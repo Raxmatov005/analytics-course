@@ -1,0 +1,202 @@
+// =====================================================================================================
+// Nur Finance · Power BI measures (week 7)                         data as of 2026-10-01
+// -----------------------------------------------------------------------------------------------------
+// How to use: Home -> New measure (or Modeling -> New measure), paste ONE measure (name = expression),
+// press Enter, set the format (Measure tools -> Format). Create a table "_Measures" first
+// (Home -> Enter data -> one empty column -> name it _Measures) and pick it as each measure's Home table,
+// so the measures live in one place.
+// Table names are the CSV file names (Power BI names each query after its file). Relationships are in
+// data/powerbi/README.md; build them first, and mark dim_date as the date table (dim_date[date]).
+// "Check" = the value your card / visual must show in the stated filter context, computed in Python
+// from the same CSV files. If yours differs, the cause is almost always a relationship or a data type.
+// Written for Power BI Desktop (2025-2026 versions); menu names can differ slightly between releases.
+// =====================================================================================================
+
+
+// ---------- 1. Portfolio (fact: v_loan_status, one row per loan) -------------------------------------
+
+Outstanding =
+SUM ( v_loan_status[outstanding] )
+// Check: no filter 208 723 504 430 · SME 125 892 942 411 · Tashkent Central 28 716 674 373
+// Trap: v_loan_status is joined to dim_date on disbursed_at, so a month slicer shows the outstanding
+// of loans DISBURSED in that month (Sep 2026: 16 965 990 458), not the book at that month's end.
+
+Loans Outstanding =
+CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[outstanding] > 0 )
+// Check: no filter 3 409 · SME 603 · MICRO 566
+
+Disbursed Amount =
+SUM ( v_loan_status[principal] )
+// Check: no filter 404 783 280 000 · Sep 2026 17 015 490 000 · Aug 2026 22 290 210 000
+
+Disbursed Count =
+COUNTROWS ( v_loan_status )
+// Check: no filter 7 828 · Sep 2026 361 · Aug 2026 358
+
+Avg Ticket =
+DIVIDE ( [Disbursed Amount], [Disbursed Count] )
+// Check: no filter 51 709 668 · Sep 2026 47 134 321 · MICRO 2 705 586 · SME 308 728 745
+
+Outstanding DPD30+ =
+CALCULATE ( [Outstanding], v_loan_status[dpd] > 30 )
+// Check: no filter 6 507 526 953 (275 loans)
+
+PAR30 % =
+DIVIDE ( [Outstanding DPD30+], [Outstanding] )
+// Check: no filter 3.12 % (0.031178) · AUTO 4.44 % · SME 2.55 % · Nukus Central 6.84 % · Termez Central 0.68 %
+
+NPL90 % =
+DIVIDE ( CALCULATE ( [Outstanding], v_loan_status[dpd] > 90 ), [Outstanding] )
+// Check: no filter 2.55 % (5 319 475 527 / 208 723 504 430) · AUTO 2.98 % · MICRO 0.00 %
+// (MICRO has 76 loans in 90+, but all their principal is already due, so none of it is "outstanding"
+//  in the week-3 definition: outstanding = principal due AFTER the as-of date.)
+
+Loans 90+ =
+CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[bucket] = "90+" )
+// Check: no filter 234 · CONS 77 · MICRO 76 · BNPL 42 · SME 29 · AUTO 10
+
+Outstanding Share of Total =
+DIVIDE ( [Outstanding], CALCULATE ( [Outstanding], ALL ( products ) ) )
+// Check (rows = products): SME 60.32 % · AUTO 27.64 % · CONS 11.05 % · BNPL 0.54 % · MICRO 0.46 % · total 100 %
+// ALL ( products ) removes only the product filter: with a branch slicer on Tashkent Central the shares
+// are within that branch. Use ALLSELECTED ( products ) to get "share of what the slicers show".
+
+Branch Rank =
+IF (
+    HASONEVALUE ( branches[branch_name] ),
+    RANKX ( ALL ( branches[branch_name] ), [Outstanding], , DESC, DENSE )
+)
+// Check (rows = branches): Tashkent Central 1 · Tashkent South 2 · Tashkent North 3 · Fergana Central 4 ·
+// Samarkand Central 5 · Andijan Central 6 · Namangan Central 7 · Bukhara Central 8 · Nukus Central 9 · Termez Central 10
+// Total row: blank (HASONEVALUE is FALSE there - a rank of "all branches" means nothing).
+
+Running Outstanding =
+VAR CurrentOutstanding = [Outstanding]
+RETURN
+    CALCULATE (
+        [Outstanding],
+        FILTER ( ALL ( branches[branch_name] ), [Outstanding] >= CurrentOutstanding )
+    )
+// Check (rows = branches, sorted by Outstanding desc): Tashkent Central 28 716 674 373 · Tashkent South
+// 55 504 066 509 · Tashkent North 81 679 738 071 · Fergana Central 106 477 072 268 · ... · Termez Central 208 723 504 430
+
+Running Outstanding % =
+DIVIDE ( [Running Outstanding], CALCULATE ( [Outstanding], ALL ( branches[branch_name] ) ) )
+// Check: Tashkent Central 13.76 % · Tashkent North (3rd) 39.13 % · Fergana Central (4th) 51.01 % ·
+// Namangan Central (7th) 81.27 % · Termez Central 100 %   - the Pareto line: 4 branches of 10 hold half the book
+
+Outstanding Month-End =
+VAR LastMonth = CALCULATE ( MAX ( v_portfolio_monthly[month] ) )
+RETURN
+    CALCULATE ( SUM ( v_portfolio_monthly[outstanding_month_end] ), v_portfolio_monthly[month] = LastMonth )
+// A snapshot ("semi-additive") measure: within a period it takes the LAST month, never the sum of months.
+// Check: Sep 2026 208 243 879 623 · Aug 2026 203 830 205 928 · Jan 2026 151 807 386 149 · Dec 2025 143 604 626 677
+// Year 2026 total row: 196 392 195 577 = the October row (the month of the as-of date, instalments due from
+// 1 Nov) - filter the visual to months up to Sep 2026. A plain SUM over 2026 would show 1 808 092 257 935: nonsense.
+
+
+// ---------- 2. Time intelligence (needs dim_date marked as the date table) ------------------------------
+
+Disbursed Prev Month =
+CALCULATE ( [Disbursed Amount], DATEADD ( dim_date[date], -1, MONTH ) )
+// Check: at Sep 2026 22 290 210 000 (= August)
+
+Disbursed MoM % =
+DIVIDE ( [Disbursed Amount] - [Disbursed Prev Month], [Disbursed Prev Month] )
+// Check: at Sep 2026 -23.66 %
+
+YTD Disbursed =
+TOTALYTD ( [Disbursed Amount], dim_date[date] )
+// Check: Jan 2026 17 452 370 000 · Mar 2026 49 003 630 000 · Jun 2026 101 480 730 000 ·
+// Sep 2026 161 480 300 000 · Sep 2025 110 929 400 000
+
+Disbursed SPLY =
+CALCULATE ( [Disbursed Amount], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+// Check: at Sep 2026 14 644 540 000 (= Sep 2025)
+
+Disbursed YoY % =
+DIVIDE ( [Disbursed Amount] - [Disbursed SPLY], [Disbursed SPLY] )
+// Check: at Sep 2026 +16.19 % · YTD comparison (YTD Disbursed vs its SPLY) at Sep 2026: +45.57 %
+
+
+// ---------- 3. Risk and quality (other facts) -------------------------------------------------------
+
+FPD30 % =
+DIVIDE ( SUM ( fct_first_instalment[fpd30] ), COUNTROWS ( fct_first_instalment ) )
+// Check: no filter 1.28 % (91 / 7 099) · MICRO 1.70 % (41 / 2 411) · vintage Jul 2026 1.09 % (4 / 367) ·
+// vintage May 2026 1.86 % (7 / 377) · vintage Aug 2026 0.00 % (0 / 11: not yet readable - hide n < 50)
+
+FPD30 Loans in Scope =
+COUNTROWS ( fct_first_instalment )
+// Check: 7 099 · Jul 2026 vintage 367 · Aug 2026 vintage 11
+
+Collection Rate =
+DIVIDE ( SUM ( fct_installments[paid_to_asof] ), SUM ( fct_installments[total_due] ) )
+// Rows are instalments, dated by due_date: "of what fell due in the period, how much was paid by the as-of date".
+// Check: due in Sep 2026 94.08 % (15 982 118 926 / 16 987 977 718) · due in Aug 2026 96.52 % ·
+// Sep 2026 by product: MICRO 91.55 % · SME 94.81 % · by branch: Tashkent South 91.44 % · Termez Central 97.68 %
+
+Collected Amount =
+SUM ( v_payments_clean[amount] )
+// Rows are payments, dated by paid_at. Check: paid in Sep 2026 16 338 823 207 · no filter 255 114 772 176
+// (Collected Amount is cash in; Collection Rate is "due vs paid" - two different questions.)
+
+Approval Rate =
+DIVIDE ( SUM ( fct_applications[is_approved] ), SUM ( fct_applications[is_decided] ) )
+// Decided = not cancelled. Check: no filter 70.55 % (8 595 / 12 183) · app 68.20 % · branch 72.38 % ·
+// partner 70.55 % · applied in Sep 2026 70.93 % (383 / 540)
+
+Cure Rate 1-30 =
+DIVIDE (
+    CALCULATE ( SUM ( roll_rates[loans] ), roll_rates[from_bucket] = "1-30", roll_rates[to_bucket] = "0" ),
+    CALCULATE ( SUM ( roll_rates[loans] ), roll_rates[from_bucket] = "1-30" )
+)
+// Check: 75.78 % (97 / 128), 1 Sep -> 1 Oct 2026 (week 3's roll-rate matrix)
+
+Roll Forward 1-30 =
+DIVIDE (
+    CALCULATE ( SUM ( roll_rates[loans] ), roll_rates[from_bucket] = "1-30", roll_rates[to_bucket] = "31-60" ),
+    CALCULATE ( SUM ( roll_rates[loans] ), roll_rates[from_bucket] = "1-30" )
+)
+// Check: 19.53 % (25 / 128)
+
+
+// ---------- 4. Collections (fact: fct_collections_actions) ---------------------------------------------
+
+Actions =
+COUNTROWS ( fct_collections_actions )
+// Check: Sep 2026 651 (sms 216 · call 216 · visit 111 · restructure_offer 108)
+
+Contact Rate =
+DIVIDE ( CALCULATE ( [Actions], fct_collections_actions[outcome] <> "no_answer" ), [Actions] )
+// Check: Sep 2026 72.81 % · no filter 70.95 %
+
+Promise-to-Pay Rate =
+DIVIDE ( CALCULATE ( [Actions], fct_collections_actions[outcome] = "promise_to_pay" ), [Actions] )
+// Check: Sep 2026 28.57 %
+
+Paid-on-Action Rate =
+DIVIDE ( CALCULATE ( [Actions], fct_collections_actions[outcome] = "paid" ), [Actions] )
+// Check: Sep 2026 22.73 %
+
+
+// ---------- 5. Text and helpers ----------------------------------------------------------------------
+
+Dynamic Title =
+"Outstanding - " & SELECTEDVALUE ( products[product_name], "all products" )
+    & " · as of 1 Oct 2026: " & FORMAT ( [Outstanding] / 1e9, "#,0.0" ) & " bn soum"
+// Check: no filter "Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"
+//        SME selected "Outstanding - Small business loan · as of 1 Oct 2026: 125.9 bn soum"
+// Use: a card or a visual's title -> fx -> Field value -> Dynamic Title.
+
+// A CALCULATED COLUMN, not a measure (Table tools -> New column, on v_loan_status) - SWITCH ( TRUE () ) buckets:
+// DPD Bucket (DAX) =
+// SWITCH (
+//     TRUE (),
+//     v_loan_status[dpd] = 0, "0",
+//     v_loan_status[dpd] <= 30, "1-30",
+//     v_loan_status[dpd] <= 60, "31-60",
+//     v_loan_status[dpd] <= 90, "61-90",
+//     "90+"
+// )
+// Check: counts 0 7 429 · 1-30 124 · 31-60 25 · 61-90 16 · 90+ 234 (identical to the view's [bucket] column)

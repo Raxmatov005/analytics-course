@@ -1,0 +1,360 @@
+{
+ "salt": "nur-finance-2026",
+ "checks": {
+  "hw1.2": {
+   "title": "HW 1.2 \u2014 10 queries for Bekzod",
+   "kind": "sql",
+   "file": "submissions/week-01/day-2/bekzod.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "f05d3b297632b8adc67827cd",
+       "dp": 0
+      }
+     ]
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "5f77f1a03fd3618cbbc39b62",
+       "dp": 0
+      }
+     ]
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "939126eb9047329b58e15af2",
+       "dp": 0
+      }
+     ]
+    },
+    "Q4": {
+     "values": [
+      {
+       "h": "07dec19578478683ba983aab",
+       "dp": 0
+      }
+     ]
+    },
+    "Q5": {
+     "values": [
+      {
+       "h": "4df2d147d8c223a89a111200",
+       "dp": 0
+      }
+     ]
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "2c648c9db5944fb0543f124b",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "f702d5518a42d1e63d6fa6c0",
+      "dp": 0
+     }
+    },
+    "Q7": {
+     "values": [
+      {
+       "h": "28e14f486833c090fcbe6ef3",
+       "dp": 0
+      }
+     ]
+    },
+    "Q8": {
+     "values": [
+      {
+       "h": "ae04a7f77f3741632e17fea1",
+       "dp": 0
+      }
+     ]
+    },
+    "Q9": {
+     "values": [
+      {
+       "h": "7d5629ef0b60f88b37820b69",
+       "dp": 0
+      }
+     ]
+    },
+    "Q10": {
+     "values": [
+      {
+       "h": "a0b827e152fade636864c04d",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw2.1": {
+   "title": "HW 2.1 \u2014 loan book for Bekzod",
+   "kind": "sql",
+   "file": "submissions/week-02/day-1/loan_book.sql",
+   "tasks": {
+    "Q1": {
+     "rows": {
+      "h": "f05d3b297632b8adc67827cd",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "rows": {
+      "h": "f9c81faeb257838097947b90",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "rows": {
+      "h": "84f3305db4ad715ff6578445",
+      "dp": 0
+     },
+     "values": [
+      {
+       "h": "054f378b8ffa52ddfe0db8f0",
+       "dp": 0
+      }
+     ]
+    },
+    "Q4": {
+     "rows": {
+      "h": "b9a8f77c8746bd0bca311096",
+      "dp": 0
+     }
+    },
+    "Q5": {
+     "rows": {
+      "h": "f05d3b297632b8adc67827cd",
+      "dp": 0
+     }
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "e0a1c02683fee0caf9f6b065",
+       "dp": 0
+      }
+     ]
+    },
+    "Q7": {
+     "values": [
+      {
+       "h": "6e81d56a7207b408d4d1ea4a",
+       "dp": 0
+      }
+     ]
+    },
+    "Q8": {
+     "rows": {
+      "h": "2932c1cb630a55026744c540",
+      "dp": 0
+     }
+    },
+    "Q10": {
+     "values": [
+      {
+       "h": "b2c5c9ef7c738858266ee9e3",
+       "dp": 0
+      },
+      {
+       "h": "cd2d0129ab1987a985039c0f",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "hw2.2": {
+   "title": "HW 2.2 \u2014 lateness report for Sevara",
+   "kind": "sql-files",
+   "files": {
+    "submissions/week-02/day-3/lateness.sql": {
+     "values": [
+      {
+       "h": "8be3b40eb19b6487ba283f97",
+       "dp": 0
+      }
+     ]
+    },
+    "submissions/week-02/day-3/methods.sql": {
+     "values": [
+      {
+       "h": "9df980bda3b117f0e439e66c",
+       "dp": 0
+      },
+      {
+       "h": "039dfa7a86a7aa881b2ab165",
+       "dp": 0
+      }
+     ]
+    }
+   },
+   "notes": {
+    "detective.md": "the loans disbursed before their application \u2014 the reviewer reads this file",
+    "_early": {
+     "h": "151287bd9b318e1b4729d3b3",
+     "dp": 0
+    }
+   }
+  },
+  "hw3.1": {
+   "title": "HW 3.1 \u2014 share-and-trend pack",
+   "kind": "sql-files",
+   "files": {
+    "submissions/week-03/day-1/shares.sql": {
+     "values": [
+      {
+       "h": "763a52256c5432ff981d7d32",
+       "dp": 1
+      },
+      {
+       "h": "37f142edd721c266e2900fa7",
+       "dp": 1
+      },
+      {
+       "h": "c2766803f340ffa97074f292",
+       "dp": 1
+      }
+     ]
+    },
+    "submissions/week-03/day-1/trend.sql": {
+     "values": [
+      {
+       "h": "91f922208c622e02cc2e806f",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "hw4.1": {
+   "title": "HW 4.1 \u2014 functions pack",
+   "kind": "xlsx",
+   "file": "submissions/week-04/day-1/functions_pack.xlsx",
+   "values": {
+    "active loans": {
+     "h": "f9c81faeb257838097947b90",
+     "dp": 0
+    },
+    "outstanding": {
+     "h": "7ce8735a21e87e335a21da04",
+     "dp": 0
+    },
+    "loans disbursed in 2026": {
+     "h": "07dec19578478683ba983aab",
+     "dp": 0
+    },
+    "principal disbursed in 2026": {
+     "h": "0a9593da318ca22f9be86980",
+     "dp": 0
+    },
+    "September 2026 principal": {
+     "h": "d825d7b2beb907b15ff1b974",
+     "dp": 0
+    },
+    "loans with DPD above 0": {
+     "h": "00cbce24adf20fd3e250d26a",
+     "dp": 0
+    },
+    "SME share of outstanding": {
+     "h": "763a52256c5432ff981d7d32",
+     "dp": 1
+    },
+    "approval rate, app": {
+     "h": "d5804d32f718eeba51f09771",
+     "dp": 1
+    },
+    "approval rate, branch": {
+     "h": "3cab4c61eb344a1f19252644",
+     "dp": 1
+    },
+    "approval rate, partner": {
+     "h": "1c9eb924d5357618b8399a63",
+     "dp": 1
+    }
+   }
+  },
+  "hw4.2": {
+   "title": "HW 4.2 \u2014 cleaning pipeline",
+   "kind": "xlsx-tables",
+   "file": "submissions/week-04/day-3/cleaning.xlsx",
+   "tables": {
+    "customers_clean": {
+     "rows": {
+      "h": "4785a26231e04bda650a0146",
+      "dp": 0
+     }
+    },
+    "payments_clean": {
+     "rows": {
+      "h": "6492613d453d5e0a23dfe5b8",
+      "dp": 0
+     },
+     "sum": {
+      "h": "346ce1ce4cfa2cfade3d9c29",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw5.1": {
+   "title": "HW 5.1 \u2014 eight functions",
+   "kind": "notebook",
+   "file": "submissions/week-05/day-1/day1_starter.ipynb"
+  },
+  "hw5.2": {
+   "title": "HW 5.2 \u2014 pandas cleaning pipeline + DPD",
+   "kind": "csv",
+   "run": "submissions/week-05/day-3/clean_nur.py",
+   "files": {
+    "customers_clean.csv": {
+     "rows": {
+      "h": "4785a26231e04bda650a0146",
+      "dp": 0
+     }
+    },
+    "payments_clean.csv": {
+     "rows": {
+      "h": "6492613d453d5e0a23dfe5b8",
+      "dp": 0
+     },
+     "sum": {
+      "col": "amount",
+      "h": "346ce1ce4cfa2cfade3d9c29",
+      "dp": 0
+     }
+    },
+    "dpd_per_loan.csv": {
+     "rows": {
+      "h": "f05d3b297632b8adc67827cd",
+      "dp": 0
+     },
+     "positive": {
+      "col": "dpd",
+      "h": "00cbce24adf20fd3e250d26a",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw6.1": {
+   "title": "HW 6.1 \u2014 probability and expected loss",
+   "kind": "notebook",
+   "file": "submissions/week-06/day-1/day1_starter.ipynb"
+  },
+  "hw7.1": {
+   "title": "HW 7.1 \u2014 design doc + A/A check",
+   "kind": "notebook",
+   "file": "submissions/week-07/day-1/day1_starter.ipynb"
+  }
+ }
+}

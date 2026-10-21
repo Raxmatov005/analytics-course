@@ -1,0 +1,13 @@
+# Analytics Learning — Python packages for weeks 5–7.
+# Install once:  pip install -r requirements.txt   (Anaconda already has most of these)
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+seaborn>=0.13
+jupyter>=1.0
+notebook>=7.0
+openpyxl>=3.1
+pypdf>=4.0
+# week 6 (statistics) and week 7 (A/B testing)
+scipy>=1.12
+statsmodels>=0.14

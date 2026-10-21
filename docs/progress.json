@@ -1,0 +1,274 @@
+{
+  "learner": "",
+  "updated": null,
+  "quizDays": 0,
+  "stretch": 0,
+  "bonus": [],
+  "badges": [],
+  "given": {},
+  "items": [
+    {
+      "id": "d0",
+      "week": 0,
+      "kind": "hw",
+      "title": "Day 0 — diagnostic + plan",
+      "max": 10,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw1.1",
+      "week": 1,
+      "kind": "hw",
+      "title": "HW 1.1 — tool ready",
+      "max": 10,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw1.2",
+      "week": 1,
+      "kind": "hw",
+      "title": "HW 1.2 — 10 queries for Bekzod",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw1.3",
+      "week": 1,
+      "kind": "hw",
+      "title": "HW 1.3 — data quality memo",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp1",
+      "week": 1,
+      "kind": "checkpoint",
+      "title": "Checkpoint 1 — Nur Pay design + 20 queries + interview",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw2.1",
+      "week": 2,
+      "kind": "hw",
+      "title": "HW 2.1 — loan book for Bekzod",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw2.2",
+      "week": 2,
+      "kind": "hw",
+      "title": "HW 2.2 — lateness report for Sevara",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp2",
+      "week": 2,
+      "kind": "checkpoint",
+      "title": "Checkpoint 2 — 25 questions + interview",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw3.1",
+      "week": 3,
+      "kind": "hw",
+      "title": "HW 3.1 — share-and-trend pack for Bekzod",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw3.2",
+      "week": 3,
+      "kind": "hw",
+      "title": "HW 3.2 — three views for Timur",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp3",
+      "week": 3,
+      "kind": "checkpoint",
+      "title": "Checkpoint 3 — EDA report + interview",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw4.1",
+      "week": 4,
+      "kind": "hw",
+      "title": "HW 4.1 — functions pack",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw4.2",
+      "week": 4,
+      "kind": "hw",
+      "title": "HW 4.2 — Power Query cleaning pipeline",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp4",
+      "week": 4,
+      "kind": "checkpoint",
+      "title": "Checkpoint 4 — clean data + one-pager + interview",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw5.1",
+      "week": 5,
+      "kind": "hw",
+      "title": "HW 5.1 — eight functions that pass the asserts",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw5.2",
+      "week": 5,
+      "kind": "hw",
+      "title": "HW 5.2 — pandas cleaning pipeline + DPD",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp5",
+      "week": 5,
+      "kind": "checkpoint",
+      "title": "Checkpoint 5 — EDA notebook + interview",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw6.1",
+      "week": 6,
+      "kind": "hw",
+      "title": "HW 6.1 — probability and expected loss",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw6.2",
+      "week": 6,
+      "kind": "hw",
+      "title": "HW 6.2 — FPD intervals by channel and grade (+20 bonus for the exact interval)",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp6",
+      "week": 6,
+      "kind": "checkpoint",
+      "title": "Checkpoint 6 — intervals, tests, quiz + interview",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw7.1",
+      "week": 7,
+      "kind": "hw",
+      "title": "HW 7.1 — experiment design doc + A/A check",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw7.2",
+      "week": 7,
+      "kind": "hw",
+      "title": "HW 7.2 — Power BI model + 6 base measures",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp7",
+      "week": 7,
+      "kind": "checkpoint",
+      "title": "Checkpoint 7 — A/B notebook + 3-page dashboard + interview",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw8.1",
+      "week": 8,
+      "kind": "hw",
+      "title": "HW 8.1 — CV draft + portfolio index",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "capstone",
+      "week": 8,
+      "kind": "checkpoint",
+      "title": "Capstone — 2026 portfolio review (analysis, dashboard, deck, talk)",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "mock",
+      "week": 8,
+      "kind": "checkpoint",
+      "title": "Mock interview",
+      "max": 50,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    }
+  ],
+  "challengeXp": 0,
+  "challengeWeeks": [],
+  "spent": []
+}

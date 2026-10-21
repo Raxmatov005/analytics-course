@@ -1,0 +1,6 @@
+product_id,code,name,min_amount,max_amount,annual_rate,channel
+1,MICRO,Micro loan,500000,5000000,0.42,app
+2,CONS,Consumer loan,3000000,50000000,0.3,branch
+3,BNPL,Buy now pay later,300000,8000000,0.0,partner
+4,AUTO,Auto loan,50000000,400000000,0.24,branch
+5,SME,Small business loan,20000000,600000000,0.26,branch

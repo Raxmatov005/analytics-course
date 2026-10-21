@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Analytics Learning — Nur Finance</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css">
+  <style>
+    :root { --theme-color: #0f766e; }
+    .markdown-section { max-width: 860px; }
+    .markdown-section details { background: #f6f8f7; border-left: 4px solid #0f766e; padding: .6em 1em; margin: 1em 0; border-radius: 4px; }
+    .markdown-section details summary { cursor: pointer; font-weight: 600; }
+    .markdown-section blockquote.story { border-left-color: #c2410c; background: #fff7ed; color: #3b1f0e; }
+    .markdown-section blockquote.story p { color: inherit; }
+    .markdown-section .badge { display: inline-block; font-size: .75em; padding: .1em .55em; border-radius: 999px; background: #0f766e; color: #fff; margin-right: .4em; vertical-align: middle; }
+    .markdown-section .badge.hw { background: #c2410c; }
+    .markdown-section .badge.stretch { background: #6d28d9; }
+    .markdown-section .badge.company { background: #1d4ed8; }
+    .markdown-section table { display: table; width: 100%; }
+    .markdown-section .timebox { float: right; font-size: .8em; color: #666; }
+    body { background: #fff; color: #34495e; }
+
+    /* day quiz */
+    .quiz { border: 1px solid #cfe3df; border-radius: 10px; padding: 1em 1.2em; margin: 1.5em 0; background: #fbfdfc; }
+    .quiz-head { display: flex; flex-wrap: wrap; gap: .6em; align-items: baseline; margin-bottom: .8em; }
+    .quiz-title { font-weight: 700; font-size: 1.1em; color: #0f766e; }
+    .quiz-rule { color: #666; font-size: .9em; }
+    .quiz-done { background: #0f766e; color: #fff; border-radius: 999px; padding: .05em .6em; font-size: .8em; }
+    .quiz-q { padding: .7em .8em; margin: .6em 0; border-radius: 8px; border-left: 4px solid transparent; }
+    .quiz-q.ok { background: #ecfdf5; border-left-color: #059669; }
+    .quiz-q.bad { background: #fef2f2; border-left-color: #dc2626; }
+    .quiz-qtext { margin-bottom: .4em; }
+    .markdown-section pre.quiz-code { margin: .4em 0 .6em; padding: .6em .9em; font-size: .85em; }
+    .quiz-opt { display: block; padding: .25em 0; cursor: pointer; }
+    .quiz-opt input { margin-right: .4em; }
+    .quiz-hint { font-size: .8em; color: #777; }
+    .quiz-input { width: 100%; max-width: 360px; padding: .4em .6em; border: 1px solid #bbb; border-radius: 6px; font: inherit; }
+    .quiz-feedback { margin-top: .4em; font-size: .92em; }
+    .quiz-actions button { font: inherit; padding: .5em 1.1em; border-radius: 8px; border: 0; background: #0f766e; color: #fff; cursor: pointer; margin-top: .6em; }
+    .quiz-actions .quiz-retry { background: #475569; }
+    .quiz-result { margin-top: .8em; padding: .7em .9em; border-radius: 8px; }
+    .quiz-result.pass { background: #0f766e; color: #fff; }
+    .quiz-result.fail { background: #fff7ed; color: #7c2d12; }
+    .quiz-error { color: #b91c1c; }
+    /* daily challenge */
+    .chal { border: 1px solid #fcd34d; border-radius: 10px; padding: 1em 1.2em; margin: 1.5em 0; background: #fffbeb; }
+    .chal-head { display: flex; flex-wrap: wrap; gap: .6em; align-items: baseline; margin-bottom: .6em; }
+    .chal-title { font-weight: 700; font-size: 1.1em; color: #b45309; }
+    .chal-rule { color: #92400e; font-size: .85em; }
+    .chal-q { margin-bottom: .5em; }
+    .chal-row { display: flex; gap: .5em; flex-wrap: wrap; margin-top: .4em; }
+    .chal-row button { font: inherit; padding: .4em 1em; border-radius: 8px; border: 0; background: #b45309; color: #fff; cursor: pointer; }
+    .chal-msg { margin-top: .5em; font-size: .92em; }
+    .chal-msg.fail { color: #9a3412; }
+    .chal-links { margin-top: .6em; font-size: .85em; }
+    .chal-hinttext { margin-top: .4em; font-size: .9em; color: #78350f; }
+    .chal-result { margin: .6em 0; padding: .6em .9em; border-radius: 8px; }
+    .chal-result.pass { background: #b45309; color: #fff; }
+    .chal-result.fail { background: #fef3c7; color: #78350f; }
+    .markdown-section .chal-sol { background: #fff; border-left-color: #b45309; }
+    .sidebar-nav a.day-done::after { content: " \2713"; color: #0f766e; font-weight: 700; }
+
+    /* progress board */
+    .al-icon { flex: none; }
+    .lvl { border-radius: 12px; padding: 1.1em 1.3em; background: linear-gradient(135deg, #0f766e, #115e59); color: #fff; margin: 1em 0; }
+    .lvl-top { display: flex; gap: 1em; align-items: center; }
+    .lvl-name { font-size: 1.5em; font-weight: 700; }
+    .lvl-note { opacity: .85; }
+    .lvl-xp { margin-left: auto; text-align: right; }
+    .lvl-xp b { font-size: 1.4em; }
+    .lvl-xp span { opacity: .8; font-size: .85em; }
+    .bar { height: 10px; background: rgba(255,255,255,.25); border-radius: 999px; margin: .9em 0 .4em; overflow: hidden; }
+    .bar div { height: 100%; background: #fbbf24; border-radius: 999px; }
+    .lvl-next { font-size: .9em; opacity: .9; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .7em; margin: 1em 0; }
+    .stat { border: 1px solid #e2e8f0; border-radius: 10px; padding: .8em; color: #0f766e; }
+    .stat b { display: block; font-size: 1.4em; color: #1f2937; margin-top: .3em; }
+    .stat span { font-size: .8em; color: #64748b; }
+    .board-note { color: #64748b; font-size: .9em; }
+    .mss { display: grid; gap: .6em; }
+    .ms { display: flex; gap: .9em; border: 1px solid #e2e8f0; border-radius: 10px; padding: .8em 1em; color: #94a3b8; }
+    .ms.on { border-color: #059669; background: #ecfdf5; color: #065f46; }
+    .ms-size { text-transform: uppercase; font-size: .7em; letter-spacing: .06em; }
+    .ms.big .ms-size { color: #b45309; font-weight: 700; }
+    .ms.grand { border: 1px solid #f59e0b; background: #fffbeb; color: #92400e; }
+    .ms.grand .ms-size { color: #b45309; font-weight: 800; }
+    .ms.grand.on { border-color: #d97706; background: #fef3c7; }
+    .ms-reward { font-weight: 700; color: #1f2937; }
+    .ms-what { font-size: .9em; color: #475569; }
+    .ms-progress, .ms-state { font-size: .82em; margin-top: .2em; }
+    .ms.on .ms-state { font-weight: 700; }
+    .chips { display: flex; flex-wrap: wrap; gap: .3em; margin-top: .4em; }
+    .chip { font-size: .75em; padding: .1em .55em; border-radius: 999px; background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+    .chip.reached { background: #059669; color: #fff; border-color: #059669; }
+    .chip.given { background: #0f766e; color: #fff; border-color: #0f766e; text-decoration: line-through; }
+    .bdgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .6em; }
+    .bdg { border: 1px dashed #cbd5e1; border-radius: 10px; padding: .8em; color: #cbd5e1; }
+    .bdg.on { border: 1px solid #0f766e; color: #0f766e; background: #f0fdfa; }
+    .bdg-name { font-weight: 700; margin-top: .3em; color: #94a3b8; }
+    .bdg.on .bdg-name { color: #134e4a; }
+    .bdg-how { font-size: .78em; color: #94a3b8; }
+    .bdg.on .bdg-how { color: #475569; }
+    .markdown-section table.pts { margin: .6em 0 1.2em; }
+    .wallet { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6em; margin: .8em 0; }
+    .wallet div { border: 1px solid #e2e8f0; border-radius: 10px; padding: .7em .9em; }
+    .wallet span { display: block; font-size: .78em; color: #64748b; }
+    .wallet b { font-size: 1.25em; color: #1f2937; }
+    .wallet .bal { background: #0f766e; border-color: #0f766e; }
+    .wallet .bal span, .wallet .bal b { color: #fff; }
+    .chain { display: grid; gap: .4em; }
+    .link { display: flex; align-items: center; gap: .8em; border: 1px solid #e2e8f0; border-radius: 10px; padding: .55em .9em; color: #94a3b8; }
+    .link.won { border-color: #059669; background: #ecfdf5; color: #059669; }
+    .link.next { border: 1px dashed #0f766e; color: #0f766e; }
+    .link.missed { background: #fef2f2; color: #b91c1c; }
+    .link-body { flex: 1; }
+    .link-label { font-weight: 700; color: #1f2937; }
+    .link-tag { font-size: .8em; }
+    .link-val { font-weight: 700; font-size: 1.05em; color: #1f2937; white-space: nowrap; }
+    .link.later .link-val { color: #94a3b8; font-weight: 400; }
+    .markdown-section ul.menu { padding-left: 1.1em; }
+    .markdown-section ul.menu span { color: #64748b; font-size: .9em; }
+    .markdown-section table.pts tr.sum td { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div id="app">Loading the course…</div>
+  <script>
+    window.$docsify = {
+      name: 'Analytics Learning',
+      repo: '',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      search: { placeholder: 'Search the course', depth: 3 },
+      copyCode: { buttonText: 'Copy', successText: 'Copied' },
+      pagination: { previousText: 'Previous', nextText: 'Next', crossChapter: true },
+      alias: { '/.*/_sidebar.md': '/_sidebar.md' },
+      markdown: {
+        renderer: {
+          blockquote: function (q) {
+            if (q.indexOf('<p>📖') === 0 || q.indexOf('<p>STORY') === 0) {
+              return '<blockquote class="story">' + q.replace('STORY', '') + '</blockquote>';
+            }
+            return '<blockquote>' + q + '</blockquote>';
+          }
+        }
+      }
+    }
+  </script>
+  <script src="assets/quiz.js?v=3"></script>
+  <script src="assets/challenge.js?v=3"></script>
+  <script src="assets/board.js?v=3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@3.0.0/dist/docsify-copy-code.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2.10.1/dist/docsify-pagination.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+</body>
+</html>
