@@ -4,7 +4,7 @@ Every homework names a folder like `submissions/week-01/day-1/`. Put your files 
 
 ## One-time setup (15 min)
 
-1. Create a free account at https://github.com if you don't have one and send your username to the mentor; you'll be added to the private course repository.
+1. Create a free account at https://github.com if you don't have one and send your username to the mentor; you'll be invited to the course repository (accept the e-mail from GitHub).
 2. Install **GitHub Desktop**: https://desktop.github.com → sign in → *Clone a repository* → pick the course repo → choose the folder on your PC.
 3. Open the folder. `docs/` is the course; `submissions/` is yours.
 
