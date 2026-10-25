@@ -121,6 +121,40 @@
     .markdown-section ul.menu { padding-left: 1.1em; }
     .markdown-section ul.menu span { color: #64748b; font-size: .9em; }
     .markdown-section table.pts tr.sum td { font-weight: 700; }
+    /* course map */
+    .map { margin: 1.2em 0; }
+    .mweek { display: flex; gap: .9em; align-items: flex-start; }
+    .mnode { flex: none; width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f1f5f9; color: #94a3b8; border: 2px solid #e2e8f0; font-size: 1.2em; }
+    .mweek.here .mnode { background: #0f766e; color: #fff; border-color: #0f766e; box-shadow: 0 0 0 5px #ccfbf1; }
+    .mweek.cleared .mnode { background: #059669; color: #fff; border-color: #059669; }
+    .mpath { width: 4px; height: 22px; margin-left: 21px; background: repeating-linear-gradient(#cbd5e1 0 5px, transparent 5px 10px); }
+    .mpath.cleared { background: #059669; }
+    .mcard { flex: 1; min-width: 0; border: 1px solid #e2e8f0; border-radius: 12px; padding: .7em 1em; }
+    .mweek.here .mcard { border-color: #0f766e; background: #f0fdfa; }
+    .mweek.cleared .mcard { border-color: #a7f3d0; }
+    .mweek.ahead .mcard { opacity: .6; }
+    .mhead { display: flex; flex-wrap: wrap; gap: .5em; align-items: baseline; }
+    .mlevel { font-size: .72em; text-transform: uppercase; letter-spacing: .06em; color: #0f766e; font-weight: 700; }
+    .mtitle { font-weight: 700; color: #1f2937; }
+    .mcount { margin-left: auto; font-size: .85em; color: #64748b; }
+    .mdays { display: grid; gap: .25em; margin-top: .5em; }
+    .markdown-section a.mday { display: flex; align-items: center; gap: .55em; padding: .25em .4em; border-radius: 8px; color: #334155; font-weight: 400; border: 0; text-decoration: none; }
+    .markdown-section a.mday:hover { background: #f1f5f9; }
+    .mdot { flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85em; font-weight: 700; background: #f1f5f9; color: #64748b; }
+    .mday.done .mdot { background: #059669; color: #fff; }
+    .mday.here .mdot { background: #0f766e; color: #fff; }
+    .mday.boss .mdot { background: #fef3c7; color: #b45309; }
+    .mday.boss.done .mdot { background: #b45309; color: #fff; }
+    .mday-name { min-width: 0; }
+    .mday.boss .mday-name { font-weight: 700; }
+    .mtag { display: inline-flex; }
+    .mtag.star { color: #b45309; }
+    .mtag.gift { color: #be185d; }
+    .mhere { font-size: .72em; background: #0f766e; color: #fff; border-radius: 999px; padding: .05em .55em; white-space: nowrap; }
+    .mreward { display: inline-flex; align-items: center; gap: .3em; margin-top: .5em; font-size: .85em; color: #b45309; }
+    .mreward.won { color: #059669; font-weight: 700; }
+    .mreward.missed { color: #b91c1c; }
+    .chal-lucky { display: flex; gap: .6em; align-items: center; margin: -.2em 0 .7em; padding: .55em .8em; border-radius: 8px; background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
   </style>
 </head>
 <body>
@@ -149,8 +183,9 @@
     }
   </script>
   <script src="assets/quiz.js?v=4"></script>
-  <script src="assets/challenge.js?v=3"></script>
-  <script src="assets/board.js?v=3"></script>
+  <script src="assets/challenge.js?v=4"></script>
+  <script src="assets/board.js?v=4"></script>
+  <script src="assets/map.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@3.0.0/dist/docsify-copy-code.min.js"></script>

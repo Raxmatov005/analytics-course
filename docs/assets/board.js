@@ -144,13 +144,16 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
   function chainOf(r, p) {
     var c = r.chain, by = {}, step = 0, rows = [], earned = 0, nextShown = false;
     p.items.forEach(function (it) { by[it.id] = it; });
-    var fullWeeks = p.challengeWeeks || [];
+    var fullWeeks = p.challengeWeeks || [], ahead = 0;
     c.order.forEach(function (o) {
       var it = by[o[0]], week = o[1], label = o[0] === 'capstone' ? 'Capstone' : 'Checkpoint ' + o[0].slice(2);
       var base = c.base * Math.pow(c.ratio, step);
       if (!it || it.earned == null) {
-        rows.push({ label: label, state: nextShown ? 'later' : 'next', value: Math.round(base / c.roundTo) * c.roundTo, week: week });
+        // checkpoints not taken yet: what each would be worth if she passes every one before it
+        var proj = c.base * Math.pow(c.ratio, step + ahead);
+        rows.push({ label: label, state: nextShown ? 'later' : 'next', value: Math.round(proj / c.roundTo) * c.roundTo, week: week });
         nextShown = true;
+        ahead += 1;
         return;
       }
       var v = pct(it);
@@ -178,7 +181,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     h += '<div class="chain">' + ch.rows.map(function (row) {
       var tag = row.state === 'won' ? 'Won' + (row.bonus90 ? ' · 90 %+ bonus' : '') + (row.fullWeek ? ' · full challenge week +10 %' : '')
         : row.state === 'missed' ? 'Missed (' + Math.round(row.pct) + ' %) — the chain stepped back'
-        : row.state === 'next' ? 'Next — pass it to win this' : 'Grows as you pass the ones before';
+        : row.state === 'next' ? 'Next — pass it to win this' : 'If you pass every one before it';
       return '<div class="link ' + row.state + '">' + icon(row.state === 'won' ? 'gift' : row.state === 'missed' ? 'lock' : 'target', 22) +
         '<div class="link-body"><div class="link-label">' + esc(row.label) + '</div><div class="link-tag">' + esc(tag) + '</div></div>' +
         '<div class="link-val">' + (row.state === 'missed' ? '—' : (row.state === 'won' ? '' : '≈ ') + fmt(row.value)) + '</div></div>';
@@ -209,7 +212,8 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     ]).then(function (res) {
       var p = res[0], r = res[1];
       var xp = xpOf(p, r), lv = levelOf(xp, r);
-      var maxXp = p.items.reduce(function (s, it) { return s + it.max; }, 0) + 41 * r.xpPerQuizDay + 374;  // 374 = 40 challenges on a perfect streak
+      var maxXp = p.items.reduce(function (s, it) { return s + it.max; }, 0) + 41 * r.xpPerQuizDay +
+        (window.ALChallenge ? window.ALChallenge.maxXp() : 374);  // 40 challenges on a perfect streak, lucky days doubled
       var span = lv.next ? lv.next.from - lv.cur.from : 1;
       var into = lv.next ? (xp - lv.cur.from) / span : 1;
       var done = window.ALQuiz ? window.ALQuiz.doneCount() : 0, streak = window.ALQuiz ? window.ALQuiz.streak() : 0;
@@ -222,12 +226,13 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
         '<div class="lvl-next">' + (lv.next ? fmt(lv.next.from - xp) + ' XP to <b>' + esc(lv.next.name) + '</b>' : 'Top level reached.') + '</div></div>';
 
       html += '<div class="stats">' +
-        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / 41</b><span>days finished (this device)</span></div>' +
-        '<div class="stat">' + icon('flame', 22) + '<b>' + streak + '</b><span>day streak (this device)</span></div>' +
-        '<div class="stat">' + icon('star', 22) + '<b>' + (p.quizDays || 0) + '</b><span>quiz days counted by the mentor</span></div>' +
-        '<div class="stat">' + icon('zap', 22) + '<b>' + (p.stretch || 0) + '</b><span>stretch tasks done</span></div>' +
-        (window.ALChallenge ? '<div class="stat">' + icon('target', 22) + '<b>' + window.ALChallenge.solved() + ' / 40</b><span>daily challenges solved · streak ' +
-          window.ALChallenge.streak() + ' · ' + window.ALChallenge.xp() + ' XP (this device)</span></div>' : '') + '</div>';
+        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / 41</b><span>days finished · ' + (p.quizDays || 0) + ' already in your XP</span></div>' +
+        '<div class="stat">' + icon('flame', 22) + '<b>' + streak + '</b><span>day streak</span></div>' +
+        (window.ALChallenge ? '<div class="stat">' + icon('target', 22) + '<b>' + window.ALChallenge.solved() + ' / 40</b><span>challenges solved · streak ' +
+          window.ALChallenge.streak() + ' · ' + window.ALChallenge.xp() + ' XP earned, ' + (p.challengeXp || 0) + ' already in your XP</span></div>' : '') +
+        '<div class="stat">' + icon('zap', 22) + '<b>' + (p.stretch || 0) + '</b><span>stretch tasks done</span></div></div>' +
+        '<p class="board-note">Days and challenges count on this device as you go; they join your XP above when your mentor records ' +
+        'the Friday screenshot of this page.</p>';
 
       html += '<h2 id="real-rewards">Real rewards: your voucher chain</h2><p class="board-note">Every checkpoint you pass wins a voucher, and every voucher is bigger than the last. Keep the chain going.</p>' +
         chainHtml(r, p) +

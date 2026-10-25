@@ -6,14 +6,25 @@
 The page holds only fingerprints of the answer (built by the mentor), so the answer is not in the page source.
 The solution opens once she solves the challenge, or if she gives up (then no XP).
 XP grows with the challenge streak: 2, 3, 4, 6, 9, then 10 a day. Saturdays and Sundays never break a streak.
+Lucky days: one of Monday–Thursday in each week 1–8, picked by a hash of the week, pays double XP. It is a surprise:
+the page says so only when she opens that day, and the map shows a gift on the lucky days she has found.
 Results live in this browser (localStorage "al.v1"), next to the quiz results.
 */
 (function () {
   var KEY = 'al.v1', SALT = 'nur-finance-2026', XP_STEPS = [2, 3, 4, 6, 9, 10];
 
   function load() {
-    try { var s = JSON.parse(localStorage.getItem(KEY)) || {}; s.quizzes = s.quizzes || {}; s.challenges = s.challenges || {}; return s; }
-    catch (e) { return { quizzes: {}, challenges: {} }; }
+    try { var s = JSON.parse(localStorage.getItem(KEY)) || {}; s.quizzes = s.quizzes || {}; s.challenges = s.challenges || {}; s.lucky = s.lucky || {}; return s; }
+    catch (e) { return { quizzes: {}, challenges: {}, lucky: {} }; }
+  }
+  function luckyDayOf(week) {
+    var h = 2166136261, key = 'nur-lucky-' + week;
+    for (var i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return 1 + h % 4;
+  }
+  function isLucky(id) {
+    var m = /^w(\d\d)d(\d)$/.exec(id);
+    return !!m && Number(m[1]) >= 1 && Number(m[2]) === luckyDayOf(Number(m[1]));
   }
   function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* nothing to do */ } }
   function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -62,6 +73,14 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
     streak: function () { return streakEndingAt(load()); },
     solved: function () { var s = load(); return Object.keys(s.challenges).filter(function (k) { return s.challenges[k].solvedOn; }).length; },
     xp: function () { return totalXp(load()); },
+    /* every challenge solved on a perfect streak, lucky days doubled */
+    maxXp: function () {
+      var t = 0;
+      for (var w = 1; w <= 8; w++) for (var d = 1; d <= 5; d++) {
+        t += XP_STEPS[Math.min((w - 1) * 5 + d, XP_STEPS.length) - 1] * (isLucky('w0' + w + 'd' + d) ? 2 : 1);
+      }
+      return t;
+    },
     fullWeeks: function () {
       var s = load(), weeks = [];
       for (var w = 1; w <= 8; w++) {
@@ -84,13 +103,18 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
   }
 
   function draw(box, ch) {
-    var rec = load().challenges[ch.id];
-    var html = '<div class="chal-head"><span class="chal-title">Daily challenge</span>' +
+    var st0 = load(), rec = st0.challenges[ch.id], lucky = isLucky(ch.id);
+    if (lucky && !st0.lucky[ch.id]) { st0.lucky[ch.id] = dayKey(new Date()); save(st0); }
+    var html = (lucky ? '<div class="chal-lucky"><svg class="al-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/>' +
+        '<path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6 1 6-1.5S14 4 12 8"/></svg>' +
+        '<span><b>Lucky day!</b> You found this week\'s surprise: today\'s challenge pays <b>double XP</b>.</span></div>' : '') +
+      '<div class="chal-head"><span class="chal-title">Daily challenge</span>' +
       '<span class="chal-rule">10–15 min · bonus XP that grows with your challenge streak</span></div>' +
       '<div class="chal-q">' + esc(ch.q) + '</div>' + (ch.code ? '<pre class="quiz-code"><code>' + esc(ch.code) + '</code></pre>' : '');
     if (rec && (rec.solvedOn || rec.gaveUp)) {
       html += '<div class="chal-result ' + (rec.solvedOn ? 'pass' : 'fail') + '">' +
-        (rec.solvedOn ? '<b>Solved on ' + esc(rec.solvedOn) + ' — +' + rec.xp + ' XP.</b>' : '<b>You opened the solution</b> — no XP for this one; tomorrow\'s counts.') + '</div>' +
+        (rec.solvedOn ? '<b>Solved on ' + esc(rec.solvedOn) + ' — +' + rec.xp + ' XP' + (lucky ? ' (lucky day, doubled)' : '') + '.</b>' : '<b>You opened the solution</b> — no XP for this one; tomorrow\'s counts.') + '</div>' +
         '<details class="chal-sol" open><summary>Solution</summary><div>' + esc(fromB64(ch.sol)).replace(/\n/g, '<br>') + '</div></details>';
       box.innerHTML = html;
       return;
@@ -115,7 +139,7 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
           r.solvedOn = today;
           s.challenges[ch.id] = r;
           var st = streakEndingAt(s);
-          r.xp = XP_STEPS[Math.min(st, XP_STEPS.length) - 1] || 2;
+          r.xp = (XP_STEPS[Math.min(st, XP_STEPS.length) - 1] || 2) * (lucky ? 2 : 1);
           r.streakAtSolve = st;
           s.challenges[ch.id] = r;
           save(s);

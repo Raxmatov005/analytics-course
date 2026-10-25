@@ -1,4 +1,5 @@
 - [Start here](/)
+- [Course map](map.md)
 - [Progress & rewards](progress.md)
 - [How to submit homework](homework/how-to-submit.md)
 - [Practice day: try the routine](practice.md)

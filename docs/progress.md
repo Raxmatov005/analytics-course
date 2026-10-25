@@ -11,6 +11,7 @@ Your level, your XP, the real rewards you are working towards, your badges and e
 | Homework and checkpoints | the points the mentor gives (see the tables above) |
 | Each day finished (day quiz passed with 80 % or more) | 2 — counted by the mentor from the screenshot of this board you send every Friday |
 | Each daily challenge solved | 2, 3, 4, 6, 9, then 10 a day as your challenge streak grows (a day without one resets it to 2) |
+| A challenge on a **lucky day** (one hidden day in every week) | double |
 | Each stretch task | 5 |
 | Finding a real mistake in the course | 10, and the Bug hunter badge |
 
@@ -23,4 +24,5 @@ Your level, your XP, the real rewards you are working towards, your badges and e
 - **Every Friday** send a screenshot of this page with your checkpoint. Quiz results live in your browser; the screenshot is how they count.
 - **Vouchers:** every checkpoint you pass wins a voucher worth 1.5× the previous one; 90 %+ adds 25 %; a week with all five daily challenges adds 10 %. Missing a checkpoint gives no voucher and steps the chain back two links — so the cheapest way to lose money is to skip the work, not to make mistakes in it.
 - **Daily challenges** are a bonus at the end of each day. Giving up shows the solution but earns no XP.
+- **Lucky days:** one day in every week is a surprise lucky day: its challenge pays double XP. You only find out when you open that day; the [course map](map.md) marks the ones you have found.
 - **Real rewards** are given by your mentor. When a voucher is won, tell them what you want from the menu, or save it for something bigger.
