@@ -1,6 +1,37 @@
 {
  "salt": "nur-finance-2026",
  "checks": {
+  "practice": {
+   "title": "Practice day \u2014 3 warm-up queries",
+   "kind": "sql",
+   "file": "submissions/practice/answers.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "f702d5518a42d1e63d6fa6c0",
+       "dp": 0
+      }
+     ]
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "7531fede56f88e69cab03888",
+       "dp": 2
+      }
+     ]
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "00939945c142e4bb1c55d714",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
   "hw1.2": {
    "title": "HW 1.2 \u2014 10 queries for Bekzod",
    "kind": "sql",

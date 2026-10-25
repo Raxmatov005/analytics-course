@@ -38,10 +38,14 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     return t === '' ? NaN : Number(t);
   }
 
+  /* the practice day's quiz (id "practice") trains the routine only: no streak, no finished day */
+  function isPractice(id) { return id.indexOf('practice') === 0; }
+
   /* ---------- streak: consecutive study days; Saturdays and Sundays never break it ---------- */
   function streak(state) {
     var days = {};
     Object.keys(state.quizzes).forEach(function (id) {
+      if (isPractice(id)) return;
       var r = state.quizzes[id];
       (r.passDays || (r.passedOn ? [r.passedOn] : [])).forEach(function (d) { days[d] = true; });
     });
@@ -63,7 +67,7 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     streak: function () { return streak(load()); },
     doneCount: function () {
       var s = load();
-      return Object.keys(s.quizzes).filter(function (id) { return s.quizzes[id].passedOn; }).length;
+      return Object.keys(s.quizzes).filter(function (id) { return !isPractice(id) && s.quizzes[id].passedOn; }).length;
     },
     TOTAL_DAYS: TOTAL_DAYS
   };
@@ -162,7 +166,10 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       save(s);
       result.hidden = false;
       result.className = 'quiz-result ' + (passed ? 'pass' : 'fail');
-      result.innerHTML = passed
+      result.innerHTML = passed && isPractice(quiz.id)
+        ? '<b>' + right + ' / ' + quiz.questions.length + ' (' + pct + ' %) — practice quiz passed.</b> ' +
+          'This is how a real day ends; practice does not count toward your days or streak.'
+        : passed
         ? '<b>' + right + ' / ' + quiz.questions.length + ' (' + pct + ' %) — day done.</b> Streak: ' + streak(s) + ' day(s). ' +
           'Days finished: ' + window.ALQuiz.doneCount() + ' / ' + TOTAL_DAYS + '.'
         : '<b>' + right + ' / ' + quiz.questions.length + ' (' + pct + ' %).</b> You need ' + Math.round(pass * 100) +

@@ -1,6 +1,7 @@
 - [Start here](/)
 - [Progress & rewards](progress.md)
 - [How to submit homework](homework/how-to-submit.md)
+- [Practice day: try the routine](practice.md)
 
 - **Week 0 — Diagnostic**
   - [Day 0: where do you stand?](weeks/week-00/day-0.md)
