@@ -2,11 +2,11 @@
 
 <span class="badge">A/B analysis 120 min</span> <span class="badge">Dashboard 120 min</span> <span class="badge">Interview 30 min</span> <span class="badge hw">Checkpoint · 100 points</span>
 
-> STORY **Friday, 9:00.** Five people, two deliverables. Kamola and Nilufar: *"The readout you showed on Tuesday — now as a notebook anyone can re-run, with the decision memo at the end. If the iOS bug or the leak is not in it, it did not happen."* Bekzod and Timur: *"The board pack: three pages, the numbers from the week-3 tiles, a PDF for the board and the `.pbix` for us. Timur will open it and press Refresh; if anything breaks, it is not done."* Madina: *"And eight questions every analyst interview asks this year. A/B testing and Power BI are on every job advert in this city."*
+> STORY **Friday, 9:00.** Five people, two deliverables. Kamola and Nilufar: *"Tuesday's readout was for the whole app. The rollout starts in the regions, and the regional sales head wants his own — the seven regions outside Tashkent, as a notebook anyone can re-run, with the decision memo at the end. If the iOS bug or the leak touches his users, it must be in it."* Bekzod and Timur: *"The board pack: three pages, the numbers from the week-3 tiles, a PDF for the board and the `.pbix` for us. Timur will open it and press Refresh; if anything breaks, it is not done."* Madina: *"And eight questions every analyst interview asks this year. A/B testing and Power BI are on every job advert in this city."*
 
 ## Today in 3 lines
 
-- **Part A (40 pts):** `checkpoint_ab.ipynb` from `data/python/week7/checkpoint_ab_template.ipynb` — the full offer-screen analysis on `data/ab/`: sanity checks, novelty, the primary result, funnel and money, the FPD guardrail with unit economics, segments with Holm, and the **decision memo**.
+- **Part A (40 pts):** `checkpoint_ab.ipynb` from `data/python/week7/checkpoint_ab_template.ipynb` — the full offer-screen analysis on `data/ab/` for the users outside Tashkent: sanity checks, novelty, the primary result, funnel and money, the FPD guardrail with unit economics, segments with Holm, and the **decision memo**.
 - **Part B (40 pts):** the **3-page Power BI dashboard** (Portfolio, Risk, Collections) on `data/powerbi/` — `nur_dashboard.pbix`, a PDF export, a screenshot of each page; graded by the numbers each card must show.
 - **Part C (20 pts):** eight interview questions (SRM, peeking, MDE, guardrails, A/A, `CALCULATE` and filter context, measure vs calculated column, the star schema in Power BI), 3–5 sentences each, in `quiz.md`.
 
@@ -25,7 +25,9 @@
 
 ---
 
-## Part A — The offer-screen A/B analysis (120 min, 40 pts)
+## Part A — The offer-screen A/B analysis, the regional readout (120 min, 40 pts)
+
+**The population is new.** Tuesday's readout was for every app user. The rollout will start in the regions, and the regional sales head wants a readout of his own: **users in the seven regions outside Tashkent** (`users["region"] != "Tashkent"` — 16 738 of the 27 974 rows). Same experiment, same pre-registered plan (7-day conversion, novelty days excluded, the same seven segments), new numbers: none of them is on Tuesday's page. A user's region never changes, so you can filter first and then run every check of Day 2 on what is left.
 
 Every task: code with printed output, then **two sentences** for Kamola (product) and Nilufar (risk). A correct number with no interpretation earns 60 % of the task. Conversion = `contract_signed` within 7 × 24 h of `assigned_at` (the template's `with_conversion`).
 
@@ -33,139 +35,140 @@ Every task: code with printed output, then **two sentences** for Kamola (product
 
 Rows vs users; SRM overall (rows and users) and by device, week, device × week, with your threshold stated; the hash check; users in both variants. Every problem with its size.
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
-users["user_id"].nunique(), len(users)                                   # 27 674 users, 27 974 rows
-dup_ids = users.loc[users["user_id"].duplicated(), "user_id"].unique()    # 300 users, each in A and B
-stats.chisquare(users["variant"].value_counts().values).pvalue           # rows 13 845 / 14 129: p = 0.090
-ud = users[~users["user_id"].isin(dup_ids)].assign(week=lambda t: (t.assigned_at - pd.Timestamp("2026-08-01")).dt.days // 7 + 1)
-stats.chisquare(ud["variant"].value_counts().values).pvalue              # users 13 545 / 13 829: p = 0.086
-srm_by(ud, ["device", "week"])                                           # iOS wk4: 537 / 822 (60.5 % B), p = 1.1e-14; all other cells p >= 0.14
-expected = users["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
-(users["variant"] != expected).sum()                                     # 431 = 300 leak re-assignments + 131 iOS wk4 users logged B, hash A
+reg = users[users["region"] != "Tashkent"]                                # 16 738 rows
+reg["user_id"].nunique(), len(reg)                                       # 16 558 users, 16 738 rows
+dup_ids = reg.loc[reg["user_id"].duplicated(), "user_id"].unique()        # 180 users, each in A and B
+stats.chisquare(reg["variant"].value_counts().values).pvalue             # rows 8 299 / 8 439: p = 0.28
+ud = reg[~reg["user_id"].isin(dup_ids)].assign(week=lambda t: (t.assigned_at - pd.Timestamp("2026-08-01")).dt.days // 7 + 1)
+stats.chisquare(ud["variant"].value_counts().values).pvalue              # users 8 119 / 8 259: p = 0.27
+srm_by(ud, ["device", "week"])                                           # iOS wk4: 330 / 482 (59.4 % B), p = 9.6e-8; all other cells p >= 0.13
+expected = reg["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
+(reg["variant"] != expected).sum()                                       # 261 = 180 leak re-assignments + 81 iOS wk4 users logged B, hash A
 ```
 
-Threshold: p < 0.001 for SRM (many slices are checked). Problems: (1) **300 users in both variants** (600 rows) — removed entirely; (2) **SRM in iOS, 22–28 August**: 1 359 users, 60.5 % B, 131 of them hash-A users logged as B — the cell is removed from both arms (after: 13 008 / 13 007, p = 0.995); device iOS overall (p = 2.2 × 10⁻⁵) and week 4 (p = 0.0019) are the same bug seen through wider slices.
+Threshold: p < 0.001 for SRM (many slices are checked). Problems: (1) **180 users in both variants** (360 rows; first assignment A for 111, B for 69) — removed entirely; (2) **SRM in iOS, 22–28 August**: 812 users, 59.4 % B, 81 of them hash-A users logged as B — the cell is removed from both arms (after: 7 789 / 7 777, p = 0.92). Device iOS overall (p = 0.0070) is the same bug seen through a wider slice; week 4 as a whole (p = 0.12) does not show it at all.
 
-*Interpretation.* The experiment's overall split looked fine (p = 0.09), but 300 users saw both screens and an iOS bug pushed 131 control users into B in the last week; both are removed before any result is read. The iOS client must log assignment failures before the next test, or the same bias will repeat.
+*Interpretation.* In the regions the overall split looks fine (p = 0.28) and even the last week as a whole hides the problem, but 180 users saw both screens and the iOS client pushed 81 control users into B in the last week; both are removed before any result is read. A regional readout that skipped the device × week check would have compared a contaminated B with A.
 </details>
 
-*Deductions seen most often:* SRM checked only overall; the duplicates noticed but only the second row removed; "SRM p = 0.09, so the split is fine"; reweighting the iOS cell instead of removing it; new users p = 0.021 reported as a second problem (it disappears when the iOS cell is removed).
+*Deductions seen most often:* SRM checked only overall, or only by week; the duplicates noticed but only the second row removed; reweighting the iOS cell instead of removing it; the Tashkent users left in.
 
 ### A2. Novelty — 4 pts
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
-Daily conversion (de-duplicated), B − A on 1–3 August: **+4.0, +2.4, +3.9** points; afterwards single days swing around +1 (±3). Days 1–3 pooled: 8.01 % vs **11.44 %**, +3.44 points, p = 0.0012; from 4 August (clean): +0.88. Weekly (iOS week 4 out): A 8.38 / 8.56 / 7.20 / 7.59 %, B 10.12 / 9.75 / 8.02 / 8.44 %.
+Daily conversion (de-duplicated), B − A on 1–3 August: **+2.8, +0.3, +2.0** points; single days afterwards swing from −4.3 to +5.9 (14 August). Days 1–3 pooled: 8.50 % vs **10.16 %**, +1.66 points, p = 0.22; from 4 August (clean): +1.05. Weekly (iOS week 4 out): A 8.45 / 8.32 / 6.32 / 8.04 %, B 9.57 / 9.85 / 7.30 / 8.84 %.
 
-*Interpretation.* B's first three days convert 1.4 times as well as A's, then the lift settles at about +0.9 points — a novelty effect the design anticipated. As pre-registered, the primary result uses users assigned from 4 August; the full period is a sensitivity line.
+*Interpretation.* In the regions the launch spike is weaker and noisier than in the whole app (+1.7 points on days 1–3, p = 0.22) — on its own it would not prove a novelty effect. The decision does not depend on that: the pre-registered rule excludes days 1–3 for every population, so the primary uses users assigned from 4 August and the full period is a sensitivity line.
 </details>
 
-*Deductions seen most often:* one high day (14 August, +5.2) called novelty; days excluded with no reference to the plan; no chart.
+*Deductions seen most often:* days 1–3 kept "because the spike is small here" (the plan, not the data, decides exclusions); one high day (14 August) called novelty; no chart.
 
 ### A3. The primary result — 8 pts
 
 Clean population: conversion per variant, the difference with a 95 % CI, the p-value, the relative lift with its CI; then the same on raw data.
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
-clean = with_conversion(clean_users(users), events)                     # 22 906 users: A 11 472, B 11 434 (SRM p = 0.80)
+clean = with_conversion(clean_users(reg), events)                       # 13 725 users: A 6 883, B 6 842 (SRM p = 0.73)
 ab_readout(clean)
-# A 915 / 11 472 = 7.98 % · B 1 013 / 11 434 = 8.86 % · diff +0.88 pt (Newcombe +0.16 to +1.60) · z = 2.41, p = 0.0160
-# relative +11.1 % (log-ratio CI +2.0 % to +21.0 %)
-ab_readout(with_conversion(users, events))
-# raw: 8.28 % vs 9.37 % · +1.09 pt (+0.42 to +1.75) · p = 0.0014 · +13.1 % (+4.9 to +22.0)
+# A 530 / 6 883 = 7.70 % · B 599 / 6 842 = 8.75 % · diff +1.05 pt (Newcombe +0.14 to +1.98) · z = 2.25, p = 0.025
+# relative +13.7 % (log-ratio CI +1.7 % to +27.2 %)
+ab_readout(with_conversion(reg, events))
+# raw: 8.12 % vs 9.10 % · +0.98 pt (+0.13 to +1.83) · p = 0.024 · +12.1 % (+1.5 to +23.7)
 ```
 
 | population | diff (95 % CI) | p | relative |
 |---|---|---|---|
-| raw | +1.09 (+0.42 to +1.75) | 0.0014 | +13.1 % |
-| − leak | +1.11 | 0.0010 | +13.8 % |
-| − iOS wk 4 | +1.19 | 0.00059 | +14.9 % |
-| **clean** | **+0.88 (+0.16 to +1.60)** | **0.016** | **+11.1 % (+2.0 to +21.0)** |
+| raw | +0.98 (+0.13 to +1.83) | 0.024 | +12.1 % |
+| − leak | +1.00 | 0.020 | +12.8 % |
+| − iOS wk 4 | +1.13 | 0.011 | +14.5 % |
+| **clean** | **+1.05 (+0.14 to +1.98)** | **0.025** | **+13.7 % (+1.7 to +27.2)** |
 
-*Interpretation.* The new screen raises 7-day conversion from 7.98 % to 8.86 % (+0.88 points, 95 % CI +0.16 to +1.60; p = 0.016) — about 9 more contracts per 1 000 viewers. The raw data overstated the lift by a fifth (+1.09 points), mostly through the novelty days; the conclusion holds, but the number to plan with is +0.9 points and the low end of the interval is close to zero.
+*Interpretation.* In the regions the new screen raises 7-day conversion from 7.70 % to 8.75 % (+1.05 points, 95 % CI +0.14 to +1.98; p = 0.025) — about 10 more contracts per 1 000 viewers. Here the raw and the clean answers are close (+0.98 vs +1.05): cleaning is not a way to make the lift bigger or smaller, it is the condition for reading it — and the interval's low end is close to zero.
 </details>
 
-*Deductions seen most often:* the relative CI computed by dividing the difference's CI by 7.98 %; z with the arms in the wrong order (negative z for a positive lift, unexplained); no raw-vs-clean comparison; "p = 0.016 means a 98.4 % chance B is better".
+*Deductions seen most often:* the relative CI computed by dividing the difference's CI by 7.70 %; z with the arms in the wrong order (negative z for a positive lift, unexplained); no raw-vs-clean comparison; "p = 0.025 means a 97.5 % chance B is better".
 
 ### A4. Funnel and money — 6 pts
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
-Funnel (clean): start 33.6 vs 33.7 % (p 0.91); submit 73.4 vs 74.5 % of starters (0.27); approved 39.7 vs 41.6 % of submitted (0.14); signed 88.4 vs 90.1 % of approved (0.17). Principal per loan: A 2 563 847 (median 2 270 000, 993 loans), B 2 494 675 (2 245 000, 1 076); Mann–Whitney **p = 0.32**; bootstrap mean difference **−69 172 (−174 910 to +35 635)**. Disbursed per viewer: A 203 824, B 220 024 (**+7.9 %**), bootstrap CI of the difference −4 423 to +36 856 (203.8 m vs 220.0 m per 1 000 viewers).
+Funnel (clean): start 33.3 vs 33.3 % (p 0.95); submit 73.5 vs 74.6 % of starters (0.37); approved 38.4 vs 41.2 % of submitted (0.10); signed 88.9 vs 90.7 % of approved (0.26). Principal per loan: A 2 640 243 (median 2 330 000, 575 loans), B 2 513 443 (2 290 000, 636); Mann–Whitney **p = 0.15**; bootstrap mean difference **−126 800 (−265 376 to +14 550)**, −4.8 %. Disbursed per viewer: A 202 840, B 219 744 (**+8.3 %**), bootstrap CI of the difference −10 048 to +43 827 (202.8 m vs 219.7 m per 1 000 viewers).
 
-*Interpretation.* The lift comes from users finishing an application, not from more users starting one; B's loans may be slightly smaller (−2.7 %, not significant), so the money effect (+7.9 % disbursed per viewer) is smaller than the conversion effect and its interval includes zero. Watch the approval step: a higher approval share in B (p = 0.14) would mean the screen attracts different applicants.
+*Interpretation.* As in the whole app, the lift comes from users finishing an application, not from more users starting one; B's loans may be smaller (−4.8 %, not significant), so the money effect (+8.3 % disbursed per viewer) has an interval that includes zero. Watch the approval step: 41.2 % vs 38.4 % of submitted forms (p = 0.10) would mean the screen brings in different applicants — which A5 makes urgent.
 </details>
 
-*Deductions seen most often:* a t-test on principal with "loans are smaller" from p = 0.20; disbursed per viewer averaged over converters only; five funnel p-values read as five findings.
+*Deductions seen most often:* a t-test on principal with "loans are smaller" from p = 0.15; disbursed per viewer averaged over converters only; five funnel p-values read as five findings.
 
 ### A5. The guardrail — 8 pts
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
 lc = loans.merge(clean[["user_id", "variant"]], on="user_id").assign(fpd=lambda t: 1 - t.first_instalment_paid_within_30d)
-# A 15 / 993 = 1.51 % (Wilson 0.92-2.48) · B 24 / 1 076 = 2.23 % (1.50-3.30)
-# z-test p = 0.23 · Fisher p = 0.26 · difference +0.72 pt (Newcombe -0.49 to +1.94)
-# power for a true +0.72 pt at these n: 23 % · loans per arm for 80 % power: 5 508 (~65 000 users per arm)
+# A 6 / 575 = 1.04 % (Wilson 0.48-2.26) · B 14 / 636 = 2.20 % (1.32-3.66)
+# z-test p = 0.11 · Fisher p = 0.17 · difference +1.16 pt (Newcombe -0.35 to +2.72)
+# power for a true +1.16 pt at these n: 37 % · loans per arm for 80 % power: 1 809 (~20 700 users per arm)
 ```
 
-Unit economics (interest 9.86 % of principal, LGD 60 %, FPD ≈ PD): per 1 000 viewers **A 17 996 742**, **B 18 339 646** (+1.9 %); break-even FPD for B **2.45 %** = A + **0.94** points; at the CI's upper end (3.45 %) B makes 16 454 966 (−8.6 % vs A).
+Unit economics (interest 9.856 % of principal = 266 662 ÷ 2 705 586, LGD 60 %, FPD ≈ PD): per 1 000 viewers **A 18 555 488**, **B 18 303 993** (−1.4 %); break-even FPD for B **2.04 %** = A + **0.99** points — and B's observed 2.20 % is already above it; at the CI's upper end (3.77 %) B makes 15 898 606 (−14.3 % vs A).
 
-*Interpretation.* B's FPD is 0.7 points higher, within chance, but the test had only 23 % power, and the interval reaches +1.9 points — beyond the +0.94-point break-even at which B stops paying for itself. The guardrail is therefore unresolved, not passed: B can ship only with FPD monitored against a hold-out.
+*Interpretation.* B's FPD is 1.2 points higher in the regions (p = 0.11, with only 37 % power), and its point estimate of 2.20 % is already beyond the 2.04 % at which B stops paying for itself — the expected money effect is slightly negative. The guardrail is not cleared and leans towards failing: B must not go to all regional users until FPD is read on more matured loans.
 </details>
 
-*Deductions seen most often:* "FPD not significant — guardrail passed"; FPD on all loans including the leaked users (raw: 19 / 1 206 vs 35 / 1 377, p = 0.087 — a different, contaminated answer); no power statement; the break-even from Day 1 (+1.25) copied without recomputing with the observed principal.
+*Deductions seen most often:* "FPD not significant — guardrail passed"; the break-even from Day 1 (+1.25) or Day 2 (+0.94) copied without recomputing on the regional principal and FPD; no power statement; FPD on all loans including the leaked users.
 
 ### A6. Segments — 6 pts
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 | segment | lift (pt) | p | Holm |
 |---|---|---|---|
-| Android | +0.87 | 0.030 | 0.21 |
-| iOS | +0.94 | 0.31 | 0.61 |
-| new | +0.85 | 0.093 | 0.37 |
-| returning | +0.96 | 0.068 | 0.34 |
-| affluent | +1.71 | 0.047 | 0.28 |
-| mass | +0.63 | 0.17 | 0.52 |
-| sme | +0.87 | 0.30 | 0.61 |
+| Android | +0.69 | 0.18 | 0.81 |
+| iOS | +2.77 | 0.018 | 0.13 |
+| new | +0.66 | 0.31 | 0.81 |
+| returning | +1.42 | 0.034 | 0.21 |
+| affluent | +1.48 | 0.18 | 0.81 |
+| mass | +0.82 | 0.16 | 0.81 |
+| sme | +1.36 | 0.21 | 0.81 |
 
-Interaction new vs returning: z = −0.15, **p = 0.88**.
+Interaction new vs returning: z = −0.82, **p = 0.41**.
 
-*Interpretation.* The lift is positive in all seven pre-registered segments and none differs significantly after Holm; there is no evidence that the screen works better for one group. The affluent result (+1.7, raw p = 0.047) is the largest of seven comparisons and does not survive correction — it is not a targeting recommendation.
+*Interpretation.* The lift is positive in all seven pre-registered segments and none is significant after Holm (smallest 0.13); there is no evidence that the screen works better for one group. iOS (+2.8, raw p = 0.018) is the largest of seven comparisons and the slice where a broken cell was just removed — a reason for care, not a targeting recommendation.
 </details>
 
-*Deductions seen most often:* no correction; "works on Android, not on iOS"; segments invented after looking (region, by day of week) presented as pre-registered.
+*Deductions seen most often:* no correction; "works on iOS"; segments invented after looking (single regions, day of week) presented as pre-registered.
 
 ### The decision memo (inside the 40 points)
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
-**Decision: ship B in stages.** B converts better by about +0.9 points; its effect on first-payment defaults is unknown and could cancel the gain, so 10 % of users stay on A until FPD can be read.
+**Decision: extend — do not roll B out to the regions yet.** B converts better by about +1 point, but its first-payment defaults are already above the break-even in the point estimate; keep the 50/50 test running in the regions until FPD can be read.
 
 | Line | Text |
 |---|---|
 | Hypothesis | A single button and the monthly payment in large type make more offer viewers sign a contract. |
-| Design | User-level 50/50 hash split (`offer_screen_v2`), 1–28 Aug 2026; primary = signed within 7 days; α 5 % two-sided; MDE +0.9 pt; ~14 000 per arm (power 77 %). |
-| Sanity checks | 300 users in both variants removed; iOS 22–28 Aug SRM (537 / 822, p ≈ 10⁻¹⁴, client bug) removed from both arms; novelty days 1–3 Aug excluded as planned. Clean: 11 472 / 11 434, SRM p = 0.80. |
-| Primary | 7.98 % → 8.86 %: +0.88 pt (95 % CI +0.16 to +1.60), p = 0.016; +11 % relative (+2 % to +21 %). Raw would have said +1.09. |
-| Guardrails | FPD 1.51 % → 2.23 % (+0.72, CI −0.49 to +1.94, p = 0.23, power 23 %); break-even +0.94 pt — unresolved. Principal −2.7 % (p = 0.32). Disbursed per viewer +7.9 % (CI includes 0). |
-| Segments | All seven positive, none after Holm; no interaction (p = 0.88). |
-| Decision and conditions | Roll out to 90 %, keep a 10 % hold-out on A for ten weeks; roll back if B's FPD exceeds A's by more than 0.94 pt once ≥ 2 000 B loans have matured. |
-| Learned / next | The lift is in finishing, not starting; novelty lasts ~3 days in this app; fix iOS assignment logging; next test: the submit step (where B helped). |
+| Design | User-level 50/50 hash split (`offer_screen_v2`), 1–28 Aug 2026; population: the seven regions outside Tashkent; primary = signed within 7 days; α 5 % two-sided; MDE +0.9 pt. |
+| Sanity checks | 180 users in both variants removed; iOS 22–28 Aug SRM (330 / 482, p ≈ 10⁻⁷, client bug) removed from both arms; novelty days 1–3 Aug excluded as planned. Clean: 6 883 / 6 842, SRM p = 0.73. |
+| Primary | 7.70 % → 8.75 %: +1.05 pt (95 % CI +0.14 to +1.98), p = 0.025; +13.7 % relative (+1.7 % to +27.2 %). Raw would have said +0.98. |
+| Guardrails | FPD 1.04 % → 2.20 % (+1.16, CI −0.35 to +2.72, p = 0.11, power 37 %); break-even +0.99 pt — the point estimate is beyond it. Principal −4.8 % (p = 0.15). Disbursed per viewer +8.3 % (CI includes 0). |
+| Segments | All seven positive, none after Holm (min 0.13); no interaction (p = 0.41). |
+| Decision and conditions | Keep the 50/50 split in the regions until ~1 800 loans per arm have a readable FPD (about ten more weeks of regional traffic, then two months for the last loans to mature); ship to the regions only if the FPD difference's upper 95 % bound is below +0.99 pt. |
+| Learned / next | The regional lift is as large as the app's, the regional loans look riskier; the guardrail must be read per rollout population, not once; fix iOS assignment logging. |
 </details>
 
 **If you are stuck (hints, not answers).**
 
-- A1: `users["user_id"].duplicated(keep=False)`; your Day-2 `srm_by` on `["device", "week"]`; Day 1's `hash_variant` with the salt from `data/ab/README.md` — Day 2, Step 1.
+- A1: filter `region != "Tashkent"` first; then `duplicated(keep=False)`; your Day-2 `srm_by` on `["device", "week"]`; Day 1's `hash_variant` with the salt from `data/ab/README.md` — Day 2, Step 1.
 - A2: `groupby([assigned_at.dt.date, "variant"])["conv"].mean().unstack()`, then a line chart — Day 2, Step 1d, P5.
-- A3: your `clean_users` and `ab_readout`; `compare="ratio", method="log"` for the relative CI — Day 2, worked example.
+- A3: your `clean_users` and `ab_readout` on the regional rows; `compare="ratio", method="log"` for the relative CI — Day 2, worked example.
 - A4: one `isin` per event name for the funnel; `stats.mannwhitneyu`; a bootstrap loop with `default_rng(2026)` — Day 2, P7–P8.
-- A5: `proportion_confint(..., method="wilson")`, `NormalIndPower().power(...)`, `zt_ind_solve_power(...)`; the break-even formula from Day 1's Company corner with today's principal — Day 2, P9 and P11.
+- A5: `proportion_confint(..., method="wilson")`, `NormalIndPower().power(...)`, `zt_ind_solve_power(...)`; the break-even formula from Day 1's Company corner with the regional principal and FPD — Day 2, P9 and P11.
 - A6: a loop over three columns, then `multipletests(p, method="holm")`; the interaction as a z on the difference of two differences — Day 2, P10.
 
 ---
@@ -213,7 +216,7 @@ Build on yesterday's model (`nur_week7.pbix` → save as `nur_dashboard.pbix`). 
 | | YTD Disbursed at Sep 2026 | **161 480 300 000** (YoY +45.6 %) | 2 |
 | | Avg Ticket, Sep 2026 | **47 134 321** | 1 |
 | | Month-end trend Jan–Sep 2026 | 151.8 → **208.2 bn** (no October point, no summed balances) | 2 |
-| | Outstanding by product with share | SME **60.32 %** … MICRO 0.46 % | 2 |
+| | Outstanding by product with share | SME **60.32 %** … MICRO 0.46 % | 1 |
 | | Layout, titles, slicers, as-of | top-left KPI, ≤ 7 visuals, synced slicers | 2 |
 | Risk | PAR30 % · NPL90 % | **3.12 %** · **2.55 %** (234 loans 90+) | 3 |
 | | FPD30 %, Jul 2026 vintage | **1.09 %** (4 / 367); vintages with n < 50 hidden | 2 |
@@ -225,7 +228,7 @@ Build on yesterday's model (`nur_week7.pbix` → save as `nur_dashboard.pbix`). 
 | | Actions / contact / PTP / paid, Sep 2026 | **651** · 72.81 % · 28.57 % · 22.73 % | 2 |
 | | Collection rate by branch | Termez 97.68 % top, Tashkent South 91.44 % bottom | 2 |
 | | Collector table, Top N 5 | Nilufar Jalilov 52 … Ilhom Qodirov 32 | 2 |
-| All | Files: `.pbix` refreshes on Timur's PC (relative folder or a parameter), PDF, three PNGs | | 4 |
+| All | Files: `.pbix` refreshes on Timur's PC (relative folder or a parameter), PDF, three PNGs | | 3 |
 | All | Model hygiene: star, single direction, date table marked, no (Blank) segment | | 3 |
 | | | **total** | **40** |
 

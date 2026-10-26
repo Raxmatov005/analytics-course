@@ -144,7 +144,7 @@ ever AS (                                        -- grain: instalment — "ever 
 SELECT * FROM ever WHERE loan_id = 1 ORDER BY installment_no;
 ```
 
-Loan 1: instalments 1–6 all `late30 = 0`, so `ever30 = 0` at every MOB — the March instalment was 45 days late but that is instalment 12, outside MOB 1..6. A loan whose instalment 2 is late shows `late30` 0, 1, 0, 0, 0, 0 and `ever30` 0, **1, 1, 1, 1, 1**: once late, "ever late" stays on. That running `MAX` is the whole trick — it turns a per-instalment event into a cumulative loan state. Check the base: `inst` has 33 198 rows for 7 099 loans, 967 of them 30+ late; at MOB 1 the flag equals week 2's FPD30 to the loan (91 of 7 099 = 1.28 %) — the two definitions meet, which is the check that you built it right.
+Loan 1: instalments 1–6 all `late30 = 0`, so `ever30 = 0` at every MOB — the March instalment was 45 days late but that is instalment 12, outside MOB 1..6. A loan whose instalment 2 is late shows `late30` 0, 1, 0, 0, 0, 0 and `ever30` 0, **1, 1, 1, 1, 1**: once late, "ever late" stays on. That running `MAX` is the whole trick — it turns a per-instalment event into a cumulative loan state. Check the base: `inst` has 33 198 rows for 7 099 loans; 967 of those instalments, on 457 loans, are 30+ late; at MOB 1 the flag equals week 2's FPD30 to the loan (91 of 7 099 = 1.28 %) — the two definitions meet, which is the check that you built it right.
 
 ---
 
@@ -218,7 +218,7 @@ The worked example's three CTEs plus a `base` CTE (`loans WHERE term_months >= 6
 **P9.** Pivot P8 to wide (MOB 1..6 as columns, `SUM(CASE WHEN installment_no = k THEN ever30 END) / SUM(installment_no = k)`), and make a cell **NULL when not every loan of the cohort is observable** at that MOB. Which cells go blank?
 
 <details><summary>Answer</summary>
-Add `COUNT(*)` per cohort×MOB and the cohort size (`(SELECT COUNT(*) FROM base x WHERE x.cohort = b.cohort)`), and `CASE WHEN observed = size THEN rate END`. Blank: **2026-03 at MOB 5 (250 of 251 observed) and MOB 6 (5 of 251)** — the April-disbursed loans' sixth instalment is due around 2026-09-30 and its 30 days are not up. A 0.0 % in that cell would be a lie: not "nobody late", but "nobody measured".
+Add `COUNT(*)` per cohort×MOB and the cohort size (`(SELECT COUNT(*) FROM base x WHERE x.cohort = b.cohort)`), and `CASE WHEN observed = size THEN rate END`. Blank: **2026-03 at MOB 5 (250 of 251 observed) and MOB 6 (5 of 251)** — the March loans' sixth instalment falls due after 1 September for 246 of the 251, so its 30 days are not up by 1 October. A 0.0 % in that cell would be a lie: not "nobody late", but "nobody measured".
 </details>
 
 **P10.** Vintage curve pooled by **grade** instead of by month (2025-01..2026-03, term ≥ 6): rate at MOB 1, 3, 6. Does the scorecard order the curves?

@@ -34,7 +34,7 @@ SELECT p.code, COUNT(*) AS loans, SUM(l.principal) AS disbursed, … FROM loans 
 
 Five lines of Markdown per section, not fifty: the reviewer reads the finding first, then checks the number, then — only if it is wrong — reads the query.
 
-**Common mistakes from this week** (each costs the number point): summing `loans.principal` after a join to `installments` (×11.8); a running total without `PARTITION BY` where the sentence says "per product"; `LAG` with the display filter inside the CTE (NULL year-on-year); a 0.00 % in a vintage cell that is not yet observable; `BETWEEN` on a datetime column; raw `payments` where `v_payments_clean` was asked for.
+**Common mistakes from this week** (each costs the number point): summing `loans.principal` after a join to `installments` (11.8 rows per loan, and the long loans are the big ones: Σ principal ×24.7); a running total without `PARTITION BY` where the sentence says "per product"; `LAG` with the display filter inside the CTE (NULL year-on-year); a 0.00 % in a vintage cell that is not yet observable; `BETWEEN` on a datetime column; raw `payments` where `v_payments_clean` was asked for.
 
 ---
 
@@ -155,7 +155,7 @@ SELECT branch_name, loans, disbursed_2026, RANK() OVER (ORDER BY disbursed_2026 
 -- … 9 Nukus Central 201 / 11 345 780 000 · 10 Termez Central 184 / 8 120 400 000
 ```
 
-Top borrowers by total principal (`GROUP BY customer_id`, `ORDER BY … LIMIT 5`): Murod Yusupov (sme) 5 loans / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000. Largest loan per product (`ROW_NUMBER` top-1): SME 2861 599 060 000 · AUTO 1501 399 530 000 · CONS 1464 49 990 000 · BNPL 7 990 000 (three tied) · MICRO 4 990 000 (three tied).
+Top borrowers by total principal (`GROUP BY customer_id`, `ORDER BY … LIMIT 5`): Murod Yusupov (sme) 5 loans / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000. Largest loan per product (`ROW_NUMBER` top-1): SME 2861 599 060 000 · AUTO 1501 399 530 000 · CONS 1464 49 990 000 · BNPL 7 990 000 (four tied) · MICRO 4 990 000 (four tied).
 
 **Finding.** Fergana Central is the second-largest branch in 2026 by money with fewer loans than four others — SME-heavy. Termez is last at 38 % of the leader. Every product's biggest loans sit at its `max_amount`: the limits bind, so growth comes from count, not ticket.
 </details>

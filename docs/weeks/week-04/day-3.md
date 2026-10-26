@@ -2,7 +2,7 @@
 
 <span class="badge">Learn 60 min</span> <span class="badge">Detective 40 min</span> <span class="badge">Practice 45 min</span> <span class="badge">Homework</span> <span class="badge company">Company corner</span>
 
-> STORY **Wednesday, 9:05.** Nilufar, risk (*риск-аналитик*), with two printouts. *"My age-band table for the scorecard has a customer aged **−5** and one aged **126**. HR says we have 6 000 customers, my sheet says 6 040 — the same forty we argued about in week 1, and they are still there. And Timur's payments tile is 58 million above Finance's. I get `customers_dirty.csv` and `payments_dirty.csv` from the export every Monday; I need them **clean every Monday**, not once by hand."* Timur, passing: *"If you build it in Power Query I can refresh it. If you build it with the mouse I cannot."*
+> STORY **Wednesday, 9:05.** Nilufar, risk (*риск-аналитик*), with two printouts. *"My age-band table for the scorecard has a customer aged **−5** and one aged **126**. HR says we have 6 000 customers, my sheet says 6 040 — the same forty we argued about in week 1, and they are still there. And Timur's payments tile is tens of millions above Finance's. I get `customers_dirty.csv` and `payments_dirty.csv` from the export every Monday; I need them **clean every Monday**, not once by hand."* Timur, passing: *"If you build it in Power Query I can refresh it. If you build it with the mouse I cannot."*
 
 ## Today in 3 lines
 
@@ -33,7 +33,7 @@ Never clean the only copy. In SQL you cleaned *on the way out* (a view); in Exce
 
 ### Find & Replace (*найти и заменить*) — Ctrl+H
 
-Ctrl+H, *Find what* `bank transfer`, *Replace with* `transfer`, **Options**: *Match case*, *Match entire cell contents*, scope *Sheet* or *Workbook*. Replace All reports how many — **27** here. Three cautions: it also edits formulas that contain the text; without *Match entire cell contents* a search for `card` edits `discard`; and it is not recorded anywhere — write the count in your change log by hand. Wildcards: `*` any text, `?` one character, `~*` a literal asterisk. Find & Replace on `" "` (a space) with nothing is **not** TRIM — it removes the spaces inside names too.
+Ctrl+H, *Find what* `bank transfer`, *Replace with* `transfer`, **Options**: *Match case*, *Match entire cell contents*, scope *Sheet* or *Workbook*. Replace All reports how many — write the count down. Three cautions: it also edits formulas that contain the text; without *Match entire cell contents* a search for `card` edits `discard`; and it is not recorded anywhere — write the count in your change log by hand. Wildcards: `*` any text, `?` one character, `~*` a literal asterisk. Find & Replace on `" "` (a space) with nothing is **not** TRIM — it removes the spaces inside names too.
 
 ### Text to Columns (*текст по столбцам*) and Flash Fill
 
@@ -51,19 +51,19 @@ M2  n        =COUNTIFS($L$2:$L$6041, L2)                 how many rows share thi
 N2  rank     =COUNTIFS($L$2:L2, L2)                       1 for the first occurrence, 2 for the repeat  — ROW_NUMBER()
 ```
 
-Filter `n > 1` → **84** rows in **42** groups; `rank = 2` → the 42 "extra" rows. Week 1 found 40 duplicates — the other **2** are different people who share a name and a birth date (ids 823/1197 *Nodir Nazarov*, 1963-born *Eldor Karimov* 2460/5562 — different phones, different regions). A key on `phone|birth_date` gives exactly **40**; on `phone` alone **43** (three family numbers). Every key has false positives; the `rank` column is the Excel `ROW_NUMBER() OVER (PARTITION BY key ORDER BY row)` and lets you *look* before you delete. The `$L$2:L2` growing range is slow on 50 000 rows — Power Query below does the same in a second.
+Filter `n > 1` to see the groups and `rank = 2` for the "extra" rows, then compare the count with week 1's 40 duplicates — if they differ, read the extra pairs before you decide anything (Detective step 2). Build a second key on `phone|birth_date` and a third on `phone` alone and compare the three counts. Every key has false positives; the `rank` column is the Excel `ROW_NUMBER() OVER (PARTITION BY key ORDER BY row)` and lets you *look* before you delete. The `$L$2:L2` growing range is slow on 50 000 rows — Power Query below does the same in a second.
 
 ### Remove Duplicates (*удалить дубликаты*) — and why it lies
 
 Data → Remove Duplicates, tick the columns that define sameness, OK; Excel reports *n duplicate values removed*. It compares the ticked columns **exactly as displayed**, case-**in**sensitively, space-**sensitively**, and keeps the **first** row. Three runs on `Customers` show the problem:
 
-| Columns ticked | Removed | Rows left | What happened |
-|---|---|---|---|
-| first_name, last_name, birth_date (raw) | **24** | 6 016 | 22 `MALIKA`-style rows (case ignored) + the 2 false positives; the 18 `Bobur␣` rows survive (space) |
-| the same after TRIM | **42** | 5 998 | all 40 true duplicates — **and the two real people** |
-| phone, birth_date | **40** | 6 000 | the right answer, by a key nobody would tick first |
+| Columns ticked | What can happen |
+|---|---|
+| first_name, last_name, birth_date (raw) | case is ignored, spaces are not: a duplicate whose name ends in a space survives |
+| the same after TRIM | every true duplicate goes — **and so does any pair of different people** who share a name and a birth date |
+| phone, birth_date | the identifying key, the one nobody ticks first — compare its count with week 1's |
 
-So it under-removes on raw text and over-removes on a loose key, says nothing about *which* rows went, and leaves no formula. On `Payments`: tick `installment_id`, `paid_at`, `amount` → **25 removed, 52 850 left**; tick all columns → **0** (the `payment_id` differs). Use it to *check a number* on a copy; deliver the result with Power Query, where the step is recorded and re-runs.
+So it under-removes on raw text and over-removes on a loose key, says nothing about *which* rows went, and leaves no formula. On `Payments`: tick `installment_id`, `paid_at`, `amount` and compare the count with week 3's duplicate payments; tick all columns and nothing goes (the `payment_id` differs). Use it to *check a number* on a copy; deliver the result with Power Query, where the step is recorded and re-runs.
 
 ### Power Query (*Get & Transform*) — the recorded pipeline
 
@@ -115,6 +115,14 @@ Column letters instead of names, `label` to rename, `pivot` for a cross-tab (`se
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Text repair (TRIM, PROPER, Find & Replace, Text to Columns) — [Master Data Cleaning Essentials on Excel in Just 10 Minutes (Kenji Explains), 03:39](https://youtu.be/jxq4-KSB_OA?t=219)
+- ▶ Remove Duplicates (button, UNIQUE, Power Query; "what counts as a duplicate row") — [Three EASY Ways to Find and Remove Duplicates in Excel (Leila Gharani), 01:15](https://youtu.be/ADArCWLz55Y?t=75)
+- ▶ Power Query (where it is, connect, Applied Steps) — [Power Query for Beginners: Automate Your Excel Work in 25 Mins (Leila Gharani), 04:45](https://youtu.be/x7mzOYEn0XA?t=285)
+- ▶ Power Query (second option, shorter, Get data -> Transform -> Close & Load) — [How to use Microsoft Power Query (Kevin Stratvert), 05:26](https://youtu.be/0aeZX1l4JT4?t=326)
+- ▶ Data cleaning block inside one longer Excel course — [Learn Excel in Under 3 Hours (Alex The Analyst), 1:39:03](https://youtu.be/zXnQNytHCPM?t=5943)
+
 - RU workbook `HW 3.1 Excel.xlsx` and `HW_2_Module_3.xlsx` — the original course's cleaning homework (text functions and lookups on a shop file); ours uses the same functions on Nur Finance data.
 - *Russian terms:* очистка данных = data cleaning, удалить дубликаты = Remove Duplicates, текст по столбцам = Text to Columns, мгновенное заполнение = Flash Fill, Power Query / Получить и преобразовать = Get & Transform, объединение запросов = Merge Queries, добавление запросов = Append, обновить = Refresh, журнал изменений = change log.
 
@@ -145,7 +153,7 @@ Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly id
 **Step 4 — Payments.** Key `=C2&"|"&TEXT(D2,"yyyy-mm-dd")&"|"&E2` (installment, day, amount), `n` and `rank` columns; and the method inventory with `=UNIQUE(F2:F52876)`.
 
 <details><summary>Result</summary>
-`n > 1` → **50** rows in **25** pairs; `rank = 2` → the 25 extra rows, Σ amount **58 397 800** — Timur's 58 million. All 25 repeats are `payment_id` 52 851–52 875 — they were appended to the export in one batch. Do not rely on that: sameness is the three columns, not the id range. Methods: **10** distinct raw (`card`, `cash`, `transfer`, `payme`, `click`, `Card` 57, `Click` 36, `PayMe` 30, `CASH ` 30, `bank transfer` 27 — the **180** dirty rows); `UNIQUE(LOWER(TRIM(…)))` → 6; with the `bank transfer` replacement → **5**: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774.
+`n > 1` → **50** rows in **25** pairs; `rank = 2` → the 25 extra rows, Σ amount **58 397 800** — the gap on Timur's tile. All 25 repeats are `payment_id` 52 851–52 875 — they were appended to the export in one batch. Do not rely on that: sameness is the three columns, not the id range. Methods: **10** distinct raw (`card`, `cash`, `transfer`, `payme`, `click`, `Card` 57, `Click` 36, `PayMe` 30, `CASH ` 30, `bank transfer` 27 — the **180** dirty rows); `UNIQUE(LOWER(TRIM(…)))` → 6; with the `bank transfer` replacement → **5**: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774.
 </details>
 
 **Step 5 — build it once in Power Query** (the worked pipeline for `payments_dirty.csv`; `Customers` is HW 4.2):
@@ -216,7 +224,7 @@ card 17 612 / 84 747 182 579 · payme 8 897 / 42 929 061 915 · cash 8 788 / 41 
 **P8.** **Merge** = join: a query `paid_by_installment` = `payments_clean` filtered `paid_at <= 2026-10-01`, grouped by `installment_id` → `paid`; merge it into `installments.csv` (Left Outer, key `installment_id`), expand `paid`, replace null with 0. Count matured instalments (`due_date <= 2026-10-01`) with `paid < total_due`.
 
 <details><summary>Answer</summary>
-92 193 rows after the merge (Left Outer keeps every instalment — check it; an Inner join would drop the unpaid ones, which are the point). Matured: 54 207; **1 784** not fully paid, 403 of them with a partial payment — week 2's `unpaid` CTE, built with a dropdown. Bonus check: instalments with `paid > total_due` → **0** after dedup, **25** before it — the duplicates were the only over-payments in the book.
+92 193 rows after the merge (Left Outer keeps every instalment — check it; an Inner join would drop the unpaid ones, which are the point). Matured: 54 207; **1 784** not fully paid, 403 of them with a partial payment — week 2's `unpaid` CTE, built with a dropdown. (Week 2 counted 427 partials because it did not cut payments at the as-of date: 24 more instalments have a forward-dated payment.) Bonus check: instalments with `paid > total_due` → **0** after dedup, **25** before it — the duplicates were the only over-payments in the book.
 </details>
 
 **P9.** Append: split `payments_clean` into two queries by region (Tashkent / everyone else), then Append them back. Rows? Now add a `source` column to each before appending — what is that for?
@@ -242,7 +250,7 @@ Jan 97.3 % · Feb 97.0 · Mar 96.8 · Apr 96.9 · May 97.1 · Jun 96.9 · Jul 96
 - Cleaning the raw sheet in place and saving — the evidence is gone; raw stays raw.
 - Remove Duplicates on all columns ("to be safe") — 0 removed, because ids differ.
 - Remove Duplicates on a loose key without a count first — real people deleted (P4).
-- `TRIM` not applied before matching — 18 duplicates survive.
+- `TRIM` not applied before matching — the trailing-space duplicates survive.
 - Text transforms on a column still typed as a number in Power Query — nothing happens, no error.
 - A Merge with the default Left Outer when you meant Inner (or vice versa) — count rows after every merge.
 - Replacing a date you cannot trust with a plausible one — blank + flag, never a guess.
@@ -254,7 +262,7 @@ Jan 97.3 % · Feb 97.0 · Mar 96.8 · Apr 96.9 · May 97.1 · Jun 96.9 · Jul 96
 
 **Nilufar's Monday pipeline.** Submit `submissions/week-04/day-3/cleaning.xlsx` (Power Query inside) — or, in Sheets, a spreadsheet with raw and clean tabs exported to `.xlsx` plus the formulas visible — and `change_log.md`:
 
-1. **`customers_clean`** — 6 000 rows: names trimmed and capitalised, duplicates removed on `phone` + `birth_date` (keep the earlier `registered_at` — sort before Remove Duplicates), `birth_date_invalid` flag (7 TRUE) and `birth_date_clean` (blank when invalid), `monthly_income` typed as number with 356 blanks kept as null — not 0.
+1. **`customers_clean`** — 6 000 rows: names trimmed and capitalised, duplicates removed on `phone` + `birth_date` (keep the earlier `registered_at` — sort before Remove Duplicates), `birth_date_invalid` flag (7 TRUE) and `birth_date_clean` (blank when invalid), `monthly_income` typed as number with its blanks kept as null — not 0 (356 in the raw file, 354 after the dedup: two blanks belonged to removed duplicates).
 2. **`payments_clean`** — 52 850 rows: `method` in 5 values, duplicates removed on `installment_id` + `paid_at` + `amount`, a column `is_forward_dated` (TRUE for the 24 rows after 2026-10-01; keep the rows).
 3. **`checks`** sheet — `ROWS`, `SUM`, `UNIQUE` counts for both tables against the known numbers (6 000 / 7; 52 850 / 255 114 772 176 / 5 / 24), each with a TRUE/FALSE cell.
 4. **`change_log.md`** — ten lines, one per change: *what, on which columns, how many rows affected, the money if any, why* (e.g. *removed 25 duplicate payments on installment_id + paid_at + amount, Σ 58 397 800, keeping the lower payment_id*). The Applied Steps pane, renamed, is your draft.
@@ -265,7 +273,7 @@ Graded on: (a) counts match (6 000 / 7 / 52 850 / 5 / 25 removed), (b) Refresh A
 
 ## 5. Self-check
 
-1. Remove Duplicates on `first_name, last_name, birth_date` removes 24, not 40. Name the two reasons. *(→ section 1, "Remove Duplicates", P4)*
+1. Remove Duplicates on raw `first_name, last_name, birth_date` removes fewer rows than there are true duplicates, and after `TRIM` it removes too many. Name the two reasons. *(→ section 1, "Remove Duplicates", P4)*
 2. What is the Power Query equivalent of a `LEFT JOIN`, and what row count must you check after it? *(→ section 1, "Power Query", P8)*
 3. A column of dates is left-aligned and `">="&DATE(2026,1,1)` finds nothing. What happened and which two fixes exist? *(→ section 1, "Dates stored as text")*
 

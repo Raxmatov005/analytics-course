@@ -46,7 +46,7 @@ Two sentences: the number with its uncertainty and test, then what it means for 
 
 For each of the five products: n, mean, sd, the 95 % t interval, the half-width as % of the mean. Which product's average do you know least precisely, and why (n or sd)?
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
 # grain: one row per loan (7 828)
@@ -74,7 +74,7 @@ a1 = pd.DataFrame(rows, columns=["product", "n", "mean", "sd", "ci_lo", "ci_hi",
 
 Approved = status starting with `approved`; denominator = **decided** applications (cancelled out). Wilson 95 % per channel. Do the app and branch intervals overlap?
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
 # grain: one row per application (14 000); decided = not cancelled (12 183)
@@ -95,78 +95,82 @@ a2[["wilson_lo", "wilson_hi"]] = [proportion_confint(k, n, method="wilson") for 
 
 **Excel cross-check (optional).** A1: `=AVERAGE(r)`, `=STDEV.S(r)`, `=CONFIDENCE.T(0.05, STDEV.S(r), COUNT(r))` per product from a pivot of `loans_status.csv`. A2: with k in B1, n in B2 and z in B3, the Wilson limits of Day 2's formula; Clopper–Pearson `=BETA.INV(0.025, B1, B2-B1+1)` and `=BETA.INV(0.975, B1+1, B2-B1)` as the conservative check. Matching Python to the third decimal is the point.
 
-### A3. Test: late-payment rate, grade C vs grade D — 10 pts
+### A3. Test: late-payment rate, customer segment sme vs mass — 10 pts
 
-Late = paid after the due date, on the 52 850 clean payments. Two-proportion z-test or χ² on the 2 × 2. Report p, the difference in points and the relative risk; one sentence on what the grain (payments, not loans) does to the test, and the loan-level check.
+Late = paid after the due date, on the 52 850 clean payments; the segment is the customer's (`customers.segment`, reached through `loans.customer_id`). Two-proportion z-test or χ² on the 2 × 2. Report p, the difference in points and the relative risk; one sentence on what the grain (payments, not loans) does to the test, and the loan-level check.
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
-# grain: one row per clean payment; C 14 677, D 2 393 payments
-cd = pd.crosstab(x["risk_grade"], x["late"]).loc[["C", "D"]]          # C 11 798 / 2 879 · D 1 541 / 852
-k, n = cd[1].to_numpy(), cd.sum(axis=1).to_numpy()
-proportions_ztest(k, n)                                                # z = -17.55, p = 6.2e-69
-stats.chi2_contingency(cd, correction=False)[:2]                       # chi2 = 307.9 (= z²), same p
-# late share C 19.62 % · D 35.60 % · diff 15.99 pp · RR 1.82
-# loan level (any late payment): C 1 469 / 2 130 = 69.0 % · D 273 / 319 = 85.6 %; z = -6.11, p = 1.0e-9
+# grain: one row per clean payment; sme 11 413, mass 30 601 payments
+seg = pd.read_sql("SELECT l.loan_id, c.segment FROM loans l JOIN customers c ON c.customer_id = l.customer_id", con)
+xs = x.merge(seg, on="loan_id")
+t = pd.crosstab(xs["segment"], xs["late"]).loc[["sme", "mass"]]       # sme 9 925 / 1 488 · mass 26 752 / 3 849
+k, n = t[1].to_numpy(), t.sum(axis=1).to_numpy()
+proportions_ztest(k, n)                                                # z = 1.26, p = 0.21
+stats.chi2_contingency(t, correction=False)[:2]                        # chi2 = 1.58 (= z²), same p
+# late share sme 13.04 % · mass 12.58 % · diff +0.46 pp · RR 1.04
+# loan level (any late payment): sme 802 / 1 609 = 49.8 % · mass 2 234 / 4 345 = 51.4 %; z = -1.08, p = 0.28
 ```
 
-*Interpretation.* Grade D payments are late 35.6 % of the time against 19.6 % for grade C — 16 points, 1.8 times as often — and the difference is far beyond chance (p ≈ 10⁻⁶⁹); the scorecard separates C from D. Because a loan contributes about seven payments that are not independent, the payment-level test overstates the evidence; at the loan level (69 % vs 86 % of loans with any late payment, p ≈ 10⁻⁹) the conclusion holds, and that is the version for the committee.
+*Interpretation.* Payments of sme-segment customers are late 13.0 % of the time against 12.6 % for mass customers — +0.46 points, RR 1.04, p = 0.21 — so the data show no difference in lateness between the two segments, and at the loan level the direction even reverses (49.8 % vs 51.4 % of loans with any late payment, p = 0.28). Do not price or limit by customer segment on this evidence; the payment grain could only have overstated a difference, and the loan-level check says there is none to explain — the risk grade (Day 3) is what separates late payers.
 </details>
 
-*Deductions seen most often:* raw payments (52 875, with the 25 duplicates) instead of clean ones; "p = 0.000"; no relative risk; the clustering sentence missing or claiming it makes the test invalid (it inflates the evidence; the loan-level check fixes it).
+*Deductions seen most often:* raw payments (52 875, with the 25 duplicates) instead of clean ones; "p = 0.21, so the two segments pay exactly the same" (absence of evidence, not proof); no relative risk; the grain sentence missing (payments of one loan are not independent; the loan-level check is the honest version).
 
-### A4. Test: days late, Micro vs Consumer — 10 pts
+### A4. Test: days late, Consumer loans of grade B vs grade C — 10 pts
 
 Mann–Whitney U, two-sided. Before the test: the shape (median, mean, skew, share paid late) and one sentence on why not a t-test. After: the p-value and the probability of superiority U / (n₁·n₂).
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
-# grain: one row per clean payment; Micro 10 092, Consumer 21 474
-mi, co = x.loc[x.code == "MICRO", "days_late"], x.loc[x.code == "CONS", "days_late"]
-#              MICRO      CONS
+# grain: one row per clean payment; Consumer grade B 9 495, grade C 6 155
+cb = x.loc[(x.code == "CONS") & (x.risk_grade == "B"), "days_late"]
+cc = x.loc[(x.code == "CONS") & (x.risk_grade == "C"), "days_late"]
+#              CONS B    CONS C
 # median        -1.0      -1.0
-# mean          0.563    -0.011
-# skew          4.822     5.562
-# share late    0.163     0.120
-u = stats.mannwhitneyu(mi, co, alternative="two-sided")    # U = 113 709 057, p = 4.6e-13
-u.statistic / (len(mi) * len(co))                          # 0.5247
+# mean         -0.403     0.886
+# skew          6.366     4.438
+# share late    0.094     0.184
+u = stats.mannwhitneyu(cb, cc, alternative="two-sided")    # U = 26 323 435, p = 8.3e-27
+u.statistic / (len(cb) * len(cc))                          # 0.4504
 ```
 
-Why not a t-test: days late is heavily right-skewed (skew ≈ 5) with the same median in both groups, so the mean is driven by a thin tail of very late payments; the business question "do Micro borrowers pay later?" is about the typical payment, which a rank test answers. (With n in the tens of thousands a Welch test on the means is still *valid* — t = 7.03, p = 2.2 × 10⁻¹² — it just answers a different question.)
+Why not a t-test: days late is heavily right-skewed (skew 4–6) with the same median in both groups, so the mean is driven by a thin tail of very late payments; the question "do grade C Consumer borrowers pay later than grade B?" is about the typical payment, which a rank test answers. (With n in the thousands a Welch test on the means is still *valid* — t = −11.70, p = 2.1 × 10⁻³¹ — it just answers a different question.)
 
-*Interpretation.* Micro payments tend to arrive later than Consumer payments (p ≈ 5 × 10⁻¹³), but the effect is small: a random Micro payment is later than a random Consumer one 52.5 % of the time against 50 % for no difference, and the medians are the same (one day early). The practical difference is the share paid late — 16.3 % vs 12.0 % — which is where a reminder for Micro (the app channel) would act.
+*Interpretation.* Inside the same product, grade C payments tend to arrive later than grade B payments (p ≈ 10⁻²⁶): a random grade-B payment is later than a random grade-C one only 45.0 % of the time, against 50 % for no difference, although both medians are one day early. The scorecard separates lateness even within Consumer loans; the practical gap is the share paid late — 18.4 % vs 9.4 % — which is where an earlier reminder for grade C would act.
 </details>
 
-*Deductions seen most often:* "the medians differ" (they are equal); a t-test with no reason given; the effect size missing — a p of 10⁻¹³ on 31 566 payments says nothing about size without the 52.5 %.
+*Deductions seen most often:* "the medians differ" (they are equal); a t-test with no reason given; the effect size missing — a p of 10⁻²⁶ on 15 650 payments says nothing about size without the 45.0 %; all grade B and C payments used instead of the Consumer ones.
 
 ### A5. Power: loans needed to detect +2 pp on the app approval rate — 10 pts
 
 Baseline = the app's decided approval rate (A2). Cohen's h, α 0.05 two-sided, power 0.80. Then: how many months of app applications is that, at the 2026 monthly volume of decided app applications?
 
-<details><summary>Model answer</summary>
+<details><summary>Model answer (open after submitting)</summary>
 
 ```python
 p1 = 2915 / 4274                                                  # 68.20 %
 h = proportion_effectsize(p1 + 0.02, p1)                          # 0.0433
 n_arm = int(np.ceil(zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80)))     # 8 362 per arm, 16 724 total
-dec = apps[(apps.channel == "app") & (apps.status != "cancelled") & (apps.applied_at >= "2026-01-01")]
-dec.groupby(dec.applied_at.dt.to_period("M")).size().mean()      # 169.1 a month → 16 724 / 169.1 ≈ 99 months
+dec = apps[(apps.channel == "app") & (apps.status != "cancelled")
+           & (apps.applied_at >= "2026-01-01") & (apps.applied_at < "2026-10-01")]       # nine full months
+dec.groupby(dec.applied_at.dt.to_period("M")).size().mean()      # 183.0 a month → 16 724 / 183.0 ≈ 91 months
 ```
 
-*Interpretation.* Detecting a 2-point rise in the app's approval rate (68.2 → 70.2 %) with 80 % power needs 8 362 decided applications per arm — about 99 months of the app's current traffic, so a test of that size is not feasible. With one year of traffic split in two (~1 015 per arm) the smallest detectable change is about +5.6 points; the team should either test a bigger change, pool channels, or accept a monitored rollout instead of a test.
+*Interpretation.* Detecting a 2-point rise in the app's approval rate (68.2 → 70.2 %) with 80 % power needs 8 362 decided applications per arm — about 91 months of the app's current traffic, so a test of that size is not feasible. With one year of traffic split in two (~1 098 per arm) the smallest detectable change is about +5.4 points; the team should either test a bigger change, pool channels, or accept a monitored rollout instead of a test.
 </details>
 
-*Deductions seen most often:* the all-applications rate (58.2 %) as the baseline instead of the decided one; n for both arms reported as "per arm"; a one-sided test without saying so; no translation into months — the number that makes the decision.
+*Deductions seen most often:* the all-applications rate (58.2 %) as the baseline instead of the decided one; n for both arms reported as "per arm"; a one-sided test without saying so; the one day of October counted as a month; no translation into months — the number that makes the decision.
 
 **If you are stuck (hints, not answers).**
 
 - A1: `loans.groupby("code")["principal"]`, then `stats.t.interval(0.95, n - 1, loc=mean, scale=sd / np.sqrt(n))` per group — Day 2, "z or t".
 - A2: filter `status != "cancelled"` first; `status.str.startswith("approved")` is the numerator; `proportion_confint(..., method="wilson")` — Day 2, worked example.
-- A3: `pd.crosstab(x.risk_grade, x.late).loc[["C", "D"]]`; for the loan level, `x.groupby(["loan_id", "risk_grade"]).late.max()` — Day 3, P9.
-- A4: describe first (`median`, `mean`, `stats.skew`, `(v > 0).mean()`), then `stats.mannwhitneyu(..., alternative="two-sided")` — Day 4, P1.
-- A5: your `n_per_arm` from Day 4 works with `p2 = p1 + 0.02`; the months are `2 * n / monthly_volume` — Day 4, Company corner.
+- A3: the segment comes from `customers` through `loans.customer_id` — merge it onto `x` by `loan_id`; then `pd.crosstab(…, x.late)` on the two segments; for the loan level, `groupby(["loan_id", "segment"]).late.max()` — Day 3, P9.
+- A4: filter `x` on `code == "CONS"` and the grade first; describe (`median`, `mean`, `stats.skew`, `(v > 0).mean()`), then `stats.mannwhitneyu(..., alternative="two-sided")` — Day 4, P1.
+- A5: your `n_per_arm` from Day 4 works with `p2 = p1 + 0.02`; the months are `2 * n / monthly_volume`, the volume from whole months only — Day 4, Company corner.
 
 ---
 
@@ -222,7 +226,7 @@ For each scenario: **the test** (and the correction or the follow-up, if one is 
 8. **Permutation test** (shuffle loans between strategies) or a **bootstrap CI** of the difference. *Why:* the statistic is a ratio of sums (Σ paid / Σ due) with no simple SE formula. *Trap:* resampling *payments* instead of *loans* — the unit that was assigned to a strategy is the loan.
 9. **Spearman rank correlation**. *Why:* two numbers per loan, the relation is monotone rather than linear, days late is skewed with many ties. *Trap:* Pearson on these data is driven by a few very late loans; and correlation is not a test of the scorecard — the grade table (late share by grade, Day 3) answers the business question better.
 10. **Holm** (or Benjamini–Hochberg) across the 25 tests — or stop colouring by p and show intervals. *Why:* 25 tests at 5 % give a 1 − 0.95²⁵ = **72 %** chance of at least one red KPI when nothing changed. *Trap:* every month someone "explains" a red KPI that is noise.
-11. A **power / sample-size calculation** first (Cohen's h, `zt_ind_solve_power`); fix α, the metric, the sample size, the end date and the stopping rule in advance; plan an **A/A** check. *Why:* an underpowered test cannot answer (A5: a 2-point change needs ~99 months of app traffic), and peeking turns 5 % into ~21 % (Day 4). *Trap:* "we will run it and see".
+11. A **power / sample-size calculation** first (Cohen's h, `zt_ind_solve_power`); fix α, the metric, the sample size, the end date and the stopping rule in advance; plan an **A/A** check. *Why:* an underpowered test cannot answer (A5: a 2-point change needs ~91 months of app traffic), and peeking turns 5 % into ~21 % (Day 4). *Trap:* "we will run it and see".
 12. **χ² test** on the 3 × 2 table, then pairwise two-proportion tests (or Fisher) with **Holm**. *Why:* a rate, three independent groups. *Trap:* testing the best script against the worst only — that is three comparisons chosen after looking.
 </details>
 

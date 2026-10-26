@@ -137,7 +137,7 @@ SELECT d.loan_id, c.first_name || ' ' || c.last_name AS borrower, c.phone, d.dpd
 FROM dpd d JOIN loans l ON l.loan_id = d.loan_id JOIN customers c ON c.customer_id = l.customer_id
 WHERE d.dpd BETWEEN 31 AND 90 ORDER BY d.dpd DESC;
 ```
-**41 loans, 183 724 086 UZS**; first row loan 2242, Abror Abdullaev, 89 DPD, 968 400 owed; the biggest ticket in the list is loan 4567 (60 328 500, 84 DPD). `BETWEEN` is fine on integers — the trap is on dates with times, not here.
+**41 loans, 183 724 086 UZS**; first row loan 2242, Abror Abdullaev, 89 DPD, 968 400 owed; the largest overdue amount in the list is loan 4567 (60 328 500 owed, 84 DPD). `BETWEEN` is fine on integers — the trap is on dates with times, not here.
 </details>
 
 **T11.** Delinquent loans (DPD > 0) and overdue amount by product, with a `-- note:`.
@@ -232,7 +232,7 @@ Both monotonic. FPD separates A/B from C/D (×2.2) but barely C from D; write-of
 **T20.** Payments by `method` raw and cleaned (`LOWER`, `TRIM`, `REPLACE`), and the number of rows that needed cleaning.
 
 <details><summary>T20</summary>
-Raw: 10 groups. Cleaned with `REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')`: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774. Dirty rows: `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180**. Note for Timur: the 27 `bank transfer` rows average 2.1 days late — a different source system, not a typo.
+Raw: 10 groups on SQLite (SQL Server's default collation ignores case and trailing spaces and shows 6 — Day 2 P9). Cleaned with `REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')`: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774. Dirty rows: `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180** on SQLite (SQL Server: add `COLLATE Latin1_General_CS_AS` after `LOWER(TRIM(method))`, or its default collation finds only the 27 `bank transfer` rows). Note for Timur: the 27 `bank transfer` rows average 2.1 days late — a different source system, not a typo.
 </details>
 
 **T21.** Exact duplicate payments: how many groups, and how much money is counted twice?

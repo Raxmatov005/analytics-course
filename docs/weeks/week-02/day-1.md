@@ -46,28 +46,28 @@ ORDER BY l.principal DESC;                       -- 179 rows: SME loans to afflu
 
 ### INNER vs LEFT — what happens to rows that do not match
 
-`INNER JOIN` keeps only rows that have a partner on the other side. Turn the question round — *customers with their loans* — and the difference appears:
+`INNER JOIN` keeps only rows that have a partner on the other side. Turn the question round — *customers with their applications* — and the difference appears:
 
 ```sql
-SELECT c.customer_id, c.first_name, l.loan_id, l.principal
+SELECT c.customer_id, c.first_name, a.application_id, a.requested_amount
 FROM customers c
-LEFT JOIN loans l ON l.customer_id = c.customer_id;
+LEFT JOIN applications a ON a.customer_id = c.customer_id;
 ```
 
 | | rows | why |
 |---|---|---|
-| `customers INNER JOIN loans` | 7 828 | one row per loan; customers without a loan vanish |
-| `customers LEFT JOIN loans` | 9 533 | 7 828 loan rows + 1 705 customers with no loan, their `loan_id` and `principal` **NULL** |
+| `customers INNER JOIN applications` | 14 000 | one row per application; customers who never applied vanish |
+| `customers LEFT JOIN applications` | 14 587 | 14 000 application rows + 587 customers with no application, their `application_id` and `requested_amount` **NULL** |
 
-**LEFT JOIN** (*левое соединение*) keeps every row of the left table (the one in `FROM`) and fills the right side with NULLs when nothing matches. 6 040 customers, 4 335 of them have at least one loan, 1 705 have none: 7 828 + 1 705 = 9 533. Check that arithmetic every time you LEFT JOIN — it tells you whether the join did what you think.
+**LEFT JOIN** (*левое соединение*) keeps every row of the left table (the one in `FROM`) and fills the right side with NULLs when nothing matches. 6 040 customers, 5 453 of them have at least one application, 587 have none: 14 000 + 587 = 14 587. Check that arithmetic every time you LEFT JOIN — it tells you whether the join did what you think.
 
-Those NULL rows are useful in themselves. *"Which customers have never borrowed?"* is a LEFT JOIN plus one filter — the **anti-join**:
+Those NULL rows are useful in themselves. *"Which customers have never applied?"* is a LEFT JOIN plus one filter — the **anti-join**:
 
 ```sql
 SELECT COUNT(*)
 FROM customers c
-LEFT JOIN loans l ON l.customer_id = c.customer_id
-WHERE l.loan_id IS NULL;                          -- 1705
+LEFT JOIN applications a ON a.customer_id = c.customer_id
+WHERE a.application_id IS NULL;                   -- 587
 ```
 
 *Preview — Day 4 explains the NULL rules behind this.* Today, copy the pattern: LEFT JOIN, then `WHERE right_table.key IS NULL` = "rows on the left with no match on the right".
@@ -156,7 +156,7 @@ Loan 4570 — last Friday's three 57 170 000 payments — is Umida Khasanova's c
 
 ## 3. Practice (60 min)
 
-Write every query with its result into `week-02/day-1/practice.sql`. Only this week's and last week's SQL: `SELECT … JOIN … WHERE … ORDER BY`, `COUNT(*)`, `TOP`/`LIMIT`. No `GROUP BY` yet (tomorrow).
+Write every query with its result into `submissions/week-02/day-1/practice.sql`. Only this week's and last week's SQL: `SELECT … JOIN … WHERE … ORDER BY`, `COUNT(*)`, `TOP`/`LIMIT`. No `GROUP BY` yet (tomorrow).
 
 **P1.** Join `loans` to `customers`. How many rows? Now run `SELECT COUNT(*) FROM loans`. Why the same?
 
@@ -165,7 +165,7 @@ Write every query with its result into `week-02/day-1/practice.sql`. Only this w
 ```sql
 SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id;   -- 7828
 ```
-Every loan has exactly one customer (many-to-one, FK enforced), so the inner join neither drops nor multiplies rows. If the count had been lower, some loans would point at a customer that does not exist; check with a LEFT JOIN … IS NULL — it returns 0 here.
+Every loan has exactly one customer (many-to-one), so the inner join neither drops nor multiplies rows. The relationship is real, but this teaching copy of the database declares no FOREIGN KEY, so nothing *guarantees* it — the count is how you check. If it had been lower, some loans would point at a customer that does not exist; check with a LEFT JOIN … IS NULL — it returns 0 here.
 </details>
 
 **P2.** Active loans held at the Nukus and Termez branches (the branch's region, not the customer's).
@@ -217,17 +217,17 @@ WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'act
 ```
 </details>
 
-**P7.** Customers who have never had a loan — and prove the number with two single-table counts.
+**P7.** Loans that have never had a collections action — and prove the number with two single-table counts.
 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id
-WHERE l.loan_id IS NULL;                                                            -- 1705
-SELECT COUNT(*) FROM customers;                                                     -- 6040
-SELECT COUNT(DISTINCT customer_id) FROM loans;                                      -- 4335
+SELECT COUNT(*) FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id
+WHERE ca.action_id IS NULL;                                                         -- 7545
+SELECT COUNT(*) FROM loans;                                                         -- 7828
+SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                            -- 283
 ```
-6 040 − 4 335 = 1 705. The anti-join and the arithmetic must agree; when they do not, your join key is wrong.
+7 828 − 283 = 7 545: most loans never needed a reminder. The anti-join and the arithmetic must agree; when they do not, your join key is wrong.
 </details>
 
 **P8.** Row multiplication. Count the rows of `loans JOIN installments`, `loans JOIN payments`, and `loans LEFT JOIN payments`. Explain each number from the relationships.
@@ -301,7 +301,7 @@ Graded on: (a) every join uses the right key and the row count is stated and rig
 
 1. `FROM loans l JOIN customers c ON …` — which table's rows can disappear, and why? *(→ section 1, "INNER vs LEFT")*
 2. You join `loans` to `installments` and get 92 193 rows. Is that a bug? What is one row now? *(→ section 1, "Many-to-one")*
-3. Write from memory the three-line pattern that finds "customers with no loan". *(→ section 1, the anti-join; P7)*
+3. Write from memory the three-line pattern that finds "customers who never applied". *(→ section 1, the anti-join; P7)*
 
 ---
 
@@ -317,7 +317,7 @@ FROM installments i
 WHERE i.due_date > '2026-10-01';                          -- 208 723 504 430 across 3409 loans
 ```
 
-**208.7 bn UZS** of principal is still scheduled to come in. The **portfolio** is this number, usually restricted to live loans: join `loans` and keep `status = 'active'` → **203.4 bn** on 3 341 loans; the remaining 5.3 bn sits on 22 `default` and 46 `written_off` loans whose schedules run on although nobody expects the money. Bekzod's "the Auto book" is the same query filtered through `products` (Auto: 57.7 bn on 368 loans; SME 125.9 bn; Consumer 23.1 bn; BNPL 1.1 bn; Micro 1.0 bn). Note what outstanding is *not*: `SUM(principal)` of active loans is 297.0 bn — the amount originally lent, not what is left.
+**208.7 bn UZS** of principal is still scheduled to come in. The **portfolio** is this number, usually restricted to live loans: join `loans` and keep `status = 'active'` → **203.4 bn** on 3 341 loans; the remaining 5.3 bn sits on 22 `default` and 46 `written_off` loans whose schedules run on although nobody expects the money. Bekzod's "the Auto book" is the same query filtered through `products` (active loans: Auto 56.0 bn on 358 loans; SME 122.8 bn; Consumer 22.6 bn; BNPL 1.1 bn; Micro 1.0 bn). Note what outstanding is *not*: `SUM(principal)` of active loans is 297.0 bn — the amount originally lent, not what is left.
 
 **2. Overdue amount** (*сумма просрочки*) — the money that *should already have arrived* and has not: instalments with `due_date <= as-of` and no payment against them. That is the anti-join pattern from today, on `installments → payments`:
 

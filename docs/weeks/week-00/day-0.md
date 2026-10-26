@@ -17,7 +17,7 @@
 1. Paper or a text file `submissions/week-00/day-0.md`. Write the test name, then your answers numbered.
 2. **No searching, no running code, no spreadsheet.** A guess is fine; mark it with `?`. The point is to find the gaps, not to look good.
 3. Only after finishing a whole test, open its folded key and count. One point per question, half for a partly right answer.
-4. The rule, per test: **SQL / Excel / Python / Statistics: 7 of 8 or better = skip. BI: 5 of 6 or better = skip.** "Skip" means you still do that week's Friday checkpoint; if you fail the checkpoint, you do the week after all.
+4. The rule, per test: **SQL / Excel / Python / Statistics: 7 of 8 or better = skip. BI: 5 of 6 or better = skip.** SQL has one half step: 5–6 of 8 skips week 1 only. "Skip" means you still do that week's Friday checkpoint; if you fail the checkpoint, you do the week after all.
 
 Many modules will score 0–3. That is the expected starting point of this course, and the course is built for it.
 

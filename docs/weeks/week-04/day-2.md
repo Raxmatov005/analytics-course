@@ -137,6 +137,18 @@ Rules apply to the range you selected when you created them — a Table extends 
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ VLOOKUP and its traps (exact match FALSE, locking the table, no look-left, IFNA/IFERROR) — [The Only VLOOKUP Guide You'll Ever Need (Leila Gharani), 03:46](https://youtu.be/TDphx23AtqM?t=226)
+- ▶ INDEX / MATCH — [How to use Excel Index Match (the right way) (Leila Gharani), 06:37](https://youtu.be/F264FpBDX28?t=397)
+- ▶ INDEX / MATCH (alternative, longer, with a drop-down example) — [INDEX MATCH Excel Tutorial (Kevin Stratvert), 05:36](https://youtu.be/6JhbY8Mku1A?t=336)
+- ▶ XLOOKUP — [How to Use XLOOKUP in Excel (5 Practical Examples) (Leila Gharani), 01:12](https://youtu.be/4c0CLUER6nw?t=72)
+- ▶ XLOOKUP (second option) — [XLOOKUP in Excel Tutorial (Kevin Stratvert), 01:13](https://youtu.be/HXU7lsd0ftA?t=73)
+- ▶ UNIQUE — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 02:33](https://youtu.be/2USJsIyIzvo?t=153)
+- ▶ FILTER — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 04:06](https://youtu.be/2USJsIyIzvo?t=246)
+- ▶ Conditional formatting (formula rule) — [Excel Conditional Formatting with Formula | Highlight Rows based on a cell value (Leila Gharani), 01:03](https://youtu.be/XHT4paRaY4g?t=63)
+- ▶ Conditional formatting (basics) — [Learn Excel in Under 3 Hours | Pivot Tables, Lookups, Data Cleaning (Alex The Analyst), 00:37](https://youtu.be/zXnQNytHCPM?t=37)
+
 - RU workbook `3.2 Lookups.xlsx` — sheets *VLOOKUP – Exact Match*, *VLOOKUP – Approx Match* (the grade table, the "lookup table should be sorted" note), *MATCH* (the three match types), *INDEX*, *Xlookup*; and *Cell Referrence* for the `$` multiplication table.
 - *Russian terms:* ВПР = VLOOKUP, ПОИСКПОЗ = MATCH, ИНДЕКС = INDEX, ПРОСМОТРX = XLOOKUP, точное / приближённое совпадение = exact / approximate match, проверка данных = data validation, условное форматирование = conditional formatting, выпадающий список = dropdown.
 
@@ -294,7 +306,7 @@ Summary sheet       A3:A7      0 · 1-30 · 31-60 · 61-90 · 90+  (text — '0)
 | 61-90 | **16** | 439 441 377 | 0.21 % |
 | 90+ | **234** | 5 319 475 527 | **2.55 %** |
 
-Then two tiles under it: **PAR30** `=SUMIFS(tblLoans[outstanding], tblLoans[dpd], ">30")/C8` → **3.12 %** and **NPL90** `=C7/C8` → **2.55 %** — the same 6 507 526 953 and 5 319 475 527 as week 3's view. Conditional formatting on `Loans`: `=$N2="90+"` (the new column) red — **234** rows light up, and they are exactly the 44 `default` + 190 `written_off` loans (`=COUNTIFS(tblLoans[lk_bucket], "90+", tblLoans[status], "active")` → 0, the status check from week 2, in one cell).
+Then two tiles under it: **PAR30** `=SUMIFS(tblLoans[outstanding], tblLoans[dpd], ">30")/C8` → **3.12 %** and **NPL90** `=C7/C8` → **2.55 %** — the same 6 507 526 953 and 5 319 475 527 as week 3's view. Conditional formatting on `Loans`: `=$O2="90+"` (the new `lk_bucket` column — O if P1's `rate` sits in N; use the letter your column has) red — **234** rows light up, and they are exactly the 44 `default` + 190 `written_off` loans (`=COUNTIFS(tblLoans[lk_bucket], "90+", tblLoans[status], "active")` → 0, the status check from week 2, in one cell).
 
 Why the table and not the `IFS`: when Risk moves to 1–7 / 8–30 buckets (the glossary's **[varies]**), you add a row to `Lookup` and every formula, colour and count follows. The `IFS` version is the pasted-DPD-logic problem Timur had last Thursday, one sheet at a time. And why approximate match and not exact: dpd takes 900 different values; a band is a *range*, and `match_mode −1` against the lower edges is the Excel spelling of `CASE WHEN dpd <= 30`.
 

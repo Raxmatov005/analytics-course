@@ -145,6 +145,16 @@ Two differences that bite: Excel text comparison is **case-insensitive** (SQL wa
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Tables (Ctrl+T) — [Excel for Data Analytics - Full Course for Beginners (Luke Barousse), 3:51:57](https://youtu.be/pCJ15nGFgVg?t=13917)
+- ▶ Absolute and relative references — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 07:40](https://youtu.be/Y8xhrUa3KH4?t=460)
+- ▶ Absolute and relative references (mixed `$F5`, the F4 key) — [Excel Cell Reference: Absolute, Relative or Mixed? (Leila Gharani), 01:52](https://youtu.be/FRu48zy-Djk?t=112)
+- ▶ SUMIFS (two criteria) — [How to Use SUMIFS, COUNTIFS and AVERAGEIFS in Excel (Leila Gharani), 03:18](https://youtu.be/AZuBNWMh7VM?t=198)
+- ▶ COUNTIFS / AVERAGEIFS — [How to Use SUMIFS, COUNTIFS and AVERAGEIFS in Excel (Leila Gharani), 10:19](https://youtu.be/AZuBNWMh7VM?t=619)
+- ▶ Text functions (PROPER, TRIM, LEFT/RIGHT/MID, LEN, FIND) — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 31:26](https://youtu.be/Y8xhrUa3KH4?t=1886)
+- ▶ IF / IFS (logic) — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 40:14](https://youtu.be/Y8xhrUa3KH4?t=2414)
+
 - RU workbook `Logic Math Text Functions.xlsx` (sheets *IF Function*, *IFS*, *Math+Logic*, *Text Functions*, and *Russian Excel to English*) — the same functions on a shop dataset, with the Russian names side by side.
 - *Russian terms:* умная таблица = Table, абсолютная / относительная ссылка = absolute / relative reference, закрепить области = freeze panes, условное суммирование = SUMIFS, формат ячеек = number format.
 
@@ -152,7 +162,7 @@ Two differences that bite: Excel text comparison is **case-insensitive** (SQL wa
 
 ## 2. Worked example — the bucket matrix, Bekzod's first page (15 min)
 
-Grain: one cell = one region × one bucket; the value is the sum of `outstanding`. New sheet `Summary`. Row 2 has the five buckets `0`, `1-30`, `31-60`, `61-90`, `90+` in B2:F2 (type them as text — `'0`, with an apostrophe, or Excel makes it the number 0 and matches nothing); column A has the eight regions in A3:A10 (copy from a filtered `Loans` sheet, or `=UNIQUE(tblLoans[region])` — tomorrow's tool).
+Grain: one cell = one region × one bucket; the value is the sum of `outstanding`. New sheet `Summary`. Row 2 has the five buckets `0`, `1-30`, `31-60`, `61-90`, `90+` in B2:F2 (type them as text — `'0`, with an apostrophe — so they are the same type as the text `bucket` column; `=ISTEXT(B2)` must say TRUE. Do not test this with `COUNTIFS`: `COUNTIFS`/`SUMIFS` may treat number-like text as numbers, so a wrong-type label can still look fine there); column A has the eight regions in A3:A10 (copy from a filtered `Loans` sheet, or `=UNIQUE(tblLoans[region])` — tomorrow's tool).
 
 ```
 B3:  =SUMIFS(tblLoans[outstanding], tblLoans[region], $A3, tblLoans[bucket], B$2)
@@ -161,7 +171,7 @@ B11: =SUM(B3:B10)                     column total
 G11: =SUM(G3:G10)                     → must be 208 723 504 430
 ```
 
-Fill B3 right to F3 and down to row 10: forty cells, one formula. Checks, in this order: G11 = **208 723 504 430** (the grand total ties to the Loans sheet — if not, a bucket label is a number, or a region is misspelt); row Tashkent = 81 679 738 071 (39.1 % — `=G3/$G$11` formatted `0.0%`); column `90+` = 5 319 475 527 (the NPL90 numerator, 2.55 %). Tashkent's 90+ cell: 1 920 943 970.
+Fill B3 right to F3 and down to row 10: forty cells, one formula. Checks, in this order: G11 = **208 723 504 430** (the grand total ties to the Loans sheet — if not, a region is misspelt or a label carries a stray space — check the labels with `ISTEXT` and `LEN`); row Tashkent = 81 679 738 071 (39.1 % — `=G3/$G$11` formatted `0.0%`); column `90+` = 5 319 475 527 (the NPL90 numerator, 2.55 %). Tashkent's 90+ cell: 1 920 943 970.
 
 Now the *count* version: replace `SUMIFS(tblLoans[outstanding], …)` with `COUNTIFS(…)` (same pairs, no sum range) → column totals **7 429 / 124 / 25 / 16 / 234**, grand total 7 828. Two tables, one formula each, both tied to a total you know. That is the Excel version of week 3's "every view ships with its check query": **every summary table ends in a cell that must equal a number you can defend.**
 
@@ -243,7 +253,7 @@ Add to `tblInstallments` a column `disbursed` = the loan's `disbursed_at` (tomor
 
 - A typed number next to formulas (`3352` pasted from SQL "because it was right") — it is right until Friday's refresh. Every number in the pack is a formula.
 - `SUM(K2:K7829)` instead of `SUM(tblLoans[outstanding])` — the 7 829th row is the first one the pack misses.
-- The bucket label `0` typed as a number — `COUNTIFS` on the text column finds nothing and the row shows 0 with no error.
+- The bucket label `0` typed as a number next to a text `bucket` column — two types that look identical. `=` and `SUMPRODUCT(--(a<>b))` compare strictly and show it (P4); `COUNTIFS`/`SUMIFS` may treat number-like text as numbers, so they are not a safe test. Check labels with `ISTEXT` / `ISNUMBER`.
 - `"approved"` instead of `"approved*"` — Marketing's 56.6 %.
 - Criteria without quotes: `COUNTIFS(range, >0)` is a syntax error; `COUNTIFS(range, ">"&0)` or `">0"` is the form.
 - A `SUMIFS` range and criteria range of different lengths (`K2:K7829` vs `J2:J100`) — `#VALUE!`; Tables make this impossible.
@@ -335,7 +345,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
   {"type": "single", "q": "Which criterion counts both approved and approved_not_disbursed applications?", "options": ["\"approved\"", "\"approved*\"", "\"=approved\"", "\"<>rejected\""], "answer": 1, "explain": "* is any characters, like LIKE 'approved%'; \"approved\" alone is Marketing's lower rate, and <>rejected also lets cancelled in (→ section 1, Conditional aggregates; section 6)."},
   {"type": "number", "q": "The method column of a small table holds these five values. What does the formula return?", "code": "method: card | Card | CARD | 'card ' (trailing space) | cash\n\n=COUNTIFS(tblPayments[method], \"card\")", "answer": 3, "explain": "Excel criteria ignore case, so card, Card and CARD all match; a trailing space is still a different value (→ section 1, Conditional aggregates; P8)."},
   {"type": "multi", "q": "What does an Excel Table (Ctrl+T) give your formulas that a plain range like K2:K7829 does not?", "options": ["Structured references such as tblLoans[outstanding] that mean the whole column", "Auto-expansion: new rows pasted under the table are included", "Calculated columns: one formula fills every row", "Case-sensitive text comparison", "NULL values like SQL"], "answer": [0, 1, 2], "explain": "Excel stays case-insensitive and has no NULL, Table or not (→ section 1, Tables)."},
-  {"type": "single", "q": "B2 holds the bucket label typed as the number 0, while tblLoans[bucket] holds the text \"0\". What does =COUNTIFS(tblLoans[bucket], B2) show?", "options": ["7 429, the right count", "0, with no error", "#N/A", "#VALUE!"], "answer": 1, "explain": "A number never equals text, so nothing matches and the cell quietly says 0; type the label as '0 (→ section 2, Worked example; Mistakes that cost a point)."},
+  {"type": "single", "q": "B2 may hold the bucket label as the number 0, while tblLoans[bucket] holds the text \"0\". Which formula is a reliable test that B2 is the wrong type?", "options": ["=ISTEXT(B2) — FALSE means B2 is a number, not the text \"0\"", "=COUNTIFS(tblLoans[bucket], B2) — a non-zero result proves B2 is text", "=LEN(B2) — 1 means it is text", "=SUM(B2) — 0 means it is text"], "answer": 0, "explain": "ISTEXT / ISNUMBER test the type, and = or SUMPRODUCT(--(a<>b)) compare strictly; COUNTIFS and SUMIFS may treat number-like text as numbers, so they are not a safe test. Type the label as '0 (→ section 2, Worked example; Mistakes that cost a point)."},
   {"type": "single", "q": "A1 = 1 and A2 = 4. A cell holds =100*A1/A2 and is formatted 0.0%. What does it show?", "options": ["25.0%", "2500.0%", "0.3%", "#VALUE!"], "answer": 1, "explain": "The % format already multiplies by 100; write =A1/A2 and let the format do it (→ section 1, SQL → Excel translation table; Mistakes that cost a point)."},
   {"type": "single", "q": "You want to count surnames written entirely in lower case. Why does =SUMPRODUCT(--(tblCustomers[last_name]=LOWER(tblCustomers[last_name]))) fail?", "options": ["SUMPRODUCT cannot compare text", "= ignores case in Excel, so every surname equals its lower-case copy; use EXACT", "LOWER does not exist in Excel", "-- turns the text into errors"], "answer": 1, "explain": "EXACT is the one case-sensitive comparison in Excel (→ P7)."},
   {"type": "single", "q": "Your Approval sheet has three channel rows. How do you fill the total row's approval rate?", "options": ["The average of the three channel rates", "Sum the approved counts and the application counts, then divide once", "The highest of the three rates", "Type the company figure from last week's SQL"], "answer": 1, "explain": "Averaging rates ignores that channels differ in size (mix); sum the counts, divide once (→ section 6, Company corner)."}

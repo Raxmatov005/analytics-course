@@ -114,6 +114,15 @@ Simulation answers questions no textbook formula covers — a month that mixes p
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Conditional probability, "among those who..." — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71)
+- ▶ Bayes and the base-rate trap — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321)
+- ▶ Binomial — [The Binomial Distribution and Test, Clearly Explained!!! (StatQuest)](https://youtu.be/J8jNoF-K8E8)
+- ▶ Binomial (RU) — [Биномиальное распределение. Вероятности вероятностей. Математика для аналитика #2 (Skypro)](https://youtu.be/VJTQNc8eliY)
+- ▶ Poisson — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135)
+- ▶ Normal distribution — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
+
 - RU deck `5.1 Basics of Probability Theory.pdf`: events and operations pp. 9–17, classical / statistical probability pp. 32–43, conditional probability pp. 52–57, independence pp. 58–63, total probability pp. 64–70, Bayes pp. 71–76, random variables pp. 79–104, expectation pp. 119–127, variance pp. 128–134, skewness / kurtosis / median / quantile pp. 139–150. `5.2 Statistics & Probability Theory.pdf`: Bernoulli formula pp. 5–10, binomial pp. 26–31, Poisson pp. 32–36, exponential pp. 41–44, normal pp. 45–53.
 - Notebooks: `MS1_probability_theory.ipynb` (conditional probability, Monty Hall, total probability and Bayes with three worked examples), `MS4_probability_theory_basics.ipynb` (every distribution of today drawn with `scipy.stats`, plus a call-centre binomial simulation).
 - Visual: Seeing Theory (seeing-theory.brown.edu), chapters 1–3 — Basic Probability, Compound Probability, Probability Distributions.
@@ -229,7 +238,7 @@ pm = np.where(rng.random(100_000) < 0.1, 0.0245, 0.0115)
 s = rng.binomial(400, pm)
 s.mean(), s.std(), np.mean(s >= 10), np.mean(s >= 12)        # 5.11, 2.74, 0.0683, 0.0300
 ```
-Same mean, wider spread (sd 2.74 vs 2.25), and the tail is **twice** (≥ 10: 6.8 % vs 3.6 %) to **five times** (≥ 12: 3.0 % vs 0.6 %) heavier: correlation hides in the tail, never in the mean. Nur's history: Σ (k − np)² / Σ np(1 − p) over 31 vintages = **1.22** (1.0 = pure binomial), χ² = 36.6 on 30 df, p = **0.19** — no evidence yet of a common "bad month" factor, the largest z being 2025-04 (7 of 225, z = 2.44). Banks model this with a single "economy" factor (the Vasicek model behind Basel capital); the binomial is the calm-weather special case.
+Same mean, wider spread (sd 2.74 vs 2.25), and the tail is **twice** (≥ 10: 6.8 % vs 3.6 %) to **five times** (≥ 12: 3.0 % vs 0.6 %) heavier: correlation hides in the tail, never in the mean. Nur's history: Σ (k − np)² / Σ np(1 − p) over 31 vintages = **1.23** (1.0 = pure binomial), χ² = 36.6 on 30 df, p = **0.19** — no evidence yet of a common "bad month" factor, the largest z being 2025-04 (7 of 225, z = 2.44). Banks model this with a single "economy" factor (the Vasicek model behind Basel capital); the binomial is the calm-weather special case.
 </details>
 
 ### Mistakes people make

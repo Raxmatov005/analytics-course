@@ -48,7 +48,7 @@ Rule: the unit of **analysis** must equal the unit of **randomisation** (week 6,
 
 ### Sample size and duration
 
-Baseline: the A/A run in July converted **8.2 %** within 7 days; Kamola's planning number is **8.0 %**. Smallest effect worth acting on (MDE, *минимальный детектируемый эффект*): **+0.9 points** (8.0 → 8.9 %, +11 % relative) — below that the screen is not worth the release risk. α = 5 % two-sided, power 80 %:
+Baseline: Kamola's planning number is **8.0 %** converted within 7 days (HW 7.1 checks it against the July A/A run). Smallest effect worth acting on (MDE, *минимальный детектируемый эффект*): **+0.9 points** (8.0 → 8.9 %, +11 % relative) — below that the screen is not worth the release risk. α = 5 % two-sided, power 80 %:
 
 ```python
 from statsmodels.stats.proportion import proportion_effectsize
@@ -86,15 +86,16 @@ Properties you rely on: **deterministic** (the same user gets the same screen on
 
 ### The A/A test — test the system, not the screen
 
-An **A/A test** (*A/A-тест*) splits users exactly as the real test will, shows both groups the **same** screen, and runs the planned analysis. It checks the pipe: the split (50/50?), the logging (do both groups' events arrive?), the metric query, the test itself (false positives at ~5 %?). Nur ran one on 1–14 July 2026 (`data/ab/aa_users.csv`, `aa_events.csv`):
+An **A/A test** (*A/A-тест*) splits users exactly as the real test will, shows both groups the **same** screen, and runs the planned analysis. It checks the pipe: the split (50/50?), the logging (do both groups' events arrive?), the metric query, the test itself (false positives at ~5 %?). Nur ran one on 1–14 July 2026 (`data/ab/aa_users.csv`, `aa_events.csv`). The planned analysis, run on it, is four numbers — and you compute them yourself in HW 7.1:
 
-| | A | B |
+| check | what you compute | what "the system works" looks like |
 |---|---|---|
-| users | 6 411 | 6 441 |
-| converted within 7 days | 526 (8.20 %) | 527 (8.18 %) |
-| started an application | 32.9 % | 32.6 % |
+| split | users per group, SRM p-value | a p-value far from the alarm threshold |
+| hash | the variant recomputed from `sha256(salt + user_id)` | every row matches its logged variant |
+| metric | conversion within 7 days per group | two rates that differ only by noise |
+| test | difference B − A with its 95 % CI, z-test p | an interval that contains 0, a p-value far from 0.05 |
 
-Split p = 0.79; difference −0.02 points (95 % CI −0.97 to +0.93), **p = 0.96**; every row matches the hash. And because one A/A says little about a 5 % error rate, re-split the same users at random 1 000 times: **4.0 %** of re-splits are "significant" and the p-values spread evenly from 0 to 1 (92, 90, 110, 101, 115, 100, 99, 90, 101, 102 per decile; KS test against uniform p = 0.46) — the deck's *"p-value distribution check"*. A broken system shows up as 15 % "wins" or a pile of p-values near 0.
+And because one A/A says little about a 5 % error rate, re-split the same users at random 1 000 times: **4.0 %** of re-splits are "significant" and the p-values spread evenly from 0 to 1 (92, 90, 110, 101, 115, 100, 99, 90, 101, 102 per decile; KS test against uniform p = 0.46) — the deck's *"p-value distribution check"*. A broken system shows up as 15 % "wins" or a pile of p-values near 0.
 
 ### SRM — the first number you look at
 
@@ -102,12 +103,11 @@ Split p = 0.79; difference −0.02 points (95 % CI −0.97 to +0.93), **p = 0.96
 
 ```python
 from scipy import stats
-stats.chisquare([14200, 13800], [14000, 14000])     # chi2 = 5.71, p = 0.017  -> investigate before reading anything
+stats.chisquare([14200, 13800], [14000, 14000])     # chi2 = 5.71, p = 0.017  -> look for the bug before reading anything
 stats.chisquare([14050, 13950], [14000, 14000])     # chi2 = 0.36, p = 0.55   -> fine
-stats.chisquare([6411, 6441])                       # the A/A: p = 0.79
 ```
 
-A 50.7 / 49.3 split of 28 000 users is already suspicious. Use a **strict threshold** (p < 0.001 is common) because you will check the ratio overall, by day, by device, by week — many checks — and an SRM means *do not read the result until you know why*; it is not "a small bias to correct". Excel: `=CHISQ.TEST({14200,13800},{14000,14000})`.
+A 50.7 / 49.3 split of 28 000 users is already suspicious. Use a **strict threshold** (p < 0.001 is common) because you will check the ratio overall, by day, by device, by week — many checks — and an SRM means *do not read the result until you know why*; it is not "a small bias to correct". The two thresholds do different jobs: p < 0.001 is the **automatic alarm** that runs on every slice every day, so it must rarely fire by chance; a p of 0.017 on the one overall check you planned does not trip that alarm, but it is still far enough from 50/50 that you look for the bug yourself before reading the result. Excel: `=CHISQ.TEST({14200,13800},{14000,14000})`.
 
 ### Peeking — why the end date is part of the design
 
@@ -134,6 +134,16 @@ Write the design down — dated, in the repo — **before** the test starts: hyp
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ The design steps (problem, metrics, hypothesis, design, validity) — [A/B Testing in Data Science Interviews by a Google Data Scientist (DataInterview), 09:41](https://youtu.be/DUNk4GPZ9bw?t=581)
+- ▶ Metrics, hypotheses, sample size, splitting users (RU) — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 04:45](https://youtu.be/FEI1OA-zgb8?t=285)
+- ▶ Designing an A/B test with sample size and power (EN) — [Data Science Essentials - Crash Course in A/B Testing with Case Study (freeCodeCamp.org), 19:55](https://youtu.be/KZe0C0Qq4p0?t=1195)
+- ▶ Randomisation / user split — Noukash lecture, [24:42](https://youtu.be/FEI1OA-zgb8?t=1482)
+- ▶ SRM (sample ratio mismatch) — [Understanding SRM (Sample Ratio Mismatch) in A/B Testing (Lucia from The Initial)](https://youtu.be/sSi6h-PpXQI)
+- ▶ Peeking — [Тонкости A/B тестирования: проблема подглядывания (Анатолий Карпов, karpov.courses)](https://youtu.be/jnFVmtaeSA0)
+- ▶ A/A test / validity checks — DataInterview video, [12:32](https://youtu.be/DUNk4GPZ9bw?t=752)
+
 - RU deck `6.1 Introduction.pdf` (lesson 6.1, Sanjar Khakimov, TBC): why A/B testing — asking clients vs testing pp. 4–6; examples pp. 7–10; definition p. 11; the **HADI** cycle (hypothesis → action → data → interpretation) pp. 12–16; what an experiment design contains (metric + MDE, criteria, split, A/A, simulated effect, power) pp. 18–21; metric types and relative vs absolute change pp. 23–26; how often and how long to test pp. 27–28; historical data and distributions pp. 29–31; MDE and minimum sample size pp. 32–33; the step-by-step approach (A/A → validate criteria → add effect → sample size) p. 34; reading results, and what an insignificant result means pp. 35–36.
 - RU deck `6.2 A_B Testing.pdf`: hash functions pp. 4–7, salting a split pp. 8–9, uneven splits by normalised hash p. 10.
 - Notebook `Lecture6.2 - Data Generation and Split.ipynb`: a synthetic user base (cell 4), the SHA-256 split function with a salt and group percentages (cells 7–11), visual homogeneity checks by group (cells 12–23), Kolmogorov–Smirnov and chi-square homogeneity tests (cells 24–28). Re-run its split function on `aa_users.csv` — it reproduces today's logic.
@@ -158,7 +168,7 @@ Write the design down — dated, in the repo — **before** the test starts: hyp
 | checks | A/A in July (passed); SRM daily with p < 0.001 alarm; daily lift chart for novelty | |
 | decision rule | ship if primary p < 0.05 **and** the FPD difference's upper 95 % bound < +1.25 pt (break-even, Company corner) | written before the start |
 
-**3. The A/A evidence that the system works.** 6 411 vs 6 441 (SRM p = 0.79); 8.20 % vs 8.18 % (p = 0.96); 4.0 % false positives over 1 000 re-splits. The split and the metric pipeline can be trusted — for July.
+**3. The A/A evidence that the system works.** The split's SRM p-value, the hash check, the two conversion rates and the test's p-value from the July run (your HW 7.1 cell), and 4.0 % false positives over 1 000 re-splits. If all four look like the right-hand column of the table in section 1, the split and the metric pipeline can be trusted — for July.
 
 **4. What goes back to Kamola**, in three sentences: *"Comparing September to August would mix the screen with everything else that changes between months — your own approval rate moved four points in a month with no change. Instead we show the new screen to a random half of app users for four weeks in August (about 14 000 per arm), which can detect a +0.9-point lift with 77 % power, and we decide on 28 August, not before. If conversion rises but first-payment defaults rise by more than 1.25 points, the screen loses money and we do not ship it as is."*
 
@@ -204,10 +214,10 @@ Hypothesis: *a single button and the monthly payment in large type reduce hesita
 With `offer_screen_aa_2026_07`: B, A, A, B, A (users 925601, 665666, 652995, 774155, 376261 — the notebook's table, which also shows the first 12 hex digits); with `another_test`: A, A, B, A, A. **All 12 852** rows match. Without a new salt, every experiment would put the same users in B: their "treated" history (fatigue, earlier changes) would follow them, and two simultaneous tests would be perfectly correlated — the effects of the two could not be separated.
 </details>
 
-**P7.** SRM: your `srm_pvalue` for 14 200 vs 13 800, 14 050 vs 13 950, and the A/A's 6 411 vs 6 441. Which would you investigate, and what threshold do you use?
+**P7.** SRM: your `srm_pvalue` for 14 200 vs 13 800, 14 050 vs 13 950, and 9 000 vs 1 000 for a planned 90/10 split. Which would you investigate, and what threshold do you use?
 
 <details><summary>Answer</summary>
-**0.017**, **0.55**, **0.79**. Investigate the first (a 50.7 / 49.3 split of 28 000 is unusual) — and with the usual production threshold of p < 0.001 it would not raise an automatic alarm, which is why you also check by day and segment (Day 2). The strict threshold exists because SRM checks are run many times; the response to an alarm is not a correction but a search for the bug.
+**0.017**, **0.55**, and **1.0** for 9 000 vs 1 000 (`expected_share_b=0.1`: exactly the plan). Investigate the first (a 50.7 / 49.3 split of 28 000 is unusual) — and with the usual production threshold of p < 0.001 it would not raise an automatic alarm, which is why you also check by day and segment (Day 2). The strict threshold exists because SRM checks are run many times; the response to an alarm is not a correction but a search for the bug.
 </details>
 
 **P8.** Run the peeking simulation (section 0c). Report the false-positive rate for one look, weekly looks and daily looks, and the day on which half of the daily-peeking "wins" have already been declared.
@@ -216,10 +226,10 @@ With `offer_screen_aa_2026_07`: B, A, A, B, A (users 925601, 665666, 652995, 774
 One look **4.9 %**; weekly **12.4 %**; daily **27.2 %** — a null screen "wins" in more than one test in four. Half of the daily-peeking false wins are declared by **day 6** (median first crossing), when the sample is smallest and the p-value most volatile; 15.9 % of all A/A runs have a false win within the first week. With Pocock's 0.0182 at four weekly looks the rate is back to 4.8 %.
 </details>
 
-**P9.** The A/A check (HW 7.1's numbers): split and SRM p, conversion per group with the difference, its 95 % CI and p. Then the 1 000 re-splits: false-positive share and the decile counts. What would a failing A/A look like?
+**P9.** The A/A check is HW 7.1 — compute it there, not here. Here: read the 1 000 re-splits (the notebook's bonus cell), the false-positive share and the decile counts. What would a failing A/A look like?
 
 <details><summary>Answer</summary>
-6 411 / 6 441, SRM **p = 0.79**; conversion **8.20 % vs 8.18 %**, difference **−0.02 pt** (95 % CI −0.97 to +0.93), z = −0.05, **p = 0.96**. Re-splits: **4.0 %** below 0.05; deciles 92, 90, 110, 101, 115, 100, 99, 90, 101, 102 (flat). Failing: an SRM (p < 0.001), a "significant" A/A difference that repeats on a re-run, a re-split false-positive rate well above 5 % (the test is wrong for the data, e.g. sessions counted as independent users), or one arm missing events (a logging bug).
+Re-splits: **4.0 %** below 0.05; deciles 92, 90, 110, 101, 115, 100, 99, 90, 101, 102 (flat) — the test behaves on this data. Your own A/A cell should show the same shape as the table in section 1: an SRM p far from the alarm, every row matching the hash, two close rates, an interval of the difference that contains 0. Failing: an SRM (p < 0.001), a "significant" A/A difference that repeats on a re-run, a re-split false-positive rate well above 5 % (the test is wrong for the data, e.g. sessions counted as independent users), or one arm missing events (a logging bug).
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** Novelty arithmetic. Suppose B's true lift is **+3.4 points** on days 1–3 (novelty) and **+0.9** afterwards, with equal traffic every day and A at 8.0 %. What lift would a test that stops after 7 days report? After 14 and 28? What does that say about "we saw a big win in the first week, let us ship"?

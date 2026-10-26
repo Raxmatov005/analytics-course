@@ -154,6 +154,16 @@ A **traceback** (*трассировка*) lists the calls that led to the error
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Jupyter (install, new notebook, markdown, shortcuts) — [Jupyter Notebook Tutorial: Introduction, Setup, and Walkthrough (Corey Schafer), 04:08](https://youtu.be/HW29067qVWk?t=248)
+- ▶ Install Anaconda (what the page asks) — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:50:56](https://youtu.be/wUSDVGivd-8?t=21056)
+- ▶ Variables and types — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 18:52](https://youtu.be/wUSDVGivd-8?t=1132)
+- ▶ Lists, dicts, tuples — [same course, 1:34:24](https://youtu.be/wUSDVGivd-8?t=5664)
+- ▶ if / for / while — [same course, 1:26:20](https://youtu.be/wUSDVGivd-8?t=5180)
+- ▶ Functions — [same course, 2:52:12](https://youtu.be/wUSDVGivd-8?t=10332)
+- ▶ Modules (import) — [same course, 3:12:46](https://youtu.be/wUSDVGivd-8?t=11566)
+
 - RU deck `4.1 Python.pdf` (109 pages): types pp. 26–48, control flow pp. 49–61, lists / tuples / dicts / sets pp. 62–71, functions pp. 72–78, exceptions pp. 83–91, files pp. 92–107 — the recording `video1256130814.mp4` is this lecture. `En_4.2_Python.pdf` is NumPy (arrays, slicing, broadcasting, pp. 12–66): pandas sits on top of it; read it when `.values` or `np.where` puzzle you.
 - *Russian terms:* переменная = variable, целое / вещественное число = int / float, строка = str, список = list, словарь = dict, кортеж = tuple, цикл = loop, функция = function, параметр / аргумент = parameter / argument, модуль = module, исключение = exception, трассировка = traceback, ядро = kernel, ячейка = cell.
 
@@ -235,7 +245,7 @@ branch 681.2 bn · app 13.6 bn · partner 11.4 bn (706.2 bn requested in total a
 `>= date(2026, 9, 1) and < date(2026, 10, 1)` on `.date()` → **621**; `<= date(2026, 9, 30)` on the full datetime → **598**: 23 applications after midnight on the 30th lost — week 1's trap, in a third language. Converting to `.date()` first makes both forms agree.
 </details>
 
-**P8.** Write `top_n(d, n)` returning the n largest `(key, value)` pairs of a dict, and use it on the per-`product` counts of applications. Then a `while` loop that doubles 1 000 000 at 30 % a year until it passes 10 000 000 — how many years?
+**P8.** Write `top_n(d, n)` returning the n largest `(key, value)` pairs of a dict, and use it on the per-`product` counts of applications. Then a `while` loop that grows 1 000 000 by 30 % a year until it passes 10 000 000 — how many years?
 
 <details><summary>Answer</summary>
 `sorted(d.items(), key=lambda kv: kv[1], reverse=True)[:n]` → `[('Micro loan', 5006), ('Consumer loan', 4204), ('Buy now pay later', 2771)]`. The `while`: 9 years (1.3⁹ = 10.6). A `while` without the `+= 1` runs forever — Kernel → Interrupt.

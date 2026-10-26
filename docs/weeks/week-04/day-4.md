@@ -128,6 +128,15 @@ What a pivot cannot do that SQL can: a `JOIN` (merge first in Power Query, or ad
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ PivotTables — [Pivot Table Excel | Step-by-Step Tutorial (Kevin Stratvert), 00:49](https://youtu.be/dvbLrwD2SpA?t=49)
+- ▶ Slicers and pivot charts — [Pivot Table Excel | Step-by-Step Tutorial (Kevin Stratvert), 07:08](https://youtu.be/dvbLrwD2SpA?t=428)
+- ▶ Charts — [Learn Excel in Under 3 Hours (Alex The Analyst), 35:57](https://youtu.be/zXnQNytHCPM?t=2157)
+- ▶ One-page dashboard (pivot tables + charts + timeline/slicers) — [How to Build Excel Interactive Dashboards (Kevin Stratvert), 00:52](https://youtu.be/MTlQvyNQ3PM?t=52)
+- ▶ (RU, optional) Pivot tables from scratch — [Сводные таблицы Excel с нуля до профи за полчаса + Дэшборды! (Билял Хасенов)](https://youtu.be/4roVtL2mynA)
+- ▶ (RU, optional) Core analyst formulas incl. pivots in 10 minutes — [EXCEL для начинающих аналитиков (Noukash), 05:40](https://youtu.be/snqGcBdTgCU?t=340)
+
 - RU workbook `3.3 Pivot.xlsx` — sheets *Introduction*, *Building a Pivot table*, *Filtering*, *Calculations in Pivot Table*; the employee/store data shows the same Rows–Values–Filters mechanics.
 - *Russian terms:* сводная таблица = PivotTable, срез = slicer, временная шкала = timeline, вычисляемое поле = calculated field, группировка по месяцам = group by months, % от родительской строки = % of parent row total, нарастающий итог = running total, гистограмма / линейчатая / график / комбинированная / с накоплением = column / bar / line / combo / stacked chart, спарклайн = sparkline, обновить = refresh.
 
@@ -201,7 +210,7 @@ Tashkent Central 28 716 674 373 · Tashkent South 26 787 392 136 · Tashkent Nor
 **P6.** Add a slicer on `product` and a timeline on `disbursed_at`, connected to the P2 and P5 pivots. Set the timeline to **Q3 2026** and the slicer to **Small business loan**. Count and amount? Then clear both.
 
 <details><summary>Answer</summary>
-**114** SME loans / **37 677 910 000** in July–September 2026 (all products: 1 086 / 59 999 570 000). The P5 pivot re-ranks under the filter (Fergana Central climbs — SME-heavy, week 3 S6). Clear with the slicer's corner icon; a page left filtered is the most common "the numbers are wrong" call on a Monday morning. Slicers filter the pivot, not the Table, so a check on the Table cannot see them — put the pivot's grand total next to the Table's `SUM` as a visible pair: equal means unfiltered.
+**114** SME loans in July–September 2026 (all products: 1 086); read the amount off your pivot. The P5 pivot re-ranks under the filter (Fergana Central climbs — SME-heavy, week 3 S6). Clear with the slicer's corner icon; a page left filtered is the most common "the numbers are wrong" call on a Monday morning. Slicers filter the pivot, not the Table, so a check on the Table cannot see them — put the pivot's grand total next to the Table's `SUM` as a visible pair: equal means unfiltered.
 </details>
 
 **P7.** A calculated field: with Tuesday's `rate` column on `tblLoans`, add `run_rate = outstanding * rate / 12` and show it by product. Then try `avg_ticket = principal / loan_id` — what happens, and what is the fix?

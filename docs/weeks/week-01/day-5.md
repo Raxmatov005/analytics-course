@@ -139,7 +139,7 @@ SELECT COUNT(*) FROM loans WHERE principal >= 100000000;       -- 996
 ```
 </details>
 
-**B7.** Affluent-segment customers living in Tashkent. · **B8.** Customers whose surname ends in `ova`. · **B9.** Instalments falling due in October 2026 (the month after the data's as-of date).
+**B7.** Affluent-segment customers living in Tashkent. · **B8.** Customers whose surname ends in `ova`. · **B9.** Instalments falling due in October 2026 (the month that starts on the data's as-of date).
 
 <details><summary>B7–B9</summary>
 
@@ -203,10 +203,10 @@ De Morgan: `NOT (a OR b)` = `NOT a AND NOT b`. Both forms score; the second is w
 <details><summary>B18</summary>
 
 ```sql
--- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC;
-SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC LIMIT 3;
+-- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id;
+SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id LIMIT 3;
 ```
-Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 000 SME loan from Day 2 P9), 2025-01-26 / 02-27 / 03-27. Three equal amounts in a row is not a duplicate: they are three consecutive instalments. (Write that sentence; it is the difference between a count and an analysis.)
+Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 000 SME loan from Day 2 P9), 2025-01-26 / 02-27 / 03-27. Three equal amounts in a row is not a duplicate: they are three consecutive instalments. (Payment 30775 on the same loan has the same amount, so third place is a tie; `payment_id` in the `ORDER BY` makes the three rows the same on both engines.) (Write that sentence; it is the difference between a count and an analysis.)
 </details>
 
 **B19.** The earliest and the latest loan ever disbursed (two queries): loan id, date, principal.

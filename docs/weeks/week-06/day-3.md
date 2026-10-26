@@ -155,6 +155,15 @@ Then one sentence with six parts, in this order — it is the sentence an examin
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ p-value (one right definition) — [p-values: What they are and how to interpret them (StatQuest), 04:32](https://youtu.be/vemZtEM63GY?t=272)
+- ▶ H0 / H1 — [Hypothesis Testing and The Null Hypothesis, Clearly Explained!!! (StatQuest), 09:51](https://youtu.be/0oc49DyA3hU?t=591)
+- ▶ z-test for two proportions — [Hypothesis Testing With Two Proportions (The Organic Chemistry Tutor)](https://youtu.be/pCbNUnZ98oE)
+- ▶ Chi-square test of independence — [Chi-Square Test [Simply explained] (numiqo), 00:17](https://youtu.be/rpKzq64GA9Y?t=17)
+- ▶ t-test (independent / paired / assumptions) — [t-Test - Full Course - Everything you need to know (numiqo), 01:45](https://youtu.be/VekJxtk4BYM?t=105)
+- ▶ Whole logic of a test in Russian, p-value and CI on a worked case — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 16:53](https://youtu.be/FEI1OA-zgb8?t=1013)
+
 - RU deck `Параметрические тесты (2).pdf` (lesson 5.4): the CLT and z-scores pp. 6–9, checking normality and log-transform pp. 10–12, p-value p. 13, type I/II errors p. 14, choosing a test pp. 15–16, assumptions of parametric tests p. 18, one-sample z pp. 19–21, two-sample z pp. 22–24, Student's t pp. 25–31 (paired pp. 30–31), Welch pp. 32–35, ANOVA pp. 36–46, Bonferroni and Tukey pp. 47–49, correlation and regression pp. 50–58.
 - Notebook `примеры стат_тестов в python.ipynb`: one- and two-sample z, independent and paired t, Welch, ANOVA (scipy and statsmodels), Bonferroni, Tukey HSD — each on simulated data; rerun any of them on `f` or `x`.
 - Visual: Seeing Theory, chapter 4 (hypothesis testing).
@@ -179,7 +188,7 @@ stats.fisher_exact([[41, 2370], [34, 3229]])                                    
 stats.chi2_contingency(pd.crosstab(f.channel, f.fpd30))[1]                         # 0.0778 — the three-channel check
 ```
 
-**4. The size.** +0.66 points (95 % CI +0.05 to +1.33); RR 1.63 (1.04–2.56); **6.6 extra FPDs per 1 000 app loans**. At the 2026 pace (1 045 app loans in nine months, ~1 393 a year) that is ~9 extra FPDs a year on loans averaging 2.69 m: ~25 m soum of exposure, ~15 m of expected loss at 60 % LGD.
+**4. The size.** +0.66 points (95 % CI +0.05 to +1.33); RR 1.63 (1.04–2.56); **6.6 extra FPDs per 1 000 app loans**. At the 2026 pace (1 036 app loans in January–September, ~1 381 a year) that is ~9 extra FPDs a year on loans averaging 2.69 m: ~25 m soum of exposure, ~15 m of expected loss at 60 % LGD.
 
 **5. The caveats that go in the note.** (a) The three-channel χ² is not significant (p = 0.078) and app vs branch was chosen as the most extreme pair — the evidence is **moderate**, not overwhelming. (b) App loans are all Micro, branch loans are Auto / Consumer / SME: the gap is channel *and* product; the data cannot separate them. (c) The interval of the difference starts at +0.05 points — consistent with almost nothing.
 
@@ -236,7 +245,7 @@ Paired: t = **−2.56, p = 0.031**; independent: t = −2.05, p = 0.055; mean ch
 **P8.** Effect sizes for app vs branch FPD: difference with its 95 % CI, RR with its CI, extra FPDs per 1 000. Then translate into soum per year for the app channel.
 
 <details><summary>Answer</summary>
-Difference **+0.66 points** (Newcombe CI +0.05 to +1.33); RR **1.63** (`confint_proportions_2indep(..., compare="ratio", method="log")` → 1.04–2.56); **6.6 per 1 000** (0.5–13.3). App volume 2026: 1 045 loans in nine months → ~1 393 a year → ~9 extra FPDs × 2.69 m average principal ≈ **25 m soum** at risk, ~15 m expected loss at LGD 60 %. Statistically "yes", financially a rounding error next to the 3.6 bn expected loss of the book (Day 1).
+Difference **+0.66 points** (Newcombe CI +0.05 to +1.33); RR **1.63** (`confint_proportions_2indep(..., compare="ratio", method="log")` → 1.04–2.56); **6.6 per 1 000** (0.5–13.3). App volume 2026: 1 036 loans in January–September → ~1 381 a year → ~9 extra FPDs × 2.69 m average principal ≈ **25 m soum** at risk, ~15 m expected loss at LGD 60 %. Statistically "yes", financially a rounding error next to the 3.6 bn expected loss of the book (Day 1).
 </details>
 
 **P9.** Late payment, grade A vs grade B: z-test on payments, then on loans (any late payment). Why do the z values differ so much?

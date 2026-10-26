@@ -125,7 +125,7 @@ Principal per signed loan (clean users) is right-skewed and capped at the produc
 | first-payment defaults | 15 | 24 |
 | FPD rate (Wilson 95 %) | **1.51 %** (0.92–2.48) | **2.23 %** (1.50–3.30) |
 
-Two-proportion z-test **p = 0.23** (Fisher 0.26); difference **+0.72 points, 95 % CI −0.49 to +1.94**. "Not significant" here means almost nothing: the test's **power** to detect a true +0.72 points with ~1 000 loans per arm is **23 %**; detecting it with 80 % power needs **5 508 loans per arm** — about 65 000 users per arm at B's conversion, four and a half months of traffic. The guardrail decision therefore rests on the **interval vs the break-even** (Company corner): the point estimate +0.72 is below Day 1's +1.25 (and below +0.94 recomputed with today's numbers), the upper bound +1.94 is above it. The data cannot rule out that B loses money.
+Two-proportion z-test **p = 0.23** (Fisher 0.26); difference **+0.72 points, 95 % CI −0.49 to +1.94**. "Not significant" here means almost nothing: the test's **power** to detect a true +0.72 points with ~1 000 loans per arm is **23 %**; detecting it with 80 % power needs **5 508 loans per arm** — about 62 000 users per arm at B's 7-day conversion of 8.86 %, some four months of traffic. The guardrail decision therefore rests on the **interval vs the break-even** (Company corner): the point estimate +0.72 is below Day 1's +1.25 (and below +0.94 recomputed with today's numbers), the upper bound +1.94 is above it. The data cannot rule out that B loses money.
 
 ### Step 4 — segments, with the correction
 
@@ -156,6 +156,13 @@ Nothing survives Holm; every segment's lift is positive and close to the total. 
 Here: row two. A screen change is cheap to reverse; FPD is a two-month-late signal. Ship B to 100 % of new offer views **except a 10 % hold-out on A** for ten weeks, and read FPD on both when ~5 000 B loans have matured.
 
 ### Depth (optional)
+
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Primary result: p-value and confidence interval — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 30:47](https://youtu.be/FEI1OA-zgb8?t=1847)
+- ▶ Analysing results in Python — [Data Science Essentials - Crash Course in A/B Testing with Case Study (freeCodeCamp.org), 39:22](https://youtu.be/KZe0C0Qq4p0?t=2362)
+- ▶ Validity check and launch decision — [A/B Testing in Data Science Interviews by a Google Data Scientist (DataInterview), 12:32](https://youtu.be/DUNk4GPZ9bw?t=752)
+- ▶ Common problems (RU) — Noukash lecture, [35:37](https://youtu.be/FEI1OA-zgb8?t=2137)
 
 - RU deck `6.2 A_B Testing.pdf` (lesson 6.2): pp. 4–10 — hashing, salting, uneven splits (the logic behind the hash check).
 - Notebook `Lecture6.2 - Tests.ipynb`: the t-test step by step and with scipy (cells 3–19), "was it profitable?" — a skewed revenue metric and the Mann–Whitney U test (cells 20–40), **A/A tests and added-effect checks** — simulate many A/A splits, check the p-values are uniform, add an artificial effect and check the test finds it (cells 41–62), multiple comparisons (cell 63). Run its A/A loop on our `users` + `events` instead of the generated data.
@@ -246,7 +253,7 @@ A 15 / 993 = **1.51 %** (0.92–2.48), B 24 / 1 076 = **2.23 %** (1.50–3.30); 
 Lifts +0.87 (Android, p 0.030), +0.94 (iOS, 0.31), +0.85 (new, 0.093), +0.96 (returning, 0.068), +1.71 (affluent, 0.047), +0.63 (mass, 0.17), +0.87 (sme, 0.30); **Holm: smallest 0.21** — none significant. Interaction new vs returning: z = −0.15, **p = 0.88**. Allowed: *"The lift is positive in every pre-registered segment and we find no evidence that it differs between segments."* Not allowed: "it works for affluent users" or "it works on Android only".
 </details>
 
-<span class="badge stretch">Stretch</span> **P11.** Redo Day 1's unit economics with today's numbers (conversion, average principal per arm, FPD per arm; interest = 9.86 % of principal as on Nur's Micro book; LGD 60 %). Profit per 1 000 viewers per arm; B's break-even FPD; B's profit if its FPD were at the upper end of the CI.
+<span class="badge stretch">Stretch</span> **P11.** Redo Day 1's unit economics with today's numbers (conversion, average principal per arm, FPD per arm; interest = 9.856 % of principal, i.e. 266 662 ÷ 2 705 586 as on Nur's Micro book; LGD 60 %). Profit per 1 000 viewers per arm; B's break-even FPD; B's profit if its FPD were at the upper end of the CI.
 
 <details><summary>Answer</summary>
 A: conversion 7.98 %, principal 2 563 847 → I = 252 692, L = 1 538 308, FPD 1.51 % → 225 638 per loan → **17 996 742** per 1 000 viewers. B: 8.86 %, 2 494 675 → I = 245 875, L = 1 496 805, FPD 2.23 % → 207 004 per loan → **18 339 646** (+1.9 %). Break-even FPD for B: **2.45 %**, i.e. **+0.94 points** over A (smaller than Day 1's +1.25 because B's loans are slightly smaller). At the CI's upper end (A + 1.94 = 3.45 %): **16 454 966**, 8.6 % below A. Expected gain small and positive; the bad case is bigger than the good one — exactly why the rollout is staged.
@@ -291,12 +298,12 @@ Every experiment ends on **one slide** with eight lines in this order. Kamola re
 | 2 | **Design** | user-level 50/50 hash split (`offer_screen_v2`), 1–28 Aug 2026, primary = signed within 7 days, α 5 % two-sided, MDE +0.9 pt, power 77 % at ~14 000/arm | same |
 | 3 | **Sanity checks** | "split 49.5 / 50.5, OK" | **300 users in both variants removed; SRM in iOS 22–28 Aug (537 / 822, p ≈ 10⁻¹⁴: client bug) — cell removed from both arms; novelty spike on 1–3 Aug (+3.4 pt) — excluded as pre-registered.** After cleaning: 11 472 / 11 434, SRM p = 0.80 |
 | 4 | **Primary result** | 8.28 % → 9.37 %, +1.09 pt (+0.42 to +1.75), p = 0.0014, **+13.1 %** | 7.98 % → 8.86 %, **+0.88 pt (+0.16 to +1.60), p = 0.016, +11.1 % (+2.0 to +21.0)** |
-| 5 | **Guardrails** | FPD 1.58 % → 2.54 % (19 / 1 206 vs 35 / 1 377), p = 0.087 — "almost significantly worse" | FPD 1.51 % → 2.23 %, +0.72 pt (−0.49 to +1.94), p = 0.23, **power 23 %**; break-even +0.94 pt — **not cleared, not failed: unknown**. Principal −2.7 % (MW p = 0.32) |
+| 5 | **Guardrails** | FPD 1.66 % → 2.64 % (19 / 1 147 vs 35 / 1 324: loans of every raw row that converted within 7 days, leaked users in both arms), p = 0.094 — "almost significantly worse" | FPD 1.51 % → 2.23 %, +0.72 pt (−0.49 to +1.94), p = 0.23, **power 23 %**; break-even +0.94 pt — **not cleared, not failed: unknown**. Principal −2.7 % (MW p = 0.32) |
 | 6 | **Segments** | "affluent +1.7 pt, p = 0.047!" | 7 pre-registered cuts, all positive, none after Holm (min 0.21); no interaction (new vs returning p = 0.88) |
 | 7 | **Decision** | "ship" (or, from line 5, a panic) | **Ship B in stages:** 100 % of offer views with a **10 % hold-out on A** for ten weeks; stop and roll back if B's FPD exceeds A's by more than 0.94 pt on ≥ 2 000 matured B loans |
 | 8 | **What we learned** | — | The lift is in *finishing* (submit → signed), not in starting; novelty is real in this app (on the first 3 days B converted 1.4 times as often as A); the iOS client must log assignment failures — **fix before the next test**; a guardrail test on FPD needs ~5 500 loans per arm, so risk guardrails need hold-outs, not the A/B window |
 
-**How the conclusion changes.** The direction does not: B is better on conversion in every version. Three things change: the **size** (+1.09 → +0.88 points; +13 % → +11 %, and the lower end of the interval from +0.42 to +0.16), the **guardrail story** (raw: FPD p = 0.087, which would have started an argument about a "nearly significant" risk increase; clean: an honest "we cannot tell, so we keep a hold-out"), and the **credibility**: a slide that says *what was removed and why* survives the first question from the CFO; the dashboard's version does not survive Jasur.
+**How the conclusion changes.** The direction does not: B is better on conversion in every version. Three things change: the **size** (+1.09 → +0.88 points; +13 % → +11 %, and the lower end of the interval from +0.42 to +0.16), the **guardrail story** (raw: FPD p = 0.094, which would have started an argument about a "nearly significant" risk increase; clean: an honest "we cannot tell, so we keep a hold-out"), and the **credibility**: a slide that says *what was removed and why* survives the first question from the CFO; the dashboard's version does not survive Jasur.
 
 > Interview version: *"Walk me through how you analyse an A/B test."* — Sanity first: one row per unit, the sample ratio overall and by the slices the software ships in, units in both arms, the assignment rule recomputed; then the primary metric with a CI and a test, as decided before the start; then guardrails (with their power) and the money; then pre-registered segments with a correction; then a decision — ship, don't, extend, or ship in stages — and what we learned for the next test.
 

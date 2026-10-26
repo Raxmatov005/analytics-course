@@ -8,7 +8,7 @@
 
 - A number computed from loans is a **sample estimate** with its own uncertainty: the **standard error** measures it, the **law of large numbers** says it shrinks, the **central limit theorem** says the estimate is approximately normal even when the data are not (loan principal: skew 2.9) — shown by simulation, not by proof.
 - A **confidence interval** = estimate ± critical value × SE: **t** for a mean (z only when σ is known — never), **Wilson** for a proportion (the textbook **Wald** interval covers a 1.28 % rate only 73–88 % of the time at Nur's sample sizes), **Clopper–Pearson** when you must guarantee 95 %, the **bootstrap** when there is no formula — and what "95 %" does and does not promise.
-- Bekzod's answer, part 1: **app 1.70 % (1.26–2.30 %), branch 1.04 % (0.75–1.45 %), partner 1.12 % (0.69–1.82 %)** — and you start HW 6.2: the same for every channel and grade, with a chart and five sentences.
+- Bekzod's answer, part 1: a rate **with its interval** for each channel — how precisely we know app, branch and partner FPD — and you start HW 6.2: the same for every channel and grade, with a chart and five sentences.
 
 ---
 
@@ -133,6 +133,15 @@ Its strength is statistics with no SE formula — a **median**, a ratio of sums 
 Default to a 95 % level and say so; use 90 % only when a team has agreed to it in advance, never because the 95 % interval "looked too wide".
 
 ### Depth (optional)
+
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Standard error — [Standard Deviation vs Standard Error, Clearly Explained!!! (StatQuest), 01:12](https://youtu.be/A82brFpdr9g?t=72)
+- ▶ Central limit theorem — [The Central Limit Theorem, Clearly Explained!!! (StatQuest), 00:42](https://youtu.be/YAlJCEDH2uY?t=42)
+- ▶ Confidence intervals — [Confidence Intervals, Clearly Explained!!! (StatQuest), 02:55](https://youtu.be/TqOeMYtOc1w?t=175)
+- ▶ Confidence interval for a mean, formula route — [Confidence Interval [Simply explained] (numiqo)](https://youtu.be/ENnlSlvQHO0)
+- ▶ Bootstrap — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400)
+- ▶ Confidence interval (RU) — [Доверительный интервал за 15 мин. Биостатистика. (Kirill Milchakov)](https://youtu.be/MstzroncW28)
 
 - RU deck `5.2 Statistics & Probability Theory.pdf` pp. 68–73: law of large numbers and CLT. `MS_lecture3.pdf` (lesson 5.3): sample method and sample properties pp. 5–13, point estimates — unbiased, consistent, efficient pp. 14–18, method of moments and maximum likelihood pp. 19–27, confidence intervals (Fisher's lemma; the mean with σ known and unknown; the variance) pp. 28–35. The lesson's recording: `video1414856026.mp4`.
 - Notebooks: `MS_5_statistics.ipynb` (LLN with a coin and a die, CLT from other distributions), `MS6_Точечное_оценивание.ipynb` (unbiasedness and consistency by simulation), `MS6_Интервальное_оценивание.ipynb` (exact vs asymptotic interval, coverage at n = 3 … 1 000 — the same experiment as our Wald/Wilson table), `HW_3_CI.ipynb` (an interval for an exponential mean).
@@ -289,7 +298,7 @@ b["funnel_hi"] = stats.binom.ppf(0.975, b.n, p0) / b.n
 b["p_ge"] = stats.binom.sf(b.fpd - 1, b.n, p0)          # how surprising this many FPDs is at the book rate
 ```
 
-**The ranking trap.** The "worst" branch (Bukhara, 1.43–3.97 %) and the "best" (Nukus, 0.23–1.99 %) **overlap between 1.43 and 1.99 %**: the data cannot even put the top and the bottom of the league table in a reliable order. Simulate a book in which all ten branches have exactly 1.28 % (`default_rng(2026)`, 10 000 books, the same n's): the top branch averages **2.00 %**, reaches Bukhara's 2.39 % or more in **10.5 %** of books, and the bottom branch is at or below Nukus's 0.68 % in **50 %** of books. Somebody is always first and last; a league table of rates guarantees a "worst branch" even when there is none.
+**The ranking trap.** The "worst" branch (Bukhara, 1.43–3.97 %) and the "best" (Nukus, 0.23–1.99 %) **overlap between 1.43 and 1.99 %**: the data cannot even put the top and the bottom of the league table in a reliable order. Simulate a book in which all ten branches have exactly 1.28 % (`default_rng(2026)`, 10 000 books, the same n's): the top branch averages **2.00 %**, exceeds Bukhara's 2.39 % in **10.5 %** of books, and the bottom branch is below Nukus's 0.68 % in **50 %** of books. Somebody is always first and last; a league table of rates guarantees a "worst branch" even when there is none.
 
 What Bukhara's row does say: it is the one branch above its funnel (14 FPDs where 13 is the 97.5 % limit, P(≥ 14) = 0.02). One branch out of ten past a 95 % limit is roughly what chance produces — Thursday's multiple-comparisons day tests exactly this. The right action is to **watch** Bukhara (next quarter's vintages, the officer mix), not to punish it.
 

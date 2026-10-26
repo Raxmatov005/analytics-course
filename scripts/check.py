@@ -249,16 +249,38 @@ def check_xlsx_tables(c: dict) -> int:
 
 
 # ---------------------------------------------------------------- Python
+def notebook_home(file: str) -> str:
+    """The data/python folder the starter notebook lives in, so that its relative paths (DATA = Path("..") or
+    Path("../..")) resolve exactly as they did when the learner ran it there."""
+    name = os.path.basename(file)
+    m = re.search(r"week-0*(\d+)", file)
+    folders = [os.path.join(ROOT, "data", "python", f"week{m.group(1)}")] if m else []
+    folders.append(os.path.join(ROOT, "data", "python"))
+    for folder in folders:
+        if os.path.exists(os.path.join(folder, name)):
+            return folder
+    return os.path.dirname(os.path.join(ROOT, file))
+
+
 def check_notebook(c: dict) -> int:
     path = os.path.join(ROOT, c["file"])
     if not os.path.exists(path):
         print(f"{RED}file not found: {c['file']}")
         return 1
     out = os.path.join(tempfile.mkdtemp(), "run.ipynb")
+    home = notebook_home(c["file"])
+    # run a temporary copy next to the starter notebook, so its "../.." still means data/; removed afterwards
+    run_copy = os.path.join(home, f"_check_{os.getpid()}_{os.path.basename(path)}")
     print("running your notebook from the top (this can take a minute)…")
-    r = subprocess.run([sys.executable, "-m", "jupyter", "nbconvert", "--to", "notebook", "--execute", "--allow-errors",
-                        "--ExecutePreprocessor.timeout=600", "--output", out, path],
-                       cwd=os.path.dirname(path), capture_output=True, text=True)
+    try:
+        with open(path, "rb") as src, open(run_copy, "wb") as dst:
+            dst.write(src.read())
+        r = subprocess.run([sys.executable, "-m", "jupyter", "nbconvert", "--to", "notebook", "--execute",
+                            "--allow-errors", "--ExecutePreprocessor.timeout=600", "--output", out, run_copy],
+                           cwd=home, capture_output=True, text=True)
+    finally:
+        if os.path.exists(run_copy):
+            os.remove(run_copy)
     if r.returncode != 0 or not os.path.exists(out):
         print(f"{RED}the notebook could not be run: {r.stderr.strip().splitlines()[-1] if r.stderr.strip() else 'unknown error'}")
         return 1

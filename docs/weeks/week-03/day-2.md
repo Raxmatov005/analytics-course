@@ -28,7 +28,7 @@ GROUP BY p.code, l.term_months ORDER BY loans DESC;
 -- MICRO 3 → 1335 loans, rn 1 rk 1 drk 1 · MICRO 6 → 1334, 2 2 2 · CONS 6 → 631, 3 3 3 … no ties here, so all three agree
 ```
 
-They differ only on **ties** (*равные значения*). Rank loans by principal inside BNPL: three loans share the top amount 7 990 000. `ROW_NUMBER` gives them 1, 2, 3 (in whatever order — add a tiebreaker like `, loan_id` to make it repeatable); `RANK` gives 1, 1, 1 and the next loan **4**; `DENSE_RANK` gives 1, 1, 1 and the next **2**. Rule of thumb: `ROW_NUMBER` when you need exactly one row per group (deduplication, "the latest loan per customer"); `RANK` for sports-style leaderboards; `DENSE_RANK` when you want "the top 3 *values*" even if more than three rows share them.
+They differ only on **ties** (*равные значения*). Rank loans by principal inside BNPL: four loans share the top amount 7 990 000. `ROW_NUMBER` gives them 1, 2, 3, 4 (in whatever order — add a tiebreaker like `, loan_id` to make it repeatable); `RANK` gives 1, 1, 1, 1 and the next loan **5**; `DENSE_RANK` gives 1, 1, 1, 1 and the next **2**. Rule of thumb: `ROW_NUMBER` when you need exactly one row per group (deduplication, "the latest loan per customer"); `RANK` for sports-style leaderboards; `DENSE_RANK` when you want "the top 3 *values*" even if more than three rows share them.
 
 **`NTILE(n)`** cuts the ordered rows into n groups of (almost) equal **count** — quartiles, deciles:
 
@@ -90,7 +90,7 @@ FROM payments WHERE loan_id = 1 ORDER BY paid_at;
 -- gaps 31, 29, 29, 31, 35, 26, 34, 29, 32, 29, then 58 (2026-02-26 → 2026-04-25), 17, 14, 32 …
 ```
 
-The 58-day gap is March's missed instalment, the 17 and 14 the catch-up — the same story as yesterday's running total, now as a number per row. Over all 45 439 consecutive pairs the average gap is 30.9 days, 1 435 gaps exceed 45 days and the longest is 408; **63 gaps are 0 days** — two payments on the same day for one loan. Twenty-five of those are today's detective case.
+The 58-day gap is March's missed instalment, the 17 and 14 the catch-up — the same story as yesterday's running total, now as a number per row. Over all 45 439 consecutive pairs the average gap is 30.9 days, 1 435 gaps exceed 45 days and the longest is 408; **63 gaps are 0 days** — two payments on the same day for one loan. Some of those are today's detective case.
 
 ### FIRST_VALUE, LAST_VALUE and the frame trap
 
@@ -128,7 +128,7 @@ SELECT * FROM d WHERE rn > 1 ORDER BY payment_id;
 ```
 
 <details><summary>What you see</summary>
-**25 rows**, 58 397 800 UZS counted twice. Their `payment_id`s are **52851–52875 — the last 25 rows of the table**, while their twins are spread from id 110 to 52 107 (distance 744 to 52 759). Dates 2024-08-30 to 2026-09-17, all methods (card 9, transfer 7, click 4, payme 3, cash 2). Reading: not 25 cashier mistakes over two years — a **batch** appended at the end, a re-import of 25 old transactions with new IDs. Finance is right that the IDs are unique and wrong that it proves anything. Cross-checks from week 2: 52 875 payments vs 52 850 distinct `installment_id` (difference 25), and 25 instalments paid *more* than their `total_due` by exactly one instalment.
+**25 rows**, 58 397 800 UZS counted twice. Their `payment_id`s are **52851–52875 — the last 25 rows of the table**, while their twins are spread from id 110 to 52 120 (distance 744 to 52 759). Dates 2024-08-30 to 2026-09-17, all methods (card 9, transfer 7, click 4, payme 3, cash 2). Reading: not 25 cashier mistakes over two years — a **batch** appended at the end, a re-import of 25 old transactions with new IDs. Finance is right that the IDs are unique and wrong that it proves anything. Cross-checks from week 2: 52 875 payments vs 52 850 distinct `installment_id` (difference 25), and 25 instalments paid *more* than their `total_due` by exactly one instalment.
 </details>
 
 **The de-duplicated query.** Never `DELETE` from the course tables (or from a production table on your own authority): the de-duplicated *view* is the deliverable, the raw table stays as evidence. Keep `rn = 1` — the earliest `payment_id` in each group:

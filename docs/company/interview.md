@@ -201,11 +201,15 @@ Result: **25** rows, **58 397 800** soum. Then the part that gets the job: you d
 <details><summary>Model answer</summary>
 
 ```sql
-WITH first_inst AS (
+WITH clean_pay AS (                                                  -- de-duplicated payments, as in B5
+  SELECT * FROM (
+    SELECT p.*, ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
+    FROM payments p) WHERE rn = 1),
+first_inst AS (
   SELECT i.loan_id, i.total_due,
-         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_30   -- DATEADD(day, 30, i.due_date)
+         COALESCE(SUM(CASE WHEN p.paid_at < date(i.due_date, '+31 days') THEN p.amount END), 0) AS paid_30   -- half-open: up to day 30 included; DATEADD(day, 31, i.due_date)
   FROM installments i
-  LEFT JOIN payments p ON p.installment_id = i.installment_id
+  LEFT JOIN clean_pay p ON p.installment_id = i.installment_id
   WHERE i.installment_no = 1 AND i.due_date <= '2026-09-01'          -- only loans whose 30 days have passed
   GROUP BY i.loan_id, i.total_due)
 SELECT a.channel, COUNT(*) AS loans,
@@ -223,7 +227,7 @@ GROUP BY a.channel ORDER BY fpd30_pct DESC;
 | partner | 1 425 | 16 | 1.12 |
 | branch | 3 263 | 34 | 1.04 |
 
-Three things to say: the maturity filter (a loan whose first instalment fell due last week cannot have an FPD30 yet), the partial-payment rule (paid in full, not "any payment"), and that app vs branch is a statistical question — z = 2.15, p = 0.032 in week 6.
+Four things to say: clean payments (a duplicated payment would count twice towards the instalment), the maturity filter (a loan whose first instalment fell due last week cannot have an FPD30 yet), the partial-payment rule (paid in full, not "any payment"), and that app vs branch is a statistical question — z = 2.15, p = 0.032 in week 6.
 </details>
 
 ---
@@ -255,7 +259,7 @@ A **calculated column** is computed once per row at refresh and stored — use i
 
 <details><summary>Model answer</summary>
 
-`CALCULATE(expression, filters…)` evaluates a measure in a **modified filter context**: it adds, replaces or removes filters — e.g. `PAR30 Outstanding = CALCULATE([Outstanding], loans[dpd] > 30)`, then `PAR30 % = DIVIDE([PAR30 Outstanding], [Outstanding])`. Filters flow from **dimension** tables (products, branches, dates) along one-to-many relationships into the **fact** table; that is why the model should be a star: facts in the middle, dimensions around, single-direction one-to-many relationships, a marked date table. With fact-to-fact relationships, many-to-many or bidirectional filters, the same measure returns different numbers depending on the path the filter took — and nobody can explain the dashboard.
+`CALCULATE(expression, filters…)` evaluates a measure in a **modified filter context**: it adds, replaces or removes filters — e.g. `Outstanding DPD30+ = CALCULATE([Outstanding], v_loan_status[dpd] > 30)`, then `PAR30 % = DIVIDE([Outstanding DPD30+], [Outstanding])`. Filters flow from **dimension** tables (products, branches, dates) along one-to-many relationships into the **fact** table; that is why the model should be a star: facts in the middle, dimensions around, single-direction one-to-many relationships, a marked date table. With fact-to-fact relationships, many-to-many or bidirectional filters, the same measure returns different numbers depending on the path the filter took — and nobody can explain the dashboard.
 </details>
 
 ---

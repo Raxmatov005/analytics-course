@@ -47,7 +47,7 @@ Draw a fact table in the middle and its dimensions around it: a **star schema** 
 
 **Grain** (*гранулярность*) is the most important word of the day: *what is one row of the fact table?* One loan? One instalment? One payment? One loan **per month-end** (a snapshot)? Choose the grain first; every measure must make sense at that grain. You cannot store "outstanding balance" in a fact at the grain "one payment" — balance belongs to a loan at a date.
 
-**Snowflake** (*"снежинка"*): a star whose dimensions are themselves normalised — `dim_branch` points to a separate `dim_region`, `dim_product` to `dim_product_family`. Fewer repeated values, more joins. Analysts prefer stars: `region` repeated 7 828 times in a wide `dim_branch` costs nothing and saves a join in every query. Warehouses de-normalise *on purpose* — yesterday's rules are for writing; today's are for reading.
+**Snowflake** (*"снежинка"*): a star whose dimensions are themselves normalised — `dim_branch` points to a separate `dim_region`, `dim_product` to `dim_product_family`. Fewer repeated values, more joins. Analysts prefer stars: repeating `region` on each of the ten rows of a wide `dim_branch` costs nothing and saves a join in every query. Warehouses de-normalise *on purpose* — yesterday's rules are for writing; today's are for reading.
 
 ### Nur Finance as a star
 
@@ -86,7 +86,7 @@ That is the whole method: *write the question, find the noun that is "one row", 
 
 ## 3. The case of the forty customers (70 min)
 
-Write every query and its result in `week-01/day-4/case.sql`; your reasoning goes in the homework memo. Work in order; each fold confirms the step before you take the next.
+Write every query and its result in `submissions/week-01/day-4/case.sql`; your reasoning goes in the homework memo. Work in order; each fold confirms the step before you take the next.
 
 **Step 1 — reproduce the two numbers.** The board pack counts rows of `customers`. Confirm it.
 
@@ -98,21 +98,23 @@ SELECT COUNT(*) FROM customers;   -- expect 6040
 HR's 6 000 counts *people*. So either 40 people are missing from HR, or 40 rows in `customers` are not people. Which is more likely? HR's list is audited for the regulator; a CRM table is edited by a hundred officers. Start with the table.
 </details>
 
-**Step 2 — your Day-1 P8 note.** You wrote down names in CAPITALS and names with a trailing space. Count them, with only Day-2 SQL plus two functions: `UPPER()`, `LOWER()` and `TRIM()` return a changed copy of a text (SQL Server also has `LTRIM`/`RTRIM`).
+**Step 2 — your Day-1 P8 note.** You wrote down names in CAPITALS and names with a trailing space. Count them, with only Day-2 SQL plus three functions: `UPPER()`, `LOWER()` and `TRIM()` return a changed copy of a text (SQL Server also has `LTRIM`/`RTRIM`).
 
 <details><summary>Check</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);     -- expect 22
-SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);     -- expect 18
-SELECT COUNT(*) FROM customers WHERE last_name  = LOWER(last_name);      -- expect 40
+SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);     -- your count (SQLite)
+SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);     -- your count (SQLite)
+SELECT COUNT(*) FROM customers WHERE last_name  = LOWER(last_name);      -- your count (SQLite)
 
 SELECT customer_id, first_name, last_name, birth_date, registered_at
 FROM customers
 WHERE last_name = LOWER(last_name)
 ORDER BY customer_id;
 ```
-22 + 18 = 40, and the lower-case surname catches all 40 at once: every odd row has a lower-case surname. The ids run from **6001 to 6040** — all at the very end of the table, all added after the original 6 000. First three: 6001 `MALIKA jalilova`, 6002 `LOLA saidova`, 6003 `Bobur␣ rakhimov`. Suspicious, but *odd formatting is not proof of a duplicate*. Prove it.
+These three counts are SQLite's. SQL Server's default collation ignores case and trailing spaces, so there the first and third count every row and the second finds none: add `COLLATE Latin1_General_CS_AS` to the case tests (`WHERE first_name = UPPER(first_name) COLLATE Latin1_General_CS_AS`) and compare `DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))` for the spaces (Week 2 Day 3 explains why).
+
+The capitals count and the trailing-space count add up to the lower-case-surname count: the lower-case surname catches every oddly formatted row at once. The ids run from **6001** to the end of the table — all added after the original 6 000. First three: 6001 `MALIKA jalilova`, 6002 `LOLA saidova`, 6003 `Bobur␣ rakhimov`. Suspicious, but *odd formatting is not proof of a duplicate*. Prove it.
 </details>
 
 **Step 3 — find a twin.** Take customer 6001. Is there another Malika Jalilova born 1981-08-15?
@@ -142,9 +144,9 @@ ORDER BY n DESC, ln, fn;
 How many groups? Now add `phone` to both the SELECT and the GROUP BY and run again. How many now? Explain the difference before opening the fold.
 
 <details><summary>Check</summary>
-Name + birth date: **42** groups, each of exactly 2 rows. Name + birth date + phone: **40** groups. The two groups that disappeared are *Eldor Karimov, 1963-04-06* (ids 2460 and 5562, Samarkand and Andijan, different phones) and *Nodir Nazarov, 1997-04-28* (ids 823 and 1197, Tashkent and Samarkand, different phones) — two genuinely different people who share a common name and a birthday. With 6 000 people and 40 first names, that happens. **A match on one or two fields is a suspicion; a match on name, birth date and phone is a duplicate.** The 40 confirmed duplicates are exactly the 40 lower-case-surname rows from step 2.
+Name + birth date gives a few more groups than name + birth date + phone, each of exactly 2 rows. Look at the groups that disappear when you add the phone: the same common name and the same birthday, but different phones and different regions — two genuinely different people. With 6 000 people and 40 first names, that happens. **A match on one or two fields is a suspicion; a match on name, birth date and phone is a duplicate.** Check that the confirmed groups are exactly the lower-case-surname rows from step 2.
 
-Try the opposite check too: group by `phone` alone → **43** groups. Three pairs share a phone but have different names and birth dates (e.g. ids 786 and 1731) — a family number or a typo, not duplicates. Every rule you invent to find duplicates has false positives; always look at what it caught.
+Try the opposite check too: group by `phone` alone. A few groups appear that the name rule did not find — pairs that share a phone but have different names and birth dates: a family number or a typo, not duplicates. Every rule you invent to find duplicates has false positives; always look at what it caught. The counts and the pairs that are *not* duplicates go in your memo.
 </details>
 
 **Step 5 — the other thing you noticed on Day 1: birth dates.** The data is as of 2026-10-01 and the oldest plausible borrower was born around 1920. Count the rows outside that range and list them.
@@ -152,31 +154,39 @@ Try the opposite check too: group by `phone` alone → **43** groups. Three pair
 <details><summary>Check</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE birth_date > '2026-10-01';   -- expect 4 (not born yet)
-SELECT COUNT(*) FROM customers WHERE birth_date = '1900-01-01';   -- expect 3 (the classic "unknown" placeholder)
+SELECT COUNT(*) FROM customers WHERE birth_date > '2026-10-01';   -- not born yet
+SELECT COUNT(*) FROM customers WHERE birth_date = '1900-01-01';   -- the classic "unknown" placeholder
 
 SELECT customer_id, first_name, last_name, birth_date
 FROM customers
 WHERE birth_date > '2026-10-01' OR birth_date < '1920-01-01'
-ORDER BY birth_date;                                              -- expect 7 rows
+ORDER BY birth_date;                                              -- the full list
 ```
-Seven: three `1900-01-01` (ids 957, 1020, 2934), three `2031-04-12` (927, 2338, 3380) and one `2027-02-28` (id 964) — the last one looks like a normal date until you notice it is **after the as-of date**: a customer born next year. That is the lesson: a type check (is it a date?) catches nothing here; only a *business* check (born between 1920 and today minus 18 years) does. All seven are findings for the memo. None of the seven is one of the 40 duplicates. Everyone else was born between 1955-01-04 and 2006-12-26 — plausible.
+Look at the dates in the list: the placeholder `1900-01-01`, years far in the future — and one that looks like a normal date until you notice it is **after the as-of date**: a customer born next year. That is the lesson: a type check (is it a date?) catches nothing here; only a *business* check (born between 1920 and today minus 18 years) does. Every row of the list is a finding for the memo; check whether any of them is one of the duplicate rows. Everyone else was born between 1955-01-04 and 2006-12-26 — plausible.
 </details>
 
 **Step 6 — answer the CFO.** How many real customers are there, and which number is right?
 
 <details><summary>Check</summary>
-6 040 rows − 40 duplicate rows = **6 000 people**. HR is right; the board pack counted rows, not people. The 7 impossible birth dates do not change the count (they are real people with a wrong field) but they must be fixed before anyone computes age bands.
+6 040 rows minus the duplicate rows you confirmed in step 4. If that leaves **6 000 people**, HR is right and the board pack counted rows, not people. The impossible birth dates do not change the count (they are real people with a wrong field) but they must be fixed before anyone computes age bands.
 
-One more sentence for Madina: the duplicates are not harmless. Run `SELECT COUNT(*) FROM loans WHERE customer_id >= 6001;` → **48** loans and **95** applications sit on the duplicate ids, so "loans per customer", "repeat customers" and "customers with more than one product" are all understated for those 40 people. Ten of the 40 duplicates were registered in 2026, so "new customers this year" (955 by `registered_at`) is also overstated by 10.
+One more sentence for Madina: the duplicates are not harmless. Run `SELECT COUNT(*) FROM loans WHERE customer_id >= 6001;` and the same on `applications`: loans and applications sit on the duplicate ids, so "loans per customer", "repeat customers" and "customers with more than one product" are all understated for those people. Count, too, how many duplicate rows were registered in 2026: "new customers this year" (by `registered_at`) is overstated by exactly that many. Run it; your three numbers go in the memo's *What it changes*.
 </details>
 
-**Step 7 — what to do.** Three options, in rising order of effort: (1) report people, not rows — count distinct `(name, birth date, phone)` in the warehouse's `dim_customer`; (2) merge: repoint the 48 loans and 95 applications from the new id to the old one, then delete the duplicate rows — a data engineer's job, with a backup; (3) prevent: a uniqueness check on `(phone, birth_date)` at registration so officers must search before creating. Your memo recommends an order.
+**Step 7 — what to do.** Three options, in rising order of effort: (1) report people, not rows — count distinct `(name, birth date, phone)` in the warehouse's `dim_customer`; (2) merge: repoint their loans and applications from the new id to the old one, then delete the duplicate rows — a data engineer's job, with a backup; (3) prevent: a uniqueness check on `(phone, birth_date)` at registration so officers must search before creating. Your memo recommends an order.
 
-<span class="badge stretch">Stretch</span> **Step 8.** Are there customers whose `registered_at` is *earlier* than the earliest date in the data (2024-01-01) and who nevertheless have an application dated before they were registered? Write the query you *would* run (it needs two tables, so it is a join — week 2); describe in words what a hit would mean.
+<span class="badge stretch">Stretch</span> **Step 8.** One more date check, across two tables. An application cannot be older than the customer who made it: are there applications dated *before* their customer's `registered_at`? It needs a join (week 2) — copy it today, and before you run it, write down what a hit would mean.
+
+```sql
+SELECT a.application_id, a.customer_id, a.applied_at, c.registered_at
+FROM applications a
+JOIN customers c ON c.customer_id = a.customer_id
+WHERE a.applied_at < c.registered_at
+ORDER BY a.customer_id, a.applied_at;
+```
 
 <details><summary>Check</summary>
-Join `applications` to `customers` on `customer_id` and filter `applied_at < registered_at`. A hit means an application recorded before the customer existed — either the registration date was overwritten (a re-import) or the application was back-dated. The generator prevents it here, but in real data it is a routine finding. Keep the query for Tuesday.
+There are hits, and every one sits on a duplicate id. Look at their `registered_at`: it lies *after* the as-of date — later in 2026, one in 2027. The duplicate rows were created with invented registration dates, so their applications look older than their customers. That is a finding of its own: list the ids, and count how many customer rows carry a registration date after 2026-10-01 (`WHERE registered_at > '2026-10-01'` on `customers` alone finds them all, with or without an application). It also means step 6's "new customers this year" contains people registered in the future. Not required for the memo — a memo that has it stands out.
 </details>
 
 ---
@@ -188,7 +198,7 @@ Join `applications` to `customers` on `customer_id` and filter `applied_at < reg
 1. `memo.md` — **one page**, in this order: *What is wrong* (each issue in one line: table, column, what, how many rows), *What it changes* (which reported numbers are affected and by how much), *What to do* (your recommendation per issue, who does it, and in what order), *How I checked* (one sentence pointing at the queries). Numbers from your queries, not from the folds.
 2. `case.sql` — every query from steps 1–6 with a `-- result:` line.
 
-Graded on: (a) all three issue types are in the memo with correct counts (40 duplicates, 7 impossible dates, the 2 false-positive name pairs explained), (b) the "what it changes" section names at least two downstream numbers with their size (loans, applications or new customers), (c) it fits on one page and a CFO could read it without knowing SQL.
+Graded on: (a) every issue type is in the memo with the count from your queries — the duplicate rows, the impossible birth dates, and the name pairs that are *not* duplicates, explained (step 8's future registration dates are not required; a memo that has them stands out), (b) the "what it changes" section names at least two downstream numbers with their size (loans, applications or new customers), (c) it fits on one page and a CFO could read it without knowing SQL.
 
 ---
 
@@ -231,8 +241,8 @@ Pass with 80 % to finish the day. Retry as often as you like.
   {"type": "text", "q": "One word: the answer to 'what is one row of this fact table?' is called its…", "answer": ["grain", "granularity"], "explain": "Choose the grain first; every measure must make sense at it (→ section 1, Facts, dimensions, and the star)."},
   {"type": "single", "q": "Risk wants 'approval rate by channel, per month'. Which fact table has the right grain?", "options": ["fact_loans (one loan)", "fact_payments (one payment)", "fact_applications (one application)", "fact_loan_monthly (one loan per month-end)"], "answer": 2, "explain": "Approval is a property of an application, and rejected ones never become loans; write the question, find the noun that is one row (→ section 2)."},
   {"type": "single", "q": "In a warehouse, dim_branch points to a separate dim_region table instead of storing region itself. What is this design called?", "options": ["A star schema", "A snowflake schema", "An OLTP schema", "A snapshot fact"], "answer": 1, "explain": "A snowflake normalises its dimensions: fewer repeated values, one more join in every query; analysts prefer stars (→ section 1, Facts, dimensions, and the star)."},
-  {"type": "single", "q": "Your duplicate query returns this pair. What do you conclude?", "code": "customer_id | name          | birth_date | phone        | region\n2460        | Eldor Karimov | 1963-04-06 | +99890111... | Samarkand\n5562        | Eldor Karimov | 1963-04-06 | +99893555... | Andijan", "options": ["A duplicate — same name and birth date", "Probably two different people: a match on name and birth date is only a suspicion, and the phones differ", "A data-type error in birth_date", "Delete the newer row right away"], "answer": 1, "explain": "Name + birth date + phone is a duplicate; name + birth date alone also catches namesakes sharing a birthday (→ section 3, step 4)."},
-  {"type": "single", "q": "Which query finds customers whose first name carries an extra space?", "options": ["SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);", "SELECT COUNT(*) FROM customers WHERE first_name = TRIM(first_name);", "SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);", "SELECT COUNT(*) FROM customers WHERE first_name IS NULL;"], "answer": 0, "explain": "TRIM returns a copy without the spaces; a row that differs from its own trimmed copy has a space (→ section 3, step 2)."},
+  {"type": "single", "q": "Suppose a duplicate query returned this pair (an invented example). What do you conclude?", "code": "customer_id | name          | birth_date | phone        | region\n1111        | Aziz Rakhimov | 1980-05-12 | +99890111... | Samarkand\n2222        | Aziz Rakhimov | 1980-05-12 | +99893555... | Andijan", "options": ["A duplicate — same name and birth date", "Probably two different people: a match on name and birth date is only a suspicion, and the phones differ", "A data-type error in birth_date", "Delete the newer row right away"], "answer": 1, "explain": "Name + birth date + phone is a duplicate; name + birth date alone also catches namesakes sharing a birthday (→ section 3, step 4)."},
+  {"type": "single", "q": "In SQLite, which query finds customers whose first name carries an extra space?", "options": ["SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);", "SELECT COUNT(*) FROM customers WHERE first_name = TRIM(first_name);", "SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);", "SELECT COUNT(*) FROM customers WHERE first_name IS NULL;"], "answer": 0, "explain": "TRIM returns a copy without the spaces; a row that differs from its own trimmed copy has a space. SQL Server ignores trailing spaces when it compares text, so there compare DATALENGTH instead (→ section 3, step 2)."},
   {"type": "single", "q": "The data is as of 2026-10-01. Which filter lists the impossible birth dates, including one like 2027-02-28?", "options": ["WHERE birth_date IS NULL", "WHERE birth_date > '2026-10-01' OR birth_date < '1920-01-01'", "WHERE birth_date BETWEEN '1920-01-01' AND '2026-10-01'", "WHERE birth_date = '1900-01-01'"], "answer": 1, "explain": "2027-02-28 is a valid date, so only a business check (born before today, after about 1920) catches it; the BETWEEN version lists the plausible ones (→ section 3, step 5)."},
   {"type": "single", "q": "\"The approval-rate tile shows 61 % and Risk's deck says 70 % — align them.\" Whose desk does this request come from?", "options": ["Collections analyst", "BI / dashboard specialist", "Data engineer", "Product analyst"], "answer": 1, "explain": "The BI specialist owns one truth on one screen, including definitions like the two approval-rate conventions (→ section 6, Company corner)."}
 ]}

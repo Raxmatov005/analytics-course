@@ -27,7 +27,7 @@ Yesterday a primary key was "the unique ID". Today, what it *enforces*:
 
 An **entity-relationship diagram** (ER, *ER-диаграмма*) is the floor plan. Ours, as a list (compare with your Day-1 P9 sketch):
 
-| Relationship | Cardinality | Enforced by |
+| Relationship | Cardinality | Key column (an FK in a production design) |
 |---|---|---|
 | customers → applications | 1 — ∞ | `applications.customer_id` FK |
 | products → applications | 1 — ∞ | `applications.product_id` FK |
@@ -45,6 +45,8 @@ An **entity-relationship diagram** (ER, *ER-диаграмма*) is the floor pl
 | branches → staff | 1 — ∞ | `staff.branch_id` FK |
 | customers → app_events, applications → app_events | 1 — ∞ | two FKs |
 | dim_date → (any date column) | 1 — ∞ | by convention, not enforced |
+
+**One honest note about our copy.** These relationships are real — every `loans.customer_id` does point at a customer — but the course database is a teaching copy loaded from CSV files, and it declares **no** PRIMARY KEY or FOREIGN KEY constraints. Nothing in it would refuse a bad row; the joins work because the data is consistent, not because the engine checks it. A foreign key can only point at a column its parent declares as PRIMARY KEY (or UNIQUE), so when today's exercises need the database to say *no*, they first build a small keyed copy of the ids.
 
 Two things to notice. `loans.customer_id` is *redundant* — you could reach the customer through the application — and the designers kept it anyway, because almost every loan query needs the customer and nobody wants a two-step join each time. That is a deliberate, documented exception to the rules below. And `payments` has *two* FKs into the loan world (loan and instalment): a payment knows which instalment it was for, so you can see partial and late payments per instalment.
 
@@ -83,20 +85,25 @@ Why not always normalise everything? Because reading needs joins, and joins cost
 | auto-numbered id | `INT IDENTITY(1,1)` | `INTEGER PRIMARY KEY AUTOINCREMENT` | `SERIAL` / `GENERATED … AS IDENTITY` |
 
 ```sql
+CREATE TABLE scratch_loan_keys (                    -- a keyed copy of the loan ids (the course tables carry no keys)
+    loan_id    INT          NOT NULL PRIMARY KEY    -- SQLite: INTEGER NOT NULL PRIMARY KEY
+);
+INSERT INTO scratch_loan_keys (loan_id) SELECT loan_id FROM loans;   -- 7828 rows; DML on a scratch_ table
+
 CREATE TABLE scratch_demo (
     demo_id    INT          NOT NULL PRIMARY KEY,   -- SQLite: INTEGER NOT NULL PRIMARY KEY
     loan_id    INT          NOT NULL,
     note       NVARCHAR(200),                       -- SQLite: TEXT
     created_on DATE         NOT NULL,
-    FOREIGN KEY (loan_id) REFERENCES loans(loan_id)
+    FOREIGN KEY (loan_id) REFERENCES scratch_loan_keys(loan_id)
 );
 ```
 
-Read it aloud: *"a demo row must have an id (unique) and a loan it belongs to (which must exist); the note may be empty."* `ALTER TABLE scratch_demo ADD reason NVARCHAR(100);` adds a column; `DROP TABLE scratch_demo;` deletes the table and everything in it — no undo.
+Read it aloud: *"a demo row must have an id (unique) and a loan it belongs to (which must exist in the keyed list of loans); the note may be empty."* `ALTER TABLE scratch_demo ADD reason NVARCHAR(100);` adds a column; `DROP TABLE scratch_demo;` deletes the table and everything in it — no undo.
 
 ### DML — changing rows
 
-**DML** (Data Manipulation Language) changes *rows*: `INSERT`, `UPDATE`, `DELETE`. **Rule for this course: DML only on tables whose name starts with `scratch_` or `my_`.** The eleven course tables are read-only for you; if you change them, every "expect 7828" on every page stops being true, and your homework numbers will not match the keys. If it happens anyway: delete the database and reload it from `data/raw/` (Day 1, Path A step 4 or Path B step 2).
+**DML** (Data Manipulation Language) changes *rows*: `INSERT`, `UPDATE`, `DELETE`. **Rule for this course: DML only on tables whose name starts with `scratch_` or `my_`.** The eleven course tables are read-only for you; if you change them, every "expect 7828" on every page stops being true, and your homework numbers will not match the keys. If it happens anyway: on SQL Server, drop the `nur` database and load it again (Day 1, Path A steps 3–4). On SQLite your tool writes into `data/raw/nur.db` itself, so reopening the file undoes nothing: before today's practice, copy `nur.db` to a spare file (e.g. `nur_backup.db`), and if a course table changes, close the tool and copy the spare back.
 
 ```sql
 INSERT INTO scratch_demo (demo_id, loan_id, note, created_on)
@@ -126,10 +133,16 @@ DELETE FROM scratch_demo WHERE demo_id = 1;
 
 **Step 3 — what must never be empty?** The loan, the request date, the status. The decision date may be empty while it is pending.
 
-**Step 4 — what did we *not* put in?** The customer's name (reachable via loan → customer: 3NF), the product rate (via loan → product), the collector's branch (via staff). Every one of them would be a 3NF violation and a future "fix 400 cells".
+**Step 4 — what did we *not* put in?** The customer's name (reachable via loan → customer: 3NF), the product rate (via loan → product), the approver's branch (via staff). Every one of them would be a 3NF violation and a future "fix 400 cells".
 
 ```sql
 -- SQL Server
+-- the keyed copies the foreign keys point at (skip scratch_loan_keys if you made it in section 1)
+CREATE TABLE scratch_loan_keys  (loan_id  INT NOT NULL PRIMARY KEY);
+INSERT INTO scratch_loan_keys  (loan_id)  SELECT loan_id  FROM loans;
+CREATE TABLE scratch_staff_keys (staff_id INT NOT NULL PRIMARY KEY);
+INSERT INTO scratch_staff_keys (staff_id) SELECT staff_id FROM staff;
+
 CREATE TABLE scratch_restructurings (
     restructuring_id   INT IDENTITY(1,1) PRIMARY KEY,
     loan_id            INT           NOT NULL,
@@ -141,20 +154,20 @@ CREATE TABLE scratch_restructurings (
     reason_code        NVARCHAR(30)  NOT NULL,     -- 'job_loss', 'illness', 'business_down', 'other'
     approved_by        INT           NULL,
     status             NVARCHAR(20)  NOT NULL,
-    FOREIGN KEY (loan_id)     REFERENCES loans(loan_id),
-    FOREIGN KEY (approved_by) REFERENCES staff(staff_id)
+    FOREIGN KEY (loan_id)     REFERENCES scratch_loan_keys(loan_id),
+    FOREIGN KEY (approved_by) REFERENCES scratch_staff_keys(staff_id)
 );
--- SQLite: replace the first line's type with  INTEGER PRIMARY KEY AUTOINCREMENT,
+-- SQLite: replace restructuring_id's type with  INTEGER PRIMARY KEY AUTOINCREMENT,
 -- INT → INTEGER, BIGINT → INTEGER, NVARCHAR(n) → TEXT, DATE → TEXT.
 ```
 
-Sevara reads the column list and says "yes, that's all of it, and it's twelve columns, not three per event". That sentence — a business user recognising their process in your table — is the test of a good design.
+Sevara reads the column list and says "yes, that's all of it, and it's ten columns, not three per event". That sentence — a business user recognising their process in your table — is the test of a good design.
 
 ---
 
 ## 3. Practice (60 min)
 
-Save DDL/DML in `week-01/day-3/scratch.sql` and prose answers in `week-01/day-3/answers.md`.
+Save DDL/DML in `submissions/week-01/day-3/scratch.sql` and prose answers in `submissions/week-01/day-3/answers.md`.
 
 **P1.** Here is a table Timur found on a shared drive, `collections_log`:
 
@@ -179,10 +192,10 @@ Name every normalisation problem you see and which normal form it breaks.
 (b) and (d). (a) is allowed — one-to-many is the point. (c) is allowed — the FK constrains the child, not the parent.
 </details>
 
-**P4.** Create the restructurings table from the worked example in your own database, named `scratch_restructurings`. Check it exists with `SELECT COUNT(*) FROM scratch_restructurings;` (expect 0).
+**P4.** Create the restructurings table from the worked example in your own database, named `scratch_restructurings` — the two keyed copies first, then the table. Check it exists with `SELECT COUNT(*) FROM scratch_restructurings;` (expect 0).
 
 <details><summary>Answer</summary>
-The DDL above, in your engine's dialect. On SQLite, foreign keys are only enforced after `PRAGMA foreign_keys = ON;` in the same session — run it first if you want the FK to refuse bad ids.
+The DDL above, in your engine's dialect. On SQLite, foreign keys are only enforced while the connection has them switched on: run `PRAGMA foreign_keys = ON;` on its own first (it has no effect inside an open transaction). DB Browser usually switches them on for you (*Edit → Preferences → Database → Foreign keys*).
 </details>
 
 **P5.** Insert three rows: restructurings for loans 2242, 4567 and 4503 (three real, currently active loans that are the furthest behind), requested on 2026-09-28, old term 24, new term 36, reason `business_down`, status `requested`, decided_on and approved_by empty. Then count.
@@ -221,7 +234,7 @@ If you forgot the `WHERE` on the UPDATE, all rows are approved now. Drop the tab
 **P7.** Try to insert a restructuring for `loan_id = 999999`. What happens on your engine, and what *should* happen?
 
 <details><summary>Answer</summary>
-SQL Server: error, the FK constraint is violated — correct behaviour. SQLite without `PRAGMA foreign_keys = ON`: the row is accepted silently; with the pragma: `FOREIGN KEY constraint failed`. The lesson: constraints are only protection if the engine enforces them; always check what your engine does.
+SQL Server: error, the FK constraint is violated (999999 is not in `scratch_loan_keys`) — correct behaviour. SQLite with foreign keys off (`PRAGMA foreign_keys = OFF`, the engine's own default): the row is accepted silently; with them on: `FOREIGN KEY constraint failed`. The lesson: constraints are only protection if the engine enforces them; always check what your engine does.
 </details>
 
 **P8.** `loans` stores `customer_id` although it is reachable through `applications`. Is this a 3NF violation? Argue both sides in two sentences each.
@@ -285,11 +298,11 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w01d3", "pass": 0.8, "questions": [
-  {"type": "multi", "q": "installments.loan_id is a FOREIGN KEY to loans.loan_id. What does it refuse?", "options": ["An instalment whose loan_id does not exist in loans", "Many instalments for the same loan", "Deleting a loan that still has instalments", "A loan with no instalments yet"], "answer": [0, 2], "explain": "The FK keeps the child from pointing at nothing; one-to-many is allowed, and it constrains the child, not the parent (→ section 1, Keys, one level deeper)."},
+  {"type": "multi", "q": "In a production design, installments.loan_id is a FOREIGN KEY to loans.loan_id. What does it refuse?", "options": ["An instalment whose loan_id does not exist in loans", "Many instalments for the same loan", "Deleting a loan that still has instalments", "A loan with no instalments yet"], "answer": [0, 2], "explain": "The FK keeps the child from pointing at nothing; one-to-many is allowed, and it constrains the child, not the parent (→ section 1, Keys, one level deeper)."},
   {"type": "single", "q": "In Sevara's sheet, the columns inst1_due, inst1_paid, inst2_due, inst2_paid… repeat the same fact across columns. Which normal form does that break?", "options": ["1NF", "2NF", "3NF", "None — it is fine for short loans"], "answer": 0, "explain": "A repeating group breaks 1NF; the fix is one row per instalment, the installments table (→ section 1, Normalisation)."},
   {"type": "single", "q": "In this sheet, rate depends on product, not on the loan. Which normal form is broken, and what goes wrong?", "code": "loan_id | customer | product       | rate | branch_phone\n1       | Kamola   | Consumer loan | 0.30 | 71-200-01-01\n2       | Kamola   | Consumer loan | 0.30 | 71-200-01-01", "options": ["1NF — a cell holds two values", "3NF — when the Consumer rate changes, thousands of cells must change and some get missed", "2NF — the key is composite", "No form is broken; rate is a number"], "answer": 1, "explain": "A column depending on another non-key column is a 3NF violation and causes update anomalies; the rate belongs in products (→ section 1, Normalisation)."},
   {"type": "single", "q": "What does this statement do?", "code": "UPDATE scratch_restructurings\nSET status = 'approved';", "options": ["Approves the most recent row only", "Approves every row in the table", "Fails because WHERE is missing", "Nothing until you add COMMIT"], "answer": 1, "explain": "UPDATE and DELETE without WHERE hit every row; write the WHERE first and run it as a SELECT (→ section 1, DML)."},
-  {"type": "single", "q": "On SQLite, without running PRAGMA foreign_keys = ON first, you run this. Loan 999999 does not exist. What happens?", "code": "INSERT INTO scratch_restructurings\n  (loan_id, requested_on, old_term_months, new_term_months, reason_code, status)\nVALUES (999999, '2026-09-28', 24, 36, 'other', 'requested');", "options": ["FOREIGN KEY constraint failed", "The row is accepted silently", "SQLite creates loan 999999", "The whole table is dropped"], "answer": 1, "explain": "A constraint protects you only if the engine enforces it; SQLite checks FKs only after the pragma (→ P7)."},
+  {"type": "single", "q": "On SQLite with foreign keys off (PRAGMA foreign_keys = OFF, the engine's own default), you run this. Loan 999999 is not in scratch_loan_keys. What happens?", "code": "INSERT INTO scratch_restructurings\n  (loan_id, requested_on, old_term_months, new_term_months, reason_code, status)\nVALUES (999999, '2026-09-28', 24, 36, 'other', 'requested');", "options": ["FOREIGN KEY constraint failed", "The row is accepted silently", "SQLite creates loan 999999", "The whole table is dropped"], "answer": 1, "explain": "A constraint protects you only if the engine enforces it; SQLite checks FKs only while PRAGMA foreign_keys is ON (→ P7)."},
   {"type": "single", "q": "On which tables may you run INSERT, UPDATE or DELETE in this course?", "options": ["Any table, as long as you use WHERE", "Only tables whose name starts with scratch_ or my_", "Only loans and customers", "None — DML is never allowed"], "answer": 1, "explain": "The eleven course tables are read-only, or every expected number on every page stops being true (→ section 1, DML)."},
   {"type": "number", "q": "One loan's schedule, as of 2026-10-01. How many days past due (DPD) is the loan?", "code": "installment_no | due_date   | paid\n1              | 2026-07-01 | in full\n2              | 2026-08-01 | nothing\n3              | 2026-09-01 | in full", "answer": 61, "explain": "DPD counts from the oldest unpaid instalment (1 August), however many later ones were paid: 31 + 30 = 61 days, bucket 61–90 (→ section 5, Company corner)."},
   {"type": "single", "q": "First-payment default (FPD) jumps at one branch while later buckets stay calm. What is this the classic signal of?", "options": ["Fraud", "A slowing economy", "A data-loading error", "Customers paying early"], "answer": 0, "explain": "A borrower who never meant to repay skips the very first instalment; genuine trouble arrives later (→ section 5, Company corner)."}

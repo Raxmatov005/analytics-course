@@ -170,7 +170,7 @@ GROUP BY p.name ORDER BY p.name;
 
 ## 3. Practice (60 min)
 
-File `week-02/day-4/practice.sql`.
+File `submissions/week-02/day-4/practice.sql`.
 
 **P1.** For `customers`: rows, rows with income, rows without, share without (one decimal) — in one query.
 
@@ -230,7 +230,7 @@ app 2 693 / 222 / 1 359 / 732 = 5 006 · branch 3 636 / 329 / 1 513 / 745 = 6 22
 **P7.** The ON-vs-WHERE experiment. Count rows of `installments LEFT JOIN payments` for matured instalments with the as-of filter `p.paid_at <= '2026-10-01'` (a) in `ON`, (b) in `WHERE`. Explain the difference.
 
 <details><summary>Answer</summary>
-(a) 54 232 rows (54 207 matured instalments + 25 duplicate payments), `COUNT(p.payment_id)` 52 851. (b) 52 851 rows: every instalment without a payment is gone — `NULL <= '2026-10-01'` is not true. 24 payments are dated after the as-of date; with the filter in `ON` they are ignored *and* the unpaid instalments stay. (Re-running Day 3's DPD with that `ON` filter gives the same buckets — the 24 are partial payments on loans already deep in 90+.)
+(a) 54 232 rows (54 207 matured instalments + 25 duplicate payments), `COUNT(p.payment_id)` 52 851. (b) 52 851 rows: every instalment without a payment is gone — `NULL <= '2026-10-01'` is not true. 24 payments are dated after the as-of date; with the filter in `ON` they are ignored *and* the unpaid instalments stay. (Re-running Day 3's DPD with that `ON` filter gives exactly the same DPD for every loan — none of the 24 changes a loan's oldest not-fully-paid instalment.)
 </details>
 
 **P8.** Self-join: pairs of customers with the same phone but a *different* birth date. How many, and what are they?
@@ -267,7 +267,7 @@ See the Company corner: 7 099 loans in scope, **91** flagged — 51 unpaid or pa
 
 ## 4. Homework
 
-No new homework. **HW 2.2** (Sevara's lateness report, clean methods, the twelve loans) is due tomorrow with the checkpoint.
+No new homework. **HW 2.2** (Sevara's 2026 lateness report, clean methods, the under-18 applications) is due tomorrow with the checkpoint.
 
 ---
 

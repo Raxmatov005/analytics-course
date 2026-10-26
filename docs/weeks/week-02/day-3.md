@@ -40,7 +40,7 @@ ORDER BY payments DESC;
 
 Six rows, not ten — `Card`→`card`, `CASH `→`cash`, `PayMe`→`payme`, `Click`→`click`. The last stray is a different *word*, so case and spaces cannot fix it: `REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')` → five rows, transfer 8 774. Wrap the expression once and reuse it everywhere; week 3 turns it into a view so nobody retypes it.
 
-How many rows were dirty? `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180**. Small number, five phantom categories — Timur's tile moved because 0.3 % of the payments were spelt differently.
+How many rows were dirty? `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180** on SQLite. (SQL Server's default collation ignores case and trailing spaces, so there the same test finds only the 27 `bank transfer` rows; write `method <> LOWER(TRIM(method)) COLLATE Latin1_General_CS_AS` to get the same 180.) Small number, five phantom categories — Timur's tile moved because 0.3 % of the payments were spelt differently.
 
 ### Numbers (*числовые функции*)
 
@@ -54,7 +54,7 @@ SELECT 7917 / 14000,            -- 0
 -- SQL Server alternative: CAST(7917 AS FLOAT) / 14000
 ```
 
-Rule: put `100.0 *` at the *front* of every percentage. **`ROUND(x, n)`** rounds to n decimals; `ROUND(x)` to a whole number; `ROUND(x, -6)` to the nearest million (SQL Server; SQLite rounds to a whole number — divide first). **`CAST(x AS type)`** converts: `CAST(AVG(principal) AS INTEGER)` → 51 709 668 (SQL Server: `AS BIGINT`); `CAST(julianday(...) AS INTEGER)` turns SQLite's fractional days into whole days. For money reports, divide by a billion and round once: `ROUND(SUM(principal) / 1000000000.0, 1)` → SME 241.1 bn, Auto 84.8, Consumer 65.1, Micro 7.2, BNPL 6.5.
+Rule: put `100.0 *` at the *front* of every percentage. **`ROUND(x, n)`** rounds to n decimals; `ROUND(x)` to a whole number; `ROUND(x, -6)` to the nearest million (SQL Server; SQLite rounds to a whole number — divide first). **`CAST(x AS type)`** converts: `CAST(AVG(principal) AS INTEGER)` → 51 709 667 — CAST cuts the decimals off, it does not round (SQL Server: `AS BIGINT`); `CAST(julianday(...) AS INTEGER)` turns SQLite's fractional days into whole days. For money reports, divide by a billion and round once: `ROUND(SUM(principal) / 1000000000.0, 1)` → SME 241.1 bn, Auto 84.8, Consumer 65.1, Micro 7.2, BNPL 6.5.
 
 ### Dates (*функции дат*)
 
@@ -121,7 +121,7 @@ ORDER BY days;
 ```
 
 <details><summary>Result</summary>
-**12 loans.** The first row: loan 2244 (application 3969), applied 2026-09-27, disbursed 2026-08-29 — 29 days before the request. Eight are closed, four active; they are spread over 2024-12 to 2026-09 and over all products. Now look at their schedules: loan 1039's first instalment is due 2025-02-07 — one month after **2025-01-07**, not after the stored 2024-12-20. The schedule was built from the real disbursement date; only `disbursed_at` was overwritten later (a re-import, a manual correction gone wrong). Memo line for Timur: *12 loans (0.15 %) have `disbursed_at` 6–29 days earlier than `applications.applied_at`; the first due date minus one month gives the true date, 0–3 days after `decided_at`, consistent with every other loan; recommend restoring `disbursed_at` from the schedule.* Check also `l.disbursed_at < a.decided_at` — the same 12; nothing else was paid out before its decision.
+**12 loans.** The first row: loan 2244 (application 3969), applied 2026-09-27, disbursed 2026-08-29 — 29 days before the request. Eight are closed, four active; they were disbursed between 2024-12 and 2026-08, all Micro, Consumer or BNPL loans. Now look at their schedules: loan 1039's first instalment is due 2025-02-07 — one month after **2025-01-07**, not after the stored 2024-12-20. The schedule was built from the real disbursement date; only `disbursed_at` was overwritten later (a re-import, a manual correction gone wrong). Memo line for Timur: *12 loans (0.15 %) have `disbursed_at` 6–29 days earlier than `applications.applied_at`; the first due date minus one month gives the true date, 0–3 days after `decided_at`, consistent with every other loan; recommend restoring `disbursed_at` from the schedule.* Check also `l.disbursed_at < a.decided_at` — the same 12; nothing else was paid out before its decision.
 </details>
 
 **Step 3 — Sevara's tile.** Rebuild "share of payments by method" with the cleaned expression and compare with the raw one:
@@ -134,14 +134,14 @@ SELECT REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,
 FROM payments GROUP BY 1 ORDER BY payments DESC;
 -- card 17621 (33.3 %) · payme 8900 (16.8) · click 8790 (16.6) · cash 8790 (16.6) · transfer 8774 (16.6)
 ```
-(`(SELECT COUNT(*) FROM payments)` is a one-value subquery — week 3; copy it today.) Raw `card` was 17 564 = 33.2 %; the tile moved by the 57 `Card` rows. Nothing changed overnight except which rows the cashier's software capitalised.
+(`(SELECT COUNT(*) FROM payments)` is a one-value subquery — week 3; copy it today.) Raw `card` was 17 564 = 33.2 % on SQLite (SQL Server's default collation already puts `Card` with `card`); the tile moved by the 57 `Card` rows. Nothing changed overnight except which rows the cashier's software capitalised.
 </details>
 
 ---
 
 ## 3. Practice (50 min)
 
-File `week-02/day-3/practice.sql`. Show both dialects where they differ, or say which one you used.
+File `submissions/week-02/day-3/practice.sql`. Show both dialects where they differ, or say which one you used.
 
 **P1.** The 18 customers whose first name has a trailing space, found with a length comparison (not `LIKE`).
 
@@ -249,7 +249,7 @@ A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 %
 **P10.** Rewrite Tuesday's payments-by-method with the cleaned method *and* average lateness per method. Anything about the 27 `bank transfer` rows?
 
 <details><summary>Answer</summary>
-card −0.03 days, payme 0.14, click 0.20, cash 0.09, transfer 0.15 — and before merging, `bank transfer` alone averaged **2.11** days: the 27 mis-spelt rows are not a random sample; a different source system logs them, later. Cleaning the label is right; also tell Timur where those 27 come from.
+card −0.03 days, payme 0.14, click 0.20, cash 0.09, transfer 0.16 — and before merging, `bank transfer` alone averaged **2.11** days: the 27 mis-spelt rows are not a random sample; a different source system logs them, later. Cleaning the label is right; also tell Timur where those 27 come from.
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Reconstruct the true disbursement date of the twelve detective loans from their schedule: first `due_date` minus one month. How many days after `decided_at` is it for each? Then test the same rule on *all* loans — how many disagree with `disbursed_at`, and why are most of them not errors?
@@ -271,11 +271,11 @@ Lags of 0–3 days for all twelve (1039 → 2025-01-07, 2 days after the decisio
 
 ## 4. Homework <span class="badge hw">HW 2.2 — Due Day 5</span>
 
-**Sevara's lateness report and the clean method table.** Submit to `submissions/week-02/day-3/`:
+**Sevara's 2026 lateness report and the clean method table.** Use the payments received from 1 January to 30 September 2026 throughout (a half-open filter on `paid_at`). Submit to `submissions/week-02/day-3/`:
 
-1. `lateness.sql` + `lateness.md` — (a) days late per payment (the P7 query, with a `-- result:` of the count of late payments), (b) by product: payments, share late, average days over all payments, average days over late payments only — one query with all four columns, (c) by risk grade the same, (d) three sentences for Sevara: which product is late most often, how late a late payment typically is, whether the grades order correctly.
-2. `methods.sql` — the cleaned payments-by-method table (five rows) with count, total amount and share %, plus the count of dirty rows (180) and a one-line proposal for where the fix belongs (the cashier software, the ETL, or a reference table of methods).
-3. `detective.md` — the twelve loans as a table (loan, applied, disbursed, days) and the memo line for Timur.
+1. `lateness.sql` + `lateness.md` — (a) days late per payment (the P7 shape, with a `-- result:` of the count of late payments in 2026), (b) by customer **segment**: payments, share late, average days over all payments, average days over late payments only — one query with all four columns, (c) by **region of the branch** the same, (d) three sentences for Sevara: which segment is late most often, how late a late payment typically is, and whether any region stands out.
+2. `methods.sql` — the cleaned payments-by-method table for 2026 (five rows) with count, total amount and share %, plus the count of 2026 rows that needed cleaning and a one-line proposal for where the fix belongs (the cashier software, the ETL, or a reference table of methods).
+3. `detective.md` — a new case with section 2's tools: **applications made by people who were not yet 18 on the day they applied** (join `applications` to `customers`; compare `date(c.birth_date, '+18 years')` with `date(a.applied_at)` — SQL Server `DATEADD(year, 18, c.birth_date)` and `CAST(a.applied_at AS DATE)`). How many applications, how many customers, how many became loans — split into "born after the day they applied" and "really under 18". A table of the cases and a memo line for Timur: what it says about the data, and about the approval process.
 
 Graded on: (a) numbers match ours within rounding, (b) both dialects or a clear "SQLite"/"SQL Server" header, (c) the three sentences answer Sevara's actual question — frequency vs severity.
 

@@ -25,7 +25,7 @@ Standard definitions, with the places where companies differ marked **[varies]**
 - **Cure rate** — share of delinquent loans that return to DPD 0.
 - **Write-off** (*списание*) — removing a loan from the live portfolio as a loss, usually at 180+ DPD **[varies]**. **Recovery** — money collected after write-off.
 - **PD — probability of default** (*вероятность дефолта*) — the chance a loan defaults (usually 90+ DPD) within a horizon, typically 12 months. (W6 D1)
-- **LGD — loss given default** (*потери при дефолте*) — the share of the exposure lost if the loan defaults, after recoveries. Often 40–70 % for unsecured lending. (W6 D1)
+- **LGD — loss given default** (*потери при дефолте*) — the share of the exposure lost if the loan defaults, after recoveries. Often 50–80 % for unsecured consumer loans. (W6 D1)
 - **EAD — exposure at default** — what is owed at the moment of default; for an amortising loan, roughly the outstanding balance. (W6 D1)
 - **EL — expected loss** (*ожидаемые потери*) — PD × LGD × EAD; the basis of provisions. Under **IFRS 9** banks hold 12-month EL for healthy loans and lifetime EL for loans whose risk has grown significantly. **[varies]** how each PD and LGD is estimated. (W6 D1)
 - **Cost of risk** — provisions (or losses) in a period ÷ average portfolio.
@@ -41,7 +41,7 @@ Standard definitions, with the places where companies differ marked **[varies]**
 
 ## Product and app metrics
 
-- **Funnel** (*воронка*) — the steps from app open to signed contract and the share that survives each step. (W8)
+- **Funnel** (*воронка*) — the steps from app open to the money — signed contract, then the disbursed loan — and the share that survives each step; end it at the table that books the money. (W8)
 - **Conversion** — share moving from one step to the next.
 - **Activation** — first meaningful action (here: first disbursed loan).
 - **Retention / churn** (*удержание / отток*) — share of a cohort still active after N months; churn is the opposite. (W8)

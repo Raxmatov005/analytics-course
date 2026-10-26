@@ -211,28 +211,36 @@
     "submissions/week-02/day-3/lateness.sql": {
      "values": [
       {
-       "h": "8be3b40eb19b6487ba283f97",
+       "h": "224d36ab75f61771d48dd3ce",
        "dp": 0
+      },
+      {
+       "h": "7a9d8fe8db0aa7f0647eeb0e",
+       "dp": 1
+      },
+      {
+       "h": "2d6eaa29f0ec2e698947dac4",
+       "dp": 1
       }
      ]
     },
     "submissions/week-02/day-3/methods.sql": {
      "values": [
       {
-       "h": "9df980bda3b117f0e439e66c",
+       "h": "dfcd81d7480dcc37fd4cd3e2",
        "dp": 0
       },
       {
-       "h": "039dfa7a86a7aa881b2ab165",
+       "h": "c3483dd988022423c0b030f3",
        "dp": 0
       }
      ]
     }
    },
    "notes": {
-    "detective.md": "the loans disbursed before their application \u2014 the reviewer reads this file",
-    "_early": {
-     "h": "151287bd9b318e1b4729d3b3",
+    "detective.md": "the applications made before the applicant turned 18 \u2014 the reviewer reads this file",
+    "_minors": {
+     "h": "3217779f8781e8714dcd1641",
      "dp": 0
     }
    }

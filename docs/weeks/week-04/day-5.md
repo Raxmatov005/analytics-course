@@ -57,7 +57,7 @@ Twenty points per file: 8 for the row and value counts, 6 for the pipeline being
 |---|---|---|---|
 | rows | 6 000 | 52 850 | 2 + 2 |
 | the four data problems handled | 40 duplicates on phone + birth_date; 7 dates flagged and blanked | 25 duplicates on three columns; 180 method rows → 5 values | 3 + 3 |
-| nothing destroyed | 2 namesakes kept; 356 income blanks kept as null; raw sheets untouched | 24 forward-dated rows kept and flagged; raw untouched | 3 + 3 |
+| nothing destroyed | 2 namesakes kept; income blanks kept as null (354 after the dedup); raw sheets untouched | 24 forward-dated rows kept and flagged; raw untouched | 3 + 3 |
 | recorded and refreshable | Applied Steps renamed; Refresh All reproduces | same; `installments_paid` merge keeps 92 193 rows | 6 + 6 |
 | change log | one line per change, with counts and money | | 6 (shared) |
 
@@ -96,9 +96,9 @@ Remove duplicates      select phone, birth_date → Remove Rows → Remove Dupli
 Close & Load To        Table customers_clean
 ```
 
-Checks on `Checks`: `=ROWS(customers_clean)` → **6 000**; `=COUNTIFS(customers_clean[birth_date_invalid], TRUE)` → **7**; `=MAX(customers_clean[customer_id])` → 6 000 (no id above 6 000 survives — every duplicate was the *later* registration; if you get 6 0xx you did not sort first); `=COUNTBLANK(customers_clean[monthly_income])` → 356 (−0 if you typed blanks as 0: wrong — a zero income is a statement, a blank is a gap); `=ROWS(UNIQUE(customers_clean[phone]))` → 5 997; `=COUNTIFS(customers_clean[first_name], "*Bobur*")` returns the same whether or not a space followed. Namesakes 823/1197 and 2460/5562 are both present. Average age of valid rows 45.2.
+Checks on `Checks`: `=ROWS(customers_clean)` → **6 000**; `=COUNTIFS(customers_clean[birth_date_invalid], TRUE)` → **7**; `=MAX(customers_clean[customer_id])` → 6 000 (no id above 6 000 survives — every duplicate was the *later* registration; if you get 6 0xx you did not sort first); `=COUNTBLANK(customers_clean[monthly_income])` → 354 (the raw file has 356; two blanks belonged to removed duplicates — and 0 if you typed blanks as 0: wrong — a zero income is a statement, a blank is a gap); `=ROWS(UNIQUE(customers_clean[phone]))` → 5 997; `=COUNTIFS(customers_clean[first_name], "*Bobur*")` returns the same whether or not a space followed. Namesakes 823/1197 and 2460/5562 are both present. Average age of valid rows 45.2.
 
-Change-log lines (5 of the 10): *Trimmed and capitalised first_name/last_name — 18 trailing spaces, 22 all-caps first names, 40 lower-case surnames fixed* · *Flagged 7 impossible birth dates (3 × 1900-01-01, 3 × 2031-04-12, 1 × 2027-02-28) and blanked birth_date_clean for them; no value invented* · *Removed 40 duplicate customers on phone + birth_date, keeping the earlier registration (ids 6001–6040 dropped); 6 040 → 6 000* · *Kept 2 name-and-birth-date namesakes (823/1197, 2460/5562) — different phones and regions* · *monthly_income typed numeric, 356 blanks kept as null.*
+Change-log lines (5 of the 10): *Trimmed and capitalised first_name/last_name — 18 trailing spaces, 22 all-caps first names, 40 lower-case surnames fixed* · *Flagged 7 impossible birth dates (3 × 1900-01-01, 3 × 2031-04-12, 1 × 2027-02-28) and blanked birth_date_clean for them; no value invented* · *Removed 40 duplicate customers on phone + birth_date, keeping the earlier registration (ids 6001–6040 dropped); 6 040 → 6 000* · *Kept 2 name-and-birth-date namesakes (823/1197, 2460/5562) — different phones and regions* · *monthly_income typed numeric, blanks kept as null (356 raw, 354 after the dedup).*
 </details>
 
 ### A2. `payments_clean` (20 pts)
@@ -208,7 +208,7 @@ If you are stuck:
 **`findings.md` — the five sentences:**
 
 1. The book stands at **208.7 bn UZS** across 3 409 loans with a balance, growing about 7 bn a month while 17–22 bn is disbursed monthly — most new lending replaces fast repayments on short Micro, BNPL and Consumer terms.
-2. **SME is 60.3 % of outstanding on 10.0 % of the loans** (Auto another 27.6 % on 5 %), so the balance sheet is decided by roughly 1 200 large decisions a year, not by the 2 669 Micro loans.
+2. **SME is 60.3 % of outstanding on 10.0 % of the loans** (Auto another 27.6 % on 5 %), so the balance sheet is decided by fewer than 500 large decisions a year (452 SME and Auto loans in 2025), not by the 2 669 Micro loans.
 3. **PAR30 is 3.12 % and NPL90 2.55 %**: 5.3 of the 6.5 bn at risk is already past 90 days (234 loans, all defaulted or written off), so the delinquent book is old debt rather than a new wave; the live 1–90 caseload is 165 loans and 5.9 bn.
 4. **FPD30 on the July 2026 vintage is 1.09 % (4 of 367)**, in line with the 1.28 % history; August is not yet readable and should not be shown.
 5. **September's collection rate is 94.1 %** (15.98 of 16.99 bn due) against 96.5–97 % for earlier months — the latest month always reads low until it matures, and the 5.9 % unpaid is October's inflow to the 1–30 bucket.

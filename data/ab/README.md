@@ -18,7 +18,7 @@ Generated once by the mentors (seeded). Synthetic, like everything at Nur Financ
 
 **Events** (`event_name`), in funnel order: `view_offer` (the first one is the assignment moment; users may view the offer again later) → `start_application` → `submit_application` → `approved` (the scorecard said yes) → `contract_signed`. Events are logged until 2026-09-09 (experiment) and 2026-07-25 (A/A), so every user has at least 7 days of follow-up.
 
-**Follow-up.** The first instalment of an app loan falls due 30 days after signing; `loans_followup.csv` was extracted when every listed loan had had 30 more days to pay it (early November 2026). It is the source of the **FPD guardrail**.
+**Follow-up.** The first instalment of an app loan falls due 30 days after signing; `loans_followup.csv` was extracted when every listed loan had had 30 more days to pay it. It is the one file of the course dated after the as-of date of 1 October 2026: the last loan was signed on 9 September, its first instalment fell due on 9 October, so the extract was taken after 8 November 2026. Everything else in `data/ab/` ends by 9 September, inside the as-of date. It is the source of the **FPD guardrail**.
 
 ## Definitions used in the pages
 

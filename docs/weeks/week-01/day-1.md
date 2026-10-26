@@ -42,7 +42,7 @@ Eleven tables. Learn them like a floor plan: you will walk these corridors for e
 | `app_events` | one tap in the mobile app | `event_id` | `customer_id`, `application_id` |
 | `dim_date` | one calendar day | `date_key` | — |
 
-Notice the shape: a few **"who/what" tables** (customers, products, branches, staff) and a few **"what happened" tables** (applications, loans, installments, payments, actions, events). Almost every company's data has this shape; in week 4 you will learn its name (*dimensions and facts*).
+Notice the shape: a few **"who/what" tables** (customers, products, branches, staff — and the calendar, dim_date) and a few **"what happened" tables** (applications, loans, installments, payments, actions, events). Almost every company's data has this shape; in week 4 you will learn its name (*dimensions and facts*).
 
 ### Reading a relationship
 
@@ -127,7 +127,7 @@ That chain — fact table → key → dimension → key → the next fact — is
 
 ## 4. Practice (60 min)
 
-Write your answers in a text file `week-01/day-1/answers.md`. Check each against the folded answer only after you have tried.
+Write your answers in a text file `submissions/week-01/day-1/answers.md` (HW 1.1 collects it). Check each against the folded answer only after you have tried.
 
 **P1.** For each table, say whether it is a "who/what" table or a "what happened" table.
 

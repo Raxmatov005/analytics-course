@@ -135,11 +135,11 @@ If your number differs, find out why **before** you build on it (usually: raw pa
 
 Run Q1, Q2 and Q3 at the level of the "minimum analysis" column. For each table write, in the notebook, **one sentence** that would be a slide title if it survived tomorrow. Do not format anything yet.
 
-Useful starting queries: growth by product is week 2 with two `CASE WHEN` columns (2025 and 2026, Jan–Sep each); by region join `customers` (or `branches`; here they agree); vintages are week 3 Day 3's chain with `GROUP BY` channel or grade; collections coverage is `v_loan_status` (bucket) left-joined to the loans with a `collections_actions` row in September:
+Useful starting queries: growth by product is week 2 with two `CASE WHEN` columns (2025 and 2026, Jan–Sep each); by region join `customers` (or `branches`; here they agree); vintages are week 3 Day 3's chain with `GROUP BY` channel or grade; collections coverage is `v_loan_status` (bucket) left-joined to the loans with a `collections_actions` row in September. `v_loan_status` is not a table in `nur.db`: the capstone template creates it (with `v_payments_clean`) as a TEMP view in its own connection, so run this query in the notebook through `read_sql` — in DBeaver, create the view first from your week-3 `views.sql`:
 
 ```sql
 WITH delinquent AS (SELECT loan_id, bucket, outstanding FROM v_loan_status WHERE dpd BETWEEN 1 AND 90),
-touched AS (SELECT DISTINCT loan_id FROM collections_actions WHERE action_date >= '2026-09-01' AND action_date <= '2026-10-01')
+touched AS (SELECT DISTINCT loan_id FROM collections_actions WHERE action_date >= '2026-09-01' AND action_date < '2026-10-01')
 SELECT d.bucket, COUNT(*) AS loans, COUNT(t.loan_id) AS contacted_in_september, SUM(d.outstanding) AS outstanding
 FROM delinquent d LEFT JOIN touched t ON t.loan_id = d.loan_id
 GROUP BY d.bucket;

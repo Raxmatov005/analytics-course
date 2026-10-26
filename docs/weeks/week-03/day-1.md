@@ -23,8 +23,8 @@ SELECT loan_id, principal,
        SUM(principal) OVER ()                 AS company_total,     -- the same number on all 7 828 rows
        AVG(principal) OVER ()                 AS company_avg,
        COUNT(*) OVER ()                       AS loans
-FROM loans WHERE loan_id <= 3;
--- 1 · 31 150 000 · 404 783 280 000 · 51 709 668 · 7828   (and the same three values on rows 2 and 3)
+FROM loans LIMIT 3;
+-- 1 · 31 150 000 · 404 783 280 000 · 51 709 668 · 7828   (and the same three values on rows 2 and 3 — the window ran over all 7 828 rows before LIMIT cut the display)
 ```
 
 Read `OVER ()` as *"over all rows of the result"*. Empty brackets = one window containing everything. The two engines agree on every window keyword today — SQL Server and SQLite differ only in the functions you put in front (`julianday` vs `DATEDIFF`, as before).
@@ -225,7 +225,7 @@ WITH m AS (SELECT p.code, strftime('%Y-%m', l.disbursed_at) AS month, COUNT(*) A
            WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY 1, 2)
 SELECT code, month, loans, disbursed, SUM(disbursed) OVER (PARTITION BY code ORDER BY month) AS ytd
 FROM m ORDER BY code, month;
--- AUTO: Jan 4 620 560 000 → ytd Sep 36 021 820 000 · SME: Jan 9 … → ytd Sep 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL → 2 431 040 000
+-- AUTO: Jan 4 620 560 000 → ytd Sep 36 021 820 000 · SME: Jan 10 042 990 000 → ytd Sep 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL → 2 431 040 000
 ```
 45 rows (5 products × 9 months). Forget `PARTITION BY code` and Auto's September "YTD" includes every other product's January.
 </details>
@@ -357,11 +357,11 @@ Graded on: (a) numbers match ours within rounding, (b) every window has the righ
 - **Top-3 branches' share** — the cumulative share after three rows of the branch table: `SUM(SUM(outstanding)) OVER (ORDER BY SUM(outstanding) DESC) / SUM(SUM(outstanding)) OVER ()` → 13.8 → 26.6 → **39.1 %**. That is the three Tashkent branches: 39 % of the book in one city. A regulator or a board reads this as *geographic concentration: one region = 39 %*; Bekzod reads it as *"the capital is a third of the business — nothing unusual for an Uzbek lender, but one Tashkent shock hits 39 % of the book."*
 - **Biggest customer's share** — customer 3208 (Ulugbek Nazarov, SME segment, two SME loans of 568 200 000 and 454 970 000, both disbursed August 2026) owes 977 697 006 = **0.47 %** of outstanding. The top 10 customers together hold 3.6 %, the top 25 7.8 %. For a retail-and-SME book that is **low single-name concentration**: no borrower matters on his own. (A bank would also compare the largest exposure with its capital — the "large exposure" limit, typically 25 % of capital; we have no capital figure here, so the share of book is what we report.)
 
-**How to present the mix.** One table, three cuts stacked, each with count share *and* money share side by side (count tells you about operations, money about risk); below it the two concentration lines. The sentence under the table: *"The book is 60 % SME by money and 34 % Micro by count; Tashkent's three branches hold 39 %; the largest borrower is 0.5 %, the top 25 under 8 %."*
+**How to present the mix.** One table, three cuts stacked, each with count share *and* money share side by side (count tells you about operations, money about risk); below it the two concentration lines. The sentence under the table: *"The book is 60 % SME by money and 41 % Consumer by count of owing loans; Tashkent's three branches hold 39 %; the largest borrower is 0.5 %, the top 25 under 8 %."*
 
 > Interview version: *"How would you describe a loan portfolio's composition in SQL?"* — Outstanding = sum of `principal_due` over instalments not yet due; group by the dimension, add `100.0 * SUM(x) / SUM(SUM(x)) OVER ()` for the share; for concentration, order by the share and take a running `SUM(...) OVER (ORDER BY ...)` divided by the total to read top-N shares; always show count share next to money share.
 
-Tomorrow: ranking (who is first, who is in the top 3 of each group), looking at the *previous* row with `LAG`, and the twenty-five payments collections received twice.
+Tomorrow: ranking (who is first, who is in the top 3 of each group), looking at the *previous* row with `LAG`, and the payments collections say they received twice.
 
 ---
 

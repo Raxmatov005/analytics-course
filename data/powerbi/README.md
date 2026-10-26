@@ -55,7 +55,7 @@ Whole number: ids, `principal`, `outstanding`, `dpd`, amounts, `fpd30`, `is_deci
 
 ## Measures
 
-`measures.dax` — 31 measures and one calculated column, each with the value it must show in a stated filter context (computed in Python from these files). Three anchors to check first: **Outstanding** (no filter) 208 723 504 430 · **PAR30 %** 3.12 % · **YTD Disbursed** at September 2026 161 480 300 000.
+`measures.dax` — 32 measures and one calculated column, each with the value it must show in a stated filter context (computed in Python from these files). Three anchors to check first: **Outstanding** (no filter) 208 723 504 430 · **PAR30 %** 3.12 % · **YTD Disbursed** at September 2026 161 480 300 000.
 
 ## Known caveats
 

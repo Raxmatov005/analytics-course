@@ -47,7 +47,7 @@ CREATE TABLE t_loan_status AS SELECT * FROM v_loan_status;      -- SQL Server: S
 -- 7 828 rows, frozen as of 2026-10-01; the view keeps moving, the table does not
 ```
 
-Measured on our 11 MB SQLite file: `SELECT bucket, COUNT(*) FROM v_loan_status GROUP BY bucket` — **0.49 s** through the view, **0.00 s** from the materialised table; `v_portfolio_monthly` for one month — **12.8 s** through the view (it recomputes month-end outstanding for 34 months), instant from a table. **When to materialise:** when the view is slow *and* the data changes rarely (a nightly table is the standard warehouse answer — bronze/silver/gold from week 1's video); when the number must not change after it is published; when a script needs the same intermediate result five times (temp table, not five CTE copies). **When not to:** when freshness matters more than speed, or when the "table" will quietly go stale and disagree with the view — Timur's three tiles were exactly that: stale copies.
+Measured on our 9.6 MB SQLite file: `SELECT bucket, COUNT(*) FROM v_loan_status GROUP BY bucket` — **0.49 s** through the view, **0.00 s** from the materialised table; `v_portfolio_monthly` for one month — **12.8 s** through the view (it recomputes month-end outstanding for 34 months), instant from a table. **When to materialise:** when the view is slow *and* the data changes rarely (a nightly table is the standard warehouse answer — bronze/silver/gold from week 1's video); when the number must not change after it is published; when a script needs the same intermediate result five times (temp table, not five CTE copies). **When not to:** when freshness matters more than speed, or when the "table" will quietly go stale and disagree with the view — Timur's three tiles were exactly that: stale copies.
 
 ### Indexes (*индексы*) — the phone book
 
@@ -146,7 +146,7 @@ The dictionary paragraph HW 3.2 asks for, as a table (one line per column is the
 | `dpd` | as-of − due date of the oldest matured instalment not fully paid (payments through as-of, clean view); 0 if none |
 | `bucket` | `0` / `1-30` / `31-60` / `61-90` / `90+` from `dpd` |
 | `unpaid_instalments`, `overdue_amount` | count and unpaid remainder of those matured instalments |
-| caveats | 15 `closed` loans with `closed_at` NULL carry DPD > 0; outstanding excludes interest; as-of fixed at 2026-10-01 |
+| caveats | 14 `closed` loans (all with `closed_at` NULL) carry DPD > 0 — 13 in 1–30, 1 in 31–60; outstanding excludes interest; as-of fixed at 2026-10-01 |
 
 The as-of date appears four times. In SQL Server, make it a parameter with an inline table-valued function (`CREATE FUNCTION f_loan_status(@asof DATE) RETURNS TABLE AS RETURN (…)`); in SQLite, keep a one-row `params` table and join it. For the course, the literal date is fine — write it in the view's header comment.
 

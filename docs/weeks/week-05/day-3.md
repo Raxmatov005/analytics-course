@@ -8,7 +8,7 @@
 
 - **`groupby` / `agg`** is `GROUP BY` with named outputs; **`transform`** is the window function (a group total next to every row); **`merge`** is the join, with `how=`, `validate=` and `indicator=` as the safety belts you never had in SQL; `concat` is `UNION ALL`; `pivot_table` is the cross-tab.
 - Cleaning is the same three repairs as week 4 — text (`.str.strip().str.lower()`, `replace`), dates (`to_datetime(errors="coerce")` **plus the business rule**), duplicates (`duplicated` / `drop_duplicates(subset=, keep=)` after a sort) — written once, checked with `assert`, re-run forever.
-- You reproduce every week-4 count in pandas (6 040 → 6 000, the name-key trap at 42, 7 bad dates, 25 duplicate payments, 180 → 5 methods) and compute **DPD for all 7 828 loans** from `installments.csv` + payments — identical to the SQL column, 399 late, 7 429 / 124 / 25 / 16 / 234.
+- You can reproduce every week-4 cleaning count in pandas — duplicate people (and the name-key trap), impossible birth dates, duplicate payments, method spellings — and compute **DPD for every loan** from `installments.csv` + payments, checked against the SQL column loan by loan.
 
 ---
 
@@ -33,7 +33,7 @@ pay.groupby("region")["amount"].sum().sort_values(ascending=False)   # one aggre
 pay["loan_total"] = pay.groupby("loan_id")["amount"].transform("sum")   # SUM(amount) OVER (PARTITION BY loan_id)
 pay["share"] = pay["amount"] / pay["loan_total"]                        # each payment's share of its loan's payments
 cust["seg_median"] = cust.groupby("segment")["monthly_income"].transform("median")
-above = (cust["monthly_income"] > cust["seg_median"]).sum()             # 2 823 customers earn above their segment's median
+above = (cust["monthly_income"] > cust["seg_median"]).sum()             # raw customers_dirty.csv: 2 841 earn above their segment's median
 ```
 
 `agg` collapses to one row per group; `transform` returns a value **per original row** aligned to the frame — week 3's `OVER (PARTITION BY …)`. Use it for shares of a group total, for "difference from the group mean", for `cumsum` running totals inside groups (`groupby("loan_id")["amount"].cumsum()`), for `rank` inside groups, and — the dedup trick — `groupby(key).cumcount()` is `ROW_NUMBER() OVER (PARTITION BY key)`.
@@ -42,14 +42,14 @@ above = (cust["monthly_income"] > cust["seg_median"]).sum()             # 2 823 
 
 ```python
 m = inst.merge(paid, on="installment_id", how="left", validate="1:1", indicator=True)
-m["_merge"].value_counts()      # both 52826 · left_only 39367 · right_only 0
+m["_merge"].value_counts()      # both · left_only · right_only — read the three counts (Detective step 5)
 ```
 
-`left.merge(right, on="key", how=...)`: `"inner"` (default — **not** `left`; a forgotten `how=` drops the unpaid instalments, which are the point), `"left"`, `"right"`, `"outer"`. `left_on=` / `right_on=` when the names differ; `on=["a", "b"]` for a two-column key. Two arguments SQL never gave you: **`validate="1:1"` / `"m:1"` / `"1:m"`** raises `MergeError` if the key is not unique on the side you promised — the week-2 fan-out (×11.8 principal after joining instalments) becomes an error instead of a wrong number; **`indicator=True`** adds a `_merge` column saying where each row came from — the anti-join is `m[m["_merge"] == "left_only"]`. Columns with the same name on both sides get `_x` / `_y`; pass `suffixes=("", "_sql")` to control it. Count rows before and after, every time: a left merge must keep exactly `len(left)` rows.
+`left.merge(right, on="key", how=...)`: `"inner"` (default — **not** `left`; a forgotten `how=` drops the unpaid instalments, which are the point), `"left"`, `"right"`, `"outer"`. `left_on=` / `right_on=` when the names differ; `on=["a", "b"]` for a two-column key. Two arguments SQL never gave you: **`validate="1:1"` / `"m:1"` / `"1:m"`** raises `MergeError` if the key is not unique on the side you promised — the week-2 fan-out (Σ principal ×24.7 after joining instalments) becomes an error instead of a wrong number; **`indicator=True`** adds a `_merge` column saying where each row came from — the anti-join is `m[m["_merge"] == "left_only"]`. Columns with the same name on both sides get `_x` / `_y`; pass `suffixes=("", "_sql")` to control it. Count rows before and after, every time: a left merge must keep exactly `len(left)` rows.
 
 | `how=` | SQL (week 2) | Power Query (week 4) | Rows kept |
 |---|---|---|---|
-| `"inner"` (default) | `INNER JOIN` | Inner | only matches — 52 826 instalments with a payment |
+| `"inner"` (default) | `INNER JOIN` | Inner | only matches — the instalments with a payment |
 | `"left"` | `LEFT JOIN` | Left Outer | every left row — 92 193 instalments, `paid` NaN where none |
 | `"right"` | `RIGHT JOIN` | Right Outer | every right row |
 | `"outer"` | `FULL OUTER JOIN` | Full Outer | everything from both — the roll-rate join of two snapshots |
@@ -58,7 +58,7 @@ m["_merge"].value_counts()      # both 52826 · left_only 39367 · right_only 0
 ### concat — UNION ALL; pivot_table — the cross-tab
 
 ```python
-pd.concat([pay[pay.region == "Tashkent"], pay[pay.region != "Tashkent"]])           # 20437 + 32413 = 52850 rows, by column NAME
+pd.concat([pay[pay.region == "Tashkent"], pay[pay.region != "Tashkent"]])           # Tashkent + the rest = every row again, matched by column NAME
 pd.concat([a, b], ignore_index=True)                                                 # renumber the index
 pd.pivot_table(loans, index="bucket", columns="product", values="loan_id", aggfunc="count", fill_value=0, margins=True)
 pd.crosstab(loans["grade"], loans["bucket"])                                         # counts only, shorter
@@ -79,10 +79,10 @@ loans["bucket"] = loans["dpd"].apply(dpd_bucket)      # fine for a label functio
 ### The `.str` accessor — text repair for a whole column
 
 ```python
-cust["first_name"].str.strip()                           # TRIM            — 18 rows had a trailing space
+cust["first_name"].str.strip()                           # TRIM            — the trailing spaces go
 cust["first_name"].str.title()                           # PROPER          — 'MALIKA' → 'Malika'; also 'buy now pay later' → 'Buy Now Pay Later', so names only
 pay["method"].str.strip().str.lower()                    # the week-2 LOWER(TRIM())
-pay["method"].replace({"bank transfer": "transfer"})     # whole-value replace (a dict) — 27 rows
+pay["method"].replace({"bank transfer": "transfer"})     # whole-value replace (a dict)
 cust["first_name"].str.contains(" "), .str.len(), .str.startswith("approved"), .str.split(" ").str[0], .str.replace(r"^998", "+998", regex=True)
 ```
 
@@ -91,18 +91,18 @@ cust["first_name"].str.contains(" "), .str.len(), .str.startswith("approved"), .
 ### Duplicates: find, look, then drop
 
 ```python
-dup_mask = pay.duplicated(subset=["installment_id", "paid_at", "amount"], keep=False)   # True on ALL members of a group → 50 rows
+dup_mask = pay.duplicated(subset=["installment_id", "paid_at", "amount"], keep=False)   # True on ALL members of a group
 pay[dup_mask].sort_values(["installment_id", "payment_id"])                            # look before you delete
-pay_clean = pay.sort_values("payment_id").drop_duplicates(subset=[...], keep="first")  # keep the lowest payment_id → 52 850
+pay_clean = pay.sort_values("payment_id").drop_duplicates(subset=[...], keep="first")  # keep the lowest payment_id
 ```
 
-`duplicated(subset=, keep=)`: `keep="first"` marks the later copies (25 rows — the ones that will go), `keep=False` marks every member (50 — for looking). `drop_duplicates` with the same arguments removes them, keeping the first row **in the current order** — so **sort first**: by `payment_id` to keep the earliest payment, by `registered_at` to keep the customer's original registration. Without `subset=` it compares all columns and finds 0 here, because the `payment_id` differs — week 4's "tick all columns" trap, in a parameter. The key defines sameness; the sort defines the survivor; the assert on the count proves both.
+`duplicated(subset=, keep=)`: `keep="first"` marks the later copies (the ones that will go), `keep=False` marks every member (for looking). `drop_duplicates` with the same arguments removes them, keeping the first row **in the current order** — so **sort first**: by `payment_id` to keep the earliest payment, by `registered_at` to keep the customer's original registration. Without `subset=` it compares all columns and finds 0 here, because the `payment_id` differs — week 4's "tick all columns" trap, in a parameter. The key defines sameness; the sort defines the survivor; the assert on the count proves both.
 
 ### Dates that lie: `errors="coerce"` and the business rule
 
 ```python
-cust["birth_date"] = pd.to_datetime(cust["birth_date"], errors="coerce")   # unparseable → NaT (not a crash); here 0 NaT — every date PARSES
-bad = (cust["birth_date"] > AS_OF) | (cust["birth_date"] < "1920-01-01")   # the business rule finds the 7
+cust["birth_date"] = pd.to_datetime(cust["birth_date"], errors="coerce")   # unparseable → NaT (not a crash) — count the NaT
+bad = (cust["birth_date"] > AS_OF) | (cust["birth_date"] < "1920-01-01")   # the business rule finds what parsing cannot
 cust["birth_date_invalid"] = bad
 cust["birth_date_clean"] = cust["birth_date"].where(~bad)                   # keep the date where valid, NaT where not
 ```
@@ -120,6 +120,14 @@ assert (m["_merge"] != "right_only").all()           # no payment without an ins
 `assert condition, message` stops the notebook with `AssertionError` when the condition is False and does nothing otherwise. Put one after every step whose count you know — rows after dedup, rows after a left merge (`== len(left)`), a sum that must reconcile — and a Monday run either finishes or tells you exactly which step broke. This is what Jasur meant: the counts are *in* the script, not in your memory.
 
 ### Depth (optional)
+
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ groupby and agg — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 1:05:47](https://youtu.be/2uvysYbKdjM?t=3947)
+- ▶ groupby, short single-topic — [Group By and Aggregate Functions in Pandas (Alex The Analyst), 01:20](https://youtu.be/VRmXto2YA2I?t=80)
+- ▶ merge / concat — Keith Galli same video, [50:42](https://youtu.be/2uvysYbKdjM?t=3042)
+- ▶ Cleaning (duplicates, strip, replace, fill nulls) — [Data Cleaning in Pandas (Alex The Analyst), 02:34](https://youtu.be/bDhvCp3_lYw?t=154)
+- ▶ Same topic inside the big course — [Python for Data Analytics (Luke Barousse), Merge 7:15:37](https://youtu.be/wUSDVGivd-8?t=26137)
 
 - RU deck `4.3_Python.pdf` pp. 82–103: `groupby` and `.agg` pp. 82–87, pivot tables pp. 88–91, `pd.merge` / `join` / `concat` pp. 92–103; `.apply` / `.map` pp. 74–81. `4.4_Python.pdf` is tomorrow's bridge (DB-API, `read_sql`, SQLAlchemy).
 - *Russian terms:* группировка = groupby, агрегация = aggregation, именованная агрегация = named aggregation, оконная функция = window function (`transform`), слияние / соединение = merge / join, конкатенация = concat, сводная таблица = pivot table, дубликаты = duplicates, очистка данных = data cleaning, утверждение / проверка = assert.
@@ -181,7 +189,7 @@ SME: card 2 701 · cash 1 334 · click 1 390 · payme 1 401 · transfer 1 396 �
 **P3.** `transform`: add each customer's segment median income next to them; how many earn above it? Then `cumcount` per `phone` as the `ROW_NUMBER` of week 3 — how many rows get 1 or more?
 
 <details><summary>Answer</summary>
-2 823 above their segment median (mass 5.80 m · affluent 25.18 m · sme 33.24 m; the 356 NaN compare False). `cust.groupby("phone").cumcount()` → 43 rows ≥ 1 — the 40 duplicates plus the three family-shared numbers; with `["phone", "birth_date"]` as the key, exactly 40. Sort by `registered_at` before `cumcount` or the "0" may be the later copy.
+On the raw `customers_dirty.csv`: 2 841 above their segment median (mass 5.79 m · affluent 25.28 m · sme 33.21 m; the 356 NaN compare False). On the 6 000 clean customers (P6): 2 823 (medians 5.80 / 25.18 / 33.24 m) — say which frame you used. `cust.groupby("phone").cumcount()` → 43 rows ≥ 1 — the 40 duplicates plus the three family-shared numbers; with `["phone", "birth_date"]` as the key, exactly 40. Sort by `registered_at` before `cumcount` or the "0" may be the later copy.
 </details>
 
 **P4.** The inner-merge trap: repeat Step 5 with the default `how`. How many rows, and which loans would the DPD computation then miss?
@@ -190,10 +198,10 @@ SME: card 2 701 · cash 1 334 · click 1 390 · payme 1 401 · transfer 1 396 �
 52 826 rows — every instalment with **no** payment disappears, so an instalment that was never paid is not "unpaid", it is absent, and every loan whose arrears are total (the 234 in 90+ with months of nothing) looks current. `how="left"` + `fillna(0)` is the `LEFT JOIN … COALESCE(SUM, 0)` of week 2; an `assert len(m) == len(inst)` after the merge is the belt.
 </details>
 
-**P5.** `validate`: merge clean payments onto `loans_status.csv` (`loan_id`) with `validate="m:1"` — fine. Now merge `installments.csv` onto payments with `validate="1:1"` — what happens, and what does the message tell you about the grain?
+**P5.** `validate`: merge clean payments onto `loans_status.csv` (`loan_id`) with `validate="m:1"` — fine. Now merge `installments.csv` onto the **raw** payments with `validate="1:1"`, then onto the **clean** payments — what happens each time, and what does the message tell you about the grain?
 
 <details><summary>Answer</summary>
-`MergeError: Merge keys are not unique in left dataset; not a one-to-one merge` — several payments can hit one instalment (403 partials, and before dedup the 25 pairs), so payments → instalments is **m:1**; stating the wrong grain is caught before any number is wrong. Rule: write the `validate` you *believe*; a `MergeError` is a free lesson about the data.
+Raw: `MergeError: Merge keys are not unique in left dataset; not a one-to-one merge` — the 25 duplicate pairs put two payment rows on 25 instalments, so raw payments → instalments is **m:1**; stating the wrong grain is caught before any number is wrong. Clean: the merge passes — after the dedup every instalment has at most one payment (week 3 P11: the partials are single payments smaller than `total_due`, not several payments). Keep `validate="m:1"` in the script anyway: it is the grain the business allows, and it will not break the day a real split payment arrives. Rule: write the `validate` you *believe*; a `MergeError` is a free lesson about the data.
 </details>
 
 **P6.** Clean `customers_dirty.csv` end to end in one chain (strip + title, flags, sort, dedup) and `assert` the four counts: 6 000 rows, 7 invalid dates, 354 missing incomes, no id above 6 000. Why 354 and not 356?
@@ -223,7 +231,7 @@ Row-wise `apply(axis=1)` ≈ 0.7 s; `inst.principal_due + inst.interest_due` ≈
 <span class="badge stretch">Stretch</span> **P10.** Reshape: `monthly_disbursements.csv` (170 long rows) → `pivot` to 34 months × 5 products, add a `total` column and SME's share per month; then `melt` it back to long. Which month had SME's highest share, and what was it in September 2026?
 
 <details><summary>Answer</summary>
-`md.pivot(index="month", columns="product", values="amount")` → (34, 5); SME is 50.6 % of September 2026's 17.0 bn (8.60 bn). `w.reset_index().melt(id_vars="month", var_name="product", value_name="amount")` → 170 rows again. Wide for reading and Excel, long for `groupby` and seaborn — tomorrow's lineplot wants the long shape.
+`md.pivot(index="month", columns="product", values="amount")` → (34, 5); SME's highest share is **2024-07, 77.2 %**; it is 50.6 % of September 2026's 17.0 bn (8.60 bn). `w.reset_index().melt(id_vars="month", var_name="product", value_name="amount")` → 170 rows again. Wide for reading and Excel, long for `groupby` and seaborn — tomorrow's lineplot wants the long shape.
 </details>
 
 ### Mistakes that cost a point this week
@@ -248,6 +256,8 @@ Row-wise `apply(axis=1)` ≈ 0.7 s; `inst.principal_due + inst.interest_due` ≈
 3. **`dpd_per_loan.csv`** — one row per loan (7 828): `loan_id`, `dpd`, `bucket`, computed from `installments.csv` + your clean payments as in the Company corner; 399 loans with `dpd > 0`, buckets 7 429 / 124 / 25 / 16 / 234, equal to `loans_status.csv`'s `dpd` for every loan.
 4. **Asserts** on every count above inside the script, plus `len(merged) == len(installments)` after the merge; running `python clean_nur.py` prints nothing but the three file names when all is well.
 
+**Paths.** `python scripts/check.py hw5.2` runs your script with `submissions/week-05/day-3/` as the working directory. So read the raw files relative to that folder — `../../../data/excel/customers_dirty.csv`, or safer `RAW = Path(__file__).resolve().parents[3] / "data" / "excel"` — and write the three CSVs into the current folder (`customers_clean.csv`, not a path elsewhere). If you submit the notebook instead of the script, the checker reads the three CSVs already in `submissions/week-05/day-3/`, so save them there.
+
 Graded on: (a) the counts (6 000 / 7 / 52 850 / 5 / 24 / 399 and the buckets), (b) the asserts are present and the script runs top to bottom from the raw files — the reviewer deletes the CSVs and re-runs it, (c) the dedup keeps the right survivor (originals ≤ 6 000; lowest `payment_id`) and the DPD matches the SQL for all 7 828 loans. Also due today: **HW 5.1** in `day-1/`.
 
 ---
@@ -255,7 +265,7 @@ Graded on: (a) the counts (6 000 / 7 / 52 850 / 5 / 24 / 399 and the buckets), (
 ## 5. Self-check
 
 1. `agg` vs `transform` — which returns one row per group, which one per original row, and which is the window function? *(→ section 1, "groupby", "transform")*
-2. You merge payments onto instalments and get 52 826 rows instead of 92 193. What did you forget, and which `assert` would have caught it? *(→ section 1, "merge", P4)*
+2. You merge payments onto instalments and get fewer rows than the 92 193 instalments. What did you forget, and which `assert` would have caught it? *(→ section 1, "merge", P4)*
 3. `pd.to_datetime(errors="coerce")` found 0 bad birth dates. Are the dates clean? *(→ section 1, "Dates that lie", Detective step 3)*
 
 ---
@@ -270,7 +280,7 @@ inst = pd.read_csv("../excel/installments.csv", parse_dates=["due_date"])       
 pay  = clean_payments(pd.read_csv("../excel/payments_dirty.csv", parse_dates=["paid_at"]))   # 52 850
 
 paid = (pay[pay["paid_at"] <= AS_OF]                                                # 1. payments through the as-of …
-        .groupby("installment_id", as_index=False).agg(paid=("amount", "sum")))     #    … aggregated per instalment (52 826)
+        .groupby("installment_id", as_index=False).agg(paid=("amount", "sum")))     #    … aggregated per instalment
 m = inst.merge(paid, on="installment_id", how="left", validate="1:1")               # 2. every instalment kept
 assert len(m) == len(inst)
 m["paid"] = m["paid"].fillna(0)                                                     #    no payment = 0 paid
@@ -313,8 +323,8 @@ Pass with 80 % to finish the day. Retry as often as you like.
 {"id": "w05d3", "pass": 0.8, "questions": [
   {"type": "single", "q": "You need each payment's share of its loan's total, on every payment row. Which call gives the loan total per row?", "options": ["pay.pivot_table(index=\"loan_id\", values=\"amount\")", "pay.groupby(\"loan_id\")[\"amount\"].transform(\"sum\")", "pay.groupby(\"loan_id\")[\"amount\"].agg(\"sum\")", "pay[\"amount\"].sum()"], "answer": 1, "explain": "agg returns one row per group; transform returns one value per original row — the window function SUM() OVER (PARTITION BY) (→ section 1, 'transform')."},
   {"type": "single", "q": "You expected len(m) == 92 193. Why is it smaller?", "code": "m = inst.merge(paid, on=\"installment_id\")\nlen(inst), len(m)", "options": ["merge defaults to how=\"inner\", so instalments with no payment vanish", "paid has duplicate installment_ids", "installment_id is text in one of the tables", "merge drops rows with NaN in any column"], "answer": 0, "explain": "The default join is inner; use how=\"left\", fillna(0) after the merge, and assert len(m) == len(inst) (→ section 1, 'merge', P4)."},
-  {"type": "number", "q": "Clean payments cut at the as-of, summed per instalment, then an inner merge onto installments.csv. How many rows does m have?", "code": "paid = pay_clean[pay_clean[\"paid_at\"] <= AS_OF].groupby(\"installment_id\", as_index=False).agg(paid=(\"amount\", \"sum\"))\nm = inst.merge(paid, on=\"installment_id\")\nlen(m)", "answer": 52826, "tol": 0, "explain": "Only instalments with at least one payment survive an inner merge: 52 826 of 92 193 — the 39 367 without a payment are exactly the ones DPD needs (→ section 1, 'merge')."},
-  {"type": "single", "q": "installments.merge(payments, on=\"installment_id\", validate=\"1:1\") raises MergeError. What does it tell you?", "options": ["pandas cannot validate more than 50 000 rows", "The merge must be rewritten as a loop", "Several payments can hit one instalment — payments to instalments is m:1, so the grain you stated was wrong", "installment_id has NaN values"], "answer": 2, "explain": "validate turns a wrong belief about the grain into an error before any number is wrong — the week-2 fan-out, caught (→ section 1, 'merge', P5)."},
+  {"type": "number", "q": "inst has 10 instalments; paid has one row for each of the 6 instalments that received a payment. How many rows does m have?", "code": "m = inst.merge(paid, on=\"installment_id\")\nlen(m)", "answer": 6, "tol": 0, "explain": "The default join is inner: only instalments with a payment survive, and the 4 without a payment — exactly the ones DPD needs — vanish; how=\"left\" keeps all 10 (→ section 1, 'merge')."},
+  {"type": "single", "q": "installments.merge(payments_raw, on=\"installment_id\", validate=\"1:1\") raises MergeError on the raw payments file. What does it tell you?", "options": ["pandas cannot validate more than 50 000 rows", "The merge must be rewritten as a loop", "Some instalments have more than one payment row (here the duplicate payments), so payments to instalments is m:1 — the grain you stated was wrong", "installment_id has NaN values"], "answer": 2, "explain": "validate turns a wrong belief about the grain into an error before any number is wrong — the week-2 fan-out, caught (→ section 1, 'merge', P5)."},
   {"type": "multi", "q": "Which statements about duplicated / drop_duplicates are true?", "options": ["Without subset= it compares all columns, and finds 0 payment duplicates because payment_id differs", "subset= defines what 'the same' means", "drop_duplicates keeps the first row in the current order, so sort first", "duplicated(keep=False) marks every member of a duplicate group", "It always keeps the row with the lowest id, whatever the order"], "answer": [0, 1, 2, 3], "explain": "The key defines sameness, the sort defines the survivor, the assert proves both (→ section 1, 'Duplicates')."},
   {"type": "single", "q": "pd.to_datetime(birth_date, errors=\"coerce\") produces 0 NaT. Are the birth dates clean?", "options": ["Yes, if the dtype is datetime64", "No — parsing is syntax; 2031-04-12 parses fine and still breaks the business rule", "No — coerce silently turns bad dates into 1900-01-01", "Yes — every value parsed"], "answer": 1, "explain": "Validity is a rule you write (not in the future, not before 1920); flag and blank with .where, never guess a date (→ section 1, 'Dates that lie')."},
   {"type": "single", "q": "What does the concat produce?", "code": "a = pay[pay[\"region\"] == \"Tashkent\"]\nb = pay[pay[\"region\"] != \"Tashkent\"].rename(columns={\"amount\": \"Amount\"})\npd.concat([a, b])", "options": ["All rows and one column more: amount is NaN in b's rows, Amount is NaN in a's", "An error: the column names differ", "Only the columns both frames share", "One amount column — pandas ignores case"], "answer": 0, "explain": "concat matches columns by name, without an error; assert set(a.columns) == set(b.columns) before every concat (→ section 1, 'concat', P9)."},
@@ -331,7 +341,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w05d3", "q": "Sevara wants the collections ranking for the last quarter by branch. Take the instalments due from 1 July to 30 September 2026 (installments.csv), what was paid on each through the as-of 2026-10-01 (payments_dirty.csv, de-duplicated as in today's Detective), and the loan's branch from loans_status.csv. Collection rate = Σ paid ÷ Σ total_due. What is the rate of the WORST branch? Give a percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["8aa6be7c2de4b2c386aeab63"], "hint": "Today's Company corner already builds the instalment-level frame with paid next to total_due; one more merge brings the branch — check its grain with validate before you group.", "sol": "QVNfT0YgPSBwZC5UaW1lc3RhbXAoIjIwMjYtMTAtMDEiKQppbnN0ID0gcGQucmVhZF9jc3YoIi4uL2V4Y2VsL2luc3RhbGxtZW50cy5jc3YiLCBwYXJzZV9kYXRlcz1bImR1ZV9kYXRlIl0pCnBheSA9IHBkLnJlYWRfY3N2KCIuLi9leGNlbC9wYXltZW50c19kaXJ0eS5jc3YiLCBwYXJzZV9kYXRlcz1bInBhaWRfYXQiXSkKcGF5ID0gcGF5LnNvcnRfdmFsdWVzKCJwYXltZW50X2lkIikuZHJvcF9kdXBsaWNhdGVzKHN1YnNldD1bImluc3RhbGxtZW50X2lkIiwgInBhaWRfYXQiLCAiYW1vdW50Il0pICAgIyA1MiA4NTAKcGFpZCA9IHBheVtwYXlbInBhaWRfYXQiXSA8PSBBU19PRl0uZ3JvdXBieSgiaW5zdGFsbG1lbnRfaWQiLCBhc19pbmRleD1GYWxzZSkuYWdnKHBhaWQ9KCJhbW91bnQiLCAic3VtIikpCm0gPSBpbnN0Lm1lcmdlKHBhaWQsIG9uPSJpbnN0YWxsbWVudF9pZCIsIGhvdz0ibGVmdCIsIHZhbGlkYXRlPSIxOjEiKS5maWxsbmEoeyJwYWlkIjogMH0pCmxvYW5zID0gcGQucmVhZF9jc3YoIi4uL2V4Y2VsL2xvYW5zX3N0YXR1cy5jc3YiKQptID0gbS5tZXJnZShsb2Fuc1tbImxvYW5faWQiLCAiYnJhbmNoIl1dLCBvbj0ibG9hbl9pZCIsIGhvdz0ibGVmdCIsIHZhbGlkYXRlPSJtOjEiKQpxMyA9IG1bKG1bImR1ZV9kYXRlIl0gPj0gIjIwMjYtMDctMDEiKSAmIChtWyJkdWVfZGF0ZSJdIDwgIjIwMjYtMTAtMDEiKV0KZyA9IHEzLmdyb3VwYnkoImJyYW5jaCIpLmFnZyhkdWU9KCJ0b3RhbF9kdWUiLCAic3VtIiksIHBhaWQ9KCJwYWlkIiwgInN1bSIpKQpnWyJyYXRlIl0gPSAxMDAgKiBnWyJwYWlkIl0gLyBnWyJkdWUiXQpnLnNvcnRfdmFsdWVzKCJyYXRlIikuaGVhZCgzKQojIEJ1a2hhcmEgQ2VudHJhbCA5Mi44MCDCtyBUYXNoa2VudCBTb3V0aCA5My4zNSDCtyBOYW1hbmdhbiBDZW50cmFsIDkzLjU0IOKApiBiZXN0IFRlcm1leiBDZW50cmFsIDk4LjQ5Cgo5Mi44MCAlOiBCdWtoYXJhIENlbnRyYWwgY29sbGVjdGVkIDMuMTggYm4gb2YgdGhlIDMuNDMgYm4gdGhhdCBmZWxsIGR1ZSBpbiBRMyDigJQgdGhlIHdvcnN0IG9mIHRoZSB0ZW4gYnJhbmNoZXMsIGFsbW9zdCBzaXggcG9pbnRzIGJlaGluZCBUZXJtZXogQ2VudHJhbC4KVGhlIHR3byB0cmFwcyBhcmUgYW4gaW5uZXIgbWVyZ2UgKHRoZSB1bnBhaWQgaW5zdGFsbWVudHMgdmFuaXNoIGFuZCBldmVyeSByYXRlIGNsaW1icyB0b3dhcmRzIDEwMCAlKSBhbmQgdGhlIGR1cGxpY2F0ZSBwYXltZW50cyAobGVmdCBpbiwgdGhleSBhZGQgNTggbSB0aGF0IHdhcyBuZXZlciBwYWlkIHR3aWNlKS4KU2VwdGVtYmVyIGluc3RhbG1lbnRzIGhhdmUgaGFkIGxpdHRsZSB0aW1lIHRvIGJlIHBhaWQsIHNvIGFsbCBicmFuY2hlcyBsb29rIHdvcnNlIHRoYW4gaW4gSnVseTsgdGhlIHJhbmtpbmcsIG5vdCB0aGUgbGV2ZWwsIGlzIHRoZSBmaW5kaW5nLg=="}
+{"id": "w05d3", "q": "Sevara wants the collections ranking for the last quarter by branch. Take the instalments due from 1 July to 30 September 2026 (installments.csv), what was paid on each through the as-of 2026-10-01 (payments_dirty.csv, de-duplicated as in today's Detective), and the loan's branch from loans_status.csv. Collection rate = Σ paid ÷ Σ total_due. What is the rate of the WORST branch? Give a percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["8aa6be7c2de4b2c386aeab63"], "hint": "Today's Company corner already builds the instalment-level frame with paid next to total_due; one more merge brings the branch — check its grain with validate before you group.", "sol": "QVNfT0YgPSBwZC5UaW1lc3RhbXAoIjIwMjYtMTAtMDEiKQppbnN0ID0gcGQucmVhZF9jc3YoIi4uL2V4Y2VsL2luc3RhbGxtZW50cy5jc3YiLCBwYXJzZV9kYXRlcz1bImR1ZV9kYXRlIl0pCnBheSA9IHBkLnJlYWRfY3N2KCIuLi9leGNlbC9wYXltZW50c19kaXJ0eS5jc3YiLCBwYXJzZV9kYXRlcz1bInBhaWRfYXQiXSkKcGF5ID0gcGF5LnNvcnRfdmFsdWVzKCJwYXltZW50X2lkIikuZHJvcF9kdXBsaWNhdGVzKHN1YnNldD1bImluc3RhbGxtZW50X2lkIiwgInBhaWRfYXQiLCAiYW1vdW50Il0pICAgIyA1MiA4NTAKcGFpZCA9IHBheVtwYXlbInBhaWRfYXQiXSA8PSBBU19PRl0uZ3JvdXBieSgiaW5zdGFsbG1lbnRfaWQiLCBhc19pbmRleD1GYWxzZSkuYWdnKHBhaWQ9KCJhbW91bnQiLCAic3VtIikpCm0gPSBpbnN0Lm1lcmdlKHBhaWQsIG9uPSJpbnN0YWxsbWVudF9pZCIsIGhvdz0ibGVmdCIsIHZhbGlkYXRlPSIxOjEiKS5maWxsbmEoeyJwYWlkIjogMH0pCmxvYW5zID0gcGQucmVhZF9jc3YoIi4uL2V4Y2VsL2xvYW5zX3N0YXR1cy5jc3YiKQptID0gbS5tZXJnZShsb2Fuc1tbImxvYW5faWQiLCAiYnJhbmNoIl1dLCBvbj0ibG9hbl9pZCIsIGhvdz0ibGVmdCIsIHZhbGlkYXRlPSJtOjEiKQpxMyA9IG1bKG1bImR1ZV9kYXRlIl0gPj0gIjIwMjYtMDctMDEiKSAmIChtWyJkdWVfZGF0ZSJdIDwgIjIwMjYtMTAtMDEiKV0KZyA9IHEzLmdyb3VwYnkoImJyYW5jaCIpLmFnZyhkdWU9KCJ0b3RhbF9kdWUiLCAic3VtIiksIHBhaWQ9KCJwYWlkIiwgInN1bSIpKQpnWyJyYXRlIl0gPSAxMDAgKiBnWyJwYWlkIl0gLyBnWyJkdWUiXQpnLnNvcnRfdmFsdWVzKCJyYXRlIikuaGVhZCgzKQojIEJ1a2hhcmEgQ2VudHJhbCA5Mi44MCDCtyBUYXNoa2VudCBTb3V0aCA5My4zNSDCtyBOYW1hbmdhbiBDZW50cmFsIDkzLjU0IOKApiBiZXN0IFRlcm1leiBDZW50cmFsIDk4LjQ5Cgo5Mi44MCAlOiBCdWtoYXJhIENlbnRyYWwgY29sbGVjdGVkIDMuMTggYm4gb2YgdGhlIDMuNDMgYm4gdGhhdCBmZWxsIGR1ZSBpbiBRMyDigJQgdGhlIHdvcnN0IG9mIHRoZSB0ZW4gYnJhbmNoZXMsIGFsbW9zdCBzaXggcG9pbnRzIGJlaGluZCBUZXJtZXogQ2VudHJhbC4KVGhlIHR3byB0cmFwcyBhcmUgYW4gaW5uZXIgbWVyZ2UgKHRoZSB1bnBhaWQgaW5zdGFsbWVudHMgdmFuaXNoIGFuZCBldmVyeSByYXRlIGNsaW1icyB0b3dhcmRzIDEwMCAlKSBhbmQgdGhlIGR1cGxpY2F0ZSBwYXltZW50cyAobGVmdCBpbiwgdGhleSBhZGQgMzguMyBtIHRvIHRoZSBRMyBpbnN0YWxtZW50cyDigJQgNTguNCBtIG92ZXIgdGhlIHdob2xlIGJvb2sg4oCUIHRoYXQgd2FzIG5ldmVyIHBhaWQgdHdpY2UpLgpTZXB0ZW1iZXIgaW5zdGFsbWVudHMgaGF2ZSBoYWQgbGl0dGxlIHRpbWUgdG8gYmUgcGFpZCwgc28gYWxsIGJyYW5jaGVzIGxvb2sgd29yc2UgdGhhbiBpbiBKdWx5OyB0aGUgcmFua2luZywgbm90IHRoZSBsZXZlbCwgaXMgdGhlIGZpbmRpbmcu"}
 ```
 
 <!-- challenge:end -->

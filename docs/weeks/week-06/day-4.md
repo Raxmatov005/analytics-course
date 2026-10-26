@@ -142,6 +142,18 @@ An **A/A test** (*A/A-тест*) splits units into two groups that receive the *
 
 ### Depth (optional)
 
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Mann–Whitney — [Mann-Whitney U Test [Simply explained] (numiqo), 00:23](https://youtu.be/LcxB56PzylA?t=23)
+- ▶ Wilcoxon signed-rank and the other rank tests — [Non-parametric tests - Sign test, Wilcoxon signed rank, Mann-Whitney (zedstatistics), 11:26](https://youtu.be/IcLSKko2tsg?t=686)
+- ▶ Multiple comparisons — [The Bonferroni Correction - Clearly Explained (Steven Bradburn), 01:31](https://youtu.be/HLzS5wPqWR0?t=91)
+- ▶ Multiple comparisons and false discovery rate — [False Discovery Rates, FDR, clearly explained (StatQuest), 12:28](https://youtu.be/K8LQSvtjcEo?t=748)
+- ▶ Multiple comparisons (RU, simulation) — [Множественная проверка гипотез | Вероятность и статистика #8 (Глеб Михайлов), 45:32](https://youtu.be/qbbY7ubzDoE?t=2732)
+- ▶ Statistical power — [Statistical Power, Clearly Explained!!! (StatQuest), 03:19](https://youtu.be/Rsc5znwR5FA?t=199)
+- ▶ Power and sample size calculation — [Power Analysis, Clearly Explained!!! (StatQuest), 11:48](https://youtu.be/VX_M3tIyiYk?t=708)
+- ▶ Power calculations (also p-hacking) — [p-hacking and power calculations (StatQuest), 14:12](https://youtu.be/UFhJefdVCjE?t=852)
+- ▶ Sample size in an A/B setting (RU) — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 17:57](https://youtu.be/FEI1OA-zgb8?t=1077)
+
 - RU deck `Непараметрические тесты_latest.pdf` (lesson 5.5): normality checks and log-transform pp. 9–12, which test to choose pp. 13–14, ranks and Mann–Whitney pp. 15–16, Wilcoxon for paired samples pp. 17–18, Kruskal–Wallis p. 19, bootstrap pp. 20–21, power p. 22, MDE p. 23, A/A tests p. 24. Multiple comparisons: `Параметрические тесты (2).pdf` pp. 47–49 (Bonferroni, Tukey HSD).
 - Notebooks: `non-parametric.ipynb` (sample-mean normality, Mann–Whitney on exponential data, Wilcoxon, Kruskal–Wallis, bootstrap), `power.ipynb` (power by simulation: 1 000 t-tests on a 1 % shift — the same idea as our simulation cell). `стат_критерии.docx` is a reading list (Habr / YouTube articles on test choice, Mann–Whitney pitfalls, sample size); the card in section 2 is our own.
 - *Russian terms:* непараметрический критерий = non-parametric test, ранг = rank, U-критерий Манна–Уитни = Mann–Whitney U, критерий Вилкоксона = Wilcoxon signed-rank, критерий Краскела–Уоллиса = Kruskal–Wallis, перестановочный тест = permutation test, точный критерий Фишера = Fisher's exact test, множественные сравнения = multiple comparisons, поправка Бонферрони / Холма = Bonferroni / Holm correction, мощность = power, объём выборки = sample size, MDE (минимальный детектируемый эффект) = minimum detectable effect, A/A-тест = A/A test.
@@ -232,7 +244,7 @@ Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → runn
 **P8.** Sample size for the SMS test with other settings: 90 % power; one-sided 80 %. And the achieved power of 1 000 vs 1 000.
 
 <details><summary>Answer</summary>
-90 % power: **30 096** per arm; one-sided 80 %: **17 709** per arm (one-sided is cheaper — and only legitimate if "SMS makes it worse" and "no change" lead to the same decision, which for a cheap SMS they arguably do); 1 000 per arm: **9.1 %** power. Every setting is far beyond Nur's ~305 new loans a month.
+90 % power: **30 096** per arm; one-sided 80 %: **17 709** per arm (one-sided is cheaper — and only legitimate if "SMS makes it worse" and "no change" lead to the same decision, which for a cheap SMS they arguably do); 1 000 per arm: **9.1 %** power. Every setting is far beyond Nur's ~337 new loans a month (January–September 2026).
 </details>
 
 **P9.** MDE: with 1 000, 2 000 and 10 000 loans per arm (α 5 %, power 80 %), what FPD rate must the SMS reach to be detectable from 1.28 %? Use your `mde_rate`.
@@ -284,7 +296,7 @@ Jasur's question, answered before anyone sends an SMS.
 | Question | Answer | How |
 |---|---|---|
 | Loans needed per arm for 80 % power | **22 481** (44 962 in total) | `zt_ind_solve_power(proportion_effectsize(0.0128, 0.010), alpha=0.05, power=0.8)` |
-| At Nur's pace (305 new loans a month in 2026) | **147 months — 12 years** | 44 962 / 305 |
+| At Nur's pace (337 new loans a month, January–September 2026) | **133 months — 11 years** | 44 962 / 337 |
 | Power of the proposed 1 000 vs 1 000 | **9.1 %** | `NormalIndPower().power(h, nobs1=1000, alpha=0.05)` |
 | … even with 2 000 SMS vs 2 000 control | **13.3 %** (simulation: 12.5 %) | `nobs1=2000` |
 | What 1 000 per arm *can* detect (MDE) | FPD 1.28 → **0.26 %** (−80 %) | `mde_rate(0.0128, 1000)` |
@@ -292,7 +304,7 @@ Jasur's question, answered before anyone sends an SMS.
 
 **The business reading.** As designed, the test has a 91 % chance of returning "not significant" **even if the SMS works exactly as marketing hopes** — and that result would then be used to kill a good idea. Four honest options for Nilufar and marketing:
 
-1. **Change the primary metric** to a frequent one the SMS acts on: *first instalment paid late at all* (13.3 %). A 20 % cut needs 2 324 per arm — about 15 months of all new loans, or 1 000 + 1 000 with 45 % power. Keep FPD30 as a guardrail.
+1. **Change the primary metric** to a frequent one the SMS acts on: *first instalment paid late at all* (13.3 %). A 20 % cut needs 2 324 per arm — about 14 months of all new loans, or 1 000 + 1 000 with 45 % power. Keep FPD30 as a guardrail.
 2. **Use a continuous outcome** (days late on the first instalment) with a t-test or Mann–Whitney — more information per loan than a yes/no.
 3. **Run longer, on every new loan**, with a pre-registered stopping date, accepting that FPD30 is a 2027 answer.
 4. **Do not test — decide on cost.** An SMS costs a few hundred soum; the 25 m-soum app FPD problem from yesterday's note is small. If the downside of sending it to everyone is negligible, roll it out and monitor; a test is worth its cost only when the decision is expensive to reverse.
@@ -331,7 +343,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w06d4", "q": "Jasur takes option 1 — primary metric 'first instalment paid late at all' (947 / 7 099 = 13.34 % today) — but he can only wait six months: 305 new loans a month, split evenly, so 915 loans per arm. With Cohen's h, two-sided α = 5 % and 80 % power, what is the LOWEST late rate the SMS arm must reach for this test to detect it (the MDE as a rate)? Give a percentage to 3 decimals.", "type": "number", "dp": 3, "h": ["ef4dff8934e73fc928f83c57"], "hint": "Let the power solver give you the effect size for that n, then turn h back into a rate — h is a difference of 2·arcsin√p.", "sol": "aW1wb3J0IG51bXB5IGFzIG5wCmZyb20gc3RhdHNtb2RlbHMuc3RhdHMucG93ZXIgaW1wb3J0IHp0X2luZF9zb2x2ZV9wb3dlcgpwMSA9IDk0NyAvIDcwOTkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDAuMTMzNDAKaCA9IHp0X2luZF9zb2x2ZV9wb3dlcihub2JzMT05MTUsIGFscGhhPTAuMDUsIHBvd2VyPTAuODApICAgICAgICAgIyAwLjEzMTAKcDIgPSBucC5zaW4obnAuYXJjc2luKG5wLnNxcnQocDEpKSAtIGggLyAyKSAqKiAyICAgICAgICAgICAgICAgICAjIDAuMDkyMTMKIyBjaGVjazogTm9ybWFsSW5kUG93ZXIoKS5wb3dlcihwcm9wb3J0aW9uX2VmZmVjdHNpemUocDEsIHAyKSwgbm9iczE9OTE1LCBhbHBoYT0wLjA1KSDihpIgMC44MAoKTURFIDkuMjEzICU6IGluIHNpeCBtb250aHMgdGhlIHRlc3QgY2FuIG9ubHkgc2VlIHRoZSBsYXRlIHJhdGUgZmFsbGluZyBmcm9tIDEzLjM0ICUgdG8gYWJvdXQgOS4yICUg4oCUIGEgMzEgJSByZWxhdGl2ZSBjdXQsIGhhbGYgYXMgbGFyZ2UgYWdhaW4gYXMgdGhlIDIwICUgdGhhdCBtYXJrZXRpbmcgaG9wZXMgZm9yLgpTbyBldmVuIG9uIHRoZSBmcmVxdWVudCBtZXRyaWMsIGEgc2l4LW1vbnRoIHRlc3QgaXMgdW5kZXJwb3dlcmVkIGZvciBhIHJlYWxpc3RpYyBlZmZlY3QgKHRoZSAyMCAlIGN1dCBuZWVkcyAyIDMyNCBwZXIgYXJtLCBhYm91dCAxNSBtb250aHMpLgpUaGUgaG9uZXN0IG9wdGlvbnMgc3RheSB0aGUgc2FtZTogcnVuIGxvbmdlciBvbiBhbGwgbmV3IGxvYW5zIHdpdGggYSBmaXhlZCBlbmQgZGF0ZSwgdXNlIGRheXMgbGF0ZSBhcyBhIGNvbnRpbnVvdXMgb3V0Y29tZSwgb3IgZGVjaWRlIG9uIGNvc3Qu"}
+{"id": "w06d4", "q": "Jasur takes option 1 — primary metric 'first instalment paid late at all' (947 / 7 099 = 13.34 % today) — but he can only wait six months: 337 new loans a month (January–September 2026), split evenly, so 1 011 loans per arm. With Cohen's h, two-sided α = 5 % and 80 % power, what is the LOWEST late rate the SMS arm must reach for this test to detect it (the MDE as a rate)? Give a percentage to 3 decimals.", "type": "number", "dp": 3, "h": ["2c3dbc0bb304d536c1cf4748"], "hint": "Let the power solver give you the effect size for that n, then turn h back into a rate — h is a difference of 2·arcsin√p.", "sol": "aW1wb3J0IG51bXB5IGFzIG5wCmZyb20gc3RhdHNtb2RlbHMuc3RhdHMucG93ZXIgaW1wb3J0IHp0X2luZF9zb2x2ZV9wb3dlcgpwMSA9IDk0NyAvIDcwOTkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDAuMTMzNDAKaCA9IHp0X2luZF9zb2x2ZV9wb3dlcihub2JzMT0xMDExLCBhbHBoYT0wLjA1LCBwb3dlcj0wLjgwKSAgICAgICAgIyAwLjEyNDYKcDIgPSBucC5zaW4obnAuYXJjc2luKG5wLnNxcnQocDEpKSAtIGggLyAyKSAqKiAyICAgICAgICAgICAgICAgICAjIDAuMDkzOTgKIyBjaGVjazogTm9ybWFsSW5kUG93ZXIoKS5wb3dlcihwcm9wb3J0aW9uX2VmZmVjdHNpemUocDEsIHAyKSwgbm9iczE9MTAxMSwgYWxwaGE9MC4wNSkg4oaSIDAuODAKCk1ERSA5LjM5OCAlOiBpbiBzaXggbW9udGhzIHRoZSB0ZXN0IGNhbiBvbmx5IHNlZSB0aGUgbGF0ZSByYXRlIGZhbGxpbmcgZnJvbSAxMy4zNCAlIHRvIGFib3V0IDkuNCAlIOKAlCBhIDMwICUgcmVsYXRpdmUgY3V0LCBoYWxmIGFzIGxhcmdlIGFnYWluIGFzIHRoZSAyMCAlIHRoYXQgbWFya2V0aW5nIGhvcGVzIGZvci4KU28gZXZlbiBvbiB0aGUgZnJlcXVlbnQgbWV0cmljLCBhIHNpeC1tb250aCB0ZXN0IGlzIHVuZGVycG93ZXJlZCBmb3IgYSByZWFsaXN0aWMgZWZmZWN0ICh0aGUgMjAgJSBjdXQgbmVlZHMgMiAzMjQgcGVyIGFybSwgYWJvdXQgMTQgbW9udGhzKS4KVGhlIGhvbmVzdCBvcHRpb25zIHN0YXkgdGhlIHNhbWU6IHJ1biBsb25nZXIgb24gYWxsIG5ldyBsb2FucyB3aXRoIGEgZml4ZWQgZW5kIGRhdGUsIHVzZSBkYXlzIGxhdGUgYXMgYSBjb250aW51b3VzIG91dGNvbWUsIG9yIGRlY2lkZSBvbiBjb3N0Lg=="}
 ```
 
 <!-- challenge:end -->

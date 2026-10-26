@@ -189,6 +189,11 @@ Dynamic Title =
 //        SME selected "Outstanding - Small business loan · as of 1 Oct 2026: 125.9 bn soum"
 // Use: a card or a visual's title -> fx -> Field value -> Dynamic Title.
 
+PAR30 Colour =
+SWITCH ( TRUE (), [PAR30 %] >= 0.05, "#C0392B", [PAR30 %] >= 0.03, "#E67E22", "#7F8C8D" )
+// A text measure for conditional formatting (Format -> Cell elements -> Background colour -> fx -> Field value).
+// Check: no filter "#E67E22" (3.12 %) · Nukus Central × SME "#C0392B" (9.02 %) · Termez Central "#7F8C8D" (0.68 %)
+
 // A CALCULATED COLUMN, not a measure (Table tools -> New column, on v_loan_status) - SWITCH ( TRUE () ) buckets:
 // DPD Bucket (DAX) =
 // SWITCH (

@@ -60,6 +60,17 @@ A **memo** (2 pages) has the same order: answer, reasons with numbers, recommend
 
 ---
 
+### Depth (optional)
+
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Answer first, one focal point, never a single number — [7 Effective Tips for Presenting Data at Work! (Jeff Su), 00:45](https://youtu.be/jizZKNnx9wA?t=45)
+- ▶ Structuring a narrative — [Storytelling with Data (Cole Nussbaumer Knaflic, Talks at Google), 22:19](https://youtu.be/8EMW7io4rSI?t=1339)
+- ▶ Presenting a story (from the data team's own webinar) — [How to turn data into stories (storytelling with data), 25:54](https://youtu.be/Hfx1X9WSGYQ?t=1554)
+- ▶ Unit economics (CAC, LTV/CAC, payback; the page's loan unit-economics section) (RU) — [Все продуктовые метрики за 15 минут (Аналитика без воды), 08:45](https://youtu.be/X4asNCIMBRg?t=525)
+
+---
+
 ## 2. Worked example — one Consumer loan (15 min)
 
 Loan 1 (week 1): Consumer, **31 150 000** soum, 24 months, 30 % a year, annuity 1 741 700 a month, branch channel.

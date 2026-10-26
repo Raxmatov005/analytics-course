@@ -123,7 +123,7 @@ A 16:9 slide takes a `figsize=(12, 5.4)` figure at `dpi=150` (1 800 × 810 px) w
 
 ### Chart-choice rules (week 4, unchanged)
 
-Line for time (34 months), bar for categories, **barh** for rankings and long labels, heatmap for a matrix, box for a distribution per group; **no pie** beyond three slices, **no 3D**, **bars start at zero**, **sort by value** unless the order is natural, **one colour + one highlight**, **the title states the finding** (*"SME is 60 % of the book"*, not *"Outstanding by product"*), **no legend for one series**, **unit on the axis or in the title**, a **source line** (`fig.text(0.01, 0.01, "loans_status.csv · 7 828 loans · as of 2026-10-01", fontsize=9)`). The October-2026 point (one day, 0.85 bn) is dropped from every time series or it reads as a crash. A log axis on a bar chart breaks "bars start at zero": the 7 429 current loans go into the subtitle, not onto a log scale.
+Line for time (34 months), bar for categories, **barh** for rankings and long labels, heatmap for a matrix, box for a distribution per group; **no pie** beyond three slices, **no 3D**, **bars start at zero**, **sort by value** unless the order is natural, **one colour + one highlight**, **the title states the finding** (*"SME is 60 % of the book"*, not *"Outstanding by product"*), **no legend for one series**, **unit on the axis or in the title**, a **source line** (`fig.text(0.01, 0.01, "loans_status.csv · 7 828 loans · as of 2026-10-01", fontsize=9)`). The October-2026 point (one day, 0.85 bn) is dropped from every time series or it reads as a crash. A log axis on a bar chart breaks "bars start at zero": the 7 429 current loans go into the axis label, not onto a log scale.
 
 ### `pd.read_sql` — the bridge
 
@@ -153,6 +153,16 @@ ax = mix.plot.barh(x="product", y="outstanding", legend=False); ax.set_title(...
 `df.plot` / `Series.plot` is matplotlib with the index as x — perfect for a five-second look while exploring; for the deck, go through `fig, ax` so the title, formatter and size are yours.
 
 ### Depth (optional)
+
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ matplotlib figure and axes — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:21:23](https://youtu.be/wUSDVGivd-8?t=19283)
+- ▶ Chart formatting / histograms / box plots — same course, [8:17:21](https://youtu.be/wUSDVGivd-8?t=29841)
+- ▶ seaborn — same course, [9:31:39](https://youtu.be/wUSDVGivd-8?t=34299)
+- ▶ seaborn (short single-topic) — [Seaborn Crash Course - Data Visualization in Python (NeuralNine), 08:16](https://youtu.be/rLVCSmtoA7U?t=496)
+- ▶ pandas plotting shortcuts — [Creating Visualizations using Pandas Library (Alex The Analyst), 01:52](https://youtu.be/JpSMse3eVVg?t=112)
+- ▶ `read_sql` — [SQL Databases with Pandas and Python - A Complete Guide (Rob Mulla), 08:35](https://youtu.be/DiQ5Hni6oRI?t=515)
+- ▶ `read_sql` with SQLite (matches the page's `sqlite3.connect`) — [SQLite with Pandas (Code Adhyayana)](https://youtu.be/xcVXCK6U6LA)
 
 - RU deck `4.5_Python.pdf`: matplotlib OO interface pp. 12–20, seaborn relational / categorical / distribution plots pp. 22–38 (long vs wide data p. 24), heatmap p. 36, pandas plotting pp. 47–55, chart choice and storytelling pp. 68–72. `4.4_Python.pdf`: DB-API and cursors pp. 7–28, `read_sql` / `to_sql` / chunking pp. 29–34, SQLAlchemy engines pp. 38–54 (for the day you connect to SQL Server).
 - *Russian terms:* график = chart / plot, линейный график = line chart, столбчатая / линейчатая диаграмма = bar / barh, гистограмма = histogram, ящик с усами = boxplot, диаграмма рассеяния = scatter, тепловая карта = heatmap, подграфик = subplot, легенда = legend, ось = axis, длинный / широкий формат = long / wide format.
@@ -225,13 +235,13 @@ Tashkent 81.7 bn · Fergana 24.8 · Samarkand 24.7 · Andijan 19.8 · Namangan 1
 **P7.** The bridge with parameters: a function `late_loans(con, as_of)` that runs the week-2 DPD CTE with `params=` and returns the bucket counts. Call it for 1 September and 1 October.
 
 <details><summary>Answer</summary>
-1 Sep: 128 / 23 / 17 / 217 (398 late, 13 due that day); 1 Oct: 124 / 25 / 16 / 234 (399 late, 14 due that day). `params=(as_of, as_of)` fills two `?` placeholders (the instalment filter *and* the payment filter — week 3's lesson). Never `f"... <= '{as_of}'"`: it works today and breaks on the first value with a quote in it.
+1 Sep: 128 / 23 / 17 / 217 (385 late, plus 13 with an instalment due that day at DPD 0); 1 Oct: 124 / 25 / 16 / 234 (399 late, plus 14 due that day). `params=(as_of, as_of)` fills two `?` placeholders (the instalment filter *and* the payment filter — week 3's lesson). Never `f"... <= '{as_of}'"`: it works today and breaks on the first value with a quote in it.
 </details>
 
 **P8.** `sns.lineplot` of monthly disbursements by product (`hue="product"`) from `monthly_disbursements.csv` — long data, October dropped. Then `pivot` to wide and `df.plot()` — same chart? Which product should be on its own axis and why do you refuse?
 
 <details><summary>Answer</summary>
-Same chart: seaborn takes long data with `hue`, pandas' `plot` takes wide data with one column per line. SME (95.2 bn in 2026) and Auto (36.2) are readable; Consumer (25.6) is a low line; Micro (2.8) and BNPL (2.4) are flat at the bottom. The request for a second axis is the week-4 trap (two lines crossing on two scales tell a story that does not exist); give the small products their own small-multiple (`sns.relplot(..., col="product", facet_kws={"sharey": False})`) or a share chart.
+Same chart: seaborn takes long data with `hue`, pandas' `plot` takes wide data with one column per line. SME (94.8 bn in January–September 2026) and Auto (36.0) are readable; Consumer (25.5) is a low line; Micro (2.8) and BNPL (2.4) are flat at the bottom. The request for a second axis is the week-4 trap (two lines crossing on two scales tell a story that does not exist); give the small products their own small-multiple (`sns.relplot(..., col="product", facet_kws={"sharey": False})`) or a share chart.
 </details>
 
 **P9.** A 2 × 2 grid: buckets (bar), outstanding mix (barh), monthly line, roll heatmap — one `fig.suptitle`, one source line, one PNG. Then say why this is *not* what Timur asked for.
@@ -263,7 +273,7 @@ Same chart: seaborn takes long data with `hue`, pandas' `plot` takes wide data w
 
 1. Name three things `pd.read_sql` lets you avoid re-doing in pandas, and one thing you would still do in pandas afterwards. *(→ section 1, "pd.read_sql")*
 2. seaborn's `lineplot` wants long data and pandas' `plot` wants wide. Which pandas call converts each way? *(→ section 1, "seaborn", Day 3 "pivot_table")*
-3. Why does figure 3 draw four bars and put the fifth number in the subtitle? *(→ section 1, "Chart-choice rules")*
+3. Why does figure 3 draw four bars and put the fifth number in the axis label? *(→ section 1, "Chart-choice rules")*
 
 ---
 
@@ -335,7 +345,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w05d4", "q": "Timur wants figure 1 to carry a year-ago comparison in its title. Read the monthly disbursed amount (SUM(principal) by month, disbursed before 2026-10-01) from nur.db with pd.read_sql, take the 3-month rolling average, and compare September 2026's average (Jul–Sep 2026) with September 2025's (Jul–Sep 2025). By how many percent is it higher? Give a percentage to 1 decimal.", "type": "number", "dp": 1, "h": ["76d786089690eeaf0c7f6726"], "hint": "Once the months are one row each in order, the year-ago value of any column is twelve rows up.", "sol": "Y29uID0gc3FsaXRlMy5jb25uZWN0KCIuLi9yYXcvbnVyLmRiIikKbSA9IHBkLnJlYWRfc3FsKCIiIlNFTEVDVCBzdHJmdGltZSgnJVktJW0nLCBkaXNidXJzZWRfYXQpIEFTIG1vbnRoLCBTVU0ocHJpbmNpcGFsKSBBUyBkaXNidXJzZWQKICAgICAgICAgICAgICAgICAgIEZST00gbG9hbnMgV0hFUkUgZGlzYnVyc2VkX2F0IDwgPyBHUk9VUCBCWSAxIE9SREVSIEJZIDEiIiIsIGNvbiwgcGFyYW1zPSgiMjAyNi0xMC0wMSIsKSkKbVsibWEzIl0gPSBtWyJkaXNidXJzZWQiXS5yb2xsaW5nKDMpLm1lYW4oKQptWyJtYTNfeW95Il0gPSAxMDAgKiAobVsibWEzIl0gLyBtWyJtYTMiXS5zaGlmdCgxMikgLSAxKQptLnRhaWwoMSkgICAgIyAyMDI2LTA5ICBtYTMgMTkgOTk5IDg1NiA2NjcgwrcgYSB5ZWFyIGVhcmxpZXIgMTUgNjM0IDIxMyAzMzMgwrcgKzI3LjkgJQoKKzI3LjkgJTogdGhlIDMtbW9udGggYXZlcmFnZSByZWFjaGVkIDIwLjAgYm4gaW4gU2VwdGVtYmVyIDIwMjYgYWdhaW5zdCAxNS42IGJuIGEgeWVhciBlYXJsaWVyIOKAlCBncm93dGgsIGJ1dCBtdWNoIHNsb3dlciB0aGFuIHRoZSArNDDigJM3MCAlIG9mIHRoZSBmaXJzdCBoYWxmIG9mIDIwMjYuClRoZSBzaW5nbGUgbW9udGggc2F5cyArMTYgJSAoMTcuMCB2cyAxNC42IGJuKSwgd2hpY2ggaXMgd2h5IHRoZSB0aXRsZSBzaG91bGQgcXVvdGUgdGhlIGF2ZXJhZ2U6IG9uZSB3ZWFrIFNlcHRlbWJlciBtb250aCB3b3VsZCBvdGhlcndpc2Ugc2V0IHRoZSBzdG9yeS4KRHJvcHBpbmcgT2N0b2JlciAyMDI2IG1hdHRlcnMgaGVyZSB0b286IHdpdGggdGhlIG9uZS1kYXkgbW9udGggbGVmdCBpbiwgdGhlIGxhc3Qgcm93IGlzIGEgY3Jhc2gsIG5vdCBTZXB0ZW1iZXIu"}
+{"id": "w05d4", "q": "Timur wants figure 1 to carry a year-ago comparison in its title. Read the monthly disbursed amount (SUM(principal) by month, disbursed before 2026-10-01) from nur.db with pd.read_sql, take the 3-month rolling average, and compare September 2026's average (Jul–Sep 2026) with September 2025's (Jul–Sep 2025). By how many percent is it higher? Give a percentage to 1 decimal.", "type": "number", "dp": 1, "h": ["76d786089690eeaf0c7f6726"], "hint": "Once the months are one row each in order, the year-ago value of any column is twelve rows up.", "sol": "Y29uID0gc3FsaXRlMy5jb25uZWN0KCIuLi9yYXcvbnVyLmRiIikKbSA9IHBkLnJlYWRfc3FsKCIiIlNFTEVDVCBzdHJmdGltZSgnJVktJW0nLCBkaXNidXJzZWRfYXQpIEFTIG1vbnRoLCBTVU0ocHJpbmNpcGFsKSBBUyBkaXNidXJzZWQKICAgICAgICAgICAgICAgICAgIEZST00gbG9hbnMgV0hFUkUgZGlzYnVyc2VkX2F0IDwgPyBHUk9VUCBCWSAxIE9SREVSIEJZIDEiIiIsIGNvbiwgcGFyYW1zPSgiMjAyNi0xMC0wMSIsKSkKbVsibWEzIl0gPSBtWyJkaXNidXJzZWQiXS5yb2xsaW5nKDMpLm1lYW4oKQptWyJtYTNfeW95Il0gPSAxMDAgKiAobVsibWEzIl0gLyBtWyJtYTMiXS5zaGlmdCgxMikgLSAxKQptLnRhaWwoMSkgICAgIyAyMDI2LTA5ICBtYTMgMTkgOTk5IDg1NiA2NjcgwrcgYSB5ZWFyIGVhcmxpZXIgMTUgNjM0IDIwNiA2NjcgwrcgKzI3LjkgJQoKKzI3LjkgJTogdGhlIDMtbW9udGggYXZlcmFnZSByZWFjaGVkIDIwLjAgYm4gaW4gU2VwdGVtYmVyIDIwMjYgYWdhaW5zdCAxNS42IGJuIGEgeWVhciBlYXJsaWVyIOKAlCBncm93dGgsIGJ1dCBtdWNoIHNsb3dlciB0aGFuIHRoZSArNDDigJM3MCAlIG9mIHRoZSBmaXJzdCBoYWxmIG9mIDIwMjYuClRoZSBzaW5nbGUgbW9udGggc2F5cyArMTYgJSAoMTcuMCB2cyAxNC42IGJuKSwgd2hpY2ggaXMgd2h5IHRoZSB0aXRsZSBzaG91bGQgcXVvdGUgdGhlIGF2ZXJhZ2U6IG9uZSB3ZWFrIFNlcHRlbWJlciBtb250aCB3b3VsZCBvdGhlcndpc2Ugc2V0IHRoZSBzdG9yeS4KRHJvcHBpbmcgT2N0b2JlciAyMDI2IG1hdHRlcnMgaGVyZSB0b286IHdpdGggdGhlIG9uZS1kYXkgbW9udGggbGVmdCBpbiwgdGhlIGxhc3Qgcm93IGlzIGEgY3Jhc2gsIG5vdCBTZXB0ZW1iZXIu"}
 ```
 
 <!-- challenge:end -->

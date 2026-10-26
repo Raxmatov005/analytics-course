@@ -4,11 +4,12 @@
 
 ## How this course works
 
-- **One page per day.** Read it top to bottom. When you reach the end, the day is done. ~3 hours.
+- **First, the [Practice day](practice.md).** It walks you through the routine once (get the course, open the data, answer, check, send, read the feedback) on three warm-up questions that do not count.
+- **One page per day.** Read it top to bottom; the day is done when you pass its quiz at the end. ~3 hours. The [course map](map.md) shows where you are.
 - **Mon–Thu: learn and practise. Fri: checkpoint or a bigger homework.** Weekends are free (or catch-up).
 - **Practice answers are folded** on the page — try first, then open. **Homework** goes to the `submissions/` folder (see [How to submit](homework/how-to-submit.md)); you get written feedback within a day and points on the [progress board](progress.md).
 - **Every day ends with a short quiz.** Pass it with **80 %** and the day is done: it gets a tick in the sidebar, counts toward your streak and earns XP.
-- **Levels, badges and real rewards.** Points and quiz days add up to XP; XP takes you from Intern to Lead Analyst. Every checkpoint passed unlocks a small real reward; big results unlock big ones. See your [progress & rewards](progress.md) board.
+- **Levels, badges and real rewards.** Points, quiz days and daily challenges add up to XP; XP takes you from Intern to Lead Analyst. Every checkpoint you pass (70 %+) wins a voucher you can spend, each one bigger than the last; big results unlock big rewards. See your [progress & rewards](progress.md) board.
 - **Check your homework yourself first:** `python scripts/check.py hw1.2` tells you task by task whether your numbers are right — without showing the answers ([how](homework/how-to-submit.md#check-before-you-send)).
 - **Skip what you know.** Start with [Day 0](weeks/week-00/day-0.md): five short tests. Score 80 %+ on a module → skip that week, do only its Friday checkpoint.
 - **One dataset for everything:** the Nur Finance database (11 tables, 6,040 customers, 7,828 loans). You will know it like your own flat by week 3.

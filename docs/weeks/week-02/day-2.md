@@ -152,7 +152,7 @@ Joins put tables side by side; **set operators** (*операции над мн�
 
 ## 3. Practice (60 min)
 
-File: `week-02/day-2/practice.sql`, each query with `-- result:`. Yesterday's joins plus today's aggregates; no `CASE` yet.
+File: `submissions/week-02/day-2/practice.sql`, each query with `-- result:`. Yesterday's joins plus today's aggregates; no `CASE` yet.
 
 **P1.** Loans and total principal by `status`, largest total first.
 
@@ -210,7 +210,7 @@ Both are conditions on an aggregate → `HAVING`. Writing them in `WHERE` is a s
 ```sql
 SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) > 1 ORDER BY loans DESC;
 ```
-2 246 rows (your tool shows the row count). Three customers have 7 loans each (ids 5478, 4435, 3216). Wrapping it in `SELECT COUNT(*) FROM ( … )` is a subquery — Week 3 Day 3.
+2 246 rows (your tool shows the row count). Four customers have 7 loans each (ids 1893, 3216, 4435, 5478). Wrapping it in `SELECT COUNT(*) FROM ( … )` is a subquery — Week 3 Day 3.
 </details>
 
 **P7.** Collections actions by type with the number of promises to pay. Which action type gets the highest *share* of promises? (A share is a division — compute it by hand today, in SQL tomorrow.)
@@ -243,7 +243,7 @@ The joined `SUM(l.principal)` is in the trillions — every principal counted on
 ```sql
 SELECT method, COUNT(*) AS payments, SUM(amount) AS total FROM payments GROUP BY method ORDER BY payments DESC;
 ```
-Ten rows where there should be five: `card` 17 564 **and** `Card` 57; `click` 8 754 and `Click` 36; `payme` 8 870 and `PayMe` 30; `cash` 8 760 and `CASH ` (trailing space) 30; `transfer` 8 747 and `bank transfer` 27. 180 rows carry a differently spelt method, so every "share by method" is off and *card* looks like it has 57 fewer payments than it does. `GROUP BY` groups *exact* values — a space or a capital letter is a different group. We fix this tomorrow with `LOWER`, `TRIM` and `REPLACE`.
+Ten rows where there should be five: `card` 17 564 **and** `Card` 57; `click` 8 754 and `Click` 36; `payme` 8 870 and `PayMe` 30; `cash` 8 760 and `CASH ` (trailing space) 30; `transfer` 8 747 and `bank transfer` 27. 180 rows carry a differently spelt method, so every "share by method" is off and *card* looks like it has 57 fewer payments than it does. `GROUP BY` groups *exact* values — a space or a capital letter is a different group. We fix this tomorrow with `LOWER`, `TRIM` and `REPLACE`. (These ten rows are SQLite's. SQL Server's default collation ignores case and trailing spaces, so there `GROUP BY method` shows six rows and the stray spellings hide inside `card`, `click`, `payme` and `cash`; write `GROUP BY method COLLATE Latin1_General_CS_AS` to get the same ten rows.)
 </details>
 
 **P10.** Monthly payments received in 2026: count and sum per month. Anything odd at the end of the list?
@@ -345,7 +345,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
   {"type": "single", "q": "Which line has the bug?", "code": "1  SELECT b.branch_name, COUNT(*) AS loans\n2  FROM loans l JOIN branches b ON b.branch_id = l.branch_id\n3  WHERE COUNT(*) > 900\n4  GROUP BY b.branch_name;", "options": ["Line 1", "Line 2", "Line 3 — a condition on an aggregate belongs in HAVING, after GROUP BY", "Line 4"], "answer": 2, "explain": "WHERE filters rows before grouping, when no count exists yet; HAVING filters groups (→ section 1, HAVING vs WHERE)."},
   {"type": "single", "q": "What does SQL Server do with this query?", "code": "SELECT p.name, l.loan_id, COUNT(*)\nFROM loans l JOIN products p ON p.product_id = l.product_id\nGROUP BY p.name;", "options": ["Returns one row per loan", "Refuses it: loan_id is neither aggregated nor in GROUP BY", "Returns one row per product with the first loan_id", "Returns the count only"], "answer": 1, "explain": "Every SELECT column is either inside an aggregate or in GROUP BY; SQLite silently picks one loan_id, which you must never rely on (→ section 1, GROUP BY)."},
   {"type": "single", "q": "Micro shows 2 669 for COUNT(*) and 2 133 for COUNT(DISTINCT l.customer_id). Which sentence is right?", "options": ["2 669 Micro customers", "2 669 Micro loans taken by 2 133 different people", "534 Micro loans are duplicates to delete", "2 133 Micro loans"], "answer": 1, "explain": "COUNT(*) counts rows (loans); COUNT(DISTINCT …) counts different customers — report the one you mean (→ section 1, COUNT(DISTINCT))."},
-  {"type": "number", "q": "The method column holds these five values. How many rows does the query return?", "code": "method: 'card', 'card', 'Card', 'cash', 'CASH '\n\nSELECT method, COUNT(*)\nFROM payments\nGROUP BY method;", "answer": 4, "explain": "GROUP BY groups exact values: card, Card, cash and 'CASH ' (trailing space) are four different groups (→ P9)."},
+  {"type": "number", "q": "In SQLite, the method column holds these five values. How many rows does the query return?", "code": "method: 'card', 'card', 'Card', 'cash', 'CASH '\n\nSELECT method, COUNT(*)\nFROM payments\nGROUP BY method;", "answer": 4, "explain": "GROUP BY groups exact values: card, Card, cash and 'CASH ' (trailing space) are four different groups (→ P9)."},
   {"type": "single", "q": "You join loans to payments and want SUM(l.principal). Which quick check tells you the sum is unsafe?", "options": ["COUNT(*) and COUNT(DISTINCT l.loan_id) differ", "The sum is a round number", "The query runs slowly", "MIN(principal) is 0"], "answer": 0, "explain": "If rows outnumber loans, each principal is counted several times; aggregate a column at the grain of its own table (→ section 1, the multiplication trap; P8)."},
   {"type": "multi", "q": "Which statements about set operators are true?", "options": ["UNION removes duplicate rows", "UNION ALL keeps duplicates and is faster", "EXCEPT returns rows of the first query that are not in the second", "UNION puts two tables side by side, like a join", "The two queries must return the same number of rows"], "answer": [0, 1, 2], "explain": "Set operators stack results, so the column count must match, not the row count; default to UNION ALL (→ section 1, Set operators)."},
   {"type": "single", "q": "Which clause can use a column alias defined in SELECT (e.g. ORDER BY active_loans) on both SQL Server and SQLite?", "options": ["WHERE", "GROUP BY", "ORDER BY", "None of them"], "answer": 2, "explain": "ORDER BY runs after SELECT in FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY; SQL Server needs the expression repeated in GROUP BY (→ section 1, GROUP BY; HAVING vs WHERE)."},
