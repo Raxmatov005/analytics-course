@@ -94,7 +94,7 @@ Week 2's DPD join: before indexing, `SCAN i` plus an `AUTOMATIC COVERING INDEX` 
 
 ### Depth (optional)
 
-- ▶ Baraa, *Views* [15:35:02](https://youtu.be/SSKVgrwhzus?t=56102), *CTAS and temp tables* [16:36:40](https://youtu.be/SSKVgrwhzus?t=59800), *Indexes* [18:23:42](https://youtu.be/SSKVgrwhzus?t=66222), *Execution plan* [20:20:31](https://youtu.be/SSKVgrwhzus?t=73231), *30 performance tips* [21:43:39](https://youtu.be/SSKVgrwhzus?t=78219) — long; watch Views + Indexes + the tips (≈2 h), the plan chapter if SQL Server is your target. Stored procedures and triggers (17:27:04, 18:12:58) are optional for an analyst.
+- ▶ Baraa, *Views* [15:35:02](https://youtu.be/SSKVgrwhzus?t=56102&end=59800), *CTAS and temp tables* [16:36:40](https://youtu.be/SSKVgrwhzus?t=59800&end=62251), *Indexes* [18:23:42](https://youtu.be/SSKVgrwhzus?t=66222&end=73231), *Execution plan* [20:20:31](https://youtu.be/SSKVgrwhzus?t=73231&end=76263), *30 performance tips* [21:43:39](https://youtu.be/SSKVgrwhzus?t=78219&end=80665) — long; watch Views + Indexes + the tips (≈2 h), the plan chapter if SQL Server is your target. Stored procedures and triggers (17:27:04, 18:12:58) are optional for an analyst.
 - *Russian terms:* представление = view, временная таблица = temp table, материализация = materialisation, индекс = index, кластерный / некластерный = clustered / non-clustered, план выполнения = execution plan, полное сканирование = full scan, поиск по индексу = index seek.
 
 ---

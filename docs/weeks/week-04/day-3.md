@@ -117,11 +117,11 @@ Column letters instead of names, `label` to rename, `pivot` for a cross-tab (`se
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Text repair (TRIM, PROPER, Find & Replace, Text to Columns) — [Master Data Cleaning Essentials on Excel in Just 10 Minutes (Kenji Explains), 03:39](https://youtu.be/jxq4-KSB_OA?t=219)
-- ▶ Remove Duplicates (button, UNIQUE, Power Query; "what counts as a duplicate row") — [Three EASY Ways to Find and Remove Duplicates in Excel (Leila Gharani), 01:15](https://youtu.be/ADArCWLz55Y?t=75)
-- ▶ Power Query (where it is, connect, Applied Steps) — [Power Query for Beginners: Automate Your Excel Work in 25 Mins (Leila Gharani), 04:45](https://youtu.be/x7mzOYEn0XA?t=285)
-- ▶ Power Query (second option, shorter, Get data -> Transform -> Close & Load) — [How to use Microsoft Power Query (Kevin Stratvert), 05:26](https://youtu.be/0aeZX1l4JT4?t=326)
-- ▶ Data cleaning block inside one longer Excel course — [Learn Excel in Under 3 Hours (Alex The Analyst), 1:39:03](https://youtu.be/zXnQNytHCPM?t=5943)
+- ▶ Text repair (TRIM, PROPER, Find & Replace, Text to Columns) — [Master Data Cleaning Essentials on Excel in Just 10 Minutes (Kenji Explains), 03:39](https://youtu.be/jxq4-KSB_OA?t=219&end=350)
+- ▶ Remove Duplicates (button, UNIQUE, Power Query; "what counts as a duplicate row") — [Three EASY Ways to Find and Remove Duplicates in Excel (Leila Gharani), 01:15](https://youtu.be/ADArCWLz55Y?t=75&end=146)
+- ▶ Power Query (where it is, connect, Applied Steps) — [Power Query for Beginners: Automate Your Excel Work in 25 Mins (Leila Gharani), 04:45](https://youtu.be/x7mzOYEn0XA?t=285&end=402)
+- ▶ Power Query (second option, shorter, Get data -> Transform -> Close & Load) — [How to use Microsoft Power Query (Kevin Stratvert), 05:26](https://youtu.be/0aeZX1l4JT4?t=326&end=420)
+- ▶ Data cleaning block inside one longer Excel course — [Learn Excel in Under 3 Hours (Alex The Analyst), 1:39:03](https://youtu.be/zXnQNytHCPM?t=5943&end=7066)
 
 - RU workbook `HW 3.1 Excel.xlsx` and `HW_2_Module_3.xlsx` — the original course's cleaning homework (text functions and lookups on a shop file); ours uses the same functions on Nur Finance data.
 - *Russian terms:* очистка данных = data cleaning, удалить дубликаты = Remove Duplicates, текст по столбцам = Text to Columns, мгновенное заполнение = Flash Fill, Power Query / Получить и преобразовать = Get & Transform, объединение запросов = Merge Queries, добавление запросов = Append, обновить = Refresh, журнал изменений = change log.

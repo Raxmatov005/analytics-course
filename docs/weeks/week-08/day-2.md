@@ -64,10 +64,10 @@ A **memo** (2 pages) has the same order: answer, reasons with numbers, recommend
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Answer first, one focal point, never a single number — [7 Effective Tips for Presenting Data at Work! (Jeff Su), 00:45](https://youtu.be/jizZKNnx9wA?t=45)
-- ▶ Structuring a narrative — [Storytelling with Data (Cole Nussbaumer Knaflic, Talks at Google), 22:19](https://youtu.be/8EMW7io4rSI?t=1339)
-- ▶ Presenting a story (from the data team's own webinar) — [How to turn data into stories (storytelling with data), 25:54](https://youtu.be/Hfx1X9WSGYQ?t=1554)
-- ▶ Unit economics (CAC, LTV/CAC, payback; the page's loan unit-economics section) (RU) — [Все продуктовые метрики за 15 минут (Аналитика без воды), 08:45](https://youtu.be/X4asNCIMBRg?t=525)
+- ▶ Answer first, one focal point, never a single number — [7 Effective Tips for Presenting Data at Work! (Jeff Su), 00:45](https://youtu.be/jizZKNnx9wA?t=45&end=97)
+- ▶ Structuring a narrative — [Storytelling with Data (Cole Nussbaumer Knaflic, Talks at Google), 22:19](https://youtu.be/8EMW7io4rSI?t=1339&end=1537)
+- ▶ Presenting a story (from the data team's own webinar) — [How to turn data into stories (storytelling with data), 25:54](https://youtu.be/Hfx1X9WSGYQ?t=1554&end=2138)
+- ▶ Unit economics (CAC, LTV/CAC, payback; the page's loan unit-economics section) (RU) — [Все продуктовые метрики за 15 минут (Аналитика без воды), 08:45](https://youtu.be/X4asNCIMBRg?t=525&end=609)
 
 ---
 

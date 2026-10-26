@@ -67,7 +67,7 @@ Notice `fact_loans` carries `customer_id`, `product_id` *and* `branch_id` direct
 
 ### Depth (optional)
 
-- ▶ Baraa, *Project: Data warehouse* [23:21:04](https://youtu.be/SSKVgrwhzus?t=84064) — watch the first 20 min (what a warehouse is, bronze/silver/gold). The rest is for after week 3.
+- ▶ Baraa, *Project: Data warehouse* [23:21:04](https://youtu.be/SSKVgrwhzus?t=84064&end=85264) — watch the first 20 min (what a warehouse is, bronze/silver/gold). The rest is for after week 3.
 - RU decks `1.3 NoSQL, OLAPOLTP & Data Architecture.pdf` (OLTP/OLAP pages, архитектура данных) and `1.4 Dimensional Modeling Star & Snowflake Schemas.pdf` (факты, измерения, звезда, снежинка, гранулярность).
 
 ---

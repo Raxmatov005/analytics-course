@@ -6,7 +6,7 @@
 
 ## Today in 3 lines
 
-- **Part A (80 pts):** `report.md` — an exploratory data analysis (*разведочный анализ данных*, EDA) of Nur Finance's loan book in ten sections, modelled on Baraa's SQL EDA project (▶ [27:41:51](https://youtu.be/SSKVgrwhzus?t=99711)) but on our data and our metrics.
+- **Part A (80 pts):** `report.md` — an exploratory data analysis (*разведочный анализ данных*, EDA) of Nur Finance's loan book in ten sections, modelled on Baraa's SQL EDA project (▶ [27:41:51](https://youtu.be/SSKVgrwhzus?t=99711&end=102638)) but on our data and our metrics.
 - **Part B (20 pts):** eight interview questions on this week's material, answered in writing.
 - Allowed: everything from weeks 1–3, including the three HW 3.2 views (ship `views.sql` with the report so the reviewer can run it).
 
@@ -298,7 +298,7 @@ Below 70: feedback names the sections to redo (most often S8 — the month-end o
 
 **Submission checklist** — `submissions/week-03/day-5/`: `report.md` (10 sections, each with query + first rows + finding), `report.sql` (`-- S1:` … `-- S10:`), `views.sql` (copied from HW 3.2 so the report runs), `interview.md` (definitions note + 8 answers). Also due today: **HW 3.2** in `day-4/` (`views.sql`, `dictionary.md`, `checks.sql`).
 
-<span class="badge stretch">Stretch</span> Baraa's *Advanced analytics* project (▶ [28:30:38](https://youtu.be/SSKVgrwhzus?t=102638)) adds change-over-time, cumulative, performance-vs-target, part-to-whole and segmentation reports in SQL Server on his SalesDB. Redo his "performance vs target" idea on ours: each product's 2026 monthly disbursement against its own 2025 monthly average (`AVG(...) OVER (PARTITION BY product)` on the 2025 rows, joined), flagged above/below.
+<span class="badge stretch">Stretch</span> Baraa's *Advanced analytics* project (▶ [28:30:38](https://youtu.be/SSKVgrwhzus?t=102638&end=107244)) adds change-over-time, cumulative, performance-vs-target, part-to-whole and segmentation reports in SQL Server on his SalesDB. Redo his "performance vs target" idea on ours: each product's 2026 monthly disbursement against its own 2025 monthly average (`AVG(...) OVER (PARTITION BY product)` on the 2025 rows, joined), flagged above/below.
 
 Madina, 17:30: *"Bekzod has his one-pager — six numbers, three cuts, one chart, one sentence under each. Nilufar put the vintage table on her committee slide with your definitions on it. Timur deleted eleven measures and pointed the dashboard at three views. Monday is Excel — the same book, in the tool everyone else in the building uses."*
 

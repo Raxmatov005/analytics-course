@@ -147,13 +147,13 @@ Two differences that bite: Excel text comparison is **case-insensitive** (SQL wa
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Tables (Ctrl+T) — [Excel for Data Analytics - Full Course for Beginners (Luke Barousse), 3:51:57](https://youtu.be/pCJ15nGFgVg?t=13917)
-- ▶ Absolute and relative references — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 07:40](https://youtu.be/Y8xhrUa3KH4?t=460)
-- ▶ Absolute and relative references (mixed `$F5`, the F4 key) — [Excel Cell Reference: Absolute, Relative or Mixed? (Leila Gharani), 01:52](https://youtu.be/FRu48zy-Djk?t=112)
-- ▶ SUMIFS (two criteria) — [How to Use SUMIFS, COUNTIFS and AVERAGEIFS in Excel (Leila Gharani), 03:18](https://youtu.be/AZuBNWMh7VM?t=198)
-- ▶ COUNTIFS / AVERAGEIFS — [How to Use SUMIFS, COUNTIFS and AVERAGEIFS in Excel (Leila Gharani), 10:19](https://youtu.be/AZuBNWMh7VM?t=619)
-- ▶ Text functions (PROPER, TRIM, LEFT/RIGHT/MID, LEN, FIND) — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 31:26](https://youtu.be/Y8xhrUa3KH4?t=1886)
-- ▶ IF / IFS (logic) — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 40:14](https://youtu.be/Y8xhrUa3KH4?t=2414)
+- ▶ Tables (Ctrl+T) — [Excel for Data Analytics - Full Course for Beginners (Luke Barousse), 3:51:57](https://youtu.be/pCJ15nGFgVg?t=13917&end=14968)
+- ▶ Absolute and relative references — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 07:40](https://youtu.be/Y8xhrUa3KH4?t=460&end=586)
+- ▶ Absolute and relative references (mixed `$F5`, the F4 key) — [Excel Cell Reference: Absolute, Relative or Mixed? (Leila Gharani), 01:52](https://youtu.be/FRu48zy-Djk?t=112&end=178)
+- ▶ SUMIFS (two criteria) — [How to Use SUMIFS, COUNTIFS and AVERAGEIFS in Excel (Leila Gharani), 03:18](https://youtu.be/AZuBNWMh7VM?t=198&end=320)
+- ▶ COUNTIFS / AVERAGEIFS — [How to Use SUMIFS, COUNTIFS and AVERAGEIFS in Excel (Leila Gharani), 10:19](https://youtu.be/AZuBNWMh7VM?t=619&end=691)
+- ▶ Text functions (PROPER, TRIM, LEFT/RIGHT/MID, LEN, FIND) — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 31:26](https://youtu.be/Y8xhrUa3KH4?t=1886&end=1920)
+- ▶ IF / IFS (logic) — [Excel Formulas and Functions | Full Course (Kevin Stratvert), 40:14](https://youtu.be/Y8xhrUa3KH4?t=2414&end=2487)
 
 - RU workbook `Logic Math Text Functions.xlsx` (sheets *IF Function*, *IFS*, *Math+Logic*, *Text Functions*, and *Russian Excel to English*) — the same functions on a shop dataset, with the Russian names side by side.
 - *Russian terms:* умная таблица = Table, абсолютная / относительная ссылка = absolute / relative reference, закрепить области = freeze panes, условное суммирование = SUMIFS, формат ячеек = number format.

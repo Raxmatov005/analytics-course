@@ -162,14 +162,14 @@ Same questions, same answers, a third spelling — and the only one of the three
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Read a file into a DataFrame — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 08:25](https://youtu.be/2uvysYbKdjM?t=505)
-- ▶ Selecting columns, loc / iloc — same video, [15:28](https://youtu.be/2uvysYbKdjM?t=928)
-- ▶ Sorting — same video, [21:11](https://youtu.be/2uvysYbKdjM?t=1271)
-- ▶ Filtering (boolean mask, multiple conditions) — same video, [24:12](https://youtu.be/2uvysYbKdjM?t=1452)
-- ▶ New columns and dates (`pd.to_datetime`, `.dt`) — same video, [41:40](https://youtu.be/2uvysYbKdjM?t=2500)
+- ▶ Read a file into a DataFrame — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 08:25](https://youtu.be/2uvysYbKdjM?t=505&end=822)
+- ▶ Selecting columns, loc / iloc — same video, [15:28](https://youtu.be/2uvysYbKdjM?t=928&end=1160)
+- ▶ Sorting — same video, [21:11](https://youtu.be/2uvysYbKdjM?t=1271&end=1381)
+- ▶ Filtering (boolean mask, multiple conditions) — same video, [24:12](https://youtu.be/2uvysYbKdjM?t=1452&end=1678)
+- ▶ New columns and dates (`pd.to_datetime`, `.dt`) — same video, [41:40](https://youtu.be/2uvysYbKdjM?t=2500&end=2798)
 - ▶ Dates in depth — [Python Pandas Tutorial (Part 10): Working with Dates and Time Series Data (Corey Schafer), 03:35](https://youtu.be/UFuo7EHI8zc?t=215)
-- ▶ Missing values (isna, fillna, dropna) — Keith Galli same video, [58:33](https://youtu.be/2uvysYbKdjM?t=3513)
-- ▶ Missing values (alternative, slower) — [Python Pandas Tutorial 5: Handle Missing Data: fillna, dropna, interpolate (codebasics), 04:10](https://youtu.be/EaGbS7eWSs0?t=250)
+- ▶ Missing values (isna, fillna, dropna) — Keith Galli same video, [58:33](https://youtu.be/2uvysYbKdjM?t=3513&end=3845)
+- ▶ Missing values (alternative, slower) — [Python Pandas Tutorial 5: Handle Missing Data: fillna, dropna, interpolate (codebasics), 04:10](https://youtu.be/EaGbS7eWSs0?t=250&end=455)
 
 - RU deck `4.3_Python.pdf`: Series and DataFrame pp. 10–15, dtypes and `astype` / `to_numeric` pp. 14–22, reading and writing pp. 23–30, first look pp. 31–37, `loc` / `iloc` / boolean indexing pp. 38–44, missing values pp. 45–52, `.str` pp. 55–67, categorical pp. 68–72, sorting pp. 104–108. (pp. 82–103 are tomorrow.)
 - *Russian terms:* датафрейм = DataFrame, серия = Series, индекс = index, булева маска = boolean mask, фильтрация = filtering, пропущенные значения / NaN = missing values, приведение типов = type casting, категориальный тип = category dtype, биннинг / разбиение на корзины = `pd.cut`.

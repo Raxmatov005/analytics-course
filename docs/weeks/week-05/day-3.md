@@ -123,11 +123,11 @@ assert (m["_merge"] != "right_only").all()           # no payment without an ins
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ groupby and agg — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 1:05:47](https://youtu.be/2uvysYbKdjM?t=3947)
-- ▶ groupby, short single-topic — [Group By and Aggregate Functions in Pandas (Alex The Analyst), 01:20](https://youtu.be/VRmXto2YA2I?t=80)
-- ▶ merge / concat — Keith Galli same video, [50:42](https://youtu.be/2uvysYbKdjM?t=3042)
-- ▶ Cleaning (duplicates, strip, replace, fill nulls) — [Data Cleaning in Pandas (Alex The Analyst), 02:34](https://youtu.be/bDhvCp3_lYw?t=154)
-- ▶ Same topic inside the big course — [Python for Data Analytics (Luke Barousse), Merge 7:15:37](https://youtu.be/wUSDVGivd-8?t=26137)
+- ▶ groupby and agg — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 1:05:47](https://youtu.be/2uvysYbKdjM?t=3947&end=4104)
+- ▶ groupby, short single-topic — [Group By and Aggregate Functions in Pandas (Alex The Analyst), 01:20](https://youtu.be/VRmXto2YA2I?t=80&end=188)
+- ▶ merge / concat — Keith Galli same video, [50:42](https://youtu.be/2uvysYbKdjM?t=3042&end=3513)
+- ▶ Cleaning (duplicates, strip, replace, fill nulls) — [Data Cleaning in Pandas (Alex The Analyst), 02:34](https://youtu.be/bDhvCp3_lYw?t=154&end=221)
+- ▶ Same topic inside the big course — [Python for Data Analytics (Luke Barousse), Merge 7:15:37](https://youtu.be/wUSDVGivd-8?t=26137&end=26753)
 
 - RU deck `4.3_Python.pdf` pp. 82–103: `groupby` and `.agg` pp. 82–87, pivot tables pp. 88–91, `pd.merge` / `join` / `concat` pp. 92–103; `.apply` / `.map` pp. 74–81. `4.4_Python.pdf` is tomorrow's bridge (DB-API, `read_sql`, SQLAlchemy).
 - *Russian terms:* группировка = groupby, агрегация = aggregation, именованная агрегация = named aggregation, оконная функция = window function (`transform`), слияние / соединение = merge / join, конкатенация = concat, сводная таблица = pivot table, дубликаты = duplicates, очистка данных = data cleaning, утверждение / проверка = assert.

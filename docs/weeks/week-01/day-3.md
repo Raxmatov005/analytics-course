@@ -118,7 +118,7 @@ DELETE FROM scratch_demo WHERE demo_id = 1;
 
 ### Depth (optional)
 
-- ▶ Baraa, *DDL commands* [1:32:31](https://youtu.be/SSKVgrwhzus?t=5551) — 11 min; ▶ *DML commands* [1:43:44](https://youtu.be/SSKVgrwhzus?t=6224) — 25 min.
+- ▶ Baraa, *DDL commands* [1:32:31](https://youtu.be/SSKVgrwhzus?t=5551&end=6224) — 11 min; ▶ *DML commands* [1:43:44](https://youtu.be/SSKVgrwhzus?t=6224&end=7683) — 25 min.
 - RU deck `1.2 Database Modeling & Normalization.pdf`, the pages on ER-диаграмма, 1НФ/2НФ/3НФ and аномалии. *Russian terms:* сущность = entity, связь = relationship, нормализация = normalisation, избыточность = redundancy.
 
 ---

@@ -1,6 +1,8 @@
 /* Mini-games for the theory parts (Docsify plugin): a ```game JSON block becomes a small interactive exercise.
-Everything works by tapping (phones too). Results stay in this browser (localStorage "al.v1" → games). Types:
-  match   {"type":"match","title":"…","pairs":[["term","meaning"],…]}                 tap a term, then its meaning
+Everything works by tapping (phones too). Each game shows a score and a progress bar, shakes on a wrong tap, and ends
+with 1–3 stars (no slips = 3, one or two = 2, more = 1); the best stars stay in this browser (localStorage "al.v1" →
+games). Types:
+  match   {"type":"match","title":"…","pairs":[["term","meaning"],…]}                 tap a term and its meaning (either side first)
   order   {"type":"order","title":"…","items":["first","second",…]}                     tap the items in the right order
   sort    {"type":"sort","title":"…","groups":{"Group A":["x","y"],"Group B":["z"]}}    tap an item, then its group
   pick    {"type":"pick","title":"…","q":"…","columns":["a","b"],"rows":[[…]],"answer":["a"],"why":"…"}   tap the right column(s)
@@ -9,6 +11,10 @@ Everything works by tapping (phones too). Results stay in this browser (localSto
 */
 (function () {
   var KEY = 'al.v1';
+  var ICON = { match: '⇄', order: '1·2·3', sort: '▦', pick: '◎', connect: '⟷' };
+  var HOW = { match: 'Tap a word, then its meaning (or the other way round).', order: 'Tap the steps in the order they happen.',
+    sort: 'Tap an item, then the group it belongs to.', pick: 'Tap the right column name in the table.',
+    connect: 'Tap a column on the left, then the column it joins on the right.' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function shuffle(a, seed) {   // the same shuffle every time for one game, different between games
     var r = seed || 7, b = a.slice();
@@ -17,54 +23,109 @@ Everything works by tapping (phones too). Results stay in this browser (localSto
     return b;
   }
   function seedOf(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100000; return h + 1; }
-  function record(id, ok) {
-    try { var s = JSON.parse(localStorage.getItem(KEY)) || {}; s.games = s.games || {}; var g = s.games[id] || { tries: 0 }; g.tries++; if (ok && !g.doneOn) g.doneOn = new Date().toISOString().slice(0, 10); s.games[id] = g; localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private window */ }
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function best(id) { return (load().games || {})[id] || null; }
+  function record(id, stars) {
+    try {
+      var s = load(); s.games = s.games || {};
+      var g = s.games[id] || { tries: 0 };
+      g.tries++;
+      if (stars) { g.doneOn = g.doneOn || new Date().toISOString().slice(0, 10); g.stars = Math.max(g.stars || 0, stars); }
+      s.games[id] = g; localStorage.setItem(KEY, JSON.stringify(s));
+    } catch (e) { /* private window */ }
   }
-  function frame(box, g, body) {
-    box.innerHTML = '<div class="gm-head"><span class="gm-badge">🎮 Game</span><span class="gm-title">' + esc(g.title) + '</span></div>' +
-      (g.q ? '<div class="gm-q">' + esc(g.q) + '</div>' : '') + body +
-      '<div class="gm-foot"><span class="gm-msg"></span><button type="button" class="gm-again">↺ Again</button></div>';
-    box.querySelector('.gm-again').onclick = function () { draw(box, g); };
-    return box.querySelector('.gm-msg');
-  }
-  function win(box, g, msg, text) {
-    msg.innerHTML = '🎉 <b>' + text + '</b>' + (g.why ? ' ' + esc(g.why) : '');
-    box.classList.add('gm-won'); record(g.id, true);
+  function starHtml(n) { var h = ''; for (var i = 1; i <= 3; i++) h += '<span class="' + (i <= n ? 'on' : '') + '">★</span>'; return h; }
+
+  /* the frame every game shares: header with score, progress bar, instruction, body, status line */
+  function frame(box, g, total, body) {
+    var b = best(g.id);
+    box.innerHTML = '<div class="gx-head"><span class="gx-icon">' + ICON[g.type] + '</span>' +
+      '<div class="gx-hd"><div class="gx-kicker">Game' + (b && b.stars ? ' · best <span class="gx-stars sm">' + starHtml(b.stars) + '</span>' : '') + '</div>' +
+      '<div class="gx-title">' + esc(g.title) + '</div></div><div class="gx-score"><b>0</b>/' + total + '</div></div>' +
+      '<div class="gx-bar"><span></span></div>' +
+      (g.q ? '<div class="gx-q">' + esc(g.q) + '</div>' : '') + '<div class="gx-how">' + HOW[g.type] + '</div>' +
+      '<div class="gx-body">' + body + '</div>' +
+      '<div class="gx-foot"><span class="gx-msg" aria-live="polite"></span><button type="button" class="gx-again">↺ Restart</button></div>';
+    box.querySelector('.gx-again').onclick = function () { draw(box, g); };
+    var msg = box.querySelector('.gx-msg'), n = 0, slips = 0;
+    var ui = {
+      say: function (text, kind) { msg.textContent = text; msg.className = 'gx-msg' + (kind ? ' ' + kind : ''); },
+      step: function () {
+        n++;
+        box.querySelector('.gx-score b').textContent = n;
+        box.querySelector('.gx-bar span').style.width = Math.round(100 * n / total) + '%';
+        if (n === total) ui.win(); else ui.say(ui.good(), 'good');
+      },
+      good: function () { return ['Yes!', 'Right.', 'Correct.', 'Nice.', 'Exactly.'][n % 5] + ' ' + (total - n) + ' to go.'; },
+      slip: function (els, text) {
+        slips++;
+        els.forEach(function (el) {
+          if (!el) return;
+          el.classList.remove('gx-no'); void el.offsetWidth; el.classList.add('gx-no');
+          setTimeout(function () { el.classList.remove('gx-no'); }, 450);
+        });
+        ui.say(text, 'bad');
+      },
+      win: function () {
+        var stars = slips === 0 ? 3 : slips <= 2 ? 2 : 1;
+        record(g.id, stars);
+        box.classList.add('gx-won');
+        var w = document.createElement('div');
+        w.className = 'gx-win';
+        w.innerHTML = '<div class="gx-stars">' + starHtml(stars) + '</div>' +
+          '<div class="gx-win-t">' + (stars === 3 ? 'Perfect!' : stars === 2 ? 'Well done!' : 'Done!') + '</div>' +
+          '<div class="gx-win-s">' + (slips ? slips + ' slip' + (slips > 1 ? 's' : '') + ' — play again for 3 stars.' : 'No slips at all.') + '</div>' +
+          (g.why ? '<div class="gx-why">' + esc(g.why) + '</div>' : '') +
+          '<button type="button" class="gx-btn">Play again</button>';
+        box.querySelector('.gx-foot').before(w);
+        w.querySelector('.gx-btn').onclick = function () { draw(box, g); };
+        ui.say('', '');
+      }
+    };
+    ui.say('');
+    return ui;
   }
 
   function match(box, g) {
-    var left = g.pairs.map(function (p) { return p[0]; }), right = shuffle(g.pairs.map(function (p) { return p[1]; }), seedOf(g.id));
-    var msg = frame(box, g, '<div class="gm-cols"><div class="gm-col">' + left.map(function (t, i) { return '<button type="button" class="gm-it" data-l="' + i + '">' + esc(t) + '</button>'; }).join('') +
-      '</div><div class="gm-col">' + right.map(function (t, i) { return '<button type="button" class="gm-it" data-r="' + i + '">' + esc(t) + '</button>'; }).join('') + '</div></div>');
-    var pick = null, done = 0, miss = 0;
-    box.querySelectorAll('[data-l]').forEach(function (b) {
-      b.onclick = function () { if (b.classList.contains('gm-ok')) return; box.querySelectorAll('[data-l]').forEach(function (x) { x.classList.remove('gm-sel'); }); b.classList.add('gm-sel'); pick = Number(b.dataset.l); };
-    });
-    box.querySelectorAll('[data-r]').forEach(function (b) {
+    var left = shuffle(g.pairs.map(function (p, i) { return i; }), seedOf(g.id + 'l'));
+    var right = shuffle(g.pairs.map(function (p, i) { return i; }), seedOf(g.id));
+    var ui = frame(box, g, g.pairs.length, '<div class="gx-match"><div class="gx-col">' +
+      left.map(function (i) { return '<button type="button" class="gx-it gx-term" data-i="' + i + '">' + esc(g.pairs[i][0]) + '</button>'; }).join('') +
+      '</div><div class="gx-col">' + right.map(function (i) { return '<button type="button" class="gx-it gx-mean" data-i="' + i + '">' + esc(g.pairs[i][1]) + '</button>'; }).join('') + '</div></div>');
+    var sel = { term: null, mean: null }, made = 0;
+    box.querySelectorAll('.gx-it').forEach(function (b) {
       b.onclick = function () {
-        if (pick === null || b.classList.contains('gm-ok')) { msg.textContent = 'Tap a term on the left first.'; return; }
-        var l = box.querySelector('[data-l="' + pick + '"]');
-        if (g.pairs[pick][1] === right[Number(b.dataset.r)]) {
-          l.classList.remove('gm-sel'); l.classList.add('gm-ok'); b.classList.add('gm-ok'); pick = null; done++;
-          msg.textContent = done + ' / ' + g.pairs.length;
-          if (done === g.pairs.length) win(box, g, msg, miss ? 'All matched (' + miss + ' slip' + (miss > 1 ? 's' : '') + ').' : 'Perfect — all matched first time.');
-        } else { miss++; b.classList.add('gm-no'); setTimeout(function () { b.classList.remove('gm-no'); }, 500); msg.textContent = 'Not that one — try again.'; }
+        if (b.classList.contains('gx-done')) return;
+        var side = b.classList.contains('gx-term') ? 'term' : 'mean';
+        if (sel[side]) sel[side].classList.remove('gx-sel');
+        sel[side] = sel[side] === b ? null : b;
+        if (sel[side]) b.classList.add('gx-sel');
+        if (!sel.term || !sel.mean) return;
+        var a = sel.term, c = sel.mean;
+        a.classList.remove('gx-sel'); c.classList.remove('gx-sel'); sel = { term: null, mean: null };
+        if (a.dataset.i === c.dataset.i) {
+          var k = made++ % 6;
+          [a, c].forEach(function (x) { x.classList.add('gx-done', 'gx-p' + k); x.insertAdjacentHTML('afterbegin', '<i class="gx-num">' + made + '</i>'); });
+          ui.step();
+        } else ui.slip([a, c], 'Not a pair — try again.');
       };
     });
   }
 
   function order(box, g) {
     var mixed = shuffle(g.items, seedOf(g.id));
-    var msg = frame(box, g, '<ol class="gm-seq"></ol><div class="gm-pool">' + mixed.map(function (t) { return '<button type="button" class="gm-it">' + esc(t) + '</button>'; }).join('') + '</div>');
-    var seq = box.querySelector('.gm-seq'), next = 0, miss = 0;
-    msg.textContent = 'Tap what comes first.';
-    box.querySelectorAll('.gm-pool .gm-it').forEach(function (b) {
+    var ui = frame(box, g, g.items.length, '<ol class="gx-slots">' + g.items.map(function () { return '<li></li>'; }).join('') + '</ol>' +
+      '<div class="gx-pool">' + mixed.map(function (t) { return '<button type="button" class="gx-it">' + esc(t) + '</button>'; }).join('') + '</div>');
+    var slots = box.querySelectorAll('.gx-slots li'), next = 0;
+    slots[0].classList.add('gx-next');
+    box.querySelectorAll('.gx-pool .gx-it').forEach(function (b) {
       b.onclick = function () {
         if (b.textContent === g.items[next]) {
-          seq.insertAdjacentHTML('beforeend', '<li>' + esc(b.textContent) + '</li>'); b.remove(); next++;
-          if (next === g.items.length) win(box, g, msg, miss ? 'In order (' + miss + ' slip' + (miss > 1 ? 's' : '') + ').' : 'Perfect order.');
-          else msg.textContent = 'Good — what comes next?';
-        } else { miss++; b.classList.add('gm-no'); setTimeout(function () { b.classList.remove('gm-no'); }, 500); msg.textContent = 'Not yet — that one comes later.'; }
+          slots[next].textContent = b.textContent; slots[next].classList.remove('gx-next'); slots[next].classList.add('gx-filled');
+          b.remove(); next++;
+          if (slots[next]) slots[next].classList.add('gx-next');
+          ui.step();
+        } else ui.slip([b], 'Not yet — that one comes later.');
       };
     });
   }
@@ -73,79 +134,92 @@ Everything works by tapping (phones too). Results stay in this browser (localSto
     var names = Object.keys(g.groups), items = [];
     names.forEach(function (n) { g.groups[n].forEach(function (t) { items.push({ t: t, g: n }); }); });
     items = shuffle(items.map(function (x) { return JSON.stringify(x); }), seedOf(g.id)).map(function (x) { return JSON.parse(x); });
-    var msg = frame(box, g, '<div class="gm-pool">' + items.map(function (x, i) { return '<button type="button" class="gm-it" data-i="' + i + '">' + esc(x.t) + '</button>'; }).join('') + '</div>' +
-      '<div class="gm-bins">' + names.map(function (n) { return '<div class="gm-bin" data-g="' + esc(n) + '"><div class="gm-bin-name">' + esc(n) + '</div><div class="gm-bin-in"></div></div>'; }).join('') + '</div>');
-    var pick = null, left = items.length, miss = 0;
-    msg.textContent = 'Tap an item, then its group.';
-    box.querySelectorAll('.gm-pool .gm-it').forEach(function (b) {
-      b.onclick = function () { box.querySelectorAll('.gm-pool .gm-it').forEach(function (x) { x.classList.remove('gm-sel'); }); b.classList.add('gm-sel'); pick = b; };
+    var ui = frame(box, g, items.length, '<div class="gx-pool">' + items.map(function (x, i) { return '<button type="button" class="gx-it" data-i="' + i + '">' + esc(x.t) + '</button>'; }).join('') + '</div>' +
+      '<div class="gx-bins">' + names.map(function (n) {
+        return '<button type="button" class="gx-bin" data-g="' + esc(n) + '"><span class="gx-bin-name">' + esc(n) + '</span><span class="gx-bin-in"></span></button>';
+      }).join('') + '</div>');
+    var pick = null;
+    box.querySelectorAll('.gx-pool .gx-it').forEach(function (b) {
+      b.onclick = function () {
+        if (pick) pick.classList.remove('gx-sel');
+        pick = pick === b ? null : b;
+        if (pick) { b.classList.add('gx-sel'); box.classList.add('gx-holding'); } else box.classList.remove('gx-holding');
+      };
     });
-    box.querySelectorAll('.gm-bin').forEach(function (bin) {
+    box.querySelectorAll('.gx-bin').forEach(function (bin) {
       bin.onclick = function () {
-        if (!pick) { msg.textContent = 'Tap an item first.'; return; }
+        if (!pick) { ui.say('Tap an item first, then its group.', 'bad'); return; }
         var it = items[Number(pick.dataset.i)];
         if (it.g === bin.dataset.g) {
-          bin.querySelector('.gm-bin-in').insertAdjacentHTML('beforeend', '<span class="gm-tag">' + esc(it.t) + '</span>'); pick.remove(); pick = null; left--;
-          if (!left) win(box, g, msg, miss ? 'All sorted (' + miss + ' slip' + (miss > 1 ? 's' : '') + ').' : 'Perfect sort.');
-          else msg.textContent = left + ' to go.';
-        } else { miss++; bin.classList.add('gm-no'); setTimeout(function () { bin.classList.remove('gm-no'); }, 500); msg.textContent = 'Not that group — think again.'; }
+          bin.querySelector('.gx-bin-in').insertAdjacentHTML('beforeend', '<span class="gx-tag">' + esc(it.t) + '</span>');
+          pick.remove(); pick = null; box.classList.remove('gx-holding');
+          ui.step();
+        } else ui.slip([bin, pick], 'Not that group — think again.');
       };
     });
   }
 
   function pick(box, g) {
-    var msg = frame(box, g, '<div class="gm-scroll"><table class="gm-table"><thead><tr>' + g.columns.map(function (c) { return '<th><button type="button" class="gm-colbtn" data-c="' + esc(c) + '">' + esc(c) + '</button></th>'; }).join('') +
-      '</tr></thead><tbody>' + g.rows.map(function (r) { return '<tr>' + r.map(function (v) { return '<td>' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>');
-    var found = 0, miss = 0;
-    msg.textContent = 'Tap a column name.';
-    box.querySelectorAll('.gm-colbtn').forEach(function (b) {
+    var ui = frame(box, g, g.answer.length, '<div class="gx-scroll"><table class="gx-table"><thead><tr>' +
+      g.columns.map(function (c) { return '<th><button type="button" class="gx-colbtn" data-c="' + esc(c) + '">' + esc(c) + '</button></th>'; }).join('') +
+      '</tr></thead><tbody>' + g.rows.map(function (r) { return '<tr>' + r.map(function (v) { return '<td>' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('') +
+      '</tbody></table></div>');
+    box.querySelectorAll('.gx-colbtn').forEach(function (b) {
       b.onclick = function () {
-        if (b.classList.contains('gm-ok')) return;
+        if (b.classList.contains('gx-done')) return;
         if (g.answer.indexOf(b.dataset.c) >= 0) {
-          b.classList.add('gm-ok'); found++;
-          if (found === g.answer.length) win(box, g, msg, miss ? 'Found it.' : 'Spot on.');
-          else msg.textContent = 'Yes — there is one more.';
-        } else { miss++; b.classList.add('gm-no'); setTimeout(function () { b.classList.remove('gm-no'); }, 500); msg.textContent = (g.hint || 'Not that one.'); }
+          b.classList.add('gx-done');
+          box.querySelectorAll('.gx-table tr').forEach(function (tr) { var cell = tr.children[g.columns.indexOf(b.dataset.c)]; if (cell) cell.classList.add('gx-col-ok'); });
+          ui.step();
+        } else ui.slip([b], g.hint || 'Not that one — look for a value that is different in every row.');
       };
     });
   }
 
   function connect(box, g) {
-    function side(t, s) { return '<div class="gm-tb" data-s="' + s + '"><div class="gm-tb-name">' + esc(t.name) + '</div>' + t.cols.map(function (c) { return '<button type="button" class="gm-it gm-c" data-s="' + s + '" data-c="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>'; }
-    var msg = frame(box, g, '<div class="gm-join">' + side(g.left, 'l') + '<svg class="gm-lines"></svg>' + side(g.right, 'r') + '</div>');
-    var a = null, made = 0, miss = 0, svg = box.querySelector('.gm-lines');
-    msg.textContent = 'Tap a column in ' + g.left.name + ', then the column it joins in ' + g.right.name + '.';
-    function line(x, y) {
-      var r = box.querySelector('.gm-join').getBoundingClientRect(), p = x.getBoundingClientRect(), q = y.getBoundingClientRect();
-      svg.setAttribute('width', r.width); svg.setAttribute('height', r.height);
-      var el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      el.setAttribute('x1', p.right - r.left); el.setAttribute('y1', p.top + p.height / 2 - r.top);
-      el.setAttribute('x2', q.left - r.left); el.setAttribute('y2', q.top + q.height / 2 - r.top);
-      svg.appendChild(el);
+    function side(t, s) {
+      return '<div class="gx-tb" data-s="' + s + '"><div class="gx-tb-name">' + esc(t.name) + '</div>' + t.cols.map(function (c) {
+        var dot = c.indexOf('.'), label = dot > 0 ? '<small>' + esc(c.slice(0, dot)) + '.</small>' + esc(c.slice(dot + 1)) : esc(c);
+        return '<button type="button" class="gx-it gx-c" data-s="' + s + '" data-c="' + esc(c) + '">' + label + '</button>';
+      }).join('') + '</div>';
     }
-    box.querySelectorAll('.gm-c').forEach(function (b) {
+    var ui = frame(box, g, g.links.length, '<div class="gx-join">' + side(g.left, 'l') + '<div class="gx-gap"></div>' + side(g.right, 'r') +
+      '<svg class="gx-lines" aria-hidden="true"></svg></div>');
+    var a = null, pairs = [], wrap = box.querySelector('.gx-join'), svg = box.querySelector('.gx-lines');
+    function drawLines() {
+      var r = wrap.getBoundingClientRect();
+      svg.setAttribute('width', r.width); svg.setAttribute('height', r.height);
+      svg.innerHTML = pairs.map(function (p, k) {
+        var x = p[0].getBoundingClientRect(), y = p[1].getBoundingClientRect();
+        var x1 = x.right - r.left, y1 = x.top + x.height / 2 - r.top, x2 = y.left - r.left, y2 = y.top + y.height / 2 - r.top, m = (x1 + x2) / 2;
+        return '<path class="gx-p' + (k % 6) + '" d="M' + x1 + ' ' + y1 + ' C' + m + ' ' + y1 + ' ' + m + ' ' + y2 + ' ' + x2 + ' ' + y2 + '"/>' +
+          '<circle class="gx-p' + (k % 6) + '" cx="' + x1 + '" cy="' + y1 + '" r="4"/><circle class="gx-p' + (k % 6) + '" cx="' + x2 + '" cy="' + y2 + '" r="4"/>';
+      }).join('');
+    }
+    window.addEventListener('resize', function () { if (document.body.contains(wrap)) drawLines(); });
+    box.querySelectorAll('.gx-c').forEach(function (b) {
       b.onclick = function () {
-        if (b.classList.contains('gm-ok')) return;
-        if (b.dataset.s === 'l') { box.querySelectorAll('.gm-c[data-s="l"]').forEach(function (x) { x.classList.remove('gm-sel'); }); b.classList.add('gm-sel'); a = b; return; }
-        if (!a) { msg.textContent = 'Start on the ' + g.left.name + ' side.'; return; }
+        if (b.classList.contains('gx-done')) return;
+        if (b.dataset.s === 'l') { if (a) a.classList.remove('gx-sel'); a = a === b ? null : b; if (a) b.classList.add('gx-sel'); return; }
+        if (!a) { ui.say('Start with a column in ' + g.left.name + ' (left).', 'bad'); return; }
         var ok = g.links.some(function (l) { return l[0] === a.dataset.c && l[1] === b.dataset.c; });
         if (ok) {
-          a.classList.remove('gm-sel'); a.classList.add('gm-ok'); b.classList.add('gm-ok'); line(a, b); a = null; made++;
-          if (made === g.links.length) win(box, g, msg, miss ? 'Joined.' : 'Joined first time.');
-          else msg.textContent = 'Good — ' + (g.links.length - made) + ' more.';
-        } else { miss++; b.classList.add('gm-no'); setTimeout(function () { b.classList.remove('gm-no'); }, 500); msg.textContent = 'Those do not hold the same thing — try again.'; }
+          var k = pairs.length % 6;
+          a.classList.remove('gx-sel'); [a, b].forEach(function (x) { x.classList.add('gx-done', 'gx-p' + k); });
+          pairs.push([a, b]); a = null; drawLines(); ui.step();
+        } else { ui.slip([a, b], 'Those do not hold the same thing — try again.'); a.classList.remove('gx-sel'); a = null; }
       };
     });
   }
 
   var TYPES = { match: match, order: order, sort: sort, pick: pick, connect: connect };
-  function draw(box, g) { box.classList.remove('gm-won'); (TYPES[g.type] || function () { box.textContent = 'Unknown game type ' + g.type; })(box, g); }
+  function draw(box, g) { box.classList.remove('gx-won', 'gx-holding'); (TYPES[g.type] || function () { box.textContent = 'Unknown game type ' + g.type; })(box, g); }
   function mount(pre) {
     var g;
     try { g = JSON.parse((pre.querySelector('code') || pre).textContent); } catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">This game could not be read (' + esc(e.message) + ').</p>'); return; }
     g.id = g.id || (location.hash + ':' + g.title);
     var box = document.createElement('div');
-    box.className = 'gm gm-' + g.type;
+    box.className = 'gx gx-type-' + g.type;
     pre.parentNode.replaceChild(box, pre);
     draw(box, g);
   }

@@ -75,7 +75,7 @@ Now you can read the whole database as sentences:
 
 ### Depth (optional)
 
-- ▶ Baraa, *Introduction to SQL* [0:07:38](https://youtu.be/SSKVgrwhzus?t=458) — 15 min, what a database is and why SQL.
+- ▶ Baraa, *Introduction to SQL* [0:07:38](https://youtu.be/SSKVgrwhzus?t=458&end=1353) — 15 min, what a database is and why SQL.
 - RU deck `1.1 Database Fundamentals.pdf`, pages 1–30 (what a DBMS is, tables, keys). *Russian terms:* таблица = table, строка = row, столбец = column, первичный ключ = primary key, внешний ключ = foreign key.
 
 ---
@@ -114,7 +114,7 @@ SELECT COUNT(*) AS loans FROM loans;        -- expect 7828
 SELECT COUNT(*) AS customers FROM customers; -- expect 6040
 ```
 
-▶ Baraa shows the same install at [0:22:33](https://youtu.be/SSKVgrwhzus?t=1353).
+▶ Baraa shows the same install at [0:22:33](https://youtu.be/SSKVgrwhzus?t=1353&end=2041).
 </details>
 
 <details>

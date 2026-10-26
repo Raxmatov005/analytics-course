@@ -116,7 +116,7 @@ Windows never reduce rows; `GROUP BY` always does; the pattern `SUM(SUM())` is t
 
 ### Depth (optional)
 
-- ▶ Baraa, *Window functions basics* [8:50:11](https://youtu.be/SSKVgrwhzus?t=31811), *Window aggregate* [9:47:00](https://youtu.be/SSKVgrwhzus?t=35220) — ~2 h; SQL Server, every keyword identical here.
+- ▶ Baraa, *Window functions basics* [8:50:11](https://youtu.be/SSKVgrwhzus?t=31811&end=35220), *Window aggregate* [9:47:00](https://youtu.be/SSKVgrwhzus?t=35220&end=39189) — ~2 h; SQL Server, every keyword identical here.
 - RU deck `2.3 SQL.pdf` — window pages. *Russian terms:* оконные функции = window functions, секция = partition, рамка окна = frame, накопительный итог = running total, скользящее среднее = moving average.
 
 ---

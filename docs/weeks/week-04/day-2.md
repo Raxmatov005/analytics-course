@@ -139,15 +139,15 @@ Rules apply to the range you selected when you created them — a Table extends 
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ VLOOKUP and its traps (exact match FALSE, locking the table, no look-left, IFNA/IFERROR) — [The Only VLOOKUP Guide You'll Ever Need (Leila Gharani), 03:46](https://youtu.be/TDphx23AtqM?t=226)
-- ▶ INDEX / MATCH — [How to use Excel Index Match (the right way) (Leila Gharani), 06:37](https://youtu.be/F264FpBDX28?t=397)
-- ▶ INDEX / MATCH (alternative, longer, with a drop-down example) — [INDEX MATCH Excel Tutorial (Kevin Stratvert), 05:36](https://youtu.be/6JhbY8Mku1A?t=336)
-- ▶ XLOOKUP — [How to Use XLOOKUP in Excel (5 Practical Examples) (Leila Gharani), 01:12](https://youtu.be/4c0CLUER6nw?t=72)
-- ▶ XLOOKUP (second option) — [XLOOKUP in Excel Tutorial (Kevin Stratvert), 01:13](https://youtu.be/HXU7lsd0ftA?t=73)
-- ▶ UNIQUE — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 02:33](https://youtu.be/2USJsIyIzvo?t=153)
-- ▶ FILTER — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 04:06](https://youtu.be/2USJsIyIzvo?t=246)
-- ▶ Conditional formatting (formula rule) — [Excel Conditional Formatting with Formula | Highlight Rows based on a cell value (Leila Gharani), 01:03](https://youtu.be/XHT4paRaY4g?t=63)
-- ▶ Conditional formatting (basics) — [Learn Excel in Under 3 Hours | Pivot Tables, Lookups, Data Cleaning (Alex The Analyst), 00:37](https://youtu.be/zXnQNytHCPM?t=37)
+- ▶ VLOOKUP and its traps (exact match FALSE, locking the table, no look-left, IFNA/IFERROR) — [The Only VLOOKUP Guide You'll Ever Need (Leila Gharani), 03:46](https://youtu.be/TDphx23AtqM?t=226&end=285)
+- ▶ INDEX / MATCH — [How to use Excel Index Match (the right way) (Leila Gharani), 06:37](https://youtu.be/F264FpBDX28?t=397&end=488)
+- ▶ INDEX / MATCH (alternative, longer, with a drop-down example) — [INDEX MATCH Excel Tutorial (Kevin Stratvert), 05:36](https://youtu.be/6JhbY8Mku1A?t=336&end=530)
+- ▶ XLOOKUP — [How to Use XLOOKUP in Excel (5 Practical Examples) (Leila Gharani), 01:12](https://youtu.be/4c0CLUER6nw?t=72&end=178)
+- ▶ XLOOKUP (second option) — [XLOOKUP in Excel Tutorial (Kevin Stratvert), 01:13](https://youtu.be/HXU7lsd0ftA?t=73&end=260)
+- ▶ UNIQUE — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 02:33](https://youtu.be/2USJsIyIzvo?t=153&end=185)
+- ▶ FILTER — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 04:06](https://youtu.be/2USJsIyIzvo?t=246&end=301)
+- ▶ Conditional formatting (formula rule) — [Excel Conditional Formatting with Formula | Highlight Rows based on a cell value (Leila Gharani), 01:03](https://youtu.be/XHT4paRaY4g?t=63&end=108)
+- ▶ Conditional formatting (basics) — [Learn Excel in Under 3 Hours | Pivot Tables, Lookups, Data Cleaning (Alex The Analyst), 00:37](https://youtu.be/zXnQNytHCPM?t=37&end=1200)
 
 - RU workbook `3.2 Lookups.xlsx` — sheets *VLOOKUP – Exact Match*, *VLOOKUP – Approx Match* (the grade table, the "lookup table should be sorted" note), *MATCH* (the three match types), *INDEX*, *Xlookup*; and *Cell Referrence* for the `$` multiplication table.
 - *Russian terms:* ВПР = VLOOKUP, ПОИСКПОЗ = MATCH, ИНДЕКС = INDEX, ПРОСМОТРX = XLOOKUP, точное / приближённое совпадение = exact / approximate match, проверка данных = data validation, условное форматирование = conditional formatting, выпадающий список = dropdown.

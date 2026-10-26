@@ -76,13 +76,13 @@ Related words: **activation** (here, the first disbursed loan), **churn** (*от
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Metric system, AARRR, metric tree / North Star (RU) — [Все продуктовые метрики за 15 минут — без воды | DAU, Retention, LTV (Аналитика без воды), 00:31](https://youtu.be/X4asNCIMBRg?t=31)
-- ▶ Funnels (RU) — same video, [06:41](https://youtu.be/X4asNCIMBRg?t=401)
-- ▶ Retention (RU) — same video, [05:15](https://youtu.be/X4asNCIMBRg?t=315)
-- ▶ Metric trees (EN, long) — [Analytics for Product Managers Masterclass (HelloPM), 1:17:30](https://youtu.be/N-Igkw7__z0?t=4650)
+- ▶ Metric system, AARRR, metric tree / North Star (RU) — [Все продуктовые метрики за 15 минут — без воды | DAU, Retention, LTV (Аналитика без воды), 00:31](https://youtu.be/X4asNCIMBRg?t=31&end=90)
+- ▶ Funnels (RU) — same video, [06:41](https://youtu.be/X4asNCIMBRg?t=401&end=459)
+- ▶ Retention (RU) — same video, [05:15](https://youtu.be/X4asNCIMBRg?t=315&end=401)
+- ▶ Metric trees (EN, long) — [Analytics for Product Managers Masterclass (HelloPM), 1:17:30](https://youtu.be/N-Igkw7__z0?t=4650&end=4810)
 - ▶ Cohorts, how to read the chart — [What is a Cohort? How to Read a Cohort Analysis Chart... (Peel), 01:21](https://youtu.be/mb2_kskQDDU?t=81)
-- ▶ Retention by cohort, calculated — [Customer Retention & Cohort Analysis (Eric Andrews), 04:11](https://youtu.be/OwCATJh4lNg?t=251)
-- ▶ Cohorts (RU, long) — [Когортный анализ и важнейшие метрики продукта (ProductStar), 29:00](https://youtu.be/uYYh69Nf-34?t=1740)
+- ▶ Retention by cohort, calculated — [Customer Retention & Cohort Analysis (Eric Andrews), 04:11](https://youtu.be/OwCATJh4lNg?t=251&end=434)
+- ▶ Cohorts (RU, long) — [Когортный анализ и важнейшие метрики продукта (ProductStar), 29:00](https://youtu.be/uYYh69Nf-34?t=1740&end=2780)
 
 - RU deck `8.1 Product Analytics.pptx` (lesson 8.1): slides 4–6 — what a metric is and why it exists; slides 7–11 — how to build one: goal → product initiatives → business questions → the metric (the Amplitude pyramid on 8–10, the one-line definition on 11: a metric tells you how what you do affects your goal); slides 12–18 — a case: MAU growing while revenue flattens (13–14), product vs growth metrics (15), a monthly KPI table with MoM and YoY (16), **cohort retention curves against a benchmark** (17), a daily product dashboard split into financial, growth and performance metrics (18); slide 19 — the summary grid (question, how, goal, metric; growth, financial, efficiency metrics). Mostly pictures: read them next to this page.
 - *Russian terms:* продуктовая аналитика = product analytics, дерево метрик = metric tree, входная / выходная метрика = input / output metric, опережающая / запаздывающая = leading / lagging, воронка = funnel, конверсия шага = step conversion, отвал = drop-off, когорта = cohort, удержание = retention, отток = churn, повторный займ = repeat loan, липкость = stickiness.

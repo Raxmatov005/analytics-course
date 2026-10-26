@@ -116,7 +116,7 @@ Write joins in the order of the story (fact first, then its dimensions); the dat
 
 ### Depth (optional)
 
-- ▶ Baraa, *SQL joins (basics)* [2:47:57](https://youtu.be/SSKVgrwhzus?t=10077) — 40 min, INNER/LEFT/RIGHT/FULL with his pictures; his `customers`/`orders` are our `customers`/`loans`.
+- ▶ Baraa, *SQL joins (basics)* [2:47:57](https://youtu.be/SSKVgrwhzus?t=10077&end=12449) — 40 min, INNER/LEFT/RIGHT/FULL with his pictures; his `customers`/`orders` are our `customers`/`loans`.
 - RU deck `2.1 SQL-47-77.pdf` — JOIN pages. *Russian terms:* соединение = join, внутреннее = inner, левое = left, псевдоним = alias, ключ соединения = join key.
 
 ---

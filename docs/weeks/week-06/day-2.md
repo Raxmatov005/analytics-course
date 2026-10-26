@@ -140,7 +140,7 @@ Default to a 95 % level and say so; use 90 % only when a team has agreed to it i
 - ▶ Central limit theorem — [The Central Limit Theorem, Clearly Explained!!! (StatQuest), 00:42](https://youtu.be/YAlJCEDH2uY?t=42)
 - ▶ Confidence intervals — [Confidence Intervals, Clearly Explained!!! (StatQuest), 02:55](https://youtu.be/TqOeMYtOc1w?t=175)
 - ▶ Confidence interval for a mean, formula route — [Confidence Interval [Simply explained] (numiqo)](https://youtu.be/ENnlSlvQHO0)
-- ▶ Bootstrap — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400)
+- ▶ Bootstrap — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
 - ▶ Confidence interval (RU) — [Доверительный интервал за 15 мин. Биостатистика. (Kirill Milchakov)](https://youtu.be/MstzroncW28)
 
 - RU deck `5.2 Statistics & Probability Theory.pdf` pp. 68–73: law of large numbers and CLT. `MS_lecture3.pdf` (lesson 5.3): sample method and sample properties pp. 5–13, point estimates — unbiased, consistent, efficient pp. 14–18, method of moments and maximum likelihood pp. 19–27, confidence intervals (Fisher's lemma; the mean with σ known and unknown; the variance) pp. 28–35. The lesson's recording: `video1414856026.mp4`.

@@ -156,13 +156,13 @@ A **traceback** (*трассировка*) lists the calls that led to the error
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Jupyter (install, new notebook, markdown, shortcuts) — [Jupyter Notebook Tutorial: Introduction, Setup, and Walkthrough (Corey Schafer), 04:08](https://youtu.be/HW29067qVWk?t=248)
-- ▶ Install Anaconda (what the page asks) — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:50:56](https://youtu.be/wUSDVGivd-8?t=21056)
-- ▶ Variables and types — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 18:52](https://youtu.be/wUSDVGivd-8?t=1132)
-- ▶ Lists, dicts, tuples — [same course, 1:34:24](https://youtu.be/wUSDVGivd-8?t=5664)
-- ▶ if / for / while — [same course, 1:26:20](https://youtu.be/wUSDVGivd-8?t=5180)
-- ▶ Functions — [same course, 2:52:12](https://youtu.be/wUSDVGivd-8?t=10332)
-- ▶ Modules (import) — [same course, 3:12:46](https://youtu.be/wUSDVGivd-8?t=11566)
+- ▶ Jupyter (install, new notebook, markdown, shortcuts) — [Jupyter Notebook Tutorial: Introduction, Setup, and Walkthrough (Corey Schafer), 04:08](https://youtu.be/HW29067qVWk?t=248&end=961)
+- ▶ Install Anaconda (what the page asks) — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:50:56](https://youtu.be/wUSDVGivd-8?t=21056&end=21634)
+- ▶ Variables and types — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 18:52](https://youtu.be/wUSDVGivd-8?t=1132&end=1465)
+- ▶ Lists, dicts, tuples — [same course, 1:34:24](https://youtu.be/wUSDVGivd-8?t=5664&end=6582)
+- ▶ if / for / while — [same course, 1:26:20](https://youtu.be/wUSDVGivd-8?t=5180&end=5664)
+- ▶ Functions — [same course, 2:52:12](https://youtu.be/wUSDVGivd-8?t=10332&end=10923)
+- ▶ Modules (import) — [same course, 3:12:46](https://youtu.be/wUSDVGivd-8?t=11566&end=12496)
 
 - RU deck `4.1 Python.pdf` (109 pages): types pp. 26–48, control flow pp. 49–61, lists / tuples / dicts / sets pp. 62–71, functions pp. 72–78, exceptions pp. 83–91, files pp. 92–107 — the recording `video1256130814.mp4` is this lecture. `En_4.2_Python.pdf` is NumPy (arrays, slicing, broadcasting, pp. 12–66): pandas sits on top of it; read it when `.values` or `np.where` puzzle you.
 - *Russian terms:* переменная = variable, целое / вещественное число = int / float, строка = str, список = list, словарь = dict, кортеж = tuple, цикл = loop, функция = function, параметр / аргумент = parameter / argument, модуль = module, исключение = exception, трассировка = traceback, ядро = kernel, ячейка = cell.

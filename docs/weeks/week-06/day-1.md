@@ -116,11 +116,11 @@ Simulation answers questions no textbook formula covers — a month that mixes p
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Conditional probability, "among those who..." — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71)
-- ▶ Bayes and the base-rate trap — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321)
+- ▶ Conditional probability, "among those who..." — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71&end=285)
+- ▶ Bayes and the base-rate trap — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321&end=552)
 - ▶ Binomial — [The Binomial Distribution and Test, Clearly Explained!!! (StatQuest)](https://youtu.be/J8jNoF-K8E8)
 - ▶ Binomial (RU) — [Биномиальное распределение. Вероятности вероятностей. Математика для аналитика #2 (Skypro)](https://youtu.be/VJTQNc8eliY)
-- ▶ Poisson — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135)
+- ▶ Poisson — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135&end=188)
 - ▶ Normal distribution — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
 
 - RU deck `5.1 Basics of Probability Theory.pdf`: events and operations pp. 9–17, classical / statistical probability pp. 32–43, conditional probability pp. 52–57, independence pp. 58–63, total probability pp. 64–70, Bayes pp. 71–76, random variables pp. 79–104, expectation pp. 119–127, variance pp. 128–134, skewness / kurtosis / median / quantile pp. 139–150. `5.2 Statistics & Probability Theory.pdf`: Bernoulli formula pp. 5–10, binomial pp. 26–31, Poisson pp. 32–36, exponential pp. 41–44, normal pp. 45–53.

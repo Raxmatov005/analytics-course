@@ -151,14 +151,14 @@ No selection: *"Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"*;
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Measures vs columns — [Learn 80% of DAX in an Hour (Chandoo), 13:39](https://youtu.be/lD7TvkoQ6rY?t=819)
-- ▶ CALCULATE — [Learn 80% of DAX in an Hour (Chandoo), 34:18](https://youtu.be/lD7TvkoQ6rY?t=2058)
-- ▶ CALCULATE (short, one idea) — [DAX CALCULATE Function Made Easy to Understand (Leila Gharani), 00:38](https://youtu.be/40xO1MD_CCs?t=38)
-- ▶ Time intelligence — [Time Intelligence DAX | Current, Previous & SamePeriodLastYear | MTD QTD YTD | MoM QoQ YoY POWER BI (Rahim Zulfiqar Ali), 13:07](https://youtu.be/WsWDjH-CgHg?t=787)
-- ▶ Time intelligence, needs the marked date table — [My number 1 trick for TIME INTELLIGENCE (How to Power BI), 00:30](https://youtu.be/I8Y5fBGwqeQ?t=30)
-- ▶ Visuals — [Power BI for Data Analytics - Full Course for Beginners (Luke Barousse), 1:13:27](https://youtu.be/FwjaHCVNBWA?t=4407)
-- ▶ Visuals and the full project — [Learn Power BI in Under 3 Hours (Alex The Analyst), 1:09:26](https://youtu.be/I0vQ_VLZTWg?t=4166)
-- ▶ (RU) DAX basics — [Power BI с нуля — полный гайд | Часть 1 (MrAnalitik), 39:33](https://youtu.be/A2r6or-Dm28?t=2373)
+- ▶ Measures vs columns — [Learn 80% of DAX in an Hour (Chandoo), 13:39](https://youtu.be/lD7TvkoQ6rY?t=819&end=908)
+- ▶ CALCULATE — [Learn 80% of DAX in an Hour (Chandoo), 34:18](https://youtu.be/lD7TvkoQ6rY?t=2058&end=2541)
+- ▶ CALCULATE (short, one idea) — [DAX CALCULATE Function Made Easy to Understand (Leila Gharani), 00:38](https://youtu.be/40xO1MD_CCs?t=38&end=241)
+- ▶ Time intelligence — [Time Intelligence DAX | Current, Previous & SamePeriodLastYear | MTD QTD YTD | MoM QoQ YoY POWER BI (Rahim Zulfiqar Ali), 13:07](https://youtu.be/WsWDjH-CgHg?t=787&end=969)
+- ▶ Time intelligence, needs the marked date table — [My number 1 trick for TIME INTELLIGENCE (How to Power BI), 00:30](https://youtu.be/I8Y5fBGwqeQ?t=30&end=66)
+- ▶ Visuals — [Power BI for Data Analytics - Full Course for Beginners (Luke Barousse), 1:13:27](https://youtu.be/FwjaHCVNBWA?t=4407&end=5536)
+- ▶ Visuals and the full project — [Learn Power BI in Under 3 Hours (Alex The Analyst), 1:09:26](https://youtu.be/I0vQ_VLZTWg?t=4166&end=4960)
+- ▶ (RU) DAX basics — [Power BI с нуля — полный гайд | Часть 1 (MrAnalitik), 39:33](https://youtu.be/A2r6or-Dm28?t=2373&end=4004)
 
 - RU deck `Power BI 7.2.pptx`: M vs DAX — slide 9; DAX syntax, types, operators — slides 10–12; the most used functions (math and statistics, `DIVIDE`; logical `IF`, `AND`, `OR`) — slides 13–14; links — slide 15. RU deck `Power BI 7.3.pptx`: why visualise and visual categories — slides 3–6; **allocation of visuals (top / middle / bottom)** — slide 7; publishing to the web, refresh settings — slides 8–9; dashboards vs reports, sharing — slides 10–12; homework — slide 13.
 - `Power BI 7.2.pbix`, `Power BI 7.3.pbix` — the lecture files (binary; open them in Power BI Desktop, not readable here). `Homework.zip` — the 7.3 homework: `flights.csv` (72 MB, US flights), `airline_carriers.csv` and a task list: load and relate, a calculated column *Delay / On-Time* (`DepDelay` or `ArrDelay` > 0), a visual of the % share of each status, flights by carrier name, then a **Top N** filter to the top 5 carriers. A good extra hour on someone else's data with exactly today's tools.

@@ -134,7 +134,7 @@ FROM customers a JOIN customers b
 
 ### Depth (optional)
 
-- ▶ Baraa, *NULL functions* [6:59:06](https://youtu.be/SSKVgrwhzus?t=25146) — 50 min; *CASE* [8:07:50](https://youtu.be/SSKVgrwhzus?t=29270) — 35 min; *Joins (advanced)* [3:27:29](https://youtu.be/SSKVgrwhzus?t=12449) — anti-joins, self-joins, FULL.
+- ▶ Baraa, *NULL functions* [6:59:06](https://youtu.be/SSKVgrwhzus?t=25146&end=29270) — 50 min; *CASE* [8:07:50](https://youtu.be/SSKVgrwhzus?t=29270&end=31416) — 35 min; *Joins (advanced)* [3:27:29](https://youtu.be/SSKVgrwhzus?t=12449&end=14529) — anti-joins, self-joins, FULL.
 - RU deck `2.2 SQL-1-38.pdf` — NULL / CASE pages. *Russian terms:* пустое значение = NULL, условное выражение = CASE, самосоединение = self-join, дубликаты = duplicates.
 
 ---

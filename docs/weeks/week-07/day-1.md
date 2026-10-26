@@ -136,13 +136,13 @@ Write the design down — dated, in the repo — **before** the test starts: hyp
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ The design steps (problem, metrics, hypothesis, design, validity) — [A/B Testing in Data Science Interviews by a Google Data Scientist (DataInterview), 09:41](https://youtu.be/DUNk4GPZ9bw?t=581)
-- ▶ Metrics, hypotheses, sample size, splitting users (RU) — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 04:45](https://youtu.be/FEI1OA-zgb8?t=285)
-- ▶ Designing an A/B test with sample size and power (EN) — [Data Science Essentials - Crash Course in A/B Testing with Case Study (freeCodeCamp.org), 19:55](https://youtu.be/KZe0C0Qq4p0?t=1195)
-- ▶ Randomisation / user split — Noukash lecture, [24:42](https://youtu.be/FEI1OA-zgb8?t=1482)
+- ▶ The design steps (problem, metrics, hypothesis, design, validity) — [A/B Testing in Data Science Interviews by a Google Data Scientist (DataInterview), 09:41](https://youtu.be/DUNk4GPZ9bw?t=581&end=694)
+- ▶ Metrics, hypotheses, sample size, splitting users (RU) — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 04:45](https://youtu.be/FEI1OA-zgb8?t=285&end=498)
+- ▶ Designing an A/B test with sample size and power (EN) — [Data Science Essentials - Crash Course in A/B Testing with Case Study (freeCodeCamp.org), 19:55](https://youtu.be/KZe0C0Qq4p0?t=1195&end=2276)
+- ▶ Randomisation / user split — Noukash lecture, [24:42](https://youtu.be/FEI1OA-zgb8?t=1482&end=1638)
 - ▶ SRM (sample ratio mismatch) — [Understanding SRM (Sample Ratio Mismatch) in A/B Testing (Lucia from The Initial)](https://youtu.be/sSi6h-PpXQI)
 - ▶ Peeking — [Тонкости A/B тестирования: проблема подглядывания (Анатолий Карпов, karpov.courses)](https://youtu.be/jnFVmtaeSA0)
-- ▶ A/A test / validity checks — DataInterview video, [12:32](https://youtu.be/DUNk4GPZ9bw?t=752)
+- ▶ A/A test / validity checks — DataInterview video, [12:32](https://youtu.be/DUNk4GPZ9bw?t=752&end=913)
 
 - RU deck `6.1 Introduction.pdf` (lesson 6.1, Sanjar Khakimov, TBC): why A/B testing — asking clients vs testing pp. 4–6; examples pp. 7–10; definition p. 11; the **HADI** cycle (hypothesis → action → data → interpretation) pp. 12–16; what an experiment design contains (metric + MDE, criteria, split, A/A, simulated effect, power) pp. 18–21; metric types and relative vs absolute change pp. 23–26; how often and how long to test pp. 27–28; historical data and distributions pp. 29–31; MDE and minimum sample size pp. 32–33; the step-by-step approach (A/A → validate criteria → add effect → sample size) p. 34; reading results, and what an insignificant result means pp. 35–36.
 - RU deck `6.2 A_B Testing.pdf`: hash functions pp. 4–7, salting a split pp. 8–9, uneven splits by normalised hash p. 10.

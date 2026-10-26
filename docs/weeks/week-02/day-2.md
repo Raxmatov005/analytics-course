@@ -120,7 +120,7 @@ Joins put tables side by side; **set operators** (*операции над мн�
 
 ### Depth (optional)
 
-- ▶ Baraa, *Aggregate functions* [8:43:36](https://youtu.be/SSKVgrwhzus?t=31416) — 7 min; and *Set operators* [4:02:09](https://youtu.be/SSKVgrwhzus?t=14529) — 40 min.
+- ▶ Baraa, *Aggregate functions* [8:43:36](https://youtu.be/SSKVgrwhzus?t=31416&end=31811) — 7 min; and *Set operators* [4:02:09](https://youtu.be/SSKVgrwhzus?t=14529&end=17261) — 40 min.
 - RU deck `2.2 SQL-1-38.pdf` — GROUP BY / HAVING pages. *Russian terms:* агрегатная функция = aggregate, группировка = GROUP BY, средний чек = average ticket, объединение = UNION.
 
 ---

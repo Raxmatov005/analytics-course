@@ -121,7 +121,7 @@ Anchor row, then "take the last rows and produce the next" until the condition f
 
 ### Depth (optional)
 
-- ▶ Baraa, *Subqueries* [12:58:04](https://youtu.be/SSKVgrwhzus?t=46684), *CTE* [14:18:08](https://youtu.be/SSKVgrwhzus?t=51488) — ~2 h 30; his recursive examples use SQL Server syntax (no `RECURSIVE` keyword, `MAXRECURSION` option).
+- ▶ Baraa, *Subqueries* [12:58:04](https://youtu.be/SSKVgrwhzus?t=46684&end=51488), *CTE* [14:18:08](https://youtu.be/SSKVgrwhzus?t=51488&end=56102) — ~2 h 30; his recursive examples use SQL Server syntax (no `RECURSIVE` keyword, `MAXRECURSION` option).
 - RU deck `2.4 SQL Advanced.pdf` — subqueries and the recursive CTE pages. *Russian terms:* подзапрос = subquery, обобщённое табличное выражение (ОТВ) = CTE, рекурсия = recursion, когорта/винтаж = cohort/vintage.
 
 ---

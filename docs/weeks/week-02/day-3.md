@@ -88,7 +88,7 @@ It works for dates, datetimes, months of 28–31 days and year ends alike. Make 
 
 ### Depth (optional)
 
-- ▶ Baraa, *String functions* [4:52:58](https://youtu.be/SSKVgrwhzus?t=17578), *Numeric* [5:18:44](https://youtu.be/SSKVgrwhzus?t=19124), *Date & time* [5:22:48](https://youtu.be/SSKVgrwhzus?t=19368) — 1 h 20 total; SQL Server syntax throughout, use the table above to translate.
+- ▶ Baraa, *String functions* [4:52:58](https://youtu.be/SSKVgrwhzus?t=17578&end=19124), *Numeric* [5:18:44](https://youtu.be/SSKVgrwhzus?t=19124&end=19368), *Date & time* [5:22:48](https://youtu.be/SSKVgrwhzus?t=19368&end=25146) — 1 h 20 total; SQL Server syntax throughout, use the table above to translate.
 - RU deck `2.2 SQL-1-38.pdf` — functions pages. *Russian terms:* строковые функции = string functions, преобразование типов = CAST, целочисленное деление = integer division, разница дат = date difference.
 
 ---

@@ -130,12 +130,12 @@ What a pivot cannot do that SQL can: a `JOIN` (merge first in Power Query, or ad
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ PivotTables — [Pivot Table Excel | Step-by-Step Tutorial (Kevin Stratvert), 00:49](https://youtu.be/dvbLrwD2SpA?t=49)
-- ▶ Slicers and pivot charts — [Pivot Table Excel | Step-by-Step Tutorial (Kevin Stratvert), 07:08](https://youtu.be/dvbLrwD2SpA?t=428)
-- ▶ Charts — [Learn Excel in Under 3 Hours (Alex The Analyst), 35:57](https://youtu.be/zXnQNytHCPM?t=2157)
-- ▶ One-page dashboard (pivot tables + charts + timeline/slicers) — [How to Build Excel Interactive Dashboards (Kevin Stratvert), 00:52](https://youtu.be/MTlQvyNQ3PM?t=52)
+- ▶ PivotTables — [Pivot Table Excel | Step-by-Step Tutorial (Kevin Stratvert), 00:49](https://youtu.be/dvbLrwD2SpA?t=49&end=93)
+- ▶ Slicers and pivot charts — [Pivot Table Excel | Step-by-Step Tutorial (Kevin Stratvert), 07:08](https://youtu.be/dvbLrwD2SpA?t=428&end=485)
+- ▶ Charts — [Learn Excel in Under 3 Hours (Alex The Analyst), 35:57](https://youtu.be/zXnQNytHCPM?t=2157&end=2962)
+- ▶ One-page dashboard (pivot tables + charts + timeline/slicers) — [How to Build Excel Interactive Dashboards (Kevin Stratvert), 00:52](https://youtu.be/MTlQvyNQ3PM?t=52&end=85)
 - ▶ (RU, optional) Pivot tables from scratch — [Сводные таблицы Excel с нуля до профи за полчаса + Дэшборды! (Билял Хасенов)](https://youtu.be/4roVtL2mynA)
-- ▶ (RU, optional) Core analyst formulas incl. pivots in 10 minutes — [EXCEL для начинающих аналитиков (Noukash), 05:40](https://youtu.be/snqGcBdTgCU?t=340)
+- ▶ (RU, optional) Core analyst formulas incl. pivots in 10 minutes — [EXCEL для начинающих аналитиков (Noukash), 05:40](https://youtu.be/snqGcBdTgCU?t=340&end=418)
 
 - RU workbook `3.3 Pivot.xlsx` — sheets *Introduction*, *Building a Pivot table*, *Filtering*, *Calculations in Pivot Table*; the employee/store data shows the same Rows–Values–Filters mechanics.
 - *Russian terms:* сводная таблица = PivotTable, срез = slicer, временная шкала = timeline, вычисляемое поле = calculated field, группировка по месяцам = group by months, % от родительской строки = % of parent row total, нарастающий итог = running total, гистограмма / линейчатая / график / комбинированная / с накоплением = column / bar / line / combo / stacked chart, спарклайн = sparkline, обновить = refresh.

@@ -157,12 +157,12 @@ Then one sentence with six parts, in this order — it is the sentence an examin
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ p-value (one right definition) — [p-values: What they are and how to interpret them (StatQuest), 04:32](https://youtu.be/vemZtEM63GY?t=272)
-- ▶ H0 / H1 — [Hypothesis Testing and The Null Hypothesis, Clearly Explained!!! (StatQuest), 09:51](https://youtu.be/0oc49DyA3hU?t=591)
+- ▶ p-value (one right definition) — [p-values: What they are and how to interpret them (StatQuest), 04:32](https://youtu.be/vemZtEM63GY?t=272&end=427)
+- ▶ H0 / H1 — [Hypothesis Testing and The Null Hypothesis, Clearly Explained!!! (StatQuest), 09:51](https://youtu.be/0oc49DyA3hU?t=591&end=824)
 - ▶ z-test for two proportions — [Hypothesis Testing With Two Proportions (The Organic Chemistry Tutor)](https://youtu.be/pCbNUnZ98oE)
 - ▶ Chi-square test of independence — [Chi-Square Test [Simply explained] (numiqo), 00:17](https://youtu.be/rpKzq64GA9Y?t=17)
-- ▶ t-test (independent / paired / assumptions) — [t-Test - Full Course - Everything you need to know (numiqo), 01:45](https://youtu.be/VekJxtk4BYM?t=105)
-- ▶ Whole logic of a test in Russian, p-value and CI on a worked case — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 16:53](https://youtu.be/FEI1OA-zgb8?t=1013)
+- ▶ t-test (independent / paired / assumptions) — [t-Test - Full Course - Everything you need to know (numiqo), 01:45](https://youtu.be/VekJxtk4BYM?t=105&end=148)
+- ▶ Whole logic of a test in Russian, p-value and CI on a worked case — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 16:53](https://youtu.be/FEI1OA-zgb8?t=1013&end=1077)
 
 - RU deck `Параметрические тесты (2).pdf` (lesson 5.4): the CLT and z-scores pp. 6–9, checking normality and log-transform pp. 10–12, p-value p. 13, type I/II errors p. 14, choosing a test pp. 15–16, assumptions of parametric tests p. 18, one-sample z pp. 19–21, two-sample z pp. 22–24, Student's t pp. 25–31 (paired pp. 30–31), Welch pp. 32–35, ANOVA pp. 36–46, Bonferroni and Tukey pp. 47–49, correlation and regression pp. 50–58.
 - Notebook `примеры стат_тестов в python.ipynb`: one- and two-sample z, independent and paired t, Welch, ANOVA (scipy and statsmodels), Bonferroni, Tukey HSD — each on simulated data; rerun any of them on `f` or `x`.

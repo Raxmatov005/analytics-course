@@ -209,7 +209,7 @@ Work in progress is kept in localStorage "al.sql". */
   function fit(ta) {   // the editor is as tall as its code, so nothing is cut off and nothing wraps
     var lines = ta.value.split('\n').length;   // counted from the text, so it also works inside a closed <details>
     if (ta.classList.contains('sq-text')) lines += Math.floor(ta.value.length / 60);
-    var least = ta.classList.contains('sq-text') ? 4 : ta.closest('.sq-task') ? 3 : 1;
+    var least = ta.classList.contains('sq-text') ? 4 : ta.closest('.sq-task, .sq-prac') ? 3 : 1;
     ta.rows = Math.max(least, Math.min(30, lines + (least > 1 ? 1 : 0)));
   }
   function tabKeys(ta) {
@@ -440,11 +440,98 @@ Work in progress is kept in localStorage "al.sql". */
     btn.hidden = false;
   }
 
+  /* ---------- 3. practice questions: a box under each question whose "Answer" fold holds SQL ----------
+     Her query is kept in this browser (al.sql → prac[page][P1]). ✔ Check runs the fold's query and hers on the untouched
+     data and compares the results (rows in any order unless the answer sorts; cells in any order within a row), so she
+     learns whether she got it without opening the fold. */
+  function results(db, text) {
+    var list = [];
+    stripComments(text).split(';').filter(function (s) { return s.trim(); }).forEach(function (stmt) {
+      if (!/^\s*(SELECT|WITH)\b/i.test(stmt)) return;
+      [stmt, translate(stmt)].some(function (q) {
+        try {
+          var res = db.exec(q);
+          list.push({ r: res.length ? res[res.length - 1] : { columns: [], values: [] }, ordered: /\bORDER\s+BY\b/i.test(q) });
+          return true;
+        } catch (e) { return false; }
+      });
+    });
+    return list;
+  }
+  function cell(v) {
+    if (v === null) return '∅';
+    var s = String(v).trim(), n = Number(s);
+    return s !== '' && !isNaN(n) ? String(Math.round(n * 10000) / 10000) : s;
+  }
+  function sameResult(a, b, ordered) {
+    if (a.values.length !== b.values.length || a.columns.length !== b.columns.length) return false;
+    var key = function (row) { return row.map(cell).sort().join('\u0001'); };
+    var ra = a.values.map(key), rb = b.values.map(key);
+    if (!ordered) { ra.sort(); rb.sort(); }
+    return ra.every(function (x, i) { return x === rb[i]; });
+  }
+  function practice(det) {
+    var sum = det.querySelector('summary');
+    var pres = det.querySelectorAll('pre[data-lang="sql"]');
+    if (!sum || !/^\s*answer/i.test(sum.textContent) || !pres.length || det.previousElementSibling && det.previousElementSibling.classList.contains('sq-prac')) return;
+    var answer = Array.prototype.map.call(pres, function (p) { return (p.querySelector('code') || p).textContent; }).join(';\n');
+    var q = det.previousElementSibling, strong = q && q.querySelector('strong'), m = strong && /^(P\d+|[A-Z]\d+)/.exec(strong.textContent.trim());
+    var page = location.hash.replace(/\?.*$/, '') || '#/';
+    var id = m ? m[1] : 'Q' + (Array.prototype.indexOf.call(document.querySelectorAll('.markdown-section details'), det) + 1);
+    var h1 = document.querySelector('.markdown-section h1');
+    var exam = !!(h1 && /checkpoint/i.test(h1.textContent));   // a test day: no checking against the folds before she submits
+    var box = document.createElement('div');
+    box.className = 'sq-box sq-prac';
+    box.innerHTML = '<div class="sq-top"><span class="sq-lang">YOUR QUERY · ' + esc(id) + '</span><span class="sq-tip">saved in this browser</span>' +
+      '<button type="button" class="sq-reset" hidden>Clear</button></div>' +
+      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="-- write your query here, then Run"></textarea>' +
+      '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button>' + (exam ? '' : '<button type="button" class="sq-check">✔ Check</button>') +
+      '<span class="sq-msg"></span></div><div class="sq-out"></div>';
+    det.parentNode.insertBefore(box, det);
+    var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out'), msg = box.querySelector('.sq-msg'), clr = box.querySelector('.sq-reset');
+    var s0 = store(), mine = ((s0.prac || {})[page] || {})[id] || '';
+    ta.value = mine; clr.hidden = !mine;
+    fit(ta); tabKeys(ta);
+    ta.addEventListener('input', function () {
+      var s = store(); s.prac = s.prac || {}; s.prac[page] = s.prac[page] || {}; s.prac[page][id] = ta.value; save(s);
+      fit(ta); clr.hidden = !ta.value; msg.textContent = ''; box.classList.remove('ok', 'bad');
+    });
+    clr.onclick = function () { ta.value = ''; ta.dispatchEvent(new Event('input')); out.innerHTML = ''; };
+    box.querySelector('.sq-run').onclick = function () {
+      if (!ta.value.trim()) { msg.textContent = 'Write a query first.'; return; }
+      out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
+      ready().then(function () { out.innerHTML = table(run(play, ta.value, false)); })
+        .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the connection and try again.</div>'; });
+    };
+    if (!exam) box.querySelector('.sq-check').onclick = function () {
+      if (!ta.value.trim()) { msg.textContent = 'Write a query first.'; return; }
+      msg.textContent = 'Checking…';
+      ready().then(function () {
+        var want = results(clean, answer), got = results(clean, ta.value);
+        var mineRes = run(clean, ta.value, true);
+        out.innerHTML = table(mineRes);
+        if (!got.length) { msg.textContent = mineRes.error ? 'The query did not run — see the message below.' : 'No result to compare yet.'; box.classList.add('bad'); return; }
+        var last = got[got.length - 1], hit = -1, loose = -1;
+        want.forEach(function (w, i) {
+          if (hit < 0 && sameResult(last.r, w.r, w.ordered)) hit = i;
+          if (loose < 0 && sameResult(last.r, w.r, false)) loose = i;   // the same rows, sorted differently
+        });
+        var part = function (i) { return want.length > 1 ? ' (part ' + (i + 1) + ' of ' + want.length + ')' : ''; };
+        box.classList.toggle('ok', hit >= 0 || loose >= 0); box.classList.toggle('bad', hit < 0 && loose < 0);
+        if (hit >= 0) msg.textContent = '✅ Same result as the answer' + part(hit) + '.';
+        else if (loose >= 0) msg.textContent = '✅ Same rows as the answer' + part(loose) + (last.ordered ? ', in a different order — check the ORDER BY.' : '. The answer also sorts them with ORDER BY.');
+        else if (want.some(function (w) { return w.r.values.length === last.r.values.length; })) msg.textContent = '❌ Same number of rows as the answer, but the columns or values differ.';
+        else msg.textContent = '❌ Not yet — the answer has a different number of rows (you have ' + last.r.values.length + ').';
+      }).catch(function (e) { console.error('practice check failed', e); msg.textContent = 'Could not check right now — try again.'; });
+    };
+  }
+
   window.$docsify = window.$docsify || {};
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.doneEach(function () {
       var sec = document.querySelector('.markdown-section');
       if (!sec) return;
+      Array.prototype.forEach.call(sec.querySelectorAll('details'), practice);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqltask"]'), workspace);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sql"]'), example);
       dbButton();

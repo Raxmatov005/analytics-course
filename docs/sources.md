@@ -8,7 +8,7 @@ pages are complete without these; they are the depth reading.
 Video: https://youtu.be/SSKVgrwhzus · Slides and scripts: https://github.com/DataWithBaraa/sql-ultimate-course
 (`02_docs/` slides per chapter, `03_scripts/` every query). Baraa uses SQL Server; the same commands work on our Nur Finance data.
 
-A link like `[▶ 2:08:03](https://youtu.be/SSKVgrwhzus?t=7683)` opens the video at that chapter.
+A link like `[▶ 2:08:03](https://youtu.be/SSKVgrwhzus?t=7683&end=10077)` opens the video at that chapter.
 
 | Chapter | Start | Course day |
 |---|---|---|

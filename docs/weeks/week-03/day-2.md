@@ -110,7 +110,7 @@ Fix: spell out the frame, or use `FIRST_VALUE` with the reversed `ORDER BY … D
 
 ### Depth (optional)
 
-- ▶ Baraa, *Window ranking* [10:53:09](https://youtu.be/SSKVgrwhzus?t=39189), *Window value* [11:56:05](https://youtu.be/SSKVgrwhzus?t=42965) — ~2 h.
+- ▶ Baraa, *Window ranking* [10:53:09](https://youtu.be/SSKVgrwhzus?t=39189&end=42965), *Window value* [11:56:05](https://youtu.be/SSKVgrwhzus?t=42965&end=45634) — ~2 h.
 - RU deck `2.3 SQL.pdf` — ranking and offset functions. *Russian terms:* ранжирование = ranking, функции смещения = offset functions (LAG/LEAD), дубликаты = duplicates.
 
 ---

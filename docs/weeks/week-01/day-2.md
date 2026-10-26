@@ -91,7 +91,7 @@ Careful with `applied_at`: it holds a date *and a time* (`2025-06-02 10:35:00`),
 
 ### Depth (optional)
 
-- ▶ Baraa, *Query data (SELECT)* [0:34:01](https://youtu.be/SSKVgrwhzus?t=2041) — 60 min, SELECT/DISTINCT/TOP/ORDER BY on his SalesDB; ▶ *Filtering data* [2:08:03](https://youtu.be/SSKVgrwhzus?t=7683) — 40 min, every operator above.
+- ▶ Baraa, *Query data (SELECT)* [0:34:01](https://youtu.be/SSKVgrwhzus?t=2041&end=5551) — 60 min, SELECT/DISTINCT/TOP/ORDER BY on his SalesDB; ▶ *Filtering data* [2:08:03](https://youtu.be/SSKVgrwhzus?t=7683&end=10077) — 40 min, every operator above.
 - RU deck `2.1 SQL-1-46.pdf`, pages 1–46 (SELECT, WHERE, ORDER BY). *Russian terms:* запрос = query, выборка = selection/result set, условие = condition, сортировка = sorting, псевдоним = alias.
 
 ---
@@ -127,7 +127,7 @@ WHERE product_id = 1
 
 ## 3. Practice (60 min)
 
-Save every query in `submissions/week-01/day-2/queries.sql` with a comment line above it (`-- P3: customers with empty income`). Run, look at the rows, then count. Open the fold only after you have a number.
+Write each query in the box under its question — it is saved in this browser. **▶ Run**, look at the rows, then count. **✔ Check** tells you whether your result matches the answer without showing it; open the fold only after you have a number.
 
 **P1.** List the distinct values of `loans.status`. How many are there?
 

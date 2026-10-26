@@ -20,10 +20,12 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
   function info(a) {
     var m = /youtu\.be\/([\w-]{11})(?:\?t=(\d+))?/.exec(a.href);
     if (!m) return null;
-    var v = { id: m[1], t: Number(m[2] || 0), href: a.href, topic: '', title: '', len: '' };
+    var e = /[?&]end=(\d+)/.exec(a.href);   // the part's end (the next chapter of the video), added by the mentor's tools
+    var v = { id: m[1], t: Number(m[2] || 0), end: e ? Number(e[1]) : 0, href: a.href.replace(/&end=\d+/, ''), topic: '', title: '', len: '' };
     var after = a.nextSibling && a.nextSibling.nodeType === 3 ? a.nextSibling.textContent : '';
     var lm = /^\s*[—–-]\s*(\d+)\s*min/.exec(after);
-    if (lm) v.len = lm[1] + ' min';
+    if (v.end) v.len = Math.max(1, Math.round((v.end - v.t) / 60)) + ' min';
+    else if (lm) v.len = lm[1] + ' min';
     var before = textBefore(a).replace(/▶/g, '').replace(/\s*[—–]\s*$/, '').replace(/^[\s—–;,.]+/, '').trim();
     if (TIME.test(a.textContent.replace(/^0:/, ''))) {   // "Baraa, *Topic* [0:34:01]": the topic is the emphasis just before
       var em = a.previousElementSibling;
@@ -40,7 +42,7 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
   function cardHtml(v, i) {
     return '<div class="yt" data-i="' + i + '"><button type="button" class="yt-thumb" aria-label="Watch here">' +
       '<img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + v.id + '/mqdefault.jpg"><span class="yt-play">▶</span>' +
-      (v.t ? '<span class="yt-at">from ' + clock(v.t) + '</span>' : '') + '</button>' +
+      (v.t || v.end ? '<span class="yt-at">' + (v.end ? clock(v.t) + ' – ' + clock(v.end) : 'from ' + clock(v.t)) + '</span>' : '') + '</button>' +
       '<div class="yt-body"><div class="yt-title">' + esc(v.topic) + '</div>' +
       ((v.title || v.len) ? '<div class="yt-meta">' + esc([v.title, v.len].filter(Boolean).join(' · ')) + '</div>' : '') +
       '<div class="yt-acts"><button type="button" class="yt-go">▶ Watch here</button>' +
@@ -50,7 +52,7 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
     if (card.classList.contains('yt-on')) return;
     var f = document.createElement('iframe');
     f.className = 'yt-frame';
-    f.src = 'https://www.youtube-nocookie.com/embed/' + v.id + '?autoplay=1&rel=0' + (v.t ? '&start=' + v.t : '');
+    f.src = 'https://www.youtube-nocookie.com/embed/' + v.id + '?autoplay=1&rel=0' + (v.t ? '&start=' + v.t : '') + (v.end ? '&end=' + v.end : '');
     f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
     f.allowFullscreen = true;
     card.classList.add('yt-on');
@@ -86,7 +88,7 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
     var panel = document.createElement('section');
     panel.className = 'yt-panel';
     panel.innerHTML = '<div class="yt-panel-head"><span class="yt-panel-icon">▶</span><div><div class="yt-panel-title">Videos for today</div>' +
-      '<div class="yt-panel-sub">' + vids.length + ' video' + (vids.length > 1 ? 's' : '') + ', each starts at the right minute. Free, optional — watch before or after the lesson.</div></div></div>' +
+      '<div class="yt-panel-sub">' + vids.length + ' video' + (vids.length > 1 ? 's' : '') + '. Each plays only its part of the video and stops at the end of that part. Free, optional.</div></div></div>' +
       '<div class="yt-grid">' + vids.map(cardHtml).join('') + '</div>';
     Array.prototype.forEach.call(panel.querySelectorAll('.yt'), function (card) {
       var v = vids[Number(card.dataset.i)];

@@ -156,12 +156,12 @@ ax = mix.plot.barh(x="product", y="outstanding", legend=False); ax.set_title(...
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ matplotlib figure and axes — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:21:23](https://youtu.be/wUSDVGivd-8?t=19283)
-- ▶ Chart formatting / histograms / box plots — same course, [8:17:21](https://youtu.be/wUSDVGivd-8?t=29841)
-- ▶ seaborn — same course, [9:31:39](https://youtu.be/wUSDVGivd-8?t=34299)
-- ▶ seaborn (short single-topic) — [Seaborn Crash Course - Data Visualization in Python (NeuralNine), 08:16](https://youtu.be/rLVCSmtoA7U?t=496)
-- ▶ pandas plotting shortcuts — [Creating Visualizations using Pandas Library (Alex The Analyst), 01:52](https://youtu.be/JpSMse3eVVg?t=112)
-- ▶ `read_sql` — [SQL Databases with Pandas and Python - A Complete Guide (Rob Mulla), 08:35](https://youtu.be/DiQ5Hni6oRI?t=515)
+- ▶ matplotlib figure and axes — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:21:23](https://youtu.be/wUSDVGivd-8?t=19283&end=20081)
+- ▶ Chart formatting / histograms / box plots — same course, [8:17:21](https://youtu.be/wUSDVGivd-8?t=29841&end=30606)
+- ▶ seaborn — same course, [9:31:39](https://youtu.be/wUSDVGivd-8?t=34299&end=35140)
+- ▶ seaborn (short single-topic) — [Seaborn Crash Course - Data Visualization in Python (NeuralNine), 08:16](https://youtu.be/rLVCSmtoA7U?t=496&end=840)
+- ▶ pandas plotting shortcuts — [Creating Visualizations using Pandas Library (Alex The Analyst), 01:52](https://youtu.be/JpSMse3eVVg?t=112&end=192)
+- ▶ `read_sql` — [SQL Databases with Pandas and Python - A Complete Guide (Rob Mulla), 08:35](https://youtu.be/DiQ5Hni6oRI?t=515&end=684)
 - ▶ `read_sql` with SQLite (matches the page's `sqlite3.connect`) — [SQLite with Pandas (Code Adhyayana)](https://youtu.be/xcVXCK6U6LA)
 
 - RU deck `4.5_Python.pdf`: matplotlib OO interface pp. 12–20, seaborn relational / categorical / distribution plots pp. 22–38 (long vs wide data p. 24), heatmap p. 36, pandas plotting pp. 47–55, chart choice and storytelling pp. 68–72. `4.4_Python.pdf`: DB-API and cursors pp. 7–28, `read_sql` / `to_sql` / chunking pp. 29–34, SQLAlchemy engines pp. 38–54 (for the day you connect to SQL Server).

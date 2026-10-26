@@ -159,10 +159,10 @@ Here: row two. A screen change is cheap to reverse; FPD is a two-month-late sign
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Primary result: p-value and confidence interval — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 30:47](https://youtu.be/FEI1OA-zgb8?t=1847)
-- ▶ Analysing results in Python — [Data Science Essentials - Crash Course in A/B Testing with Case Study (freeCodeCamp.org), 39:22](https://youtu.be/KZe0C0Qq4p0?t=2362)
-- ▶ Validity check and launch decision — [A/B Testing in Data Science Interviews by a Google Data Scientist (DataInterview), 12:32](https://youtu.be/DUNk4GPZ9bw?t=752)
-- ▶ Common problems (RU) — Noukash lecture, [35:37](https://youtu.be/FEI1OA-zgb8?t=2137)
+- ▶ Primary result: p-value and confidence interval — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 30:47](https://youtu.be/FEI1OA-zgb8?t=1847&end=1980)
+- ▶ Analysing results in Python — [Data Science Essentials - Crash Course in A/B Testing with Case Study (freeCodeCamp.org), 39:22](https://youtu.be/KZe0C0Qq4p0?t=2362&end=3660)
+- ▶ Validity check and launch decision — [A/B Testing in Data Science Interviews by a Google Data Scientist (DataInterview), 12:32](https://youtu.be/DUNk4GPZ9bw?t=752&end=913)
+- ▶ Common problems (RU) — Noukash lecture, [35:37](https://youtu.be/FEI1OA-zgb8?t=2137&end=2301)
 
 - RU deck `6.2 A_B Testing.pdf` (lesson 6.2): pp. 4–10 — hashing, salting, uneven splits (the logic behind the hash check).
 - Notebook `Lecture6.2 - Tests.ipynb`: the t-test step by step and with scipy (cells 3–19), "was it profitable?" — a skewed revenue metric and the Mann–Whitney U test (cells 20–40), **A/A tests and added-effect checks** — simulate many A/A splits, check the p-values are uniform, add an artificial effect and check the test finds it (cells 41–62), multiple comparisons (cell 63). Run its A/A loop on our `users` + `events` instead of the generated data.
