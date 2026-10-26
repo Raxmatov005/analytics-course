@@ -76,7 +76,7 @@ In GitHub Desktop you will see `answers.sql` in the list on the left.
 2. **Commit to main**
 3. **Push origin** (top bar)
 
-Then write **pushed** in the Telegram group.
+Then open the course bot (the button in the group's pinned message) and tap **📤 I pushed my homework** → **Practice day**. It checks that `answers.sql` is really in GitHub and tells your mentor — no typing needed.
 
 ## Step 7 — your feedback
 
