@@ -296,8 +296,6 @@ Graded on: (a) all values equal the SQL numbers (a `=B3=C3` check column showing
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-04/day-1/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W4D1", "lesson": "W4D1", "title": "HW 4.1", "tasks": [{"id": "functions_pack.xlsx", "file": "functions_pack.xlsx", "names": ["functions_pack.xlsx"], "upload": true, "accept": ".xlsx", "q": "Attach `functions_pack.xlsx` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

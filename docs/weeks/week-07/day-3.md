@@ -274,8 +274,6 @@ The formulas are in `data/powerbi/measures.dax` (section 1). Graded on: (a) the 
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-07/day-3/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W7D3", "lesson": "W7D3", "title": "HW 7.2", "tasks": [{"id": "nur_week7.pbix", "file": "nur_week7.pbix", "names": ["nur_week7.pbix"], "upload": true, "accept": ".pbix", "q": "Attach `nur_week7.pbix` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

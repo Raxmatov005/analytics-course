@@ -268,8 +268,6 @@ The mentor's written feedback goes to `submissions/week-08/day-5/FEEDBACK.md` �
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-08/day-5/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W8D5", "lesson": "W8D5", "title": "Capstone + mock interview", "tasks": [{"id": "capstone.ipynb", "file": "capstone.ipynb", "names": ["capstone.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `capstone.ipynb` — what the page above asks for."}, {"id": "capstone_deck.pdf", "file": "capstone_deck.pdf", "names": ["capstone_deck.pdf"], "upload": true, "accept": ".pdf", "q": "Attach `capstone_deck.pdf` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

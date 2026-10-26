@@ -281,8 +281,6 @@ Graded on: (a) numbers match ours within rounding, (b) both dialects or a clear 
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-02/day-3/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W2D3", "lesson": "W2D3", "title": "HW 2.2", "tasks": [{"id": "lateness.sql", "file": "lateness.sql", "text": true, "minLines": 3, "q": "Write `lateness.sql` here — what the page above asks for."}, {"id": "methods.sql", "file": "methods.sql", "text": true, "minLines": 3, "q": "Write `methods.sql` here — what the page above asks for."}, {"id": "detective.md", "file": "detective.md", "text": true, "minLines": 3, "q": "Write `detective.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

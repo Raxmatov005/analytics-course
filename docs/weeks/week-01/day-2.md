@@ -25,7 +25,7 @@ WHERE    condition               -- which rows (optional)
 ORDER BY column1 DESC;           -- in what order (optional)
 ```
 
-Try it now (DB Browser: tab *Execute SQL*; SSMS: *New Query*, make sure the database `nur` is selected in the dropdown):
+Try it now — press **▶ Run** under the query:
 
 ```sql
 SELECT loan_id, principal, disbursed_at, status
@@ -276,7 +276,7 @@ His questions:
 - Q6 The ten smallest loans (loan id, product id, principal), smallest first. Q7 How many loans have an annual rate of 0 (which product is that)?
 - Q8 How many customers are in the `sme` segment outside Tashkent? Q9 How many applications requested more than 500 000 000? Q10 The applications with the five highest credit scores that were nevertheless rejected (any channel).
 
-**Do it right here** (or in DB Browser and push the two files — both count):
+**Do it right here:**
 
 ```sqltask
 {"check": "hw1.2", "lesson": "W1D2", "title": "HW 1.2 — Bekzod's 10 questions", "file": "bekzod.sql", "tasks": [{"id": "Q1", "q": "How many loans has Nur Finance ever disbursed?"}, {"id": "Q2", "q": "How many of them are Auto?"}, {"id": "Q3", "q": "How many SME loans have a term of 36 months?"}, {"id": "Q4", "q": "How many loans were disbursed in 2026?"}, {"id": "Q5", "q": "How many in September 2026 only?"}, {"id": "Q6", "q": "The ten smallest loans (loan id, product id, principal), smallest first."}, {"id": "Q7", "q": "How many loans have an annual rate of 0 (which product is that)?"}, {"id": "Q8", "q": "How many customers are in the sme segment outside Tashkent?"}, {"id": "Q9", "q": "How many applications requested more than 500 000 000?"}, {"id": "Q10", "q": "The applications with the five highest credit scores that were nevertheless rejected (any channel)."}, {"id": "Surprised", "file": "surprised.md", "text": true, "minLines": 5, "q": "What surprised you in the data (5–10 lines): a value you did not expect, a column that behaved strangely, a count that did not add up — with the query that shows it."}]}

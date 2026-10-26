@@ -311,8 +311,6 @@ Answer in `quiz.md`, 3–5 sentences each, with a Nur number where it helps. 2.5
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-06/day-5/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W6D5", "lesson": "W6D5", "title": "Checkpoint 6", "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — what the page above asks for."}, {"id": "quiz.md", "file": "quiz.md", "text": true, "minLines": 3, "q": "Write `quiz.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

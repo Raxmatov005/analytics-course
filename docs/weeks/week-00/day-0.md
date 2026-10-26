@@ -263,8 +263,6 @@ Monday: Week 1, Day 1 — how a company keeps its data.
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-00/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W0D0", "lesson": "W0D0", "title": "Day 0 plan", "tasks": [{"id": "my-plan.md", "file": "my-plan.md", "text": true, "minLines": 3, "q": "Write `my-plan.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

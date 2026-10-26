@@ -25,6 +25,14 @@ thumbnail and start time; "▶ Watch here" plays it inside the page (youtube-noc
       '<span class="yt-acts"><button type="button" class="yt-go">▶ Watch here</button>' +
       '<a class="yt-out" target="_blank" rel="noopener" href="' + esc(a.href) + '">Open on YouTube</a></span></span>';
     a.parentNode.replaceChild(box, a);
+    var host = box.parentNode;   // "- ▶ Topic — [video](…)": the topic becomes the card's caption, without the arrow and the dash
+    var li = host.tagName === 'LI' ? host : host.tagName === 'P' && host.parentNode.tagName === 'LI' ? host.parentNode : null;
+    if (li) {
+      if (host.firstChild && host.firstChild.nodeType === 3) host.firstChild.textContent = host.firstChild.textContent.replace(/^\s*▶\s*/, '');
+      var before = box.previousSibling;
+      if (before && before.nodeType === 3) before.textContent = before.textContent.replace(/\s*[—–]\s*$/, '');
+      li.classList.add('yt-li');
+    }
     function play() {
       var f = document.createElement('iframe');
       f.className = 'yt-frame';

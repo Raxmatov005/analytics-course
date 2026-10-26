@@ -306,8 +306,6 @@ Madina, 17:30: *"Bekzod has his one-pager — six numbers, three cuts, one chart
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-03/day-5/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W3D5", "lesson": "W3D5", "title": "Checkpoint 3", "tasks": [{"id": "report.md", "file": "report.md", "text": true, "minLines": 3, "q": "Write `report.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

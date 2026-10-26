@@ -236,8 +236,6 @@ Graded on: (a) the three views create and the checks pass, (b) the dictionary le
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-03/day-4/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W3D4", "lesson": "W3D4", "title": "HW 3.2", "tasks": [{"id": "views.sql", "file": "views.sql", "text": true, "minLines": 3, "q": "Write `views.sql` here — what the page above asks for."}, {"id": "dictionary.md", "file": "dictionary.md", "text": true, "minLines": 3, "q": "Write `dictionary.md` here — what the page above asks for."}, {"id": "checks.sql", "file": "checks.sql", "text": true, "minLines": 3, "q": "Write `checks.sql` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

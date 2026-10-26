@@ -44,7 +44,7 @@ All green? Send it. The mentor still reads your queries, comments and text: the 
 3. In GitHub Desktop: write a one-line summary (e.g. `HW 1.2 — 10 queries for Bekzod`) → **Commit to main** → **Push origin**.
 4. In the course bot, tap **📤 I pushed my homework** and pick the homework. The bot checks that your files are really in GitHub (if one is missing, it tells you which) and lets your mentor know in the 📤 Homework topic.
 
-Can't make GitHub Desktop work today? Zip the folder and send it in the 📤 Homework topic of the course group; the mentor will put it in the repo. Learn Desktop by the end of week 1 though — pushing files is part of the job.
+Can't make GitHub Desktop work? Use the box on the lesson page instead — it counts the same. Pushing files is part of the job.
 
 ## What comes back
 

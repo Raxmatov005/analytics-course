@@ -4,7 +4,7 @@
 
 ## How this course works
 
-- **First, the [Practice day](practice.md).** It walks you through the routine once (get the course, open the data, answer, check, send, read the feedback) on three warm-up questions that do not count.
+- **First, the [Practice day](practice.md).** It walks you through the routine once (run SQL on the page, answer, check, send, read the feedback) on three warm-up questions that do not count. Nothing to install.
 - **One page per day.** Read it top to bottom; the day is done when you pass its quiz at the end. ~3 hours. The [course map](map.md) shows where you are.
 - **Mon–Thu: learn and practise. Fri: checkpoint or a bigger homework.** Weekends are free (or catch-up).
 - **Practice answers are folded** on the page — try first, then open. **Homework** goes to the `submissions/` folder (see [How to submit](homework/how-to-submit.md)); you get written feedback within a day and points on the [progress board](progress.md).
@@ -121,8 +121,8 @@ Data for the week: `data/ab/` (the experiment), `data/powerbi/` (model tables + 
 
 Before any interview: the [interview bank](company/interview.md) — 30 questions with model answers.
 
-## Tools you will install (free)
+## Tools (free)
 
-SQL Server Express + SSMS (or DB Browser for SQLite) · Excel or Google Sheets · Python via Anaconda or Google Colab · Power BI Desktop · a GitHub account.
+Weeks 1–3 need only this website (SQL runs on the pages). Later: Excel or Google Sheets · Python via Anaconda or Google Colab · Power BI Desktop · a GitHub account.
 
 

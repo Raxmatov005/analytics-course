@@ -271,8 +271,6 @@ Graded on: (a) counts match (6 000 / 7 / 52 850 / 5 / 25 removed), (b) Refresh A
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-04/day-3/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W4D3", "lesson": "W4D3", "title": "HW 4.2", "tasks": [{"id": "cleaning.xlsx", "file": "cleaning.xlsx", "names": ["cleaning.xlsx"], "upload": true, "accept": ".xlsx", "q": "Attach `cleaning.xlsx` — what the page above asks for."}, {"id": "change_log.md", "file": "change_log.md", "text": true, "minLines": 3, "q": "Write `change_log.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```

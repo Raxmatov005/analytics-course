@@ -72,23 +72,27 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     TOTAL_DAYS: TOTAL_DAYS
   };
 
-  /* ---------- rendering ---------- */
-  function questionHtml(q, i, qid) {
+  /* ---------- rendering: one question at a time, then a results screen (Khan-style) ---------- */
+  var LETTERS = 'ABCDEFGH';
+  function questionHtml(q, i, qid, n) {
     var name = qid + '-q' + i;
-    var h = '<div class="quiz-q" data-i="' + i + '"><div class="quiz-qtext"><b>' + (i + 1) + '.</b> ' + esc(q.q) + '</div>';
-    if (q.code) h += '<pre class="quiz-code"><code>' + esc(q.code) + '</code></pre>';
+    var h = '<div class="qz-q" data-i="' + i + '"><div class="qz-qnum">Question ' + (i + 1) + ' of ' + n + '</div>' +
+      '<div class="qz-qtext">' + esc(q.q) + '</div>';
+    if (q.code) h += '<pre class="qz-code"><code>' + esc(q.code) + '</code></pre>';
     if (q.type === 'single' || q.type === 'multi') {
       var t = q.type === 'single' ? 'radio' : 'checkbox';
+      if (q.type === 'multi') h += '<div class="qz-hint">Choose every correct answer.</div>';
+      h += '<div class="qz-opts">';
       q.options.forEach(function (o, k) {
-        h += '<label class="quiz-opt"><input type="' + t + '" name="' + name + '" value="' + k + '"> <span>' + esc(o) + '</span></label>';
+        h += '<label class="qz-opt"><input type="' + t + '" name="' + name + '" value="' + k + '">' +
+          '<span class="qz-letter">' + LETTERS[k] + '</span><span class="qz-otext">' + esc(o) + '</span></label>';
       });
-      if (q.type === 'multi') h += '<div class="quiz-hint">Tick every correct option.</div>';
+      h += '</div>';
     } else {
-      h += '<input class="quiz-input" type="text" name="' + name + '" placeholder="' +
-        (q.type === 'number' ? 'a number' : 'your answer') + '" autocomplete="off">';
+      h += '<input class="qz-input" type="text" name="' + name + '" inputmode="' + (q.type === 'number' ? 'decimal' : 'text') +
+        '" placeholder="' + (q.type === 'number' ? 'Type a number' : 'Type your answer') + '" autocomplete="off">';
     }
-    h += '<div class="quiz-feedback" hidden></div></div>';
-    return h;
+    return h + '</div>';
   }
 
   function isRight(q, el) {
@@ -101,7 +105,7 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       var want = q.answer.slice().sort();
       return got.length === want.length && got.every(function (v, k) { return v === want[k]; });
     }
-    var v = el.querySelector('.quiz-input').value;
+    var v = el.querySelector('.qz-input').value;
     if (q.type === 'number') {
       var n = parseNum(v);
       return !isNaN(n) && Math.abs(n - q.answer) <= (q.tol || 0);
@@ -116,6 +120,12 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     if (q.type === 'number') return String(q.answer) + (q.tol ? ' (± ' + q.tol + ')' : '');
     return (Array.isArray(q.answer) ? q.answer[0] : q.answer);
   }
+  function givenText(q, el) {
+    if (q.type === 'single' || q.type === 'multi') {
+      return Array.prototype.map.call(el.querySelectorAll('input:checked'), function (x) { return q.options[Number(x.value)]; }).join(' · ');
+    }
+    return el.querySelector('.qz-input').value.trim();
+  }
 
   function mount(pre) {
     var quiz;
@@ -125,66 +135,75 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">This quiz could not be read (' + esc(e.message) + ').</p>');
       return;
     }
-    var pass = quiz.pass || 0.8;
+    var pass = quiz.pass || 0.8, n = quiz.questions.length;
     var box = document.createElement('div');
-    box.className = 'quiz';
+    box.className = 'qz';
     var prev = load().quizzes[quiz.id];
-    var head = '<div class="quiz-head"><span class="quiz-title">Day quiz</span>' +
-      '<span class="quiz-rule">' + quiz.questions.length + ' questions · ' + Math.round(pass * 100) + ' % finishes the day</span>' +
-      (prev && prev.passedOn ? '<span class="quiz-done">Day done · best ' + prev.best + ' %</span>' : '') + '</div>';
-    var n = quiz.questions.length;
-    box.innerHTML = head + '<div class="quiz-prog"><div class="quiz-prog-bar"></div></div><div class="quiz-step"></div>' +
-      '<div class="quiz-result" hidden></div>' +
-      quiz.questions.map(function (q, i) { return questionHtml(q, i, quiz.id); }).join('') +
-      '<div class="quiz-actions"><button type="button" class="quiz-back">← Back</button><button type="button" class="quiz-next">Next →</button>' +
-      '<button type="button" class="quiz-check" hidden>Submit answers</button>' +
-      '<button type="button" class="quiz-retry" hidden>Try again</button></div>';
+    box.innerHTML =
+      '<div class="qz-start">' +
+        '<div class="qz-icon">✓</div>' +
+        '<div class="qz-start-body"><div class="qz-title">' + (isPractice(quiz.id) ? 'Practice quiz' : 'Day quiz') + '</div>' +
+        '<div class="qz-sub">' + n + ' questions · get ' + Math.round(pass * 100) + '% to finish the day · about ' + Math.max(2, Math.round(n * 0.6)) + ' min</div>' +
+        (prev && prev.passedOn ? '<div class="qz-badge">Done · best ' + prev.best + '%</div>' : '') + '</div>' +
+        '<button type="button" class="qz-btn qz-go">' + (prev && prev.attempts ? 'Try again' : 'Start quiz') + '</button>' +
+      '</div>' +
+      '<div class="qz-run" hidden>' +
+        '<div class="qz-top"><span class="qz-title-s">' + (isPractice(quiz.id) ? 'Practice quiz' : 'Day quiz') + '</span><span class="qz-count"></span></div>' +
+        '<div class="qz-segs">' + quiz.questions.map(function () { return '<span></span>'; }).join('') + '</div>' +
+        quiz.questions.map(function (q, i) { return questionHtml(q, i, quiz.id, n); }).join('') +
+        '<div class="qz-foot"><button type="button" class="qz-btn qz-ghost qz-back">Back</button>' +
+        '<button type="button" class="qz-btn qz-next">Next</button></div>' +
+      '</div>' +
+      '<div class="qz-res" hidden></div>';
     pre.parentNode.replaceChild(box, pre);
 
-    var checkBtn = box.querySelector('.quiz-check'), retryBtn = box.querySelector('.quiz-retry'), result = box.querySelector('.quiz-result');
-    var backBtn = box.querySelector('.quiz-back'), nextBtn = box.querySelector('.quiz-next'), cur = 0;
-    var qs = box.querySelectorAll('.quiz-q');
-    /* one question at a time (Khan-style): Next opens once this one is answered; the last one shows Submit */
+    var run = box.querySelector('.qz-run'), res = box.querySelector('.qz-res'), start = box.querySelector('.qz-start');
+    var backBtn = box.querySelector('.qz-back'), nextBtn = box.querySelector('.qz-next'), cur = 0;
+    var qs = box.querySelectorAll('.qz-q'), segs = box.querySelectorAll('.qz-segs span');
     function answered(el) {
-      return !!el.querySelector('input:checked') || Array.prototype.some.call(el.querySelectorAll('.quiz-input'), function (x) { return x.value.trim(); });
+      return !!el.querySelector('input:checked') || Array.prototype.some.call(el.querySelectorAll('.qz-input'), function (x) { return x.value.trim(); });
     }
     function show() {
       Array.prototype.forEach.call(qs, function (el, i) { el.hidden = i !== cur; });
-      box.querySelector('.quiz-step').textContent = 'Question ' + (cur + 1) + ' of ' + n;
-      box.querySelector('.quiz-prog-bar').style.width = Math.round(100 * (cur + 1) / n) + '%';
-      backBtn.hidden = cur === 0;
-      nextBtn.hidden = cur === n - 1;
-      checkBtn.hidden = cur !== n - 1;
-      nextBtn.disabled = checkBtn.disabled = !answered(qs[cur]);
-    }
-    box.addEventListener('input', function () { if (!box.classList.contains('quiz-review')) show(); });
-    box.addEventListener('change', function () { if (!box.classList.contains('quiz-review')) show(); });
-    box.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && e.target.classList.contains('quiz-input')) { e.preventDefault(); (cur === n - 1 ? checkBtn : nextBtn).click(); }
-    });
-    nextBtn.addEventListener('click', function () { if (cur < n - 1 && answered(qs[cur])) { cur++; show(); } });
-    backBtn.addEventListener('click', function () { if (cur > 0) { cur--; show(); } });
-    show();
-    checkBtn.addEventListener('click', function () {
-      box.classList.add('quiz-review');
-      Array.prototype.forEach.call(qs, function (el) { el.hidden = false; });
-      backBtn.hidden = nextBtn.hidden = true;
-      box.querySelector('.quiz-step').textContent = 'Your answers';
-      box.querySelector('.quiz-prog').hidden = true;
-      var right = 0;
-      quiz.questions.forEach(function (q, i) {
-        var el = box.querySelector('.quiz-q[data-i="' + i + '"]');
-        var ok = isRight(q, el);
-        if (ok) right++;
-        el.classList.remove('ok', 'bad');
-        el.classList.add(ok ? 'ok' : 'bad');
-        var fb = el.querySelector('.quiz-feedback');
-        fb.hidden = false;
-        fb.innerHTML = (ok ? '<b>Right.</b> ' : '<b>Not quite.</b> Answer: ' + esc(rightAnswerText(q)) + '. ') + esc(q.explain || '');
-        Array.prototype.forEach.call(el.querySelectorAll('input'), function (x) { x.disabled = true; });
+      Array.prototype.forEach.call(segs, function (s, i) {
+        s.className = i === cur ? 'now' : answered(qs[i]) ? 'did' : '';
       });
-      var pct = Math.round(100 * right / quiz.questions.length);
-      var passed = pct >= pass * 100;
+      box.querySelector('.qz-count').textContent = (cur + 1) + ' / ' + n;
+      backBtn.style.visibility = cur === 0 ? 'hidden' : 'visible';
+      nextBtn.textContent = cur === n - 1 ? 'Submit answers' : 'Next';
+      nextBtn.classList.toggle('qz-submit', cur === n - 1);
+      nextBtn.disabled = !answered(qs[cur]);
+    }
+    function top() { var r = box.getBoundingClientRect(); if (r.top < 0 || r.top > window.innerHeight * 0.6) box.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    box.querySelector('.qz-go').addEventListener('click', function () {
+      start.hidden = true; run.hidden = false; show();
+      var f = qs[0].querySelector('.qz-input'); if (f) f.focus();
+    });
+    run.addEventListener('input', show);
+    run.addEventListener('change', show);
+    run.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target.classList.contains('qz-input')) { e.preventDefault(); nextBtn.click(); }
+    });
+    backBtn.addEventListener('click', function () { if (cur > 0) { cur--; show(); top(); } });
+    nextBtn.addEventListener('click', function () {
+      if (!answered(qs[cur])) return;
+      if (cur < n - 1) { cur++; show(); top(); var f = qs[cur].querySelector('.qz-input'); if (f) f.focus(); return; }
+      finish();
+    });
+
+    function finish() {
+      var right = 0, rows = '';
+      quiz.questions.forEach(function (q, i) {
+        var el = qs[i], ok = isRight(q, el);
+        if (ok) right++;
+        rows += '<details class="qz-rv ' + (ok ? 'ok' : 'bad') + '"' + (ok ? '' : ' open') + '><summary>' +
+          '<span class="qz-mark">' + (ok ? '✓' : '✕') + '</span><span class="qz-rv-q"><b>' + (i + 1) + '.</b> ' + esc(q.q) + '</span></summary>' +
+          '<div class="qz-rv-body">' +
+          '<div><span class="qz-k">Your answer</span> ' + esc(givenText(q, el) || '—') + '</div>' +
+          (ok ? '' : '<div><span class="qz-k">Right answer</span> ' + esc(rightAnswerText(q)) + '</div>') +
+          (q.explain ? '<div class="qz-why">' + esc(q.explain) + '</div>' : '') + '</div></details>';
+      });
+      var pct = Math.round(100 * right / n), passed = pct >= pass * 100;
       var s = load();
       var r = s.quizzes[quiz.id] || { best: 0, attempts: 0 };
       r.attempts++;
@@ -196,23 +215,25 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       }
       s.quizzes[quiz.id] = r;
       save(s);
-      result.hidden = false;
-      result.className = 'quiz-result ' + (passed ? 'pass' : 'fail');
-      result.innerHTML = passed && isPractice(quiz.id)
-        ? '<b>' + right + ' / ' + quiz.questions.length + ' (' + pct + ' %) — practice quiz passed.</b> ' +
-          'This is how a real day ends; practice does not count toward your days or streak.'
-        : passed
-        ? '<b>' + right + ' / ' + quiz.questions.length + ' (' + pct + ' %) — day done.</b> Streak: ' + streak(s) + ' day(s). ' +
-          'Days finished: ' + window.ALQuiz.doneCount() + ' / ' + TOTAL_DAYS + '.'
-        : '<b>' + right + ' / ' + quiz.questions.length + ' (' + pct + ' %).</b> You need ' + Math.round(pass * 100) +
-          ' %. Reread the sections the explanations point to, then try again — the best score counts.';
-      checkBtn.hidden = true;
-      retryBtn.hidden = false;
+      var head = passed && isPractice(quiz.id) ? 'Practice quiz passed'
+        : passed ? 'Day done!' : 'Almost there';
+      var line = passed && isPractice(quiz.id) ? 'This is how a real day ends. Practice does not count toward your days or streak.'
+        : passed ? 'Streak: ' + streak(s) + ' day' + (streak(s) === 1 ? '' : 's') + ' · days finished: ' + window.ALQuiz.doneCount() + ' / ' + TOTAL_DAYS
+        : 'You need ' + Math.round(pass * 100) + '%. Read the explanations below, then try again — your best score counts.';
+      run.hidden = true;
+      res.hidden = false;
+      res.innerHTML =
+        '<div class="qz-score ' + (passed ? 'pass' : 'fail') + '">' +
+          '<div class="qz-ring" style="--p:' + pct + '"><span>' + right + '<small>/' + n + '</small></span></div>' +
+          '<div class="qz-score-body"><div class="qz-head">' + head + '</div><div class="qz-pct">' + pct + '% correct</div><div class="qz-line">' + line + '</div></div>' +
+        '</div>' +
+        '<div class="qz-dots">' + quiz.questions.map(function (q, i) { return '<span class="' + (isRight(q, qs[i]) ? 'ok' : 'bad') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
+        '<div class="qz-rv-title">Review your answers</div>' + rows +
+        '<div class="qz-foot"><button type="button" class="qz-btn qz-retry">Try again</button></div>';
+      res.querySelector('.qz-retry').addEventListener('click', function () { mount(rebuild(quiz, box)); });
+      top();
       markSidebar();
-    });
-    retryBtn.addEventListener('click', function () {
-      mount(rebuild(quiz, box));
-    });
+    }
   }
 
   function rebuild(quiz, box) {

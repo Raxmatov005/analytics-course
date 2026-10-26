@@ -32,12 +32,63 @@ Work in progress is kept in localStorage "al.sql". */
   function loadScript(src) {
     return new Promise(function (ok, bad) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
   }
+  /* The data: a gzip copy of data/raw/nur.db served by the site itself (4 MB instead of 9.6; bot/pack_db.py makes it),
+     kept in the browser's cache after the first visit. Old browsers fall back to the plain file on GitHub. */
+  var DB_GZ = 'assets/nur.db.gz?v=1';
+  function mb(n) { return (n / 1048576).toFixed(1); }
+  function progress(got, total) {
+    Array.prototype.forEach.call(document.querySelectorAll('.sq-loading'), function (el) {
+      el.textContent = 'Opening the Nur Finance database (first time only) — ' + mb(got) + (total ? ' of ' + mb(total) : '') + ' MB…';
+    });
+  }
+  function download(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var total = Number(r.headers.get('content-length')) || 0;
+      if (!r.body || !r.body.getReader) return r.arrayBuffer();
+      var rd = r.body.getReader(), parts = [], got = 0;
+      return (function pump() {
+        return rd.read().then(function (x) {
+          if (x.done) {
+            var all = new Uint8Array(got), o = 0;
+            parts.forEach(function (p) { all.set(p, o); o += p.length; });
+            return all.buffer;
+          }
+          parts.push(x.value); got += x.value.length; progress(got, total);
+          return pump();
+        });
+      })();
+    });
+  }
+  function gunzip(buf) {
+    var b = new Uint8Array(buf);
+    if (b[0] !== 0x1f || b[1] !== 0x8b) return Promise.resolve(buf);   // the network already unpacked it
+    return new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  }
+  function dbBytes() {
+    var box = window.caches ? caches.open('al-db').catch(function () { return null; }) : Promise.resolve(null);
+    return box.then(function (c) {
+      return (c ? c.match(DB_GZ).catch(function () { return null; }) : Promise.resolve(null)).then(function (hit) {
+        if (hit) return hit.arrayBuffer().then(gunzip);
+        return download(DB_GZ).then(function (buf) {
+          return gunzip(buf).then(function (raw) {
+            if (c) c.keys().then(function (ks) {   // keep only this version
+              return Promise.all(ks.filter(function (k) { return k.url.indexOf('nur.db.gz') >= 0; }).map(function (k) { return c.delete(k); }));
+            }).then(function () { return c.put(DB_GZ, new Response(buf)); }).catch(function () {});
+            return raw;
+          });
+        });
+      });
+    }).catch(function () {
+      return fetch(REPO_RAW + 'data/raw/nur.db').then(function (r) { return r.arrayBuffer(); });
+    });
+  }
   function ready() {
     if (engine) return engine;
     engine = loadScript(ENGINE + 'sql-wasm.js')
       .then(function () { return window.initSqlJs({ locateFile: function (f) { return ENGINE + f; } }); })
       .then(function (SQL) {
-        return fetch(REPO_RAW + 'data/raw/nur.db').then(function (r) { return r.arrayBuffer(); }).then(function (buf) {
+        return dbBytes().then(function (buf) {
           var bytes = new Uint8Array(buf);
           play = new SQL.Database(bytes);           // examples may change this one
           clean = new SQL.Database(bytes.slice());  // checks always read the untouched data
@@ -138,20 +189,28 @@ Work in progress is kept in localStorage "al.sql". */
     var code = (pre.querySelector('code') || pre).textContent.replace(/\n$/, '');
     var box = document.createElement('div');
     box.className = 'sq-box';
-    box.innerHTML = '<textarea class="sq-edit" spellcheck="false" rows="' + Math.min(14, code.split('\n').length + 1) + '"></textarea>' +
-      '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button><button type="button" class="sq-reset">↺ Reset</button>' +
-      '<button type="button" class="sq-tables">🗂 Tables</button><span class="sq-hint">try changing it</span></div><div class="sq-out"></div>';
+    box.innerHTML = '<div class="sq-top"><span class="sq-lang">SQL</span><span class="sq-tip">edit it, then Run</span>' +
+      '<button type="button" class="sq-reset" hidden>Reset</button></div>' +
+      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off"></textarea>' +
+      '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button><span class="sq-keys">Ctrl + Enter</span></div><div class="sq-out"></div>';
     pre.parentNode.replaceChild(box, pre);
-    var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out');
+    var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out'), rs = box.querySelector('.sq-reset');
     ta.value = code;
+    fit(ta);
     tabKeys(ta);
-    box.querySelector('.sq-reset').onclick = function () { ta.value = code; out.innerHTML = ''; };
-    box.querySelector('.sq-tables').onclick = function () { lastEditor = ta; explorer(); };
+    ta.addEventListener('input', function () { fit(ta); rs.hidden = ta.value === code; });
+    rs.onclick = function () { ta.value = code; fit(ta); rs.hidden = true; out.innerHTML = ''; };
     box.querySelector('.sq-run').onclick = function () {
-      out.innerHTML = '<div class="sq-note">Loading the Nur Finance data (once, ~10 MB)…</div>';
+      out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
       ready().then(function () { out.innerHTML = table(run(play, ta.value, false)); })
         .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the internet connection and try again.</div>'; });
     };
+  }
+  function fit(ta) {   // the editor is as tall as its code, so nothing is cut off and nothing wraps
+    var lines = ta.value.split('\n').length;   // counted from the text, so it also works inside a closed <details>
+    if (ta.classList.contains('sq-text')) lines += Math.floor(ta.value.length / 60);
+    var least = ta.classList.contains('sq-text') ? 4 : ta.closest('.sq-task') ? 3 : 1;
+    ta.rows = Math.max(least, Math.min(30, lines + (least > 1 ? 1 : 0)));
   }
   function tabKeys(ta) {
     ta.addEventListener('keydown', function (e) {
@@ -172,14 +231,15 @@ Work in progress is kept in localStorage "al.sql". */
     var hasSql = spec.tasks.some(function (t) { return !t.text && !t.upload; });
     var picked = {};   // chosen files live in memory only: after a reload she picks them again
     box.innerHTML = '<div class="sq-ws-head"><span class="sq-ws-title">' + (hasSql ? '🧑‍💻 Your workspace — ' : '📎 Hand in — ') + esc(spec.title || spec.check) + '</span>' +
-      '<span class="sq-ws-sub">' + (hasSql ? 'Write → ▶ Run → ✔ Check → fix → 📤 Submit. Saved in this browser. Ctrl+Enter runs.'
-        : 'Write or attach each part, then 📤 Submit. No GitHub needed.') + '</span>' +
-      (hasSql ? '<button type="button" class="sq-tables">🗂 Tables and columns</button>' : '') + '</div>' +
+      '<span class="sq-ws-sub">' + (hasSql ? 'Write each query → ▶ Run → ✔ Check. When every one is ✅, tap 📤 Submit. Saved in this browser.'
+        : 'Write or attach each part, then tap 📤 Submit. No GitHub needed.') + '</span></div>' +
       spec.tasks.map(function (t, i) {
         var input = t.upload
           ? '<label class="sq-file"><input type="file"' + (t.accept ? ' accept="' + esc(t.accept) + '"' : '') + '> 📎 Choose file</label><span class="sq-fname"></span>'
-          : '<textarea class="sq-edit" spellcheck="false" rows="' + (t.text ? 5 : 4) + '" placeholder="' + (t.text ? 'Write here…' : '-- your query') + '"></textarea>';
-        return '<div class="sq-task" data-i="' + i + '"><div class="sq-task-q"><span class="sq-chip"></span><b>' + esc(t.id) + '</b> ' + esc(t.q) +
+          : '<textarea class="sq-edit' + (t.text ? ' sq-text' : '') + '" spellcheck="' + (t.text ? 'true' : 'false') + '"' +
+            (t.text ? '' : ' wrap="off" autocapitalize="off" autocorrect="off"') +
+            ' rows="' + (t.text ? 4 : 3) + '" placeholder="' + (t.text ? 'Write here…' : '-- write your query here') + '"></textarea>';
+        return '<div class="sq-task" data-i="' + i + '"><div class="sq-task-q"><span class="sq-chip"></span><b>' + esc(hasSql ? t.id : String(i + 1)) + '</b><span>' + esc(t.q).replace(/`([^`]+)`/g, '<code>$1</code>') + '</span>' +
           (t.optional ? ' <span class="sq-opt">optional</span>' : '') + '</div>' +
           (t.upload ? '<div class="sq-bar">' + input + '<span class="sq-msg"></span></div>' :
             input + '<div class="sq-bar">' + (t.text ? '' : '<button type="button" class="sq-run">▶ Run</button><button type="button" class="sq-check">✔ Check</button>') +
@@ -187,7 +247,6 @@ Work in progress is kept in localStorage "al.sql". */
       }).join('') +
       '<div class="sq-ws-foot">' + (hasSql ? '<button type="button" class="sq-all">✔ Check all</button>' : '') + '<button type="button" class="sq-submit">📤 Submit</button>' +
       '<div class="sq-ws-state"></div></div>';
-    if (hasSql) box.querySelector('.sq-tables').onclick = explorer;
     var cards = box.querySelectorAll('.sq-task');
     spec.tasks.forEach(function (t, i) {
       var c = cards[i], ta = c.querySelector('textarea'), out = c.querySelector('.sq-out'), msg = c.querySelector('.sq-msg');
@@ -209,25 +268,27 @@ Work in progress is kept in localStorage "al.sql". */
         return;
       }
       ta.value = mine.code[t.id] || '';
+      if (ta.value) setTimeout(function () { fit(ta); }, 0);
       tabKeys(ta);
       paint(c, mine.ok[t.id]);
       ta.addEventListener('input', function () {
         var st = store(), m = st.sql[spec.check];
         m.code[t.id] = ta.value;
+        fit(ta);
         if (t.text) m.ok[t.id] = ta.value.trim().split('\n').filter(function (l) { return l.trim(); }).length >= (t.minLines || 3);
         else delete m.ok[t.id];
         save(st); paint(c, m.ok[t.id]); foot();
       });
       if (t.text) { msg.textContent = 'At least ' + (t.minLines || 3) + ' lines.'; return; }
       c.querySelector('.sq-run').onclick = function () {
-        out.innerHTML = '<div class="sq-note">Running…</div>';
+        out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
         ready().then(function () { out.innerHTML = table(run(play, ta.value, false)); }).catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — try again.</div>'; });
       };
       c.querySelector('.sq-check').onclick = function () { checkOne(t, c).then(foot); };
     });
     function paint(card, ok) {
       card.classList.toggle('ok', ok === true); card.classList.toggle('bad', ok === false);
-      card.querySelector('.sq-chip').textContent = ok === true ? '✅' : ok === false ? '❌' : '•';
+      card.querySelector('.sq-chip').textContent = ok === true ? '✅' : ok === false ? '❌' : '';
     }
     function checkOne(t, card) {
       var ta = card.querySelector('textarea'), msg = card.querySelector('.sq-msg'), out = card.querySelector('.sq-out');
@@ -325,9 +386,9 @@ Work in progress is kept in localStorage "al.sql". */
     drawer = document.createElement('aside');
     drawer.id = 'sq-db';
     drawer.className = 'open';
-    drawer.innerHTML = '<div class="db-head"><b>🗂 Nur Finance database</b><button type="button" class="db-x" aria-label="Close">✕</button></div>' +
+    drawer.innerHTML = '<div class="db-head"><b>Nur Finance database</b><button type="button" class="db-x" aria-label="Close">✕</button></div>' +
       '<div class="db-tip">Tap a table to see its columns · tap a name to put it in your query · 👁 shows 5 rows.</div>' +
-      '<input class="db-find" type="search" placeholder="Find a table or column…"><div class="db-list">Loading…</div><div class="db-prev"></div>';
+      '<input class="db-find" type="search" placeholder="Find a table or column…"><div class="db-list sq-loading">Loading…</div><div class="db-prev"></div>';
     document.body.appendChild(drawer);
     drawer.querySelector('.db-x').onclick = function () { drawer.classList.remove('open'); };
     ready().then(function () {
@@ -362,7 +423,7 @@ Work in progress is kept in localStorage "al.sql". */
           Array.prototype.forEach.call(d.querySelectorAll('.db-c'), function (c) { c.classList.toggle('db-hit', !!q && c.dataset.v.indexOf(q) >= 0); });
         });
       });
-    }).catch(function () { drawer.querySelector('.db-list').textContent = 'Could not load the data — check the connection and tap 🗂 again.'; drawer.dataset.failed = '1'; });
+    }).catch(function () { drawer.querySelector('.db-list').textContent = 'Could not load the data — check the connection and tap Database again.'; drawer.dataset.failed = '1'; });
   }
   function dbButton() {
     var has = document.querySelector('.markdown-section .sq-box, .markdown-section .sq-ws .sq-run');
@@ -370,7 +431,9 @@ Work in progress is kept in localStorage "al.sql". */
     if (!has) { if (btn) btn.hidden = true; var d = document.getElementById('sq-db'); if (d) d.classList.remove('open'); return; }
     if (!btn) {
       btn = document.createElement('button');
-      btn.id = 'sq-db-btn'; btn.type = 'button'; btn.textContent = '🗂 Database';
+      btn.id = 'sq-db-btn'; btn.type = 'button'; btn.setAttribute('aria-label', 'Database: tables and columns');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="8" ry="3"/>' +
+        '<path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Database</span>';
       btn.onclick = explorer;
       document.body.appendChild(btn);
     }

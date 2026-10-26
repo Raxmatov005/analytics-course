@@ -308,8 +308,6 @@ Answer in `quiz.md`, 3–5 sentences each, with a number from this week where it
 
 ### 📎 Hand in here
 
-Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-07/day-5/` and tap 📤 I pushed my homework in the bot — both count.)
-
 ```sqltask
 {"check": "handin-W7D5", "lesson": "W7D5", "title": "Checkpoint 7", "tasks": [{"id": "checkpoint_ab.ipynb", "file": "checkpoint_ab.ipynb", "names": ["checkpoint_ab.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint_ab.ipynb` — what the page above asks for."}, {"id": "nur_dashboard.pbix", "file": "nur_dashboard.pbix", "names": ["nur_dashboard.pbix"], "upload": true, "accept": ".pbix", "q": "Attach `nur_dashboard.pbix` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
