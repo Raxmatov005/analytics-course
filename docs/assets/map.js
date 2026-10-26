@@ -20,14 +20,18 @@ Nothing is locked for real: a dimmed week can still be opened, the lock only sho
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
   }
 
-  /* "- **Week 2 — SQL for analysts**" followed by "  - [Day 1: joining tables](weeks/week-02/day-1.md)" lines */
+  function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
+
+  /* "- **Week 2 — SQL for analysts**" followed by "  - [Day 1: joining tables](weeks/week-02/day-1.md)" lines;
+     the Russian menu (ru/_sidebar.md) has "- **Неделя 2 — …**" and "[День 1: …](ru/weeks/week-02/day-1.md)" */
   function parseSidebar(md) {
     var weeks = [], cur = null;
     md.split('\n').forEach(function (line) {
-      var w = line.match(/^- \*\*Week (\d+) — (.+?)\*\*/);
+      var w = line.match(/^- \*\*(?:Week|Неделя) (\d+) — (.+?)\*\*/);
       if (w) { cur = { n: Number(w[1]), title: w[2], days: [] }; weeks.push(cur); return; }
-      var d = cur && line.match(/^\s+- \[(.+?)\]\((weeks\/week-(\d\d)\/day-(\d)\.md)\)/);
-      if (d) cur.days.push({ title: d[1].replace(/^Day \d+:\s*/, ''), href: '#/' + d[2].replace(/\.md$/, ''), id: 'w' + d[3] + 'd' + d[4], d: Number(d[4]) });
+      var d = cur && line.match(/^\s+- \[(.+?)\]\(\/?(?:ru\/)?(weeks\/week-(\d\d)\/day-(\d)\.md)\)/);
+      if (d) cur.days.push({ title: d[1].replace(/^(?:Day|День) \d+:\s*/, ''), href: window.ALLang ? window.ALLang.link('#/' + d[2].replace(/\.md$/, '')) : '#/' + d[2].replace(/\.md$/, ''),
+        id: 'w' + d[3] + 'd' + d[4], d: Number(d[4]) });
     });
     return weeks;
   }
@@ -37,7 +41,7 @@ Nothing is locked for real: a dimmed week can still be opened, the lock only sho
     if (!el || el.getAttribute('data-done')) return;
     el.setAttribute('data-done', '1');
     Promise.all([
-      fetch('_sidebar.md', { cache: 'no-store' }).then(function (x) { return x.text(); }),
+      fetch(window.ALLang ? window.ALLang.file('_sidebar.md') : '_sidebar.md', { cache: 'no-store' }).then(function (x) { return x.text(); }),
       fetch('progress.json', { cache: 'no-store' }).then(function (x) { return x.json(); })
     ]).then(function (res) {
       var weeks = parseSidebar(res[0]), p = res[1], by = {};
@@ -60,21 +64,21 @@ Nothing is locked for real: a dimmed week can still be opened, the lock only sho
           var cls = 'mday' + (q && q.passedOn ? ' done' : '') + (isHere ? ' here' : '') + (boss ? ' boss' : '');
           return '<a class="' + cls + '" href="' + d.href + '" title="' + esc(d.title) + '">' +
             '<span class="mdot">' + (q && q.passedOn ? icon('check', 18) : isHere ? icon('pin', 18) : boss ? icon('trophy', 18) : d.d) + '</span>' +
-            '<span class="mday-name">' + (boss ? 'Boss: ' : '') + esc(d.title) + '</span>' +
-            (c && c.solvedOn ? '<span class="mtag star" title="Daily challenge solved">' + icon('star', 14) + '</span>' : '') +
-            (lucky ? '<span class="mtag gift" title="A lucky day you found">' + icon('gift', 14) + '</span>' : '') +
-            (isHere ? '<span class="mhere">You are here</span>' : '') + '</a>';
+            '<span class="mday-name">' + (boss ? T('Boss: ', 'Босс: ') : '') + esc(d.title) + '</span>' +
+            (c && c.solvedOn ? '<span class="mtag star" title="' + T('Daily challenge solved', 'Задача дня решена') + '">' + icon('star', 14) + '</span>' : '') +
+            (lucky ? '<span class="mtag gift" title="' + T('A lucky day you found', 'Найденный вами счастливый день') + '">' + icon('gift', 14) + '</span>' : '') +
+            (isHere ? '<span class="mhere">' + T('You are here', 'Вы здесь') + '</span>' : '') + '</a>';
         }).join('');
         if (state === 'here' && !hereSet) hereSet = true;  // all days done, only the boss is left
         var reward = '';
         if (cp && wk.n > 0) {
-          reward = cpPct == null ? '<span class="mreward">Beat the boss (70 %+) to win a voucher</span>'
-            : cpPct >= 70 ? '<span class="mreward won">' + icon('trophy', 16) + ' Boss beaten · ' + Math.round(cpPct) + ' %</span>'
-            : '<span class="mreward missed">Boss: ' + Math.round(cpPct) + ' % — try the next one</span>';
+          reward = cpPct == null ? '<span class="mreward">' + T('Beat the boss (70 %+) to win a voucher', 'Победите босса (70 %+), чтобы выиграть ваучер') + '</span>'
+            : cpPct >= 70 ? '<span class="mreward won">' + icon('trophy', 16) + T(' Boss beaten · ', ' Босс побеждён · ') + Math.round(cpPct) + ' %</span>'
+            : '<span class="mreward missed">' + T('Boss: ' + Math.round(cpPct) + ' % — try the next one', 'Босс: ' + Math.round(cpPct) + ' % — попробуйте следующего') + '</span>';
         }
         html += '<div class="mweek ' + state + '">' +
           '<div class="mnode">' + (state === 'cleared' ? icon('flag', 26) : state === 'ahead' ? icon('lock', 22) : '<b>' + wk.n + '</b>') + '</div>' +
-          '<div class="mcard"><div class="mhead"><span class="mlevel">Level ' + wk.n + '</span><span class="mtitle">' + esc(wk.title) + '</span>' +
+          '<div class="mcard"><div class="mhead"><span class="mlevel">' + T('Level ', 'Уровень ') + wk.n + '</span><span class="mtitle">' + esc(wk.title) + '</span>' +
           '<span class="mcount">' + done + ' / ' + wk.days.length + '</span></div>' +
           '<div class="mdays">' + dots + '</div>' + reward + '</div></div>';
         if (i < weeks.length - 1) html += '<div class="mpath ' + (state === 'cleared' ? 'cleared' : '') + '"></div>';
@@ -82,7 +86,8 @@ Nothing is locked for real: a dimmed week can still be opened, the lock only sho
       html += '</div>';
       el.innerHTML = html;
     }).catch(function (e) {
-      el.innerHTML = '<p>The map could not load (' + esc(e.message) + '). Open the course through its web address, not as a file.</p>';
+      el.innerHTML = '<p>' + T('The map could not load', 'Не удалось загрузить карту') + ' (' + esc(e.message) + '). ' +
+        T('Open the course through its web address, not as a file.', 'Откройте курс по его веб-адресу, а не как файл.') + '</p>';
     });
   }
 

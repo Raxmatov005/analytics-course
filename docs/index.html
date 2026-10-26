@@ -193,7 +193,7 @@
     .gm-again { font: inherit; font-size: .85em; border: 0; background: transparent; color: #6d28d9; cursor: pointer; }
     @media (max-width: 600px) { .gm-cols, .gm-bins { grid-template-columns: 1fr; } }
   </style>
-  <link rel="stylesheet" href="assets/theme.css?v=24">
+  <link rel="stylesheet" href="assets/theme.css?v=25">
 </head>
 <body>
   <div id="app">Loading the course…</div>
@@ -204,10 +204,27 @@
       loadSidebar: true,
       subMaxLevel: 2,
       auto2top: true,
-      search: { placeholder: 'Search the course', depth: 3 },
-      copyCode: { buttonText: 'Copy', successText: 'Copied' },
-      pagination: { previousText: 'Previous', nextText: 'Next', crossChapter: true },
-      alias: { '/.*/_sidebar.md': '/_sidebar.md' },
+      nameLink: { '/ru/': '#/ru/', '/': '#/' },
+      search: {
+        placeholder: { '/ru/': 'Поиск по курсу', '/': 'Search the course' },
+        noData: { '/ru/': 'Ничего не найдено', '/': 'No results' },
+        depth: 3
+      },
+      copyCode: {
+        buttonText: { '/ru/': 'Копировать', '/': 'Copy' },
+        successText: { '/ru/': 'Скопировано', '/': 'Copied' }
+      },
+      pagination: {
+        previousText: { '/ru/': 'Назад', '/': 'Previous' },
+        nextText: { '/ru/': 'Далее', '/': 'Next' },
+        crossChapter: true
+      },
+      /* one menu per language; the first matching rule wins */
+      alias: {
+        '/ru/_sidebar.md': '/ru/_sidebar.md',
+        '/ru/.+/_sidebar.md': '/ru/_sidebar.md',
+        '/.*/_sidebar.md': '/_sidebar.md'
+      },
       markdown: {
         renderer: {
           blockquote: function (q) {
@@ -220,16 +237,17 @@
       }
     }
   </script>
-  <script src="assets/quiz.js?v=7"></script>
-  <script src="assets/challenge.js?v=4"></script>
-  <script src="assets/board.js?v=4"></script>
-  <script src="assets/map.js?v=1"></script>
-  <script src="assets/feedback.js?v=7"></script>
-  <script src="assets/sqlrun.js?v=18"></script>
-  <script src="assets/games.js?v=4"></script>
-  <script src="assets/videos.js?v=10"></script>
+  <script src="assets/lang.js?v=1"></script>
+  <script src="assets/quiz.js?v=8"></script>
+  <script src="assets/challenge.js?v=5"></script>
+  <script src="assets/board.js?v=5"></script>
+  <script src="assets/map.js?v=2"></script>
+  <script src="assets/feedback.js?v=8"></script>
+  <script src="assets/sqlrun.js?v=19"></script>
+  <script src="assets/games.js?v=5"></script>
+  <script src="assets/videos.js?v=11"></script>
   <script src="assets/nav.js?v=4"></script>
-  <script src="assets/files.js?v=1"></script>
+  <script src="assets/files.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@3.0.0/dist/docsify-copy-code.min.js"></script>

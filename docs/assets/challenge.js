@@ -27,6 +27,12 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
     return !!m && Number(m[1]) >= 1 && Number(m[2]) === luckyDayOf(Number(m[1]));
   }
   function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* nothing to do */ } }
+  /* words in the page's language (lang.js); Russian counts take one of three forms: 1 попытка, 2 попытки, 5 попыток */
+  function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many;
+  }
   function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function fromB64(b) {
@@ -95,7 +101,7 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
   function mount(pre) {
     var src = pre.querySelector('code') || pre, ch;
     try { ch = JSON.parse(src.textContent); }
-    catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">This challenge could not be read (' + esc(e.message) + ').</p>'); return; }
+    catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This challenge could not be read', 'Не удалось прочитать задачу') + ' (' + esc(e.message) + ').</p>'); return; }
     var box = document.createElement('div');
     box.className = 'chal';
     pre.parentNode.replaceChild(box, pre);
@@ -108,29 +114,37 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
     var html = (lucky ? '<div class="chal-lucky"><svg class="al-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
         'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/>' +
         '<path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8C10 4 6 4 6 6.5S12 8 12 8s6 1 6-1.5S14 4 12 8"/></svg>' +
-        '<span><b>Lucky day!</b> You found this week\'s surprise: today\'s challenge pays <b>double XP</b>.</span></div>' : '') +
-      '<div class="chal-head"><span class="chal-title">Daily challenge</span>' +
-      '<span class="chal-rule">10–15 min · bonus XP that grows with your challenge streak</span></div>' +
+        '<span>' + T('<b>Lucky day!</b> You found this week\'s surprise: today\'s challenge pays <b>double XP</b>.',
+          '<b>Счастливый день!</b> Вы нашли сюрприз этой недели: сегодняшняя задача приносит <b>двойной XP</b>.') + '</span></div>' : '') +
+      '<div class="chal-head"><span class="chal-title">' + T('Daily challenge', 'Задача дня') + '</span>' +
+      '<span class="chal-rule">' + T('10–15 min · bonus XP that grows with your challenge streak', '10–15 мин · бонусный XP, который растёт вместе с серией решённых задач') + '</span></div>' +
       '<div class="chal-q">' + esc(ch.q) + '</div>' + (ch.code ? '<pre class="quiz-code"><code>' + esc(ch.code) + '</code></pre>' : '');
     if (rec && (rec.solvedOn || rec.gaveUp)) {
       html += '<div class="chal-result ' + (rec.solvedOn ? 'pass' : 'fail') + '">' +
-        (rec.solvedOn ? '<b>Solved on ' + esc(rec.solvedOn) + ' — +' + rec.xp + ' XP' + (lucky ? ' (lucky day, doubled)' : '') + '.</b>' : '<b>You opened the solution</b> — no XP for this one; tomorrow\'s counts.') + '</div>' +
-        '<details class="chal-sol" open><summary>Solution</summary><div>' + esc(fromB64(ch.sol)).replace(/\n/g, '<br>') + '</div></details>';
+        (rec.solvedOn ? '<b>' + T('Solved on ' + esc(rec.solvedOn) + ' — +' + rec.xp + ' XP' + (lucky ? ' (lucky day, doubled)' : ''),
+            'Решено ' + esc(rec.solvedOn) + ' — +' + rec.xp + ' XP' + (lucky ? ' (счастливый день, вдвойне)' : '')) + '.</b>'
+          : T('<b>You opened the solution</b> — no XP for this one; tomorrow\'s counts.', '<b>Вы открыли решение</b> — за эту задачу XP нет; завтрашняя засчитается.')) + '</div>' +
+        '<details class="chal-sol" open><summary>' + T('Solution', 'Решение') + '</summary><div>' + esc(fromB64(ch.sol)).replace(/\n/g, '<br>') + '</div></details>';
       box.innerHTML = html;
       return;
     }
-    html += '<div class="chal-row"><input class="quiz-input chal-input" type="text" placeholder="' + (ch.type === 'number' ? 'a number' : 'your answer') + '" autocomplete="off">' +
-      '<button type="button" class="chal-go">Check</button></div>' +
+    html += '<div class="chal-row"><input class="quiz-input chal-input" type="text" placeholder="' + (ch.type === 'number' ? T('a number', 'число') : T('your answer', 'ваш ответ')) + '" autocomplete="off">' +
+      '<button type="button" class="chal-go">' + T('Check', 'Проверить') + '</button></div>' +
       '<div class="chal-msg" hidden></div>' +
-      '<div class="chal-links"><a href="javascript:void(0)" class="chal-hint">Hint</a> · <a href="javascript:void(0)" class="chal-giveup">Give up and see the solution</a></div>' +
-      '<div class="chal-hinttext" hidden>' + esc(ch.hint || 'No hint for this one.') + '</div>';
+      '<div class="chal-links"><a href="javascript:void(0)" class="chal-hint">' + T('Hint', 'Подсказка') + '</a> · <a href="javascript:void(0)" class="chal-giveup">' +
+      T('Give up and see the solution', 'Сдаться и посмотреть решение') + '</a></div>' +
+      '<div class="chal-hinttext" hidden>' + esc(ch.hint || T('No hint for this one.', 'К этой задаче подсказки нет.')) + '</div>';
     box.innerHTML = html;
 
     var input = box.querySelector('.chal-input'), msg = box.querySelector('.chal-msg');
     function check() {
       var c = canon(input.value, ch.type, ch.dp);
-      if (c === null) { msg.hidden = false; msg.className = 'chal-msg fail'; msg.textContent = 'Type a number.'; return; }
-      if (!window.crypto || !crypto.subtle) { msg.hidden = false; msg.className = 'chal-msg fail'; msg.textContent = 'This browser cannot check answers here; open the course through its web address.'; return; }
+      if (c === null) { msg.hidden = false; msg.className = 'chal-msg fail'; msg.textContent = T('Type a number.', 'Введите число.'); return; }
+      if (!window.crypto || !crypto.subtle) {
+        msg.hidden = false; msg.className = 'chal-msg fail';
+        msg.textContent = T('This browser cannot check answers here; open the course through its web address.', 'Этот браузер не может проверить ответ здесь; откройте курс по его веб-адресу.');
+        return;
+      }
       sha(SALT + c).then(function (hx) {
         var s = load(), r = s.challenges[ch.id] || { tries: 0 };
         r.tries = (r.tries || 0) + 1;
@@ -145,14 +159,15 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
           save(s);
           draw(box, ch);
           var res = box.querySelector('.chal-result');
-          if (res) res.innerHTML += ' Challenge streak: ' + st + ' day(s).';
+          if (res) res.innerHTML += T(' Challenge streak: ' + st + ' day' + (st === 1 ? '' : 's') + '.', ' Серия задач: ' + st + ' ' + plural(st, 'день', 'дня', 'дней') + '.');
           if (window.ALBoard) window.ALBoard.render(true);
         } else {
           s.challenges[ch.id] = r;
           save(s);
           msg.hidden = false;
           msg.className = 'chal-msg fail';
-          msg.textContent = 'Not yet (' + r.tries + ' tr' + (r.tries === 1 ? 'y' : 'ies') + '). Check your filter and your rounding, then try again.';
+          msg.textContent = T('Not yet (' + r.tries + ' tr' + (r.tries === 1 ? 'y' : 'ies') + '). Check your filter and your rounding, then try again.',
+            'Пока нет (' + r.tries + ' ' + plural(r.tries, 'попытка', 'попытки', 'попыток') + '). Проверьте фильтр и округление и попробуйте снова.');
         }
       });
     }
@@ -160,7 +175,8 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') check(); });
     box.querySelector('.chal-hint').addEventListener('click', function () { box.querySelector('.chal-hinttext').hidden = false; });
     box.querySelector('.chal-giveup').addEventListener('click', function () {
-      if (!confirm('See the solution? This challenge will give no XP, and your challenge streak continues only with tomorrow\'s.')) return;
+      if (!confirm(T('See the solution? This challenge will give no XP, and your challenge streak continues only with tomorrow\'s.',
+        'Показать решение? Эта задача не даст XP, а серия задач продолжится только с завтрашней.'))) return;
       var s = load(), r = s.challenges[ch.id] || {};
       r.gaveUp = dayKey(new Date());
       s.challenges[ch.id] = r;

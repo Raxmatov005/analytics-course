@@ -7,6 +7,7 @@ the page, youtube-nocookie, from the linked second) and "Open on YouTube". In th
 Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
 (function () {
   var TIME = /^\s*\d{1,2}:\d{2}(:\d{2})?\s*$/;
+  function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function clock(sec) {
     var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
@@ -23,14 +24,14 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
     var e = /[?&]end=(\d+)/.exec(a.href);   // the part's end (the next chapter of the video), added by the mentor's tools
     var v = { id: m[1], t: Number(m[2] || 0), end: e ? Number(e[1]) : 0, href: a.href.replace(/&end=\d+/, ''), topic: '', title: '', len: '' };
     var after = a.nextSibling && a.nextSibling.nodeType === 3 ? a.nextSibling.textContent : '';
-    var lm = /^\s*[—–-]\s*(\d+)\s*min/.exec(after);
-    if (v.end) v.len = Math.max(1, Math.round((v.end - v.t) / 60)) + ' min';
-    else if (lm) v.len = lm[1] + ' min';
+    var lm = /^\s*[—–-]\s*(\d+)\s*(?:min|мин)/.exec(after);   // "— 60 min" (a Russian page: "— 60 мин")
+    if (v.end) v.len = Math.max(1, Math.round((v.end - v.t) / 60)) + T(' min', ' мин');
+    else if (lm) v.len = lm[1] + T(' min', ' мин');
     var before = textBefore(a).replace(/▶/g, '').replace(/\s*[—–]\s*$/, '').replace(/^[\s—–;,.]+/, '').trim();
     if (TIME.test(a.textContent.replace(/^0:/, ''))) {   // "Baraa, *Topic* [0:34:01]": the topic is the emphasis just before
       var em = a.previousElementSibling;
-      v.topic = em && /^(EM|STRONG)$/.test(em.tagName) ? em.textContent.trim() : before || 'Video';
-      var who = /^([A-Z][\w.'-]+(?: [A-Z][\w.'-]+)?),/.exec(before);
+      v.topic = em && /^(EM|STRONG)$/.test(em.tagName) ? em.textContent.trim() : before || T('Video', 'Видео');
+      var who = /^([A-ZА-ЯЁ][\wА-Яа-яЁё.'-]+(?: [A-ZА-ЯЁ][\wА-Яа-яЁё.'-]+)?),/.exec(before);   // "Baraa," or, on a Russian page, "Бараа,"
       v.title = who ? who[1] : '';
     } else {
       v.title = a.textContent.replace(/,?\s*\d{1,2}:\d{2}(:\d{2})?\s*$/, '').trim();
@@ -40,12 +41,12 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
     return v;
   }
   function cardHtml(v, i) {
-    return '<div class="yt" data-i="' + i + '"><button type="button" class="yt-thumb" aria-label="Watch here">' +
+    return '<div class="yt" data-i="' + i + '"><button type="button" class="yt-thumb" aria-label="' + T('Watch here', 'Смотреть здесь') + '">' +
       '<img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + v.id + '/mqdefault.jpg"><span class="yt-play">▶</span>' +
-      (v.t || v.end ? '<span class="yt-at">' + (v.end ? clock(v.end - v.t) : 'from ' + clock(v.t)) + '</span>' : '') + '</button>' +
+      (v.t || v.end ? '<span class="yt-at">' + (v.end ? clock(v.end - v.t) : T('from ', 'с ') + clock(v.t)) + '</span>' : '') + '</button>' +
       '<div class="yt-body"><div class="yt-title">' + esc(v.topic) + '</div>' +
       ((v.title || v.len) ? '<div class="yt-meta">' + esc([v.title, v.len].filter(Boolean).join(' · ')) + '</div>' : '') +
-      '<div class="yt-acts"><button type="button" class="yt-go">▶ Watch this part</button></div></div></div>';
+      '<div class="yt-acts"><button type="button" class="yt-go">' + T('▶ Watch this part', '▶ Смотреть этот фрагмент') + '</button></div></div></div>';
   }
   /* The part player. YouTube's own controls show the whole video (30 hours for Baraa's course), so they are hidden
      (controls=0, a cover over the frame takes every tap) and ours show only the part: time and slider run from 0 to
@@ -68,24 +69,27 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
   function play(card, v) {
     if (card.classList.contains('yt-on')) return;
     card.classList.add('yt-on');
-    var stage = document.createElement('div');
+    var stage = document.createElement('div'), AUTO = T('Auto', 'Авто'), PP = T('Play or pause', 'Воспроизвести или приостановить');
     stage.className = 'yp';
     stage.innerHTML = '<div class="yp-screen"><div class="yp-frame"></div>' +
-      '<button type="button" class="yp-cover" aria-label="Play or pause"><span class="yp-big">▶</span></button>' +
-      '<div class="yp-done" hidden><div class="yp-done-t">✓ End of this part</div><button type="button" class="yp-again">↺ Watch it again</button></div></div>' +
-      '<div class="yp-bar"><button type="button" class="yp-pp" aria-label="Play or pause">▶</button>' +
+      '<button type="button" class="yp-cover" aria-label="' + PP + '"><span class="yp-big">▶</span></button>' +
+      '<div class="yp-done" hidden><div class="yp-done-t">' + T('✓ End of this part', '✓ Конец фрагмента') + '</div><button type="button" class="yp-again">' +
+      T('↺ Watch it again', '↺ Посмотреть ещё раз') + '</button></div></div>' +
+      '<div class="yp-bar"><button type="button" class="yp-pp" aria-label="' + PP + '">▶</button>' +
       '<span class="yp-time">0:00 / …</span>' +
-      '<div class="yp-track" role="slider" aria-label="Position in this part" tabindex="0"><div class="yp-fill"></div><div class="yp-knob"></div></div>' +
-      '<button type="button" class="yp-speed" aria-label="Speed">1×</button>' +
-      '<button type="button" class="yp-cc" aria-label="Subtitles">CC</button>' +
-      '<button type="button" class="yp-q" aria-label="Quality">Auto</button>' +
-      '<button type="button" class="yp-full" aria-label="Full screen">⛶</button></div>' +
-      '<div class="yp-qmenu" hidden><div class="yp-qmenu-h">Quality: <b class="yp-qnow">Auto</b></div>' +
-      '<p>YouTube picks the quality itself from the size of the player and your internet — websites are not allowed to set it. ' +
-      'For a sharper picture:</p>' +
-      '<button type="button" class="yp-qfull">⛶ Watch full screen <small>YouTube then switches to HD</small></button>' +
-      '<a class="yp-qyt" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + v.id + '&t=' + v.t + 's">⚙ Choose the quality on YouTube <small>' +
-      'opens at this part' + (v.end ? '; stop at ' + clock(v.end) : '') + '</small></a></div>';
+      '<div class="yp-track" role="slider" aria-label="' + T('Position in this part', 'Позиция во фрагменте') + '" tabindex="0"><div class="yp-fill"></div><div class="yp-knob"></div></div>' +
+      '<button type="button" class="yp-speed" aria-label="' + T('Speed', 'Скорость') + '">1×</button>' +
+      '<button type="button" class="yp-cc" aria-label="' + T('Subtitles', 'Субтитры') + '">CC</button>' +
+      '<button type="button" class="yp-q" aria-label="' + T('Quality', 'Качество') + '">' + AUTO + '</button>' +
+      '<button type="button" class="yp-full" aria-label="' + T('Full screen', 'Во весь экран') + '">⛶</button></div>' +
+      '<div class="yp-qmenu" hidden><div class="yp-qmenu-h">' + T('Quality: ', 'Качество: ') + '<b class="yp-qnow">' + AUTO + '</b></div>' +
+      '<p>' + T('YouTube picks the quality itself from the size of the player and your internet — websites are not allowed to set it. ' +
+      'For a sharper picture:', 'YouTube сам выбирает качество по размеру плеера и скорости интернета — сайтам менять его не разрешено. ' +
+      'Чтобы картинка была чётче:') + '</p>' +
+      '<button type="button" class="yp-qfull">' + T('⛶ Watch full screen <small>YouTube then switches to HD</small>', '⛶ Смотреть во весь экран <small>тогда YouTube включит HD</small>') + '</button>' +
+      '<a class="yp-qyt" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + v.id + '&t=' + v.t + 's">' +
+      T('⚙ Choose the quality on YouTube <small>opens at this part', '⚙ Выбрать качество на YouTube <small>откроется на этом фрагменте') +
+      (v.end ? T('; stop at ', '; остановитесь на ') + clock(v.end) : '') + '</small></a></div>';
     card.querySelector('.yt-thumb').replaceWith(stage);
     var go = card.querySelector('.yt-go');
     if (go) go.remove();
@@ -111,8 +115,8 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
         $('.yp-knob').style.left = (f * 100) + '%';
       }
       $('.yp-time').textContent = clock(Math.round(rel)) + ' / ' + clock(Math.round(len()));
-      var q = p.getPlaybackQuality ? QL[p.getPlaybackQuality()] || 'Auto' : 'Auto';
-      if ($('.yp-q').textContent !== q) { $('.yp-q').textContent = q; $('.yp-qnow').textContent = q === 'Auto' ? 'Auto' : q + ' (auto)'; }
+      var q = p.getPlaybackQuality ? QL[p.getPlaybackQuality()] || AUTO : AUTO;
+      if ($('.yp-q').textContent !== q) { $('.yp-q').textContent = q; $('.yp-qnow').textContent = q === AUTO ? AUTO : q + T(' (auto)', ' (авто)'); }
       var on = playing() && !(end && t >= end - 0.25);
       $('.yp-pp').textContent = on ? '❚❚' : '▶';
       $('.yp-big').hidden = on;
@@ -160,7 +164,7 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
     document.addEventListener('fullscreenchange', icon);
     document.addEventListener('webkitfullscreenchange', icon);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && stage.classList.contains('yp-max')) setMax(false); });
-    var QL = { hd2160: '4K', hd1440: '1440p', hd1080: '1080p', hd720: '720p', large: '480p', medium: '360p', small: '240p', tiny: '144p', auto: 'Auto' };
+    var QL = { hd2160: '4K', hd1440: '1440p', hd1080: '1080p', hd720: '720p', large: '480p', medium: '360p', small: '240p', tiny: '144p', auto: AUTO };
     $('.yp-q').onclick = function (e) { e.stopPropagation(); $('.yp-qmenu').hidden = !$('.yp-qmenu').hidden; };
     $('.yp-qyt').onclick = function () { if (p && playing()) p.pauseVideo(); $('.yp-qmenu').hidden = true; };
     document.addEventListener('click', function (e) { if (!e.target.closest('.yp-qmenu') && !e.target.closest('.yp-q')) $('.yp-qmenu').hidden = true; });
@@ -211,8 +215,8 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
       var pill = document.createElement('button');
       pill.type = 'button';
       pill.className = 'yt-pill';
-      pill.textContent = '▶ ' + (v.t ? clock(v.t) : 'video');
-      pill.title = 'Watch: ' + v.topic;
+      pill.textContent = '▶ ' + (v.t ? clock(v.t) : T('video', 'видео'));
+      pill.title = T('Watch: ', 'Смотреть: ') + v.topic;
       pill.onclick = function () {
         var card = sec.querySelector('.yt-panel .yt[data-i="' + i + '"]');
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -223,16 +227,19 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
     if (!vids.length) return;
     var panel = document.createElement('section');
     panel.className = 'yt-panel';
-    panel.innerHTML = '<div class="yt-panel-head"><span class="yt-panel-icon">▶</span><div><div class="yt-panel-title">Videos for today</div>' +
-      '<div class="yt-panel-sub">' + vids.length + ' video' + (vids.length > 1 ? 's' : '') + '. Each plays only its part of the video and stops at the end of that part. Free, optional.</div></div></div>' +
+    panel.innerHTML = '<div class="yt-panel-head"><span class="yt-panel-icon">▶</span><div><div class="yt-panel-title">' + T('Videos for today', 'Видео на сегодня') + '</div>' +
+      '<div class="yt-panel-sub">' + T(vids.length + ' video' + (vids.length > 1 ? 's' : '') + '. Each plays only its part of the video and stops at the end of that part. Free, optional.',
+        vids.length + ' видео. Каждое показывает только свой фрагмент ролика и останавливается в его конце. Бесплатно, по желанию.') + '</div></div></div>' +
       '<div class="yt-grid">' + vids.map(cardHtml).join('') + '</div>';
     Array.prototype.forEach.call(panel.querySelectorAll('.yt'), function (card) {
       var v = vids[Number(card.dataset.i)];
       card.querySelector('.yt-thumb').onclick = function () { play(card, v); };
       card.querySelector('.yt-go').onclick = function () { play(card, v); };
     });
-    // under "Today in 3 lines" (its list), else before the first section heading
-    var h = Array.prototype.filter.call(sec.querySelectorAll('h2'), function (x) { return /today in 3 lines/i.test(x.textContent); })[0];
+    // under "Today in 3 lines" (its list), else before the first section heading; a Russian page keeps the English id
+    var h = Array.prototype.filter.call(sec.querySelectorAll('h2'), function (x) {
+      return x.id === 'today-in-3-lines' || /today in 3 lines|сегодня в 3 строк/i.test(x.textContent);
+    })[0];
     var at = h && h.nextElementSibling && /^(UL|OL)$/.test(h.nextElementSibling.tagName) ? h.nextElementSibling : null;
     if (at) at.insertAdjacentElement('afterend', panel);
     else {

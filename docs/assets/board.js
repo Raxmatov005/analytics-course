@@ -32,6 +32,20 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
   }
   function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  /* words in the page's language (lang.js). The JSON files carry Russian next to English ("name_ru", "how_ru" …):
+     loc(x, 'name') is x.name_ru on a Russian page when there is one, else x.name. */
+  function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
+  function isRu() { return !!(window.ALLang && window.ALLang.isRu()); }
+  function loc(x, k) { return x && isRu() && x[k + '_ru'] != null ? x[k + '_ru'] : x && x[k]; }
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many;
+  }
+  var SIZE_RU = { small: 'Малая награда', medium: 'Средняя награда', big: 'Большая награда' };
+  function sizeLabel(size) {
+    if (size === 'grand') return T('Grand prize', 'Главный приз');
+    return isRu() ? SIZE_RU[size] || 'Награда' : esc(size) + ' reward';
+  }
   function pct(it) { return it && it.earned != null ? 100 * it.earned / it.max : null; }
 
   function xpOf(p, r) {
@@ -102,18 +116,19 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
         var chips = cps.map(function (it) {
           var v = pct(it), ok = v != null && v >= m.min && (!m.max || used < m.max), key = m.id + ':' + it.id;
           if (ok) used++;
-          var label = it.id === 'capstone' ? 'Capstone' : 'CP' + it.id.slice(2);
+          var label = it.id === 'capstone' ? T('Capstone', 'Итоговый проект') : 'CP' + it.id.slice(2);
           var cls = ok ? (given[key] ? 'chip given' : 'chip reached') : 'chip';
-          return '<span class="' + cls + '" title="' + esc(it.title) + (given[key] ? ' — given ' + esc(given[key]) : '') + '">' + label + '</span>';
+          return '<span class="' + cls + '" title="' + esc(loc(it, 'title')) + (given[key] ? T(' — given ', ' — выдано ') + esc(given[key]) : '') + '">' + label + '</span>';
         }).join('');
         rows.push({ m: m, reached: null, extra: '<div class="chips">' + chips + '</div>' +
-          (m.max ? '<div class="ms-progress">' + used + ' / ' + m.max + ' earned</div>' : '') });
+          (m.max ? '<div class="ms-progress">' + used + ' / ' + m.max + T(' earned', ' получено') + '</div>' : '') });
       } else if (m.onTimeWeeks) {
         var hw = p.items.filter(function (it) { return it.kind === 'hw' && m.onTimeWeeks.indexOf(it.week) >= 0; });
         var onTime = hw.filter(function (it) { return it.earned != null && it.onTime === true; }).length;
         var late = hw.some(function (it) { return it.onTime === false; });
         rows.push({ m: m, reached: late ? false : (onTime === hw.length ? true : false), given: given[m.id],
-          extra: '<div class="ms-progress">' + onTime + ' / ' + hw.length + ' on time' + (late ? ' — one was late, this one is gone' : '') + '</div>' });
+          extra: '<div class="ms-progress">' + onTime + ' / ' + hw.length + T(' on time', ' вовремя') +
+            (late ? T(' — one was late, this one is gone', ' — одна работа сдана с опозданием, эта награда сгорела') : '') + '</div>' });
       } else if (m.level) {
         var lv = r.levels.filter(function (l) { return l.name === m.level; })[0];
         var ok = lv && xp >= lv.from;
@@ -122,7 +137,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
         var cc = m.countCheckpoints;
         var hits = p.items.filter(function (it) { var v = pct(it); return it.kind === 'checkpoint' && it.id !== 'mock' && v != null && v >= cc.min; }).length;
         rows.push({ m: m, reached: hits >= cc.count, given: given[m.id],
-          extra: '<div class="ms-progress">' + Math.min(hits, cc.count) + ' / ' + cc.count + ' checkpoints at ' + cc.min + ' %+</div>' });
+          extra: '<div class="ms-progress">' + Math.min(hits, cc.count) + ' / ' + cc.count + T(' checkpoints at ', ' контрольных на ') + cc.min + ' %+</div>' });
       } else if (m.all) {
         var okAll = m.all.every(function (c) { return by[c.item] && by[c.item].earned != null && by[c.item].earned >= c.min; });
         rows.push({ m: m, reached: okAll, given: given[m.id], extra: '' });
@@ -130,12 +145,12 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     });
     return rows.map(function (row) {
       var m = row.m;
-      var state = row.reached === null ? '' : row.reached ? (row.given ? 'Given on ' + esc(row.given) : 'Reached — collect it from your mentor') : 'Locked';
+      var state = row.reached === null ? '' : row.reached ? (row.given ? T('Given on ', 'Выдано ') + esc(row.given) : T('Reached — collect it from your mentor', 'Достигнуто — получите награду у ментора')) : T('Locked', 'Закрыто');
       return '<div class="ms ' + m.size + (row.reached ? ' on' : '') + '">' +
         '<div class="ms-icon">' + icon(row.reached === false ? 'lock' : 'gift', 26) + '</div>' +
-        '<div class="ms-body"><div class="ms-size">' + (m.size === 'grand' ? 'Grand prize' : esc(m.size) + ' reward') + '</div>' +
-        '<div class="ms-reward">' + esc(m.reward) + '</div>' +
-        '<div class="ms-what">' + esc(m.what) + '</div>' + row.extra +
+        '<div class="ms-body"><div class="ms-size">' + sizeLabel(m.size) + '</div>' +
+        '<div class="ms-reward">' + esc(loc(m, 'reward')) + '</div>' +
+        '<div class="ms-what">' + esc(loc(m, 'what')) + '</div>' + row.extra +
         (state ? '<div class="ms-state">' + state + '</div>' : '') + '</div></div>';
     }).join('');
   }
@@ -146,7 +161,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     p.items.forEach(function (it) { by[it.id] = it; });
     var fullWeeks = p.challengeWeeks || [], ahead = 0;
     c.order.forEach(function (o) {
-      var it = by[o[0]], week = o[1], label = o[0] === 'capstone' ? 'Capstone' : 'Checkpoint ' + o[0].slice(2);
+      var it = by[o[0]], week = o[1], label = o[0] === 'capstone' ? T('Capstone', 'Итоговый проект') : T('Checkpoint ', 'Контрольная ') + o[0].slice(2);
       var base = c.base * Math.pow(c.ratio, step);
       if (!it || it.earned == null) {
         // checkpoints not taken yet: what each would be worth if she passes every one before it
@@ -175,31 +190,37 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
   function chainHtml(r, p) {
     var ch = chainOf(r, p), c = r.chain;
     var h = '<div class="wallet">' +
-      '<div><span>Earned</span><b>' + fmt(ch.earned) + '</b></div>' +
-      '<div><span>Spent</span><b>' + fmt(ch.spent) + '</b></div>' +
-      '<div class="bal"><span>In your wallet</span><b>' + fmt(ch.earned - ch.spent) + ' soum</b></div></div>';
+      '<div><span>' + T('Earned', 'Заработано') + '</span><b>' + fmt(ch.earned) + '</b></div>' +
+      '<div><span>' + T('Spent', 'Потрачено') + '</span><b>' + fmt(ch.spent) + '</b></div>' +
+      '<div class="bal"><span>' + T('In your wallet', 'В вашем кошельке') + '</span><b>' + fmt(ch.earned - ch.spent) + T(' soum', ' сум') + '</b></div></div>';
     h += '<div class="chain">' + ch.rows.map(function (row) {
-      var tag = row.state === 'won' ? 'Won' + (row.bonus90 ? ' · 90 %+ bonus' : '') + (row.fullWeek ? ' · full challenge week +10 %' : '')
-        : row.state === 'missed' ? 'Missed (' + Math.round(row.pct) + ' %) — the chain stepped back'
-        : row.state === 'next' ? 'Next — pass it to win this' : 'If you pass every one before it';
+      var tag = row.state === 'won' ? T('Won', 'Выиграно') + (row.bonus90 ? T(' · 90 %+ bonus', ' · бонус за 90 %+') : '') + (row.fullWeek ? T(' · full challenge week +10 %', ' · все задачи недели +10 %') : '')
+        : row.state === 'missed' ? T('Missed (' + Math.round(row.pct) + ' %) — the chain stepped back', 'Не сдано (' + Math.round(row.pct) + ' %) — цепочка откатилась назад')
+        : row.state === 'next' ? T('Next — pass it to win this', 'Следующая — сдайте её, чтобы выиграть эту сумму') : T('If you pass every one before it', 'Если сдадите все предыдущие');
       return '<div class="link ' + row.state + '">' + icon(row.state === 'won' ? 'gift' : row.state === 'missed' ? 'lock' : 'target', 22) +
         '<div class="link-body"><div class="link-label">' + esc(row.label) + '</div><div class="link-tag">' + esc(tag) + '</div></div>' +
         '<div class="link-val">' + (row.state === 'missed' ? '—' : (row.state === 'won' ? '' : '≈ ') + fmt(row.value)) + '</div></div>';
     }).join('') + '</div>';
-    h += '<p class="board-note">Every voucher is worth ' + c.ratio + '× the one before while you keep passing; 90 %+ adds ' +
-      Math.round((c.bonus90 - 1) * 100) + ' %, and a week with all five daily challenges adds ' + Math.round(c.fullWeekBonus * 100) +
-      ' %. A failed checkpoint gives no voucher and steps the chain back ' + c.dropSteps + ' links. Values are estimates until you get there.</p>';
-    h += '<h3>What a voucher buys</h3><p class="board-note">Spend a voucher now or save several and combine them. Tell your mentor what you choose.</p><ul class="menu">' +
-      c.menu.map(function (m) { return '<li><b>' + esc(m.what) + '</b> <span>' + esc(m.about) + '</span></li>'; }).join('') + '</ul>';
+    var b90 = Math.round((c.bonus90 - 1) * 100), bWeek = Math.round(c.fullWeekBonus * 100);
+    h += '<p class="board-note">' + T('Every voucher is worth ' + c.ratio + '× the one before while you keep passing; 90 %+ adds ' +
+      b90 + ' %, and a week with all five daily challenges adds ' + bWeek +
+      ' %. A failed checkpoint gives no voucher and steps the chain back ' + c.dropSteps + ' links. Values are estimates until you get there.',
+      'Пока вы сдаёте контрольные подряд, каждый ваучер стоит в ' + String(c.ratio).replace('.', ',') + ' раза больше предыдущего; 90 %+ добавляет ' +
+      b90 + ' %, а неделя, в которой решены все пять задач дня, — ещё ' + bWeek + ' %. Несданная контрольная не даёт ваучера и откатывает цепочку на ' +
+      c.dropSteps + ' ' + plural(c.dropSteps, 'звено', 'звена', 'звеньев') + ' назад. Пока вы не дошли до ваучера, его сумма примерная.') + '</p>';
+    h += '<h3>' + T('What a voucher buys', 'Что можно получить за ваучер') + '</h3><p class="board-note">' +
+      T('Spend a voucher now or save several and combine them. Tell your mentor what you choose.',
+        'Потратьте ваучер сразу или накопите несколько и объедините их. Скажите ментору, что вы выбрали.') + '</p><ul class="menu">' +
+      c.menu.map(function (m) { return '<li><b>' + esc(loc(m, 'what')) + '</b> <span>' + esc(loc(m, 'about')) + '</span></li>'; }).join('') + '</ul>';
     if ((p.spent || []).length) {
-      h += '<h3>Spent so far</h3><ul class="menu">' + p.spent.map(function (s) { return '<li><b>' + esc(s.what) + '</b> <span>' + fmt(s.amount) + ' · ' + esc(s.on || '') + '</span></li>'; }).join('') + '</ul>';
+      h += '<h3>' + T('Spent so far', 'Уже потрачено') + '</h3><ul class="menu">' + p.spent.map(function (s) { return '<li><b>' + esc(loc(s, 'what')) + '</b> <span>' + fmt(s.amount) + ' · ' + esc(s.on || '') + '</span></li>'; }).join('') + '</ul>';
     }
     return h;
   }
 
   function badgeCard(b, on, device) {
     return '<div class="bdg' + (on ? ' on' : '') + '">' + icon(b.icon, 30) +
-      '<div class="bdg-name">' + esc(b.name) + '</div><div class="bdg-how">' + esc(b.how) + (device ? ' <i>(this device)</i>' : '') + '</div></div>';
+      '<div class="bdg-name">' + esc(loc(b, 'name')) + '</div><div class="bdg-how">' + esc(loc(b, 'how')) + (device ? ' <i>' + T('(this device)', '(на этом устройстве)') + '</i>' : '') + '</div></div>';
   }
 
   function render() {
@@ -220,46 +241,56 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
 
       var html = '';
       html += '<div class="lvl"><div class="lvl-top">' + icon('briefcase', 36) +
-        '<div><div class="lvl-name">' + esc(lv.cur.name) + '</div><div class="lvl-note">' + esc(lv.cur.note) + '</div></div>' +
-        '<div class="lvl-xp"><b>' + fmt(xp) + '</b> XP<br><span>of ' + fmt(maxXp) + ' possible</span></div></div>' +
+        '<div><div class="lvl-name">' + esc(loc(lv.cur, 'name')) + '</div><div class="lvl-note">' + esc(loc(lv.cur, 'note')) + '</div></div>' +
+        '<div class="lvl-xp"><b>' + fmt(xp) + '</b> XP<br><span>' + T('of ' + fmt(maxXp) + ' possible', 'из ' + fmt(maxXp) + ' возможных') + '</span></div></div>' +
         '<div class="bar"><div style="width:' + Math.round(100 * Math.min(1, into)) + '%"></div></div>' +
-        '<div class="lvl-next">' + (lv.next ? fmt(lv.next.from - xp) + ' XP to <b>' + esc(lv.next.name) + '</b>' : 'Top level reached.') + '</div></div>';
+        '<div class="lvl-next">' + (lv.next ? T(fmt(lv.next.from - xp) + ' XP to <b>' + esc(lv.next.name) + '</b>',
+          'ещё ' + fmt(lv.next.from - xp) + ' XP до уровня <b>' + esc(loc(lv.next, 'name')) + '</b>') : T('Top level reached.', 'Достигнут высший уровень.')) + '</div></div>';
 
+      var cSolved = window.ALChallenge ? window.ALChallenge.solved() : 0, cStreak = window.ALChallenge ? window.ALChallenge.streak() : 0;
+      var cXp = window.ALChallenge ? window.ALChallenge.xp() : 0, inXp = p.quizDays || 0;
       html += '<div class="stats">' +
-        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / 41</b><span>days finished · ' + (p.quizDays || 0) + ' already in your XP</span></div>' +
-        '<div class="stat">' + icon('flame', 22) + '<b>' + streak + '</b><span>day streak</span></div>' +
-        (window.ALChallenge ? '<div class="stat">' + icon('target', 22) + '<b>' + window.ALChallenge.solved() + ' / 40</b><span>challenges solved · streak ' +
-          window.ALChallenge.streak() + ' · ' + window.ALChallenge.xp() + ' XP earned, ' + (p.challengeXp || 0) + ' already in your XP</span></div>' : '') +
-        '<div class="stat">' + icon('zap', 22) + '<b>' + (p.stretch || 0) + '</b><span>stretch tasks done</span></div></div>' +
-        '<p class="board-note">Days and challenges count on this device as you go; they join your XP above when your mentor records ' +
-        'the Friday screenshot of this page.</p>';
+        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / 41</b><span>' + T('days finished · ' + inXp + ' already in your XP',
+          'дней завершено · ' + inXp + ' уже в вашем XP') + '</span></div>' +
+        '<div class="stat">' + icon('flame', 22) + '<b>' + streak + '</b><span>' + T('day streak', plural(streak, 'день подряд', 'дня подряд', 'дней подряд')) + '</span></div>' +
+        (window.ALChallenge ? '<div class="stat">' + icon('target', 22) + '<b>' + cSolved + ' / 40</b><span>' +
+          T('challenges solved · streak ' + cStreak + ' · ' + cXp + ' XP earned, ' + (p.challengeXp || 0) + ' already in your XP',
+            'задач решено · серия ' + cStreak + ' · заработано ' + cXp + ' XP, ' + (p.challengeXp || 0) + ' уже в вашем XP') + '</span></div>' : '') +
+        '<div class="stat">' + icon('zap', 22) + '<b>' + (p.stretch || 0) + '</b><span>' + T('stretch tasks done', 'задач «со звёздочкой» выполнено') + '</span></div></div>' +
+        '<p class="board-note">' + T('Days and challenges count on this device as you go; they join your XP above when your mentor records ' +
+        'the Friday screenshot of this page.', 'Дни и задачи засчитываются на этом устройстве по ходу курса; в ваш XP выше они попадают, когда ментор ' +
+        'записывает пятничный скриншот этой страницы.') + '</p>';
 
-      html += '<h2 id="real-rewards">Real rewards: your voucher chain</h2><p class="board-note">Every checkpoint you pass wins a voucher, and every voucher is bigger than the last. Keep the chain going.</p>' +
+      html += '<h2 id="real-rewards">' + T('Real rewards: your voucher chain', 'Настоящие награды: ваша цепочка ваучеров') + '</h2><p class="board-note">' +
+        T('Every checkpoint you pass wins a voucher, and every voucher is bigger than the last. Keep the chain going.',
+          'Каждая сданная контрольная приносит ваучер, и каждый следующий ваучер больше предыдущего. Не прерывайте цепочку.') + '</p>' +
         chainHtml(r, p) +
-        '<h3>Big results</h3><div class="mss">' + milestoneRows(r, p, xp) + '</div>';
+        '<h3>' + T('Big results', 'Крупные достижения') + '</h3><div class="mss">' + milestoneRows(r, p, xp) + '</div>';
 
       var earned = p.badges || [];
-      html += '<h2 id="badges">Badges</h2><div class="bdgs">' +
+      html += '<h2 id="badges">' + T('Badges', 'Значки') + '</h2><div class="bdgs">' +
         r.badges.map(function (b) { return badgeCard(b, earned.indexOf(b.id) >= 0 || (b.auto && autoBadge(b.auto, p)), false); }).join('') +
         r.deviceBadges.map(function (b) { return badgeCard(b, deviceBadge(b.id), true); }).join('') + '</div>';
 
-      html += '<h2 id="points">Points by week</h2>';
+      html += '<h2 id="points">' + T('Points by week', 'Баллы по неделям') + '</h2>';
       for (var w = 0; w <= 8; w++) {
         var its = p.items.filter(function (it) { return it.week === w; });
         if (!its.length) continue;
         var sumMax = 0, sumGot = 0;
-        html += '<table class="pts"><thead><tr><th>' + (w === 0 ? 'Day 0' : 'Week ' + w) + '</th><th>Max</th><th>Earned</th><th>Feedback</th></tr></thead><tbody>';
+        html += '<table class="pts"><thead><tr><th>' + (w === 0 ? T('Day 0', 'День 0') : T('Week ', 'Неделя ') + w) + '</th><th>' + T('Max', 'Макс.') + '</th><th>' +
+          T('Earned', 'Получено') + '</th><th>' + T('Feedback', 'Отзыв') + '</th></tr></thead><tbody>';
         its.forEach(function (it) {
           sumMax += it.max; if (it.earned != null) sumGot += it.earned;
-          html += '<tr><td>' + esc(it.title) + '</td><td>' + it.max + '</td><td>' + (it.earned == null ? '—' : it.earned + (it.onTime === false ? ' <small>(late)</small>' : '')) +
-            '</td><td>' + (it.feedback ? '<a href="' + esc(it.feedback) + '">read</a>' : '') + '</td></tr>';
+          html += '<tr><td>' + esc(loc(it, 'title')) + '</td><td>' + it.max + '</td><td>' + (it.earned == null ? '—' : it.earned + (it.onTime === false ? ' <small>' + T('(late)', '(с опозданием)') + '</small>' : '')) +
+            '</td><td>' + (it.feedback ? '<a href="' + esc(it.feedback) + '">' + T('read', 'читать') + '</a>' : '') + '</td></tr>';
         });
-        html += '<tr class="sum"><td>Total</td><td>' + sumMax + '</td><td>' + sumGot + '</td><td></td></tr></tbody></table>';
+        html += '<tr class="sum"><td>' + T('Total', 'Итого') + '</td><td>' + sumMax + '</td><td>' + sumGot + '</td><td></td></tr></tbody></table>';
       }
-      html += '<p class="board-note">Updated by the mentor: ' + esc(p.updated || 'not yet') + '.</p>';
+      html += '<p class="board-note">' + T('Updated by the mentor: ', 'Обновлено ментором: ') + esc(p.updated || T('not yet', 'ещё нет')) + '.</p>';
       el.innerHTML = html;
     }).catch(function (e) {
-      el.innerHTML = '<p>The board could not load (' + esc(e.message) + '). Open the course through its web address or a local server, not as a file.</p>';
+      el.innerHTML = '<p>' + T('The board could not load', 'Не удалось загрузить доску') + ' (' + esc(e.message) + '). ' +
+        T('Open the course through its web address or a local server, not as a file.', 'Откройте курс по его веб-адресу или через локальный сервер, а не как файл.') + '</p>';
     });
   }
   window.ALBoard = { render: render };

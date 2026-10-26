@@ -38,6 +38,13 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     return t === '' ? NaN : Number(t);
   }
 
+  /* words in the page's language (lang.js); Russian counts take one of three forms: 1 день, 2 дня, 5 дней */
+  function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many;
+  }
+
   /* the practice day's quiz (id "practice") trains the routine only: no streak, no finished day */
   function isPractice(id) { return id.indexOf('practice') === 0; }
 
@@ -76,12 +83,12 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
   var LETTERS = 'ABCDEFGH';
   function questionHtml(q, i, qid, n) {
     var name = qid + '-q' + i;
-    var h = '<div class="qz-q" data-i="' + i + '"><div class="qz-qnum">Question ' + (i + 1) + ' of ' + n + '</div>' +
+    var h = '<div class="qz-q" data-i="' + i + '"><div class="qz-qnum">' + T('Question ' + (i + 1) + ' of ' + n, 'Вопрос ' + (i + 1) + ' из ' + n) + '</div>' +
       '<div class="qz-qtext">' + esc(q.q) + '</div>';
     if (q.code) h += '<pre class="qz-code"><code>' + esc(q.code) + '</code></pre>';
     if (q.type === 'single' || q.type === 'multi') {
       var t = q.type === 'single' ? 'radio' : 'checkbox';
-      if (q.type === 'multi') h += '<div class="qz-hint">Choose every correct answer.</div>';
+      if (q.type === 'multi') h += '<div class="qz-hint">' + T('Choose every correct answer.', 'Отметьте все верные ответы.') + '</div>';
       h += '<div class="qz-opts">';
       q.options.forEach(function (o, k) {
         h += '<label class="qz-opt"><input type="' + t + '" name="' + name + '" value="' + k + '">' +
@@ -90,7 +97,7 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       h += '</div>';
     } else {
       h += '<input class="qz-input" type="text" name="' + name + '" inputmode="' + (q.type === 'number' ? 'decimal' : 'text') +
-        '" placeholder="' + (q.type === 'number' ? 'Type a number' : 'Type your answer') + '" autocomplete="off">';
+        '" placeholder="' + (q.type === 'number' ? T('Type a number', 'Введите число') : T('Type your answer', 'Введите ответ')) + '" autocomplete="off">';
     }
     return h + '</div>';
   }
@@ -118,7 +125,10 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     if (q.type === 'single') return q.options[q.answer];
     if (q.type === 'multi') return q.answer.map(function (k) { return q.options[k]; }).join(' · ');
     if (q.type === 'number') return String(q.answer) + (q.tol ? ' (± ' + q.tol + ')' : '');
-    return (Array.isArray(q.answer) ? q.answer[0] : q.answer);
+    if (!Array.isArray(q.answer)) return q.answer;
+    /* a Russian page lists the English answers first and adds Russian ones: show the first Russian one there */
+    var ru = window.ALLang && window.ALLang.isRu() ? q.answer.filter(function (a) { return /[а-яё]/i.test(a); })[0] : null;
+    return ru || q.answer[0];
   }
   function givenText(q, el) {
     if (q.type === 'single' || q.type === 'multi') {
@@ -132,28 +142,31 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     var src = pre.querySelector('code') || pre;  // the copy-code plugin adds a button inside <pre>; read the <code> only
     try { quiz = JSON.parse(src.textContent); }
     catch (e) {
-      pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">This quiz could not be read (' + esc(e.message) + ').</p>');
+      pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This quiz could not be read', 'Не удалось прочитать тест') + ' (' + esc(e.message) + ').</p>');
       return;
     }
-    var pass = quiz.pass || 0.8, n = quiz.questions.length;
+    var pass = quiz.pass || 0.8, n = quiz.questions.length, need = Math.round(pass * 100), mins = Math.max(2, Math.round(n * 0.6));
+    var title = isPractice(quiz.id) ? T('Practice quiz', 'Пробный тест') : T('Day quiz', 'Тест дня');
     var box = document.createElement('div');
     box.className = 'qz';
     var prev = load().quizzes[quiz.id];
     box.innerHTML =
       '<div class="qz-start">' +
         '<div class="qz-icon">✓</div>' +
-        '<div class="qz-start-body"><div class="qz-title">' + (isPractice(quiz.id) ? 'Practice quiz' : 'Day quiz') + '</div>' +
-        '<div class="qz-sub">' + n + ' questions · get ' + Math.round(pass * 100) + '% to finish the day · about ' + Math.max(2, Math.round(n * 0.6)) + ' min</div>' +
-        (prev && prev.passedOn ? '<div class="qz-badge">✓ Passed · best ' + prev.best + '%</div>'
-          : prev && prev.attempts ? '<div class="qz-badge qz-badge-try">Best so far ' + prev.best + '% · ' + Math.round(pass * 100) + '% passes</div>' : '') + '</div>' +
-        '<button type="button" class="qz-btn qz-go">' + (prev && prev.passedOn ? 'Take it again' : prev && prev.attempts ? 'Try again' : 'Start quiz') + '</button>' +
+        '<div class="qz-start-body"><div class="qz-title">' + title + '</div>' +
+        '<div class="qz-sub">' + T(n + ' questions · get ' + need + '% to finish the day · about ' + mins + ' min',
+          n + ' ' + plural(n, 'вопрос', 'вопроса', 'вопросов') + ' · наберите ' + need + '%, чтобы завершить день · около ' + mins + ' мин') + '</div>' +
+        (prev && prev.passedOn ? '<div class="qz-badge">' + T('✓ Passed · best ' + prev.best + '%', '✓ Пройден · лучший результат ' + prev.best + '%') + '</div>'
+          : prev && prev.attempts ? '<div class="qz-badge qz-badge-try">' + T('Best so far ' + prev.best + '% · ' + need + '% passes',
+            'Лучший результат пока ' + prev.best + '% · для зачёта нужно ' + need + '%') + '</div>' : '') + '</div>' +
+        '<button type="button" class="qz-btn qz-go">' + (prev && prev.passedOn ? T('Take it again', 'Пройти ещё раз') : prev && prev.attempts ? T('Try again', 'Попробовать снова') : T('Start quiz', 'Начать тест')) + '</button>' +
       '</div>' +
       '<div class="qz-run" hidden>' +
-        '<div class="qz-top"><span class="qz-title-s">' + (isPractice(quiz.id) ? 'Practice quiz' : 'Day quiz') + '</span><span class="qz-count"></span></div>' +
+        '<div class="qz-top"><span class="qz-title-s">' + title + '</span><span class="qz-count"></span></div>' +
         '<div class="qz-segs">' + quiz.questions.map(function () { return '<span></span>'; }).join('') + '</div>' +
         quiz.questions.map(function (q, i) { return questionHtml(q, i, quiz.id, n); }).join('') +
-        '<div class="qz-foot"><button type="button" class="qz-btn qz-ghost qz-back">Back</button>' +
-        '<button type="button" class="qz-btn qz-next">Next</button></div>' +
+        '<div class="qz-foot"><button type="button" class="qz-btn qz-ghost qz-back">' + T('Back', 'Назад') + '</button>' +
+        '<button type="button" class="qz-btn qz-next">' + T('Next', 'Далее') + '</button></div>' +
       '</div>' +
       '<div class="qz-res" hidden></div>';
     pre.parentNode.replaceChild(box, pre);
@@ -171,7 +184,7 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       });
       box.querySelector('.qz-count').textContent = (cur + 1) + ' / ' + n;
       backBtn.style.visibility = cur === 0 ? 'hidden' : 'visible';
-      nextBtn.textContent = cur === n - 1 ? 'Submit answers' : 'Next';
+      nextBtn.textContent = cur === n - 1 ? T('Submit answers', 'Отправить ответы') : T('Next', 'Далее');
       nextBtn.classList.toggle('qz-submit', cur === n - 1);
       nextBtn.disabled = !answered(qs[cur]);
     }
@@ -200,8 +213,8 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
         rows += '<details class="qz-rv ' + (ok ? 'ok' : 'bad') + '"' + (ok ? '' : ' open') + '><summary>' +
           '<span class="qz-mark">' + (ok ? '✓' : '✕') + '</span><span class="qz-rv-q"><b>' + (i + 1) + '.</b> ' + esc(q.q) + '</span></summary>' +
           '<div class="qz-rv-body">' +
-          '<div><span class="qz-k">Your answer</span> ' + esc(givenText(q, el) || '—') + '</div>' +
-          (ok ? '' : '<div><span class="qz-k">Right answer</span> ' + esc(rightAnswerText(q)) + '</div>') +
+          '<div><span class="qz-k">' + T('Your answer', 'Ваш ответ') + '</span> ' + esc(givenText(q, el) || '—') + '</div>' +
+          (ok ? '' : '<div><span class="qz-k">' + T('Right answer', 'Верный ответ') + '</span> ' + esc(rightAnswerText(q)) + '</div>') +
           (q.explain ? '<div class="qz-why">' + esc(q.explain) + '</div>' : '') + '</div></details>';
       });
       var pct = Math.round(100 * right / n), passed = pct >= pass * 100;
@@ -216,21 +229,25 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       }
       s.quizzes[quiz.id] = r;
       save(s);
-      var head = passed && isPractice(quiz.id) ? 'Practice quiz passed'
-        : passed ? 'Day done!' : 'Almost there';
-      var line = passed && isPractice(quiz.id) ? 'This is how a real day ends. Practice does not count toward your days or streak.'
-        : passed ? 'Streak: ' + streak(s) + ' day' + (streak(s) === 1 ? '' : 's') + ' · days finished: ' + window.ALQuiz.doneCount() + ' / ' + TOTAL_DAYS
-        : 'You need ' + Math.round(pass * 100) + '%. Read the explanations below, then try again — your best score counts.';
+      var head = passed && isPractice(quiz.id) ? T('Practice quiz passed', 'Пробный тест пройден')
+        : passed ? T('Day done!', 'День завершён!') : T('Almost there', 'Почти получилось');
+      var st = streak(s), fin = window.ALQuiz.doneCount();
+      var line = passed && isPractice(quiz.id) ? T('This is how a real day ends. Practice does not count toward your days or streak.',
+          'Так заканчивается настоящий день. Пробный тест не идёт в счёт дней и серии.')
+        : passed ? T('Streak: ' + st + ' day' + (st === 1 ? '' : 's') + ' · days finished: ' + fin + ' / ' + TOTAL_DAYS,
+          'Серия: ' + st + ' ' + plural(st, 'день', 'дня', 'дней') + ' · завершено дней: ' + fin + ' / ' + TOTAL_DAYS)
+        : T('You need ' + need + '%. Read the explanations below, then try again — your best score counts.',
+          'Нужно ' + need + '%. Прочитайте пояснения ниже и попробуйте снова — засчитывается лучший результат.');
       run.hidden = true;
       res.hidden = false;
       res.innerHTML =
         '<div class="qz-score ' + (passed ? 'pass' : 'fail') + '">' +
           '<div class="qz-ring" style="--p:' + pct + '"><span>' + right + '<small>/' + n + '</small></span></div>' +
-          '<div class="qz-score-body"><div class="qz-head">' + head + '</div><div class="qz-pct">' + pct + '% correct</div><div class="qz-line">' + line + '</div></div>' +
+          '<div class="qz-score-body"><div class="qz-head">' + head + '</div><div class="qz-pct">' + pct + T('% correct', '% верно') + '</div><div class="qz-line">' + line + '</div></div>' +
         '</div>' +
         '<div class="qz-dots">' + quiz.questions.map(function (q, i) { return '<span class="' + (isRight(q, qs[i]) ? 'ok' : 'bad') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
-        '<div class="qz-rv-title">Review your answers</div>' + rows +
-        '<div class="qz-foot"><button type="button" class="qz-btn qz-retry">Try again</button></div>';
+        '<div class="qz-rv-title">' + T('Review your answers', 'Разбор ваших ответов') + '</div>' + rows +
+        '<div class="qz-foot"><button type="button" class="qz-btn qz-retry">' + T('Try again', 'Попробовать снова') + '</button></div>';
       res.querySelector('.qz-retry').addEventListener('click', function () { mount(rebuild(quiz, box)); });
       top();
       markSidebar();
@@ -248,7 +265,7 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
   /* ---------- sidebar ticks for finished days ---------- */
   function idFromHref(href) {
     if (!href || href.indexOf('?id=') >= 0) return null;  // section links inside a day get no tick
-    var m = /week-(\d\d)\/day-(\d)/.exec(href);
+    var m = /(?:^|[/#])(?:ru\/)?weeks\/week-(\d\d)\/day-(\d)/.exec(href);   // '#/weeks/…' and the Russian menu's '#/ru/weeks/…'
     return m ? 'w' + m[1] + 'd' + m[2] : null;
   }
   function markSidebar() {

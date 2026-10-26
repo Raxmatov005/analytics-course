@@ -6,6 +6,7 @@ counts when it is unique; `../raw/nur.db` counts as data/raw/nur.db. */
   var RAW = 'https://raw.githubusercontent.com/Raxmatov005/analytics-course/main/';
   var TREE = 'https://github.com/Raxmatov005/analytics-course/tree/main/';
   var list = null;
+  function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
   function load() {
     if (!list) list = fetch('assets/files.json?v=1').then(function (r) { return r.json(); }).catch(function () { return []; });
     return list;
@@ -23,14 +24,14 @@ counts when it is unique; `../raw/nur.db` counts as data/raw/nur.db. */
   }
   function save(path, btn) {
     var name = path.split('/').pop();
-    btn.textContent = 'Downloading…';
+    btn.textContent = T('Downloading…', 'Скачивание…');
     fetch(RAW + path).then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); }).then(function (b) {
       var a = document.createElement('a');
       a.href = URL.createObjectURL(b); a.download = name;
       document.body.appendChild(a); a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
       btn.textContent = '✓ ' + name;
-    }).catch(function () { window.open(RAW + path, '_blank'); btn.textContent = '⬇ Download'; });
+    }).catch(function () { window.open(RAW + path, '_blank'); btn.textContent = T('⬇ Download', '⬇ Скачать'); });
   }
   function mark(files) {
     var sec = document.querySelector('.markdown-section');
@@ -43,10 +44,11 @@ counts when it is unique; `../raw/nur.db` counts as data/raw/nur.db. */
       var b = document.createElement(path ? 'button' : 'a');
       b.className = 'fl-dl';
       if (path) {
-        b.type = 'button'; b.textContent = '⬇ Download'; b.title = 'Save ' + path.split('/').pop() + ' on this device';
+        b.type = 'button'; b.textContent = T('⬇ Download', '⬇ Скачать');
+        b.title = T('Save ' + path.split('/').pop() + ' on this device', 'Сохранить ' + path.split('/').pop() + ' на это устройство');
         b.onclick = function () { save(path, b); };
       } else {
-        b.href = TREE + dir; b.target = '_blank'; b.rel = 'noopener'; b.textContent = '📁 Open folder';
+        b.href = TREE + dir; b.target = '_blank'; b.rel = 'noopener'; b.textContent = T('📁 Open folder', '📁 Открыть папку');
       }
       code.insertAdjacentElement('afterend', b);
     });

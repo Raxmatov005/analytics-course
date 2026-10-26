@@ -531,3 +531,12 @@ body.reading-down #sq-db-btn { transform: translateY(160%); opacity: 0; pointer-
 @media (max-width: 768px) { body.reading-down:not(.close) .sidebar-toggle { transform: translateY(160%); opacity: 0; pointer-events: none; } }
 .markdown-section table:not(.sq-table):not(.gx-table) td, .markdown-section table:not(.sq-table):not(.gx-table) th { min-width: 6.5em; max-width: 17em; }
 .markdown-section table code { overflow-wrap: normal; white-space: nowrap; }
+
+/* ---------- EN | RU switch (lang.js) ---------- */
+.lang-switch { position: fixed; top: 14px; right: 18px; z-index: 35; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(15, 23, 42, .12); font-family: var(--sans); }
+.lang-switch button { font: 700 12.5px var(--sans); letter-spacing: .04em; padding: .42em .85em; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; }
+.lang-switch button:hover { color: var(--ink); }
+.lang-switch button.on { background: var(--brand); color: #fff; cursor: default; }
+.lang-switch button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+body.db-on .lang-switch { opacity: 0; pointer-events: none; }
+@media (max-width: 768px) { .lang-switch { top: 10px; right: 10px; } }

@@ -20,6 +20,15 @@ Work in progress is kept in localStorage "al.sql". */
   function store() { try { var s = JSON.parse(localStorage.getItem(KEY)) || {}; s.sql = s.sql || {}; return s; } catch (e) { return { sql: {} }; } }
   function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private window */ } }
   function wk() { try { return localStorage.getItem(WK); } catch (e) { return null; } }
+  /* words in the page's language (lang.js), looked up while a box is drawn; Russian counts: 1 строка, 2 строки, 5 строк */
+  function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many;
+  }
+  function rowsWord(n) { return T(n === 1 ? 'row' : 'rows', plural(n, 'строка', 'строки', 'строк')); }
+  function loadingText() { return T('Opening the Nur Finance database (first time only)…', 'Открываем базу данных Nur Finance (только в первый раз)…'); }
+  function runningText() { return play ? T('Running…', 'Выполняется…') : loadingText(); }
 
   /* the key arrives once as ?wk=… from the bot's "Connect the website" link */
   (function takeKey() {
@@ -38,7 +47,8 @@ Work in progress is kept in localStorage "al.sql". */
   function mb(n) { return (n / 1048576).toFixed(1); }
   function progress(got, total) {
     Array.prototype.forEach.call(document.querySelectorAll('.sq-loading'), function (el) {
-      el.textContent = 'Opening the Nur Finance database (first time only) — ' + mb(got) + (total ? ' of ' + mb(total) : '') + ' MB…';
+      el.textContent = T('Opening the Nur Finance database (first time only) — ' + mb(got) + (total ? ' of ' + mb(total) : '') + ' MB…',
+        'Открываем базу данных Nur Finance (только в первый раз) — ' + mb(got) + (total ? ' из ' + mb(total) : '') + ' МБ…');
     });
   }
   function download(url) {
@@ -185,15 +195,16 @@ Work in progress is kept in localStorage "al.sql". */
   function table(res) {
     if (res.error) return '<div class="sq-err">⚠ ' + esc(res.error) + '</div>' + hint(res.error);
     if (!res.last) {
-      var kind = (res.kind || '').toUpperCase();
-      return '<div class="sq-done">✓ Done' + (/INSERT|UPDATE|DELETE|REPLACE/.test(kind) ? ' — ' + res.changed + ' row' + (res.changed === 1 ? '' : 's') + ' changed' :
-        /CREATE|DROP|ALTER/.test(kind) ? ' — table ' + (kind === 'DROP' ? 'removed' : kind === 'CREATE' ? 'created' : 'changed') : '') +
-        '. Saved in your practice copy of the database (Database → Reset brings back the original).</div>';
+      var kind = (res.kind || '').toUpperCase(), ch = res.changed;
+      return '<div class="sq-done">' + T('✓ Done', '✓ Готово') + (/INSERT|UPDATE|DELETE|REPLACE/.test(kind) ? ' — ' + ch + ' ' + rowsWord(ch) + T(' changed', ' ' + plural(ch, 'изменена', 'изменены', 'изменено')) :
+        /CREATE|DROP|ALTER/.test(kind) ? (kind === 'DROP' ? T(' — table removed', ' — таблица удалена') : kind === 'CREATE' ? T(' — table created', ' — таблица создана') : T(' — table changed', ' — таблица изменена')) : '') +
+        T('. Saved in your practice copy of the database (Database → Reset brings back the original).',
+          '. Сохранено в вашей учебной копии базы (База данных → Сбросить вернёт исходные данные).') + '</div>';
     }
     var r = res.last, shown = r.values.slice(0, 50);
-    var saved = res.changed != null ? '<div class="sq-done">✓ Your changes are saved in your practice copy of the database.</div>' : '';
-    if (!r.columns.length) return saved + '<div class="sq-note">0 rows.</div>';
-    return saved + '<div class="sq-note">' + r.values.length + ' row' + (r.values.length === 1 ? '' : 's') + (r.values.length > 50 ? ' (first 50 shown)' : '') + '</div>' +
+    var saved = res.changed != null ? '<div class="sq-done">' + T('✓ Your changes are saved in your practice copy of the database.', '✓ Ваши изменения сохранены в учебной копии базы.') + '</div>' : '';
+    if (!r.columns.length) return saved + '<div class="sq-note">' + T('0 rows.', '0 строк.') + '</div>';
+    return saved + '<div class="sq-note">' + r.values.length + ' ' + rowsWord(r.values.length) + (r.values.length > 50 ? T(' (first 50 shown)', ' (показаны первые 50)') : '') + '</div>' +
       '<div class="sq-scroll"><table class="sq-table"><thead><tr>' + r.columns.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') +
       '</tr></thead><tbody>' + shown.map(function (row) { return '<tr>' + row.map(function (v) { return '<td>' + (v === null ? '<i>NULL</i>' : esc(v)) + '</td>'; }).join('') + '</tr>'; }).join('') +
       '</tbody></table></div>';
@@ -224,13 +235,15 @@ Work in progress is kept in localStorage "al.sql". */
   }
   function checkTask(text, exp, salt) {
     var res = run(clean, text, true);
-    if (res.error && !res.last) return Promise.resolve({ ok: false, why: 'the query did not run: ' + res.error });
+    if (res.error && !res.last) return Promise.resolve({ ok: false, why: T('the query did not run: ', 'запрос не выполнился: ') + res.error });
     var nums = res.cells.map(toNum).filter(function (n) { return n !== null; });
     var vals = (exp.values || []).map(function (e) { return bagHas(nums, e, salt); });
     var rows = exp.rows ? bagHas([res.rows || 0], exp.rows, salt) : Promise.resolve(true);
     return Promise.all([Promise.all(vals), rows]).then(function (a) {
       var vOk = a[0].every(Boolean), rOk = a[1];
-      return { ok: vOk && rOk && res.last !== null, why: !res.last ? 'no result yet' : !vOk ? 'a number in the result is not the expected one' : !rOk ? 'the number of rows (' + res.rows + ') is not the expected one' : '', res: res };
+      return { ok: vOk && rOk && res.last !== null, res: res,
+        why: !res.last ? T('no result yet', 'результата пока нет') : !vOk ? T('a number in the result is not the expected one', 'одно из чисел в результате не то, что ожидается')
+          : !rOk ? T('the number of rows (' + res.rows + ') is not the expected one', 'число строк (' + res.rows + ') не то, что ожидается') : '' };
     });
   }
 
@@ -239,15 +252,24 @@ Work in progress is kept in localStorage "al.sql". */
   var VIEWS = { v_payments_clean: 1, v_loan_status: 2, v_portfolio_monthly: 6 };   // section of week 3 day 4 that creates each view
   function hint(err) {
     var m = /no such table: (\w+)/i.exec(err), h = '';
-    if (m && VIEWS[m[1]]) h = 'This uses the view <code>' + esc(m[1]) + '</code>, which you build in <a href="#/weeks/week-03/day-4">Week 3 · Day 4</a> (section ' +
-      VIEWS[m[1]] + '). Run its <code>CREATE VIEW</code> box once — the view then stays in your practice copy of the database. ' +
-      '<button type="button" class="sq-build-views">Build the course views now</button>';
-    else if (m && /^(scratch_|my_|t_|tmp)/i.test(m[1])) h = '<code>' + esc(m[1]) + '</code> is not in your practice copy yet — run the box on this page that creates it (<code>CREATE TABLE …</code>) first.';
-    else if (m && ABOUT_NAMES.indexOf(m[1]) < 0) h = '<code>' + esc(m[1]) + '</code> is not a table: it is probably a name from a <code>WITH … AS (…)</code> part shown above. Put that part in front of this one and run them together. Or check the name in the Database panel.';
-    else if (/already exists/i.test(err)) h = 'You created it before — it is still in your practice copy. Skip that line, or remove it first with <code>DROP TABLE name;</code> (or Database → ↺ Reset).';
-    else if (/UNIQUE constraint failed/i.test(err)) h = 'Those rows are already there — you probably ran this box before. A primary key can hold each value only once.';
-    else if (/no such column: (\w+)/i.test(err)) h = 'Check the column name in the Database panel (bottom right) — it lists every column of every table.';
-    else if (/syntax error/i.test(err)) h = 'Look just before the word in quotes: a missing comma, bracket or quote is the usual reason.';
+    var link = window.ALLang ? window.ALLang.link('#/weeks/week-03/day-4') : '#/weeks/week-03/day-4', name = m ? '<code>' + esc(m[1]) + '</code>' : '';
+    if (m && VIEWS[m[1]]) h = T('This uses the view ' + name + ', which you build in <a href="' + link + '">Week 3 · Day 4</a> (section ' +
+      VIEWS[m[1]] + '). Run its <code>CREATE VIEW</code> box once — the view then stays in your practice copy of the database. ',
+      'Здесь используется представление ' + name + ', которое вы создаёте в <a href="' + link + '">Неделя 3 · День 4</a> (раздел ' +
+      VIEWS[m[1]] + '). Выполните там один раз блок с <code>CREATE VIEW</code> — после этого представление останется в вашей учебной копии базы. ') +
+      '<button type="button" class="sq-build-views">' + T('Build the course views now', 'Создать представления курса сейчас') + '</button>';
+    else if (m && /^(scratch_|my_|t_|tmp)/i.test(m[1])) h = T(name + ' is not in your practice copy yet — run the box on this page that creates it (<code>CREATE TABLE …</code>) first.',
+      name + ' пока нет в вашей учебной копии — сначала выполните блок на этой странице, который её создаёт (<code>CREATE TABLE …</code>).');
+    else if (m && ABOUT_NAMES.indexOf(m[1]) < 0) h = T(name + ' is not a table: it is probably a name from a <code>WITH … AS (…)</code> part shown above. Put that part in front of this one and run them together. Or check the name in the Database panel.',
+      name + ' — не таблица: скорее всего, это имя из части <code>WITH … AS (…)</code> выше. Поставьте ту часть перед этой и выполните их вместе. Или проверьте имя в панели «База данных».');
+    else if (/already exists/i.test(err)) h = T('You created it before — it is still in your practice copy. Skip that line, or remove it first with <code>DROP TABLE name;</code> (or Database → ↺ Reset).',
+      'Вы уже создавали её раньше — она всё ещё в вашей учебной копии. Пропустите эту строку или сначала удалите таблицу командой <code>DROP TABLE name;</code> (или База данных → ↺ Сбросить).');
+    else if (/UNIQUE constraint failed/i.test(err)) h = T('Those rows are already there — you probably ran this box before. A primary key can hold each value only once.',
+      'Эти строки уже есть — наверное, вы уже выполняли этот блок. Первичный ключ может содержать каждое значение только один раз.');
+    else if (/no such column: (\w+)/i.test(err)) h = T('Check the column name in the Database panel (bottom right) — it lists every column of every table.',
+      'Проверьте имя столбца в панели «База данных» (справа внизу) — там перечислены все столбцы всех таблиц.');
+    else if (/syntax error/i.test(err)) h = T('Look just before the word in quotes: a missing comma, bracket or quote is the usual reason.',
+      'Посмотрите прямо перед словом в кавычках: обычно причина — пропущенная запятая, скобка или кавычка.');
     return h ? '<div class="sq-hint-box">' + h + '</div>' : '';
   }
   /* the three course views, built from Week 3 Day 4's own CREATE VIEW boxes, in their order there; then the box runs again */
@@ -261,23 +283,31 @@ Work in progress is kept in localStorage "al.sql". */
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('.sq-build-views');
     if (!b) return;
-    b.disabled = true; b.textContent = 'Building…';
+    b.disabled = true; b.textContent = T('Building…', 'Создаём…');
     buildViews().then(function () {
       var box = b.closest('.sq-box, .sq-task, .sq-prac');
       var go = box && box.querySelector('.sq-run');
-      if (go) go.click(); else b.textContent = '✓ Built — run your query again';
-    }).catch(function () { b.disabled = false; b.textContent = 'Could not build them — try again'; });
+      if (go) go.click(); else b.textContent = T('✓ Built — run your query again', '✓ Готово — выполните запрос ещё раз');
+    }).catch(function () { b.disabled = false; b.textContent = T('Could not build them — try again', 'Не удалось создать — попробуйте снова'); });
   });
   var ABOUT_NAMES = ['customers', 'products', 'branches', 'staff', 'applications', 'loans', 'installments', 'payments', 'collections_actions', 'app_events', 'dim_date'];
   /* a block that is not meant to run: a pattern with placeholders, or one piece of a longer query */
   function shape(code) {
-    if (/…|\btable_name\b|\bcolumn1\b/.test(code)) return 'The shape of a query — the words in it are placeholders, so this one is for reading, not running.';
-    if (/^\s*--\s*(after the|replace)/i.test(code)) return 'One piece of the longer query above — add it there, then run the whole query in a box.';
-    if (/\(\s*\/\*[\s\S]*?\*\/\s*\)/.test(code)) return 'A template — the parts marked /* … */ are left for you to fill in, so it does not run as it is.';
+    if (/…|\btable_name\b|\bcolumn1\b/.test(code)) return T('The shape of a query — the words in it are placeholders, so this one is for reading, not running.',
+      'Это схема запроса — слова в ней лишь заполнители, поэтому его нужно читать, а не выполнять.');
+    // "-- after the WITH block:" / "-- replace …" (a Russian page translates the comment: "-- после …" / "-- замените …")
+    if (/^\s*--\s*(after the|replace|после|замени)/i.test(code)) return T('One piece of the longer query above — add it there, then run the whole query in a box.',
+      'Это часть более длинного запроса выше — добавьте её туда и выполните весь запрос в блоке.');
+    if (/\(\s*\/\*[\s\S]*?\*\/\s*\)/.test(code)) return T('A template — the parts marked /* … */ are left for you to fill in, so it does not run as it is.',
+      'Это шаблон — части, отмеченные /* … */, нужно заполнить самостоятельно, поэтому как есть он не выполнится.');
     var body = stripComments(code).trim();
-    if (/,$/.test(body)) return 'One piece of a longer query (it ends with a comma) — it runs together with the pieces around it.';
-    if (body && !/^(SELECT|WITH|CREATE|INSERT|UPDATE|DELETE|DROP|ALTER|PRAGMA|REPLACE|BEGIN|COMMIT|ROLLBACK|EXPLAIN|VALUES|ANALYZE)\b/i.test(body))
-      return 'One piece of a query (it starts at ' + esc(body.split(/\s/)[0].toUpperCase()) + ') — it runs as part of a whole query, not on its own.';
+    if (/,$/.test(body)) return T('One piece of a longer query (it ends with a comma) — it runs together with the pieces around it.',
+      'Это часть более длинного запроса (она заканчивается запятой) — она выполняется вместе с соседними частями.');
+    if (body && !/^(SELECT|WITH|CREATE|INSERT|UPDATE|DELETE|DROP|ALTER|PRAGMA|REPLACE|BEGIN|COMMIT|ROLLBACK|EXPLAIN|VALUES|ANALYZE)\b/i.test(body)) {
+      var w = esc(body.split(/\s/)[0].toUpperCase());
+      return T('One piece of a query (it starts at ' + w + ') — it runs as part of a whole query, not on its own.',
+        'Это часть запроса (она начинается с ' + w + ') — она выполняется в составе целого запроса, а не сама по себе.');
+    }
     return null;
   }
   function example(pre) {
@@ -286,10 +316,10 @@ Work in progress is kept in localStorage "al.sql". */
     var code = (pre.querySelector('code') || pre).textContent.replace(/\n$/, '');
     var box = document.createElement('div');
     box.className = 'sq-box';
-    box.innerHTML = '<div class="sq-top"><span class="sq-lang">SQL</span><span class="sq-tip">edit it, then Run</span>' +
-      '<button type="button" class="sq-reset" hidden>Reset</button></div>' +
+    box.innerHTML = '<div class="sq-top"><span class="sq-lang">SQL</span><span class="sq-tip">' + T('edit it, then Run', 'измените и нажмите «Выполнить»') + '</span>' +
+      '<button type="button" class="sq-reset" hidden>' + T('Reset', 'Вернуть') + '</button></div>' +
       '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off"></textarea>' +
-      '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button><span class="sq-keys">Ctrl + Enter</span></div><div class="sq-out"></div>';
+      '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><span class="sq-keys">Ctrl + Enter</span></div><div class="sq-out"></div>';
     pre.parentNode.replaceChild(box, pre);
     var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out'), rs = box.querySelector('.sq-reset');
     ta.value = code;
@@ -298,9 +328,9 @@ Work in progress is kept in localStorage "al.sql". */
     ta.addEventListener('input', function () { fit(ta); rs.hidden = ta.value === code; });
     rs.onclick = function () { ta.value = code; fit(ta); rs.hidden = true; out.innerHTML = ''; };
     box.querySelector('.sq-run').onclick = function () {
-      out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
+      out.innerHTML = '<div class="sq-note sq-loading">' + runningText() + '</div>';
       ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
-        .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the internet connection and try again.</div>'; });
+        .catch(function () { out.innerHTML = '<div class="sq-err">' + T('Could not load the data — check the internet connection and try again.', 'Не удалось загрузить данные — проверьте подключение к интернету и попробуйте снова.') + '</div>'; });
     };
   }
   function fit(ta) {   // the editor is as tall as its code, so nothing is cut off and nothing wraps
@@ -319,7 +349,8 @@ Work in progress is kept in localStorage "al.sql". */
   /* ---------- 2. the homework workspace ---------- */
   function workspace(pre) {
     var spec;
-    try { spec = JSON.parse((pre.querySelector('code') || pre).textContent); } catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">Workspace could not be read.</p>'); return; }
+    try { spec = JSON.parse((pre.querySelector('code') || pre).textContent); }
+    catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('Workspace could not be read.', 'Не удалось прочитать рабочую область.') + '</p>'); return; }
     var box = document.createElement('div');
     box.className = 'sq-ws';
     pre.parentNode.replaceChild(box, pre);
@@ -327,33 +358,39 @@ Work in progress is kept in localStorage "al.sql". */
     save(s);
     var hasSql = spec.tasks.some(function (t) { return !t.text && !t.upload; });
     var picked = {};   // chosen files live in memory only: after a reload she picks them again
-    box.innerHTML = '<div class="sq-ws-head"><span class="sq-ws-title">' + (hasSql ? '🧑‍💻 Your workspace — ' : '📎 Hand in — ') + esc(spec.title || spec.check) + '</span>' +
-      '<span class="sq-ws-sub">' + (hasSql ? 'Write each query → ▶ Run → ✔ Check. When every one is ✅, tap 📤 Submit. Saved in this browser.'
-        : 'Write or attach each part, then tap 📤 Submit. No GitHub needed.') + '</span></div>' +
+    box.innerHTML = '<div class="sq-ws-head"><span class="sq-ws-title">' + (hasSql ? T('🧑‍💻 Your workspace — ', '🧑‍💻 Ваша рабочая область — ') : T('📎 Hand in — ', '📎 Сдача работы — ')) + esc(spec.title || spec.check) + '</span>' +
+      '<span class="sq-ws-sub">' + (hasSql ? T('Write each query → ▶ Run → ✔ Check. When every one is ✅, tap 📤 Submit. Saved in this browser.',
+          'Напишите каждый запрос → ▶ Выполнить → ✔ Проверить. Когда все отмечены ✅, нажмите 📤 Сдать. Всё сохраняется в этом браузере.')
+        : T('Write or attach each part, then tap 📤 Submit. No GitHub needed.', 'Напишите или прикрепите каждую часть, затем нажмите 📤 Сдать. GitHub не нужен.')) + '</span></div>' +
       spec.tasks.map(function (t, i) {
         var input = t.upload
-          ? '<label class="sq-file"><input type="file"' + (t.accept ? ' accept="' + esc(t.accept) + '"' : '') + '> 📎 Choose file</label><span class="sq-fname"></span>'
+          ? '<label class="sq-file"><input type="file"' + (t.accept ? ' accept="' + esc(t.accept) + '"' : '') + '> ' + T('📎 Choose file', '📎 Выбрать файл') + '</label><span class="sq-fname"></span>'
           : '<textarea class="sq-edit' + (t.text ? ' sq-text' : '') + '" spellcheck="' + (t.text ? 'true' : 'false') + '"' +
             (t.text ? '' : ' wrap="off" autocapitalize="off" autocorrect="off"') +
-            ' rows="' + (t.text ? 4 : 3) + '" placeholder="' + (t.text ? 'Write here…' : '-- write your query here') + '"></textarea>';
+            ' rows="' + (t.text ? 4 : 3) + '" placeholder="' + (t.text ? T('Write here…', 'Пишите здесь…') : T('-- write your query here', '-- напишите запрос здесь')) + '"></textarea>';
         return '<div class="sq-task" data-i="' + i + '"><div class="sq-task-q"><span class="sq-chip"></span><b>' + esc(hasSql ? t.id : String(i + 1)) + '</b><span>' + esc(t.q).replace(/`([^`]+)`/g, '<code>$1</code>') + '</span>' +
-          (t.optional ? ' <span class="sq-opt">optional</span>' : '') + '</div>' +
+          (t.optional ? ' <span class="sq-opt">' + T('optional', 'по желанию') + '</span>' : '') + '</div>' +
           (t.upload ? '<div class="sq-bar">' + input + '<span class="sq-msg"></span></div>' :
-            input + '<div class="sq-bar">' + (t.text ? '' : '<button type="button" class="sq-run">▶ Run</button><button type="button" class="sq-check">✔ Check</button>') +
+            input + '<div class="sq-bar">' + (t.text ? '' : '<button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><button type="button" class="sq-check">' +
+            T('✔ Check', '✔ Проверить') + '</button>') +
             '<span class="sq-msg"></span></div>') + '<div class="sq-out"></div></div>';
       }).join('') +
-      '<div class="sq-ws-foot">' + (hasSql ? '<button type="button" class="sq-all">✔ Check all</button>' : '') + '<button type="button" class="sq-submit">📤 Submit</button>' +
+      '<div class="sq-ws-foot">' + (hasSql ? '<button type="button" class="sq-all">' + T('✔ Check all', '✔ Проверить все') + '</button>' : '') +
+      '<button type="button" class="sq-submit">' + T('📤 Submit', '📤 Сдать') + '</button>' +
       '<div class="sq-ws-state"></div></div>';
     var cards = box.querySelectorAll('.sq-task');
     spec.tasks.forEach(function (t, i) {
       var c = cards[i], ta = c.querySelector('textarea'), out = c.querySelector('.sq-out'), msg = c.querySelector('.sq-msg');
       if (t.upload) {
         paint(c, undefined);
-        msg.textContent = t.accept ? 'A ' + t.accept.split(',').join(' / ') + ' file, up to 5 MB.' : 'Up to 5 MB.';
+        msg.textContent = t.accept ? T('A ' + t.accept.split(',').join(' / ') + ' file, up to 5 MB.', 'Файл ' + t.accept.split(',').join(' / ') + ', до 5 МБ.') : T('Up to 5 MB.', 'До 5 МБ.');
         c.querySelector('input[type=file]').addEventListener('change', function () {
           var f = this.files[0];
           if (!f) return;
-          if (f.size > 5 * 1024 * 1024) { msg.textContent = 'That file is over 5 MB — send it as a zip in 📤 Homework instead.'; delete picked[t.id]; paint(c, false); foot(); return; }
+          if (f.size > 5 * 1024 * 1024) {
+            msg.textContent = T('That file is over 5 MB — send it as a zip in 📤 Homework instead.', 'Этот файл больше 5 МБ — отправьте его zip-архивом через 📤 Homework в боте.');
+            delete picked[t.id]; paint(c, false); foot(); return;
+          }
           var rd = new FileReader();
           rd.onload = function () {
             picked[t.id] = { name: f.name, type: f.type || 'application/octet-stream', b64: String(rd.result).split(',')[1] };
@@ -376,10 +413,11 @@ Work in progress is kept in localStorage "al.sql". */
         else delete m.ok[t.id];
         save(st); paint(c, m.ok[t.id]); foot();
       });
-      if (t.text) { msg.textContent = 'At least ' + (t.minLines || 3) + ' lines.'; return; }
+      if (t.text) { var ml = t.minLines || 3; msg.textContent = T('At least ' + ml + ' lines.', 'Не меньше ' + ml + ' ' + plural(ml, 'строки', 'строк', 'строк') + '.'); return; }
       c.querySelector('.sq-run').onclick = function () {
-        out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
-        ready().then(function () { out.innerHTML = table(runPlay(ta.value)); }).catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — try again.</div>'; });
+        out.innerHTML = '<div class="sq-note sq-loading">' + runningText() + '</div>';
+        ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
+          .catch(function () { out.innerHTML = '<div class="sq-err">' + T('Could not load the data — try again.', 'Не удалось загрузить данные — попробуйте снова.') + '</div>'; });
       };
       c.querySelector('.sq-check').onclick = function () { checkOne(t, c).then(foot); };
     });
@@ -389,18 +427,18 @@ Work in progress is kept in localStorage "al.sql". */
     }
     function checkOne(t, card) {
       var ta = card.querySelector('textarea'), msg = card.querySelector('.sq-msg'), out = card.querySelector('.sq-out');
-      if (!ta.value.trim()) { msg.textContent = 'Write a query first.'; return Promise.resolve(); }
-      msg.textContent = 'Checking…';
+      if (!ta.value.trim()) { msg.textContent = T('Write a query first.', 'Сначала напишите запрос.'); return Promise.resolve(); }
+      msg.textContent = T('Checking…', 'Проверяем…');
       return Promise.all([ready(), loadChecks()]).then(function (a) {
         var spec2 = a[1].checks[spec.check], exp = spec2 && spec2.tasks[t.id];
-        if (!exp) { msg.textContent = 'No automatic check for this task.'; return; }
+        if (!exp) { msg.textContent = T('No automatic check for this task.', 'Для этого задания нет автоматической проверки.'); return; }
         return checkTask(ta.value, exp, a[1].salt).then(function (r) {
           var st = store(); st.sql[spec.check].ok[t.id] = r.ok; save(st);
           paint(card, r.ok);
-          msg.textContent = r.ok ? 'Correct!' : 'Not yet: ' + r.why + '.';
+          msg.textContent = r.ok ? T('Correct!', 'Верно!') : T('Not yet: ', 'Пока нет: ') + r.why + '.';
           if (r.res) out.innerHTML = table(r.res);
         });
-      }).catch(function (e) { console.error('check failed', e); msg.textContent = 'Could not check right now — try again.'; });
+      }).catch(function (e) { console.error('check failed', e); msg.textContent = T('Could not check right now — try again.', 'Сейчас проверить не получилось — попробуйте снова.'); });
     }
     if (hasSql) box.querySelector('.sq-all').onclick = function () {
       var p = Promise.resolve();
@@ -413,9 +451,10 @@ Work in progress is kept in localStorage "al.sql". */
       var state = box.querySelector('.sq-ws-state'), btn = box.querySelector('.sq-submit');
       var key = wk();
       btn.disabled = okN < need;
-      state.innerHTML = '<b>' + okN + ' / ' + need + '</b> done' + (m.submitted ? ' · ✅ submitted ' + esc(m.submitted) : '') +
-        (okN < need ? ' · Submit opens when every task is ✅' : '') +
-        (key ? '' : '<br>First time? <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Connect this website to the course bot</a> (once).');
+      state.innerHTML = '<b>' + okN + ' / ' + need + '</b>' + T(' done', ' готово') + (m.submitted ? T(' · ✅ submitted ', ' · ✅ сдано ') + esc(m.submitted) : '') +
+        (okN < need ? T(' · Submit opens when every task is ✅', ' · Кнопка «Сдать» откроется, когда все задания будут ✅') : '') +
+        (key ? '' : T('<br>First time? <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Connect this website to the course bot</a> (once).',
+          '<br>Впервые здесь? <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Подключите этот сайт к боту курса</a> (один раз).'));
     }
     box.querySelector('.sq-submit').onclick = function () {
       var key = wk(), btn = this, state = box.querySelector('.sq-ws-state');
@@ -435,21 +474,25 @@ Work in progress is kept in localStorage "al.sql". */
           (/\.\w+$/.test(t.file || '') ? t.file : own);
         files[name] = { b64: p.b64, type: p.type };
       });
-      btn.disabled = true; state.innerHTML = 'Submitting…';
+      btn.disabled = true; state.innerHTML = T('Submitting…', 'Отправляем…');
       fetch(WORKER + '/submit', { method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ key: key, lesson: spec.lesson, check: spec.check, files: files, ok: m.ok }) })
         .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); })
         .then(function (x) {
           if (x.status === 200) {
             var st = store(); st.sql[spec.check].submitted = new Date().toISOString().slice(0, 10); save(st);
-            state.innerHTML = '✅ Submitted! Your mentor is notified — feedback will appear in 📤 Homework.';
+            state.innerHTML = T('✅ Submitted! Your mentor is notified — feedback will appear in 📤 Homework.', '✅ Сдано! Ментор получил уведомление — отзыв появится в 📤 Homework.');
           } else if (x.status === 401) {
             try { localStorage.removeItem(WK); } catch (e) { /* nothing */ }
-            state.innerHTML = 'This browser is not connected any more. <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Connect again</a>, then tap Submit.';
+            state.innerHTML = T('This browser is not connected any more. <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Connect again</a>, then tap Submit.',
+              'Этот браузер больше не подключён. <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Подключите его снова</a>, затем нажмите «Сдать».');
             btn.disabled = false;
-          } else { state.innerHTML = 'Could not submit (' + esc(x.j.error || x.status) + '). Try again in a minute.'; btn.disabled = false; }
+          } else {
+            state.innerHTML = T('Could not submit', 'Не удалось сдать') + ' (' + esc(x.j.error || x.status) + '). ' + T('Try again in a minute.', 'Попробуйте снова через минуту.');
+            btn.disabled = false;
+          }
         })
-        .catch(function () { state.innerHTML = 'No connection — try again in a minute.'; btn.disabled = false; });
+        .catch(function () { state.innerHTML = T('No connection — try again in a minute.', 'Нет подключения — попробуйте снова через минуту.'); btn.disabled = false; });
     };
     foot();
   }
@@ -465,6 +508,12 @@ Work in progress is kept in localStorage "al.sql". */
     collections_actions: ['one SMS / call / visit to a late borrower', 'action_id', { loan_id: 'loans', collector_id: 'staff' }],
     app_events: ['one tap in the mobile app', 'event_id', { customer_id: 'customers', application_id: 'applications' }],
     dim_date: ['one calendar day', 'date_key', {}]
+  };
+  var ABOUT_RU = {   // the same "what one row is" on a Russian page
+    customers: 'один человек', products: 'один кредитный продукт', branches: 'один офис', staff: 'один сотрудник',
+    applications: 'одна заявка на кредит', loans: 'один выданный кредит', installments: 'один плановый ежемесячный платёж',
+    payments: 'один полученный платёж', collections_actions: 'одно SMS / звонок / визит к заёмщику с просрочкой',
+    app_events: 'одно нажатие в мобильном приложении', dim_date: 'один календарный день'
   };
   var lastEditor = null;
   document.addEventListener('focusin', function (e) { if (e.target.classList && e.target.classList.contains('sq-edit')) lastEditor = e.target; });
@@ -490,25 +539,25 @@ Work in progress is kept in localStorage "al.sql". */
   }
   function fmt(n) { return Number(n).toLocaleString('en').replace(/,/g, ' '); }
   function tableCard(t, mine) {
-    var info = ABOUT[t] || ['a table you made', '', {}];
+    var info = ABOUT[t] || ['a table you made', '', {}], what = ABOUT[t] ? T(info[0], ABOUT_RU[t]) : T(info[0], 'таблица, которую вы создали');
     var rows = play.exec('SELECT COUNT(*) FROM "' + t + '"')[0].values[0][0];
     var cols = play.exec('PRAGMA table_info("' + t + '")')[0].values;   // cid, name, type, notnull, default, pk
     var into = Object.keys(ABOUT).filter(function (o) { return Object.keys(ABOUT[o][2]).some(function (c) { return ABOUT[o][2][c] === t; }); });
     return '<div class="db-t' + (openTables[t] ? ' open' : '') + (mine ? ' mine' : '') + '" data-t="' + esc(t) + '">' +
-      '<button type="button" class="db-row"><span class="db-ico">' + ICON_T + '</span><span class="db-name"><b>' + esc(t) + '</b><small>' + esc(info[0]) + '</small></span>' +
+      '<button type="button" class="db-row"><span class="db-ico">' + ICON_T + '</span><span class="db-name"><b>' + esc(t) + '</b><small>' + esc(what) + '</small></span>' +
       '<span class="db-count">' + fmt(rows) + '</span><span class="db-caret">›</span></button>' +
       '<div class="db-open">' +
-      '<div class="db-acts"><button type="button" class="db-act" data-do="name" data-v="' + esc(t) + '">+ Name</button>' +
+      '<div class="db-acts"><button type="button" class="db-act" data-do="name" data-v="' + esc(t) + '">' + T('+ Name', '+ Имя') + '</button>' +
       '<button type="button" class="db-act" data-do="select" data-v="' + esc(t) + '">+ SELECT</button>' +
-      '<button type="button" class="db-act" data-do="rows" data-v="' + esc(t) + '">Show rows</button></div>' +
+      '<button type="button" class="db-act" data-do="rows" data-v="' + esc(t) + '">' + T('Show rows', 'Показать строки') + '</button></div>' +
       '<div class="db-cols">' + cols.map(function (c) {
         var name = c[1], fk = info[2][name], pk = name === info[1] || c[5];
-        return '<div class="db-c"><button type="button" class="db-cn" data-v="' + esc(name) + '" title="Put in the query">' + esc(name) + '</button>' +
-          (pk ? '<span class="db-k pk" title="primary key: one value per row">PK</span>' : '') +
-          (fk ? '<button type="button" class="db-k fk" data-go="' + esc(fk) + '" title="foreign key: open ' + esc(fk) + '">→ ' + esc(fk) + '</button>' : '') +
+        return '<div class="db-c"><button type="button" class="db-cn" data-v="' + esc(name) + '" title="' + T('Put in the query', 'Вставить в запрос') + '">' + esc(name) + '</button>' +
+          (pk ? '<span class="db-k pk" title="' + T('primary key: one value per row', 'первичный ключ: одно значение на строку') + '">PK</span>' : '') +
+          (fk ? '<button type="button" class="db-k fk" data-go="' + esc(fk) + '" title="' + T('foreign key: open ', 'внешний ключ: открыть ') + esc(fk) + '">→ ' + esc(fk) + '</button>' : '') +
           '<span class="db-ty">' + esc((c[2] || '').toLowerCase()) + '</span></div>';
       }).join('') + '</div>' +
-      (into.length ? '<div class="db-into">Pointed to by: ' + into.map(function (o) { return '<button type="button" class="db-k fk" data-go="' + esc(o) + '">' + esc(o) + '</button>'; }).join(' ') + '</div>' : '') +
+      (into.length ? '<div class="db-into">' + T('Pointed to by: ', 'На неё ссылаются: ') + into.map(function (o) { return '<button type="button" class="db-k fk" data-go="' + esc(o) + '">' + esc(o) + '</button>'; }).join(' ') + '</div>' : '') +
       '</div></div>';
   }
   function fill(drawer) {
@@ -516,11 +565,13 @@ Work in progress is kept in localStorage "al.sql". */
     var names = all ? all.values.map(function (r) { return r[0]; }) : [];
     var mine = names.filter(function (n) { return !ABOUT[n]; }), company = names.filter(function (n) { return ABOUT[n]; });
     var missing = Object.keys(ABOUT).filter(function (n) { return names.indexOf(n) < 0; });
-    drawer.querySelector('.db-sub').textContent = company.length + ' company tables' + (mine.length ? ' · ' + mine.length + ' of yours' : '') + ' · your practice copy';
+    drawer.querySelector('.db-sub').textContent = T(company.length + ' company tables' + (mine.length ? ' · ' + mine.length + ' of yours' : '') + ' · your practice copy',
+      company.length + ' ' + plural(company.length, 'таблица', 'таблицы', 'таблиц') + ' компании' + (mine.length ? ' · ' + mine.length + ' ваших' : '') + ' · ваша учебная копия');
     drawer.querySelector('.db-list').innerHTML =
-      (mine.length ? '<div class="db-sec">Your tables</div>' + mine.map(function (n) { return tableCard(n, true); }).join('') : '') +
-      '<div class="db-sec">Nur Finance tables</div>' + company.map(function (n) { return tableCard(n, false); }).join('') +
-      (missing.length ? '<div class="db-warn">Missing in your copy: ' + missing.map(esc).join(', ') + ' (dropped). Reset brings them back.</div>' : '');
+      (mine.length ? '<div class="db-sec">' + T('Your tables', 'Ваши таблицы') + '</div>' + mine.map(function (n) { return tableCard(n, true); }).join('') : '') +
+      '<div class="db-sec">' + T('Nur Finance tables', 'Таблицы Nur Finance') + '</div>' + company.map(function (n) { return tableCard(n, false); }).join('') +
+      (missing.length ? '<div class="db-warn">' + T('Missing in your copy: ', 'Нет в вашей копии: ') + missing.map(esc).join(', ') +
+        T(' (dropped). Reset brings them back.', ' (удалены). «Сбросить» вернёт их.') + '</div>' : '');
     var q = drawer.querySelector('.db-find').value;
     if (q) filter(drawer, q);
   }
@@ -535,21 +586,26 @@ Work in progress is kept in localStorage "al.sql". */
     });
   }
   function explorer() {
-    var drawer = document.getElementById('sq-db');
-    if (drawer && drawer.dataset.failed) { drawer.remove(); drawer = null; }
+    var drawer = document.getElementById('sq-db'), lang = window.ALLang ? window.ALLang.get() : 'en';
+    if (drawer && (drawer.dataset.failed || drawer.dataset.lang !== lang)) {   // failed, or drawn in the other language: draw it again
+      drawer.remove(); drawer = null;
+      var old = document.getElementById('sq-db-shade');
+      if (old) old.remove();
+    }
     if (drawer) { drawer.classList.toggle('open'); document.body.classList.toggle('db-on', drawer.classList.contains('open')); return; }
     drawer = document.createElement('aside');
     drawer.id = 'sq-db';
     drawer.className = 'open';
-    drawer.setAttribute('aria-label', 'Database');
+    drawer.dataset.lang = lang;
+    drawer.setAttribute('aria-label', T('Database', 'База данных'));
     drawer.innerHTML = '<div class="db-head"><span class="db-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="8" ry="3"/>' +
       '<path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span>' +
-      '<div class="db-title"><b>Nur Finance database</b><span class="db-sub">loading…</span></div>' +
-      '<button type="button" class="db-x" aria-label="Close">✕</button></div>' +
-      '<div class="db-search"><input class="db-find" type="search" placeholder="Find a table or column…" autocomplete="off"></div>' +
-      '<div class="db-list sq-loading">Opening the database…</div>' +
+      '<div class="db-title"><b>' + T('Nur Finance database', 'База данных Nur Finance') + '</b><span class="db-sub">' + T('loading…', 'загрузка…') + '</span></div>' +
+      '<button type="button" class="db-x" aria-label="' + T('Close', 'Закрыть') + '">✕</button></div>' +
+      '<div class="db-search"><input class="db-find" type="search" placeholder="' + T('Find a table or column…', 'Найти таблицу или столбец…') + '" autocomplete="off"></div>' +
+      '<div class="db-list sq-loading">' + T('Opening the database…', 'Открываем базу данных…') + '</div>' +
       '<div class="db-prev" hidden></div>' +
-      '<div class="db-foot"><span>Tap a name to put it in your query.</span><button type="button" class="db-reset">↺ Reset</button></div>' +
+      '<div class="db-foot"><span>' + T('Tap a name to put it in your query.', 'Нажмите на имя, чтобы вставить его в запрос.') + '</span><button type="button" class="db-reset">' + T('↺ Reset', '↺ Сбросить') + '</button></div>' +
       '<div class="db-toast" hidden></div>';
     var shade = document.createElement('div');
     shade.id = 'sq-db-shade';
@@ -573,12 +629,13 @@ Work in progress is kept in localStorage "al.sql". */
         } else if (b.dataset.go) {
           var to = list.querySelector('.db-t[data-t="' + b.dataset.go + '"]');
           if (to) { openTables[b.dataset.go] = true; to.hidden = false; to.classList.add('open', 'db-flash'); to.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(function () { to.classList.remove('db-flash'); }, 1200); }
-        } else if (b.classList.contains('db-cn')) { insert(b.dataset.v); toast(drawer, '“' + b.dataset.v + '” added to your query'); }
-        else if (b.dataset.do === 'name') { insert(b.dataset.v); toast(drawer, '“' + b.dataset.v + '” added to your query'); }
-        else if (b.dataset.do === 'select') { insert('SELECT *\nFROM ' + b.dataset.v + '\nLIMIT 10;', true); toast(drawer, 'A SELECT on ' + b.dataset.v + ' is in your query'); }
+        } else if (b.classList.contains('db-cn') || b.dataset.do === 'name') {
+          insert(b.dataset.v); toast(drawer, T('“' + b.dataset.v + '” added to your query', '«' + b.dataset.v + '» добавлено в запрос'));
+        }
+        else if (b.dataset.do === 'select') { insert('SELECT *\nFROM ' + b.dataset.v + '\nLIMIT 10;', true); toast(drawer, T('A SELECT on ' + b.dataset.v + ' is in your query', 'SELECT из ' + b.dataset.v + ' добавлен в запрос')); }
         else if (b.dataset.do === 'rows') {
           var pv = drawer.querySelector('.db-prev');
-          pv.innerHTML = '<div class="db-prev-h"><b>' + esc(b.dataset.v) + '</b> · first 10 rows <button type="button" class="db-prev-x" aria-label="Close">✕</button></div>' +
+          pv.innerHTML = '<div class="db-prev-h"><b>' + esc(b.dataset.v) + '</b>' + T(' · first 10 rows ', ' · первые 10 строк ') + '<button type="button" class="db-prev-x" aria-label="' + T('Close', 'Закрыть') + '">✕</button></div>' +
             table(run(play, 'SELECT * FROM "' + b.dataset.v + '" LIMIT 10', true));
           pv.hidden = false;
           pv.querySelector('.db-prev-x').onclick = function () { pv.hidden = true; };
@@ -588,14 +645,17 @@ Work in progress is kept in localStorage "al.sql". */
       var rs = drawer.querySelector('.db-reset');
       rs.onclick = function () {
         if (!rs.classList.contains('sure')) {
-          rs.classList.add('sure'); rs.textContent = 'Tap again: undo all my changes';
-          setTimeout(function () { rs.classList.remove('sure'); rs.textContent = '↺ Reset'; }, 4000);
+          rs.classList.add('sure'); rs.textContent = T('Tap again: undo all my changes', 'Нажмите ещё раз: отменить все мои изменения');
+          setTimeout(function () { rs.classList.remove('sure'); rs.textContent = T('↺ Reset', '↺ Сбросить'); }, 4000);
           return;
         }
-        rs.classList.remove('sure'); rs.textContent = '↺ Reset';
-        resetPlay().then(function () { toast(drawer, 'The original data is back'); });
+        rs.classList.remove('sure'); rs.textContent = T('↺ Reset', '↺ Сбросить');
+        resetPlay().then(function () { toast(drawer, T('The original data is back', 'Исходные данные восстановлены')); });
       };
-    }).catch(function () { drawer.querySelector('.db-list').textContent = 'Could not load the data — check the connection and tap Database again.'; drawer.dataset.failed = '1'; });
+    }).catch(function () {
+      drawer.querySelector('.db-list').textContent = T('Could not load the data — check the connection and tap Database again.', 'Не удалось загрузить данные — проверьте подключение и снова нажмите «База данных».');
+      drawer.dataset.failed = '1';
+    });
   }
   function dbButton() {
     var has = document.querySelector('.markdown-section .sq-box, .markdown-section .sq-ws .sq-run, .markdown-section .sq-play');
@@ -603,13 +663,22 @@ Work in progress is kept in localStorage "al.sql". */
     if (!has) { if (btn) btn.hidden = true; var d = document.getElementById('sq-db'); if (d) d.classList.remove('open'); document.body.classList.remove('db-on'); return; }
     if (!btn) {
       btn = document.createElement('button');
-      btn.id = 'sq-db-btn'; btn.type = 'button'; btn.setAttribute('aria-label', 'Database: tables and columns');
+      btn.id = 'sq-db-btn'; btn.type = 'button';
       btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="8" ry="3"/>' +
-        '<path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Database</span>';
+        '<path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span></span>';
       btn.onclick = explorer;
       document.body.appendChild(btn);
     }
+    // the button stays from page to page: its words follow the page's language
+    btn.setAttribute('aria-label', T('Database: tables and columns', 'База данных: таблицы и столбцы'));
+    btn.querySelector('span').textContent = T('Database', 'База данных');
     btn.hidden = false;
+    var d0 = document.getElementById('sq-db');
+    if (d0 && window.ALLang && d0.dataset.lang !== window.ALLang.get()) {   // the panel was drawn in the other language
+      var wasOpen = d0.classList.contains('open');
+      d0.classList.remove('open'); document.body.classList.remove('db-on');
+      if (wasOpen) explorer();   // explorer() draws it again in this language (also on the next tap when it was closed)
+    }
   }
 
   /* ---------- 3. practice questions: a box under each question whose "Answer" fold holds SQL ----------
@@ -645,19 +714,20 @@ Work in progress is kept in localStorage "al.sql". */
   function practice(det) {
     var sum = det.querySelector('summary');
     var pres = det.querySelectorAll('pre[data-lang="sql"]');
-    if (!sum || !/^\s*answer/i.test(sum.textContent) || !pres.length || det.previousElementSibling && det.previousElementSibling.classList.contains('sq-prac')) return;
+    // "Answer" / "Answers" folds; a Russian page says "Ответ" / "Ответы"
+    if (!sum || !/^\s*(answer|ответ)/i.test(sum.textContent) || !pres.length || det.previousElementSibling && det.previousElementSibling.classList.contains('sq-prac')) return;
     var answer = Array.prototype.map.call(pres, function (p) { return (p.querySelector('code') || p).textContent; }).join(';\n');
     var q = det.previousElementSibling, strong = q && q.querySelector('strong'), m = strong && /^(P\d+|[A-Z]\d+)/.exec(strong.textContent.trim());
-    var page = location.hash.replace(/\?.*$/, '') || '#/';
+    var page = location.hash.replace(/\?.*$/, '').replace(/^#\/ru(\/|$)/, '#/') || '#/';   // one key for a page and its Russian copy
     var id = m ? m[1] : 'Q' + (Array.prototype.indexOf.call(document.querySelectorAll('.markdown-section details'), det) + 1);
     var h1 = document.querySelector('.markdown-section h1');
-    var exam = !!(h1 && /checkpoint/i.test(h1.textContent));   // a test day: no checking against the folds before she submits
+    var exam = !!(h1 && /checkpoint|контрольн/i.test(h1.textContent));   // a test day: no checking against the folds before she submits
     var box = document.createElement('div');
     box.className = 'sq-box sq-prac';
-    box.innerHTML = '<div class="sq-top"><span class="sq-lang">YOUR QUERY · ' + esc(id) + '</span><span class="sq-tip">saved in this browser</span>' +
-      '<button type="button" class="sq-reset" hidden>Clear</button></div>' +
-      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="-- write your query here, then Run"></textarea>' +
-      '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button>' + (exam ? '' : '<button type="button" class="sq-check">✔ Check</button>') +
+    box.innerHTML = '<div class="sq-top"><span class="sq-lang">' + T('YOUR QUERY · ', 'ВАШ ЗАПРОС · ') + esc(id) + '</span><span class="sq-tip">' + T('saved in this browser', 'сохраняется в этом браузере') + '</span>' +
+      '<button type="button" class="sq-reset" hidden>' + T('Clear', 'Очистить') + '</button></div>' +
+      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="' + T('-- write your query here, then Run', '-- напишите запрос здесь и нажмите «Выполнить»') + '"></textarea>' +
+      '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button>' + (exam ? '' : '<button type="button" class="sq-check">' + T('✔ Check', '✔ Проверить') + '</button>') +
       '<span class="sq-msg"></span></div><div class="sq-out"></div>';
     det.parentNode.insertBefore(box, det);
     var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out'), msg = box.querySelector('.sq-msg'), clr = box.querySelector('.sq-reset');
@@ -670,31 +740,39 @@ Work in progress is kept in localStorage "al.sql". */
     });
     clr.onclick = function () { ta.value = ''; ta.dispatchEvent(new Event('input')); out.innerHTML = ''; };
     box.querySelector('.sq-run').onclick = function () {
-      if (!ta.value.trim()) { msg.textContent = 'Write a query first.'; return; }
-      out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
+      if (!ta.value.trim()) { msg.textContent = T('Write a query first.', 'Сначала напишите запрос.'); return; }
+      out.innerHTML = '<div class="sq-note sq-loading">' + runningText() + '</div>';
       ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
-        .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the connection and try again.</div>'; });
+        .catch(function () { out.innerHTML = '<div class="sq-err">' + T('Could not load the data — check the connection and try again.', 'Не удалось загрузить данные — проверьте подключение и попробуйте снова.') + '</div>'; });
     };
     if (!exam) box.querySelector('.sq-check').onclick = function () {
-      if (!ta.value.trim()) { msg.textContent = 'Write a query first.'; return; }
-      msg.textContent = 'Checking…';
+      if (!ta.value.trim()) { msg.textContent = T('Write a query first.', 'Сначала напишите запрос.'); return; }
+      msg.textContent = T('Checking…', 'Проверяем…');
       ready().then(function () {
         var want = results(clean, answer), got = results(clean, ta.value);
         var mineRes = run(clean, ta.value, true);
         out.innerHTML = table(mineRes);
-        if (!got.length) { msg.textContent = mineRes.error ? 'The query did not run — see the message below.' : 'No result to compare yet.'; box.classList.add('bad'); return; }
+        if (!got.length) {
+          msg.textContent = mineRes.error ? T('The query did not run — see the message below.', 'Запрос не выполнился — смотрите сообщение ниже.') : T('No result to compare yet.', 'Пока нечего сравнивать.');
+          box.classList.add('bad'); return;
+        }
         var last = got[got.length - 1], hit = -1, loose = -1;
         want.forEach(function (w, i) {
           if (hit < 0 && sameResult(last.r, w.r, w.ordered)) hit = i;
           if (loose < 0 && sameResult(last.r, w.r, false)) loose = i;   // the same rows, sorted differently
         });
-        var part = function (i) { return want.length > 1 ? ' (part ' + (i + 1) + ' of ' + want.length + ')' : ''; };
+        var part = function (i) { return want.length > 1 ? T(' (part ' + (i + 1) + ' of ' + want.length + ')', ' (часть ' + (i + 1) + ' из ' + want.length + ')') : ''; };
         box.classList.toggle('ok', hit >= 0 || loose >= 0); box.classList.toggle('bad', hit < 0 && loose < 0);
-        if (hit >= 0) msg.textContent = '✅ Same result as the answer' + part(hit) + '.';
-        else if (loose >= 0) msg.textContent = '✅ Same rows as the answer' + part(loose) + (last.ordered ? ', in a different order — check the ORDER BY.' : '. The answer also sorts them with ORDER BY.');
-        else if (want.some(function (w) { return w.r.values.length === last.r.values.length; })) msg.textContent = '❌ Same number of rows as the answer, but the columns or values differ.';
-        else msg.textContent = '❌ Not yet — the answer has a different number of rows (you have ' + last.r.values.length + ').';
-      }).catch(function (e) { console.error('practice check failed', e); msg.textContent = 'Could not check right now — try again.'; });
+        if (hit >= 0) msg.textContent = T('✅ Same result as the answer', '✅ Результат совпадает с ответом') + part(hit) + '.';
+        else if (loose >= 0) msg.textContent = T('✅ Same rows as the answer', '✅ Строки совпадают с ответом') + part(loose) + (last.ordered
+          ? T(', in a different order — check the ORDER BY.', ', но в другом порядке — проверьте ORDER BY.')
+          : T('. The answer also sorts them with ORDER BY.', '. В ответе они ещё и отсортированы с помощью ORDER BY.'));
+        else if (want.some(function (w) { return w.r.values.length === last.r.values.length; })) {
+          msg.textContent = T('❌ Same number of rows as the answer, but the columns or values differ.', '❌ Строк столько же, сколько в ответе, но столбцы или значения отличаются.');
+        }
+        else msg.textContent = T('❌ Not yet — the answer has a different number of rows (you have ' + last.r.values.length + ').',
+          '❌ Пока нет — в ответе другое число строк (у вас ' + last.r.values.length + ').');
+      }).catch(function (e) { console.error('practice check failed', e); msg.textContent = T('Could not check right now — try again.', 'Сейчас проверить не получилось — попробуйте снова.'); });
     };
   }
 
@@ -713,12 +791,13 @@ Work in progress is kept in localStorage "al.sql". */
   function playground(pre) {
     var box = document.createElement('div');
     box.className = 'sq-play';
-    box.innerHTML = '<div class="sq-play-chips"><span>Start from:</span>' + STARTERS.map(function (s, i) { return '<button type="button" data-i="' + i + '">' + s[0] + '</button>'; }).join('') + '</div>' +
-      '<div class="sq-box"><div class="sq-top"><span class="sq-lang">SQL · YOUR PRACTICE DATABASE</span><span class="sq-tip">saved in this browser</span>' +
-      '<button type="button" class="sq-reset">Clear</button></div>' +
-      '<textarea class="sq-edit sq-big" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="-- write any SQL here: SELECT, CREATE TABLE, INSERT, UPDATE, DELETE…"></textarea>' +
-      '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button><span class="sq-keys">Ctrl + Enter</span>' +
-      '<button type="button" class="sq-open-db">Database</button></div><div class="sq-out"></div></div>';
+    box.innerHTML = '<div class="sq-play-chips"><span>' + T('Start from:', 'Начать с:') + '</span>' + STARTERS.map(function (s, i) { return '<button type="button" data-i="' + i + '">' + s[0] + '</button>'; }).join('') + '</div>' +
+      '<div class="sq-box"><div class="sq-top"><span class="sq-lang">' + T('SQL · YOUR PRACTICE DATABASE', 'SQL · ВАША УЧЕБНАЯ БАЗА') + '</span><span class="sq-tip">' + T('saved in this browser', 'сохраняется в этом браузере') + '</span>' +
+      '<button type="button" class="sq-reset">' + T('Clear', 'Очистить') + '</button></div>' +
+      '<textarea class="sq-edit sq-big" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="' +
+      T('-- write any SQL here: SELECT, CREATE TABLE, INSERT, UPDATE, DELETE…', '-- пишите здесь любой SQL: SELECT, CREATE TABLE, INSERT, UPDATE, DELETE…') + '"></textarea>' +
+      '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><span class="sq-keys">Ctrl + Enter</span>' +
+      '<button type="button" class="sq-open-db">' + T('Database', 'База данных') + '</button></div><div class="sq-out"></div></div>';
     pre.parentNode.replaceChild(box, pre);
     var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out');
     ta.value = store().playText || STARTERS[0][1];
@@ -732,9 +811,9 @@ Work in progress is kept in localStorage "al.sql". */
     });
     box.querySelector('.sq-run').onclick = function () {
       if (!ta.value.trim()) return;
-      out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
+      out.innerHTML = '<div class="sq-note sq-loading">' + runningText() + '</div>';
       ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
-        .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the connection and try again.</div>'; });
+        .catch(function () { out.innerHTML = '<div class="sq-err">' + T('Could not load the data — check the connection and try again.', 'Не удалось загрузить данные — проверьте подключение и попробуйте снова.') + '</div>'; });
     };
     lastEditor = ta;
     if (window.innerWidth >= 1200) setTimeout(function () { var d = document.getElementById('sq-db'); if (!d || !d.classList.contains('open')) explorer(); }, 300);

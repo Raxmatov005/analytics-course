@@ -4,28 +4,38 @@
   "levels": [
     {
       "name": "Intern",
+      "name_ru": "Стажёр",
       "from": 0,
-      "note": "Welcome to Nur Finance."
+      "note": "Welcome to Nur Finance.",
+      "note_ru": "Добро пожаловать в Nur Finance."
     },
     {
       "name": "Junior Analyst",
+      "name_ru": "Младший аналитик",
       "from": 150,
-      "note": "You query the company's data on your own."
+      "note": "You query the company's data on your own.",
+      "note_ru": "Вы сами пишете запросы к данным компании."
     },
     {
       "name": "Analyst",
+      "name_ru": "Аналитик",
       "from": 400,
-      "note": "Teams send you requests by name."
+      "note": "Teams send you requests by name.",
+      "note_ru": "Команды присылают запросы лично вам."
     },
     {
       "name": "Senior Analyst",
+      "name_ru": "Старший аналитик",
       "from": 750,
-      "note": "You tell the board what the numbers mean."
+      "note": "You tell the board what the numbers mean.",
+      "note_ru": "Вы объясняете правлению, что значат цифры."
     },
     {
       "name": "Lead Analyst",
+      "name_ru": "Ведущий аналитик",
       "from": 1000,
-      "note": "You would hire you."
+      "note": "You would hire you.",
+      "note_ru": "Вы бы сами себя наняли."
     }
   ],
   "badges": [
@@ -33,99 +43,129 @@
       "id": "first-query",
       "icon": "terminal",
       "name": "First query",
-      "how": "HW 1.1 submitted: your tool runs and counts 7 828 loans."
+      "name_ru": "Первый запрос",
+      "how": "HW 1.1 submitted: your tool runs and counts 7 828 loans.",
+      "how_ru": "HW 1.1 сдано: ваш инструмент работает и насчитывает 7 828 кредитов."
     },
     {
       "id": "detective",
       "icon": "search",
       "name": "Detective",
-      "how": "Every problem found in a detective case (week 1 day 4, week 2 day 3 or week 4 day 3)."
+      "name_ru": "Детектив",
+      "how": "Every problem found in a detective case (week 1 day 4, week 2 day 3 or week 4 day 3).",
+      "how_ru": "Найдены все проблемы в детективном деле (неделя 1 день 4, неделя 2 день 3 или неделя 4 день 3)."
     },
     {
       "id": "clean-sheet",
       "icon": "target",
       "name": "Clean sheet",
-      "how": "100 % on any checkpoint."
+      "name_ru": "Без единой ошибки",
+      "how": "100 % on any checkpoint.",
+      "how_ru": "100 % на любой контрольной."
     },
     {
       "id": "on-time",
       "icon": "clock",
       "name": "On time",
+      "name_ru": "Вовремя",
       "how": "Every homework of one week submitted before its deadline.",
+      "how_ru": "Все домашние задания одной недели сданы до срока.",
       "auto": "onTimeWeek"
     },
     {
       "id": "stretch-5",
       "icon": "zap",
       "name": "Stretch hunter",
+      "name_ru": "Охотник за звёздочками",
       "how": "5 stretch tasks done.",
+      "how_ru": "Выполнено 5 задач «со звёздочкой».",
       "auto": "stretch5"
     },
     {
       "id": "stretch-15",
       "icon": "zap",
       "name": "Stretch master",
+      "name_ru": "Мастер звёздочек",
       "how": "15 stretch tasks done.",
+      "how_ru": "Выполнено 15 задач «со звёздочкой».",
       "auto": "stretch15"
     },
     {
       "id": "sql",
       "icon": "database",
       "name": "SQL analyst",
+      "name_ru": "SQL-аналитик",
       "how": "Checkpoints 1–3 average 85 % or more.",
+      "how_ru": "Средний результат контрольных 1–3 — 85 % или выше.",
       "auto": "sqlBlock"
     },
     {
       "id": "excel",
       "icon": "grid",
       "name": "Spreadsheet pro",
+      "name_ru": "Профи таблиц",
       "how": "Checkpoint 4 at 85 % or more.",
+      "how_ru": "Контрольная 4 — 85 % или выше.",
       "auto": "cp4"
     },
     {
       "id": "python",
       "icon": "code",
       "name": "Pythonista",
+      "name_ru": "Питонист",
       "how": "Checkpoint 5 at 85 % or more.",
+      "how_ru": "Контрольная 5 — 85 % или выше.",
       "auto": "cp5"
     },
     {
       "id": "stats",
       "icon": "bell",
       "name": "Statistician",
+      "name_ru": "Статистик",
       "how": "Checkpoint 6 at 85 % or more.",
+      "how_ru": "Контрольная 6 — 85 % или выше.",
       "auto": "cp6"
     },
     {
       "id": "experimenter",
       "icon": "split",
       "name": "Experimenter",
-      "how": "The A/B readout passed with all three traps found."
+      "name_ru": "Экспериментатор",
+      "how": "The A/B readout passed with all three traps found.",
+      "how_ru": "Отчёт по A/B-тесту принят, и все три ловушки найдены."
     },
     {
       "id": "dashboard",
       "icon": "chart",
       "name": "Dashboard builder",
-      "how": "The three-page Power BI dashboard passed."
+      "name_ru": "Создатель дашбордов",
+      "how": "The three-page Power BI dashboard passed.",
+      "how_ru": "Трёхстраничный дашборд в Power BI принят."
     },
     {
       "id": "storyteller",
       "icon": "message",
       "name": "Storyteller",
-      "how": "18 / 20 or more for the capstone story."
+      "name_ru": "Рассказчик",
+      "how": "18 / 20 or more for the capstone story.",
+      "how_ru": "18 / 20 или больше за историю итогового проекта."
     },
     {
       "id": "interview-ready",
       "icon": "briefcase",
       "name": "Interview ready",
+      "name_ru": "Готовность к собеседованию",
       "how": "40 / 50 or more in the mock interview.",
+      "how_ru": "40 / 50 или больше на пробном собеседовании.",
       "auto": "mock40"
     },
     {
       "id": "bug-hunter",
       "icon": "bug",
       "name": "Bug hunter",
-      "how": "You found a real mistake in the course."
+      "name_ru": "Охотник за ошибками",
+      "how": "You found a real mistake in the course.",
+      "how_ru": "Вы нашли настоящую ошибку в курсе."
     }
   ],
   "deviceBadges": [
@@ -133,49 +173,65 @@
       "id": "streak-5",
       "icon": "flame",
       "name": "Streak 5",
-      "how": "5 study days in a row (weekends never break a streak)."
+      "name_ru": "Серия 5",
+      "how": "5 study days in a row (weekends never break a streak).",
+      "how_ru": "5 учебных дней подряд (выходные серию не прерывают)."
     },
     {
       "id": "streak-10",
       "icon": "flame",
       "name": "Streak 10",
-      "how": "10 study days in a row."
+      "name_ru": "Серия 10",
+      "how": "10 study days in a row.",
+      "how_ru": "10 учебных дней подряд."
     },
     {
       "id": "streak-20",
       "icon": "flame",
       "name": "Streak 20",
-      "how": "20 study days in a row."
+      "name_ru": "Серия 20",
+      "how": "20 study days in a row.",
+      "how_ru": "20 учебных дней подряд."
     },
     {
       "id": "perfect",
       "icon": "star",
       "name": "Perfect quiz",
-      "how": "100 % on any day quiz."
+      "name_ru": "Идеальный тест",
+      "how": "100 % on any day quiz.",
+      "how_ru": "100 % в любом тесте дня."
     },
     {
       "id": "sweep",
       "icon": "check",
       "name": "Week sweep",
-      "how": "Every day quiz of one week passed."
+      "name_ru": "Чистая неделя",
+      "how": "Every day quiz of one week passed.",
+      "how_ru": "Пройдены все тесты дня одной недели."
     },
     {
       "id": "chal-5",
       "icon": "zap",
       "name": "Challenger 5",
-      "how": "5 daily challenges in a row (weekends never break it)."
+      "name_ru": "Задачи: 5 подряд",
+      "how": "5 daily challenges in a row (weekends never break it).",
+      "how_ru": "5 задач дня подряд (выходные серию не прерывают)."
     },
     {
       "id": "chal-10",
       "icon": "zap",
       "name": "Challenger 10",
-      "how": "10 daily challenges in a row."
+      "name_ru": "Задачи: 10 подряд",
+      "how": "10 daily challenges in a row.",
+      "how_ru": "10 задач дня подряд."
     },
     {
       "id": "chal-20",
       "icon": "zap",
       "name": "Challenger 20",
-      "how": "20 daily challenges in a row."
+      "name_ru": "Задачи: 20 подряд",
+      "how": "20 daily challenges in a row.",
+      "how_ru": "20 задач дня подряд."
     }
   ],
   "milestones": [
@@ -183,8 +239,10 @@
       "id": "lvl-lead",
       "level": "Lead Analyst",
       "reward": "A reference letter and introductions to hiring managers we know",
+      "reward_ru": "Рекомендательное письмо и знакомство с нанимающими менеджерами, которых мы знаем",
       "size": "big",
-      "what": "Reach the Lead Analyst level"
+      "what": "Reach the Lead Analyst level",
+      "what_ru": "Достигните уровня «Ведущий аналитик»"
     },
     {
       "id": "grand",
@@ -199,8 +257,10 @@
         }
       ],
       "reward": "The grand prize — announced by your mentor",
+      "reward_ru": "Главный приз — его объявит ваш ментор",
       "size": "grand",
-      "what": "Capstone 90 / 100 or more and mock interview 45 / 50 or more"
+      "what": "Capstone 90 / 100 or more and mock interview 45 / 50 or more",
+      "what_ru": "Итоговый проект на 90 / 100 или выше и пробное собеседование на 45 / 50 или выше"
     }
   ],
   "chain": {
@@ -247,23 +307,31 @@
     "menu": [
       {
         "what": "Coffee and a dessert",
+        "what_ru": "Кофе и десерт",
         "about": "≈ 40 000"
       },
       {
         "what": "One month of ChatGPT Plus",
+        "what_ru": "Месяц ChatGPT Plus",
         "about": "≈ 260 000"
       },
       {
         "what": "Clothes of your choice",
-        "about": "from your wallet, e.g. ≈ 300 000"
+        "what_ru": "Одежда на ваш выбор",
+        "about": "from your wallet, e.g. ≈ 300 000",
+        "about_ru": "из кошелька, например ≈ 300 000"
       },
       {
         "what": "Shoes of your choice",
-        "about": "from your wallet, e.g. ≈ 300 000"
+        "what_ru": "Обувь на ваш выбор",
+        "about": "from your wallet, e.g. ≈ 300 000",
+        "about_ru": "из кошелька, например ≈ 300 000"
       },
       {
         "what": "A gift of your choice",
-        "about": "from your wallet, e.g. ≈ 120 000"
+        "what_ru": "Подарок на ваш выбор",
+        "about": "from your wallet, e.g. ≈ 120 000",
+        "about_ru": "из кошелька, например ≈ 120 000"
       }
     ]
   }

@@ -1,0 +1,331 @@
+# Неделя 1 · День 5 — Контрольная: проектирование и запросы
+
+<span class="badge">Часть A 60 мин</span> <span class="badge">Часть B 90 мин</span> <span class="badge">Часть C 20 мин</span> <span class="badge hw">Контрольная · 100 баллов</span>
+
+> STORY **Пятница, 9:00.** Мадина закрывает дверь. *«Сегодня никакого урока. У меня на столе оказались две вещи, и обе я отдаю вам. Первое: генеральный директор хочет новый продукт — авансы зарплаты для сотрудников компаний-партнёров, — и ИТ к понедельнику нужна первая модель данных. Второе: Бекзод, Севара и Тимур прислали мне каждый свой список нужных чисел; я свела их в двадцать вопросов. Спроектируйте таблицы, ответьте на вопросы, а в 15:00 я задам вам восемь вопросов, которые задал бы нанимающий менеджер. Всё, что нужно, вы выучили на этой неделе.»*
+
+## Сегодня в 3 строках :id=today-in-3-lines
+
+- **Часть A (40 баллов):** схема для *Nur Pay* по бизнес-описанию — 4–5 таблиц с ключами и типами, операторы `CREATE TABLE`, два решения по нормализации с объяснением.
+- **Часть B (40 баллов):** двадцать запросов к Nur Finance только на SQL этой недели — `SELECT` по одной таблице, `WHERE`, `ORDER BY`, `DISTINCT`, `TOP`/`LIMIT`, `COUNT(*)`.
+- **Часть C (20 баллов):** восемь вопросов собеседования, ответы письменно, по 3–5 предложений.
+
+**Правила.** Открытая книга: ваши заметки, страницы этой недели, SQL-блоки и песочница. Закрыто: свёрнутые ответы, пока вы не сдали работу. В части B — никаких `JOIN`, `GROUP BY` и подзапросов: если вы их знаете, удержитесь; смысл в том, чтобы показать, что основы усвоены прочно. Сдайте всё через **окно 📎 в конце этой страницы** до конца дня: `nur_pay.md` + `nur_pay.sql` (часть A), `queries.sql` (часть B, у каждого запроса сверху `-- Bn:` и снизу `-- result:`), `interview.md` (часть C).
+
+---
+
+## Часть A — Проектирование Nur Pay (60 мин, 40 баллов) :id=part-a-design-nur-pay-60-min-40-pts
+
+### Описание задачи :id=the-brief
+
+> **Nur Pay — аванс зарплаты.** Nur Finance подписывает договор с **компанией-партнёром** (работодателем). Работодатель передаёт нам список своих **сотрудников**, которые могут пользоваться сервисом, с их месячной зарплатой и днём выплаты. Подключённый сотрудник может запросить **аванс** через приложение в любой день: сумму до определённой доли уже заработанной в этом месяце зарплаты, за фиксированную комиссию. Мы выплачиваем его в тот же день. При ближайшей **выплате зарплаты** работодатель удерживает аванс плюс комиссию из зарплаты сотрудника и переводит нам общую сумму по всем своим сотрудникам одним платежом; мы затем раскладываем этот перевод на **погашение** по каждому авансу. У сотрудника может быть одновременно несколько открытых авансов. Работодатели могут приостановить сервис или уйти; сотрудники меняют работодателя или увольняются. Финансы хотят знать в любой момент: сколько остаётся непогашенным по каждому работодателю, какие авансы не были покрыты последней выплатой зарплаты (сотрудник уволился или выплата оказалась неполной) и комиссионный доход по месяцам.
+
+### Что сдать :id=what-to-deliver
+
+1. **`nur_pay.md`** — список таблиц в формате первого дня (таблица · одна строка — это… · первичный ключ · указывает на), затем **два решения по нормализации**, объяснённые по 3–5 предложений каждое: что-то, что вы сознательно *не* стали хранить в таблице, и почему, и что-то, что вы сознательно *сохранили* избыточно (срез), и почему.
+2. **`nur_pay.sql`** — `CREATE TABLE` для каждой таблицы (диалект SQL Server или SQLite; укажите, какой), с `NOT NULL`, `PRIMARY KEY`, `FOREIGN KEY`. Если создаёте их в своей базе `nur`, добавьте к именам префикс `my_`.
+
+### Оценивание (40) :id=scoring-40
+
+| Критерий | Баллы |
+|---|---|
+| Таблицы покрывают описание: работодатель, сотрудник, аванс, погашение и перевод по выплате зарплаты (как таблица или хорошо обоснованный столбец) | 10 |
+| Ключи: у каждой таблицы есть PK; у каждой связи из описания есть FK в правильном направлении (ключ хранит сторона *многие*) | 10 |
+| Типы и ограничения разумны (деньги как целое/decimal, даты как даты, статусы NOT NULL) | 8 |
+| Решение 1 («не хранится») — настоящий аргумент из 3НФ | 6 |
+| Решение 2 (срез) называет, что пошло бы не так без него | 6 |
+
+<details><summary>Образец ответа (открыть после сдачи)</summary>
+
+| Таблица | Одна строка — это… | PK | FK |
+|---|---|---|---|
+| `employers` | одна компания-партнёр | `employer_id` | — |
+| `employees` | один подключённый сотрудник | `employee_id` | `employer_id` |
+| `payroll_runs` | один перевод работодателя нам по выплате зарплаты | `payroll_run_id` | `employer_id` |
+| `advances` | один выплаченный аванс | `advance_id` | `employee_id` |
+| `repayments` | одно погашение одного аванса из одной выплаты зарплаты | `repayment_id` | `advance_id`, `payroll_run_id` |
+
+Кратность: `employers 1—∞ employees`, `employers 1—∞ payroll_runs`, `employees 1—∞ advances`, `advances 1—∞ repayments` (аванс может быть покрыт двумя выплатами, если первая оказалась неполной), `payroll_runs 1—∞ repayments`.
+
+```sql
+CREATE TABLE my_employers (
+    employer_id   INT          NOT NULL PRIMARY KEY,
+    name          NVARCHAR(200) NOT NULL,
+    tax_id        NVARCHAR(20)  NOT NULL,          -- естественный ключ хранится как столбец, UNIQUE
+    payday_dom    INT          NOT NULL,           -- день месяца, в который выплачивают зарплату
+    status        NVARCHAR(20) NOT NULL,           -- active / paused / terminated
+    contract_start DATE        NOT NULL,
+    contract_end  DATE         NULL
+);
+CREATE TABLE my_employees (
+    employee_id   INT          NOT NULL PRIMARY KEY,
+    employer_id   INT          NOT NULL,
+    customer_id   INT          NULL,                -- ссылка на customers, если сотрудник также клиент Nur Finance
+    full_name     NVARCHAR(200) NOT NULL,
+    phone         NVARCHAR(20) NOT NULL,
+    monthly_salary BIGINT      NOT NULL,            -- текущая зарплата, обновляется файлом от работодателя
+    enrolled_on   DATE         NOT NULL,
+    left_on       DATE         NULL,
+    status        NVARCHAR(20) NOT NULL,
+    FOREIGN KEY (employer_id) REFERENCES my_employers(employer_id)
+);
+CREATE TABLE my_payroll_runs (
+    payroll_run_id INT         NOT NULL PRIMARY KEY,
+    employer_id   INT          NOT NULL,
+    period_month  DATE         NOT NULL,            -- первый день месяца, за который начислена зарплата
+    received_on   DATE         NULL,
+    amount_expected BIGINT     NOT NULL,
+    amount_received BIGINT     NULL,
+    status        NVARCHAR(20) NOT NULL,            -- expected / received / short
+    FOREIGN KEY (employer_id) REFERENCES my_employers(employer_id)
+);
+CREATE TABLE my_advances (
+    advance_id    INT          NOT NULL PRIMARY KEY,
+    employee_id   INT          NOT NULL,
+    requested_at  DATETIME2    NOT NULL,
+    disbursed_on  DATE         NOT NULL,
+    amount        BIGINT       NOT NULL,
+    fee           BIGINT       NOT NULL,
+    salary_at_request BIGINT   NOT NULL,            -- срез, см. решение 2
+    due_payroll_month DATE     NOT NULL,            -- какая выплата зарплаты должна его покрыть
+    status        NVARCHAR(20) NOT NULL,            -- open / repaid / unpaid
+    FOREIGN KEY (employee_id) REFERENCES my_employees(employee_id)
+);
+CREATE TABLE my_repayments (
+    repayment_id  INT          NOT NULL PRIMARY KEY,
+    advance_id    INT          NOT NULL,
+    payroll_run_id INT         NOT NULL,
+    amount        BIGINT       NOT NULL,
+    allocated_on  DATE         NOT NULL,
+    FOREIGN KEY (advance_id)     REFERENCES my_advances(advance_id),
+    FOREIGN KEY (payroll_run_id) REFERENCES my_payroll_runs(payroll_run_id)
+);
+```
+
+**Решение 1 — не хранится:** название, день выплаты и статус работодателя *не* лежат в `advances` или `employees` помимо `employer_id`. Каждый аванс доходит до своего работодателя через сотрудника; хранить название работодателя в 50 000 авансов было бы нарушением 3НФ, и когда компания переименуется, изменятся 50 000 строк. Точно так же `repayments` не несёт сотрудника: цепочки аванс → сотрудник достаточно.
+
+**Решение 2 — хранится избыточно:** `salary_at_request` в авансе. Строго говоря, зарплата принадлежит сотруднику (3НФ). Но зарплата *меняется* — работодатель присылает новый файл каждый месяц, — а одобренный нами лимит был рассчитан по зарплате *на тот момент*. Без среза вы не сможете позже объяснить, почему был разрешён аванс в 4 000 000, или провести аудит правила лимита. Та же логика у `amount_expected` в выплате зарплаты: это то, что работодатель был должен, зафиксированное, даже если сотрудники потом уйдут. Срез — это избыточность, выбранная намеренно и помеченная как таковая.
+
+Три вопроса Финансов соответствуют: остаток по работодателю = `advances` со `status = 'open'`, просуммированные через сотрудника → работодателя; непокрытые авансы = `advances`, для `due_payroll_month` которых есть строка `payroll_runs` со статусом `received`/`short`, но нет (или есть неполная) строка `repayments`; комиссионный доход по месяцам = сумма `fee` по месяцу `disbursed_on`.
+
+Допустимая альтернатива: без таблицы `payroll_runs`, где `repayments` несёт `employer_transfer_ref` и `received_on` — теряется вопрос «выплата оказалась неполной»; стоит 7/10 по первому критерию.
+
+</details>
+
+---
+
+## Часть B — Двадцать запросов (90 мин, 40 баллов) :id=part-b-twenty-queries-90-min-40-pts
+
+По два балла за каждый: 1 за запрос, который выполняется и выражает вопрос, 1 за верный результат. Ожидаемые числа даны для поставляемого набора данных (2026-10-01). Сложность растёт; не застревайте — пропускайте и возвращайтесь.
+
+**B1.** Сколько клиентов в таблице? · **B2.** Сколько кредитов закрыто (closed)? · **B3.** Сколько заявок отменено (cancelled)?
+
+<details><summary>B1–B3</summary>
+
+```sql
+SELECT COUNT(*) FROM customers;                               -- 6040
+SELECT COUNT(*) FROM loans WHERE status = 'closed';           -- 4242
+SELECT COUNT(*) FROM applications WHERE status = 'cancelled'; -- 1817
+```
+
+</details>
+
+**B4.** Выведите различные регионы клиентов по алфавиту. Сколько их? · **B5.** У скольких клиентов не указан доход? · **B6.** Сколько кредитов с principal не менее 100 000 000?
+
+<details><summary>B4–B6</summary>
+
+```sql
+SELECT DISTINCT region FROM customers ORDER BY region;         -- 8: Andijan, Bukhara, Fergana, Namangan, Nukus, Samarkand, Tashkent, Termez
+SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;   -- 356
+SELECT COUNT(*) FROM loans WHERE principal >= 100000000;       -- 996
+```
+
+</details>
+
+**B7.** Клиенты сегмента affluent, живущие в Tashkent. · **B8.** Клиенты, у которых фамилия оканчивается на `ova`. · **B9.** Платежи по графику со сроком в октябре 2026 (месяц, который начинается с даты, на которую актуальны данные).
+
+<details><summary>B7–B9</summary>
+
+```sql
+SELECT COUNT(*) FROM customers WHERE segment = 'affluent' AND region = 'Tashkent';          -- 487
+SELECT COUNT(*) FROM customers WHERE last_name LIKE '%ova';                                 -- 2447
+SELECT COUNT(*) FROM installments WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';     -- 3392
+```
+B8: 2 447 из 2 924 женщин — остальные носят фамилии на `eva` (Abdullaeva, Mirzaeva). `LIKE '%ova'` — это текстовый шаблон, а не «женщина»: скажите, что именно вы измерили.
+
+</details>
+
+**B10.** Заявки, поданные в календарном 2025 году. Осторожно с типом столбца. · **B11.** Платежи больше 10 000 000.
+
+<details><summary>B10–B11</summary>
+
+```sql
+SELECT COUNT(*) FROM applications
+WHERE applied_at >= '2025-01-01' AND applied_at < '2026-01-01';   -- 5407
+SELECT COUNT(*) FROM payments WHERE amount > 10000000;            -- 7759
+```
+B10 с `BETWEEN '2025-01-01' AND '2025-12-31'` даёт 5 388 — теряются 19 заявок от 31 декабря, поданных после 00:00 (у `applied_at` есть часть со временем). Ноль баллов за результат, если число меньше 5 407 по этой причине; один балл за запрос, если вы написали комментарий, что знали об этом.
+
+</details>
+
+**B12.** Визиты взыскания, закончившиеся обещанием заплатить. · **B13.** События `contract_signed` с устройств iOS. · **B14.** Кредиты, которые не Micro (1) и не BNPL (3) и идут 24 месяца или дольше.
+
+<details><summary>B12–B14</summary>
+
+```sql
+SELECT COUNT(*) FROM collections_actions WHERE action_type = 'visit' AND outcome = 'promise_to_pay'; -- 381
+SELECT COUNT(*) FROM app_events WHERE event_name = 'contract_signed' AND device = 'ios';             -- 944
+SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;                     -- 1511
+```
+
+</details>
+
+**B15.** Списанные кредиты с классом риска C или D — и для проверки все списанные кредиты. · **B16.** Заявки с кредитным баллом выше 800, которые были отклонены (и сколько всего набрали выше 800).
+
+<details><summary>B15–B16</summary>
+
+```sql
+SELECT COUNT(*) FROM loans WHERE risk_grade IN ('C', 'D') AND status = 'written_off';   -- 128
+SELECT COUNT(*) FROM loans WHERE status = 'written_off';                                -- 190
+SELECT COUNT(*) FROM applications WHERE credit_score > 800 AND status = 'rejected';     -- 6
+SELECT COUNT(*) FROM applications WHERE credit_score > 800;                             -- 108
+```
+B15: 128 из 190 списаний (67 %) приходятся на два худших класса — скоринговая карта работает, но 62 списания пришли из A и B. B16: 6 из 108 лучших по баллу были отклонены; риск-аналитик захотел бы узнать почему (правило вне балла или ошибка в данных).
+
+</details>
+
+**B17.** Клиенты, которые **не** (сегмент mass **или** в Tashkent), то есть клиенты не из mass за пределами Tashkent. Напишите через `NOT (…)`, затем перепишите без `NOT` и убедитесь, что количество то же.
+
+<details><summary>B17</summary>
+
+```sql
+SELECT COUNT(*) FROM customers WHERE NOT (segment = 'mass' OR region = 'Tashkent');          -- 1481
+SELECT COUNT(*) FROM customers WHERE segment <> 'mass' AND region <> 'Tashkent';             -- 1481
+```
+Закон де Моргана: `NOT (a OR b)` = `NOT a AND NOT b`. Засчитываются обе формы; вторую вы будете читать в чужом коде.
+
+</details>
+
+**B18.** Три самых крупных платежа за всё время: id платежа, id кредита, сумма, дата.
+
+<details><summary>B18</summary>
+
+```sql
+-- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id;
+SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id LIMIT 3;
+```
+Платежи 30772, 30773, 30774 — все по 57 170 000, все по кредиту 4570 (SME-кредит на 598 450 000 из P9 второго дня), 2025-01-26 / 02-27 / 03-27. Три одинаковые суммы подряд — не дубликат: это три последовательных платежа по графику. (У платежа 30775 по тому же кредиту та же сумма, поэтому третье место — ничья; `payment_id` в `ORDER BY` делает три строки одинаковыми в обеих СУБД.) (Напишите это предложение; в нём разница между подсчётом и анализом.)
+
+</details>
+
+**B19.** Самый ранний и самый поздний выданный кредит (два запроса): id кредита, дата, principal.
+
+<details><summary>B19</summary>
+
+```sql
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LIMIT 1;   -- 4185, 2024-01-02, 1 250 000
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;   -- 596,  2026-10-01, 2 510 000
+```
+(`TOP 1` в SQL Server.) Последний приходится на саму дату, на которую актуальны данные: данные доведены до дня, когда их выгрузили.
+
+</details>
+
+**B20.** Клиенты, зарегистрированные в 2026 году, с ежемесячным доходом выше 20 000 000, сначала самые богатые. Сколько их и кто первый? Внимательно посмотрите на первую строку.
+
+<details><summary>B20</summary>
+
+```sql
+SELECT customer_id, first_name, last_name, monthly_income, registered_at
+FROM customers
+WHERE registered_at >= '2026-01-01' AND monthly_income > 20000000
+ORDER BY monthly_income DESC;                                                -- 258 строк
+```
+Первая строка: клиент **6016**, `Bobur␣ rakhimov`, 59 962 504 — id выше 6000 с пробелом в конце и фамилией в нижнем регистре: одна из вчерашних сорока дублирующих строк. «Самый богатый новый клиент 2026 года» — это ошибка ввода, копия существующего клиента. Полный балл — только если ваша строка `-- result:` так и говорит.
+
+</details>
+
+---
+
+## Часть C — Восемь вопросов собеседования (20 мин, 20 баллов) :id=part-c-eight-interview-questions-20-min-20-pts
+
+Отвечайте письменно, по 3–5 предложений, так, как сказали бы вслух. 2.5 балла за вопрос: 1 за правильность, 1 за кредитный пример, 0.5 за изложение простыми словами.
+
+1. Проведите меня по жизни кредита и скажите, где на каждом шаге фиксируются данные.
+2. Чем первичный ключ отличается от внешнего? Приведите по одному примеру из кредитной базы.
+3. Что значит «нормализовано», и приведите один пример проблемы, которую нормализация предотвращает.
+4. Что такое DPD и чем FPD отличается от него? Почему компании отслеживают FPD отдельно?
+5. Две команды сообщают разную долю одобрений за один и тот же месяц. Какова самая вероятная причина?
+6. Чем OLTP отличается от OLAP и зачем компании обе?
+7. Объясните схему «звезда» нетехническому руководителю.
+8. Что такое кредитный портфель, и назовите три числа, за которыми следит портфельный менеджер.
+
+<details><summary>Образцы ответов (открыть после сдачи)</summary>
+
+1. Заявка → решение → выдача → погашение → просрочка → взыскание → списание/возврат. Каждому шагу соответствует таблица: `applications` (и её `status`/балл для решения), `loans` (выдача), `installments` + `payments` (погашение; просрочка вычисляется из них), `collections_actions` и `loans.status` для списания. По одной метрике на шаг: заявок в день, доля одобрений, выданная сумма, уровень взыскания, корзины DPD, доля возвратов в график, NPL/доля списаний.
+2. PK однозначно определяет строку и не может быть пустым (`loans.loan_id`); FK — это столбец, содержащий PK другой таблицы и связывающий строку с её родителем (`loans.customer_id` → `customers`). FK гарантирует, что кредит не может указывать на несуществующего клиента; у одного клиента может быть много кредитов — «один ко многим».
+3. Каждый факт хранится один раз, в той таблице, к которой он относится, чтобы он не мог стать несогласованным. Пример: если бы процентная ставка продукта хранилась в каждой строке кредита, изменение ставки означало бы обновление тысяч строк и пропуск некоторых; в 3НФ ставка лежит в `products`, а кредиты хранят только id продукта. Также никаких повторяющихся групп столбцов вроде `inst1_due, inst2_due …` — платежи по графику становятся строками.
+4. DPD = дни с даты платежа самого старого не полностью оплаченного платежа по графику, сгруппированные в 0 / 1–30 / 31–60 / 61–90 / 90+ (90+ — неработающие). FPD = первый платёж по графику не оплачен в течение X дней (обычно 30). FPD отслеживают отдельно, потому что он проявляется в течение двух месяцев после выдачи — раннее предупреждение для новых продуктов, каналов или правил скоринга задолго до того, как сдвинется корзина 90+, — и потому что неоплата самого первого платежа — классический сигнал мошенничества.
+5. Разные знаменатели: одна команда включает отменённые заявки в базу (все заявки), другая считает только те, по которым принято решение (одобренные + отклонённые). В Nur Finance это 61.4 % против 70.5 % на одних и тех же данных. Вторая частая причина: считать «одобренными» только выданные кредиты вместо всех одобрений. Решение — письменное определение, которым пользуются все, и указание, какое именно, когда называете число.
+6. OLTP — боевая система, записывающая транзакции: нормализованная, быстрая на запись отдельных строк, хранит текущее состояние. OLAP предназначен для анализа — копия в хранилище, денормализованная в факты и измерения, хранит историю и срезы, рассчитана на большие чтения. Компании нужны обе, потому что тяжёлые отчёты на боевой базе тормозят бизнес и не могут показать остаток на конец прошлого месяца после того, как он перезаписан.
+7. «Представьте одну большую таблицу событий — каждый кредит — посередине, только с числами и кодами. Вокруг неё — маленькие справочники, которые объясняют коды: какой клиент, какой продукт, какой филиал, какая дата. Любой вопрос — „сложить число в середине, разбив по чему-то с краю“: выданная сумма по региону по месяцам. На бумаге это выглядит как звезда.»
+8. Портфель — это все кредиты, которые сейчас в обороте, вместе взятые. Портфельный менеджер следит за: остатком долга и его ростом, выдачами за месяц (и средним чеком) и качеством — PAR30/90 или долей в корзине 90+, плюс доходностью. В Nur Finance: 3 352 активных кредита, 3 051 выдан в 2026 году, 190 списаны на сегодня.
+
+</details>
+
+---
+
+## Оценка и что дальше :id=scoring-and-what-happens-next
+
+| Часть | Баллы | Проходной |
+|---|---|---|
+| A — проектирование | 40 | |
+| B — запросы | 40 | |
+| C — собеседование | 20 | |
+| **Итого** | **100** | **≥ 70 → Неделя 2 в понедельник** |
+
+Ниже 70: в обратной связи будут названы разделы, которые нужно переделать на выходных (обычно операторы Дня 2 или нормальные формы Дня 3); перед началом Недели 2 в понедельник утром пересдайте проваленную часть. Баллы попадают на [страницу прогресса](progress.md). Если вы пропустили Неделю 1 через диагностику Дня 0, эта контрольная — ваше доказательство, порог тот же.
+
+**Чек-лист сдачи** (окно 📎 ниже): `nur_pay.md`, `nur_pay.sql`, `queries.sql` (20 запросов, 20 строк `-- result:`), `interview.md`. Также сегодня срок у HW 1.3 (записка о качестве данных) в `day-4/`.
+
+Мадина, 17:30: *«Финансовый директор использовал ваши 6 000. ИТ получили модель Nur Pay. У Бекзода есть его двадцать чисел. В понедельник мы научим вас соединять таблицы — и двадцати вопросам, которые он на самом деле хотел задать.»*
+
+---
+
+### 📎 Сдайте здесь :id=hand-in-here
+
+```sqltask
+{"check": "handin-W1D5", "lesson": "W1D5", "title": "Checkpoint 1", "tasks": [{"id": "nur_pay.md", "file": "nur_pay.md", "text": true, "minLines": 3, "q": "Напишите здесь `nur_pay.md` — то, что просит страница выше."}, {"id": "queries.sql", "file": "queries.sql", "text": true, "minLines": 3, "q": "Напишите здесь `queries.sql` — то, что просит страница выше."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Всё остальное, что перечислено на странице (ещё один файл или .zip из нескольких)."}]}
+```
+
+---
+
+## Тест дня :id=day-quiz
+
+Чтобы завершить день, наберите 80 %. Пересдавать можно сколько угодно раз.
+
+```quiz
+{"id": "w01d5", "pass": 0.8, "questions": [
+  {"type": "single", "q": "В Nur Pay у одного сотрудника может быть несколько авансов. Где находится внешний ключ?", "options": ["advances.employee_id", "employees.advance_id", "В обеих таблицах", "В столбце со списком всех id авансов в строке сотрудника"], "answer": 0, "explain": "Ключ хранит сторона «многие»; список id в одной ячейке к тому же нарушил бы 1НФ (→ Часть A, оценивание)."},
+  {"type": "single", "q": "Аванс может быть покрыт двумя выплатами зарплаты (первая оказалась неполной), а одна выплата зарплаты покрывает много авансов. Как это смоделировать?", "options": ["Таблица repayments, одна строка на аванс на выплату, с FK и на advances, и на payroll_runs", "Столбец payroll_run_id в advances", "Столбец advance_id в payroll_runs", "Хранить даты выплат в текстовом столбце у сотрудника"], "answer": 0, "explain": "Как payments с двумя FK (кредит и платёж по графику): связующая таблица хранит по строке на каждую пару (→ Часть A; День 3, раздел 1)."},
+  {"type": "single", "q": "Строго говоря, зарплата принадлежит сотруднику. Когда правильно также хранить salary_at_request в каждом авансе?", "options": ["Никогда — это нарушает 3НФ", "Когда зарплата может измениться позже, а вам по-прежнему нужно объяснить лимит, одобренный в тот момент", "Только чтобы сэкономить соединение", "Когда у сотрудника больше одного аванса"], "answer": 1, "explain": "Срез — это избыточность, выбранная намеренно: без него файл с зарплатами на следующий месяц перезапишет факт, на котором основывалось решение (→ Часть A; День 3, P9)."},
+  {"type": "single", "q": "Какое предложение WHERE возвращает те же строки, что и это?", "code": "WHERE NOT (segment = 'mass' OR region = 'Tashkent')", "options": ["WHERE segment <> 'mass' OR region <> 'Tashkent'", "WHERE segment <> 'mass' AND region <> 'Tashkent'", "WHERE NOT segment = 'mass' OR region = 'Tashkent'", "WHERE segment = 'mass' AND region = 'Tashkent'"], "answer": 1, "explain": "Закон де Моргана: NOT (a OR b) = NOT a AND NOT b (→ B17)."},
+  {"type": "number", "q": "Сколько строк этой небольшой таблицы насчитывает запрос?", "code": "id | segment  | region\n1  | mass     | Tashkent\n2  | affluent | Tashkent\n3  | mass     | Nukus\n4  | sme      | Fergana\n5  | affluent | Bukhara\n\nSELECT COUNT(*) FROM t\nWHERE NOT (segment = 'mass' OR region = 'Tashkent');", "answer": 2, "explain": "Только строки 4 и 5 не mass и не в Tashkent; 4 — ответ, который получится, если превратить OR в OR NOT (→ B17)."},
+  {"type": "single", "q": "Что считает этот фильтр?", "code": "SELECT COUNT(*) FROM customers\nWHERE last_name LIKE '%ova';", "options": ["Всех женщин", "Клиентов, у которых фамилия оканчивается на «ova»", "Фамилии, начинающиеся на «ova»", "Фамилии, где «ova» встречается где угодно"], "answer": 1, "explain": "% означает любые символы перед; это текстовый шаблон, а не «женщина» (фамилии на -eva пропускаются), поэтому скажите, что вы измерили (→ B8)."},
+  {"type": "single", "q": "Три самых крупных платежа — одинаковые суммы по одному кредиту, внесённые с разницей в месяц. Какое объяснение наиболее вероятно?", "options": ["Дублирующая загрузка — два нужно удалить", "Три последовательных платежа по графику одного размера", "Ошибка валюты", "Схема мошенничества"], "answer": 1, "explain": "Одинаковые ежемесячные суммы — это то, что даёт аннуитетный график; проверьте даты, прежде чем называть что-то дубликатом (→ B18)."},
+  {"type": "multi", "q": "Какие из этих ошибок дают неверное число без сообщения об ошибке?", "options": ["Смешивание AND и OR без скобок", "Запись = NULL вместо IS NULL", "BETWEEN '…-01-01' AND '…-12-31' для столбца, в котором есть ещё и время", "Опечатка в названии столбца", "Забытая строка FROM"], "answer": [0, 1, 2], "explain": "Первые три выполняются и тихо возвращают неверный счёт; последние две падают громко, а это более безопасный вид ошибки (→ День 2, раздел 1)."}
+]}
+```
+
+<!-- challenge:start -->
+
+---
+
+## Задача дня :id=daily-challenge
+
+Бонус для любознательных: один более сложный вопрос по теме дня. Решите его и получите XP, которые растут вместе с серией задач; полная неделя из пяти задач добавляет ещё 10 % к ваучеру в пятницу.
+
+```challenge
+{"id": "w01d5", "q": "У Нилуфар новая заявка от Murod Abdullaev, клиент 3710. Все кредиты под id 3710 текущие. Прежде чем она примет решение, проверьте человека целиком: найдите все строки клиентов, которые являются этим же человеком, выведите все кредиты под этими id и укажите наибольший DPD среди них на 2026-10-01 (целое число).", "type": "number", "dp": 0, "h": ["ad57f847e0f18d31d838991b"], "hint": "Имя — не ключ: в таблице больше одного Murod Abdullaev.", "sol": "0KjQsNCzIDEg4oCUINC00LLQvtC50L3QuNC6ICjQlNC10L3RjCA0KToKU0VMRUNUIGN1c3RvbWVyX2lkLCBmaXJzdF9uYW1lLCBsYXN0X25hbWUsIGJpcnRoX2RhdGUsIHBob25lIEZST00gY3VzdG9tZXJzCldIRVJFIExPV0VSKFRSSU0oZmlyc3RfbmFtZSkpID0gJ211cm9kJyBBTkQgTE9XRVIoVFJJTShsYXN0X25hbWUpKSA9ICdhYmR1bGxhZXYnOwrihpIgOCDRgdGC0YDQvtC6OyDRgtC+0LvRjNC60L4gMzcxMCAoTXVyb2QgQWJkdWxsYWV2KSDQuCA2MDE0IChNVVJPRCBhYmR1bGxhZXYpINGB0L7QstC/0LDQtNCw0Y7RgiDQv9C+INC00LDRgtC1INGA0L7QttC00LXQvdC40Y8gMTk2OS0wOS0yOSDQuCDRgtC10LvQtdGE0L7QvdGDICs5OTg5MDQ1MDUxNDYuCtCo0LDQsyAyIOKAlCDQutGA0LXQtNC40YLRiyAo0JTQtdC90YwgMik6ClNFTEVDVCBsb2FuX2lkLCBjdXN0b21lcl9pZCwgc3RhdHVzLCBkaXNidXJzZWRfYXQgRlJPTSBsb2FucyBXSEVSRSBjdXN0b21lcl9pZCBJTiAoMzcxMCwgNjAxNCk7CuKGkiA1MjMgYWN0aXZlLCA4NjUg0LggNjU1NSBjbG9zZWQgKNC/0L7QtCAzNzEwKTsgMTIxNyBhY3RpdmUg0LggNjc4MyBkZWZhdWx0ICjQv9C+0LQgNjAxNCkuCtCo0LDQsyAzIOKAlCBEUEQg0LLRgNGD0YfQvdGD0Y4gKNCU0LXQvdGMIDMpINC/0L4g0LrRgNC10LTQuNGC0YMgNjc4MzoKU0VMRUNUIGluc3RhbGxtZW50X2lkLCBpbnN0YWxsbWVudF9ubywgZHVlX2RhdGUsIHRvdGFsX2R1ZSBGUk9NIGluc3RhbGxtZW50cyBXSEVSRSBsb2FuX2lkID0gNjc4MzsKU0VMRUNUIGluc3RhbGxtZW50X2lkLCBwYWlkX2F0LCBhbW91bnQgRlJPTSBwYXltZW50cyBXSEVSRSBsb2FuX2lkID0gNjc4MzsK4oaSINC/0LvQsNGC0ZHQtiDQv9C+INCz0YDQsNGE0LjQutGDIDEg0L7Qv9C70LDRh9C10L0g0L/QvtC70L3QvtGB0YLRjNGOOyDQv9C70LDRgtGR0LYgMiAo0YHRgNC+0LogMjAyNi0wNi0xMSwgNCAzMDAgMjAwKSDQv9C+0LvRg9GH0LjQuyDRgtC+0LvRjNC60L4gMSA1NjQgNjk1OyDQv9C70LDRgtC10LbQuCAzINC4IDQg0L7Qv9C70LDRh9C10L3RiyDRh9Cw0YHRgtC40YfQvdC+OyA1INC90LUg0L7Qv9C70LDRh9C10L0uINCh0LDQvNGL0Lkg0YHRgtCw0YDRi9C5INC90LUg0L/QvtC70L3QvtGB0YLRjNGOINC+0L/Qu9Cw0YfQtdC90L3Ri9C5OiAyMDI2LTA2LTExIOKGkiAxOSArIDMxICsgMzEgKyAzMCArIDEgPSAxMTIg0LTQvdC10LkuINCe0YHRgtCw0LvRjNC90YvQtSDRh9C10YLRi9GA0LUg0LrRgNC10LTQuNGC0LAg0YLQtdC60YPRidC40LUgKERQRCAwKS4KKFNRTCDQvtC00LjQvdCw0LrQvtCyINCyIFNRTGl0ZSDQuCBTUUwgU2VydmVyLikK0KfQtdC70L7QstC10LosINGB0LrRgNGL0LLQsNGO0YnQuNC50YHRjyDQt9CwINGH0LjRgdGC0YvQvCDQvdCwINCy0LjQtCBpZCAzNzEwLCDQuNC80LXQtdGCINC/0L7RgtGA0LXQsdC40YLQtdC70YzRgdC60LjQuSDQutGA0LXQtNC40YIg0LIg0LTQtdGE0L7Qu9GC0LUg0YHQviAxMTIg0LTQvdGP0LzQuCDQv9GA0L7RgdGA0L7Rh9C60LgsINGB0L/RgNGP0YLQsNC90L3Ri9C5INC/0L7QtCDQtNGD0LHQu9C40YDRg9GO0YnQtdC5INGB0YLRgNC+0LrQvtC5LiDQoNC10YjQtdC90LjQtSwg0L/RgNC40L3Rj9GC0L7QtSDRgtC+0LvRjNC60L4g0L/QviBpZCDQutC70LjQtdC90YLQsCwg0L/RgNC+0L/Rg9GB0YLQuNC70L4g0LHRiyDRjdGC0L4g4oCUINC00YPQsdC70LjQutCw0YLRiyDQvdC10LHQtdC30L7QsdC40LTQvdGLLg=="}
+```
+
+<!-- challenge:end -->
