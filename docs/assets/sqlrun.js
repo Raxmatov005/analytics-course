@@ -755,11 +755,15 @@ Work in progress is kept in localStorage "al.sql". */
       if (ws.length) {
         var box = ws[ws.length - 1];
         box.id = 'hand-in';
-        if (/[?&]id=hand-in\b/.test(location.hash)) setTimeout(function () {
-          box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          box.classList.add('sq-ws-here');
-          setTimeout(function () { box.classList.remove('sq-ws-here'); }, 2600);
-        }, 350);
+        if (/[?&]id=hand-in\b/.test(location.hash)) {
+          var land = function () { if (Math.abs(box.getBoundingClientRect().top - 16) > 40) box.scrollIntoView({ behavior: 'auto', block: 'start' }); };
+          setTimeout(function () {
+            land();
+            box.classList.add('sq-ws-here');
+            setTimeout(function () { box.classList.remove('sq-ws-here'); }, 2600);
+          }, 350);
+          [900, 1800, 3000].forEach(function (ms) { setTimeout(land, ms); });   // pictures above load late and push the box down
+        }
       }
     });
   });
