@@ -117,7 +117,7 @@ Windows never reduce rows; `GROUP BY` always does; the pattern `SUM(SUM())` is t
 ### Depth (optional)
 
 - ▶ Baraa, *Window functions basics* [8:50:11](https://youtu.be/SSKVgrwhzus?t=31811&end=35220), *Window aggregate* [9:47:00](https://youtu.be/SSKVgrwhzus?t=35220&end=39189) — ~2 h; SQL Server, every keyword identical here.
-- RU deck `2.3 SQL.pdf` — window pages. *Russian terms:* оконные функции = window functions, секция = partition, рамка окна = frame, накопительный итог = running total, скользящее среднее = moving average.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.3 SQL.pdf` — window pages. *Russian terms:* оконные функции = window functions, секция = partition, рамка окна = frame, накопительный итог = running total, скользящее среднее = moving average.
 
 ---
 
@@ -167,6 +167,7 @@ FROM loans WHERE customer_id = 3208;
 -- 4265 · 568 200 000 · total 1 023 170 000 · avg 511 585 000 · n 2  (loan 7606 the same)
 ```
 Without the `WHERE`: total 404 783 280 000, average 51 709 668, n 7 828 on every row. `WHERE` runs first, so the window only sees the customer's two loans.
+
 </details>
 
 **P2.** Outstanding by **risk grade** with share of total, one decimal. Which grade carries the most money, and is that what the grade *counts* would suggest?
@@ -181,6 +182,7 @@ GROUP BY l.risk_grade ORDER BY outstanding DESC;
 -- B 93 317 343 066 / 1457 loans / 44.7 % · C 56 322 842 888 / 1040 / 27.0 · A 48 417 895 338 / 754 / 23.2 · D 10 665 423 138 / 158 / 5.1
 ```
 B holds 45 % of the money on 43 % of the owing loans; D is 5 % of the book — small, as a cut-off should make it.
+
 </details>
 
 **P3.** Outstanding by **product × grade** with the grade's share *inside its product*. In which product is grade C the largest share?
@@ -195,6 +197,7 @@ WHERE i.due_date > '2026-10-01' GROUP BY p.code, l.risk_grade ORDER BY p.code, l
 -- MICRO C 35.2 % (A 22.7 · B 40.0 · D 2.1); BNPL C 31.4; CONS 30.8; AUTO 28.9; SME 25.3
 ```
 Twenty rows; each product's four shares add to 100. Micro carries the most grade-C weight — the app product, consistent with the FPD finding of week 2.
+
 </details>
 
 **P4.** 2026 monthly disbursement (all products, January–September) with: share of the nine-month total, running YTD, and each month as % of the best month.
@@ -213,6 +216,7 @@ FROM m ORDER BY month;
 -- … 2026-08 13.8 / 144 464 810 000 / 100.0 · 2026-09 10.5 / 161 480 300 000 / 76.3
 ```
 Three windows, three frames: `OVER ()` for the total and the max, `OVER (ORDER BY month)` for the running sum. The half-open filter keeps 1 October out — leave it in and "September YTD" quietly becomes 162.3 bn.
+
 </details>
 
 **P5.** Bekzod's second ask: per **product**, monthly 2026 disbursement with running YTD — the running sum must restart per product.
@@ -228,6 +232,7 @@ FROM m ORDER BY code, month;
 -- AUTO: Jan 4 620 560 000 → ytd Sep 36 021 820 000 · SME: Jan 10 042 990 000 → ytd Sep 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL → 2 431 040 000
 ```
 45 rows (5 products × 9 months). Forget `PARTITION BY code` and Auto's September "YTD" includes every other product's January.
+
 </details>
 
 **P6.** How many loans are **above their product's average** principal? (Window in a derived table, filter outside.)
@@ -242,6 +247,7 @@ GROUP BY code;
 -- AUTO 189 of 391 · BNPL 787 of 1569 · CONS 1212 of 2418 · MICRO 1331 of 2669 · SME 400 of 781   (3 919 in all)
 ```
 `WHERE principal > AVG(principal) OVER (...)` is an error — windows do not exist yet when `WHERE` runs. Wrap, then filter. Roughly half above average in every product: the ticket sizes are symmetric, no long tail of giants.
+
 </details>
 
 **P7.** Three-month moving average of monthly disbursement for 2025-01 to 2026-09, plus the number of months in each window. Which month is furthest above its moving average?
@@ -260,6 +266,7 @@ SELECT * FROM w WHERE month >= '2025-01' ORDER BY month;
 -- 2025-07: 14 590 460 000 vs ma3 11 240 216 667 → +29.8 % (the furthest); 2025-08 +24.0 %; 2026-03 19 657 410 000 vs 16 334 543 333 → +20.3 %
 ```
 Two CTEs: the window runs in `w` over the **whole** series, the display filter sits in the outer query. Put `WHERE month >= '2025-01'` inside `w` instead and `WHERE` runs *before* the window: January 2025 averages one month, February two — `months_in_window` shows 1 and 2 instead of 3. Filter the frame's input and the display separately, always.
+
 </details>
 
 **P8.** Payments of loan 1 with each payment's share of the loan's total collected and the running collected amount, ordered by date. What does the running column show about April–May 2026?
@@ -275,6 +282,7 @@ FROM payments WHERE loan_id = 1 ORDER BY paid_at;
 -- 18 payments of 1 741 700 = 31 350 600; each 5.6 %; running climbs by one instalment a month, except 2026-02-26 → 2026-04-25 (nothing in March) then two in May
 ```
 The March instalment was paid 45 days late (week 2's loan 1 story) — visible as a flat step in the running total, then a catch-up. A running total is the quickest picture of a payment history.
+
 </details>
 
 **P9.** Schedule of loan 1: per instalment, cumulative principal due and the **remaining principal** after it (principal − cumulative principal). On which instalment does the remaining balance drop below half?
@@ -289,6 +297,7 @@ FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.loan_id = 1 OR
 -- no 1 remaining 30 187 050 … no 13 → 16 570 510 · no 14 → 15 243 073 (below 15 575 000 = half) … no 24 → 0
 ```
 Annuity: principal parts grow (962 950 → 1 698 725), so half the balance is gone only after instalment 14 of 24. "Outstanding = instalments not yet due" is exactly this column read on the as-of date.
+
 </details>
 
 **P10.** Collected per month in 2026 (payments, from `payments`) with a running total — then say in one line why "collected YTD 125.7 bn" and "disbursed YTD 161.5 bn" are not comparable.
@@ -302,6 +311,7 @@ FROM payments WHERE paid_at >= '2026-01-01' AND paid_at < '2026-10-01' GROUP BY 
 -- Jan 11 759 005 976 … Sep 16 339 462 407; ytd 125 703 885 377
 ```
 Collected includes interest and repays loans from 2024–2025; disbursed is principal of new loans. Different populations, different content — a ratio of the two is not a collection rate (Day 4 builds the real one).
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Concentration curve of customers: rank borrowers by outstanding, and show the cumulative share of outstanding held by the top 10, top 25 and top 25 % of borrowers. Then the same idea for branches: how much of the book do the top three hold?
@@ -318,13 +328,14 @@ FROM c ORDER BY outstanding DESC;
 -- 2 535 borrowers; row 1: customer 3208, 977 697 006, 0.47 % ; row 10 cumulative 3.60 %; row 25 cumulative 7.80 %
 ```
 A running sum divided by a grand total — two windows with different frames in one expression. The top quarter of borrowers (634 people, via `NTILE(4)` tomorrow) holds 82.7 % of outstanding; the bottom quarter 0.5 %. For branches the same query on T5's table gives cumulative 13.8 → 26.6 → **39.1 %** after three rows — the Company corner reads it.
+
 </details>
 
 ---
 
 ## 4. Homework <span class="badge hw">HW 3.1 — Due Day 3</span>
 
-**Bekzod's share-and-trend pack.** Submit to `submissions/week-03/day-1/`:
+**Bekzod's share-and-trend pack.** Hand in with the 📎 box below:
 
 1. `shares.sql` — three queries, each with `GROUP BY` + a window: outstanding and share of total by product, by branch (with share in region), by grade. `-- result:` under each with the top row and a check line that the shares add to 100.
 2. `trend.sql` — (a) 2026 monthly disbursement with running YTD and share of the nine months (P4); (b) the same per product with the running sum restarting per product (P5); (c) 3-month moving average of monthly disbursement 2025-01..2026-09 with the window count column (P7), and one line naming the month furthest above its average.

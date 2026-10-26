@@ -14,7 +14,7 @@
 
 ## Part A — The capstone presentation (100 points)
 
-**Submit by 9:00** to `submissions/week-08/day-5/`:
+**Hand in by 9:00** with the 📎 box below:
 
 | File | What |
 |---|---|
@@ -78,6 +78,7 @@ GROUP BY p.code ORDER BY disbursed DESC;
 | BNPL | 66 | 276 590 000 | 4 190 758 |
 
 Check aloud: 361 loans, 17 015 490 000 in total — the September figure you know. Say: half-open date range, not `BETWEEN`.
+
 </details>
 
 **T2 (medium, 5 min).** Monthly approval rate of the **app** channel, April–September 2026, cancelled applications excluded; show the cancelled count too.
@@ -105,6 +106,7 @@ GROUP BY 1 ORDER BY 1;
 | 2026-09 | 224 | 32 | 66.7 |
 
 The interviewer's follow-up: *"September is the lowest — a problem?"* Answer: with ~190 decisions a month a swing of ±3 points is noise (a 95 % interval on 66.7 % is about ±7 points); and September's last days may still have applications without a decision.
+
 </details>
 
 **T3 (harder, 6 min).** For each branch, the loan officer with the most approved applications in January–September 2026 (all channels). Show ties.
@@ -141,6 +143,7 @@ ORDER BY r.approved DESC, b.branch_name;
 | Nukus Central | Nodira Abdullaev | 43 |
 
 11 rows for 10 branches: Fergana has a **tie** — `RANK` keeps both, `ROW_NUMBER` would silently pick one. Two "Sanjar Ergashev" are **different people** (different `staff_id`, Fergana and Namangan): group by the id, display the name. The follow-up: *"Is the top officer the best?"* — not without FPD of their loans; most approvals can mean the loosest approvals.
+
 </details>
 
 **T4 (hardest, 6 min).** Repeat borrowing: for customers whose first loan was in 2025, by quarter of the first loan — customers, how many took a second loan within 6 months of the first, and the rate.
@@ -173,6 +176,7 @@ GROUP BY 1 ORDER BY 1;
 | 2025-Q4 | 443 | 160 | 36.1 |
 
 What earns the points: the first loan is found **before** filtering to 2025 (filter inside `ranked` and every customer's first 2025 loan looks like a first loan); `loan_id` breaks ties on the same day; the `LEFT JOIN` keeps customers with no second loan; and the observability check said aloud — even a first loan of 31 December 2025 reaches 6 months on 30 June 2026, before the as-of, so every cell is complete. SQL Server: `DATEADD(month, 6, first_at)`, `DATEPART(quarter, first_at)`.
+
 </details>
 
 **Scoring B2 (20):** T1 3, T2 5, T3 6, T4 6. Each: correct result (60 %), the check said aloud (20 %), the trap named (20 %). A query that runs but answers a different question scores 0 for that task — ask before you write.
@@ -194,6 +198,7 @@ Five minutes to structure aloud, eight to go through it, two for the recommendat
 **5. What you recommend.** If a cell is found: fix or stop that cell (pause the campaign, block the pattern, patch the release), notify collections to call those loans in the first week. If it is mix: decide with risk whether the new segment pays (unit economics, break-even FPD ≈ 2.5 % on Micro under our assumptions). Either way: a guardrail line on the weekly report and a definition note.
 
 **Close in two sentences:** *"First I would check it is not one or two defaults on a small vintage or a definition change. If it is real, I would locate it by version, source and score band and separate mix from rate; then fix the cell or re-price the segment, and add FPD by app version to the weekly monitor."*
+
 </details>
 
 **Scoring B3 (10):** checks reality and size before causes (3); a structure that is MECE (3); names the data and tables (2); ends with a recommendation and a monitor (2).
@@ -262,7 +267,7 @@ Avoid as first questions: salary and holidays (later, with HR), "what does the c
 | Capstone (Part A) | 100 |
 | Mock interview (Part B) | 50 |
 
-The mentor's written feedback goes to `submissions/week-08/day-5/FEEDBACK.md` — the capstone by rubric line, the interview block by block with the two things to practise first. Points are added to the progress page. Then the real ones: send the CV, keep the portfolio link in it, and keep `docs/company/interview.md` open the evening before every interview.
+The mentor's written feedback comes in 📤 Homework — the capstone by rubric line, the interview block by block with the two things to practise first. Points are added to the progress page. Then the real ones: send the CV, keep the portfolio link in it, and keep `docs/company/interview.md` open the evening before every interview.
 
 ---
 

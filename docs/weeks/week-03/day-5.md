@@ -10,7 +10,7 @@
 - **Part B (20 pts):** eight interview questions on this week's material, answered in writing.
 - Allowed: everything from weeks 1–3, including the three HW 3.2 views (ship `views.sql` with the report so the reviewer can run it).
 
-**Rules.** Open book: your pages, your files, your tool. Closed: the model-answer folds until you submit. Submit to **`submissions/week-03/day-5/`**: `report.md` (ten numbered sections; each = the query in a code block, the first rows as a Markdown table, 1–3 sentences of findings), `report.sql` (the same queries, `-- S1:` … `-- S10:` headers), `interview.md`. Also due today: **HW 3.2** in `day-4/`. All numbers as of **2026-10-01**; use `v_payments_clean` wherever payments are summed.
+**Rules.** Open book: your pages, your files, your tool. Closed: the model-answer folds until you submit. Hand in with the **📎 box at the end of this page**: `report.md` (ten numbered sections; each = the query in a code block, the first rows as a Markdown table, 1–3 sentences of findings), `report.sql` (the same queries, `-- S1:` … `-- S10:` headers), `interview.md`. Also due today: **HW 3.2** in `day-4/`. All numbers as of **2026-10-01**; use `v_payments_clean` wherever payments are summed.
 
 **Working method.** For each section: say the grain before the query; name *share of what* and *period* in every sentence; a count next to every rate; half-open date filters; a window for shares and running totals, a CTE chain where you aggregate twice; and one finding per section that Bekzod could read aloud — not a description of the table.
 
@@ -70,6 +70,7 @@ UNION ALL SELECT 'staff', COUNT(*) FROM staff UNION ALL SELECT 'dim_date', COUNT
 | branches / products / staff / dim_date | 10 / 5 / 100 / 1 461 | dimensions |
 
 **Finding.** The fact tables are `loans` (7 828), `installments` (11.8 per loan) and `payments`; `payments` carries 25 duplicate rows and `loans` 12 impossible disbursement dates (week 2), so the report reads payments through `v_payments_clean`. (SQL Server: `sys.tables` + `sys.partitions`, or `INFORMATION_SCHEMA.TABLES`, lists the same without eleven `UNION`s.)
+
 </details>
 
 ### S2. Dimensions — products, branches, grades, channels
@@ -88,6 +89,7 @@ UNION ALL SELECT 'status', status, COUNT(*), ROUND(100.0 * COUNT(*) / SUM(COUNT(
 Products: MICRO 2 669 (34.1 %) · CONS 2 418 (30.9) · BNPL 1 569 (20.0) · SME 781 (10.0) · AUTO 391 (5.0). Grades: A 1 821 (23.3) · B 3 404 (43.5) · C 2 264 (28.9) · D 339 (4.3). Channels (of loans): branch 3 590 (45.9) · app 2 669 (34.1) · partner 1 569 (20.0). Status: active 3 352 · closed 4 242 · default 44 · written_off 190. Branches: 10 in 8 regions (three in Tashkent); customer segments mass 3 585 · sme 1 251 · affluent 1 204.
 
 **Finding.** Each channel sells one kind of product — app = Micro, partner = BNPL, branch = Consumer/Auto/SME — so "channel" and "product" are almost the same cut; compare them with care. (The window-over-`GROUP BY` share runs inside each `UNION ALL` branch separately — check that each block adds to 100.)
+
 </details>
 
 ### S3. Date range — first/last disbursement, as-of
@@ -103,6 +105,7 @@ SELECT (SELECT MIN(disbursed_at) FROM loans) AS first_disbursed, (SELECT MAX(dis
 ```
 
 **Finding.** The book is 33 months old (January 2024 to 1 October 2026) and the schedule runs to October 2030 (48-month Auto loans). `MAX(paid_at)` = 2026-11-24 is **after** the as-of date: 24 forward-dated payments (week 2 T23) — every payment sum in this report is filtered `paid_at <= '2026-10-01'`. Seven scalar subqueries in one row is a legitimate use of the scalar form.
+
 </details>
 
 ### S4. Key measures — the totals
@@ -122,6 +125,7 @@ SELECT (SELECT COUNT(*) FROM loans) AS loans, (SELECT COUNT(DISTINCT customer_id
 Through the clean view and the as-of filter the collected total is 255 061 333 229 — raw `payments` says 255 173 169 976: 58.4 m of duplicates and 53.4 m of forward-dated rows removed. Quote the clean figure and say so.
 
 **Finding.** 404.8 bn UZS lent to 4 335 borrowers in 7 828 loans (average ticket 51.7 m, average term 11.8 months); 208.7 bn is still outstanding — half of everything ever lent, because the book nearly doubled each year (86.5 → 155.9 → 162.3 bn in nine months). Scheduled interest over the life of the book is 122.5 bn, 23 % of the total due (527.3 bn). 73 % of loans go to repeat borrowers.
+
 </details>
 
 ### S5. Magnitude — by product, branch, region
@@ -140,6 +144,7 @@ FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.code ORDE
 By region (same shape, `GROUP BY b.region`): Tashkent 3 020 loans / 160.5 bn / **39.7 %** · Fergana 12.7 · Samarkand 11.2 · Andijan 9.5 · Namangan 8.6 · Bukhara 6.9 · Nukus 5.8 · Termez 5.7. Outstanding by branch and the 60.3 / 27.6 / 11.0 / 0.5 / 0.5 product mix: Day 1.
 
 **Finding.** Two books in one: by count a Micro/Consumer/BNPL retail lender (85 % of loans), by money an SME/Auto lender (80 % of principal). The ticket ratio is 100 : 1 (SME 309 m vs Micro 2.7 m). Tashkent's three branches are 39–40 % by every measure.
+
 </details>
 
 ### S6. Ranking — top and bottom
@@ -158,6 +163,7 @@ SELECT branch_name, loans, disbursed_2026, RANK() OVER (ORDER BY disbursed_2026 
 Top borrowers by total principal (`GROUP BY customer_id`, `ORDER BY … LIMIT 5`): Murod Yusupov (sme) 5 loans / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000. Largest loan per product (`ROW_NUMBER` top-1): SME 2861 599 060 000 · AUTO 1501 399 530 000 · CONS 1464 49 990 000 · BNPL 7 990 000 (four tied) · MICRO 4 990 000 (four tied).
 
 **Finding.** Fergana Central is the second-largest branch in 2026 by money with fewer loans than four others — SME-heavy. Termez is last at 38 % of the leader. Every product's biggest loans sit at its `max_amount`: the limits bind, so growth comes from count, not ticket.
+
 </details>
 
 ### S7. Change over time — monthly disbursements, 3-month moving average
@@ -190,6 +196,7 @@ SELECT * FROM w WHERE month >= '2026-01' ORDER BY month;
 By year: 2024 1 736 loans / 86.5 bn · 2025 3 041 / 155.9 bn · 2026 (nine months + one day) 3 051 / 162.3 bn.
 
 **Finding.** The 3-month average climbed from 16.6 bn (Jan) to 20.0 bn (Sep), +20 % in nine months, while single months swing ±30 % (February −32 % month-on-month and still +20 % year-on-year). Read the trend on the moving average and the growth on year-on-year; never on one month. 2026 has already out-lent the whole of 2025.
+
 </details>
 
 ### S8. Cumulative — running outstanding
@@ -207,6 +214,7 @@ FROM v_portfolio_monthly WHERE month >= '2026-01-01' AND month < '2026-10-01' GR
 Without the view: a recursive month calendar and, per month, `SUM(principal_due)` of instalments with `due_date >= next_month` for loans with `disbursed_at < next_month` (Day 4). Cumulative disbursed by year as a running total: 86.5 → 242.4 → 404.8 bn (`SUM(SUM(principal)) OVER (ORDER BY year)`).
 
 **Finding.** The book grew 56 bn (+37 %) in nine months, from 151.8 to 208.2 bn, while 161.5 bn was disbursed: about two thirds of new lending replaces repayments. Net growth is lumpy (+2.3 bn in February, +10.2 bn in August) and follows the SME months. Loans with a balance rose from 2 579 to 3 392.
+
 </details>
 
 ### S9. Performance — DPD buckets, FPD30, roll rates
@@ -232,6 +240,7 @@ FROM v_loan_status GROUP BY bucket ORDER BY MIN(dpd);
 PAR30 **3.12 %** (6.51 bn), NPL90 **2.55 %** (5.32 bn, 234 loans = 44 default + 190 written off). FPD30 (week 2's block on `v_payments_clean`): 91 of 7 099 = **1.28 %**; app 1.70 % vs branch 1.04 % vs partner 1.12 %; by grade A 0.60 · B 0.97 · C 2.16 · D 2.23 %. Roll rates 1 Sep → 1 Oct (Day 2): 1–30 → 31–60 **19.5 %**, 1–30 → cured **75.8 %**, 31–60 → 61–90 69.6 %, 61–90 → 90+ 100 %, 117 new entries into 1–30 (3.8 % of performing loans). Vintage (Day 3): worst cohort 2025-10, 6.91 % ever-30+ at MOB 3 and 11.52 % at MOB 6, against a pooled 2025 curve of 4.35 % / 7.46 %.
 
 **Finding.** 5.4 % of outstanding is delinquent, and 2.55 of those 3.12 PAR30 points are already 90+ — the at-risk book is old debt, not a fresh wave. The live collections caseload (1–90 DPD, 165 loans, 5.9 bn) cures three times out of four in the first bucket and almost never after 60 days. The scorecard orders FPD, write-offs (0.7 → 8.8 %) and vintage curves (A 3.1 % vs D 19.1 % at MOB 6) alike; the app channel runs 1.6× the branch FPD.
+
 </details>
 
 ### S10. Part-to-whole and segmentation — mix, income bands × grade
@@ -255,6 +264,7 @@ GROUP BY income_band ORDER BY MIN(COALESCE(c.monthly_income, -1));
 Mix (S5): count share vs money share by product; outstanding mix 60.3 / 27.6 / 11.0 / 0.5 / 0.5 (Day 1); concentration — top-3 branches 39.1 %, top borrower 0.47 %, top decile of borrowers 49.2 %.
 
 **Finding.** Income does **not** predict grade here: the C+D share is 32–35 % in every band, including the 466 loans to customers with no income on file, and the average ticket barely moves (48–55 m). Either the scorecard does not use income or the data has it only weakly — a question for Nilufar, and a reminder that the NULL band must be shown, not dropped. The book's concentration is in products and one city, not in people.
+
 </details>
 
 ---
@@ -282,6 +292,7 @@ Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per
 6. A view stores the query text — always fresh, costs its query every time (12.8 s for `v_portfolio_monthly`); a table stores the result — instant, frozen at load (0 s). Power BI reads **views** (or nightly tables built from them) so that one DPD definition serves every tile; `v_loan_status` = one row per loan with DPD, bucket, outstanding, days on book, 7 828 rows reconciling to 208 723 504 430.
 7. Cost: disk space and slower inserts/updates; benefit: a filter or join on the indexed column becomes a seek instead of a scan (`SCAN payments` → `SEARCH … USING INDEX ix_payments_loan`). It cannot help when a function wraps the column — `strftime('%Y-%m', due_date) = '2026-09'`, `LOWER(method) = 'card'` — or with `LIKE '%x'`; rewrite as a half-open range or clean the data in a view.
 8. Never `DELETE` on your own authority. Define sameness explicitly (`installment_id, paid_at, amount`), list the duplicates with `ROW_NUMBER`, show the owner the rows and the money (25 rows, 58 397 800), check the downstream effect (DPD buckets unchanged; collections overstated), publish a de-duplicated **view** (`v_payments_clean`, `rn = 1`, earliest id kept) for all reporting, and propose a unique constraint at load so it cannot recur. The raw table stays as evidence.
+
 </details>
 
 ---
@@ -294,9 +305,9 @@ Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per
 | B — 8 questions × 2 + definitions note | 20 | |
 | **Total** | **100** | **≥ 70 → Week 4 on Monday** |
 
-Below 70: feedback names the sections to redo (most often S8 — the month-end outstanding — and S9's definitions); re-submit Monday morning before Week 4. Points go to `docs/progress.md`.
+Below 70: feedback names the sections to redo (most often S8 — the month-end outstanding — and S9's definitions); re-submit Monday morning before Week 4. Points go to the [Progress page](progress.md).
 
-**Submission checklist** — `submissions/week-03/day-5/`: `report.md` (10 sections, each with query + first rows + finding), `report.sql` (`-- S1:` … `-- S10:`), `views.sql` (copied from HW 3.2 so the report runs), `interview.md` (definitions note + 8 answers). Also due today: **HW 3.2** in `day-4/` (`views.sql`, `dictionary.md`, `checks.sql`).
+**Hand-in checklist** (the 📎 box below): `report.md` (10 sections, each with query + first rows + finding), `report.sql` (`-- S1:` … `-- S10:`), `views.sql` (copied from HW 3.2 so the report runs), `interview.md` (definitions note + 8 answers). Also due today: **HW 3.2** in `day-4/` (`views.sql`, `dictionary.md`, `checks.sql`).
 
 <span class="badge stretch">Stretch</span> Baraa's *Advanced analytics* project (▶ [28:30:38](https://youtu.be/SSKVgrwhzus?t=102638&end=107244)) adds change-over-time, cumulative, performance-vs-target, part-to-whole and segmentation reports in SQL Server on his SalesDB. Redo his "performance vs target" idea on ours: each product's 2026 monthly disbursement against its own 2025 monthly average (`AVG(...) OVER (PARTITION BY product)` on the 2025 rows, joined), flagged above/below.
 

@@ -180,67 +180,89 @@ File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P8, sheet `Charts` f
 **P1.** The worked-example pivot, plus **Average** of `principal` as a fifth value. Which product has the largest ticket, and why would "Average of outstanding" be the wrong number to show next to it?
 
 <details><summary>Answer</summary>
+
 SME 308 728 745 · Auto 216 858 133 · Consumer 26 926 915 · BNPL 4 170 880 · Micro 2 705 586 — 100 : 1 between SME and Micro. *Average of outstanding* divides by all loans including the 4 242 closed ones with 0 — a meaningless 26.7 m overall; filter `status = active` (60 681 393) or say "per loan with a balance". Averages in pivots are averages over the *rows in the group*, so the rows must be the right population.
+
 </details>
 
 **P2.** Disbursements by month of 2026: Rows `disbursed_at` grouped by **Months**, Values Count of `loan_id`, Sum of `principal`, then the same sum as **Running Total In** disbursed_at and as **Difference From** (previous). Filter the year to 2026.
 
 <details><summary>Answer</summary>
+
 Jan 287 / 17 452 370 000 … Sep 361 / 17 015 490 000, Oct 21 / 852 760 000; running total reaches **162 333 060 000** in October (161 480 300 000 at end-September). Differences: Feb **−5 558 520 000** (−31.8 %), Mar +7 763 560 000 (+65.3 %), Apr −1 762 440 000, May +636 860 000, Jun −2 481 530 000, Jul +4 643 570 000 (+28.9 %), Aug +1 596 340 000, Sep −5 274 720 000 (−23.7 %), Oct −16 162 730 000 (one day — never show a partial month in a difference column without saying so). Week 3 S7's `LAG`, as a dropdown.
+
 </details>
 
 **P3.** The bucket × status cross-tab as a pivot (Rows `bucket`, Columns `status`, Values Count), then with `bucket` filtered to exclude `0`. Read off the 90+ column and the "closed" row.
 
 <details><summary>Answer</summary>
+
 Row totals 7 429 / 124 / 25 / 16 / 234 = 7 828. 90+ = 44 default + 190 written_off; `closed` has 13 in 1-30 and 1 in 31-60 (14 of the 15 week-2 closed-but-owing loans; the fifteenth is in bucket 0). Buckets sort as text (`0`, `1-30`, `31-60`, `61-90`, `90+`) — which happens to be the right order here; for labels that do not sort naturally, drag rows by hand or add a sort-key column.
+
 </details>
 
 **P4.** Region → branch: Rows `region` then `branch`, Values Sum of `outstanding` twice, the second as **% of Parent Row Total**. What are Tashkent's three branches' shares of Tashkent, and what does the same column show on the region rows?
 
 <details><summary>Answer</summary>
+
 Tashkent Central **35.2 %**, Tashkent South 32.8 %, Tashkent North 32.0 % (of Tashkent's 81 679 738 071); every single-branch region shows 100 % under its branch. On the region rows the column shows the share of the **grand total** — Tashkent 39.1 %, Fergana 11.9 %, Samarkand 11.8 % … Termez 5.1 % — because the region's parent is the whole table. One field, two levels of `PARTITION BY`.
+
 </details>
 
 **P5.** Top-5 branches by outstanding: Rows `branch`, Value Filter → **Top 10** → Top 5 by Sum of outstanding, sorted descending; and the share of the book they carry (a formula on the pivot's total vs `SUM(tblLoans[outstanding])`).
 
 <details><summary>Answer</summary>
+
 Tashkent Central 28 716 674 373 · Tashkent South 26 787 392 136 · Tashkent North 26 175 671 562 · Fergana Central 24 797 334 197 · Samarkand Central 24 655 889 676; pivot total 131 132 961 944 = **62.8 %** of 208 723 504 430. A Top-N filtered pivot's Grand Total is the total of the *shown* rows — the reason the share needs the Table's sum in the denominator, not the pivot's.
+
 </details>
 
 **P6.** Add a slicer on `product` and a timeline on `disbursed_at`, connected to the P2 and P5 pivots. Set the timeline to **Q3 2026** and the slicer to **Small business loan**. Count and amount? Then clear both.
 
 <details><summary>Answer</summary>
+
 **114** SME loans in July–September 2026 (all products: 1 086); read the amount off your pivot. The P5 pivot re-ranks under the filter (Fergana Central climbs — SME-heavy, week 3 S6). Clear with the slicer's corner icon; a page left filtered is the most common "the numbers are wrong" call on a Monday morning. Slicers filter the pivot, not the Table, so a check on the Table cannot see them — put the pivot's grand total next to the Table's `SUM` as a visible pair: equal means unfiltered.
+
 </details>
 
 **P7.** A calculated field: with Tuesday's `rate` column on `tblLoans`, add `run_rate = outstanding * rate / 12` and show it by product. Then try `avg_ticket = principal / loan_id` — what happens, and what is the fix?
 
 <details><summary>Answer</summary>
+
 SME 2 727 680 419 · Auto 1 153 685 427 · Consumer 576 373 333 · Micro 33 463 723 · BNPL 0 — total **4 491 202 901** a month (Tuesday's `SUMPRODUCT`). `principal / loan_id` *divides the sum of principal by the sum of the ids* — nonsense without an error. Fix: a column `one` = 1 in the data and `= principal / one`, or just *Average of principal* in Values. Calculated fields see sums, never counts.
+
 </details>
 
 **P8.** Six `GETPIVOTDATA` cells above the pivots: total outstanding, SME outstanding, loans in 90+, Tashkent Central outstanding, September 2026 principal, 2026 running total. Then sort a pivot differently — do the cells survive?
 
 <details><summary>Answer</summary>
+
 `=GETPIVOTDATA("outstanding", $A$20)` → 208 723 504 430; `=GETPIVOTDATA("outstanding", $A$20, "product", "Small business loan")` → 125 892 942 411; `=GETPIVOTDATA("loan_id", $A$40, "bucket", "90+")` → 234; and so on — the first argument is the *field name*, the second any cell in the pivot. They survive sorting and filtering because they address by name, which a `=B22` reference does not. They break (`#REF!`) if the item is filtered out by a slicer — the honest result.
+
 </details>
 
 **P9.** Four charts for Madina from P1–P5: a sorted bar (outstanding by product), a line of monthly disbursements over all 34 months from `monthly_disbursements.csv` (pivot: month → Sum of amount) with a **3-month moving average** (Chart Design → Add Chart Element → Trendline → Moving Average, period 3), a stacked column of delinquent loans by product and bucket (dpd > 0), and a top-5 bar. Give each a finding title.
 
 <details><summary>Answer</summary>
+
 Titles, for example: *"SME is 60 % of the book on 10 % of the loans"*; *"Disbursements climbed from 3.9 bn (Jan 2024) to a 20 bn run-rate — read the 3-month average, not the month"*; *"Consumer and Micro carry most late loans; SME carries the money"* (90+: Consumer 77 · Micro 76 · BNPL 42 · SME 29 · Auto 10); *"Three Tashkent branches plus Fergana and Samarkand hold 63 % of outstanding"*. The line chart's **October** point must be dropped or marked (one day, 0.85 bn — it looks like a crash). Bars from zero; no legend on the single-series charts; red only for 90+.
+
 </details>
 
 **P10.** Sparklines: a pivot of `monthly_disbursements.csv` with products in Rows and 2026 months in Columns (Sum of amount), a sparkline per row with high and low points, same axis for all. Which product is most volatile, and which looks volatile only because its axis is its own?
 
 <details><summary>Answer</summary>
+
 SME swings 6.0 → 15.4 bn (Feb → Jul) — the most volatile and the biggest. With *Same for All Sparklines*, Micro (0.20–0.35 bn) and BNPL (0.19–0.33) flatten to a line; with each row on its own axis they look as jagged as SME. Auto 1.8–6.2 bn is the second mover. Sparklines compare *shape*; the axis setting decides whether they also compare *size* — state which in the column header.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** On yesterday's merged `installments_paid` query, a pivot with `due_month` in Rows, Sum of `total_due`, Sum of `paid`, and a **calculated field** `rate = paid / total_due` (as `0.0%`). Does it reproduce the Company corner table? Add a slicer on `product` (merge it in from `Loans` first) — which product collects worst in September?
 
 <details><summary>Answer</summary>
+
 Yes: Jun 96.9 · Jul 96.7 · Aug 96.5 · **Sep 94.1 %** — a ratio of sums, so the calculated field is right here. By product in September, read your pivot: Micro and Consumer run below the book, SME above, BNPL (no interest) near the top — and quote the counts with the rates, because a product with 66 September instalments moves by a point when one is unpaid.
+
 </details>
 
 ### Mistakes that cost a point this week

@@ -154,7 +154,7 @@ An **A/A test** (*A/A-тест*) splits units into two groups that receive the *
 - ▶ Power calculations (also p-hacking) — [p-hacking and power calculations (StatQuest), 14:12](https://youtu.be/UFhJefdVCjE?t=852)
 - ▶ Sample size in an A/B setting (RU) — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 17:57](https://youtu.be/FEI1OA-zgb8?t=1077&end=1482)
 
-- RU deck `Непараметрические тесты_latest.pdf` (lesson 5.5): normality checks and log-transform pp. 9–12, which test to choose pp. 13–14, ranks and Mann–Whitney pp. 15–16, Wilcoxon for paired samples pp. 17–18, Kruskal–Wallis p. 19, bootstrap pp. 20–21, power p. 22, MDE p. 23, A/A tests p. 24. Multiple comparisons: `Параметрические тесты (2).pdf` pp. 47–49 (Bonferroni, Tukey HSD).
+- RU deck (TBC Data Analytics 2.0, if you have it) `Непараметрические тесты_latest.pdf` (lesson 5.5): normality checks and log-transform pp. 9–12, which test to choose pp. 13–14, ranks and Mann–Whitney pp. 15–16, Wilcoxon for paired samples pp. 17–18, Kruskal–Wallis p. 19, bootstrap pp. 20–21, power p. 22, MDE p. 23, A/A tests p. 24. Multiple comparisons: `Параметрические тесты (2).pdf` pp. 47–49 (Bonferroni, Tukey HSD).
 - Notebooks: `non-parametric.ipynb` (sample-mean normality, Mann–Whitney on exponential data, Wilcoxon, Kruskal–Wallis, bootstrap), `power.ipynb` (power by simulation: 1 000 t-tests on a 1 % shift — the same idea as our simulation cell). `стат_критерии.docx` is a reading list (Habr / YouTube articles on test choice, Mann–Whitney pitfalls, sample size); the card in section 2 is our own.
 - *Russian terms:* непараметрический критерий = non-parametric test, ранг = rank, U-критерий Манна–Уитни = Mann–Whitney U, критерий Вилкоксона = Wilcoxon signed-rank, критерий Краскела–Уоллиса = Kruskal–Wallis, перестановочный тест = permutation test, точный критерий Фишера = Fisher's exact test, множественные сравнения = multiple comparisons, поправка Бонферрони / Холма = Bonferroni / Holm correction, мощность = power, объём выборки = sample size, MDE (минимальный детектируемый эффект) = minimum detectable effect, A/A-тест = A/A test.
 
@@ -202,61 +202,81 @@ Open `data/python/week6/day4_starter.ipynb`; the loader builds `f` (FPD loans) a
 **P1.** Auto vs SME days late: describe both (n, mean, median, share late, 99th percentile), then Welch and Mann–Whitney. Marketing asks "do SME borrowers pay later than Auto borrowers?" — which test answers that, and what is your answer?
 
 <details><summary>Answer</summary>
+
 Auto 4 688 payments, mean −0.21, median −1, 10.1 % late, 99th pct 28; SME 8 222, +0.04, −1, 12.4 %, 31. Welch t = −2.34, **p = 0.0195**; Mann–Whitney **p = 0.32**, P(Auto later than SME) = 0.495. "Do SME borrowers pay later" is a question about the typical payment → Mann–Whitney: **no**, a random SME payment is no more likely to be later. What *is* different is the tail: 12.4 vs 10.1 % paid late at all (a proportions question: test it as one).
+
 </details>
 
 **P2.** Wilcoxon signed-rank on the ten branches' FPD30, 2025 vs 2026, next to the paired t-test. Why might you prefer Wilcoxon here?
 
 <details><summary>Answer</summary>
+
 `stats.wilcoxon(w[2026], w[2025])` → W = 7, **p = 0.037** (exact); paired t p = 0.031. With n = 10, the paired t leans on the differences being roughly normal, which ten branch-level differences (one of them +0.99, Tashkent North) cannot show; Wilcoxon needs only symmetry of the differences and is barely less powerful. Both agree: 2026 vintages are better.
+
 </details>
 
 **P3.** Kruskal–Wallis on days late across the five products, then one-way ANOVA (`stats.f_oneway`). Which product drives the result?
 
 <details><summary>Answer</summary>
+
 Kruskal–Wallis H = 61.0, **p = 1.8 × 10⁻¹²**; ANOVA F = 19.3, p = 7.5 × 10⁻¹⁶. Means: Micro **+0.56**, SME +0.04, Consumer −0.01, BNPL −0.02, Auto −0.21 (all medians −1). Micro is the odd one out: 16.3 % of its payments are late against 10–12 % elsewhere. Next step: pairwise Mann–Whitney Micro vs each (four tests → Holm).
+
 </details>
 
 **P4.** Permutation test for the difference in **mean** days late, Auto − SME (10 000 shuffles, `default_rng(2026)`). Compare with Welch.
 
 <details><summary>Answer</summary>
+
 Observed −0.248 days; permutation **p = 0.023**; Welch 0.0195. The permutation test makes no normality assumption about the mean and agrees: the *means* differ (the tail), while Mann–Whitney (P1) says the *typical* payment does not. Same data, three tests, two questions.
+
 </details>
 
 **P5.** The 2026-05 vintage, partner vs branch (4 / 67 vs 2 / 179). Expected counts, χ² with and without Yates, Fisher. Which do you report, and what do you conclude?
 
 <details><summary>Answer</summary>
+
 Expected FPDs 1.63 and 4.37 — two cells below 5, χ² unreliable. Yates **0.083**, uncorrected **0.028**, Fisher **0.0485**. Report Fisher. Conclusion: borderline evidence that partner's May vintage was worse — and it is one vintage of 32 and one channel pair of three, so after any correction it is noise. Six FPDs in total cannot carry a decision.
+
 </details>
 
 **P6.** Holm by hand (your TODO) on the three channel-pair p-values from yesterday: app–branch 0.0318, app–partner 0.153, partner–branch 0.804. Then Bonferroni.
 
 <details><summary>Answer</summary>
+
 Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → running max unchanged → Holm **0.095 / 0.306 / 0.804**; Bonferroni 0.095 / 0.459 / 1.000. Corrected for three comparisons, app vs branch is no longer significant at 5 %. That is why the committee note says "moderate": the answer depends on whether app vs branch was *the* question (it was Bekzod's, asked from the dashboard) or one of three.
+
 </details>
 
 **P7.** The vintage screen: test each of the 31 monthly vintages with ≥ 50 loans against the book rate 1.28 % (exact two-sided binomial). How many are "significant" at 5 %, how many would chance produce, and what survives Holm?
 
 <details><summary>Answer</summary>
+
 `p = min(1, 2·min(binom.cdf(k, n, p0), binom.sf(k − 1, n, p0)))` per vintage: **1 of 31** below 0.05 — **2026-03**, with **0 FPDs in 330** loans (p = 0.028), a suspiciously *good* month; 2025-04 (7 / 225) is next at 0.054. Chance alone would give 31 × 0.05 ≈ 1.6. Holm: 0.88 for 2026-03 — nothing survives. Check 2026-03's zero against the payment data before celebrating (Day 1, P3).
+
 </details>
 
 **P8.** Sample size for the SMS test with other settings: 90 % power; one-sided 80 %. And the achieved power of 1 000 vs 1 000.
 
 <details><summary>Answer</summary>
+
 90 % power: **30 096** per arm; one-sided 80 %: **17 709** per arm (one-sided is cheaper — and only legitimate if "SMS makes it worse" and "no change" lead to the same decision, which for a cheap SMS they arguably do); 1 000 per arm: **9.1 %** power. Every setting is far beyond Nur's ~337 new loans a month (January–September 2026).
+
 </details>
 
 **P9.** MDE: with 1 000, 2 000 and 10 000 loans per arm (α 5 %, power 80 %), what FPD rate must the SMS reach to be detectable from 1.28 %? Use your `mde_rate`.
 
 <details><summary>Answer</summary>
+
 1 000 → **0.26 %** (an 80 % cut); 2 000 → **0.48 %** (63 %); 10 000 → **0.87 %** (32 %). No reminder SMS cuts first-payment defaults by two thirds — the people who default on the first instalment are mostly not people who forgot. So a 2 000-loan FPD test is designed to fail: its most likely outcome is "not significant", which marketing will then read as "the SMS does not work".
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** Change the metric. "First instalment paid late at all" (any day after the due date, or not in full) is far more common than FPD30. Compute its rate on the 7 099 loans, the n per arm to detect a 20 % relative cut, the power of 1 000 vs 1 000, and confirm that power by simulation (20 000 runs, `default_rng(2026)`).
 
 <details><summary>Answer</summary>
+
 947 / 7 099 = **13.34 %** (app 15.9 %, branch 11.8 %, partner 12.6 %). A 20 % cut (13.34 → 10.67 %): **2 324 per arm** (`ceil(2 323.1)`); with 1 000 per arm, power **45 %** by formula, **45.5 %** by simulation. Ten times fewer loans than the FPD30 test needs, because the outcome is ten times more frequent and the SMS acts directly on it (a reminder prevents *lateness*; whether it prevents *default* is a second question). The standard design: a frequent **leading** metric as the primary outcome, FPD30 as a guardrail you monitor but do not power for.
+
 </details>
 
 ### Mistakes people make
@@ -275,7 +295,7 @@ Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → runn
 
 ## 5. Homework
 
-None today: **Checkpoint 6 is tomorrow** (intervals on Nur data, the test-choice quiz, interview questions). Finish the five TODO functions in `day4_starter.ipynb`; the checkpoint's power task uses them. **HW 6.2** is due tomorrow in `submissions/week-06/day-2/`.
+None today: **Checkpoint 6 is tomorrow** (intervals on Nur data, the test-choice quiz, interview questions). Finish the five TODO functions in `day4_starter.ipynb`; the checkpoint's power task uses them. **HW 6.2** is due tomorrow in Day 2's hand-in box.
 
 ---
 

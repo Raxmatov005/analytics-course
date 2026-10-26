@@ -135,25 +135,33 @@ Work on `customers_dirty.csv` and `payments_dirty.csv` from `data/excel/` (the s
 **Step 1 — the dirt inventory on Customers**, four formulas on the raw sheet:
 
 <details><summary>Result</summary>
+
 Trailing spaces in `first_name` `=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041))))` → **18**; all-caps first names `=SUMPRODUCT(--EXACT(B2:B6041, UPPER(B2:B6041)))` → **22**; all-lower surnames `=SUMPRODUCT(--EXACT(C2:C6041, LOWER(C2:C6041)))` → **40**; ids above 6 000 → **40**. The 22 + 18 = 40 first-name oddities and the 40 lower-case surnames land on the same 40 rows — ids 6001–6040. Suspicious; not yet proof.
+
 </details>
 
 **Step 2 — prove the duplicates** with the key + `COUNTIFS` block from section 1, then a second key on `phone|birth_date`.
 
 <details><summary>Result</summary>
+
 Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly ids 6001–6040 paired with their originals (6001 `MALIKA jalilova` ↔ 4516 `Malika Jalilova`, same phone +998908981002, same birth date 1981-08-15, same income). The two name-only pairs (823/1197, 2460/5562) have different phones and regions — namesakes, keep both. Ten of the 40 duplicates were registered in 2026, so "new customers 2026" (955 by `registered_at`) is overstated by 10 — week 1's memo line, now a filter.
+
 </details>
 
 **Step 3 — the ages.** A column `age` `=DATEDIF(E2, DATE(2026,10,1), "y")` (Sheets: same), then filter `age < 18` or `age > 100`.
 
 <details><summary>Result</summary>
+
 **7** rows: four in the future (ids 927, 2338, 3380 born 2031-04-12 → age −5; 964 born 2027-02-28 → −1) and three at 1900-01-01 (957, 1020, 2934 → age 126). `DATEDIF` with a future date returns `#NUM!`, so in Excel the −5 shows as an error — filter errors with `ISERROR`, or use `=YEARFRAC(E2, DATE(2026,10,1))` which goes negative. Valid customers average 45.2 years. Fix: blank the seven dates and add a flag column `birth_date_invalid` = TRUE — never invent a date.
+
 </details>
 
 **Step 4 — Payments.** Key `=C2&"|"&TEXT(D2,"yyyy-mm-dd")&"|"&E2` (installment, day, amount), `n` and `rank` columns; and the method inventory with `=UNIQUE(F2:F52876)`.
 
 <details><summary>Result</summary>
+
 `n > 1` → **50** rows in **25** pairs; `rank = 2` → the 25 extra rows, Σ amount **58 397 800** — the gap on Timur's tile. All 25 repeats are `payment_id` 52 851–52 875 — they were appended to the export in one batch. Do not rely on that: sameness is the three columns, not the id range. Methods: **10** distinct raw (`card`, `cash`, `transfer`, `payme`, `click`, `Card` 57, `Click` 36, `PayMe` 30, `CASH ` 30, `bank transfer` 27 — the **180** dirty rows); `UNIQUE(LOWER(TRIM(…)))` → 6; with the `bank transfer` replacement → **5**: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774.
+
 </details>
 
 **Step 5 — build it once in Power Query** (the worked pipeline for `payments_dirty.csv`; `Customers` is HW 4.2):
@@ -170,7 +178,9 @@ Close & Load To      Table "payments_clean" on a new sheet
 ```
 
 <details><summary>Checks after loading</summary>
+
 `=ROWS(payments_clean)` → **52 850**; `=SUM(payments_clean[amount])` → **255 114 772 176** (raw was 255 173 169 976; difference 58 397 800); `=ROWS(UNIQUE(payments_clean[method]))` → **5**; `=COUNTIFS(payments_clean[paid_at], ">"&DATE(2026,10,1))` → 24 forward-dated rows (53 438 947) — *not* removed here (they are real payments recorded with a future date; filter them where an as-of matters, as week 3 did). Change the Remove Duplicates step to all columns and the count is 52 875 again — the pane lets you try and undo. Then Data → Refresh All with the file untouched: the same 52 850. That is the deliverable.
+
 </details>
 
 ---
@@ -182,67 +192,89 @@ File `week-04/day-3/practice.xlsx`: raw sheets untouched, a sheet per task or a 
 **P1.** Ctrl+H on a *copy* of `Payments`: replace `bank transfer` with `transfer` (match entire cell). How many replacements? Then try `PayMe` → `payme` with and without *Match case*. Why does the second run report 8 900 without it?
 
 <details><summary>Answer</summary>
+
 27. Without *Match case*, `payme` matches `PayMe` *and* the 8 870 `payme` rows — Excel replaces all 8 900 (harmlessly here, but it would be 8 900 lines in the log for 30 real changes). Tick *Match case* → 30. Find & Replace is case-insensitive by default, like the rest of Excel.
+
 </details>
 
 **P2.** Text to Columns on a copy of `applications.csv`'s `applied_at`: date and time in two columns, the date typed YMD. Count applications submitted in September 2026 from the date column with the half-open filter — and with `BETWEEN`-style `<= 30 Sep`.
 
 <details><summary>Answer</summary>
+
 621 both ways *now* — because the time has been split off, the date column has no 21:36 to lose, and `<= DATE(2026,9,30)` is safe. On the original datetime column `<= DATE(2026,9,30)` gives **598**: 23 applications after midnight on the 30th lost — week 1 B10 / week 2 P4, in Excel. The half-open form works on both columns; use it everywhere and you never have to remember which column has a time.
+
 </details>
 
 **P3.** `DATEVALUE`: paste `1981-08-15` as text into a cell (type an apostrophe first), prove it is text with `ISTEXT`, convert with `DATEVALUE`, and compute the age. Then try `15.08.1981` and `08/15/1981` — which converts on your machine?
 
 <details><summary>Answer</summary>
+
 `ISTEXT` → TRUE; `=DATEVALUE(A1)` → 29 812 (format as date → 1981-08-15); `=DATEDIF(DATEVALUE(A1), DATE(2026,10,1), "y")` → 45. Which of the two other spellings converts depends on your Windows regional format — one of them returns `#VALUE!`. That is why ISO is the export rule and why Power Query's *Changed Type with Locale* exists.
+
 </details>
 
 **P4.** The three Remove Duplicates runs on copies of `Customers` from section 1 (raw names; trimmed names; phone + birth date). Report the three "removed" counts and which run deletes real people.
 
 <details><summary>Answer</summary>
+
 **24 / 42 / 40.** The second deletes the two namesakes (1197 and 5562 go, because the tool keeps the first of each pair); only the third removes exactly the 40 true duplicates. Lesson written for Nilufar: *sameness must be defined on identifying fields (phone + birth date), checked with a count before deletion, and executed as a recorded step.*
+
 </details>
 
 **P5.** Flash Fill: next to `first_name`, type the cleaned name for row 6001 (`Malika`) and press Ctrl+E. Check the column against `=PROPER(TRIM(B2))` with a mismatch count. What did Flash Fill guess wrong, if anything, and why would you not ship it?
 
 <details><summary>Answer</summary>
+
 Usually 0–3 mismatches (it may keep `Bobur ` with its space, or capitalise after an apostrophe differently) — read your own count. Even at 0 mismatches: there is no formula behind the cells, so next Monday's file gets nothing. Flash Fill is for a one-off reshaping of a column you will paste as values and never update.
+
 </details>
 
 **P6.** Power Query on `customers_dirty.csv`: types, Trim + Capitalize Each Word on the names, a custom column `birth_date_invalid` = `[birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)`, then Remove Duplicates on `phone`, `birth_date`. Load and count.
 
 <details><summary>Answer</summary>
+
 6 000 rows; `=COUNTIFS(customers_clean[birth_date_invalid], TRUE)` → **7**; `=ROWS(UNIQUE(customers_clean[phone]))` → 5 997 (the three family numbers). Capitalize Each Word gives `Malika Jalilova` — and `Buy Now Pay Later` if you let it touch `product` elsewhere; apply it to the name columns only. Add a conditional column `birth_date_clean` = null when invalid, else `[birth_date]`, so the age band gets a blank, not −5.
+
 </details>
 
 **P7.** Group By in Power Query on `payments_clean`: method → count and sum. Then the same with `QUERY` in Sheets (or `COUNTIFS`/`SUMIFS` on the loaded table). Five rows?
 
 <details><summary>Answer</summary>
+
 card 17 612 / 84 747 182 579 · payme 8 897 / 42 929 061 915 · cash 8 788 / 41 431 864 371 · click 8 786 / 42 977 555 023 · transfer 8 767 / 43 029 108 288; Σ = 52 850 / 255 114 772 176. Shares 33.3 / 16.8 / 16.6 / 16.6 / 16.6 % — the same shares as week 2's Step 3 table, but each count is a few rows lower: week 2 cleaned the spelling only, today you also removed the 25 duplicate payments. Sheets: `=QUERY(Clean!A1:H, "select F, count(A), sum(E) group by F", 1)`.
+
 </details>
 
 **P8.** **Merge** = join: a query `paid_by_installment` = `payments_clean` filtered `paid_at <= 2026-10-01`, grouped by `installment_id` → `paid`; merge it into `installments.csv` (Left Outer, key `installment_id`), expand `paid`, replace null with 0. Count matured instalments (`due_date <= 2026-10-01`) with `paid < total_due`.
 
 <details><summary>Answer</summary>
+
 92 193 rows after the merge (Left Outer keeps every instalment — check it; an Inner join would drop the unpaid ones, which are the point). Matured: 54 207; **1 784** not fully paid, 403 of them with a partial payment — week 2's `unpaid` CTE, built with a dropdown. (Week 2 counted 427 partials because it did not cut payments at the as-of date: 24 more instalments have a forward-dated payment.) Bonus check: instalments with `paid > total_due` → **0** after dedup, **25** before it — the duplicates were the only over-payments in the book.
+
 </details>
 
 **P9.** Append: split `payments_clean` into two queries by region (Tashkent / everyone else), then Append them back. Rows? Now add a `source` column to each before appending — what is that for?
 
 <details><summary>Answer</summary>
+
 20 437 + 32 413 = 52 850 (Tashkent carries 38.7 % of payment rows; 7 of the 25 duplicates were Tashkent's). `Append` is `UNION ALL`: it does not deduplicate, and it matches columns **by name** — a column spelt `Amount` in one file and `amount` in the other becomes two columns with nulls. The `source` column is how you know which monthly file a row came from after twelve appends — the lineage you will want the first time a total is wrong.
+
 </details>
 
 **P10.** Refresh test: with the pipeline loaded, open `payments_dirty.csv` in a text editor, duplicate the **last line** once more, save, Refresh All. What do the counts do? Undo the edit and refresh again.
 
 <details><summary>Answer</summary>
+
 Raw rows 52 876, clean rows still **52 850** (the new line is a third copy of a known duplicate), Σ unchanged. Undo, refresh → 52 875 / 52 850. You have just demonstrated the deliverable Timur asked for: the cleaning is a property of the *query*, not of the *file*. (Sheets: re-import with *Replace data at selected cell*; the formula tab follows.)
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Group By month on the merged `installments` query from P8: Σ `total_due`, Σ `paid`, and a rate column — the collection rate for every month of 2026. Where does it drop and why is the September figure *expected* to be lower?
 
 <details><summary>Answer</summary>
+
 Jan 97.3 % · Feb 97.0 · Mar 96.8 · Apr 96.9 · May 97.1 · Jun 96.9 · Jul 96.7 · Aug 96.5 · **Sep 94.1 %**. September's instalments have had at most 30 days to be paid (as of 1 October), the others 60–270 — the rate for the latest month is always lower until it matures; compare months at the same age or wait a month. The Company corner states the definition.
+
 </details>
 
 ### Mistakes that cost a point this week
@@ -260,7 +292,7 @@ Jan 97.3 % · Feb 97.0 · Mar 96.8 · Apr 96.9 · May 97.1 · Jun 96.9 · Jul 96
 
 ## 4. Homework <span class="badge hw">HW 4.2 — Due Day 5</span>
 
-**Nilufar's Monday pipeline.** Submit `submissions/week-04/day-3/cleaning.xlsx` (Power Query inside) — or, in Sheets, a spreadsheet with raw and clean tabs exported to `.xlsx` plus the formulas visible — and `change_log.md`:
+**Nilufar's Monday pipeline.** Hand in `cleaning.xlsx` (📎 box below) (Power Query inside) — or, in Sheets, a spreadsheet with raw and clean tabs exported to `.xlsx` plus the formulas visible — and `change_log.md`:
 
 1. **`customers_clean`** — 6 000 rows: names trimmed and capitalised, duplicates removed on `phone` + `birth_date` (keep the earlier `registered_at` — sort before Remove Duplicates), `birth_date_invalid` flag (7 TRUE) and `birth_date_clean` (blank when invalid), `monthly_income` typed as number with its blanks kept as null — not 0 (356 in the raw file, 354 after the dedup: two blanks belonged to removed duplicates).
 2. **`payments_clean`** — 52 850 rows: `method` in 5 values, duplicates removed on `installment_id` + `paid_at` + `amount`, a column `is_forward_dated` (TRUE for the 24 rows after 2026-10-01; keep the rows).

@@ -164,7 +164,7 @@ Then one sentence with six parts, in this order — it is the sentence an examin
 - ▶ t-test (independent / paired / assumptions) — [t-Test - Full Course - Everything you need to know (numiqo), 01:45](https://youtu.be/VekJxtk4BYM?t=105&end=148)
 - ▶ Whole logic of a test in Russian, p-value and CI on a worked case — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 16:53](https://youtu.be/FEI1OA-zgb8?t=1013&end=1077)
 
-- RU deck `Параметрические тесты (2).pdf` (lesson 5.4): the CLT and z-scores pp. 6–9, checking normality and log-transform pp. 10–12, p-value p. 13, type I/II errors p. 14, choosing a test pp. 15–16, assumptions of parametric tests p. 18, one-sample z pp. 19–21, two-sample z pp. 22–24, Student's t pp. 25–31 (paired pp. 30–31), Welch pp. 32–35, ANOVA pp. 36–46, Bonferroni and Tukey pp. 47–49, correlation and regression pp. 50–58.
+- RU deck (TBC Data Analytics 2.0, if you have it) `Параметрические тесты (2).pdf` (lesson 5.4): the CLT and z-scores pp. 6–9, checking normality and log-transform pp. 10–12, p-value p. 13, type I/II errors p. 14, choosing a test pp. 15–16, assumptions of parametric tests p. 18, one-sample z pp. 19–21, two-sample z pp. 22–24, Student's t pp. 25–31 (paired pp. 30–31), Welch pp. 32–35, ANOVA pp. 36–46, Bonferroni and Tukey pp. 47–49, correlation and regression pp. 50–58.
 - Notebook `примеры стат_тестов в python.ipynb`: one- and two-sample z, independent and paired t, Welch, ANOVA (scipy and statsmodels), Bonferroni, Tukey HSD — each on simulated data; rerun any of them on `f` or `x`.
 - Visual: Seeing Theory, chapter 4 (hypothesis testing).
 - *Russian terms:* нулевая / альтернативная гипотеза = null / alternative hypothesis, статистика критерия = test statistic, p-значение (p-value, p-уровень) = p-value, уровень значимости = significance level, ошибка I / II рода = type I / II error, мощность = power, одно- / двусторонний = one- / two-sided, критерий хи-квадрат = chi-square test, таблица сопряжённости = contingency table, t-критерий Стьюдента = Student's t-test, критерий Уэлча = Welch's test, связанные (парные) выборки = paired samples, критерий Шапиро–Уилка = Shapiro–Wilk, критерий Левена = Levene, размер эффекта = effect size, относительный риск = relative risk.
@@ -203,61 +203,81 @@ Open `data/python/week6/day3_starter.ipynb`; it loads `f` and `x` and holds the 
 **P1.** Write H₀ and H₁, one- or two-sided, for: (a) "Has grade D's late-payment rate changed since last year?" (b) "Marketing claims the new app screen raises approval; it ships only if it does." (c) "Is FPD independent of region?"
 
 <details><summary>Answer</summary>
+
 (a) H₀: p_D,2026 = p_D,2025; H₁: ≠; two-sided — a fall or a rise both matter. (b) H₀: p_new ≤ p_old; H₁: p_new > p_old; one-sided is defensible because "worse" and "no change" lead to the same action (do not ship) — written down before the test. (c) H₀: FPD and region are independent; H₁: they are not; a χ² test on the region × FPD table (the χ² is "two-sided" by construction).
+
 </details>
 
 **P2.** `two_prop_ztest` (your TODO 1) for app vs partner and partner vs branch. Which pairs differ at 5 %?
 
 <details><summary>Answer</summary>
+
 App vs partner: z = 1.43, **p = 0.153**; partner vs branch: z = 0.25, **p = 0.804**; app vs branch: z = 2.15, p = 0.032. Only one of three pairs, and the three-way χ² says p = 0.078 — the pattern "the extremes differ, nothing else does" is what a single moderate effect *or* chance plus selection would both produce. Thursday's Holm correction for three comparisons: 0.032 × 3 = 0.095.
+
 </details>
 
 **P3.** For app vs branch, the one-sided p-value. When would Nilufar be allowed to quote it?
 
 <details><summary>Answer</summary>
+
 `proportions_ztest([41, 34], [2411, 3263], alternative="larger")` → **0.0159**. Only if the committee had agreed in advance that an app channel *better* than branch would change nothing — and Bekzod's question ("is app worse, or is that noise?") was asked after looking at the dashboard. Switching to one-sided after seeing the direction is the cheapest p-hacking there is.
+
 </details>
 
 **P4.** χ² test of FPD30 × risk grade (4 × 2). Statistic, df, p, the smallest expected count. Then grade A vs grade C as a two-proportion z-test.
 
 <details><summary>Answer</summary>
+
 Counts A 10 / 1 667, B 30 / 3 084, C 44 / 2 034, D 7 / 314; **χ² = 23.17, df = 3, p = 3.7 × 10⁻⁵**. Smallest expected count: grade D's FPD cell, **4.0** — one cell of eight below 5 (under the usual 20 % limit, so χ² is acceptable; Fisher–Freeman–Halton would be the purist's choice). A vs C: z = −3.95, **p = 7.9 × 10⁻⁵**; RR 2.16 / 0.60 = 3.6. The scorecard orders FPD as well as lateness.
+
 </details>
 
 **P5.** Show that a 2 × 2 χ² without continuity correction equals z² for app vs branch. What does scipy do by default, and which p do you report?
 
 <details><summary>Answer</summary>
+
 `stats.chi2_contingency([[41, 2370], [34, 3229]], correction=False)` → χ² = **4.610** = 2.147², p = **0.0318**. The default (`correction=True`, Yates) gives χ² = 4.119, p = 0.042 — more conservative. Report one and name it; with these counts the z-test (no correction) and Fisher (0.034) agree, so the uncorrected value is fine.
+
 </details>
 
 **P6.** Welch t-test of applicants' credit scores, partner vs branch; then the same on **approved loans**. Add Cohen's d (your TODO `cohens_d`).
 
 <details><summary>Answer</summary>
+
 Applicants: partner 657.2 vs branch 659.6, Welch t = −1.72, **p = 0.086**, d = −0.04. Approved loans: 678.8 vs 679.8, t = −0.59, **p = 0.554**, d = −0.02. None of these moves a decision: a 2-point score gap is a fifth of the width of one grade band. The applicants' pool is the same across channels; whatever makes app FPD higher is not the score at the door.
+
 </details>
 
 **P7.** Paired vs independent on the ten branches (2025 vs 2026 FPD30): both tests, the mean change, and one sentence on why the p-values differ.
 
 <details><summary>Answer</summary>
+
 Paired: t = **−2.56, p = 0.031**; independent: t = −2.05, p = 0.055; mean change −0.58 points (2025 average 1.61 %, 2026 1.03 %). Branch levels differ a lot (Bukhara 3.20 → 1.99, Samarkand 0.87 → 0.75); the paired test compares each branch with itself, so that between-branch spread no longer counts as noise. Use paired whenever the same unit is measured twice.
+
 </details>
 
 **P8.** Effect sizes for app vs branch FPD: difference with its 95 % CI, RR with its CI, extra FPDs per 1 000. Then translate into soum per year for the app channel.
 
 <details><summary>Answer</summary>
+
 Difference **+0.66 points** (Newcombe CI +0.05 to +1.33); RR **1.63** (`confint_proportions_2indep(..., compare="ratio", method="log")` → 1.04–2.56); **6.6 per 1 000** (0.5–13.3). App volume 2026: 1 036 loans in January–September → ~1 381 a year → ~9 extra FPDs × 2.69 m average principal ≈ **25 m soum** at risk, ~15 m expected loss at LGD 60 %. Statistically "yes", financially a rounding error next to the 3.6 bn expected loss of the book (Day 1).
+
 </details>
 
 **P9.** Late payment, grade A vs grade B: z-test on payments, then on loans (any late payment). Why do the z values differ so much?
 
 <details><summary>Answer</summary>
+
 Payments: 5.09 % vs 9.82 %, z = **−15.45**, p = 7.5 × 10⁻⁵⁴ (12 219 vs 23 561 payments). Loans: 29.6 % vs 46.5 %, z = **−11.59**, p = 4.6 × 10⁻³¹ (1 741 vs 3 246 loans). The payment-level test pretends to have 7 times as many independent observations as it has; its z is inflated. Here the conclusion survives; on a borderline question the wrong grain manufactures significance. Test at the unit that was randomised or sampled — the loan.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** p depends on n. Keep the app and branch FPD **rates** fixed and multiply both n's by 10, then by 0.1. Compute z and p each time. Then write the sentence that explains to Bekzod why "p = 0.000 000 01" on a 10-million-row table proves nothing about importance.
 
 <details><summary>Answer</summary>
+
 ×10 (410 / 24 110 vs 340 / 32 630): z = **6.79**, p = 1.1 × 10⁻¹¹. ×0.1: z = **0.68**, p = 0.50. ×1: z = 2.15, p = 0.032. Same effect (+0.66 points), three verdicts — z grows with √n. *"A p-value measures how clearly we can see a difference, not how big it is; with enough rows every difference is 'significant', so always read the effect size and its interval next to it."*
+
 </details>
 
 ### Mistakes people make
@@ -277,7 +297,7 @@ Payments: 5.09 % vs 9.82 %, z = **−15.45**, p = 7.5 × 10⁻⁵⁴ (12 219 vs 
 
 ## 4. Homework
 
-**HW 6.1 is due today** in `submissions/week-06/day-1/`. **HW 6.2** (intervals and the chart, Day 2) is due on Day 5. Today's TODO functions (`two_prop_ztest`, `relative_risk`, `cohens_d`) are practice, not graded, but the checkpoint uses them — finish them now.
+**HW 6.1 is due today** in Day 1's hand-in box. **HW 6.2** (intervals and the chart, Day 2) is due on Day 5. Today's TODO functions (`two_prop_ztest`, `relative_risk`, `cohens_d`) are practice, not graded, but the checkpoint uses them — finish them now.
 
 ---
 

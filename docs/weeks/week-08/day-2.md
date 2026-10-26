@@ -113,6 +113,7 @@ cof = inst["bal_before"].sum() * 0.18 / 12       # 426 011 732 balance-months ×
 | SME | 781 | 308 728 745 | 24.3 | 26 % | 92 835 258 | 64 270 563 | 69 % |
 
 AUTO's 24 % leaves only 6 points over the 18 % funding rate: three quarters of its interest goes to funding. BNPL charges the customer nothing — Nur pays for the money from the first day.
+
 </details>
 
 **P2.** Expected loss per loan: PD (share now 90+), the EAD ratio measured on each product's 90+ loans, EL = PD × 60 % × EAD.
@@ -128,6 +129,7 @@ AUTO's 24 % leaves only 6 points over the 18 % funding rate: three quarters of i
 | SME | 29 / 781 | 3.71 % | 0.792 | 244 490 187 | 5 447 028 |
 
 The EAD ratio: AUTO borrowers who default stop almost at once (they still owe 97 % of the principal); short products default with a third already repaid. AUTO's ratio rests on 10 loans — a fragile number; say so.
+
 </details>
 
 **P3.** The full table: net contribution per loan and per 1 000 soum lent. Then the 2026 contribution of each product (loans disbursed in 2026 × net per loan). Which product makes money per loan, which per soum?
@@ -143,6 +145,7 @@ The EAD ratio: AUTO borrowers who default stop almost at once (they still owe 97
 | SME | 89 388 110 | 64 270 563 | 5 447 028 | 450 000 | 608 067 | **18 612 452** | **60.3** | 305 | 5.68 bn |
 
 Per loan: **SME** (18.6 m) and AUTO (15.8 m). Per soum: **AUTO** (72.9) then SME (60.3), CONS (31.9); MICRO barely positive (6.8); **BNPL loses 108 soum per 1 000 lent**. SME alone is about 64 % of the five products' 2026 contribution (5.68 of 8.85 bn). Assumptions as in section 1 — the ranking of SME/AUTO/CONS above MICRO/BNPL survives any reasonable change of the cost figures; the exact numbers do not.
+
 </details>
 
 **P4.** BNPL charges the customer 0 %. Partners (shops) usually pay the lender a **merchant fee** for each sale financed; it is not in our data. What fee, as a percentage of principal, makes an average BNPL loan break even? Who do you ask?
@@ -150,6 +153,7 @@ Per loan: **SME** (18.6 m) and AUTO (15.8 m). Per soum: **AUTO** (72.9) then SME
 <details><summary>Answer</summary>
 
 Fee\* = −net ÷ principal = 449 053 ÷ 4 170 880 = **10.8 %** of principal. Below it, BNPL loses money on every loan; above it, it earns. The question goes to Finance / the partnerships team: *"What do our partner agreements pay per financed sale, and are they the same for 3, 6 and 12 months?"* (a 12-month BNPL costs four times the funding of a 3-month one). Until that answer exists, "Nilufar wants less BNPL" has no money behind it either way — say exactly that.
+
 </details>
 
 **P5.** Micro's sensitivity. Net per loan at PD 0, 1, 5, 8 %; the break-even PD for a **first** Micro loan (acquisition 60 000) and for a **repeat** loan (acquisition 20 000: the bureau check and an SMS); then translate both into FPD30 — with Micro's own PD ÷ FPD ratio, and with week 7's simplification. Today's Micro FPD30 is 41 of 2 411 = 1.70 %.
@@ -159,6 +163,7 @@ Fee\* = −net ÷ principal = 449 053 ÷ 4 170 880 = **10.8 %** of principal. Be
 Net per first loan: PD 0 % → 56 383; 1 % → 43 054; 2.85 % (today) → 18 430; 5 % → −10 260; 8 % → −50 246. A repeat loan earns 40 000 more at every PD.
 
 Break-even PD = (I − CoF − acq − serv) ÷ (I + 0.6 × EAD): first loan **4.23 %**, repeat **7.23 %**. Micro's PD ÷ FPD = 2.85 ÷ 1.70 = 1.67, so in FPD: first loan **2.53 %**, repeat **4.32 %**; with week 7's simplification (PD = FPD, EAD = principal): 2.98 % and 5.10 %. **Micro stops paying on a new customer if its FPD30 rises from 1.7 % to about 2.5 %** — less than a point of headroom. That is the guardrail number for Kamola's next app experiment, and it is tighter than week 7's +1.25 points because funding and acquisition are now in.
+
 </details>
 
 **P6.** The funding rate is our guess. Net per 1 000 soum lent at 14 %, 18 % and 22 %. Which product is most exposed to the cost of money?
@@ -174,6 +179,7 @@ Break-even PD = (I − CoF − acq − serv) ÷ (I + 0.6 × EAD): first loan **4
 | BNPL | −94.4 | −107.7 | −120.9 |
 
 AUTO swings most: it is long (36 months) and priced closest to the funding rate. Per soum it is the best product at 18 % and nearly worthless at 22 %. A lender's product ranking is a statement about its funding cost — put the rate on the slide.
+
 </details>
 
 **P7.** The crude PD mixes young and old loans. Recompute PD on **matured** loans only (the last instalment due on or before 2026-10-01) and rerun net per 1 000 for SME, CONS, MICRO and BNPL. Which conclusion changes?
@@ -181,6 +187,7 @@ AUTO swings most: it is long (36 months) and priced closest to the funding rate.
 <details><summary>Answer</summary>
 
 Matured PD: SME **16 / 178 = 8.99 %** (vs 3.71 %), CONS 38 / 1 020 = 3.73 %, MICRO 76 / 2 103 = 3.61 %, BNPL 36 / 1 095 = 3.29 %; AUTO 0 / 23 (too few to use). Net per 1 000: **SME 19.3** (from 60.3), CONS 28.2, MICRO 3.1, BNPL −110.1. Long products look safer than they are while most of their loans are young — a two-year SME loan disbursed in 2026 has not had time to default. SME's per-soum lead over CONS **disappears** at its matured PD; with ~180 matured loans the 9 % itself is uncertain (week 6: an interval, please). Slide line: *"SME's margin depends on a default rate we have not yet observed; read its 2024 vintage before growing it."*
+
 </details>
 
 **P8.** LTV/CAC for an app customer. Take customers whose **first** loan was Micro and was disbursed before October 2024 (so 24 months are observable). Count their loans within 24 months by product. LTV = Σ contribution before acquisition of those loans, minus 20 000 per repeat loan, ÷ customers; CAC = 60 000. Micro-only and all products.
@@ -191,6 +198,7 @@ Matured PD: SME **16 / 178 = 8.99 %** (vs 3.71 %), CONS 38 / 1 020 = 3.73 %, MIC
 
 - Micro only: LTV **95 925** soum, **LTV/CAC = 1.6**. A first Micro loan already pays back its CAC (78 430 > 60 000); the repeats are the profit.
 - All products: LTV **2 903 483**, **LTV/CAC ≈ 48** — but about **87 %** of it comes from 48 SME and AUTO loans among 344 customers. Report it as "Micro customers who later take a branch loan are very valuable", not as an average every app customer delivers; the median customer's LTV is the Micro one.
+
 </details>
 
 **P9.** Storytelling. Rewrite these three titles as so-what titles, using your numbers: (a) "Unit economics by product", (b) "Micro sensitivity", (c) "App customers over 24 months".
@@ -198,6 +206,7 @@ Matured PD: SME **16 / 178 = 8.99 %** (vs 3.71 %), CONS 38 / 1 020 = 3.73 %, MIC
 <details><summary>Answer</summary>
 
 (a) *"SME and Auto earn 60–73 soum per 1 000 lent; Consumer 32; Micro 7; BNPL loses 108 unless partners pay ~11 %."* (b) *"A new Micro customer stops paying for itself if FPD30 rises from 1.7 % to 2.5 %."* (c) *"An app borrower takes 1.3 Micro loans in two years — LTV/CAC 1.6 — and the few who later take branch loans lift the average LTV thirtyfold."* Each is a sentence, has a number and a comparison, and could stand alone in an e-mail.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** Unit economics by **risk grade** inside Consumer loans (PD and EAD ratio per grade, the rest as CONS). Which grade does not pay at 450 000 acquisition? Write the one-line pricing recommendation.
@@ -205,6 +214,7 @@ Matured PD: SME **16 / 178 = 8.99 %** (vs 3.71 %), CONS 38 / 1 020 = 3.73 %, MIC
 <details><summary>Answer</summary>
 
 Same function with `groupby(["code", "risk_grade"])` on the CONS rows. Check your result against week 6's ordering (PD rises from A to D, D's write-off share 8.85 % on the whole book); write the recommendation as "grade X needs a rate of Y % or a lower limit to earn Z per 1 000". There is no single key — the mentor checks that PD is per grade, EAD per grade where there are enough 90+ loans (otherwise the product's), and that the break-even rate follows from your own net.
+
 </details>
 
 ### Mistakes people make
@@ -291,7 +301,7 @@ What turns a list into a CV is **achievements with numbers**: the action, the to
 
 ## 5. Homework <span class="badge hw">HW 8.1 — due tomorrow</span>
 
-**HW 8.1 — CV draft + portfolio index.** Submit to `submissions/week-08/day-2/`:
+**HW 8.1 — CV draft + portfolio index.** Hand in with the 📎 box below:
 
 1. `cv.pdf` (and the source, `.docx` or `.md`) — one page (two at most), for **one** target role (say which in the file name: `cv_risk_analyst.pdf`). Contacts at the top; a two-line profile; **projects** from this course with at least **three achievements with numbers**; skills grouped (SQL, Python, Excel, Power BI, statistics); education; languages.
 2. `portfolio.md` — one page: a line saying the data are synthetic (fictional lender, 2024–2026); then your **4 best deliverables**, each with the link to the file in your repository, one sentence on the question it answers, one on the method, one result.
@@ -322,61 +332,81 @@ The whole Company & metrics track, as a self-test. Answer each in two or three s
 **1.** What is DPD, and how do you compute it for a loan with three instalments, the second unpaid?
 
 <details><summary>Answer</summary>
+
 Days past due = as-of date − due date of the <b>oldest</b> unpaid instalment; 0 if nothing is overdue. Here: as-of − the second instalment's due date, whatever happened to the third. At Nur: 399 loans with DPD > 0 on 2026-10-01, buckets 1–30 / 31–60 / 61–90 / 90+ = 124 / 25 / 16 / 234.
+
 </details>
 
 **2.** FPD30 vs PAR30: what does each measure, and which moves first?
 
 <details><summary>Answer</summary>
+
 FPD30 = share of loans whose first instalment was not paid within 30 days — a property of a <b>cohort of new loans</b>, known two months after disbursement (Nur: 91 of 7 099 = 1.28 %). PAR30 = outstanding of loans with DPD > 30 ÷ total outstanding — the state of the <b>whole book</b> today (3.12 %). FPD moves first; PAR30 moves months later, diluted by the old book.
+
 </details>
 
 **3.** PAR90 and NPL — the same thing?
 
 <details><summary>Answer</summary>
+
 Often the same threshold (90+ DPD), but NPL is a <b>classification</b> that may also include restructured or "unlikely to pay" loans and may use 60 days under some regulators; PAR90 is purely DPD. Nur: NPL90 = 2.55 % (234 loans, 5.32 bn). Say which definition you use.
+
 </details>
 
 **4.** What is a roll rate and what does a 1–30 → 31–60 roll of 19.5 % tell collections?
 
 <details><summary>Answer</summary>
+
 The share of loans in one bucket at month-end that are in the next bucket a month later. 19.5 % of September's 1–30 loans were 31–60 on 1 October; 75.8 % cured. One in five early-late loans keeps sliding — the early bucket is where contact pays most.
+
 </details>
 
 **5.** Why vintages, and why must some cells be blank?
 
 <details><summary>Answer</summary>
+
 A vintage curve follows loans disbursed in the same month by age (MOB), so cohorts are compared at the same age; a calendar view mixes ages. Blank when not every loan of the cohort has reached that age (plus the 30 days of the definition) — a 0 there is "not measured", not "nobody late". Nur's worst: 2025-10, 6.91 % ever-30+ at MOB 3.
+
 </details>
 
 **6.** Approval rate: two teams report 68 % and 58 % for the app. Who is right?
 
 <details><summary>Answer</summary>
+
 Probably both. 68.2 % = approved ÷ decided (cancelled excluded, the risk convention); 58.2 % = approved ÷ app sessions (the funnel from the top); 84.5 % = approved ÷ submitted forms. Ask for the denominator, then put the definition under every number.
+
 </details>
 
 **7.** Expected loss for a book: formula, and one reason the crude version understates it.
 
 <details><summary>Answer</summary>
+
 EL = Σ PD × LGD × EAD. Nur's crude version (PD = share now 90+, LGD 60 %) = 3.60 bn, 1.77 % of the performing exposure. It understates for young, long loans: they have not had time to default (SME's matured PD is about 9 % against 3.7 % crude).
+
 </details>
 
 **8.** Cost of risk vs expected loss.
 
 <details><summary>Answer</summary>
+
 EL is a stock (the provision you should hold now). Cost of risk is a flow: the P&L charge for the period — the change in provisions plus write-offs minus recoveries — usually shown ÷ average portfolio, annualised. A book whose 1–30 entries jump has a cost of risk this month even if no loan has defaulted yet.
+
 </details>
 
 **9.** Collection rate: definition and Nur's number.
 
 <details><summary>Answer</summary>
+
 Paid ÷ due, on instalments due in the period, payments counted up to a cut-off. Nur, September 2026: 15 982 118 926 ÷ 16 987 977 718 = 94.1 % by 1 October, on de-duplicated payments (raw payments would overstate it).
+
 </details>
 
 **10.** What does a portfolio manager want on one page?
 
 <details><summary>Answer</summary>
+
 Size and growth (outstanding 208.7 bn, disbursements per month), mix (by product, branch, grade), quality (PAR30 3.12 %, NPL 2.55 %, FPD of the newest mature vintage), and the movers: which product/branch changed most since last month and why. Each tile with its definition and as-of date.
+
 </details>
 
 Tomorrow: the capstone. Madina's brief for the board — three days, four deliverables, your recommendations.

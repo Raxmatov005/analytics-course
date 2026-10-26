@@ -10,7 +10,7 @@
 - **Part B (40 pts):** the **3-page Power BI dashboard** (Portfolio, Risk, Collections) on `data/powerbi/` — `nur_dashboard.pbix`, a PDF export, a screenshot of each page; graded by the numbers each card must show.
 - **Part C (20 pts):** eight interview questions (SRM, peeking, MDE, guardrails, A/A, `CALCULATE` and filter context, measure vs calculated column, the star schema in Power BI), 3–5 sentences each, in `quiz.md`.
 
-**Rules.** Open book: this week's pages, your notebooks, `data/ab/README.md`, `data/powerbi/README.md`, `measures.dax`. Submit to **`submissions/week-07/day-5/`**: `checkpoint_ab.ipynb` (executed — Kernel → Restart & Run All, then save), `nur_dashboard.pbix`, `nur_dashboard.pdf`, `page1_portfolio.png`, `page2_risk.png`, `page3_collections.png`, `quiz.md`. Also due today: **HW 7.2** in `day-3/`. Closed: the model answers until you submit. Power BI click paths are for the current Desktop release; if a menu has moved in yours, the result is what is graded, not the path.
+**Rules.** Open book: this week's pages, your notebooks, `data/ab/README.md`, `data/powerbi/README.md`, `measures.dax`. Hand in with the **📎 box at the end of this page**: `checkpoint_ab.ipynb` (executed — Kernel → Restart & Run All, then save), `nur_dashboard.pbix`, `nur_dashboard.pdf`, `page1_portfolio.png`, `page2_risk.png`, `page3_collections.png`, `quiz.md`. Also due today: **HW 7.2** in `day-3/`. Closed: the model answers until you submit. Power BI click paths are for the current Desktop release; if a menu has moved in yours, the result is what is graded, not the path.
 
 **Plan for the day.**
 
@@ -52,6 +52,7 @@ expected = reg["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
 Threshold: p < 0.001 for SRM (many slices are checked). Problems: (1) **180 users in both variants** (360 rows; first assignment A for 111, B for 69) — removed entirely; (2) **SRM in iOS, 22–28 August**: 812 users, 59.4 % B, 81 of them hash-A users logged as B — the cell is removed from both arms (after: 7 789 / 7 777, p = 0.92). Device iOS overall (p = 0.0070) is the same bug seen through a wider slice; week 4 as a whole (p = 0.12) does not show it at all.
 
 *Interpretation.* In the regions the overall split looks fine (p = 0.28) and even the last week as a whole hides the problem, but 180 users saw both screens and the iOS client pushed 81 control users into B in the last week; both are removed before any result is read. A regional readout that skipped the device × week check would have compared a contaminated B with A.
+
 </details>
 
 *Deductions seen most often:* SRM checked only overall, or only by week; the duplicates noticed but only the second row removed; reweighting the iOS cell instead of removing it; the Tashkent users left in.
@@ -63,6 +64,7 @@ Threshold: p < 0.001 for SRM (many slices are checked). Problems: (1) **180 user
 Daily conversion (de-duplicated), B − A on 1–3 August: **+2.8, +0.3, +2.0** points; single days afterwards swing from −4.3 to +5.9 (14 August). Days 1–3 pooled: 8.50 % vs **10.16 %**, +1.66 points, p = 0.22; from 4 August (clean): +1.05. Weekly (iOS week 4 out): A 8.45 / 8.32 / 6.32 / 8.04 %, B 9.57 / 9.85 / 7.30 / 8.84 %.
 
 *Interpretation.* In the regions the launch spike is weaker and noisier than in the whole app (+1.7 points on days 1–3, p = 0.22) — on its own it would not prove a novelty effect. The decision does not depend on that: the pre-registered rule excludes days 1–3 for every population, so the primary uses users assigned from 4 August and the full period is a sensitivity line.
+
 </details>
 
 *Deductions seen most often:* days 1–3 kept "because the spike is small here" (the plan, not the data, decides exclusions); one high day (14 August) called novelty; no chart.
@@ -90,6 +92,7 @@ ab_readout(with_conversion(reg, events))
 | **clean** | **+1.05 (+0.14 to +1.98)** | **0.025** | **+13.7 % (+1.7 to +27.2)** |
 
 *Interpretation.* In the regions the new screen raises 7-day conversion from 7.70 % to 8.75 % (+1.05 points, 95 % CI +0.14 to +1.98; p = 0.025) — about 10 more contracts per 1 000 viewers. Here the raw and the clean answers are close (+0.98 vs +1.05): cleaning is not a way to make the lift bigger or smaller, it is the condition for reading it — and the interval's low end is close to zero.
+
 </details>
 
 *Deductions seen most often:* the relative CI computed by dividing the difference's CI by 7.70 %; z with the arms in the wrong order (negative z for a positive lift, unexplained); no raw-vs-clean comparison; "p = 0.025 means a 97.5 % chance B is better".
@@ -101,6 +104,7 @@ ab_readout(with_conversion(reg, events))
 Funnel (clean): start 33.3 vs 33.3 % (p 0.95); submit 73.5 vs 74.6 % of starters (0.37); approved 38.4 vs 41.2 % of submitted (0.10); signed 88.9 vs 90.7 % of approved (0.26). Principal per loan: A 2 640 243 (median 2 330 000, 575 loans), B 2 513 443 (2 290 000, 636); Mann–Whitney **p = 0.15**; bootstrap mean difference **−126 800 (−265 376 to +14 550)**, −4.8 %. Disbursed per viewer: A 202 840, B 219 744 (**+8.3 %**), bootstrap CI of the difference −10 048 to +43 827 (202.8 m vs 219.7 m per 1 000 viewers).
 
 *Interpretation.* As in the whole app, the lift comes from users finishing an application, not from more users starting one; B's loans may be smaller (−4.8 %, not significant), so the money effect (+8.3 % disbursed per viewer) has an interval that includes zero. Watch the approval step: 41.2 % vs 38.4 % of submitted forms (p = 0.10) would mean the screen brings in different applicants — which A5 makes urgent.
+
 </details>
 
 *Deductions seen most often:* a t-test on principal with "loans are smaller" from p = 0.15; disbursed per viewer averaged over converters only; five funnel p-values read as five findings.
@@ -119,6 +123,7 @@ lc = loans.merge(clean[["user_id", "variant"]], on="user_id").assign(fpd=lambda 
 Unit economics (interest 9.856 % of principal = 266 662 ÷ 2 705 586, LGD 60 %, FPD ≈ PD): per 1 000 viewers **A 18 555 488**, **B 18 303 993** (−1.4 %); break-even FPD for B **2.04 %** = A + **0.99** points — and B's observed 2.20 % is already above it; at the CI's upper end (3.77 %) B makes 15 898 606 (−14.3 % vs A).
 
 *Interpretation.* B's FPD is 1.2 points higher in the regions (p = 0.11, with only 37 % power), and its point estimate of 2.20 % is already beyond the 2.04 % at which B stops paying for itself — the expected money effect is slightly negative. The guardrail is not cleared and leans towards failing: B must not go to all regional users until FPD is read on more matured loans.
+
 </details>
 
 *Deductions seen most often:* "FPD not significant — guardrail passed"; the break-even from Day 1 (+1.25) or Day 2 (+0.94) copied without recomputing on the regional principal and FPD; no power statement; FPD on all loans including the leaked users.
@@ -140,6 +145,7 @@ Unit economics (interest 9.856 % of principal = 266 662 ÷ 2 705 586, LGD 60 %, 
 Interaction new vs returning: z = −0.82, **p = 0.41**.
 
 *Interpretation.* The lift is positive in all seven pre-registered segments and none is significant after Holm (smallest 0.13); there is no evidence that the screen works better for one group. iOS (+2.8, raw p = 0.018) is the largest of seven comparisons and the slice where a broken cell was just removed — a reason for care, not a targeting recommendation.
+
 </details>
 
 *Deductions seen most often:* no correction; "works on iOS"; segments invented after looking (single regions, day of week) presented as pre-registered.
@@ -160,6 +166,7 @@ Interaction new vs returning: z = −0.82, **p = 0.41**.
 | Segments | All seven positive, none after Holm (min 0.13); no interaction (p = 0.41). |
 | Decision and conditions | Keep the 50/50 split in the regions until ~1 800 loans per arm have a readable FPD (about ten more weeks of regional traffic, then two months for the last loans to mature); ship to the regions only if the FPD difference's upper 95 % bound is below +0.99 pt. |
 | Learned / next | The regional lift is as large as the app's, the regional loans look riskier; the guardrail must be read per rollout population, not once; fix iOS assignment logging. |
+
 </details>
 
 **If you are stuck (hints, not answers).**
@@ -190,6 +197,7 @@ Interaction new vs returning: z = −0.82, **p = 0.41**.
 4. Payments (or instalments) were merged onto loans with `outstanding` expanded: each loan's balance was repeated once per payment (×7.3). Remove the merge; relate both facts to the dimensions.
 5. **162 333 060 000** — October has only one day of data (21 loans, 852 760 000) because the as-of date is 1 October.
 6. **+0.9 points** absolute, **+11.25 %** relative (0.9 / 8.0). Always say which; "+11 %" and "+0.9 %" are different claims.
+
 </details>
 
 ---
@@ -265,6 +273,7 @@ Answer in `quiz.md`, 3–5 sentences each, with a number from this week where it
 6. **Filter context and CALCULATE.** A measure is evaluated in a filter context: the slicers, the visual's row and column, page filters, carried to the fact through relationships — in a table by product, SME's row sees only SME loans. `CALCULATE` evaluates an expression in a modified context: its filter arguments replace existing filters on the same columns and add the rest. `CALCULATE([Outstanding], v_loan_status[dpd] > 30)` in the SME row gives SME's outstanding at 30+ DPD, and divided by `[Outstanding]` it is PAR30 for SME (2.55 %). In a calculated column, `CALCULATE` also turns the row into a filter (context transition).
 7. **Measure vs calculated column.** A calculated column is computed once per row at refresh, stored, and sees the current row — use it for values you slice or filter by (a bucket, an age band, a key). A measure is computed at query time for every cell in its filter context and stores nothing — use it for every aggregated number on a visual, and always for ratios. Average of a row-level flag gave 3.51 % or 2.85 % for "PAR30"; the measure's ratio of sums gives the right 3.12 %.
 8. **Star schema in Power BI.** Fact tables (loans, payments, instalments — each at its own grain) in the centre, dimension tables (date, product, branch, customer) around them, each fact related to the dimensions by one-to-many relationships from the unique dimension key. Single direction means filters flow from dimension to fact, so one slicer reaches every fact consistently and there is exactly one path between any two tables; bidirectional relationships create ambiguity and silently wrong numbers. Facts are never joined to each other — merging a loan's balance onto its payments turned 209 billion into 1.5 trillion.
+
 </details>
 
 **Follow-ups an interviewer adds** (one sentence each): *"Why randomise by user and not session?"* (consistency, independence; Day 1) · *"What is a novelty effect and how do you see it?"* (daily lift chart; Day 2) · *"How would you test a change whose effect on defaults takes months to see?"* (a leading metric + a hold-out; Day 2) · *"Import or DirectQuery?"* (Day 3) · *"What does `ALL` do inside `CALCULATE`?"* (Day 4) · *"How do branch managers see only their branch?"* (RLS; Day 4).
@@ -280,7 +289,7 @@ Answer in `quiz.md`, 3–5 sentences each, with a number from this week where it
 - [ ] `nur_dashboard.pdf` and three PNGs; every page shows "Data as of 1 Oct 2026" and a definitions line.
 - [ ] `quiz.md` has eight answers with at least four numbers from this week.
 - [ ] A one-line `README.md` says how the dashboard was shared (`.pbix` + PDF, or a Service link) and which Desktop version you used.
-- [ ] HW 7.2 (model screenshot + six measures) is in `submissions/week-07/day-3/`.
+- [ ] HW 7.2 (model screenshot + six measures) is handed in (Day 3's box).
 
 ---
 
@@ -292,7 +301,7 @@ Answer in `quiz.md`, 3–5 sentences each, with a number from this week where it
 | B — dashboard | 40 | the checklist above |
 | C — interview | 20 | 2.5 per answer: correct, in your words, with a number or example |
 
-**70 points** to move on. Below 70, the feedback lists the sections to redo. Points go to `docs/progress.md`. Next week, the last: **product analytics** (funnels, cohorts, retention, unit economics) on the app events, and the **capstone** — three days, one dataset, a decision for Nur's management, and a mock interview.
+**70 points** to move on. Below 70, the feedback lists the sections to redo. Points go to the [Progress page](progress.md). Next week, the last: **product analytics** (funnels, cohorts, retention, unit economics) on the app events, and the **capstone** — three days, one dataset, a decision for Nur's management, and a mock interview.
 
 **Week 7 in five sentences** (what you can now say in any meeting):
 

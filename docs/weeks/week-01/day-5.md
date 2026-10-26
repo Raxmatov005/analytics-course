@@ -10,7 +10,7 @@
 - **Part B (40 pts):** twenty queries on Nur Finance using only this week's SQL — single-table `SELECT`, `WHERE`, `ORDER BY`, `DISTINCT`, `TOP`/`LIMIT`, `COUNT(*)`.
 - **Part C (20 pts):** eight interview questions answered in writing, 3–5 sentences each.
 
-**Rules.** Open book: your notes, this week's pages, the SQL boxes and the playground. Closed: the answer folds until you have submitted. No `JOIN`, `GROUP BY` or subqueries in Part B — if you know them, resist; the point is to show the basics are solid. Submit everything to **`submissions/week-01/day-5/`** by the end of the day: `nur_pay.md` + `nur_pay.sql` (Part A), `queries.sql` (Part B, each query with `-- Bn:` above and `-- result:` below), `interview.md` (Part C).
+**Rules.** Open book: your notes, this week's pages, the SQL boxes and the playground. Closed: the answer folds until you have submitted. No `JOIN`, `GROUP BY` or subqueries in Part B — if you know them, resist; the point is to show the basics are solid. Hand everything in with the **📎 box at the end of this page** by the end of the day: `nur_pay.md` + `nur_pay.sql` (Part A), `queries.sql` (Part B, each query with `-- Bn:` above and `-- result:` below), `interview.md` (Part C).
 
 ---
 
@@ -109,6 +109,7 @@ CREATE TABLE my_repayments (
 Finance's three questions map to: outstanding per employer = `advances` with `status = 'open'` summed through employee → employer; uncovered advances = `advances` whose `due_payroll_month` has a `payroll_runs` row with status `received`/`short` but no (or a short) `repayments` row; fee income per month = sum of `fee` by `disbursed_on` month.
 
 Alternative accepted: no `payroll_runs` table, with `repayments` carrying `employer_transfer_ref` and `received_on` — loses the "payroll was short" question; worth 7/10 on the first criterion.
+
 </details>
 
 ---
@@ -126,6 +127,7 @@ SELECT COUNT(*) FROM customers;                               -- 6040
 SELECT COUNT(*) FROM loans WHERE status = 'closed';           -- 4242
 SELECT COUNT(*) FROM applications WHERE status = 'cancelled'; -- 1817
 ```
+
 </details>
 
 **B4.** List the distinct regions of customers, alphabetically. How many? · **B5.** How many customers have no recorded income? · **B6.** How many loans have a principal of 100 000 000 or more?
@@ -137,6 +139,7 @@ SELECT DISTINCT region FROM customers ORDER BY region;         -- 8: Andijan, Bu
 SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;   -- 356
 SELECT COUNT(*) FROM loans WHERE principal >= 100000000;       -- 996
 ```
+
 </details>
 
 **B7.** Affluent-segment customers living in Tashkent. · **B8.** Customers whose surname ends in `ova`. · **B9.** Instalments falling due in October 2026 (the month that starts on the data's as-of date).
@@ -149,6 +152,7 @@ SELECT COUNT(*) FROM customers WHERE last_name LIKE '%ova';                     
 SELECT COUNT(*) FROM installments WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';     -- 3392
 ```
 B8: 2 447 of 2 924 women — surnames ending `eva` (Abdullaeva, Mirzaeva) are the rest. `LIKE '%ova'` is a text pattern, not "female": say what you measured.
+
 </details>
 
 **B10.** Applications submitted in calendar year 2025. Careful with the column type. · **B11.** Payments larger than 10 000 000.
@@ -161,6 +165,7 @@ WHERE applied_at >= '2025-01-01' AND applied_at < '2026-01-01';   -- 5407
 SELECT COUNT(*) FROM payments WHERE amount > 10000000;            -- 7759
 ```
 B10 with `BETWEEN '2025-01-01' AND '2025-12-31'` gives 5 388 — it loses the 19 applications of 31 December made after 00:00 (`applied_at` has a time part). Zero points for the result if the number is lower than 5 407 for that reason; one point for the query if you wrote a comment saying you knew.
+
 </details>
 
 **B12.** Collection visits that ended with a promise to pay. · **B13.** `contract_signed` events from iOS devices. · **B14.** Loans that are neither Micro (1) nor BNPL (3) and run 24 months or longer.
@@ -172,6 +177,7 @@ SELECT COUNT(*) FROM collections_actions WHERE action_type = 'visit' AND outcome
 SELECT COUNT(*) FROM app_events WHERE event_name = 'contract_signed' AND device = 'ios';             -- 944
 SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;                     -- 1511
 ```
+
 </details>
 
 **B15.** Written-off loans with risk grade C or D — and, as a check, all written-off loans. · **B16.** Applications with a credit score above 800 that were rejected (and how many scored above 800 at all).
@@ -185,6 +191,7 @@ SELECT COUNT(*) FROM applications WHERE credit_score > 800 AND status = 'rejecte
 SELECT COUNT(*) FROM applications WHERE credit_score > 800;                             -- 108
 ```
 B15: 128 of 190 write-offs (67 %) come from the two worst grades — the scorecard works, but 62 write-offs came from A and B. B16: 6 of 108 top scorers were rejected; a risk analyst would want to know why (a rule outside the score, or a data error).
+
 </details>
 
 **B17.** Customers who are **not** (mass segment **or** in Tashkent) — i.e. non-mass customers outside Tashkent. Write it with `NOT (…)`, then rewrite without `NOT` and confirm the same count.
@@ -196,6 +203,7 @@ SELECT COUNT(*) FROM customers WHERE NOT (segment = 'mass' OR region = 'Tashkent
 SELECT COUNT(*) FROM customers WHERE segment <> 'mass' AND region <> 'Tashkent';             -- 1481
 ```
 De Morgan: `NOT (a OR b)` = `NOT a AND NOT b`. Both forms score; the second is what you will read in other people's code.
+
 </details>
 
 **B18.** The three largest payments ever received: payment id, loan id, amount, date.
@@ -207,6 +215,7 @@ De Morgan: `NOT (a OR b)` = `NOT a AND NOT b`. Both forms score; the second is w
 SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id LIMIT 3;
 ```
 Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 000 SME loan from Day 2 P9), 2025-01-26 / 02-27 / 03-27. Three equal amounts in a row is not a duplicate: they are three consecutive instalments. (Payment 30775 on the same loan has the same amount, so third place is a tie; `payment_id` in the `ORDER BY` makes the three rows the same on both engines.) (Write that sentence; it is the difference between a count and an analysis.)
+
 </details>
 
 **B19.** The earliest and the latest loan ever disbursed (two queries): loan id, date, principal.
@@ -218,6 +227,7 @@ SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LI
 SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;   -- 596,  2026-10-01, 2 510 000
 ```
 (`TOP 1` on SQL Server.) The latest is on the as-of date itself: the data is current to the day it was cut.
+
 </details>
 
 **B20.** Customers registered in 2026 with a monthly income above 20 000 000, richest first. How many, and who is first? Look at the first row carefully.
@@ -231,6 +241,7 @@ WHERE registered_at >= '2026-01-01' AND monthly_income > 20000000
 ORDER BY monthly_income DESC;                                                -- 258 rows
 ```
 First row: customer **6016**, `Bobur␣ rakhimov`, 59 962 504 — an id above 6000 with a trailing space and a lower-case surname: one of yesterday's forty duplicates. The "richest new customer of 2026" is a data-entry copy of an existing client. Full marks only if your `-- result:` line says so.
+
 </details>
 
 ---
@@ -258,6 +269,7 @@ Answer in writing, 3–5 sentences each, as you would speak. 2.5 points per ques
 6. OLTP is the production system that records transactions — normalised, fast for single-row writes, holding the current state. OLAP is for analysis — a warehouse copy, de-normalised into facts and dimensions, holding history and snapshots, built for big reads. A company needs both because heavy reports on the production database slow the business and cannot show last month-end's balance once it has been overwritten.
 7. "Imagine one big table of events — every loan — in the middle, with only numbers and codes. Around it, small lookup tables that explain the codes: which customer, which product, which branch, which date. Any question is 'add up a number in the middle, split by something at the edge': disbursed amount by region by month. Drawn on paper it looks like a star."
 8. The portfolio is all loans currently outstanding, taken together. A portfolio manager watches: outstanding balance and its growth, disbursements per month (and average ticket), and quality — PAR30/90 or the share in the 90+ bucket, plus yield. At Nur Finance: 3 352 active loans, 3 051 disbursed in 2026, 190 written off to date.
+
 </details>
 
 ---
@@ -271,9 +283,9 @@ Answer in writing, 3–5 sentences each, as you would speak. 2.5 points per ques
 | C — interview | 20 | |
 | **Total** | **100** | **≥ 70 → Week 2 on Monday** |
 
-Below 70: feedback names the sections to redo over the weekend (usually Day 2's operators or Day 3's normal forms); re-submit the failed part on Monday morning before starting Week 2. Points go to `docs/progress.md`. If you skipped Week 1 via the Day-0 diagnostic, this checkpoint is your proof — same threshold.
+Below 70: feedback names the sections to redo over the weekend (usually Day 2's operators or Day 3's normal forms); re-submit the failed part on Monday morning before starting Week 2. Points go to the [Progress page](progress.md). If you skipped Week 1 via the Day-0 diagnostic, this checkpoint is your proof — same threshold.
 
-**Submission checklist** — `submissions/week-01/day-5/`: `nur_pay.md`, `nur_pay.sql`, `queries.sql` (20 queries, 20 `-- result:` lines), `interview.md`. Also due today: HW 1.3 (the data-quality memo) in `day-4/`.
+**Hand-in checklist** (the 📎 box below): `nur_pay.md`, `nur_pay.sql`, `queries.sql` (20 queries, 20 `-- result:` lines), `interview.md`. Also due today: HW 1.3 (the data-quality memo) in `day-4/`.
 
 Madina, 17:30: *"The CFO used your 6 000. IT got the Nur Pay model. Bekzod has his twenty numbers. Monday we teach you to join tables — and the twenty questions he actually wanted to ask."*
 

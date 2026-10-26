@@ -159,74 +159,96 @@ Write each query in the box under its question — it is saved in this browser. 
 **P1.** Create `v_payments_clean` and prove it: rows, total, distinct methods, and that no instalment has two rows left.
 
 <details><summary>Answer</summary>
+
 Section 1's view. `SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean` → 52 850 · 255 114 772 176 · 5; `SELECT MAX(c) FROM (SELECT installment_id, COUNT(*) c FROM v_payments_clean GROUP BY 1)` → 1.
+
 </details>
 
 **P2.** Create `v_loan_status` (worked example) and run the four checks. Then: outstanding by `region` and `bucket` from the view only — how long is that query compared with Monday's version from raw tables?
 
 <details><summary>Answer</summary>
+
 Checks as above. `SELECT region, bucket, SUM(outstanding) FROM v_loan_status GROUP BY 1, 2` — two lines instead of three joins and a CTE; Tashkent 90+ carries the largest dead outstanding. The point of the layer: the *question* is two lines, the *definition* is somewhere else, once.
+
 </details>
 
 **P3.** `EXPLAIN QUERY PLAN` for `SELECT * FROM payments WHERE loan_id = 2242` before and after `CREATE INDEX ix_payments_loan ON payments (loan_id)`. Copy both lines.
 
 <details><summary>Answer</summary>
+
 `SCAN payments` → `SEARCH payments USING INDEX ix_payments_loan (loan_id=?)`. (SQL Server: Table Scan → Index Seek in the graphical plan.)
+
 </details>
 
 **P4.** Two filters for September instalments — `strftime('%Y-%m', due_date) = '2026-09'` and the half-open range — with `ix_installments_due` in place. Plans? Same count?
 
 <details><summary>Answer</summary>
+
 Same count (the September instalments). Plans: `SCAN installments USING COVERING INDEX` for the function version — it still reads every entry; `SEARCH … (due_date>? AND due_date<?)` for the range. Habit 3.
+
 </details>
 
 **P5.** The clustered question: `EXPLAIN QUERY PLAN SELECT * FROM loans WHERE loan_id = 2242` vs `WHERE rowid = 2242`. Why do they differ, and what fixes the first?
 
 <details><summary>Answer</summary>
+
 `SCAN loans` vs `SEARCH loans USING INTEGER PRIMARY KEY (rowid=?)`: the table was loaded without a declared key, so `loan_id` is an ordinary column while `rowid` is the storage order (SQLite's clustered index). `CREATE UNIQUE INDEX ix_loans_id ON loans (loan_id)` → `SEARCH loans USING INDEX ix_loans_id`. In SQL Server you would declare `loan_id` the clustered primary key when creating the table.
+
 </details>
 
 **P6.** Habit 4: `SELECT COUNT(*), COUNT(DISTINCT l.loan_id) FROM loans l JOIN installments i ON i.loan_id = l.loan_id`. Someone "fixes" a multiplied report with `SELECT DISTINCT l.loan_id, l.principal …` and then sums. What is still wrong?
 
 <details><summary>Answer</summary>
+
 92 193 vs 7 828. `DISTINCT` on (loan_id, principal) does collapse to 7 828 rows — but only because those two columns are the same on every repeat; add any instalment column and it multiplies again, and `SUM(principal)` *before* the `DISTINCT` (the common mistake) is 24× too big. The fix is the grain: sum instalments per loan in a CTE, then join once.
+
 </details>
 
 **P7.** Create `t_loan_status` as a materialised copy (CTAS / `SELECT INTO`). Time the bucket count from the view and from the table. When would you ship the table instead of the view?
 
 <details><summary>Answer</summary>
+
 ≈0.5 s vs ≈0 s here; the difference grows with data. Ship the table for a frozen month-end report or a nightly refresh; keep the view where the as-of must be *now*. Name it so nobody confuses them (`t_` / `v_`, or `_asof_20261001`).
+
 </details>
 
 **P8.** `v_portfolio_monthly`: build it (Company corner shows the query), check 1 700 rows = 34 months × 5 × 10, and reconcile September 2026 month-end outstanding with the as-of figure. Why do they differ by about 480 m?
 
 <details><summary>Answer</summary>
+
 208 243 879 623 (month end 30 Sep) vs 208 723 504 430 (as of 1 Oct). The month-end view excludes the 21 loans disbursed on 1 October (852 760 000 of principal, none yet repaid) and counts instalments due *on* 1 October as still outstanding (they are not yet due at midnight on 30 Sep). Two correct numbers, two definitions — write both in the data dictionary.
+
 </details>
 
 **P9.** Pick five of the ten habits and show, with one query each on our data, the slow form and the fast form (plans or row counts as evidence).
 
 <details><summary>Answer</summary>
+
 Any five with evidence — e.g. habit 1 (`SELECT *` vs three columns: compare the width), 3 (P4), 4 (P6), 5 (yesterday's P6 chain vs a join of raw tables), 9 (`ROW_NUMBER` latest loan vs the correlated `= MAX` subquery: same 4 335 rows). Full marks for *evidence*, not for prose.
+
 </details>
 
 **P10.** A temp table for a long script: `CREATE TEMP TABLE tmp_dpd AS SELECT loan_id, dpd, bucket, outstanding FROM v_loan_status WHERE dpd > 0`; count it; then run three questions against it (by bucket, by product via a join, average DPD of active loans).
 
 <details><summary>Answer</summary>
+
 399 rows. Bucket counts 124/25/16/234; by product SME carries the most overdue money, Consumer the most late loans (week 2 T11); active delinquent loans average 22.7 DPD. The temp table disappears when you close the connection — which is the point: scratch space, not a report.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Tuesday's P3 found 101 customers lent to again after a written-off loan. Using `v_loan_status` and `applications`, list the officers (`officer_id`) who approved the most such repeat loans, and the FPD30 of those repeat loans versus the book.
 
 <details><summary>Answer</summary>
+
 Self-join `loans` to find the repeat loans (same customer, `disbursed_at` later than a written-off loan's), join `applications` for `officer_id`, group and rank; then join week 2's `flags` block for FPD30. Expect the repeat loans to run well above 1.28 % — read your number and quote it with its count; small groups move a lot. The structure (CTE for repeats → join officer → aggregate → rank) is the week in one query.
+
 </details>
 
 ---
 
 ## 4. Homework <span class="badge hw">HW 3.2 — Due Day 5</span>
 
-**Timur's clean layer.** Submit to `submissions/week-03/day-4/`:
+**Timur's clean layer.** Hand in with the 📎 box below:
 
 1. `views.sql` — `CREATE VIEW` for `v_payments_clean`, `v_loan_status`, `v_portfolio_monthly`, in that order (the second reads the first), each preceded by a header comment: grain, as-of date, source tables. Both dialects where they differ (`julianday` vs `DATEDIFF`, `WITH RECURSIVE` vs `WITH`, `CREATE TABLE AS` vs `SELECT INTO`), or a clear dialect header.
 2. `dictionary.md` — one paragraph per view: **grain** (what is one row), **row count**, each **column** with its definition in one line (e.g. *outstanding — sum of `principal_due` over instalments with `due_date > as-of`*), the **as-of** rule, and known caveats (closed loans in 1–30; month-end vs as-of outstanding; the 25 removed duplicates).

@@ -10,7 +10,7 @@
 - **Part B (20 pts):** eight interview questions on this week's material, in writing, 3–5 sentences each.
 - Allowed: everything from weeks 1–5 — `pd.read_sql` on `nur.db` (the SQL *is* allowed; the section must still end in a DataFrame and a pandas step), the CSV extracts, your HW 5.2 functions. Closed: the model answers until you submit.
 
-**Rules.** Open book. Submit to **`submissions/week-05/day-5/`**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save, so every output is inside the file), `interview.md`. Also due today: **HW 5.2** in `day-3/`. All numbers as of **2026-10-01**; payments de-duplicated (your `clean_payments`) and cut at the as-of wherever they are summed.
+**Rules.** Open book. Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save, so every output is inside the file), `interview.md`. Also due today: **HW 5.2** in `day-3/`. All numbers as of **2026-10-01**; payments de-duplicated (your `clean_payments`) and cut at the as-of wherever they are summed.
 
 **Working method.** Per section: the grain in a comment; the code; the first rows (`head()` is an output — it counts); the week-3 number next to yours, as an `assert` where it must be exact (counts, sums) and as a printed pair where rounding may differ (rates); one finding Bekzod can read aloud. A *mismatch* is not a failure if the line under it says why (a half-open vs inclusive filter, dirty vs clean payments, a cohort cut) — an *unexplained* mismatch costs the number points.
 
@@ -78,6 +78,7 @@ counts = pd.DataFrame({"table": tables, "rows": [pd.read_sql(f"SELECT COUNT(*) A
 | branches / products / staff / dim_date | 10 / 5 / 100 / 1 461 | dimensions |
 
 **Match:** all eleven counts equal week 3 S1. **Finding.** Same database, same grains; pandas adds nothing here except the loop — `read_sql` on `sqlite_master` replaced eleven `UNION ALL`s. The f-string on a table *name* is acceptable only because the names come from the catalogue, not from a user.
+
 </details>
 
 ### S2. Dimensions — products, grades, channels, status
@@ -96,6 +97,7 @@ for col in ["code", "risk_grade", "channel", "status"]:
 Products MICRO 2 669 (34.1 %) · CONS 2 418 (30.9) · BNPL 1 569 (20.0) · SME 781 (10.0) · AUTO 391 (5.0); grades B 3 404 (43.5) · C 2 264 (28.9) · A 1 821 (23.3) · D 339 (4.3); channels branch 3 590 (45.9) · app 2 669 (34.1) · partner 1 569 (20.0); status closed 4 242 · active 3 352 · written_off 190 · default 44; customer segments mass 3 585 · sme 1 251 · affluent 1 204.
 
 **Match:** identical to week 3 S2. **Finding.** `value_counts(normalize=True)` is the `COUNT(*) / SUM(COUNT(*)) OVER ()` of week 3 — four blocks in a loop instead of four `UNION ALL` branches. App = Micro and partner = BNPL cell for cell: channel and product remain one cut, not two.
+
 </details>
 
 ### S3. Date range — first/last disbursement, payments, as-of
@@ -111,6 +113,7 @@ print(L["disbursed_at"].min(), L["disbursed_at"].max(), pay["paid_at"].min(), pa
 ```
 
 **Match:** identical. **Finding.** 33 months of lending, a schedule to October 2030, and `MAX(paid_at)` after the as-of — the 24 rows that every payment sum below excludes with `pay["paid_at"] <= AS_OF`. In pandas the five extremes are five method calls on typed columns; the `parse_dates=` argument is where the typing happens, and forgetting it turns `.max()` into a string comparison that still "works".
+
 </details>
 
 ### S4. Key measures — the totals
@@ -129,6 +132,7 @@ assert tiles["outstanding"] == 208_723_504_430 and tiles["collected"] == 255_061
 ```
 
 **Match:** all eight. **Finding.** Collected through the clean, as-of-cut payments is 255 061 333 229 (52 826 rows) against a raw 255 173 169 976: 58.4 m of duplicates and 53.4 m of forward-dated rows out — the two filters are one `sort_values().drop_duplicates()` and one mask. 73 % of loans go to repeat borrowers (`(L.groupby("customer_id").size() > 1)` weighted by loans); the book has lent 404.8 bn and still carries 208.7 bn.
+
 </details>
 
 ### S5. Magnitude — by product, by region
@@ -146,6 +150,7 @@ by_region = L.groupby("region")["principal"].sum().pipe(lambda s: (100 * s / s.s
 ```
 
 Chart: the Day-4 barh of outstanding by product (60.3 / 27.6 / 11.0 / 0.5 / 0.5). **Match:** identical to week 3 S5. **Finding.** Two books in one — 85 % of loans are Micro/Consumer/BNPL, 80 % of the money is SME/Auto; the ticket ratio SME : Micro is 114 : 1 (308.7 m vs 2.7 m). `agg` with named outputs then two share columns is the whole of week 3's window-over-`GROUP BY`.
+
 </details>
 
 ### S6. Ranking — top and bottom
@@ -167,6 +172,7 @@ L.groupby("code")["principal"].max()     # AUTO 399 530 000 · BNPL 7 990 000 ·
 ```
 
 **Match:** identical. **Finding.** Fergana Central is second by money with fewer loans than four other branches — SME-heavy; Termez is last at 38 % of the leader. Every product's biggest loan sits at its `max_amount`. `rank(method="min")` is `RANK()`; `nlargest` is `ORDER BY … LIMIT`; the one place to be careful is the branch join — `validate="m:1"` says a loan has one branch.
+
 </details>
 
 ### S7. Change over time — monthly disbursements, 3-month average, mom %, yoy %
@@ -191,6 +197,7 @@ m.loc["2026-01":]
 | 2026-09 | 361 | 17 015 490 000 | 19 999 856 667 | −23.7 | +16.2 |
 
 Chart: Day-4 figure 1 (month in grey, average in blue). **Match:** all 33 rows identical to week 3 S7, including yoy for January 2025 onwards. **Finding.** The 3-month average rose from 16.6 to 20.0 bn in nine months (+20 %) while single months swing ±30 %. The pandas version has no `LAG` trap: `pct_change(12)` runs on the full 33-row frame and the display filter (`.loc["2026-01":]`) comes *after* — but if you filter the frame first and then call `pct_change(12)`, every yoy is NaN, exactly week 3's mistake in a new spelling.
+
 </details>
 
 ### S8. Cumulative — month-end outstanding 2026
@@ -210,6 +217,7 @@ s8["net_growth"] = s8["outstanding"].diff()
 ```
 
 **Match:** all nine month-ends equal week 3 S8 (`v_portfolio_monthly` / the recursive calendar). **Finding.** +56 bn (+37 %) in nine months while 161.5 bn was disbursed: two thirds of new lending replaces repayments. This is the one section where pandas is *clearer* than SQL — a nine-step loop with a readable condition replaces a recursive CTE plus a correlated aggregate — and also the one where it is slowest (nine passes over 92 193 rows; still under a second).
+
 </details>
 
 ### S9. Performance — buckets, PAR30, NPL90, FPD30, roll rates
@@ -229,6 +237,7 @@ npl90 = st.loc[st["dpd"] > 90, "outstanding"].sum() / st["outstanding"].sum()   
 FPD30: Day 3's pivot — 91 / 7 099 = **1.28 %**, app 1.70 · partner 1.12 · branch 1.04 %, grades A 0.60 · B 0.97 · C 2.16 · D 2.23. Roll rates: Day 4's `read_sql` matrix or two `dpd_per_loan` snapshots merged `how="outer"` — 1–30 → 31–60 **19.5 %** (25 of 128), cure 75.8 %, 31–60 → 61–90 69.6 %, 61–90 → 90+ 100 %, 117 new entries. Vintage: the Day-4 heatmap — 2025-10 at 6.91 % (MOB 3) / 11.52 % (MOB 6) vs pooled 2025 4.35 / 7.46. Charts: figures 3, 4, 5.
 
 **Match:** buckets, PAR, NPL, FPD30, roll and vintage all equal week 3 S9. **Finding.** 5.4 % of outstanding is delinquent and 2.55 of the 3.12 PAR30 points are already 90+; the live caseload (1–90 DPD, 165 loans, 5.9 bn) cures three times in four in the first bucket and never after 60 days. One number to explain if yours differs: PAR30 uses whole-loan outstanding, not overdue amount (the arrears ratio would be 3.7 %).
+
 </details>
 
 ### S10. Part-to-whole and segmentation — income band × grade
@@ -249,6 +258,7 @@ ct["avg_ticket"] = lc.groupby("band")["principal"].mean().round()
 Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borrowers 49.1 % (`sort_values().head(len // 10).sum()`). Chart: a heatmap of the crosstab or a stacked bar of grade shares per band.
 
 **Match:** identical to week 3 S10 — because `right=False` makes `pd.cut` read `[5m, 10m)` exactly as `WHEN monthly_income < 10000000`; with the default right-closed intervals a customer earning exactly 5 000 000 moves bands and the counts drift by a few. **Finding.** Income does not predict grade: C+D is 32–35 % in every band including the 466 "unknown" loans, which pandas shows only because `.astype(str).replace("nan", "unknown")` turns the NaN band into a row — `pd.cut` alone would have dropped it silently from the crosstab, the week-2 NULL-band lesson one more time.
+
 </details>
 
 ### The closing cell — what each tool made easier
@@ -256,6 +266,7 @@ Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borr
 <details><summary>Model answer (five sentences, yours will differ)</summary>
 
 1. pandas made S8 easier: a nine-step loop with a plain condition (`due_date >= next month`, loan disbursed before it) replaced a recursive CTE and a correlated aggregate, and `diff()` gave net growth in one call. 2. pandas made S7 and S9 safer: `pct_change(12)` runs on the whole frame before the display filter, `validate="1:1"` and an `assert` after the merge made the grain explicit, and `pd.cut` replaced four `CASE` branches. 3. SQL made S1–S3 and the vintage matrix easier: one `read_sql` of a CTE chain over 92 193 instalments is shorter and faster than the same joins in pandas, and the catalogue (`sqlite_master`) is a query. 4. SQL kept the definition in one place: `v_loan_status` once, read by Excel, Power BI and the notebook, whereas a pandas function lives in one notebook until someone packages it. 5. The right split: aggregate and join in SQL at the database's grain, then shape, cut, check and chart in pandas — and run the asserts in both, because the number that matters is the one both tools agree on.
+
 </details>
 
 ---
@@ -283,6 +294,7 @@ Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per
 6. SQL when the question is one aggregation or join over the database's big tables at its own grain (the vintage CTE, the DPD snapshots — `read_sql` and done), when the result must be shared by several tools (a view), or when the data does not fit in memory. pandas for the chain of reshapes after that — cut, merge of two results, rolling, pivot, charts — for anything iterative (S8's loop), for the asserts, and for the output (CSV, Excel, PNG). The notebook holds both: aggregate in SQL, shape and check in pandas.
 7. By the **question**: time → line (34 months), categories → bar / barh for rankings and long labels, a matrix → heatmap (vintage, roll), distribution per group → boxplot, two numbers per row → scatter. Not taste: bars start at zero (no log axis on bars), sort categories by value unless the order is natural, no pie beyond three slices and no 3D, one colour plus one highlight (90+ red), the title states the finding, no legend for one series, unit on the axis — and drop the one-day October point.
 8. Inputs by path, not by hand; the as-of as one variable; every number printed by code, never typed into Markdown; asserts on known counts (6 000 / 52 850 / 399 / 208 723 504 430) so a changed extract stops the run; no cell depends on being run twice. Proof: **Kernel → Restart & Run All** finishes top to bottom with every assert green — then save, so the outputs are inside the `.ipynb` the reviewer opens.
+
 </details>
 
 ---
@@ -295,9 +307,9 @@ Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per
 | B — 8 questions × 2 + definitions note | 20 | |
 | **Total** | **100** | **≥ 70 → Week 6 on Monday** |
 
-Below 70: feedback names the sections to redo (most often S8 — the month-end loop — and S9's FPD30 scope); re-submit Monday morning before Week 6. Points go to `docs/progress.md`.
+Below 70: feedback names the sections to redo (most often S8 — the month-end loop — and S9's FPD30 scope); re-submit Monday morning before Week 6. Points go to the [Progress page](progress.md).
 
-**Submission checklist** — `submissions/week-05/day-5/`: `checkpoint.ipynb` (executed, 10 sections, ≥ 4 charts, the match line under each section, the five-sentence closing cell), `interview.md` (definitions note + 8 answers). Also due today: **HW 5.2** in `day-3/` (`clean_nur.py` or the executed `day3_starter.ipynb`, `customers_clean.csv`, `payments_clean.csv`, `dpd_per_loan.csv`).
+**Hand-in checklist** (the 📎 box below): `checkpoint.ipynb` (executed, 10 sections, ≥ 4 charts, the match line under each section, the five-sentence closing cell), `interview.md` (definitions note + 8 answers). Also due today: **HW 5.2** in `day-3/` (`clean_nur.py` or the executed `day3_starter.ipynb`, `customers_clean.csv`, `payments_clean.csv`, `dpd_per_loan.csv`).
 
 <span class="badge stretch">Stretch</span> Package the week: a file `nur.py` with `clean_customers`, `clean_payments`, `dpd_per_loan`, `portfolio_summary`, `fpd30_table` and `figure_pack(con, as_of, out_dir)`, imported by a ten-line `monthly.py` that writes the tiles, the buckets and the five PNGs for any `AS_OF`. Run it for 2026-09-01 and 2026-10-01 and diff the two bucket tables — the roll-rate matrix, from the command line.
 

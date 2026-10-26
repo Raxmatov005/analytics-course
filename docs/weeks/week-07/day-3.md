@@ -147,8 +147,8 @@ Week 4's one-pager already had every idea; Power BI gives each one a home that s
 - ▶ Relationships, fuller — Alex's 3-hour course, [24:14](https://youtu.be/I0vQ_VLZTWg?t=1454&end=1917)
 - ▶ (RU) Power Query + Power BI data model — [Power Query для Excel и Power BI. ПОЛНЫЙ БАЗОВЫЙ КУРС (ПРО ДАННЫЕ), 05:02](https://youtu.be/pAn4FLC5nEU?t=302&end=359)
 
-- RU deck `7_1_Introduction_to_BI_tools,_Importing_data,_Transforming_Data.pptx` (lesson 7.1, Javokhir Tashbaev, TBC × Payme): what BI is and its benefits — slides 4–5; why Power BI and its parts (Desktop / Service / Mobile) — slides 6–8; the process of building a report — slide 9; Desktop's Report, Data and Model sections — slides 10–12; Power Query as an ETL tool — slide 13; the homework — slide 14.
-- RU deck `Power BI 7.2.pptx`: data model, star and snowflake schemas — slides 3–5; relationships: cardinality, cross-filter direction, active property — slides 6–8.
+- RU deck (TBC Data Analytics 2.0, if you have it) `7_1_Introduction_to_BI_tools,_Importing_data,_Transforming_Data.pptx` (lesson 7.1, Javokhir Tashbaev, TBC × Payme): what BI is and its benefits — slides 4–5; why Power BI and its parts (Desktop / Service / Mobile) — slides 6–8; the process of building a report — slide 9; Desktop's Report, Data and Model sections — slides 10–12; Power Query as an ETL tool — slide 13; the homework — slide 14.
+- RU deck (TBC Data Analytics 2.0, if you have it) `Power BI 7.2.pptx`: data model, star and snowflake schemas — slides 3–5; relationships: cardinality, cross-filter direction, active property — slides 6–8.
 - `Power BI 7.1.pbix` — the lecture's report file. It is a binary Power BI file: it cannot be read here, open it in Power BI Desktop to see the lecturer's queries and model.
 - `HW 7.1_Sales_Data_Practice.xlsx` — the original course's Power Query homework (optional extra): a sales export with a title and empty rows on top, "Конец" at the bottom, category codes to replace from a `Categories` sheet, names to split, a `Returned` column of "No" and errors to turn into 0/1, dates to split into day / month / year — eight steps, all from week 4.
 - DAX guide `Подробное руководство по DAX.pdf` (Russo & Ferrari; PDF page = book page): chapter 1, the data model and relationship direction, pp. 27–42 (direction pp. 29–35); chapter 15, relationships in depth, pp. 514–566 (one-to-many p. 538, many-to-many pp. 540–553, ambiguity pp. 559–566).
@@ -174,67 +174,89 @@ Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a shor
 **P1.** Load `v_loan_status`, `v_portfolio_monthly`, `v_payments_clean` through *Transform data*. Report the row count of each in Table view and the totals of `outstanding`, `disbursed_amount` and `amount`.
 
 <details><summary>Answer</summary>
+
 **7 828 · 1 700 · 52 850** rows. Σ `outstanding` **208 723 504 430**; Σ `disbursed_amount` (all 34 months) **404 783 280 000** (2024 86 522 990 000 · 2025 155 927 230 000 · 2026 162 333 060 000); Σ `amount` **255 114 772 176** — the week-3 checks, unchanged. If a count is short, Power Query probably dropped a header or split a row; if a total is off, look for a column typed as Text (it will not sum) or Decimal with rounding.
+
 </details>
 
 **P2.** Profile `v_loan_status` in Power Query (Column quality / distribution / profile, on the entire data set). How many distinct buckets, how many loans with zero outstanding, the largest outstanding and its loan? What changes if the profile stays on the first 1 000 rows?
 
 <details><summary>Answer</summary>
+
 5 buckets (0 · 1-30 · 31-60 · 61-90 · 90+); **4 419** loans with `outstanding` = 0 (closed, written off, or fully due — 7 828 − 3 409); maximum **586 068 714**, loan 4597 (SME, Bukhara Central). On the first 1 000 rows the profile shows only what those loans have (947 in bucket 0, 32 in 90+) — a profile is a sample until you tell it not to be.
+
 </details>
 
 **P3.** Load the four other facts and the five dimensions (`data/powerbi/README.md`). Which file needs a type you would not guess, and which column of `dim_date` must be sorted by another?
 
 <details><summary>Answer</summary>
+
 Row counts: `fct_installments` 92 193, `fct_first_instalment` 7 099, `fct_applications` 14 000, `fct_collections_actions` 9 361, `dim_date` 1 461, `products` 5, `branches` 10, `customers_clean` 6 000, `staff_collectors` 30. Watch `fct_applications`: `applied_at` has a time, the relationship uses `applied_date` (Date); `fct_first_instalment[vintage]` ("2026-07") should stay Text. Sort `month_name` by `month` and `year_month` by `month_start`.
+
 </details>
 
 **P4.** Merge `v_payments_clean` with `v_loan_status` on `loan_id` (Left Outer), expanding only `product` and `branch_name`. Check the row count, then relate payments to `products` and show **collected in September 2026 by product**.
 
 <details><summary>Answer</summary>
+
 Still **52 850** rows, no blanks (every payment's loan exists). Collected (paid_at in September 2026, `Collected Amount = SUM(v_payments_clean[amount])`): SME **9 865 366 314** · AUTO 2 988 980 257 · CONS 2 872 046 580 · MICRO 344 950 525 · BNPL 267 479 531 — total **16 338 823 207**. A row count above 52 850 would mean the right-hand table had duplicate `loan_id`s: a merge is only a lookup when the other side is unique.
+
 </details>
 
 **P5.** Build every relationship in the README. Then a table visual by `products[code]` with `Outstanding` and `Disbursed Count = COUNTROWS(v_loan_status)`. What does the Model view's diagram look like, and what does each line's "1" and "*" mean?
 
 <details><summary>Answer</summary>
+
 SME 125 892 942 411 / 781 · AUTO 57 684 271 333 / 391 · CONS 23 054 933 316 / 2 418 · BNPL 1 135 251 000 / 1 569 · MICRO 956 106 370 / 2 669 (total 7 828). The diagram: five dimensions around seven facts, every line with **1** at the dimension and **\*** at the fact, a single arrow pointing to the fact; no line between two facts. "1" = each key appears once there; "*" = many rows per key.
+
 </details>
 
 **P6.** The missing-relationship symptom. Before relating `v_payments_clean` to `products`, put `products[code]` and `Collected Amount` in a table. What do you see, and what does it tell you?
 
 <details><summary>Answer</summary>
+
 Every product shows the same number — **255 114 772 176**, the grand total — because no filter can travel from `products` to the payments. "The same value in every row" is the signature of a missing (or inactive) relationship; "a total bigger than it should be" is the signature of a wrong grain (Company corner); "(Blank)" as a category is the signature of keys that do not match (P8).
+
 </details>
 
 **P7.** Mark `dim_date` as the date table and set the sort orders. Then `Disbursed Amount = SUM(v_loan_status[principal])` by `dim_date[year_month]` for 2026. Report January, August and September.
 
 <details><summary>Answer</summary>
+
 January **17 452 370 000** (287 loans) · August **22 290 210 000** (358) · September **17 015 490 000** (361); October shows 852 760 000 (21 loans, one day). If you see the months in the order 2026-01, 2026-02… you sorted right; if a visual by `month_name` starts with April, the sort-by column is missing.
+
 </details>
 
 **P8.** Relate `customers_clean` to `v_loan_status` and show `Outstanding` by `customers_clean[segment]`. Explain the extra row, then fix it with `customer_id_map.csv` in Power Query.
 
 <details><summary>Answer</summary>
+
 A **(Blank)** row with **1 563 976 162** — 48 loans (week 4's 40 removed duplicates) whose `customer_id` is no longer in the dimension. Fix: merge `v_loan_status` with `customer_id_map` on `customer_id` (Left Outer), add a column `customer_id_master ?? customer_id` (M's "if null, use"), relate that column instead. After: affluent **44 253 773 349** · mass **118 769 279 493** · sme **45 700 451 588**, no blank, total still 208 723 504 430. The blank row is a data-quality finding — report it, do not hide it with a visual-level filter.
+
 </details>
 
 **P9.** Calculated column vs measure. Create the column `par30_outstanding = IF(v_loan_status[dpd] > 30, v_loan_status[outstanding], 0)` and the measure `PAR30 % = DIVIDE(SUM(v_loan_status[par30_outstanding]), SUM(v_loan_status[outstanding]))`. Then try two wrong versions: the **average** of a column `is_par30 = IF(v_loan_status[dpd] > 30, 1, 0)` on all loans, and on loans with outstanding > 0. Which number is PAR30?
 
 <details><summary>Answer</summary>
+
 Measure: **3.12 %** (6 507 526 953 / 208 723 504 430). Average of the flag on all loans: **3.51 %** (275 / 7 828 — a *count* share, and it includes closed loans); on loans with outstanding: **2.85 %** (97 / 3 409). PAR30 is a share of **money**, so only the ratio of sums is right; the averages answer other questions ("what share of loans is 30+ late?"). Ratios are measures.
+
 </details>
 
 **P10.** Grain detective. In Power Query, merge `fct_installments` with `v_loan_status` and expand `outstanding` onto the instalments. Load it as a test table and sum `outstanding`. What happened?
 
 <details><summary>Answer</summary>
+
 **6 186 108 589 284** — 29.6 times the book. Each loan's outstanding was copied onto each of its instalments (11.8 per loan on average) and then summed. The model's answer is never to bring a loan-level number down to a finer grain; both facts relate to the same dimensions instead (Company corner). Delete the test table.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** The Folder connector. With pandas, split `v_portfolio_monthly.csv` into three files by year in a new folder (`pm_2024.csv`, `pm_2025.csv`, `pm_2026.csv`). In Power BI: Get data → Folder → *Combine & Transform*. Check rows and the disbursed total, then add a fourth file and refresh. (Or, instead: connect to your SQL Server `nur` database and load the three views by SQL statement.)
 
 <details><summary>Answer</summary>
+
 Rows **600 + 600 + 500 = 1 700**, Σ `disbursed_amount` **404 783 280 000** — the same as the single file; Power BI adds a `Source.Name` column with the file name. A fourth file dropped into the folder appears after Refresh with no change to the report — that is exactly what Bekzod's monthly paste should have been. (SQL Server: the same totals; `SELECT … FROM v_loan_status` in *Advanced options* puts the query text in the M step `Sql.Database(…, [Query = "…"])`.)
+
 </details>
 
 ### Mistakes people make
@@ -255,7 +277,7 @@ Rows **600 + 600 + 500 = 1 700**, Σ `disbursed_amount` **404 783 280 000** — 
 
 ## 4. Homework <span class="badge hw">HW 7.2 — due Day 5</span>
 
-**HW 7.1** is due today in `submissions/week-07/day-1/`. **HW 7.2 — the model and six base measures.** Submit to `submissions/week-07/day-3/`:
+**HW 7.1** is due today in Day 1's hand-in box. **HW 7.2 — the model and six base measures.** Hand in with the 📎 box below:
 
 1. `nur_week7.pbix` — the data from `data/powerbi/` (CSV or SQL Server), types set, every README relationship (1 : *, single), `dim_date` marked, sort orders set, the 48-loan fix applied.
 2. `model.png` — a screenshot of the Model view where every relationship line is visible.

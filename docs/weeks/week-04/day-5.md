@@ -10,7 +10,7 @@
 - **Part B (40 pts):** the **one-page board report** on the clean data — pivots, three charts, six tiles, a five-sentence findings note.
 - **Part C (20 pts):** **eight interview questions** on the week, answered in writing as you would say them aloud.
 
-**Rules.** Open book: your pages, your files, the workbook. Closed: the model-answer folds until you submit. Submit to **`submissions/week-04/day-5/`**: `checkpoint.xlsx` (sheets `Raw_Customers`, `Raw_Payments` untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data` with the pivots; `OnePager`; `Checks`), `change_log.md`, `findings.md` (the five sentences), `interview.md`. Also due today: **HW 4.2** in `day-3/`. Sheets users: one spreadsheet with the same tabs, exported to `.xlsx` **and** the share link in `README.md`; formulas stay visible in the export. As of **2026-10-01** everywhere; a cell on `OnePager` says so.
+**Rules.** Open book: your pages, your files, the workbook. Closed: the model-answer folds until you submit. Hand in with the **📎 box at the end of this page**: `checkpoint.xlsx` (sheets `Raw_Customers`, `Raw_Payments` untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data` with the pivots; `OnePager`; `Checks`), `change_log.md`, `findings.md` (the five sentences), `interview.md`. Also due today: **HW 4.2** in `day-3/`. Sheets users: one spreadsheet with the same tabs, exported to `.xlsx` **and** the share link in `README.md`; formulas stay visible in the export. As of **2026-10-01** everywhere; a cell on `OnePager` says so.
 
 **Working method.** Raw stays raw. Every clean table ends in a check cell against a number you know. Every tile has a one-line definition under it. Every chart title is a finding. Count rows after every merge. Refresh All before you save — if a number changes, something was pasted.
 
@@ -99,6 +99,7 @@ Close & Load To        Table customers_clean
 Checks on `Checks`: `=ROWS(customers_clean)` → **6 000**; `=COUNTIFS(customers_clean[birth_date_invalid], TRUE)` → **7**; `=MAX(customers_clean[customer_id])` → 6 000 (no id above 6 000 survives — every duplicate was the *later* registration; if you get 6 0xx you did not sort first); `=COUNTBLANK(customers_clean[monthly_income])` → 354 (the raw file has 356; two blanks belonged to removed duplicates — and 0 if you typed blanks as 0: wrong — a zero income is a statement, a blank is a gap); `=ROWS(UNIQUE(customers_clean[phone]))` → 5 997; `=COUNTIFS(customers_clean[first_name], "*Bobur*")` returns the same whether or not a space followed. Namesakes 823/1197 and 2460/5562 are both present. Average age of valid rows 45.2.
 
 Change-log lines (5 of the 10): *Trimmed and capitalised first_name/last_name — 18 trailing spaces, 22 all-caps first names, 40 lower-case surnames fixed* · *Flagged 7 impossible birth dates (3 × 1900-01-01, 3 × 2031-04-12, 1 × 2027-02-28) and blanked birth_date_clean for them; no value invented* · *Removed 40 duplicate customers on phone + birth_date, keeping the earlier registration (ids 6001–6040 dropped); 6 040 → 6 000* · *Kept 2 name-and-birth-date namesakes (823/1197, 2460/5562) — different phones and regions* · *monthly_income typed numeric, blanks kept as null (356 raw, 354 after the dedup).*
+
 </details>
 
 ### A2. `payments_clean` (20 pts)
@@ -126,6 +127,7 @@ installments_paid
 Checks: `=ROWS(payments_clean)` → **52 850**; `=SUM(payments_clean[amount])` → **255 114 772 176**; `=ROWS(UNIQUE(payments_clean[method]))` → **5**; counts card 17 612 · payme 8 897 · cash 8 788 · click 8 786 · transfer 8 767; `=COUNTIFS(payments_clean[is_forward_dated], TRUE)` → **24** (Σ 53 438 947); `=ROWS(installments_paid)` → **92 193** (Left Outer kept every instalment); `=COUNTIFS(installments_paid[due_date], "<="&DATE(2026,10,1), …)` with `paid < total_due` via `SUMPRODUCT` → **1 784**; instalments with `paid > total_due` → **0** (it was 25 before the dedup — the duplicates were the only over-payments).
 
 Change-log lines: *Trimmed, lower-cased method and replaced "bank transfer" with "transfer" — 180 rows (Card 57, Click 36, PayMe 30, "CASH " 30, bank transfer 27) → 5 values* · *Removed 25 exact duplicate payments on installment_id + paid_at + amount, Σ 58 397 800, keeping the lower payment_id; 52 875 → 52 850* · *Flagged 24 payments dated after 2026-10-01 (Σ 53 438 947) as forward-dated; kept, excluded from as-of sums* · *Built installments_paid: 92 193 instalments left-joined to clean payments through 2026-10-01; 1 784 matured instalments not fully paid* · *Source path: data/excel/; Refresh All re-runs everything.*
+
 </details>
 
 ---
@@ -212,6 +214,7 @@ If you are stuck:
 3. **PAR30 is 3.12 % and NPL90 2.55 %**: 5.3 of the 6.5 bn at risk is already past 90 days (234 loans, all defaulted or written off), so the delinquent book is old debt rather than a new wave; the live 1–90 caseload is 165 loans and 5.9 bn.
 4. **FPD30 on the July 2026 vintage is 1.09 % (4 of 367)**, in line with the 1.28 % history; August is not yet readable and should not be shown.
 5. **September's collection rate is 94.1 %** (15.98 of 16.99 bn due) against 96.5–97 % for earlier months — the latest month always reads low until it matures, and the 5.9 % unpaid is October's inflow to the 1–30 bucket.
+
 </details>
 
 ---
@@ -223,6 +226,7 @@ Answer in writing, 3–5 sentences each, as you would say them aloud: 2 points p
 <details><summary>The definitions note — model</summary>
 
 *As of 2026-10-01 throughout. **DPD** = days since the due date of the oldest matured instalment not fully paid (0 if none); buckets 0 / 1-30 / 31-60 / 61-90 / 90+ on the lower edges. **Payments** are de-duplicated on installment_id + paid_at + amount keeping the lower payment_id (52 850 rows), and summed only through the as-of date (24 forward-dated rows excluded). **Outstanding** = principal_due of instalments due after the as-of date. **PAR30 / NPL90** = outstanding of loans with DPD > 30 / > 90 ÷ total outstanding. **FPD30** = first instalment not fully paid or first payment more than 30 days after its due date, shown per disbursement-month vintage, only for vintages whose first dues are all ≥ 30 days old. **Collection rate** = paid by the as-of on instalments due in the month ÷ total due in the month (instalment basis, not cash basis).*
+
 </details>
 
 1. VLOOKUP vs INDEX/MATCH vs XLOOKUP — when do you use which, and what are VLOOKUP's traps?
@@ -244,6 +248,7 @@ Answer in writing, 3–5 sentences each, as you would say them aloud: 2 points p
 6. A line for a measure over **time** (34 monthly points; the eye reads slope), a bar/column for **categories** (five products; the eye compares lengths; sort them). Lies: a bar axis not starting at zero (7 % growth looks like doubling), a partial period plotted as a full one (October's one day as a −95 % month), 3D, a dual axis that makes two lines cross meaninglessly, and a pie with many slices. Title the finding, from zero, one highlight colour.
 7. `$` pins a row, a column or both so a formula can be filled without the reference moving: `$A3` reads the region from column A on every row, `B$2` reads the bucket from row 2 in every column — the region × bucket matrix is one `SUMIFS` with three `$`. Also conditional-formatting rules (`=$M2="90+"`: column pinned, row free) and lookup ranges (`Lookup!$A$3:$F$7`). Tables remove most of the need — `tblLoans[outstanding]` is already absolute.
 8. Data arrives through Power Query (or into a Table) so Refresh All re-reads the files; pivots sit on the Table or the query output, never a fixed range; tiles read pivots by `GETPIVOTDATA` or the Table by `SUMIFS`, nothing is typed; number formats live in Value Field Settings; slicers are connected; the as-of date is a cell. After refresh: row counts against the known totals (7 828 · 52 850 · 6 000 · 92 193), the grand total against the Table's `SUM`, the slicers cleared, and the six tiles against the warehouse views — a difference means a definition changed, not a formula.
+
 </details>
 
 ---
@@ -268,7 +273,7 @@ On a copy of your workbook, with the three CSVs in `data/excel/`:
 2. **The Checks sheet**: every cell TRUE.
 3. **Duplicate the last line of `payments_dirty.csv`** and refresh: `payments_clean` must stay 52 850.
 4. **Clear every slicer**, read the six tiles, compare with the table above; then set the slicer to one region and confirm the tiles that should move (charts) do and the ones that should not (the as-of, the definitions) do not.
-5. **Ctrl+`** on `OnePager`: every number is a formula.
+5. Press **Ctrl + `** (the key left of 1) on `OnePager` to show formulas: every number is a formula.
 6. **Print preview**: one page, landscape, readable at A4.
 7. Read `findings.md` aloud: five sentences, five numbers, five consequences; `change_log.md`: ten changes with counts.
 8. `interview.md`: the definitions note first, then eight answers with a Nur Finance number each.
@@ -291,9 +296,9 @@ Partial credit rules, so you know what to drop when time runs out:
 - A pipeline that refreshes but misses one rule (e.g. the namesakes deleted) loses the 3 "nothing destroyed" points, not the 6 refreshability points.
 - A change log with the right changes but no counts scores half.
 
-Below 70: feedback names the parts to redo (most often A1's duplicate rule and B's FPD30 tile); re-submit Monday morning before Week 5. Points go to `docs/progress.md`.
+Below 70: feedback names the parts to redo (most often A1's duplicate rule and B's FPD30 tile); re-submit Monday morning before Week 5. Points go to the [Progress page](progress.md).
 
-**Submission checklist** — `submissions/week-04/day-5/`: `checkpoint.xlsx` (raw sheets untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data`; `OnePager`; `Checks`), `change_log.md` (ten lines with counts), `findings.md` (five sentences), `interview.md` (definitions note + 8 answers); Sheets users add `README.md` with the link. Also due today: **HW 4.2** in `day-3/`.
+**Hand-in checklist** (the 📎 box below): `checkpoint.xlsx` (raw sheets untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data`; `OnePager`; `Checks`), `change_log.md` (ten lines with counts), `findings.md` (five sentences), `interview.md` (definitions note + 8 answers); Sheets users add `README.md` with the link. Also due today: **HW 4.2** in `day-3/`.
 
 <span class="badge stretch">Stretch</span> Add week 3's **month-end outstanding** series to the page: on `installments_paid`, a column `disbursed` (the loan's date via `XLOOKUP`), then for each month-end `SUMIFS(principal_due, due_date >= next month, disbursed < next month)` — a `SEQUENCE` of 2026 month-starts drives it; September 208 243 879 623, June 184 617 414 010. Plot it as the sparkline under the Outstanding tile, and explain in the footnote why 208.2 bn (month-end) and 208.7 bn (as-of) are both right.
 

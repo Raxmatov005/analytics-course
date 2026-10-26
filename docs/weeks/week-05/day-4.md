@@ -164,7 +164,7 @@ ax = mix.plot.barh(x="product", y="outstanding", legend=False); ax.set_title(...
 - ▶ `read_sql` — [SQL Databases with Pandas and Python - A Complete Guide (Rob Mulla), 08:35](https://youtu.be/DiQ5Hni6oRI?t=515&end=684)
 - ▶ `read_sql` with SQLite (matches the page's `sqlite3.connect`) — [SQLite with Pandas (Code Adhyayana)](https://youtu.be/xcVXCK6U6LA)
 
-- RU deck `4.5_Python.pdf`: matplotlib OO interface pp. 12–20, seaborn relational / categorical / distribution plots pp. 22–38 (long vs wide data p. 24), heatmap p. 36, pandas plotting pp. 47–55, chart choice and storytelling pp. 68–72. `4.4_Python.pdf`: DB-API and cursors pp. 7–28, `read_sql` / `to_sql` / chunking pp. 29–34, SQLAlchemy engines pp. 38–54 (for the day you connect to SQL Server).
+- RU deck (TBC Data Analytics 2.0, if you have it) `4.5_Python.pdf`: matplotlib OO interface pp. 12–20, seaborn relational / categorical / distribution plots pp. 22–38 (long vs wide data p. 24), heatmap p. 36, pandas plotting pp. 47–55, chart choice and storytelling pp. 68–72. `4.4_Python.pdf`: DB-API and cursors pp. 7–28, `read_sql` / `to_sql` / chunking pp. 29–34, SQLAlchemy engines pp. 38–54 (for the day you connect to SQL Server).
 - *Russian terms:* график = chart / plot, линейный график = line chart, столбчатая / линейчатая диаграмма = bar / barh, гистограмма = histogram, ящик с усами = boxplot, диаграмма рассеяния = scatter, тепловая карта = heatmap, подграфик = subplot, легенда = legend, ось = axis, длинный / широкий формат = long / wide format.
 
 ---
@@ -199,61 +199,81 @@ Notebook `data/python/day4_starter.ipynb` (the five pack figures are in it; add 
 **P1.** `monthly` from the bridge: a line of the 33 months (October dropped) with pandas' `.plot()` in one line, then the same with `fig, ax` and the bn formatter. What does the one-liner lack for the deck?
 
 <details><summary>Answer</summary>
+
 Size, the formatter (it shows `1e10`), a left-aligned finding title, and the file. `monthly.set_index("month")["disbursed"].plot()` is for your eyes; the `fig, ax` version is figure 1 without the average. The line starts at 3.87 bn (Jan 2024) and ends at 17.0 bn (Sep 2026); the two Septembers (2025: 14.6 bn) show the +16 % yoy.
+
 </details>
 
 **P2.** Histogram of `principal` (all 7 828 loans) with 30 bins, then with `ax.set_xscale("log")` — or `np.log10` first. Which one shows the two books?
 
 <details><summary>Answer</summary>
+
 Linear: one bar at the left (median 5.79 m) and a long invisible tail to 599 m — useless. Log: two humps, one around 2–6 m (Micro / BNPL / Consumer) and one around 150–450 m (SME / Auto). The 10th percentile is 1.37 m, the 99th 531 m — a 400× range needs a log axis; say so on the axis label (*principal, log scale*).
+
 </details>
 
 **P3.** `sns.boxplot` of `principal` by `product`, products ordered by median. Read SME's box.
 
 <details><summary>Answer</summary>
+
 Medians: SME 314.8 m · Auto 214.8 m · Consumer 27.0 m · BNPL 4.18 m · Micro 2.70 m. SME's box runs 165 m (Q1) to 454 m (Q3), whiskers to the 600 m cap, no outliers — a flat, wide distribution up to the product limit. On one linear axis the three small products are a line at the bottom; use `ax.set_yscale("log")` or one subplot per product (`sharey=False`).
+
 </details>
 
 **P4.** `sns.countplot(x="grade", hue="product")` — then the same information as a heatmap of `pd.crosstab(product, grade)`. Which reads better, and what is the finding?
 
 <details><summary>Answer</summary>
+
 The heatmap (one number per cell; 20 bars in five colours is a legend-reading exercise). Micro: A 655 · B 1 154 · C 777 · D 83; SME: 175 · 350 · 205 · 51. Every product is roughly 23 / 44 / 29 / 4 % — the grade mix does not depend on the product, so a product's FPD difference is not a grade difference (week 2's finding, now a picture).
+
 </details>
 
 **P5.** Scatter of `principal` vs `outstanding` for active loans, `alpha=0.3`, both axes log. What is the correlation and what are the points below the diagonal?
 
 <details><summary>Answer</summary>
+
 Correlation 0.92 (`df[["principal", "outstanding"]].corr()`). Points on the diagonal are young loans (nothing repaid yet); points far below it are old loans nearly repaid. A point *above* should be impossible — and there are **19**, all BNPL loans disbursed in September 2026, above by 100–400 soum: the zero-rate schedule rounds the instalment up to the nearest 100 (`3 380 000 / 12 → 281 700 × 12 = 3 380 400`) and never trims the last one. Invisible on any axis, found by a mask (`(df.outstanding > df.principal).sum()`) — a one-line data-quality note for Jasur, and the reason you check the impossible before you trust the chart. The log–log view is the only one on which the 2 m and 500 m loans are both visible.
+
 </details>
 
 **P6.** Outstanding by region as a sorted barh with bn labels; then the same for Tashkent's product mix. One finding title each.
 
 <details><summary>Answer</summary>
+
 Tashkent 81.7 bn · Fergana 24.8 · Samarkand 24.7 · Andijan 19.8 · Namangan 18.7 · Bukhara 15.1 · Nukus 13.3 · Termez 10.7 — *"Tashkent's three branches hold 39 % of the book; the next two regions 24 %"*. Tashkent's mix: SME 58.6 % · Auto 30.0 · Consumer 10.4 · BNPL 0.5 · Micro 0.5 — *"Tashkent is the whole book in miniature"*. Sorted, from zero, one highlight (Tashkent).
+
 </details>
 
 **P7.** The bridge with parameters: a function `late_loans(con, as_of)` that runs the week-2 DPD CTE with `params=` and returns the bucket counts. Call it for 1 September and 1 October.
 
 <details><summary>Answer</summary>
+
 1 Sep: 128 / 23 / 17 / 217 (385 late, plus 13 with an instalment due that day at DPD 0); 1 Oct: 124 / 25 / 16 / 234 (399 late, plus 14 due that day). `params=(as_of, as_of)` fills two `?` placeholders (the instalment filter *and* the payment filter — week 3's lesson). Never `f"... <= '{as_of}'"`: it works today and breaks on the first value with a quote in it.
+
 </details>
 
 **P8.** `sns.lineplot` of monthly disbursements by product (`hue="product"`) from `monthly_disbursements.csv` — long data, October dropped. Then `pivot` to wide and `df.plot()` — same chart? Which product should be on its own axis and why do you refuse?
 
 <details><summary>Answer</summary>
+
 Same chart: seaborn takes long data with `hue`, pandas' `plot` takes wide data with one column per line. SME (94.8 bn in January–September 2026) and Auto (36.0) are readable; Consumer (25.5) is a low line; Micro (2.8) and BNPL (2.4) are flat at the bottom. The request for a second axis is the week-4 trap (two lines crossing on two scales tell a story that does not exist); give the small products their own small-multiple (`sns.relplot(..., col="product", facet_kws={"sharey": False})`) or a share chart.
+
 </details>
 
 **P9.** A 2 × 2 grid: buckets (bar), outstanding mix (barh), monthly line, roll heatmap — one `fig.suptitle`, one source line, one PNG. Then say why this is *not* what Timur asked for.
 
 <details><summary>Answer</summary>
+
 `fig, axes = plt.subplots(2, 2, figsize=(16, 10))`, each chart on `axes[i, j]`, `fig.suptitle("Nur Finance — loan book, as of 2026-10-01", x=0.01, ha="left")`, `fig.text(0.01, 0.005, "nur.db · 7 828 loans · payments de-duplicated", fontsize=9)`. It is the one-pager for a reader with a printout; the deck wants one chart per slide with one sentence — a 2 × 2 grid on a slide has four titles competing. Both are right for their reader.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** `to_sql`: write `dpd_per_loan` (HW 5.2) into `nur.db` as a table `loan_dpd_pandas`, then `read_sql` a join of it with `loans` to count mismatches against week 3's bucket logic. Then drop the table (`con.execute("DROP TABLE loan_dpd_pandas")`) — why drop it?
 
 <details><summary>Answer</summary>
+
 `d.to_sql("loan_dpd_pandas", con, if_exists="replace", index=False)`; the join with the week-2 CTE gives **0** mismatches on 7 828 loans. Drop it because `nur.db` is the shared raw source for everyone's weeks 1–3 work — a derived table left inside it is the "clean the only copy" sin from week 1; derived tables belong in your own database file or a `pandas_` schema, documented.
+
 </details>
 
 ### Mistakes that cost a point this week

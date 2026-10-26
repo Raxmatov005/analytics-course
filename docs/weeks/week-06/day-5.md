@@ -10,7 +10,7 @@
 - **Part B (30 pts):** the test-choice quiz — twelve short scenarios; for each, the test and one line of why.
 - **Part C (20 pts):** eight interview questions, 3–5 sentences each. Parts B and C go into `quiz.md`.
 
-**Rules.** Open book: this week's pages, your notebooks, the reference card (Day 4, section 2). Submit to **`submissions/week-06/day-5/`**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save) and `quiz.md`. Also due today: **HW 6.2** in `day-2/`. Data as of **2026-10-01**; the template's loader builds `loans`, `f` (FPD30 loans), `x` (52 850 clean payments with `days_late` and `late`) and `apps`. Closed: the model answers until you submit.
+**Rules.** Open book: this week's pages, your notebooks, the reference card (Day 4, section 2). Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save) and `quiz.md`. Also due today: **HW 6.2** in `day-2/`. Data as of **2026-10-01**; the template's loader builds `loans`, `f` (FPD30 loans), `x` (52 850 clean payments with `days_late` and `late`) and `apps`. Closed: the model answers until you submit.
 
 **What every Part A answer contains** (graded): the grain in a comment; the code; the output (numbers visible in the saved notebook); the method named (t, Wilson, z, Mann–Whitney, Cohen's h); and **two sentences**: what the number says, and what someone should do or not do with it. A correct number with no interpretation earns 6 of 10.
 
@@ -66,6 +66,7 @@ a1 = pd.DataFrame(rows, columns=["product", "n", "mean", "sd", "ci_lo", "ci_hi",
 ```
 
 *Interpretation.* Auto's average ticket is known least precisely (±4.5 %, 207–227 m) because it has the fewest loans (391) with a wide spread (sd 45 % of the mean); SME's sd is even larger relative to its mean (54 %) but its 781 loans buy back precision (±3.8 %). For pricing and limits these intervals are narrow enough to use the averages as they are; for a monthly Auto figure (≈ 20 loans) the interval would be about four times wider, so report it with n.
+
 </details>
 
 *Deductions seen most often:* `std()` from numpy (ddof 0) instead of `ddof=1`; a z value instead of t; the half-width given in soum only, so products cannot be compared; "Auto is least precise because its loans are big" (it is n and the relative spread, not the size).
@@ -89,6 +90,7 @@ a2[["wilson_lo", "wilson_hi"]] = [proportion_confint(k, n, method="wilson") for 
 ```
 
 *Interpretation.* The app approves 68.2 % of decided applications (95 % CI 66.8–69.6 %) against the branch's 72.4 % (71.2–73.6 %); the intervals do not overlap, so the 4-point gap is not sampling noise — it is policy (no officer to argue a borderline case) or mix (Micro applicants). Partner sits between and overlaps both; the dashboard should show all three with their intervals, and the 4-point gap is worth a look at the app's automated cut-offs.
+
 </details>
 
 *Deductions seen most often:* cancelled applications left in the denominator (that gives 58.2 / 63.7 / 61.9 % — say which convention you use); `approved_not_disbursed` counted as not approved; a Wald interval; "they do not overlap, so app is worse" without a word on why.
@@ -114,6 +116,7 @@ stats.chi2_contingency(t, correction=False)[:2]                        # chi2 = 
 ```
 
 *Interpretation.* Payments of sme-segment customers are late 13.0 % of the time against 12.6 % for mass customers — +0.46 points, RR 1.04, p = 0.21 — so the data show no difference in lateness between the two segments, and at the loan level the direction even reverses (49.8 % vs 51.4 % of loans with any late payment, p = 0.28). Do not price or limit by customer segment on this evidence; the payment grain could only have overstated a difference, and the loan-level check says there is none to explain — the risk grade (Day 3) is what separates late payers.
+
 </details>
 
 *Deductions seen most often:* raw payments (52 875, with the 25 duplicates) instead of clean ones; "p = 0.21, so the two segments pay exactly the same" (absence of evidence, not proof); no relative risk; the grain sentence missing (payments of one loan are not independent; the loan-level check is the honest version).
@@ -140,6 +143,7 @@ u.statistic / (len(cb) * len(cc))                          # 0.4504
 Why not a t-test: days late is heavily right-skewed (skew 4–6) with the same median in both groups, so the mean is driven by a thin tail of very late payments; the question "do grade C Consumer borrowers pay later than grade B?" is about the typical payment, which a rank test answers. (With n in the thousands a Welch test on the means is still *valid* — t = −11.70, p = 2.1 × 10⁻³¹ — it just answers a different question.)
 
 *Interpretation.* Inside the same product, grade C payments tend to arrive later than grade B payments (p ≈ 10⁻²⁶): a random grade-B payment is later than a random grade-C one only 45.0 % of the time, against 50 % for no difference, although both medians are one day early. The scorecard separates lateness even within Consumer loans; the practical gap is the share paid late — 18.4 % vs 9.4 % — which is where an earlier reminder for grade C would act.
+
 </details>
 
 *Deductions seen most often:* "the medians differ" (they are equal); a t-test with no reason given; the effect size missing — a p of 10⁻²⁶ on 15 650 payments says nothing about size without the 45.0 %; all grade B and C payments used instead of the Consumer ones.
@@ -160,6 +164,7 @@ dec.groupby(dec.applied_at.dt.to_period("M")).size().mean()      # 183.0 a month
 ```
 
 *Interpretation.* Detecting a 2-point rise in the app's approval rate (68.2 → 70.2 %) with 80 % power needs 8 362 decided applications per arm — about 91 months of the app's current traffic, so a test of that size is not feasible. With one year of traffic split in two (~1 098 per arm) the smallest detectable change is about +5.4 points; the team should either test a bigger change, pool channels, or accept a monitored rollout instead of a test.
+
 </details>
 
 *Deductions seen most often:* the all-applications rate (58.2 %) as the baseline instead of the decided one; n for both arms reported as "per arm"; a one-sided test without saying so; the one day of October counted as a month; no translation into months — the number that makes the decision.
@@ -193,6 +198,7 @@ The original course closed its statistics module with short quizzes; here are th
 4. It shrinks like σ/√n: large deviations of the sample mean from the true mean become rarer — the distribution of sample means gets narrower (Day 2's table: 49 m at n = 5, 3.3 m at n = 1 000).
 5. With **ranks**, not values; H₀: both samples come from the same distribution (P(X > Y) = ½). Micro vs BNPL days late: p = 1.1 × 10⁻⁸.
 6. The experiment **system** — the random split, the logging, the metric pipeline, the test itself: two groups with the same treatment should differ "significantly" about 5 % of the time (our split: 4.9 %).
+
 </details>
 
 ---
@@ -228,6 +234,7 @@ For each scenario: **the test** (and the correction or the follow-up, if one is 
 10. **Holm** (or Benjamini–Hochberg) across the 25 tests — or stop colouring by p and show intervals. *Why:* 25 tests at 5 % give a 1 − 0.95²⁵ = **72 %** chance of at least one red KPI when nothing changed. *Trap:* every month someone "explains" a red KPI that is noise.
 11. A **power / sample-size calculation** first (Cohen's h, `zt_ind_solve_power`); fix α, the metric, the sample size, the end date and the stopping rule in advance; plan an **A/A** check. *Why:* an underpowered test cannot answer (A5: a 2-point change needs ~91 months of app traffic), and peeking turns 5 % into ~21 % (Day 4). *Trap:* "we will run it and see".
 12. **χ² test** on the 3 × 2 table, then pairwise two-proportion tests (or Fisher) with **Holm**. *Why:* a rate, three independent groups. *Trap:* testing the best script against the worst only — that is three comparisons chosen after looking.
+
 </details>
 
 ---
@@ -255,6 +262,7 @@ Answer in `quiz.md`, 3–5 sentences each, with a Nur number where it helps. 2.5
 6. **Significance vs importance.** Significance only says the effect is distinguishable from zero given n; with enough rows any trivial gap is significant (scores app vs branch: p = 0.013, a 3-point difference, d = 0.06). Report the effect size with its interval and in business units — app vs branch FPD: +0.66 points (CI +0.05 to +1.33), 6.6 extra FPDs per 1 000 loans, ~15 m soum a year — and the decision it supports.
 7. **Multiple comparisons.** With ten tests at 5 % the chance of at least one false positive is up to 40 % even if no branch differs (our simulation: 31 %). Correct with Holm (or Bonferroni) — Bukhara's p = 0.020 becomes 0.199 — or run one omnibus test first (χ² across branches: p = 0.35), and treat a single hit as something to monitor, not act on.
 8. **Power.** The probability of detecting a real effect of a given size: it depends on α, the effect size, n and the variability (for rates, the base rate). Computing it first tells you whether the test can succeed at all: Jasur's 2 000-loan SMS test had 9 % power for FPD 1.28 → 1.00 % (22 481 per arm needed), so a "no effect" result would have been meaningless; the fix was a more frequent metric, not a bigger hope.
+
 </details>
 
 **Follow-ups an interviewer adds** (prepare one sentence each): *"Why n − 1 in the sample variance?"* (unbiased; Day 2) · *"When would you use a one-sided test?"* (pre-registered, one direction changes the action; Day 3) · *"Bootstrap or t-interval?"* (skewed statistic or no formula → bootstrap; Day 2) · *"What is an A/A test for?"* (the system; Day 4) · *"How do you choose α?"* (by the cost of a false alarm vs a miss, before the data) · *"What if the p-value is 0.051?"* (nothing magical happens at 0.05: report the effect and its interval, and the decision it supports).
@@ -295,7 +303,7 @@ Answer in `quiz.md`, 3–5 sentences each, with a Nur number where it helps. 2.5
 | B — test-choice quiz | 30 | 2.5 per scenario: the right test (1.5) and a reason that names outcome type, groups, pairing or the broken assumption (1) |
 | C — interview | 20 | 2.5 per answer: correct, in your words, with a number or example |
 
-**70 points** to move on. Below 70, the feedback lists the sections to redo (a focused redo, not the whole week). Points go to `docs/progress.md`. Next week the tests become **experiments**: A/B testing (randomisation, A/A, sequential looks, guardrails) on Nur's app funnel, and the first Power BI dashboard — where every rate gets its n and its interval.
+**70 points** to move on. Below 70, the feedback lists the sections to redo (a focused redo, not the whole week). Points go to the [Progress page](progress.md). Next week the tests become **experiments**: A/B testing (randomisation, A/A, sequential looks, guardrails) on Nur's app funnel, and the first Power BI dashboard — where every rate gets its n and its interval.
 
 **Week 6 in five sentences** (what you can now say in any meeting):
 

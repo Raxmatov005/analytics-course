@@ -160,7 +160,7 @@ No selection: *"Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"*;
 - ▶ Visuals and the full project — [Learn Power BI in Under 3 Hours (Alex The Analyst), 1:09:26](https://youtu.be/I0vQ_VLZTWg?t=4166&end=4960)
 - ▶ (RU) DAX basics — [Power BI с нуля — полный гайд | Часть 1 (MrAnalitik), 39:33](https://youtu.be/A2r6or-Dm28?t=2373&end=4004)
 
-- RU deck `Power BI 7.2.pptx`: M vs DAX — slide 9; DAX syntax, types, operators — slides 10–12; the most used functions (math and statistics, `DIVIDE`; logical `IF`, `AND`, `OR`) — slides 13–14; links — slide 15. RU deck `Power BI 7.3.pptx`: why visualise and visual categories — slides 3–6; **allocation of visuals (top / middle / bottom)** — slide 7; publishing to the web, refresh settings — slides 8–9; dashboards vs reports, sharing — slides 10–12; homework — slide 13.
+- RU deck (TBC Data Analytics 2.0, if you have it) `Power BI 7.2.pptx`: M vs DAX — slide 9; DAX syntax, types, operators — slides 10–12; the most used functions (math and statistics, `DIVIDE`; logical `IF`, `AND`, `OR`) — slides 13–14; links — slide 15. RU deck (TBC Data Analytics 2.0, if you have it) `Power BI 7.3.pptx`: why visualise and visual categories — slides 3–6; **allocation of visuals (top / middle / bottom)** — slide 7; publishing to the web, refresh settings — slides 8–9; dashboards vs reports, sharing — slides 10–12; homework — slide 13.
 - `Power BI 7.2.pbix`, `Power BI 7.3.pbix` — the lecture files (binary; open them in Power BI Desktop, not readable here). `Homework.zip` — the 7.3 homework: `flights.csv` (72 MB, US flights), `airline_carriers.csv` and a task list: load and relate, a calculated column *Delay / On-Time* (`DepDelay` or `ArrDelay` > 0), a visual of the % share of each status, flights by carrier name, then a **Top N** filter to the top 5 carriers. A good extra hour on someone else's data with exactly today's tools.
 - DAX guide `Подробное руководство по DAX.pdf` (PDF page = book page): calculated columns vs measures pp. 51–56, variables p. 56; `ALL` / `ALLEXCEPT` pp. 90–104; **evaluation contexts** pp. 105–141 (filter context p. 106, row context p. 112); **`CALCULATE`** pp. 142–205 (context transition pp. 177–193, modifiers pp. 194–203); variables pp. 206–218; iterators and **`RANKX`** pp. 219–248 (`RANKX` p. 235); **time intelligence** pp. 249–312; working with the filter context pp. 348–380. Read chapters 4 and 5 once; come back to 8 when a YTD looks wrong.
 - *Russian terms:* мера = measure, вычисляемый столбец = calculated column, контекст строки / фильтра = row / filter context, преобразование контекста = context transition, итератор = iterator, переменная = variable, логика операций со временем = time intelligence, нарастающий итог с начала года = year-to-date, аналогичный период прошлого года = same period last year, полуаддитивная мера = semi-additive measure, ранжирование = ranking, условное форматирование = conditional formatting, срез = slicer, детализация = drill-through, всплывающая подсказка = tooltip, закладка = bookmark, публикация = publish, шлюз данных = data gateway, безопасность на уровне строк = row-level security.
@@ -184,67 +184,89 @@ Continue in `nur_week7.pbix`. Paste the measures from `data/powerbi/measures.dax
 **P1.** Row vs filter context. Add two calculated columns on `v_loan_status`: `share = v_loan_status[outstanding] / SUM(v_loan_status[outstanding])` and `own = CALCULATE(SUM(v_loan_status[outstanding]))`. What do they show for loan 1, and why are they different?
 
 <details><summary>Answer</summary>
+
 `share` = 9 593 064 / 208 723 504 430 = **0.0046 %** — `SUM` in a column sees the whole table (no filter context). `own` = **9 593 064** — `CALCULATE` performs context transition: the row (loan 1) becomes a filter, so the sum covers that row only. Delete both columns afterwards; a share of total belongs in a measure.
+
 </details>
 
 **P2.** Type `Outstanding DPD30+`, `PAR30 %`, `NPL90 %`, `Loans 90+` and put them in a table by product. Check against week 3.
 
 <details><summary>Answer</summary>
+
 PAR30 / NPL90: AUTO **4.44 / 2.98 %**, BNPL 1.28 / 0.48 %, CONS 3.09 / 2.13 %, MICRO 0.72 / **0.00 %**, SME 2.55 / 2.47 %; total **3.12 / 2.55 %**. Loans 90+: CONS 77, MICRO 76, BNPL 42, SME 29, AUTO 10 — total 234. MICRO has 76 loans in 90+ but 0 % NPL90: their remaining principal is already *due*, and week 3's outstanding counts only principal due after the as-of date — a definition worth a footnote on the risk page.
+
 </details>
 
 **P3.** A matrix by `v_loan_status[bucket]` with `Outstanding` and `M90 = CALCULATE([Outstanding], v_loan_status[bucket] = "90+")`. Then change it to `CALCULATE([Outstanding], KEEPFILTERS(v_loan_status[bucket] = "90+"))`. Explain both.
 
 <details><summary>Answer</summary>
+
 `Outstanding` by bucket: 0 197 486 207 578 · 1-30 4 729 769 899 · 31-60 748 610 049 · 61-90 439 441 377 · 90+ 5 319 475 527. `M90` shows **5 319 475 527 in every row** — the filter argument replaces the row's filter on the same column. With `KEEPFILTERS` the two filters intersect: 5 319 475 527 in the 90+ row, blank elsewhere.
+
 </details>
 
 **P4.** `Outstanding Share of Total` with `ALL(products)`, then a version with `ALL(v_loan_status)`. Add a branch slicer on Tashkent Central. What does the SME row show in each, and which question does each answer?
 
 <details><summary>Answer</summary>
+
 No slicer: both give SME **60.32 %**. Tashkent Central selected: `ALL(products)` → **55.30 %** (SME's share of Tashkent Central's 28 716 674 373: AUTO 34.23 %, CONS 9.52 %, BNPL 0.49 %, MICRO 0.46 %); `ALL(v_loan_status)` → **7.61 %** (Tashkent Central's SME as a share of the whole book — `ALL` on the fact removes the filters arriving from its dimensions too). The first answers "what is this branch's mix?", the second "how much of the company sits here?" — name the denominator in the title.
+
 </details>
 
 **P5.** Time intelligence: `YTD Disbursed`, `Disbursed SPLY`, `Disbursed YoY %`, `Disbursed Prev Month`, `Disbursed MoM %` in a table by `dim_date[year_month]`. Report September 2026; then unmark the date table and say what breaks.
 
 <details><summary>Answer</summary>
+
 September 2026: Disbursed 17 015 490 000 · **YTD 161 480 300 000** · SPLY 14 644 540 000 · **YoY +16.19 %** · Prev Month 22 290 210 000 · **MoM −23.66 %**. YTD at September 2025: 110 929 400 000 (YTD growth +45.6 %). Unmarked, `TOTALYTD` still works if `dim_date[date]` is a true date column with no gaps — but Power BI keeps its auto-date tables, a visual using `disbursed_at`'s own hierarchy ignores `dim_date`, and time intelligence on a text "date" fails. Mark it and use `dim_date` everywhere.
+
 </details>
 
 **P6.** `Branch Rank` with `RANKX`. Show it for all products, then with a product slicer on SME. Then remove `ALL` from the formula and explain the result.
 
 <details><summary>Answer</summary>
+
 All products: Tashkent Central 1, Tashkent South 2, Tashkent North 3, Fergana Central 4, Samarkand Central 5, Andijan Central 6, Namangan Central 7, **Bukhara Central 8**, Nukus Central 9, Termez Central 10; total row blank. SME: **Tashkent South 1** (16 650 742 813), Tashkent Central 2, Samarkand Central 3. Without `ALL`, each row's table holds only its own branch, so **every branch ranks 1**.
+
 </details>
 
 **P7.** Type `Running Outstanding` with `VAR … RETURN` and `Running Outstanding %`; show them by branch sorted by Outstanding. How many branches hold half the book? Then rewrite without the variable and compare.
 
 <details><summary>Answer</summary>
+
 Tashkent Central 13.76 % · Tashkent South 26.59 % · Tashkent North 39.13 % · **Fergana Central 51.01 %** · Samarkand Central 62.83 % · Andijan 72.31 % · Namangan **81.27 %** · Bukhara 88.51 % · Nukus 94.89 % · Termez 100 %. Four of ten branches hold half. Without the variable, `[Outstanding] >= [Outstanding]` inside `FILTER` compares each iterated branch with itself — always true — so every row shows 208 723 504 430 (100 %).
+
 </details>
 
 **P8.** Balances over time: `Outstanding Month-End` and a plain `SUM(v_portfolio_monthly[outstanding_month_end])` in a table by month, then by year. What do the totals show?
 
 <details><summary>Answer</summary>
+
 By month both agree: Jan 2026 151 807 386 149 … Aug 203 830 205 928 · **Sep 208 243 879 623**. The **2026 total**: plain `SUM` **1 808 092 257 935** (ten balances added — meaningless); Month-End **196 392 195 577** — the last month in the filter, October (instalments due from 1 November). Filter the visual to months ≤ September 2026 and the year shows 208 243 879 623. September's month-end differs from the as-of card (208 723 504 430) by about 480 m: week 3's P8 — one is "due after 30 Sep", the other "due after 1 Oct".
+
 </details>
 
 **P9.** The risk matrix (worked example) plus a line of `FPD30 %` by `fct_first_instalment[vintage]` for 2025–2026, with `FPD30 Loans in Scope` in the tooltip. Which vintages should not be on the chart, and what are the highest points?
 
 <details><summary>Answer</summary>
+
 August 2026 has **11 loans in scope** (0 %) — not readable; hide vintages with fewer than 50 loans (a visual-level filter on `FPD30 Loans in Scope` ≥ 50). Highest: **April 2025 3.11 %** (7 / 225), March 2025 2.82 %, October 2025 2.43 %; lowest March 2026 0.00 % (0 / 330, week 6's suspicious month). 2025 vintages 1.55 % vs 2026 1.08 % overall. With 200–380 loans per vintage the intervals are wide — July 2026's 4 / 367 = 1.09 % has a Wilson interval of 0.42–2.77 %: the tooltip with n stops people reading noise as a trend.
+
 </details>
 
 **P10.** Row-level security: create the role *Branch manager — Bukhara* (`branches[branch_name] = "Bukhara Central"`), then Modeling → **View as** the role. Report the risk cards, then look at `Branch Rank` and `Outstanding Share of Total`.
 
 <details><summary>Answer</summary>
+
 Outstanding **15 116 046 338** · PAR30 **4.81 %** · NPL90 4.48 % · FPD30 **2.39 %** (14 / 586) · collection rate (due in Sep 2026) **92.31 %** · Loans 90+ 23. **Branch Rank = 1** and the shares are of Bukhara only: RLS removes the other branches' rows before any measure runs, so `ALL(branches)` sees one branch. If the manager should see her rank among all branches, compute it upstream (a column in the view) — RLS cannot be bypassed by DAX, which is the point.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** The collections page measures: `Actions`, `Contact Rate`, `Promise-to-Pay Rate`, `Paid-on-Action Rate` for September 2026, by action type and by collector; put a **Top N** filter (Filters pane → Filter type *Top N*, by `Actions`) on the collector table to show the five busiest. What would you tell Sevara, and what would you not?
 
 <details><summary>Answer</summary>
+
 September 2026: **651** actions, contact **72.81 %**, PTP **28.57 %**, paid **22.73 %**. By type: call 216 (contact 82.4 %, PTP 29.2 %, paid 28.7 %), SMS 216 (63.9 %, 38.0 %, **13.0 %**), visit 111 (68.5 %, 20.7 %, 26.1 %), restructure offer 108 (75.9 %, 16.7 %, 26.9 %). Top 5 by actions: Nilufar Jalilov 52 (paid 21.2 %), Bekzod Mirzaev 39 (17.9 %), Bobur Tashkentov 38 (31.6 %), Malika Jalilov 37 (27.0 %), Ilhom Qodirov 32 (28.1 %). Tell her: SMS promises the most and pays the least — promises from SMS need a follow-up call. Do not tell her collector X is better: 30–50 actions each, different loans and buckets — week 6's lesson (9 payments out of 40 actions = 22.5 %, Wilson 12.3–37.5 %) applies to people too.
+
 </details>
 
 ### Mistakes people make
@@ -263,7 +285,7 @@ September 2026: **651** actions, contact **72.81 %**, PTP **28.57 %**, paid **22
 
 ## 4. Homework
 
-**HW 7.2** (the model and six base measures) is due **tomorrow** in `submissions/week-07/day-3/`. Tomorrow's checkpoint Part B is the three pages below — build what you can today: the measures are all in `measures.dax`.
+**HW 7.2** (the model and six base measures) is due **tomorrow** in Day 3's hand-in box. Tomorrow's checkpoint Part B is the three pages below — build what you can today: the measures are all in `measures.dax`.
 
 ---
 

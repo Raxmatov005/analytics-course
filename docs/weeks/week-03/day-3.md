@@ -122,7 +122,7 @@ Anchor row, then "take the last rows and produce the next" until the condition f
 ### Depth (optional)
 
 - ▶ Baraa, *Subqueries* [12:58:04](https://youtu.be/SSKVgrwhzus?t=46684&end=51488), *CTE* [14:18:08](https://youtu.be/SSKVgrwhzus?t=51488&end=56102) — ~2 h 30; his recursive examples use SQL Server syntax (no `RECURSIVE` keyword, `MAXRECURSION` option).
-- RU deck `2.4 SQL Advanced.pdf` — subqueries and the recursive CTE pages. *Russian terms:* подзапрос = subquery, обобщённое табличное выражение (ОТВ) = CTE, рекурсия = recursion, когорта/винтаж = cohort/vintage.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.4 SQL Advanced.pdf` — subqueries and the recursive CTE pages. *Russian terms:* подзапрос = subquery, обобщённое табличное выражение (ОТВ) = CTE, рекурсия = recursion, когорта/винтаж = cohort/vintage.
 
 ---
 
@@ -155,19 +155,25 @@ Write each query in the box under its question — it is saved in this browser. 
 **P1.** Loans larger than the average SME loan (scalar subquery), by product. Why is the answer not "all SME loans above average" only?
 
 <details><summary>Answer</summary>
+
 `WHERE principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)` (308 728 745) → SME 400, AUTO 88 — Auto's biggest loans exceed the average SME loan; no other product comes close. A scalar subquery with its own filter — the window cannot do this one.
+
 </details>
 
 **P2.** Customers who have a written-off loan: once with `IN`, once with `EXISTS`. Same count? Which reads better when you also want to exclude customers with an *active* loan?
 
 <details><summary>Answer</summary>
+
 188 both ways. The second condition is a second `NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active')` → 127 customers with a write-off and no live loan — two tests side by side read as a sentence; with `IN` it becomes `IN (…) AND customer_id NOT IN (…)`, which also works because `customer_id` is never NULL. Count both and keep the one you can explain.
+
 </details>
 
 **P3.** The `NOT IN` trap, demonstrated: loans disbursed on a date on which no loan was closed, written three ways (NOT IN raw, NOT IN with `IS NOT NULL`, NOT EXISTS). Explain the 0.
 
 <details><summary>Answer</summary>
+
 0 · 649 · 649 (section 1). `closed_at` is NULL for 3 601 loans; one NULL in the list makes `NOT IN` unknown for every row. `NOT EXISTS` compares row by row with `=`, and a NULL simply never matches.
+
 </details>
 
 **P4.** With a derived table: the distribution of **instalments per loan** (term) — how many loans have 3, 6, 12 … instalments — and check it against `term_months`.
@@ -180,12 +186,15 @@ SELECT n_inst, COUNT(*) AS loans FROM (SELECT loan_id, COUNT(*) AS n_inst FROM i
 SELECT COUNT(*) FROM loans l WHERE term_months <> (SELECT COUNT(*) FROM installments i WHERE i.loan_id = l.loan_id);   -- 0
 ```
 Every schedule has exactly `term_months` rows (the correlated subquery proves it: 0 mismatches). Counts: 3-month = Micro 1 335 + BNPL 532 = 1 867 — the sum reconciles with Tuesday's product × term table.
+
 </details>
 
 **P5.** Correlated: each customer's **largest** loan — count the rows, then explain why `WHERE principal = (SELECT MAX …)` gives exactly 4 335 and when it could give more.
 
 <details><summary>Answer</summary>
+
 4 335 = one per borrower. It would give more if a customer had two loans with the *same* maximal principal (both match `= MAX`); `ROW_NUMBER() … ORDER BY principal DESC, loan_id` with `rn = 1` is the version that guarantees one row. Know both; say which you used.
+
 </details>
 
 **P6.** A CTE chain in four steps: (1) outstanding per loan, (2) outstanding per customer, (3) the customer's rank, (4) the top 10 with name and segment. One `WITH`, four names.
@@ -201,36 +210,47 @@ FROM ranked r JOIN customers c ON c.customer_id = r.customer_id WHERE r.rn <= 10
 -- 1 Ulugbek Nazarov (sme) 2 loans 977 697 006 · 2 Davron Tashkentov (mass) 4 · 840 677 484 · 3 Umida Yusupova (mass) 3 · 752 948 733 …
 ```
 Each step has one grain (instalment → loan → customer → ranked customer). Joining `customers` at the end, to 10 rows, is cheaper and safer than joining it to 92 193 instalments at the start.
+
 </details>
 
 **P7.** Recursive calendar 2026-01..2026-09 × products × branches, `LEFT JOIN` the monthly disbursement counts. How many empty cells, and for which products?
 
 <details><summary>Answer</summary>
+
 450 cells (9 × 5 × 10), **16 empty**: Auto 13 (five of them Termez Central), SME 3 (Fergana, Nukus, Termez) — the two big-ticket products skip months, mostly at the smallest branch. The same query without the calendar returns 434 rows and the chart silently interpolates. Use `dim_date` for the months if you prefer; the `CROSS JOIN products CROSS JOIN branches` is the part that makes the grid.
+
 </details>
 
 **P8.** Nilufar's matrix, long form: cohort × MOB → loans observed, ever-30+ count, rate — for cohorts 2025-01..2026-03, loans with `term_months >= 6`. Which cohort is worst at MOB 3?
 
 <details><summary>Answer</summary>
+
 The worked example's three CTEs plus a `base` CTE (`loans WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01'`), joined and grouped by `cohort, installment_no`. Worst at MOB 3: **2025-10 — 15 of 217 = 6.91 %**; then 2025-09 5.70 %, 2025-03 5.59 %, 2025-05 5.41 %. The Company corner pivots this into the wide matrix.
+
 </details>
 
 **P9.** Pivot P8 to wide (MOB 1..6 as columns, `SUM(CASE WHEN installment_no = k THEN ever30 END) / SUM(installment_no = k)`), and make a cell **NULL when not every loan of the cohort is observable** at that MOB. Which cells go blank?
 
 <details><summary>Answer</summary>
+
 Add `COUNT(*)` per cohort×MOB and the cohort size (`(SELECT COUNT(*) FROM base x WHERE x.cohort = b.cohort)`), and `CASE WHEN observed = size THEN rate END`. Blank: **2026-03 at MOB 5 (250 of 251 observed) and MOB 6 (5 of 251)** — the March loans' sixth instalment falls due after 1 September for 246 of the 251, so its 30 days are not up by 1 October. A 0.0 % in that cell would be a lie: not "nobody late", but "nobody measured".
+
 </details>
 
 **P10.** Vintage curve pooled by **grade** instead of by month (2025-01..2026-03, term ≥ 6): rate at MOB 1, 3, 6. Does the scorecard order the curves?
 
 <details><summary>Answer</summary>
+
 A 0.43 / 1.86 / 3.13 % · B 0.93 / 2.49 / 5.18 · C 1.99 / 7.18 / 11.52 · D 2.16 / 11.51 / **19.08**. Strictly ordered at every MOB, and the gap widens with age: one in five D loans has been 30+ late within six months. Same chain, `GROUP BY l.risk_grade` instead of cohort.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Build the calendar with `dim_date` instead of recursion, and extend the vintage chain to MOB 1..12 for the 2025 cohorts. At which MOB does the pooled 2025 curve pass 10 %?
 
 <details><summary>Answer</summary>
+
 `SELECT DISTINCT date(date_key, 'start of month') FROM dim_date WHERE date_key BETWEEN …` replaces the recursive CTE line for line. Change `installment_no <= 6` to `<= 12` and keep `term_months >= 12` for a clean denominator. The pooled 2025 curve (term ≥ 6, MOB 1..6) runs 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 %; it is concave — most trouble appears in the first three months, which is why FPD/SPD/TPD are watched separately. Read your own MOB 7..12 values and name the crossing month.
+
 </details>
 
 ---

@@ -135,7 +135,7 @@ FROM customers a JOIN customers b
 ### Depth (optional)
 
 - ▶ Baraa, *NULL functions* [6:59:06](https://youtu.be/SSKVgrwhzus?t=25146&end=29270) — 50 min; *CASE* [8:07:50](https://youtu.be/SSKVgrwhzus?t=29270&end=31416) — 35 min; *Joins (advanced)* [3:27:29](https://youtu.be/SSKVgrwhzus?t=12449&end=14529) — anti-joins, self-joins, FULL.
-- RU deck `2.2 SQL-1-38.pdf` — NULL / CASE pages. *Russian terms:* пустое значение = NULL, условное выражение = CASE, самосоединение = self-join, дубликаты = duplicates.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.2 SQL-1-38.pdf` — NULL / CASE pages. *Russian terms:* пустое значение = NULL, условное выражение = CASE, самосоединение = self-join, дубликаты = duplicates.
 
 ---
 
@@ -170,7 +170,7 @@ GROUP BY p.name ORDER BY p.name;
 
 ## 3. Practice (60 min)
 
-File `submissions/week-02/day-4/practice.sql`.
+Write each query in the box under its question — it is saved in this browser; **✔ Check** compares your result with the answer.
 
 **P1.** For `customers`: rows, rows with income, rows without, share without (one decimal) — in one query.
 
@@ -181,12 +181,15 @@ SELECT COUNT(*) AS rows_, COUNT(monthly_income) AS with_income, COUNT(*) - COUNT
        ROUND(100.0 * (COUNT(*) - COUNT(monthly_income)) / COUNT(*), 2) AS missing_pct
 FROM customers;                                                        -- 6040 · 5684 · 356 · 5.89
 ```
+
 </details>
 
 **P2.** Average income by segment two ways: `AVG(monthly_income)` and `AVG(COALESCE(monthly_income, 0))`, with the count of missing per segment. Which column goes on Madina's slide?
 
 <details><summary>Answer</summary>
+
 affluent 24 961 730 vs 23 469 002 (72 missing of 1 204) · mass 5 771 515 vs 5 436 655 (208 of 3 585) · sme 33 115 571 vs 31 103 753 (76 of 1 251). The first, labelled "of customers with income on file (94 %)". Treating unknown as zero is a *decision*, and the wrong one for income.
+
 </details>
 
 **P3.** Share of applications without a credit score by channel and by status. Is the gap random?
@@ -199,6 +202,7 @@ SELECT channel, COUNT(*) AS apps, COUNT(*) - COUNT(credit_score) AS no_score,
 FROM applications GROUP BY channel;             -- app 2.64 · branch 2.80 · partner 2.96
 ```
 By status: approved 2.69 %, approved_not_disbursed 2.36, cancelled 2.81, **rejected 3.01**. Flat enough to be random here; in real data a higher share among rejections often means "no bureau file → rejected", which is a policy, not a gap.
+
 </details>
 
 **P4.** Approval rate (all-applications denominator) by credit-score band A ≥ 720, B 660–719, C 600–659, D < 600 — with a *no score* band. One query with `CASE` in `GROUP BY`.
@@ -213,30 +217,39 @@ FROM applications GROUP BY band ORDER BY band;
 -- A 2150 / 91.3 % · B 4702 / 77.4 · C 4605 / 52.2 · D 2155 / 16.8 · no score 388 / 59.0
 ```
 The bands add to 14 000 only because the NULL band exists. 59 % for "no score" sits between B and C — someone decides those by hand.
+
 </details>
 
 **P5.** Pivot: applications by channel (rows) × status (four columns) plus a total. Check the totals against Tuesday's counts.
 
 <details><summary>Answer</summary>
+
 app 2 693 / 222 / 1 359 / 732 = 5 006 · branch 3 636 / 329 / 1 513 / 745 = 6 223 · partner 1 588 / 127 / 716 / 340 = 2 771 (approved / approved_not_disbursed / rejected / cancelled). Four `SUM(CASE …)` columns and `COUNT(*)`.
+
 </details>
 
 **P6.** Anti-joins: (a) customers who never applied; (b) customers who applied but never got a loan — once with a join, once with `EXCEPT`; (c) delinquent loans (Day 3's `unpaid` set, any DPD) that have **no** collections action at all.
 
 <details><summary>Answer</summary>
+
 (a) 587. (b) `customers c JOIN applications a … LEFT JOIN loans l ON l.customer_id = c.customer_id WHERE l.loan_id IS NULL` → **1 806 rows but 1 118 customers** — the join to `applications` multiplied by applications per person; use `COUNT(DISTINCT c.customer_id)`, or Tuesday's `EXCEPT` → 1 118 directly. (c) 117 of the 399 delinquent (DPD > 0) loans have never been contacted (130 of 413 if you also count the 13 that fall due today — those cannot have been called yet); 106 of the 124 loans in the 1–30 bucket among them. Sevara's team works the old debt and has not yet reached the new.
+
 </details>
 
 **P7.** The ON-vs-WHERE experiment. Count rows of `installments LEFT JOIN payments` for matured instalments with the as-of filter `p.paid_at <= '2026-10-01'` (a) in `ON`, (b) in `WHERE`. Explain the difference.
 
 <details><summary>Answer</summary>
+
 (a) 54 232 rows (54 207 matured instalments + 25 duplicate payments), `COUNT(p.payment_id)` 52 851. (b) 52 851 rows: every instalment without a payment is gone — `NULL <= '2026-10-01'` is not true. 24 payments are dated after the as-of date; with the filter in `ON` they are ignored *and* the unpaid instalments stay. (Re-running Day 3's DPD with that `ON` filter gives exactly the same DPD for every loan — none of the 24 changes a loan's oldest not-fully-paid instalment.)
+
 </details>
 
 **P8.** Self-join: pairs of customers with the same phone but a *different* birth date. How many, and what are they?
 
 <details><summary>Answer</summary>
+
 43 − 40 = **3** pairs (e.g. ids 786 and 1731): `a.phone = b.phone AND a.birth_date <> b.birth_date AND a.customer_id < b.customer_id`. Shared household numbers, not duplicates — last week's false positives, now found in one query.
+
 </details>
 
 **P9.** Duplicates: `COUNT(*)` vs `COUNT(DISTINCT installment_id)` on `payments`; then the groups of identical `(installment_id, paid_at, amount)` and the amount counted twice.
@@ -249,18 +262,23 @@ SELECT installment_id, paid_at, amount, COUNT(*) FROM payments
 GROUP BY installment_id, paid_at, amount HAVING COUNT(*) > 1;                  -- 25 rows, all COUNT = 2
 ```
 58 397 800 UZS is double-counted in every "payments received" total; the 25 instalments look *over*paid by exactly their amount. Removing them needs row numbers — Week 3 Day 2.
+
 </details>
 
 **P10.** Nilufar's question, part 1: for every loan whose **first** instalment was due on or before 2026-09-01, flag FPD30 = 1 if the instalment was not fully paid, or its first payment came more than 30 days after the due date. Count the flags.
 
 <details><summary>Answer</summary>
+
 See the Company corner: 7 099 loans in scope, **91** flagged — 51 unpaid or partially paid, 40 paid in full but more than 30 days late. Both parts of the `CASE` matter: a strict "unpaid only" rule gives 51 (0.72 %).
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** SPD30 — the same for the *second* instalment. Why is it higher than FPD30, and is that a problem?
 
 <details><summary>Answer</summary>
+
 156 of 6 735 = **2.32 %** vs 1.28 %. Not alarming by itself: the second instalment has had one more month for ordinary financial trouble to appear, and the scope is one month older. FPD isolates the "never meant to pay" signal; SPD/TPD show the early-trouble curve. Report them side by side per vintage.
+
 </details>
 
 ---

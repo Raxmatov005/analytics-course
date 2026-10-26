@@ -89,7 +89,7 @@ It works for dates, datetimes, months of 28–31 days and year ends alike. Make 
 ### Depth (optional)
 
 - ▶ Baraa, *String functions* [4:52:58](https://youtu.be/SSKVgrwhzus?t=17578&end=19124), *Numeric* [5:18:44](https://youtu.be/SSKVgrwhzus?t=19124&end=19368), *Date & time* [5:22:48](https://youtu.be/SSKVgrwhzus?t=19368&end=25146) — 1 h 20 total; SQL Server syntax throughout, use the table above to translate.
-- RU deck `2.2 SQL-1-38.pdf` — functions pages. *Russian terms:* строковые функции = string functions, преобразование типов = CAST, целочисленное деление = integer division, разница дат = date difference.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.2 SQL-1-38.pdf` — functions pages. *Russian terms:* строковые функции = string functions, преобразование типов = CAST, целочисленное деление = integer division, разница дат = date difference.
 
 ---
 
@@ -107,7 +107,9 @@ GROUP BY days_to_disburse ORDER BY days_to_disburse;
 ```
 
 <details><summary>What you see</summary>
+
 Values 0 to 7 carry 7 816 loans (0 days: 925 — the app channel pays out the same day; 3 days is the mode with 1 670). Then ten rows at the top of the list with **negative** days: −29, −26, −24 (two), −23 (two), −20, −18, −17, −15, −12, −6 — one or two loans each. A negative difference means disbursed *before* applied.
+
 </details>
 
 **Step 2 — list them.**
@@ -121,7 +123,9 @@ ORDER BY days;
 ```
 
 <details><summary>Result</summary>
+
 **12 loans.** The first row: loan 2244 (application 3969), applied 2026-09-27, disbursed 2026-08-29 — 29 days before the request. Eight are closed, four active; they were disbursed between 2024-12 and 2026-08, all Micro, Consumer or BNPL loans. Now look at their schedules: loan 1039's first instalment is due 2025-02-07 — one month after **2025-01-07**, not after the stored 2024-12-20. The schedule was built from the real disbursement date; only `disbursed_at` was overwritten later (a re-import, a manual correction gone wrong). Memo line for Timur: *12 loans (0.15 %) have `disbursed_at` 6–29 days earlier than `applications.applied_at`; the first due date minus one month gives the true date, 0–3 days after `decided_at`, consistent with every other loan; recommend restoring `disbursed_at` from the schedule.* Check also `l.disbursed_at < a.decided_at` — the same 12; nothing else was paid out before its decision.
+
 </details>
 
 **Step 3 — Sevara's tile.** Rebuild "share of payments by method" with the cleaned expression and compare with the raw one:
@@ -135,13 +139,14 @@ FROM payments GROUP BY 1 ORDER BY payments DESC;
 -- card 17621 (33.3 %) · payme 8900 (16.8) · click 8790 (16.6) · cash 8790 (16.6) · transfer 8774 (16.6)
 ```
 (`(SELECT COUNT(*) FROM payments)` is a one-value subquery — week 3; copy it today.) Raw `card` was 17 564 = 33.2 % on SQLite (SQL Server's default collation already puts `Card` with `card`); the tile moved by the 57 `Card` rows. Nothing changed overnight except which rows the cashier's software capitalised.
+
 </details>
 
 ---
 
 ## 3. Practice (50 min)
 
-File `submissions/week-02/day-3/practice.sql`. Show both dialects where they differ, or say which one you used.
+Write each query in the box under its question — it is saved in this browser; **✔ Check** compares your result with the answer. Show both dialects where they differ, or say which one you used.
 
 **P1.** The 18 customers whose first name has a trailing space, found with a length comparison (not `LIKE`).
 
@@ -151,6 +156,7 @@ File `submissions/week-02/day-3/practice.sql`. Show both dialects where they dif
 SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_name));   -- 18
 -- SQL Server: LEN() ignores trailing spaces, so use DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))
 ```
+
 </details>
 
 **P2.** One `full_name` column for customers 6001–6003, cleaned: trimmed, first letter logic ignored, surname lower-cased for comparison.
@@ -162,6 +168,7 @@ SELECT customer_id, TRIM(first_name) || ' ' || last_name AS full_name, LOWER(TRI
 FROM customers WHERE customer_id BETWEEN 6001 AND 6003;   -- 'MALIKA jalilova' / 'malika jalilova', 'LOLA saidova', 'Bobur rakhimov'
 ```
 The `match_key` is what last Thursday's duplicate search grouped on.
+
 </details>
 
 **P3.** Share of total due that is interest, per product, one decimal. Which product is 0 %, and why?
@@ -174,6 +181,7 @@ FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.p
 GROUP BY p.name;      -- Auto 29.5 · SME 23.1 · Consumer 17.5 · Micro 9.0 · BNPL 0.0
 ```
 BNPL has `annual_rate = 0` — the merchant pays, not the borrower. Longer terms → more interest share (Auto 36 months). Without `100.0` the column is all zeros.
+
 </details>
 
 **P4.** Loans disbursed in September 2026 — with the half-open filter — and the same for applications *submitted* in September, showing the BETWEEN mistake next to it.
@@ -185,6 +193,7 @@ SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01' AND disbursed_at <
 SELECT COUNT(*) FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';       -- 621
 SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30';               -- 598 (wrong: loses 23)
 ```
+
 </details>
 
 **P5.** Average age in days of active loans on the as-of date, as a whole number.
@@ -195,6 +204,7 @@ SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '202
 SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans WHERE status = 'active';   -- 221
 -- SQL Server: AVG(DATEDIFF(day, disbursed_at, '2026-10-01'))  (integer average → CAST one side AS FLOAT first)
 ```
+
 </details>
 
 **P6.** Disbursed loans and amount by month of 2026 using `dim_date` instead of a date function — month number, month name, loans, amount.
@@ -208,6 +218,7 @@ WHERE d.year = 2026 GROUP BY d.month, d.month_name ORDER BY d.month;
 -- January 287 / 17.45 bn … August 358 / 22.29 bn, September 361 / 17.02 bn, October 21 / 0.85 bn (one day)
 ```
 Same numbers as Tuesday's `strftime` version, no dialect difference, and a readable month name for free.
+
 </details>
 
 **P7.** Sevara's first ask: for every payment, days late = paid date − due date (`installments` via `installment_id`). Show the five latest payments and the overall count of late ones.
@@ -223,6 +234,7 @@ SELECT COUNT(*) FROM payments p JOIN installments i ON i.installment_id = p.inst
 WHERE p.paid_at > i.due_date;                         -- 6669 of 52875 = 12.6 % late
 ```
 Negative days_late = paid early (34 649 payments); 11 557 on the day; 534 more than 30 days late. The maximum is 60 — the data's borrowers never pay later than two months; after that they stop paying, which is why lateness and DPD are two different measurements.
+
 </details>
 
 **P8.** Sevara's second ask: average lateness by product — over *all* payments, and over *late* payments only. Which answers her question?
@@ -238,18 +250,23 @@ JOIN loans l ON l.loan_id = p.loan_id JOIN products pr ON pr.product_id = l.prod
 GROUP BY pr.name ORDER BY avg_days_all DESC;
 ```
 All payments: Micro **+0.56** days, SME +0.04, Consumer −0.01, BNPL −0.02, Auto **−0.21**; share late: Micro 16.3 %, SME 12.4, Consumer 12.0, BNPL 11.5, Auto 10.1. Late payments only: every product averages 11.0–11.4 days — identical. So Sevara's feeling is right about *how often* Micro is late, not about *how late*: the average over all payments mixes the two. Report both columns and name them; "average lateness" alone is ambiguous.
+
 </details>
 
 **P9.** By risk grade: share of late payments and average days. Does the scorecard order the grades?
 
 <details><summary>Answer</summary>
+
 A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 % / +2.96. Monotonic — the grade predicts payment behaviour. Same query as P8 with `GROUP BY l.risk_grade`.
+
 </details>
 
 **P10.** Rewrite Tuesday's payments-by-method with the cleaned method *and* average lateness per method. Anything about the 27 `bank transfer` rows?
 
 <details><summary>Answer</summary>
+
 card −0.03 days, payme 0.14, click 0.20, cash 0.09, transfer 0.16 — and before merging, `bank transfer` alone averaged **2.11** days: the 27 mis-spelt rows are not a random sample; a different source system logs them, later. Cleaning the label is right; also tell Timur where those 27 come from.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Reconstruct the true disbursement date of the twelve detective loans from their schedule: first `due_date` minus one month. How many days after `decided_at` is it for each? Then test the same rule on *all* loans — how many disagree with `disbursed_at`, and why are most of them not errors?
@@ -265,13 +282,14 @@ JOIN installments i ON i.loan_id = l.loan_id AND i.installment_no = 1
 WHERE l.disbursed_at < date(a.applied_at) ORDER BY l.loan_id;
 ```
 Lags of 0–3 days for all twelve (1039 → 2025-01-07, 2 days after the decision; 2244 → 2026-09-30, 3 days) — exactly the lag every normal loan shows. On all 7 828 loans the rule `date(first_due, '-1 month') <> disbursed_at` flags **166**: the 12 real ones plus 154 month-end artefacts (disbursed 2026-01-29 → due 2026-02-28, and February cannot give January 29 back). A date rule needs a tolerance; a "wrong" flag list always needs a look.
+
 </details>
 
 ---
 
 ## 4. Homework <span class="badge hw">HW 2.2 — Due Day 5</span>
 
-**Sevara's 2026 lateness report and the clean method table.** Use the payments received from 1 January to 30 September 2026 throughout (a half-open filter on `paid_at`). Submit to `submissions/week-02/day-3/`:
+**Sevara's 2026 lateness report and the clean method table.** Use the payments received from 1 January to 30 September 2026 throughout (a half-open filter on `paid_at`). Hand in with the 📎 box below:
 
 1. `lateness.sql` + `lateness.md` — (a) days late per payment (the P7 shape, with a `-- result:` of the count of late payments in 2026), (b) by customer **segment**: payments, share late, average days over all payments, average days over late payments only — one query with all four columns, (c) by **region of the branch** the same, (d) three sentences for Sevara: which segment is late most often, how late a late payment typically is, and whether any region stands out.
 2. `methods.sql` — the cleaned payments-by-method table for 2026 (five rows) with count, total amount and share %, plus the count of 2026 rows that needed cleaning and a one-line proposal for where the fix belongs (the cashier software, the ETL, or a reference table of methods).

@@ -119,7 +119,7 @@ DELETE FROM scratch_demo WHERE demo_id = 1;
 ### Depth (optional)
 
 - ▶ Baraa, *DDL commands* [1:32:31](https://youtu.be/SSKVgrwhzus?t=5551&end=6224) — 11 min; ▶ *DML commands* [1:43:44](https://youtu.be/SSKVgrwhzus?t=6224&end=7683) — 25 min.
-- RU deck `1.2 Database Modeling & Normalization.pdf`, the pages on ER-диаграмма, 1НФ/2НФ/3НФ and аномалии. *Russian terms:* сущность = entity, связь = relationship, нормализация = normalisation, избыточность = redundancy.
+- RU deck (TBC Data Analytics 2.0, if you have it) `1.2 Database Modeling & Normalization.pdf`, the pages on ER-диаграмма, 1НФ/2НФ/3НФ and аномалии. *Russian terms:* сущность = entity, связь = relationship, нормализация = normalisation, избыточность = redundancy.
 
 ---
 
@@ -167,7 +167,7 @@ Sevara reads the column list and says "yes, that's all of it, and it's ten colum
 
 ## 3. Practice (60 min)
 
-Save DDL/DML in `submissions/week-01/day-3/scratch.sql` and prose answers in `submissions/week-01/day-3/answers.md`.
+Run DDL/DML in the boxes (they change only your practice copy of the database) and keep your prose answers in a note.
 
 **P1.** Here is a table Timur found on a shared drive, `collections_log`:
 
@@ -177,25 +177,33 @@ Save DDL/DML in `submissions/week-01/day-3/scratch.sql` and prose answers in `su
 Name every normalisation problem you see and which normal form it breaks.
 
 <details><summary>Answer</summary>
+
 1NF: `action1_*`, `action2_*` repeating group → one row per action. 3NF: `customer_name`, `customer_phone` depend on the loan's customer, not on the action; `collector_branch` depends on the collector; `branch_region` depends on the branch (a two-step transitive dependency). Result after fixing: exactly our `collections_actions(action_id, loan_id, action_date, action_type, collector_id, outcome)` plus the existing `staff`, `branches`, `customers`.
+
 </details>
 
 **P2.** In `installments`, which columns would be a valid *composite* natural key? Why did the designers add `installment_id` anyway?
 
 <details><summary>Answer</summary>
+
 `(loan_id, installment_no)` — a loan has exactly one instalment number 1, one number 2, … A surrogate `installment_id` is shorter to join on (`payments.installment_id` is one column, not two) and never changes if a schedule is regenerated.
+
 </details>
 
 **P3.** Which of these does a FOREIGN KEY from `loans.customer_id` to `customers.customer_id` **prevent**? (a) two loans for the same customer; (b) a loan whose customer_id does not exist in customers; (c) a customer with no loans; (d) deleting a customer who has loans.
 
 <details><summary>Answer</summary>
+
 (b) and (d). (a) is allowed — one-to-many is the point. (c) is allowed — the FK constrains the child, not the parent.
+
 </details>
 
 **P4.** Create the restructurings table from the worked example in your own database, named `scratch_restructurings` — the two keyed copies first, then the table. Check it exists with `SELECT COUNT(*) FROM scratch_restructurings;` (expect 0).
 
 <details><summary>Answer</summary>
+
 The DDL above, in your engine's dialect. On SQLite, foreign keys are only enforced while the connection has them switched on: run `PRAGMA foreign_keys = ON;` on its own first (it has no effect inside an open transaction).
+
 </details>
 
 **P5.** Insert three rows: restructurings for loans 2242, 4567 and 4503 (three real, currently active loans that are the furthest behind), requested on 2026-09-28, old term 24, new term 36, reason `business_down`, status `requested`, decided_on and approved_by empty. Then count.
@@ -212,6 +220,7 @@ VALUES
 SELECT COUNT(*) FROM scratch_restructurings;   -- expect 3
 ```
 The id column fills itself (IDENTITY / AUTOINCREMENT). Check `old_term_months` against `loans.term_months` for those three — the real terms may differ from 24; that is fine for a scratch exercise, but notice how a stored copy of `term_months` is already a redundancy you must keep in sync. A stricter design would read the old term from `loans` and store only the new one.
+
 </details>
 
 **P6.** Sevara approved the first one: staff member 68 said yes on 2026-09-30 with a new monthly payment of 1 200 000. Update that one row only. Then "undo" the third request by deleting it. Count again.
@@ -229,24 +238,31 @@ DELETE FROM scratch_restructurings WHERE loan_id = 4503;
 SELECT COUNT(*) FROM scratch_restructurings;                        -- expect 2
 ```
 If you forgot the `WHERE` on the UPDATE, all rows are approved now. Drop the table and redo P4–P6; that is exactly why the rule says scratch tables only.
+
 </details>
 
 **P7.** Try to insert a restructuring for `loan_id = 999999`. What happens on your engine, and what *should* happen?
 
 <details><summary>Answer</summary>
+
 SQL Server: error, the FK constraint is violated (999999 is not in `scratch_loan_keys`) — correct behaviour. SQLite with foreign keys off (`PRAGMA foreign_keys = OFF`, the engine's own default): the row is accepted silently; with them on: `FOREIGN KEY constraint failed`. The lesson: constraints are only protection if the engine enforces them; always check what your engine does.
+
 </details>
 
 **P8.** `loans` stores `customer_id` although it is reachable through `applications`. Is this a 3NF violation? Argue both sides in two sentences each.
 
 <details><summary>Answer</summary>
+
 Strictly yes: `customer_id` depends on `application_id`, a non-key column, so it is a transitive dependency and could become inconsistent (a loan pointing to a different customer than its application). Pragmatically no harm: it is written once at disbursement and never changes, and it saves a join on the most common query in the company; designers call this a controlled denormalisation and document it. (Thursday's warehouse does this on a grand scale.)
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P9.** Write `CREATE TABLE` for a `scratch_promises` table: a collector records a borrower's *promise to pay* (loan, collector, date promised, amount promised, date actually paid or empty, kept yes/no). Decide which columns are NOT NULL and which are FKs, and explain one column you deliberately left out.
 
 <details><summary>Answer</summary>
+
 Columns: `promise_id` PK, `loan_id` FK NOT NULL, `collector_id` FK → staff NOT NULL, `promised_on` NOT NULL, `promise_date` NOT NULL, `promised_amount` NOT NULL, `paid_on` NULL, `kept` (0/1) NULL until the promise date passes. Left out: the borrower's phone (via loan → customer), the collector's branch (via staff), the loan's DPD at the time (a computed fact — store it only if you need the historical value, then call it `dpd_at_promise` and accept the redundancy knowingly).
+
 </details>
 
 ---

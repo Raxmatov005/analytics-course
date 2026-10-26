@@ -111,7 +111,7 @@ Fix: spell out the frame, or use `FIRST_VALUE` with the reversed `ORDER BY … D
 ### Depth (optional)
 
 - ▶ Baraa, *Window ranking* [10:53:09](https://youtu.be/SSKVgrwhzus?t=39189&end=42965), *Window value* [11:56:05](https://youtu.be/SSKVgrwhzus?t=42965&end=45634) — ~2 h.
-- RU deck `2.3 SQL.pdf` — ranking and offset functions. *Russian terms:* ранжирование = ranking, функции смещения = offset functions (LAG/LEAD), дубликаты = duplicates.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.3 SQL.pdf` — ranking and offset functions. *Russian terms:* ранжирование = ranking, функции смещения = offset functions (LAG/LEAD), дубликаты = duplicates.
 
 ---
 
@@ -128,7 +128,9 @@ SELECT * FROM d WHERE rn > 1 ORDER BY payment_id;
 ```
 
 <details><summary>What you see</summary>
+
 **25 rows**, 58 397 800 UZS counted twice. Their `payment_id`s are **52851–52875 — the last 25 rows of the table**, while their twins are spread from id 110 to 52 120 (distance 744 to 52 759). Dates 2024-08-30 to 2026-09-17, all methods (card 9, transfer 7, click 4, payme 3, cash 2). Reading: not 25 cashier mistakes over two years — a **batch** appended at the end, a re-import of 25 old transactions with new IDs. Finance is right that the IDs are unique and wrong that it proves anything. Cross-checks from week 2: 52 875 payments vs 52 850 distinct `installment_id` (difference 25), and 25 instalments paid *more* than their `total_due` by exactly one instalment.
+
 </details>
 
 **The de-duplicated query.** Never `DELETE` from the course tables (or from a production table on your own authority): the de-duplicated *view* is the deliverable, the raw table stays as evidence. Keep `rn = 1` — the earliest `payment_id` in each group:
@@ -144,7 +146,9 @@ SELECT payment_id, loan_id, installment_id, paid_at, amount, method FROM d WHERE
 ```
 
 <details><summary>Does it change anything downstream?</summary>
+
 Rerun week 2's DPD block with this result in place of `payments`: still 1 784 unpaid matured instalments, still 14 / 124 / 25 / 16 / 234. Duplicates *add* money to instalments that were already paid, so DPD and the buckets do not move — but "collected in 2026" is overstated by the 2026 duplicates, 25 instalments show as overpaid, and any "collection rate" built on raw payments is slightly too good. Memo line for Sevara and Finance: *25 payments (ids 52851–52875) are exact repeats of earlier rows — same instalment, date and amount — appended as one batch; 58.4 m UZS double-counted in collections, no effect on delinquency; recommend a unique constraint on (installment_id, paid_at, amount) at load, and `v_payments_clean` (Thursday) for all reporting.*
+
 </details>
 
 Why `ROW_NUMBER` and not `GROUP BY … HAVING COUNT(*) > 1` (week 2's T21)? `HAVING` *finds* the groups; it cannot tell you *which row to keep*, and it cannot return the non-duplicate rows alongside. The window does both in one pass.
@@ -158,13 +162,17 @@ Write each query in the box under its question — it is saved in this browser. 
 **P1.** Branches ranked by outstanding with `ROW_NUMBER`, `RANK` and `DENSE_RANK`. Why do all three agree here, and what would make them differ?
 
 <details><summary>Answer</summary>
+
 Yesterday's branch CTE plus the three functions over `ORDER BY outstanding DESC`: Tashkent Central 1/1/1 … Termez 10/10/10. No two branches have the same outstanding to the som, so there are no ties. Rank by *number of loans* within the Tashkent region instead and still no tie (1012 / 1007 / 1001) — ties appear on coarse values: grade, term, rounded amounts. 17 loans share the principal 4 880 000.
+
 </details>
 
 **P2.** The three biggest loans per product (loan, principal, disbursed). Then the three biggest *per branch* — how many rows?
 
 <details><summary>Answer</summary>
+
 The top-N pattern from section 1: 15 rows for products. For branches `PARTITION BY b.branch_name` → 30 rows; the largest in every branch is an SME loan between 570 m and 599 m. Add `, l.loan_id` to the `ORDER BY` so a rerun gives the same rows.
+
 </details>
 
 **P3.** The **latest loan of every customer**, and the status mix of those latest loans. What does "89 written off" mean here that `loans.status` alone did not say?
@@ -177,12 +185,15 @@ SELECT status, COUNT(*) FROM r WHERE rn = 1 GROUP BY status;
 -- active 2266 · closed 1950 · default 30 · written_off 89   (4 335 customers)
 ```
 89 customers' *most recent* loan was written off — but 188 customers have a written-off loan somewhere in their history, so **101 of them were lent to again after** a loan that went bad (self-join `loans` to `loans` on customer with a later `disbursed_at`). Bring that number to Nilufar; it is a scoring question, not a collections one.
+
 </details>
 
 **P4.** Monthly disbursement with month-on-month and year-on-year change for 2026-01..2026-09 (the display filtered *outside* the window). Which month fell most against the previous one and still grew year-on-year?
 
 <details><summary>Answer</summary>
+
 Section 1's `LAG` query wrapped: `SELECT * FROM (...) WHERE month >= '2026-01'`. February: −31.8 % month-on-month, **+20.0 %** year-on-year. September: −23.7 % / +16.2 %. Both columns on every slide that shows a monthly series.
+
 </details>
 
 **P5.** Per instalment of loan 1, the previous instalment's due date and the number of days between them (`LAG` on the schedule). Then over **all** loans: how many consecutive instalments are more than 31 days apart?
@@ -196,12 +207,15 @@ SELECT COUNT(*) FROM (
   FROM installments) WHERE gap > 31;
 ```
 Loan 1: 30, 31, 30, 31, 31, 30, 31, 30, 31, 31, **28** (28 Jan → 28 Feb), 31 … — month lengths, 28 to 31. Over all schedules no gap exceeds 31 — the schedule generator is monthly to the day; a gap of 32+ would mean a skipped instalment number.
+
 </details>
 
 **P6.** Gaps between consecutive **payments** per loan: the average gap, the longest, how many exceed 60 days, and how many are exactly 0. Which of those four is tonight's detective number?
 
 <details><summary>Answer</summary>
+
 `AVG` 30.9 days · `MAX` 408 · 492 gaps > 60 · **63 gaps = 0**. The 63 same-day pairs contain the 25 duplicates plus 38 legitimate pairs (a borrower paying two instalments on one day — different `installment_id`). "Same day" is a clue, not the definition; the definition is the three-column partition.
+
 </details>
 
 **P7.** Median principal per product with `ROW_NUMBER` and `COUNT(*) OVER` (pick the middle row(s)). Compare with the average — where do they differ most?
@@ -217,6 +231,7 @@ SELECT code, n, AVG(principal) AS median FROM r WHERE rn IN ((n + 1) / 2, (n + 2
 -- AUTO median 214 840 000 (avg 216 858 133) · SME 314 770 000 (308 728 745) · CONS 26 965 000 (26 926 915) · MICRO 2 700 000 (2 705 586) · BNPL 4 180 000 (4 170 880)
 ```
 Integer division picks one middle row for odd n and two for even. Median ≈ mean everywhere: ticket sizes are spread evenly between the product's min and max, no skew. (SQL Server has `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY principal) OVER (PARTITION BY code)`; SQLite does not — this is the portable way.)
+
 </details>
 
 **P8.** Rank collectors by promises obtained (`outcome = 'promise_to_pay'`) with `RANK`; show actions, promises and promise rate for the top five.
@@ -230,12 +245,15 @@ FROM collections_actions GROUP BY collector_id ORDER BY rk LIMIT 5;
 -- 29 → 568 actions / 182 promises · 28 → 593 / 177 · 27 → 590 / 170 · 57 → 419 / 125 · 7 → 393 / 121
 ```
 A window over an aggregate with `CASE` inside — three layers, still one query. Ranking by *count* rewards the busiest collector; add `100.0 * promises / actions` and rank by that too before anyone gets a bonus.
+
 </details>
 
 **P9.** Customer quartiles by outstanding (`NTILE(4)`) with count, money and share — then deciles. How much does the top 10 % hold?
 
 <details><summary>Answer</summary>
+
 Section 1 gives quartiles 82.7 / 13.6 / 3.2 / 0.5 %. `NTILE(10)`: the first decile (254 borrowers) holds **49.2 %** of the book, the second 25.9 % — three quarters of the outstanding in a fifth of the borrowers. A decile table is the standard "who are our customers by exposure" slide; quote the borrower count with every share.
+
 </details>
 
 **P10.** Sevara's list, formatted: for each duplicate pair, one row with both payment ids, loan, instalment, date, amount, method — `MIN` and `MAX` of `payment_id` over the partition. Sorted by amount, largest first.
@@ -252,12 +270,15 @@ SELECT DISTINCT first_id, second_id, loan_id, installment_id, paid_at, amount, m
 -- 25 rows; largest: loan 5106, instalment 59838, 2026-07-17, 12 410 700 (click), ids 34356 and 52857; then loan 1814 12 059 800 (11981/52858); loan 3676 11 445 500 (24496/52863)
 ```
 Aggregate windows over the duplicate partition; `DISTINCT` collapses the pair to one line — acceptable here because the two rows are identical by construction. (Thursday's performance habits warn against `DISTINCT` used to *hide* a join bug; this is not that.)
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Payments of the same instalment on *different* days or with *different* amounts are not duplicates — they are partial payments. How many instalments have two or more distinct payments, and what share of them end up fully paid? (`COUNT(*) OVER (PARTITION BY installment_id)` on the de-duplicated set.)
 
 <details><summary>Answer</summary>
+
 On the `rn = 1` set `COUNT(*) OVER (PARTITION BY installment_id)` is 1 for every row: **no instalment has two distinct payments** — every instalment is paid in one go or not at all, and the only multi-payment instalments were the 25 duplicates. The partial payments week 2 found (427 unpaid instalments with *some* payment) are single payments smaller than `total_due`. Knowing the data has no split payments simplifies every later definition — say so in your notes.
+
 </details>
 
 ---

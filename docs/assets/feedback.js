@@ -121,7 +121,7 @@ handed in first, as in the bot. "Or in Telegram" opens the bot on this lesson (t
     var card = document.createElement('div');
     card.className = 'fb-card';
     var pager = section.querySelector('.docsify-pagination-container');  // keep Previous / Next as the very last thing
-    section.insertBefore(card, pager || null);
+    if (pager && pager.parentNode) pager.parentNode.insertBefore(card, pager); else section.appendChild(card);
     mount(card, lesson);
   }
 

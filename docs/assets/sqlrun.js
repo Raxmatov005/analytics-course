@@ -144,7 +144,14 @@ Work in progress is kept in localStorage "al.sql". */
       .replace(/\bYEAR\s*\(([^()]+)\)/gi, "CAST(strftime('%Y', $1) AS INTEGER)")
       .replace(/\bMONTH\s*\(([^()]+)\)/gi, "CAST(strftime('%m', $1) AS INTEGER)")
       .replace(/\bDAY\s*\(([^()]+)\)/gi, "CAST(strftime('%d', $1) AS INTEGER)")
-      .replace(/\bISNULL\s*\(/gi, 'IFNULL(').replace(/\bLEN\s*\(/gi, 'LENGTH(').replace(/\bGETDATE\s*\(\s*\)/gi, "'2026-10-01'");
+      .replace(/\bISNULL\s*\(/gi, 'IFNULL(').replace(/\bLEN\s*\(/gi, 'LENGTH(').replace(/\bGETDATE\s*\(\s*\)/gi, "'2026-10-01'")
+      // DATEDIFF(day|month|year, a, b) with simple arguments (a column, a literal or one function call)
+      .replace(/\bDATEDIFF\s*\(\s*(day|dd|d|month|mm|m|year|yy|yyyy)\s*,\s*([^,()]+(?:\([^()]*\))?)\s*,\s*([^,()]+(?:\([^()]*\))?)\s*\)/gi, function (all, part, a, b) {
+        part = part.toLowerCase();
+        if (part[0] === 'd') return 'CAST(julianday(' + b + ') - julianday(' + a + ') AS INTEGER)';
+        var y = "(CAST(strftime('%Y', " + b + ") AS INTEGER) - CAST(strftime('%Y', " + a + ") AS INTEGER))";
+        return part[0] === 'y' ? y : '(' + y + " * 12 + CAST(strftime('%m', " + b + ") AS INTEGER) - CAST(strftime('%m', " + a + ') AS INTEGER))';
+      });
     var m = /\bSELECT\s+(DISTINCT\s+)?TOP\s*\(?\s*(\d+)\s*\)?/i.exec(s);
     if (m) s = s.slice(0, m.index) + 'SELECT ' + (m[1] || '') + s.slice(m.index + m[0].length).replace(/;\s*$/, '') + ' LIMIT ' + m[2];
     return s;
@@ -176,7 +183,7 @@ Work in progress is kept in localStorage "al.sql". */
     return out;
   }
   function table(res) {
-    if (res.error) return '<div class="sq-err">⚠ ' + esc(res.error) + '</div>';
+    if (res.error) return '<div class="sq-err">⚠ ' + esc(res.error) + '</div>' + hint(res.error);
     if (!res.last) {
       var kind = (res.kind || '').toUpperCase();
       return '<div class="sq-done">✓ Done' + (/INSERT|UPDATE|DELETE|REPLACE/.test(kind) ? ' — ' + res.changed + ' row' + (res.changed === 1 ? '' : 's') + ' changed' :
@@ -228,7 +235,54 @@ Work in progress is kept in localStorage "al.sql". */
   }
 
   /* ---------- 1. runnable examples ---------- */
+  /* what an error means here, in plain words, with what to do */
+  var VIEWS = { v_payments_clean: 1, v_loan_status: 2, v_portfolio_monthly: 6 };   // section of week 3 day 4 that creates each view
+  function hint(err) {
+    var m = /no such table: (\w+)/i.exec(err), h = '';
+    if (m && VIEWS[m[1]]) h = 'This uses the view <code>' + esc(m[1]) + '</code>, which you build in <a href="#/weeks/week-03/day-4">Week 3 · Day 4</a> (section ' +
+      VIEWS[m[1]] + '). Run its <code>CREATE VIEW</code> box once — the view then stays in your practice copy of the database. ' +
+      '<button type="button" class="sq-build-views">Build the course views now</button>';
+    else if (m && /^(scratch_|my_|t_|tmp)/i.test(m[1])) h = '<code>' + esc(m[1]) + '</code> is not in your practice copy yet — run the box on this page that creates it (<code>CREATE TABLE …</code>) first.';
+    else if (m && ABOUT_NAMES.indexOf(m[1]) < 0) h = '<code>' + esc(m[1]) + '</code> is not a table: it is probably a name from a <code>WITH … AS (…)</code> part shown above. Put that part in front of this one and run them together. Or check the name in the Database panel.';
+    else if (/already exists/i.test(err)) h = 'You created it before — it is still in your practice copy. Skip that line, or remove it first with <code>DROP TABLE name;</code> (or Database → ↺ Reset).';
+    else if (/UNIQUE constraint failed/i.test(err)) h = 'Those rows are already there — you probably ran this box before. A primary key can hold each value only once.';
+    else if (/no such column: (\w+)/i.test(err)) h = 'Check the column name in the Database panel (bottom right) — it lists every column of every table.';
+    else if (/syntax error/i.test(err)) h = 'Look just before the word in quotes: a missing comma, bracket or quote is the usual reason.';
+    return h ? '<div class="sq-hint-box">' + h + '</div>' : '';
+  }
+  /* the three course views, built from Week 3 Day 4's own CREATE VIEW boxes, in their order there; then the box runs again */
+  function buildViews() {
+    return Promise.all([ready(), fetch('weeks/week-03/day-4.md').then(function (r) { return r.text(); })]).then(function (a) {
+      var re = /```sql\r?\n(CREATE VIEW[\s\S]*?)```/g, m, made = 0;
+      while ((m = re.exec(a[1]))) { var r = runPlay(m[1]); if (r.ran) made++; }
+      return made;
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.sq-build-views');
+    if (!b) return;
+    b.disabled = true; b.textContent = 'Building…';
+    buildViews().then(function () {
+      var box = b.closest('.sq-box, .sq-task, .sq-prac');
+      var go = box && box.querySelector('.sq-run');
+      if (go) go.click(); else b.textContent = '✓ Built — run your query again';
+    }).catch(function () { b.disabled = false; b.textContent = 'Could not build them — try again'; });
+  });
+  var ABOUT_NAMES = ['customers', 'products', 'branches', 'staff', 'applications', 'loans', 'installments', 'payments', 'collections_actions', 'app_events', 'dim_date'];
+  /* a block that is not meant to run: a pattern with placeholders, or one piece of a longer query */
+  function shape(code) {
+    if (/…|\btable_name\b|\bcolumn1\b/.test(code)) return 'The shape of a query — the words in it are placeholders, so this one is for reading, not running.';
+    if (/^\s*--\s*(after the|replace)/i.test(code)) return 'One piece of the longer query above — add it there, then run the whole query in a box.';
+    if (/\(\s*\/\*[\s\S]*?\*\/\s*\)/.test(code)) return 'A template — the parts marked /* … */ are left for you to fill in, so it does not run as it is.';
+    var body = stripComments(code).trim();
+    if (/,$/.test(body)) return 'One piece of a longer query (it ends with a comma) — it runs together with the pieces around it.';
+    if (body && !/^(SELECT|WITH|CREATE|INSERT|UPDATE|DELETE|DROP|ALTER|PRAGMA|REPLACE|BEGIN|COMMIT|ROLLBACK|EXPLAIN|VALUES|ANALYZE)\b/i.test(body))
+      return 'One piece of a query (it starts at ' + esc(body.split(/\s/)[0].toUpperCase()) + ') — it runs as part of a whole query, not on its own.';
+    return null;
+  }
   function example(pre) {
+    var code0 = (pre.querySelector('code') || pre).textContent, why = shape(code0);
+    if (why) { pre.insertAdjacentHTML('beforebegin', '<div class="sq-static">' + why + '</div>'); pre.classList.add('sq-static-code'); return; }
     var code = (pre.querySelector('code') || pre).textContent.replace(/\n$/, '');
     var box = document.createElement('div');
     box.className = 'sq-box';
@@ -696,6 +750,17 @@ Work in progress is kept in localStorage "al.sql". */
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqltask"]'), workspace);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sql"]'), example);
       dbButton();
+      // the bot's "Hand in" buttons open the lesson at its homework box: #/weeks/week-01/day-2?id=hand-in
+      var ws = sec.querySelectorAll('.sq-ws');
+      if (ws.length) {
+        var box = ws[ws.length - 1];
+        box.id = 'hand-in';
+        if (/[?&]id=hand-in\b/.test(location.hash)) setTimeout(function () {
+          box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          box.classList.add('sq-ws-here');
+          setTimeout(function () { box.classList.remove('sq-ws-here'); }, 2600);
+        }, 350);
+      }
     });
   });
 })();

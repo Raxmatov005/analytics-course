@@ -123,7 +123,7 @@ Simulation answers questions no textbook formula covers — a month that mixes p
 - ▶ Poisson — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135&end=188)
 - ▶ Normal distribution — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
 
-- RU deck `5.1 Basics of Probability Theory.pdf`: events and operations pp. 9–17, classical / statistical probability pp. 32–43, conditional probability pp. 52–57, independence pp. 58–63, total probability pp. 64–70, Bayes pp. 71–76, random variables pp. 79–104, expectation pp. 119–127, variance pp. 128–134, skewness / kurtosis / median / quantile pp. 139–150. `5.2 Statistics & Probability Theory.pdf`: Bernoulli formula pp. 5–10, binomial pp. 26–31, Poisson pp. 32–36, exponential pp. 41–44, normal pp. 45–53.
+- RU deck (TBC Data Analytics 2.0, if you have it) `5.1 Basics of Probability Theory.pdf`: events and operations pp. 9–17, classical / statistical probability pp. 32–43, conditional probability pp. 52–57, independence pp. 58–63, total probability pp. 64–70, Bayes pp. 71–76, random variables pp. 79–104, expectation pp. 119–127, variance pp. 128–134, skewness / kurtosis / median / quantile pp. 139–150. `5.2 Statistics & Probability Theory.pdf`: Bernoulli formula pp. 5–10, binomial pp. 26–31, Poisson pp. 32–36, exponential pp. 41–44, normal pp. 45–53.
 - Notebooks: `MS1_probability_theory.ipynb` (conditional probability, Monty Hall, total probability and Bayes with three worked examples), `MS4_probability_theory_basics.ipynb` (every distribution of today drawn with `scipy.stats`, plus a call-centre binomial simulation).
 - Visual: Seeing Theory (seeing-theory.brown.edu), chapters 1–3 — Basic Probability, Compound Probability, Probability Distributions.
 - *Russian terms:* случайное событие = event, вероятность = probability, условная вероятность = conditional probability, независимые события = independent events, формула полной вероятности = law of total probability, формула Байеса = Bayes' rule, случайная величина = random variable, математическое ожидание (мат. ожидание) = expectation, дисперсия = variance, стандартное (среднеквадратическое) отклонение = standard deviation, распределение Бернулли / биномиальное / Пуассона / нормальное / показательное = Bernoulli / binomial / Poisson / normal / exponential distribution, функция распределения = cumulative distribution function, плотность = density, квантиль = quantile, ТВиМС = probability theory and mathematical statistics.
@@ -162,12 +162,15 @@ n = 7099; fpd = 91; partner = 1425; both = 16
 # (0.98718, 0.20073, 0.00225, 0.21208)
 ```
 P(not FPD) = 98.72 %, P(partner) = 20.07 %, P(partner ∩ FPD) = 0.23 %, P(partner ∪ FPD) = 1 500 / 7 099 = 21.21 %. Counting the 1 500 loans directly gives the same — the rule just stops you counting the 16 twice.
+
 </details>
 
 **P2.** P(FPD | partner) and P(partner | FPD). Which one does a partner manager care about, and which one does the collections team care about?
 
 <details><summary>Answer</summary>
+
 P(FPD | partner) = 16 / 1 425 = **1.12 %** — the partner's quality, what the partner manager negotiates on. P(partner | FPD) = 16 / 91 = **17.6 %** — the share of the collections workload that comes from partners. Same 16 loans, two denominators, two different meetings.
+
 </details>
 
 **P3.** With X ~ Bin(400, 91/7099): P(X = 0), P(X ≤ 2). Write both in Python and in Excel. Is a month with 0–2 FPDs good news?
@@ -179,12 +182,15 @@ X = stats.binom(400, 91 / 7099)
 X.pmf(0), X.cdf(2)      # 0.0057, 0.1128      Excel: =BINOM.DIST(0, 400, 91/7099, FALSE), =BINOM.DIST(2, 400, 91/7099, TRUE)
 ```
 0.57 % and 11.3 %. Two or fewer happens in one month in nine by luck alone, so a 0–2 month is not evidence that anything improved. Zero is rare enough (0.6 %) to check the data first: a month with no FPDs is more often a broken join or a vintage not yet 30 days past its first due date than a miracle.
+
 </details>
 
 **P4.** Next month's 400 loans are all grade C (FPD 44 / 2 034 = 2.16 %). Expected FPDs, the middle-95 % range, P(X ≥ 10) and P(X ≥ 12). What happens to Nilufar's wall number?
 
 <details><summary>Answer</summary>
+
 E = **8.65**, sd 2.91, middle 95 % **3 to 15**, P(X ≥ 10) = **36.6 %**, P(X ≥ 12) = **16.2 %**. The wall number belongs to a mix: if the mix moves towards grade C, 10 FPDs is an ordinary month. Write the alarm per segment, or recompute p from next month's actual mix (`Σ n_g · p_g`) before you read the count.
+
 </details>
 
 **P5.** Applications per hour, λ = 1.4376. P(an hour with no application), P(5 or more). Then a 13-hour day: λ_day = 13 × 1.4376 — the 95 % range for a day's applications.
@@ -196,18 +202,23 @@ stats.poisson.pmf(0, 1.4376), stats.poisson.sf(4, 1.4376)     # 0.2375, 0.0158  
 stats.poisson.interval(0.95, 13 * 1.4376)                       # (11, 28) for λ_day = 18.69
 ```
 Excel: `=POISSON.DIST(0, 1.4376, FALSE)`, `=1 - POISSON.DIST(4, 1.4376, TRUE)`. A day with 11–28 applications is ordinary; a day below 11 is worth a look at the app's error log before anyone talks about demand.
+
 </details>
 
 **P6.** Normal model of applicants' scores (μ 659.6, σ 59.5). The grade-A cut is 720: what share of applicants does the model put at 720 or above, and what does the data say? The model's 5th percentile vs the data's.
 
 <details><summary>Answer</summary>
+
 `stats.norm.sf(720, 659.6, 59.5)` → **15.5 %**, data **15.8 %**; `stats.norm.ppf(0.05, 659.6, 59.5)` → **561.7**, data `s.quantile(0.05)` → **562**. Excel: `=1 - NORM.DIST(720, 659.6, 59.5, TRUE)`, `=NORM.INV(0.05, 659.6, 59.5)`. The normal is an excellent model of applicants' scores — and a poor one of approved loans' scores (section 1), which is the population most analyses use.
+
 </details>
 
 **P7.** One SME loan: EAD = the average SME principal (308.7 m), PD = 29 / 781 (SME loans in 90+), LGD 60 %. E[loss] and sd[loss]. Compare with the Consumer loan of section 1.
 
 <details><summary>Answer</summary>
+
 Loss if default = 0.6 × 308.7 m = 185.2 m; PD = 3.71 %; **E = 6.88 m, sd = 35.0 m**. The Consumer loan: E 0.52 m, sd 2.84 m. One SME default costs as much as eleven Consumer defaults, so 781 SME loans carry more risk than 2 418 Consumer ones — counts of defaults (FPD rates, 90+ shares) hide this; money-weighted measures (Company corner) show it.
+
 </details>
 
 **P8.** Bayes on real data: flag = credit score below 600. Of the 6 907 FPD-scope loans that have a score, 89 are FPDs; 7 of those 89 and 300 of the other 6 818 score below 600. Compute the base rate, P(flag | FPD), P(flag | no FPD), then P(FPD | flag) by Bayes **and** by direct count. (Tomorrow's notebook builds the loan frame `f`; you can redo it there in three lines.)
@@ -220,12 +231,15 @@ sens * base / (sens * base + fpr * (1 - base)), 7 / (7 + 300)
 # on the frame: g = f.dropna(subset=["credit_score"]); flag = g.credit_score < 600; g[flag].fpd30.mean()
 ```
 Base **1.289 %**, sensitivity **7.9 %**, false-positive rate **4.4 %**; Bayes **2.28 %**, direct 7 / 307 = **2.28 %** — the formula is just the count, reorganised. A flag that lifts risk 1.8× still leaves 98 % of flagged loans paying: score < 600 is a pricing signal, not a fraud signal.
+
 </details>
 
 **P9.** Simulation vs formula for an all-app month: simulate 100 000 months of 400 loans at p = 41/2411 with `default_rng(2026)`; P(X ≥ 10) both ways.
 
 <details><summary>Answer</summary>
+
 Simulation **14.69 %** (mean 6.79), formula `stats.binom.sf(9, 400, 41/2411)` = **14.82 %**. The 0.13-point gap is simulation noise: with 100 000 draws the standard error of a 15 % share is √(0.15 × 0.85 / 100 000) = 0.11 points. Simulated answers have their own ± — quote them to the precision the run supports.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** Correlated defaults. Suppose a month is "bad" with probability 10 % (p = 2.45 %) and "normal" otherwise (p = 1.15 %) — the average is still 1.28 %. Simulate 100 000 months of 400 loans (draw the month's p first, then the binomial). P(X ≥ 10) and P(X ≥ 12)? Then test the idea on Nur's own history: are the 31 monthly vintages with ≥ 50 loans more spread out than a binomial with p = 1.28 % allows?
@@ -239,6 +253,7 @@ s = rng.binomial(400, pm)
 s.mean(), s.std(), np.mean(s >= 10), np.mean(s >= 12)        # 5.11, 2.74, 0.0683, 0.0300
 ```
 Same mean, wider spread (sd 2.74 vs 2.25), and the tail is **twice** (≥ 10: 6.8 % vs 3.6 %) to **five times** (≥ 12: 3.0 % vs 0.6 %) heavier: correlation hides in the tail, never in the mean. Nur's history: Σ (k − np)² / Σ np(1 − p) over 31 vintages = **1.23** (1.0 = pure binomial), χ² = 36.6 on 30 df, p = **0.19** — no evidence yet of a common "bad month" factor, the largest z being 2025-04 (7 of 225, z = 2.44). Banks model this with a single "economy" factor (the Vasicek model behind Basel capital); the binomial is the calm-weather special case.
+
 </details>
 
 ### Mistakes people make
@@ -256,7 +271,7 @@ Same mean, wider spread (sd 2.74 vs 2.25), and the tail is **twice** (≥ 10: 6.
 
 ## 4. Homework <span class="badge hw">HW 6.1 — Due Day 3</span>
 
-**Nilufar's toolkit.** Open `data/python/week6/day1_starter.ipynb`. Eight functions are stubs that raise `NotImplementedError`; under each is an assert cell. Replace each body until its assert cell runs silently, write the three-sentence answer to Nilufar in the last cell, then **Kernel → Restart & Run All** and submit the executed notebook to `submissions/week-06/day-1/day1_starter.ipynb`.
+**Nilufar's toolkit.** Open `data/python/week6/day1_starter.ipynb`. Eight functions are stubs that raise `NotImplementedError`; under each is an assert cell. Replace each body until its assert cell runs silently, write the three-sentence answer to Nilufar in the last cell, then **Kernel → Restart & Run All** and hand in the executed notebook (`day1_starter.ipynb`) with the 📎 box below.
 
 1. `prob_exactly(k, n, p)` — binomial P(X = k).
 2. `prob_at_least(k, n, p)` — P(X ≥ k), the off-by-one done right.

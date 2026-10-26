@@ -143,7 +143,7 @@ Default to a 95 % level and say so; use 90 % only when a team has agreed to it i
 - ▶ Bootstrap — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
 - ▶ Confidence interval (RU) — [Доверительный интервал за 15 мин. Биостатистика. (Kirill Milchakov)](https://youtu.be/MstzroncW28)
 
-- RU deck `5.2 Statistics & Probability Theory.pdf` pp. 68–73: law of large numbers and CLT. `MS_lecture3.pdf` (lesson 5.3): sample method and sample properties pp. 5–13, point estimates — unbiased, consistent, efficient pp. 14–18, method of moments and maximum likelihood pp. 19–27, confidence intervals (Fisher's lemma; the mean with σ known and unknown; the variance) pp. 28–35. The lesson's recording: `video1414856026.mp4`.
+- RU deck (TBC Data Analytics 2.0, if you have it) `5.2 Statistics & Probability Theory.pdf` pp. 68–73: law of large numbers and CLT. `MS_lecture3.pdf` (lesson 5.3): sample method and sample properties pp. 5–13, point estimates — unbiased, consistent, efficient pp. 14–18, method of moments and maximum likelihood pp. 19–27, confidence intervals (Fisher's lemma; the mean with σ known and unknown; the variance) pp. 28–35. The lesson's recording: `video1414856026.mp4`.
 - Notebooks: `MS_5_statistics.ipynb` (LLN with a coin and a die, CLT from other distributions), `MS6_Точечное_оценивание.ipynb` (unbiasedness and consistency by simulation), `MS6_Интервальное_оценивание.ipynb` (exact vs asymptotic interval, coverage at n = 3 … 1 000 — the same experiment as our Wald/Wilson table), `HW_3_CI.ipynb` (an interval for an exponential mean).
 - Visual: Seeing Theory, chapter 4 (Frequentist Inference: the CLT and confidence intervals, interactive).
 - *Russian terms:* генеральная совокупность = population, выборка = sample, оценка = estimate, точечная / интервальная оценка = point / interval estimate, несмещённость = unbiasedness, состоятельность = consistency, стандартная ошибка = standard error, закон больших чисел (ЗБЧ) = law of large numbers, центральная предельная теорема (ЦПТ) = central limit theorem, доверительный интервал = confidence interval, уровень доверия = confidence level, распределение Стьюдента = t distribution, степени свободы = degrees of freedom, бутстреп = bootstrap, асимптотический = asymptotic.
@@ -177,31 +177,41 @@ Open `data/python/week6/day2_starter.ipynb`, run Part 0 (the loader builds `loan
 **P1.** SE of the book's FPD rate (91 / 7 099); its Wald and Wilson 95 % intervals. Why are the two almost the same here and not at n = 400?
 
 <details><summary>Answer</summary>
+
 SE = √(0.01282 × 0.98718 / 7 099) = **0.133 points**. Wald **1.02–1.54 %**, Wilson **1.05–1.57 %**. With 91 events the binomial is already close to normal; at n = 400 there are only ~5 events and the skew near zero is what Wald ignores (88 % coverage).
+
 </details>
 
 **P2.** Reproduce the notebook's 50-loan Consumer interval in Excel: paste the 50 principals into a column, then `AVERAGE`, `STDEV.S`, `CONFIDENCE.T`. Is the true mean inside? What would a 99 % interval be?
 
 <details><summary>Answer</summary>
+
 Mean 27 486 400, s 12 617 221, `=CONFIDENCE.T(0.05, s, 50)` = 3 585 775 → **23.90–31.07 m**, contains 26.93 m. 99 %: `=CONFIDENCE.T(0.01, s, 50)` = t₀.₉₉₅,₄₉ (2.680) × 1 784 345 = 4.78 m → 22.70–32.27 m. More confidence, wider interval — the trade you always make.
+
 </details>
 
 **P3.** Ten loans instead of fifty: `rng = np.random.default_rng(2026); s10 = rng.choice(cons, 10, replace=False)`. The z interval and the t interval. How much wider is t, and which one would you sign?
 
 <details><summary>Answer</summary>
+
 Mean **31.34 m**; z: 23.07–39.60 m; t (2.262 instead of 1.96): **21.80–40.87 m**, 15 % wider. Only t has the coverage it claims at n = 10 (if the data were normal — Consumer principals are close to symmetric, skew small; for SME principals even t would undercover).
+
 </details>
 
 **P4.** The CLT table: for n = 5, 30, 100, 1000 draw 5 000 samples of loan principal, report the sd and skew of the means against σ/√n. Explain the one row where sd < σ/√n.
 
 <details><summary>Answer</summary>
+
 The notebook's chart titles: sd 49.1 / 20.5 / 11.3 / 3.3 m against SE 50.3 / 20.6 / 11.3 / 3.6 m; skew 1.33 / 0.57 / 0.30 / 0.09. At n = 1 000 we take 13 % of a population of 7 828 without replacement, so the means vary less than independent draws would: the finite-population correction √((N − n)/(N − 1)) = 0.934 brings 3.56 down to 3.32 m. In practice samples are a tiny share of the population and the correction is 1.
+
 </details>
 
 **P5.** Wald vs Wilson on two small branch-months: 2 FPDs in 150 loans, and 0 in 120. Which numbers would you put on a dashboard?
 
 <details><summary>Answer</summary>
+
 2 / 150: Wald **−0.50 % to 3.17 %** (statsmodels clips it to 0–3.17 and hides the problem), Wilson **0.37–4.73 %**, Clopper–Pearson 0.16–4.73 %. 0 / 120: Wald **0–0**, Wilson **0–3.10 %**, CP 0–3.03 %. Wilson: it says honestly "somewhere between almost nothing and about 3–5 %". The rule of three gives the same feel for zero events: the upper 95 % bound ≈ 3 / n = 2.5 %.
+
 </details>
 
 **P6.** Coverage experiment: with `default_rng(2026)`, draw 20 000 values of k ~ Bin(400, 0.01282) and compute the share of Wald, Wilson and Clopper–Pearson intervals that contain 0.01282.
@@ -215,30 +225,39 @@ for m in ("normal", "wilson", "beta"):
     lo, hi = proportion_confint(k, 400, method=m); print(m, np.mean((lo <= p) & (p <= hi)))
 ```
 Run in the order of the table (n = 100 first, then 400, then 2 000, one generator): **87.7 % / 96.0 % / 98.0 %** at n = 400. Wald misses on the high side: in samples with 1–2 FPDs its upper limit is too low, and that is exactly the case where a small branch looks "safe".
+
 </details>
 
 **P7.** Bootstrap: 95 % CI for the app's FPD (10 000 resamples, seed 2026) next to Wilson; then for the **median** principal of a 200-loan random sample.
 
 <details><summary>Answer</summary>
+
 App: bootstrap **1.20–2.24 %**, Wilson 1.26–2.30 % — close, the bootstrap slightly lower and narrower (it is symmetric around the sample's own 41 events). Median: `rng = default_rng(2026); s = rng.choice(pop, 200, replace=False)`, then 10 000 medians of resamples → sample median **5.69 m**, CI **4.54–8.27 m**, true median 5.79 m inside. Note the asymmetry (−1.2 m / +2.6 m): there is no "± SE" formula for a median, and the bootstrap does not need one.
+
 </details>
 
 **P8.** "95 %" by experiment: 100 samples of 400 loans, a t interval for the mean principal from each. How many contain 51.71 m? Then repeat 10 000 times at n = 30.
 
 <details><summary>Answer</summary>
+
 `rng = default_rng(2026)`: **96 of 100** — around 95, as promised (with 100 intervals, anything from about 91 to 99 is normal: Bin(100, 0.95)). At n = 30, 10 000 intervals: **88.6 %**. The procedure keeps its promise only when the sampling distribution is near normal; with skew 2.9 and n = 30 it is not. For money at small n: a larger n, a log scale, or the bootstrap — and say so.
+
 </details>
 
 **P9.** Sample size for a target precision: how many first instalments do you need to estimate a rate near 1.28 % to within ±0.25 points (95 %)? ±0.5 points? (Wald arithmetic is fine for planning: n = z² p(1 − p) / E².)
 
 <details><summary>Answer</summary>
+
 1.96² × 0.01282 × 0.98718 / 0.0025² = **7 778** first instalments for ±0.25 points; **1 945** for ±0.5. Nur's whole book (7 099) is just short of the first: a channel- or branch-level FPD to a quarter of a point is out of reach for years. Precision costs n quadratically — halve the margin, quadruple the loans.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** When the LLN fails. Draw 100 000 values from a Cauchy distribution (`rng.standard_cauchy`, seed 2026) and from a standard normal; print the running mean after 10, 100, 1 000, 10 000, 100 000 draws. What happens, why, and why does it matter for loan money even though no loan is Cauchy?
 
 <details><summary>Answer</summary>
+
 Cauchy: −0.544, 0.554, −0.007, **1.058, 0.957** — still jumping at 100 000. Normal: −0.121, 0.045, 0.021, −0.002, −0.000 → 0. The Cauchy has no finite mean (its tails are so heavy that one draw can outweigh all the others), so there is nothing for the average to converge to — the original course's HW 5.2 made the same point, and the 5.2 deck has the Cauchy on pp. 54–57. Loan amounts are bounded (product limits), so the LLN and CLT do hold — but heavy right tails make them **slow**: SME principals need far larger n than Micro principals before an interval keeps its 95 %.
+
 </details>
 
 ### Mistakes people make
@@ -256,7 +275,7 @@ Cauchy: −0.544, 0.554, −0.007, **1.058, 0.957** — still jumping at 100 000
 
 ## 4. Homework <span class="badge hw">HW 6.2 — Due Day 5</span>
 
-**Bekzod's error bars.** In `data/python/week6/day2_starter.ipynb` write `wald_ci`, `wilson_ci`, `bootstrap_ci` and `fpd_ci_table(f, by)`, run `fpd_ci_table` for **channel** and for **risk_grade**, and draw **one figure with two panels** (channel, grade): the rate as a dot, the Wilson interval as an error bar, the label `app (n = 2 411)`. Save it as `hw62_fpd_ci.png`. Under it, **five sentences** for Bekzod (the notebook lists what each must say). Submit the executed notebook and the PNG to `submissions/week-06/day-2/`.
+**Bekzod's error bars.** In `data/python/week6/day2_starter.ipynb` write `wald_ci`, `wilson_ci`, `bootstrap_ci` and `fpd_ci_table(f, by)`, run `fpd_ci_table` for **channel** and for **risk_grade**, and draw **one figure with two panels** (channel, grade): the rate as a dot, the Wilson interval as an error bar, the label `app (n = 2 411)`. Save it as `hw62_fpd_ci.png`. Under it, **five sentences** for Bekzod (the notebook lists what each must say). Hand in the executed notebook and the PNG with the 📎 box below.
 
 Graded on (20 points): (a) the numbers — FPD, n, rate, Wilson and bootstrap limits for 3 channels and 4 grades, matching the asserts and the model (8), (b) the chart — dots with error bars from zero-free axes in %, n in every label, grades in order A → D, a title that states the finding (6), (c) the five sentences — the overlap read correctly, the widest interval explained by n, Wilson vs bootstrap, a dashboard proposal, the question for tomorrow (6). **Bonus +20:** `clopper_pearson(k, n)` from `scipy.stats.beta` (not statsmodels) passing its assert, with the exact interval added to both tables and one sentence on when you would report it instead of Wilson.
 

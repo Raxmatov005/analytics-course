@@ -121,7 +121,7 @@ Joins put tables side by side; **set operators** (*операции над мн�
 ### Depth (optional)
 
 - ▶ Baraa, *Aggregate functions* [8:43:36](https://youtu.be/SSKVgrwhzus?t=31416&end=31811) — 7 min; and *Set operators* [4:02:09](https://youtu.be/SSKVgrwhzus?t=14529&end=17261) — 40 min.
-- RU deck `2.2 SQL-1-38.pdf` — GROUP BY / HAVING pages. *Russian terms:* агрегатная функция = aggregate, группировка = GROUP BY, средний чек = average ticket, объединение = UNION.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.2 SQL-1-38.pdf` — GROUP BY / HAVING pages. *Russian terms:* агрегатная функция = aggregate, группировка = GROUP BY, средний чек = average ticket, объединение = UNION.
 
 ---
 
@@ -152,7 +152,7 @@ Joins put tables side by side; **set operators** (*операции над мн�
 
 ## 3. Practice (60 min)
 
-File: `submissions/week-02/day-2/practice.sql`, each query with `-- result:`. Yesterday's joins plus today's aggregates; no `CASE` yet.
+Write each query in the box under its question — it is saved in this browser; **✔ Check** compares your result with the answer. Yesterday's joins plus today's aggregates; no `CASE` yet.
 
 **P1.** Loans and total principal by `status`, largest total first.
 
@@ -163,6 +163,7 @@ SELECT status, COUNT(*) AS loans, SUM(principal) AS principal
 FROM loans GROUP BY status ORDER BY principal DESC;
 ```
 active 3 352 / 296.98 bn · closed 4 242 / 94.15 bn · written_off 190 / 10.02 bn · default 44 / 3.63 bn. Closed loans are more numerous but smaller — short Micro and BNPL loans close fast.
+
 </details>
 
 **P2.** Loans disbursed per year, with the total and the average ticket, rounded to whole UZS.
@@ -175,6 +176,7 @@ SELECT strftime('%Y', disbursed_at) AS yr, COUNT(*) AS loans, SUM(principal) AS 
 FROM loans GROUP BY strftime('%Y', disbursed_at) ORDER BY yr;
 ```
 2024: 1 736 loans, 86.52 bn · 2025: 3 041, 155.93 bn · 2026 (to 1 Oct): 3 051, 162.33 bn. Nine months of 2026 already beat all of 2025.
+
 </details>
 
 **P3.** Loans by branch (name and region), with the sum of principal, most money first. Which branch lends the most?
@@ -187,6 +189,7 @@ FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 GROUP BY b.branch_name, b.region ORDER BY disbursed DESC;
 ```
 Tashkent Central 1 001 loans / 55.64 bn first, although Tashkent South has more loans (1 012 / 53.36 bn). Termez Central last: 483 / 22.99 bn. Count and amount rank differently — say which you sorted by.
+
 </details>
 
 **P4.** Branches with more than 900 loans. · **P5.** Products whose average ticket exceeds 50 000 000.
@@ -201,6 +204,7 @@ SELECT p.name, AVG(l.principal) FROM loans l JOIN products p ON p.product_id = l
 GROUP BY p.name HAVING AVG(l.principal) > 50000000;             -- Auto 216.9 m, SME 308.7 m
 ```
 Both are conditions on an aggregate → `HAVING`. Writing them in `WHERE` is a syntax error, which is the kind one.
+
 </details>
 
 **P6.** How many customers have more than one loan? Two steps: a grouped query per customer, then count its rows by eye — and note that counting *rows of a grouped result* needs a tool you get in week 3.
@@ -211,6 +215,7 @@ Both are conditions on an aggregate → `HAVING`. Writing them in `WHERE` is a s
 SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) > 1 ORDER BY loans DESC;
 ```
 2 246 rows (your tool shows the row count). Four customers have 7 loans each (ids 1893, 3216, 4435, 5478). Wrapping it in `SELECT COUNT(*) FROM ( … )` is a subquery — Week 3 Day 3.
+
 </details>
 
 **P7.** Collections actions by type with the number of promises to pay. Which action type gets the highest *share* of promises? (A share is a division — compute it by hand today, in SQL tomorrow.)
@@ -222,6 +227,7 @@ SELECT action_type, COUNT(*) AS actions FROM collections_actions GROUP BY action
 SELECT action_type, COUNT(*) AS promises FROM collections_actions WHERE outcome = 'promise_to_pay' GROUP BY action_type;
 ```
 sms 1 254 / 3 265 = 38.4 % · visit 381 / 1 506 = 25.3 % · call 785 / 3 114 = 25.2 % · restructure_offer 344 / 1 476 = 23.3 %. SMS "wins" because it is the first action on every late loan, when borrowers still answer; it says nothing about which action *works*. Tomorrow you divide inside the query.
+
 </details>
 
 **P8.** The multiplication trap, measured. For active loans: `COUNT(*)` and `COUNT(DISTINCT l.loan_id)` over `loans JOIN payments`, and `SUM(l.principal)` over the same join vs over `loans` alone.
@@ -234,6 +240,7 @@ SELECT COUNT(*), COUNT(DISTINCT l.loan_id) FROM loans l JOIN payments p ON p.loa
 SELECT SUM(principal) FROM loans WHERE status = 'active';                                   -- 296 980 040 000 (right)
 ```
 The joined `SUM(l.principal)` is in the trillions — every principal counted once per payment. When the two counts differ, aggregate loan columns on `loans` alone.
+
 </details>
 
 **P9.** Payments by `method`: count and total amount, most frequent first. Look at the result carefully and write one sentence about it.
@@ -244,6 +251,7 @@ The joined `SUM(l.principal)` is in the trillions — every principal counted on
 SELECT method, COUNT(*) AS payments, SUM(amount) AS total FROM payments GROUP BY method ORDER BY payments DESC;
 ```
 Ten rows where there should be five: `card` 17 564 **and** `Card` 57; `click` 8 754 and `Click` 36; `payme` 8 870 and `PayMe` 30; `cash` 8 760 and `CASH ` (trailing space) 30; `transfer` 8 747 and `bank transfer` 27. 180 rows carry a differently spelt method, so every "share by method" is off and *card* looks like it has 57 fewer payments than it does. `GROUP BY` groups *exact* values — a space or a capital letter is a different group. We fix this tomorrow with `LOWER`, `TRIM` and `REPLACE`. (These ten rows are SQLite's. SQL Server's default collation ignores case and trailing spaces, so there `GROUP BY method` shows six rows and the stray spellings hide inside `card`, `click`, `payme` and `cash`; write `GROUP BY method COLLATE Latin1_General_CS_AS` to get the same ten rows.)
+
 </details>
 
 **P10.** Monthly payments received in 2026: count and sum per month. Anything odd at the end of the list?
@@ -255,6 +263,7 @@ SELECT strftime('%Y-%m', paid_at) AS month, COUNT(*) AS payments, SUM(amount) AS
 FROM payments WHERE paid_at >= '2026-01-01' GROUP BY strftime('%Y-%m', paid_at) ORDER BY month;
 ```
 January 2 466 / 11.76 bn rising to September 3 159 / 16.34 bn — then **2026-10: 52** and **2026-11: 8**. The data is as of 1 October; 60 payments are dated 1 October or later, and **24** of them are dated *after* the as-of date (the last on 2026-11-24). Either the extract ran later than its label, or these are scheduled direct-debits recorded ahead. Note it for Timur; Friday asks about it.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Using `UNION ALL`, build one result with two labelled rows: `'2025'` with its loan count and `'2026'` with its loan count. Then do the same with `UNION` and explain why the result is identical here but would not be if both years had the same count.
@@ -267,6 +276,7 @@ UNION ALL
 SELECT '2026', COUNT(*) FROM loans WHERE disbursed_at >= '2026-01-01';          -- 3041 / 3051
 ```
 The label column makes the rows different, so `UNION` keeps both. Without the label, two equal counts would collapse into one row under `UNION` — the classic silent loss. Default to `UNION ALL`.
+
 </details>
 
 ---

@@ -117,7 +117,7 @@ Write joins in the order of the story (fact first, then its dimensions); the dat
 ### Depth (optional)
 
 - ▶ Baraa, *SQL joins (basics)* [2:47:57](https://youtu.be/SSKVgrwhzus?t=10077&end=12449) — 40 min, INNER/LEFT/RIGHT/FULL with his pictures; his `customers`/`orders` are our `customers`/`loans`.
-- RU deck `2.1 SQL-47-77.pdf` — JOIN pages. *Russian terms:* соединение = join, внутреннее = inner, левое = left, псевдоним = alias, ключ соединения = join key.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.1 SQL-47-77.pdf` — JOIN pages. *Russian terms:* соединение = join, внутреннее = inner, левое = left, псевдоним = alias, ключ соединения = join key.
 
 ---
 
@@ -156,7 +156,7 @@ Loan 4570 — last Friday's three 57 170 000 payments — is Umida Khasanova's c
 
 ## 3. Practice (60 min)
 
-Write every query with its result into `submissions/week-02/day-1/practice.sql`. Only this week's and last week's SQL: `SELECT … JOIN … WHERE … ORDER BY`, `COUNT(*)`, `TOP`/`LIMIT`. No `GROUP BY` yet (tomorrow).
+Write each query in the box under its question — it is saved in this browser; **✔ Check** compares your result with the answer. Only this week's and last week's SQL: `SELECT … JOIN … WHERE … ORDER BY`, `COUNT(*)`, `TOP`/`LIMIT`. No `GROUP BY` yet (tomorrow).
 
 **P1.** Join `loans` to `customers`. How many rows? Now run `SELECT COUNT(*) FROM loans`. Why the same?
 
@@ -166,6 +166,7 @@ Write every query with its result into `submissions/week-02/day-1/practice.sql`.
 SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id;   -- 7828
 ```
 Every loan has exactly one customer (many-to-one), so the inner join neither drops nor multiplies rows. The relationship is real, but this teaching copy of the database declares no FOREIGN KEY, so nothing *guarantees* it — the count is how you check. If it had been lower, some loans would point at a customer that does not exist; check with a LEFT JOIN … IS NULL — it returns 0 here.
+
 </details>
 
 **P2.** Active loans held at the Nukus and Termez branches (the branch's region, not the customer's).
@@ -177,6 +178,7 @@ SELECT COUNT(*)
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 WHERE b.region IN ('Nukus', 'Termez') AND l.status = 'active';                    -- 413
 ```
+
 </details>
 
 **P3.** SME loans (`product_id = 5`) taken by affluent customers. · **P4.** Micro loans taken by customers living in Samarkand.
@@ -189,6 +191,7 @@ WHERE l.product_id = 5 AND c.segment = 'affluent';                              
 SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id
 WHERE l.product_id = 1 AND c.region = 'Samarkand';                                 -- 277
 ```
+
 </details>
 
 **P5.** The three largest written-off loans with the borrower's name and region.
@@ -202,6 +205,7 @@ WHERE l.status = 'written_off'
 ORDER BY l.principal DESC LIMIT 3;                       -- TOP 3 on SQL Server
 ```
 6579 Jasur Ismoilov (Samarkand) 525 670 000 · 2898 Abror Sobirov (Tashkent) 507 760 000 · 903 Nodira Yusupova (Tashkent) 498 520 000. Three SME-sized losses; Sevara knows all three by name.
+
 </details>
 
 **P6.** Active Auto loans booked at the *Tashkent Central* branch. Use the product **code**, not the id, and the branch **name** — three tables.
@@ -215,6 +219,7 @@ JOIN products p ON p.product_id = l.product_id
 JOIN branches b ON b.branch_id = l.branch_id
 WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'active';   -- 60
 ```
+
 </details>
 
 **P7.** Loans that have never had a collections action — and prove the number with two single-table counts.
@@ -228,6 +233,7 @@ SELECT COUNT(*) FROM loans;                                                     
 SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                            -- 283
 ```
 7 828 − 283 = 7 545: most loans never needed a reminder. The anti-join and the arithmetic must agree; when they do not, your join key is wrong.
+
 </details>
 
 **P8.** Row multiplication. Count the rows of `loans JOIN installments`, `loans JOIN payments`, and `loans LEFT JOIN payments`. Explain each number from the relationships.
@@ -240,6 +246,7 @@ SELECT COUNT(*) FROM loans l JOIN payments p ON p.loan_id = l.loan_id;          
 SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id;        -- 53267
 ```
 One-to-many: the count is the number of rows on the *many* side (92 193 instalments; 52 875 payments). The LEFT JOIN adds one row for each loan that has no payment at all: 53 267 − 52 875 = **392** loans with nothing paid yet (new loans whose first instalment is not due, and the worst defaulters).
+
 </details>
 
 **P9.** Week 1, Day 1, P7c asked "how many calls did collectors make in Fergana?". Answer it now: `collections_actions → staff → branches`.
@@ -254,6 +261,7 @@ JOIN branches b ON b.branch_id = s.branch_id
 WHERE ca.action_type = 'call' AND b.region = 'Fergana';                              -- 416
 ```
 The branch is the *collector's* branch, reached through `staff`. Joining `collections_actions → loans → branches` would give the loan's branch — the same here (collectors work their own branch's loans), but not the same question.
+
 </details>
 
 **P10.** Loan 1's schedule with its payments: instalment number, due date, amount due, paid date, amount paid — including instalments not yet paid. Which instalment was paid latest relative to its due date?
@@ -268,19 +276,22 @@ WHERE i.loan_id = 1
 ORDER BY i.installment_no;
 ```
 24 rows (the loan is 24 months); 18 paid, 6 with NULL `paid_at` — they fall due from 2026-10-28 on. Instalment 12, due 2026-03-28, was paid on 2026-05-12 — 45 days late — then everything after it on time. An INNER JOIN would have shown 18 rows and hidden the six open ones; "the schedule" needs LEFT.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Join `loans` to `applications`. How many loans came through each channel? (One `COUNT(*)` with a `WHERE` per channel.) Then: how many applications have `status = 'approved'` but no loan at all? Describe in words what those rows are before you look.
 
 <details><summary>Answer</summary>
+
 app 2 669 · branch 3 590 · partner 1 569 (= 7 828). Approved-with-no-loan: `applications a LEFT JOIN loans l ON l.application_id = a.application_id WHERE a.status = 'approved' AND l.loan_id IS NULL` → **89**. All 89 were decided between 2026-09-29 and 2026-10-05 — approvals whose disbursement had not happened by the as-of date (some are even decided *after* it: the decision column carries a planned date). Not errors: a pipeline. Day 4 returns to them.
+
 </details>
 
 ---
 
 ## 4. Homework <span class="badge hw">HW 2.1 — Due Day 3</span>
 
-**Bekzod's loan book.** Ten queries he can run every Monday. Submit `submissions/week-02/day-1/loan_book.sql`, each query preceded by `-- Qn: <the question in one line>` and followed by `-- result: <row count, and the top row or the number>`. You may use tomorrow's `GROUP BY` in Q6 if you have learned it by then; a `WHERE` per value also scores.
+**Bekzod's loan book.** Ten queries he can run every Monday. Hand in `loan_book.sql` (📎 box below), each query preceded by `-- Qn: <the question in one line>` and followed by `-- result: <row count, and the top row or the number>`. You may use tomorrow's `GROUP BY` in Q6 if you have learned it by then; a `WHERE` per value also scores.
 
 1. The readable loan list from section 2, all rows, newest disbursement first.
 2. The same list, **active** loans only, plus `monthly_payment`.

@@ -2,7 +2,7 @@
 
 <span class="badge">Learn 60 min</span> <span class="badge">Practice 60 min</span> <span class="badge">Workspace 15 min</span> <span class="badge company">Company corner</span>
 
-> STORY **Monday, 9:02.** You badge into Nur Finance for the first time. Your lead, Madina, puts a coffee on your desk and says: *"We lend money to people and small businesses. Everything that happens — every application, every loan, every payment that comes in late — ends up in a database. Your job is to turn that database into answers. Today: learn how it's organised and get it running on your laptop. Tomorrow you write your first query."*
+> STORY **Monday, 9:02.** You badge into Nur Finance for the first time. Your lead, Madina, puts a coffee on your desk and says: *"We lend money to people and small businesses. Everything that happens — every application, every loan, every payment that comes in late — ends up in a database. Your job is to turn that database into answers. Today: learn how it's organised and run your first query on it. Tomorrow you write your first query."*
 
 ## Today in 3 lines
 
@@ -76,7 +76,7 @@ Now you can read the whole database as sentences:
 ### Depth (optional)
 
 - ▶ Baraa, *Introduction to SQL* [0:07:38](https://youtu.be/SSKVgrwhzus?t=458&end=1353) — 15 min, what a database is and why SQL.
-- RU deck `1.1 Database Fundamentals.pdf`, pages 1–30 (what a DBMS is, tables, keys). *Russian terms:* таблица = table, строка = row, столбец = column, первичный ключ = primary key, внешний ключ = foreign key.
+- RU deck (TBC Data Analytics 2.0, if you have it) `1.1 Database Fundamentals.pdf`, pages 1–30 (what a DBMS is, tables, keys). *Russian terms:* таблица = table, строка = row, столбец = column, первичный ключ = primary key, внешний ключ = foreign key.
 
 ---
 
@@ -110,42 +110,54 @@ That chain — fact table → key → dimension → key → the next fact — is
 
 ## 4. Practice (60 min)
 
-Write your answers in a text file `submissions/week-01/day-1/answers.md` (HW 1.1 collects it). Check each against the folded answer only after you have tried.
+Write your answers down as you go (a note on your phone is fine) — HW 1.1's hand-in box collects them as `answers.md`. Check each against the folded answer only after you have tried.
 
 **P1.** For each table, say whether it is a "who/what" table or a "what happened" table.
 
 <details><summary>Answer</summary>
+
 Who/what: customers, products, branches, staff, dim_date. What happened: applications, loans, installments, payments, collections_actions, app_events.
+
 </details>
 
 **P2.** `installments` has a column `loan_id`. Is it a primary key or a foreign key? How do you know without opening the data?
 
 <details><summary>Answer</summary>
+
 Foreign key. A loan has many instalments, so the same loan_id appears on many rows — it cannot be unique, so it cannot be the primary key. The PK is installment_id.
+
 </details>
 
 **P3.** Which pairs of tables are one-to-many? Write five, in the form `A 1 — ∞ B`.
 
 <details><summary>Answer</summary>
+
 customers 1—∞ applications; customers 1—∞ loans; products 1—∞ loans; loans 1—∞ installments; loans 1—∞ payments; branches 1—∞ staff; loans 1—∞ collections_actions; applications 1—∞ app_events (any five).
+
 </details>
 
 **P4.** Is `applications → loans` one-to-many or one-to-one? Explain using the business, not the data.
 
 <details><summary>Answer</summary>
+
 One-to-one (or one-to-zero): one application can produce at most one loan, and a rejected application produces none. loans.application_id would be unique.
+
 </details>
 
 **P5.** Browse `applications`. Find the distinct values of `status`. What does each mean in business words?
 
 <details><summary>Answer</summary>
+
 approved (money paid out → there is a loan), approved_not_disbursed (we said yes, the customer never took it), rejected (we said no), cancelled (the customer withdrew).
+
 </details>
 
 **P6.** Browse `loans.status`. One value is `written_off`. In your own words, what happened to that loan?
 
 <details><summary>Answer</summary>
+
 The borrower stopped paying for so long (here > 180 days) that the company no longer expects the money and removed it from the "live" portfolio as a loss. It may still be collected later (recovery).
+
 </details>
 
 **P7.** Which table would answer each question, and which column?
@@ -154,13 +166,17 @@ b) "What is the total amount we are owed?"
 c) "How many calls did collectors make in Fergana?"
 
 <details><summary>Answer</summary>
+
 a) applications: channel = 'app', applied_at. b) installments (total_due) minus payments (amount) — two tables; not loans.principal, which is the original amount, not what is owed now. c) collections_actions (action_type = 'call') joined to staff → branches (region = 'Fergana').
+
 </details>
 
 **P8.** Open `customers`. Scroll. Write down two things that look *wrong* to you. (Keep the note; Thursday is detective day.)
 
 <details><summary>Answer</summary>
+
 Any two of: empty monthly_income cells; a birth date in the future or 1900-01-01; a first name in CAPITALS or with a trailing space; what looks like the same person twice.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P9.** Draw the eleven tables as boxes and the relationships as lines on paper or in https://dbdiagram.io (free, no login needed to try). Photograph it; you will compare it with the real diagram on Day 3.
@@ -169,7 +185,7 @@ Any two of: empty monthly_income cells; a birth date in the future or 1900-01-01
 
 ## 5. Homework <span class="badge hw">Due Day 3</span>
 
-**HW 1.1 — Your workspace works.** Submit to `submissions/week-01/day-1/`:
+**HW 1.1 — Your workspace works.** Hand in with the 📎 box below:
 
 1. `screenshot.png` — a ▶ Run box on this page showing `SELECT COUNT(*) FROM loans;` with the result **7828**.
 2. `answers.md` — your P1–P8 answers (after checking: mark where you were wrong and what you learned).

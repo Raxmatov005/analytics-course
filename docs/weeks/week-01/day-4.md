@@ -86,7 +86,7 @@ That is the whole method: *write the question, find the noun that is "one row", 
 
 ## 3. The case of the forty customers (70 min)
 
-Write every query and its result in `submissions/week-01/day-4/case.sql`; your reasoning goes in the homework memo. Work in order; each fold confirms the step before you take the next.
+Write each query in the box under its question and note the result; your reasoning goes in the homework memo (its hand-in box takes `case.sql` too). Work in order; each fold confirms the step before you take the next.
 
 **Step 1 — reproduce the two numbers.** The board pack counts rows of `customers`. Confirm it.
 
@@ -96,6 +96,7 @@ Write every query and its result in `submissions/week-01/day-4/case.sql`; your r
 SELECT COUNT(*) FROM customers;   -- expect 6040
 ```
 HR's 6 000 counts *people*. So either 40 people are missing from HR, or 40 rows in `customers` are not people. Which is more likely? HR's list is audited for the regulator; a CRM table is edited by a hundred officers. Start with the table.
+
 </details>
 
 **Step 2 — your Day-1 P8 note.** You wrote down names in CAPITALS and names with a trailing space. Count them, with only Day-2 SQL plus three functions: `UPPER()`, `LOWER()` and `TRIM()` return a changed copy of a text (SQL Server also has `LTRIM`/`RTRIM`).
@@ -115,6 +116,7 @@ ORDER BY customer_id;
 These three counts are SQLite's. SQL Server's default collation ignores case and trailing spaces, so there the first and third count every row and the second finds none: add `COLLATE Latin1_General_CS_AS` to the case tests (`WHERE first_name = UPPER(first_name) COLLATE Latin1_General_CS_AS`) and compare `DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))` for the spaces (Week 2 Day 3 explains why).
 
 The capitals count and the trailing-space count add up to the lower-case-surname count: the lower-case surname catches every oddly formatted row at once. The ids run from **6001** to the end of the table — all added after the original 6 000. First three: 6001 `MALIKA jalilova`, 6002 `LOLA saidova`, 6003 `Bobur␣ rakhimov`. Suspicious, but *odd formatting is not proof of a duplicate*. Prove it.
+
 </details>
 
 **Step 3 — find a twin.** Take customer 6001. Is there another Malika Jalilova born 1981-08-15?
@@ -129,6 +131,7 @@ WHERE LOWER(TRIM(first_name)) = 'malika'
   AND birth_date = '1981-08-15';
 ```
 Two rows: **4516** `Malika Jalilova`, registered 2022-09-27, and **6001** `MALIKA jalilova`, registered 2023-03-30 — same birth date, **same phone**. One person, two ids. Someone (an officer, an import) created her again instead of searching. Repeat for 6002 and 6003 if you want to feel the pattern; then stop doing it by hand.
+
 </details>
 
 **Step 4 — do it for everyone (borrow a week-2 tool).** You need "groups of rows with the same normalised name and birth date that have more than one member". That is `GROUP BY … HAVING COUNT(*) > 1` — week 2's topic. Copy it today, understand it next Tuesday:
@@ -144,9 +147,11 @@ ORDER BY n DESC, ln, fn;
 How many groups? Now add `phone` to both the SELECT and the GROUP BY and run again. How many now? Explain the difference before opening the fold.
 
 <details><summary>Check</summary>
+
 Name + birth date gives a few more groups than name + birth date + phone, each of exactly 2 rows. Look at the groups that disappear when you add the phone: the same common name and the same birthday, but different phones and different regions — two genuinely different people. With 6 000 people and 40 first names, that happens. **A match on one or two fields is a suspicion; a match on name, birth date and phone is a duplicate.** Check that the confirmed groups are exactly the lower-case-surname rows from step 2.
 
 Try the opposite check too: group by `phone` alone. A few groups appear that the name rule did not find — pairs that share a phone but have different names and birth dates: a family number or a typo, not duplicates. Every rule you invent to find duplicates has false positives; always look at what it caught. The counts and the pairs that are *not* duplicates go in your memo.
+
 </details>
 
 **Step 5 — the other thing you noticed on Day 1: birth dates.** The data is as of 2026-10-01 and the oldest plausible borrower was born around 1920. Count the rows outside that range and list them.
@@ -163,14 +168,17 @@ WHERE birth_date > '2026-10-01' OR birth_date < '1920-01-01'
 ORDER BY birth_date;                                              -- the full list
 ```
 Look at the dates in the list: the placeholder `1900-01-01`, years far in the future — and one that looks like a normal date until you notice it is **after the as-of date**: a customer born next year. That is the lesson: a type check (is it a date?) catches nothing here; only a *business* check (born between 1920 and today minus 18 years) does. Every row of the list is a finding for the memo; check whether any of them is one of the duplicate rows. Everyone else was born between 1955-01-04 and 2006-12-26 — plausible.
+
 </details>
 
 **Step 6 — answer the CFO.** How many real customers are there, and which number is right?
 
 <details><summary>Check</summary>
+
 6 040 rows minus the duplicate rows you confirmed in step 4. If that leaves **6 000 people**, HR is right and the board pack counted rows, not people. The impossible birth dates do not change the count (they are real people with a wrong field) but they must be fixed before anyone computes age bands.
 
 One more sentence for Madina: the duplicates are not harmless. Run `SELECT COUNT(*) FROM loans WHERE customer_id >= 6001;` and the same on `applications`: loans and applications sit on the duplicate ids, so "loans per customer", "repeat customers" and "customers with more than one product" are all understated for those people. Count, too, how many duplicate rows were registered in 2026: "new customers this year" (by `registered_at`) is overstated by exactly that many. Run it; your three numbers go in the memo's *What it changes*.
+
 </details>
 
 **Step 7 — what to do.** Three options, in rising order of effort: (1) report people, not rows — count distinct `(name, birth date, phone)` in the warehouse's `dim_customer`; (2) merge: repoint their loans and applications from the new id to the old one, then delete the duplicate rows — a data engineer's job, with a backup; (3) prevent: a uniqueness check on `(phone, birth_date)` at registration so officers must search before creating. Your memo recommends an order.
@@ -186,14 +194,16 @@ ORDER BY a.customer_id, a.applied_at;
 ```
 
 <details><summary>Check</summary>
+
 There are hits, and every one sits on a duplicate id. Look at their `registered_at`: it lies *after* the as-of date — later in 2026, one in 2027. The duplicate rows were created with invented registration dates, so their applications look older than their customers. That is a finding of its own: list the ids, and count how many customer rows carry a registration date after 2026-10-01 (`WHERE registered_at > '2026-10-01'` on `customers` alone finds them all, with or without an application). It also means step 6's "new customers this year" contains people registered in the future. Not required for the memo — a memo that has it stands out.
+
 </details>
 
 ---
 
 ## 4. Homework <span class="badge hw">HW 1.3 — Due Day 5</span>
 
-**Data-quality memo to Madina.** Submit to `submissions/week-01/day-4/`:
+**Data-quality memo to Madina.** Hand in with the 📎 box below:
 
 1. `memo.md` — **one page**, in this order: *What is wrong* (each issue in one line: table, column, what, how many rows), *What it changes* (which reported numbers are affected and by how much), *What to do* (your recommendation per issue, who does it, and in what order), *How I checked* (one sentence pointing at the queries). Numbers from your queries, not from the folds.
 2. `case.sql` — every query from steps 1–6 with a `-- result:` line.

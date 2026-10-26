@@ -8,13 +8,13 @@
 
 - You have taken **five short self-tests** (SQL, Excel, Python, Statistics, BI) without looking anything up.
 - For each module you know your score and the rule: **≥ 80 % → skip that week, do only its Friday checkpoint.**
-- You have filled the **"my plan"** template and submitted it to `submissions/week-00/`.
+- You have filled the **"my plan"** template and handed it in with the 📎 box on this page.
 
 ---
 
 ## 0. How to take the tests
 
-1. Paper or a text file `submissions/week-00/day-0.md`. Write the test name, then your answers numbered.
+1. Paper or a note on your phone. Write the test name, then your answers numbered.
 2. **No searching, no running code, no spreadsheet.** A guess is fine; mark it with `?`. The point is to find the gaps, not to look good.
 3. Only after finishing a whole test, open its folded key and count. One point per question, half for a partly right answer.
 4. The rule, per test: **SQL / Excel / Python / Statistics: 7 of 8 or better = skip. BI: 5 of 6 or better = skip.** SQL has one half step: 5–6 of 8 skips week 1 only. "Skip" means you still do that week's Friday checkpoint; if you fail the checkpoint, you do the week after all.
@@ -56,6 +56,7 @@ Use this tiny table for questions 3–8. It is called `loans`.
 8. `SELECT customer_id, COUNT(*) AS n FROM loans GROUP BY customer_id HAVING COUNT(*) > 1;` → customer 10 with n = 2.
 
 Score /8: _____ · 7+ = skip weeks 1–3 (do the three Friday checkpoints: W1 D5, W2 D5, W3 D5). 5–6 = skip week 1 only.
+
 </details>
 
 ---
@@ -83,6 +84,7 @@ Score /8: _____ · 7+ = skip weeks 1–3 (do the three Friday checkpoints: W1 D5
 8. **Conditional formatting** (a rule on the DPD column: cell value > 90 → red fill).
 
 Score /8: _____ · 7+ = skip week 4 (do its checkpoint W4 D5).
+
 </details>
 
 ---
@@ -128,6 +130,7 @@ Answer without running anything.
 8. For each product, the sum of `principal` — one number per product, like a pivot table or `GROUP BY product` in SQL.
 
 Score /8: _____ · 7+ = skip week 5 (do its checkpoint W5 D5).
+
 </details>
 
 ---
@@ -157,6 +160,7 @@ Use this sample of days-late for 8 payments: **2, 4, 4, 4, 5, 5, 7, 9**.
 8. Population = every loan Nur Finance ever issued; sample = the 500 loans you pulled for a manual file review. Statistics lets you say something about the first from the second, with an error margin.
 
 Score /8: _____ · 7+ = skip week 6 (do its checkpoint W6 D5).
+
 </details>
 
 ---
@@ -180,6 +184,7 @@ Score /8: _____ · 7+ = skip week 6 (do its checkpoint W6 D5).
 6. Import copies the data into the model (fast, refreshed on schedule). DirectQuery leaves the data in the database and sends a query per interaction (always current, slower). Pick DirectQuery when the numbers must be live (intraday collections, a regulatory limit) or the data is too big to import.
 
 Score /6: _____ · 5+ = skip week 7 (do its checkpoint W7 D5; the A/B-testing half of the week still applies unless you also passed Statistics).
+
 </details>
 
 ---
@@ -281,7 +286,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
   {"type": "single", "q": "You skip week 4 because Excel scored 7/8. What must you still do?", "options": ["Nothing — the week is done", "Pass week 4's Friday checkpoint (W4 D5)", "All of week 4's homework", "Take the Excel self-test again on Monday"], "answer": 1, "explain": "Skip means checkpoint only; if you fail it, you take the week after all (→ section 0, rule 4)."},
   {"type": "single", "q": "Which part of the course is never skipped, whatever your scores?", "options": ["Week 1 (SQL basics)", "Week 8 (product analytics + capstone) and the Company & metrics track", "Week 7 (BI)", "Day 0's self-tests"], "answer": 1, "explain": "Week 8 and the Company & metrics track are the job itself (→ section 6)."},
   {"type": "number", "q": "BI has only 6 questions. What is the lowest BI score that lets you skip week 7?", "answer": 5, "explain": "BI: 5 of 6 or better = skip; the other four modules need 7 of 8 (→ section 0, rule 4)."},
-  {"type": "text", "q": "What is the file name of your plan inside submissions/week-00/?", "answer": ["my-plan.md", "my-plan"], "explain": "The plan goes to submissions/week-00/my-plan.md, submitted before Day 1 (→ section 7)."},
+  {"type": "text", "q": "The hand-in box names the file for your plan. What is that file called?", "answer": ["my-plan.md", "my-plan"], "explain": "The plan is my-plan.md, handed in with the 📎 box on this page before Day 1 (→ section 7)."},
   {"type": "single", "q": "Collections asks which borrowers crossed 30 days late. Which of the two lending questions is that?", "options": ["Are we lending enough, to the right people? (growth)", "Are they paying us back? (risk)", "Neither — it is a marketing question"], "answer": 1, "explain": "Days past due, buckets and write-offs belong to the risk side (→ section 9)."}
 ]}
 ```

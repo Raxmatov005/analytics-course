@@ -164,7 +164,7 @@ A **traceback** (*трассировка*) lists the calls that led to the error
 - ▶ Functions — [same course, 2:52:12](https://youtu.be/wUSDVGivd-8?t=10332&end=10923)
 - ▶ Modules (import) — [same course, 3:12:46](https://youtu.be/wUSDVGivd-8?t=11566&end=12496)
 
-- RU deck `4.1 Python.pdf` (109 pages): types pp. 26–48, control flow pp. 49–61, lists / tuples / dicts / sets pp. 62–71, functions pp. 72–78, exceptions pp. 83–91, files pp. 92–107 — the recording `video1256130814.mp4` is this lecture. `En_4.2_Python.pdf` is NumPy (arrays, slicing, broadcasting, pp. 12–66): pandas sits on top of it; read it when `.values` or `np.where` puzzle you.
+- RU deck (TBC Data Analytics 2.0, if you have it) `4.1 Python.pdf` (109 pages): types pp. 26–48, control flow pp. 49–61, lists / tuples / dicts / sets pp. 62–71, functions pp. 72–78, exceptions pp. 83–91, files pp. 92–107 — the recording `video1256130814.mp4` is this lecture. `En_4.2_Python.pdf` is NumPy (arrays, slicing, broadcasting, pp. 12–66): pandas sits on top of it; read it when `.values` or `np.where` puzzle you.
 - *Russian terms:* переменная = variable, целое / вещественное число = int / float, строка = str, список = list, словарь = dict, кортеж = tuple, цикл = loop, функция = function, параметр / аргумент = parameter / argument, модуль = module, исключение = exception, трассировка = traceback, ядро = kernel, ячейка = cell.
 
 ---
@@ -206,61 +206,81 @@ Work in a new notebook `week5_day1.ipynb` (File → New → Notebook) next to th
 **P1.** Types: `principal = "31150000"` as read from the CSV. What does `principal * 2` give, what does `int(principal) * 2` give, and what error does `principal + 1` raise?
 
 <details><summary>Answer</summary>
+
 `"3115000031150000"` (a string repeated), `62300000`, `TypeError: can only concatenate str (not "int") to str`. The CSV lesson in one line: convert before arithmetic.
+
 </details>
 
 **P2.** A list of the five bucket labels in order. Print the last one without counting, the middle three with a slice, and the position of `"61-90"` with `.index()`.
 
 <details><summary>Answer</summary>
+
 `buckets[-1]` → `'90+'`; `buckets[1:4]` → `['1-30', '31-60', '61-90']`; `buckets.index("61-90")` → `3`. Slices stop *before* the second number — the half-open filter of week 1, as indexes.
+
 </details>
 
 **P3.** Count applications per `status` with a dict and a loop; print the dict sorted by count, largest first.
 
 <details><summary>Answer</summary>
+
 `approved 7917 · rejected 3588 · cancelled 1817 · approved_not_disbursed 678`; the sort is `sorted(counts.items(), key=lambda kv: kv[1], reverse=True)` — `lambda kv: kv[1]` says "sort by the value". These four sum to 14 000; `approved*` = 8 595.
+
 </details>
 
 **P4.** Write `label(dpd)` from section 1 and apply it with a comprehension to `[0, 7, 30, 31, 45, 90, 91, 919]`. Then count how many of `loans_status.csv`'s 7 828 rows land in each label with a dict.
 
 <details><summary>Answer</summary>
+
 `['0', '1-30', '1-30', '31-60', '31-60', '61-90', '90+', '90+']` — 30 is still `1-30`, 91 is `90+`. On the file: `{'0': 7429, '1-30': 124, '31-60': 25, '61-90': 16, '90+': 234}`, the week-2/3/4 buckets a fourth time (remember `int(r["dpd"])`). Checksum: 7 429 + 399 = 7 828.
+
 </details>
 
 **P5.** Sum `requested_amount` per channel; print each as `f"{x / 1e9:.1f} bn"`. What goes wrong without `int()`?
 
 <details><summary>Answer</summary>
+
 branch 681.2 bn · app 13.6 bn · partner 11.4 bn (706.2 bn requested in total against 404.8 bn disbursed — the branch asks for SME and Auto money). Without `int()` the `+=` concatenates text into one enormous string — no error, a wrong answer; run `type()` on the result when a sum looks strange.
+
 </details>
 
 **P6.** Missing values: how many rows have `credit_score == ""`? Compute the average credit score of the rest — and explain why `sum / len(rows)` would be wrong.
 
 <details><summary>Answer</summary>
+
 388 blanks (2.8 %); mean of the 13 612 others **659.6**. Dividing by 14 000 silently treats a blank as 0 and pulls the mean down to 641.3 — week 2's NULL rule (`AVG` ignores NULL; your loop must too) written by hand.
+
 </details>
 
 **P7.** Dates: `from datetime import date, datetime`; parse `applied_at` (`"2025-06-02 10:35:00"`) with `datetime.strptime(s, "%Y-%m-%d %H:%M:%S")`, then count applications in September 2026 with the half-open rule. Check it against `<= 2026-09-30`.
 
 <details><summary>Answer</summary>
+
 `>= date(2026, 9, 1) and < date(2026, 10, 1)` on `.date()` → **621**; `<= date(2026, 9, 30)` on the full datetime → **598**: 23 applications after midnight on the 30th lost — week 1's trap, in a third language. Converting to `.date()` first makes both forms agree.
+
 </details>
 
 **P8.** Write `top_n(d, n)` returning the n largest `(key, value)` pairs of a dict, and use it on the per-`product` counts of applications. Then a `while` loop that grows 1 000 000 by 30 % a year until it passes 10 000 000 — how many years?
 
 <details><summary>Answer</summary>
+
 `sorted(d.items(), key=lambda kv: kv[1], reverse=True)[:n]` → `[('Micro loan', 5006), ('Consumer loan', 4204), ('Buy now pay later', 2771)]`. The `while`: 9 years (1.3⁹ = 10.6). A `while` without the `+= 1` runs forever — Kernel → Interrupt.
+
 </details>
 
 **P9.** Write `approval_rate(rows, channel, convention="all")` as in the worked example, with `"decided"` as the second convention, and a `try/except` around a call with a channel that does not exist so that it returns `None` instead of crashing.
 
 <details><summary>Answer</summary>
+
 all: 58.2 / 63.7 / 61.9; decided: 68.2 / 72.4 / 70.5 — identical to week 4's `COUNTIFS` table. For an unknown channel the filtered list is empty and `approved / 0` raises `ZeroDivisionError`; `try: … except ZeroDivisionError: return None` (or `if not rows: return None` before dividing — the clearer version).
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** Read `loans_status.csv` and compute Σ `outstanding` by `product` with a dict, then the share of each with an f-string `:.1%`. Then write the same result to a new CSV with `csv.DictWriter` (`fieldnames=["product", "outstanding", "share"]`), open it in Excel.
 
 <details><summary>Answer</summary>
+
 SME 125 892 942 411 (60.3 %) · Auto 57 684 271 333 (27.6) · Consumer 23 054 933 316 (11.0) · BNPL 1 135 251 000 (0.5) · Micro 956 106 370 (0.5); Σ 208 723 504 430. `writer.writeheader()` then one `writer.writerow({...})` per product; `newline=""` in `open` or Excel shows blank lines between rows. Tomorrow this is four lines of pandas.
+
 </details>
 
 ### Mistakes that cost a point this week
@@ -277,7 +297,7 @@ SME 125 892 942 411 (60.3 %) · Auto 57 684 271 333 (27.6) · Consumer 23 054 93
 
 ## 4. Homework <span class="badge hw">HW 5.1 — Due Day 3</span>
 
-**Jasur's eight functions.** Open `data/python/day1_starter.ipynb`. Eight functions are stubs that raise `NotImplementedError`; under each is an **assert cell** with the expected answers. Replace the body of each stub until its assert cell runs silently, then **Kernel → Restart & Run All** and submit the executed notebook to `submissions/week-05/day-1/day1_starter.ipynb`.
+**Jasur's eight functions.** Open `data/python/day1_starter.ipynb`. Eight functions are stubs that raise `NotImplementedError`; under each is an **assert cell** with the expected answers. Replace the body of each stub until its assert cell runs silently, then **Kernel → Restart & Run All** and hand in the executed notebook (`day1_starter.ipynb`) with the 📎 box below.
 
 1. `dpd_bucket(dpd)` — the five labels (negative → `"0"`).
 2. `annuity(principal, annual_rate, term)` — the monthly payment rounded to the nearest 100 (Company corner).

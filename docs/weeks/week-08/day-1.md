@@ -84,7 +84,7 @@ Related words: **activation** (here, the first disbursed loan), **churn** (*от
 - ▶ Retention by cohort, calculated — [Customer Retention & Cohort Analysis (Eric Andrews), 04:11](https://youtu.be/OwCATJh4lNg?t=251&end=434)
 - ▶ Cohorts (RU, long) — [Когортный анализ и важнейшие метрики продукта (ProductStar), 29:00](https://youtu.be/uYYh69Nf-34?t=1740&end=2780)
 
-- RU deck `8.1 Product Analytics.pptx` (lesson 8.1): slides 4–6 — what a metric is and why it exists; slides 7–11 — how to build one: goal → product initiatives → business questions → the metric (the Amplitude pyramid on 8–10, the one-line definition on 11: a metric tells you how what you do affects your goal); slides 12–18 — a case: MAU growing while revenue flattens (13–14), product vs growth metrics (15), a monthly KPI table with MoM and YoY (16), **cohort retention curves against a benchmark** (17), a daily product dashboard split into financial, growth and performance metrics (18); slide 19 — the summary grid (question, how, goal, metric; growth, financial, efficiency metrics). Mostly pictures: read them next to this page.
+- RU deck (TBC Data Analytics 2.0, if you have it) `8.1 Product Analytics.pptx` (lesson 8.1): slides 4–6 — what a metric is and why it exists; slides 7–11 — how to build one: goal → product initiatives → business questions → the metric (the Amplitude pyramid on 8–10, the one-line definition on 11: a metric tells you how what you do affects your goal); slides 12–18 — a case: MAU growing while revenue flattens (13–14), product vs growth metrics (15), a monthly KPI table with MoM and YoY (16), **cohort retention curves against a benchmark** (17), a daily product dashboard split into financial, growth and performance metrics (18); slide 19 — the summary grid (question, how, goal, metric; growth, financial, efficiency metrics). Mostly pictures: read them next to this page.
 - *Russian terms:* продуктовая аналитика = product analytics, дерево метрик = metric tree, входная / выходная метрика = input / output metric, опережающая / запаздывающая = leading / lagging, воронка = funnel, конверсия шага = step conversion, отвал = drop-off, когорта = cohort, удержание = retention, отток = churn, повторный займ = repeat loan, липкость = stickiness.
 
 ---
@@ -146,6 +146,7 @@ Change the dates in the worked example to September (`act` from `2026-09-01` to 
 | product | 2 910 × 0.21340 × 0.61675 × 0.87206 × 43 732 545 = **14 606 670 000** ✓ |
 
 Report convention: 383 ÷ 540 decided = **70.9 %** (81 cancelled out of the denominator). The tree's number is lower by construction, not because something is wrong.
+
 </details>
 
 **P2.** September's applications produced less money than August's. By how much, and which factor explains most of the fall (log shares)? Then look hard at the factor in second place: is it a real change?
@@ -155,6 +156,7 @@ Report convention: 383 ÷ 540 decided = **70.9 %** (81 cancelled out of the deno
 Total **−37.4 %** (23.34 bn → 14.61 bn). Factor changes and shares of the log change: active +2.2 % (−4.7 %), application rate −6.4 % (+14.2 %), approval +2.1 % (−4.5 %), take-up −5.8 % (+12.8 %), **ticket −32.0 % (+82.2 %)**. The ticket is the story: August's applications carried 14.76 bn of SME loans (39 loans), September's 6.65 bn (26) — a **mix** effect of a few very large loans, not a change in how many people borrow.
 
 Take-up is not a real fall: **24** of September's approved applications had no loan yet on 1 October — approvals of the last days, waiting for the money. Without them take-up is 334 ÷ 359 = 93.0 %, the same as August's 92.6 %. A month that has just ended is **right-censored** at the bottom of the tree; read its last factor a week later, or compare it with August as it looked one day after month-end.
+
 </details>
 
 **P3.** Kamola's first question. Build the app funnel: one row per session (`application_id`), a 0/1 flag per step, then the count per step, step conversion, conversion from the top and drop-off. Add **disbursed** from `loans`. Where is the biggest loss?
@@ -187,6 +189,7 @@ FROM s LEFT JOIN loans l ON l.application_id = s.application_id;
 | disbursed | 2 669 | 91.6 % | 53.3 % | **246** |
 
 The funnel is a staircase with no cliff: 10–15 % is lost at each of the first four steps. The largest user-side loss is the **form** (start → submit: 552, 13.8 %). Submit → approved (536) is the scorecard, a risk decision. And one loss is not in anybody's app dashboard: **246 signed contracts never became a loan** (P7). The marketing deck's "conversion" is most likely *approved (or signed) ÷ app opens* = 58.2 %; the money conversion is 53.3 %. Ask for the definition before you agree or disagree.
+
 </details>
 
 **P4.** The other claim Kamola heard: "most applicants never open the app". Reproduce it: for **all** applications, left-join the sessions and compute the share with an `app_open`, by channel. Then write what "funnel conversion" means for a branch or partner customer, and give Kamola the funnel those customers *do* have.
@@ -204,6 +207,7 @@ The funnel every channel has comes from `applications` + `loans`: applied → de
 | partner | 2 771 | 87.7 % | 70.5 % | 91.5 % | 56.6 % |
 
 Only for the app can you see *inside* "applied → decided" (offer, form, submit). For branch and partner the steps before the application happen at a desk or a shop till and are not logged — the honest answer is "we do not measure them", not 0 %.
+
 </details>
 
 **P5.** The funnel by **device** and by **app version**. First check: is `device` (and `app_version`) constant inside a session? Then compare grouping events by their own device with grouping sessions by the device of their `app_open`. Is any device or version worse at any step?
@@ -218,6 +222,7 @@ Not constant: **3 660 of 5 006** sessions have events from more than one device 
 | iOS | 1 638 | 88.7 % | 87.7 % | 85.6 % | 85.0 % | 91.3 % | 51.6 % |
 
 Versions 3.8.0 / 3.9.1 / 4.0.0 / 4.0.2 (1 272 / 1 258 / 1 267 / 1 209 sessions): open → disbursed 52.4 / 54.1 / 52.6 / 54.3 %. Chi-square per step (3 steps × 2 attributes): smallest p = 0.045 (submit by version), next 0.055 (start by device); after a Holm correction for six tests nothing is close. **No device or version leaks more than another** — the leak is in the product's steps, not in a client. All four versions are in use in every month of the data: the app does not force updates, which is itself worth a line to Kamola.
+
 </details>
 
 **P6.** The funnel says approved ÷ submitted for the app is one number; week 1's approval rate for the app channel is another. Compute both and explain the difference with a cross-tab of `applications.status` against "has a submit event".
@@ -225,6 +230,7 @@ Versions 3.8.0 / 3.9.1 / 4.0.0 / 4.0.2 (1 272 / 1 258 / 1 267 / 1 209 sessions):
 <details><summary>Answer</summary>
 
 Funnel: 2 915 ÷ 3 451 = **84.5 %** of submitted. Report: 2 915 ÷ 4 274 decided = **68.2 %**. The cross-tab: all 2 915 approved applications have a submit event; of 1 359 rejected, only **348** do — **1 011 were rejected without ever being submitted**. The application row is created when the session opens, and the pre-check (age, blacklist, existing overdue debt) can reject it at any step before the form is sent; 732 cancelled split 544 without submit / 188 with. So the scorecard's decision on *submitted* forms approves 84.5 %; the company's approval of *applications* is 68.2 %. Two true numbers with two denominators — the classic "your approval rate does not match the report" (roles page, step 4).
+
 </details>
 
 **P7.** The last step. How many sessions signed a contract but have no loan, and why? Which part of that is final and which part is the as-of date?
@@ -232,6 +238,7 @@ Funnel: 2 915 ÷ 3 451 = **84.5 %** of submitted. Report: 2 915 ÷ 4 274 decided
 <details><summary>Answer</summary>
 
 **246**: **222** have status `approved_not_disbursed` — signed, and the money never went out (final; a question for operations: payout failures, card not linked, the customer withdrew); **24** have status `approved` and were decided on 29 September – 1 October — waiting for disbursement on the as-of date (censored, not lost). The real post-signature loss is 222 of 2 915 signed = **7.6 %** — larger than any single UX step after the offer, and invisible in an event funnel that ends at `contract_signed`. Rule: end a funnel at **money**, from the table that books the money.
+
 </details>
 
 **P8.** Kamola's second question. One row per customer: first and second loan dates (`ROW_NUMBER` by `disbursed_at`). For each first-loan month: customers, % with a second loan within 3, 6 and 12 months. Then look at the cohorts of 2026 in your result and fix what is wrong.
@@ -257,6 +264,7 @@ FROM pairs GROUP BY 1 ORDER BY 1;
 4 335 borrowers; 2 089 took one loan, 2 246 two or more. The earliest full cohort, **January 2024: 79 customers, 10.1 % / 20.3 % (16 people) / 36.7 %** at 3 / 6 / 12 months.
 
 What is wrong: from **2025-10** onwards the 12-month column is a number although the window has not ended, and from 2026-04 onward m6 = m12 (e.g. 2026-06: 37.4 / 37.4 / 37.4) — those customers had three months, not twelve. Blank a cell unless **every** first loan of the cohort is at least N months old: `CASE WHEN MAX(date(first_at, '+12 months')) <= '2026-10-01' THEN … END`. With the rule, m12 exists up to the 2025-09 cohort, m6 up to 2026-03, m3 up to 2026-06. (One more caveat for the slide: the data start in January 2024, so some "first" loans of early 2024 are a customer's first loan *in our data*, not in their life.)
+
 </details>
 
 **P9.** The cohort triangle by **quarter** of the first loan, columns at 1, 2, 3, 6, 9, 12, 18, 24 months, only observable cells. What does the triangle say, read down the columns?
@@ -277,6 +285,7 @@ What is wrong: from **2025-10** onwards the 12-month column is a number although
 | 2026Q2 (463) | 26.1 | 29.2 | 33.0 | | | | | |
 
 % with a second loan, cumulative. Read **down** a column (same age, later cohorts): repeat borrowing is rising steadily — at 6 months from 22.3 % (2024Q1) to 38.3 % (2026Q1); at 3 months from 13.1 % to 33.0 %. Read **across** a row: about two in three customers of 2024 had come back within two years. Kamola's answer: *borrowers do come back, more and sooner every quarter.* What it does not say: whether the repeat loans are *good* (FPD of second loans — Day 2 and the capstone) and whether the quick repeats are refinancing a struggling first loan.
+
 </details>
 
 **P10.** DAU, MAU and stickiness from `app_events` (distinct customers per day / per month; average DAU over all calendar days of the month ÷ MAU), for the last 12 months. Then one sentence for Kamola on why this is not the app's North Star.
@@ -284,6 +293,7 @@ What is wrong: from **2025-10** onwards the 12-month column is a number although
 <details><summary>Answer</summary>
 
 September 2026: **MAU 201**, average DAU **7.43**, stickiness **3.7 %**; the last twelve full months run 3.3–3.8 %, MAU 151 (Oct 2025) → 214 (Aug 2026). In the last six months only 3–7 % of a month’s users were also active the month before. A social app wants 20 %+; a lender's customer opens the app when they need money, so 3–4 % is normal and pushing it up is not the goal. Also: our event log only records sessions that create an application — a real app would log payments and balance checks too, and its MAU would be larger. *"DAU/MAU measures habit; our customers do not need a habit, they need a loan when they need one — so we steer by applications, approval-to-money conversion and repeat borrowing, and keep DAU/MAU as a health line."*
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Repeat borrowing by the **product of the first loan** (customers whose first loan was before October 2025, so 12 months are observable), and which product the second loan is.
@@ -291,6 +301,7 @@ September 2026: **MAU 201**, average DAU **7.43**, stickiness **3.7 %**; the las
 <details><summary>Answer</summary>
 
 First product (customers): MICRO (903) 18.7 / 29.8 / 42.2 % at 3 / 6 / 12 months; CONS (809) 18.0 / 26.9 / 40.7; BNPL (526) 20.0 / 30.6 / 43.5; AUTO (120) 15.8 / 27.5 / 44.2; SME (249) 16.9 / 24.1 / 42.6. Within the noise of a few hundred customers, **the first product hardly matters** for coming back. What they come back for (all customers, second loan by first product): after a first MICRO, the second is MICRO 263, CONS 254, BNPL 171, SME 71, AUTO 52 (720 never came back) — the app is a door into the whole book, which is the LTV argument of Day 2.
+
 </details>
 
 ### Mistakes people make

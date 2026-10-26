@@ -96,7 +96,7 @@ Russian Excel names the functions in Russian (`ЕСЛИ`, `СУММЕСЛИМН`
 
 ### Number formats (*формат ячеек*) — the value does not change, the display does
 
-Ctrl+1 → Number. `#,##0` shows 208723504430 as `208,723,504,430`; `#,##0,,,` " bn" shows it as `209 bn` (each trailing comma divides the display by a thousand); `0.0%` shows 0.0312 as `3.1%`; `yyyy-mm-dd` shows a date as text you can sort. The cell still holds the full number — `TEXT()` is the function that *converts* it. Dates in Excel are numbers (days since 1900-01-00: `DATE(2026,10,1)` = 46 296), which is why `">="&DATE(2026,1,1)` works and why a date stored as *text* (Wednesday) does not compare. Sheets: Format → Number → Custom number format, same codes.
+Ctrl+1 → Number. `#,##0` shows 208723504430 as `208,723,504,430`; `#,##0,,," bn"` shows it as `209 bn` (each trailing comma divides the display by a thousand); `0.0%` shows 0.0312 as `3.1%`; `yyyy-mm-dd` shows a date as text you can sort. The cell still holds the full number — `TEXT()` is the function that *converts* it. Dates in Excel are numbers (days since 1900-01-00: `DATE(2026,10,1)` = 46 296), which is why `">="&DATE(2026,1,1)` works and why a date stored as *text* (Wednesday) does not compare. Sheets: Format → Number → Custom number format, same codes.
 
 ### Google Sheets differences, collected
 
@@ -175,7 +175,7 @@ Fill B3 right to F3 and down to row 10: forty cells, one formula. Checks, in thi
 
 Now the *count* version: replace `SUMIFS(tblLoans[outstanding], …)` with `COUNTIFS(…)` (same pairs, no sum range) → column totals **7 429 / 124 / 25 / 16 / 234**, grand total 7 828. Two tables, one formula each, both tied to a total you know. That is the Excel version of week 3's "every view ships with its check query": **every summary table ends in a cell that must equal a number you can defend.**
 
-Finish with the display: select B3:G11, Ctrl+1, custom `#,##0,,,` " bn"` — `81.7 bn` reads; `81679738071` does not. The cell still holds every soum, so the check still works.
+Finish with the display: select B3:G11, Ctrl+1, custom `#,##0,,," bn"` — `81.7 bn` reads; `81679738071` does not. The cell still holds every soum, so the check still works.
 
 ---
 
@@ -186,67 +186,89 @@ Work in a **copy** of `nur_week4_start.xlsx` named `week-04/day-1/practice.xlsx`
 **P1.** Four cells from `Loans`: number of loans, number of active loans, total outstanding, number of loans with dpd > 0.
 
 <details><summary>Answer</summary>
+
 `=COUNTA(tblLoans[loan_id])` → 7 828 · `=COUNTIFS(tblLoans[status],"active")` → 3 352 · `=SUM(tblLoans[outstanding])` → 208 723 504 430 · `=COUNTIFS(tblLoans[dpd],">0")` → 399. All four are week-3 numbers; if one differs, the file is not the shipped one.
+
 </details>
 
 **P2.** Loans and principal disbursed in 2026 (through the as-of date), then the same for September 2026 only, with the half-open filter.
 
 <details><summary>Answer</summary>
+
 `=COUNTIFS(tblLoans[disbursed_at],">="&DATE(2026,1,1))` → 3 051; `=SUMIFS(tblLoans[principal],tblLoans[disbursed_at],">="&DATE(2026,1,1))` → 162 333 060 000. September: add the pair `tblLoans[disbursed_at],"<"&DATE(2026,10,1)` and start at `DATE(2026,9,1)` → 361 / 17 015 490 000. The 21 loans of 1 October (852 760 000) are inside the first pair and outside the second.
+
 </details>
 
 **P3.** A five-row product table: loans, outstanding, share of outstanding (`0.0%`), average principal, largest principal. Which product is 60 % of the book and 10 % of the loans?
 
 <details><summary>Answer</summary>
+
 `COUNTIFS` / `SUMIFS` / `=C3/SUM($C$3:$C$7)` / `AVERAGEIFS(tblLoans[principal],tblLoans[product],$A3)` / `MAXIFS(…)`. Small business loan 781 · 125 892 942 411 · **60.3 %** · 308 728 745 · 599 060 000; Auto 391 · 57 684 271 333 · 27.6 % · 216 858 133 · 399 530 000; Consumer 2 418 · 23 054 933 316 · 11.0 %; Micro 2 669 · 956 106 370 · 0.5 %; BNPL 1 569 · 1 135 251 000 · 0.5 %. The largest loans sit exactly at `Lookup!E3:E7` minus 10 000–940 000 — the product limits bind.
+
 </details>
 
 **P4.** Add a calculated column `my_bucket` to `tblLoans` with `IFS` on `dpd`, then prove it equals the shipped `bucket` column with one `SUMPRODUCT` (count of mismatches).
 
 <details><summary>Answer</summary>
+
 The `IFS` from section 1 in a new column; `=SUMPRODUCT(--(tblLoans[my_bucket]<>tblLoans[bucket]))` → **0**. If you get 7 429, your first branch returned the number 0 and the shipped column has the text `0`: wrap it as `"0"`. `--` turns TRUE/FALSE into 1/0 — the Excel idiom for `SUM(CASE WHEN … THEN 1 ELSE 0 END)`.
+
 </details>
 
 **P5.** The status × bucket cross-tab for delinquent loans only (dpd > 0): a `COUNTIFS` with three pairs. Which statuses appear in 90+ and how many "closed" loans are late?
 
 <details><summary>Answer</summary>
+
 Rows active / closed / default / written_off, columns 1-30 … 90+, `=COUNTIFS(tblLoans[status],$A3,tblLoans[bucket],B$2,tblLoans[dpd],">0")`. 90+ = 44 default + 190 written_off (and nothing else); closed: 13 in 1-30 + 1 in 31-60 = **14** — week 2's finding (the fifteenth sits at dpd 0 on the as-of day and is outside this filter). Active: 111 / 24 / 16 / 0.
+
 </details>
 
 **P6.** Average DPD and maximum DPD of *active* delinquent loans, and the average outstanding of an active loan.
 
 <details><summary>Answer</summary>
+
 `=AVERAGEIFS(tblLoans[dpd],tblLoans[status],"active",tblLoans[dpd],">0")` → **22.7**; `=MAXIFS(tblLoans[dpd],tblLoans[status],"active")` → 89 (no active loan is past 90 — those are `default`); `=AVERAGEIFS(tblLoans[outstanding],tblLoans[status],"active")` → 60 681 393. `AVERAGEIFS` divides by the count that passed the criteria, so the `">0"` pair is what turns "average over all active loans" into "average over late ones" — week 2 P8's two numbers, one argument apart.
+
 </details>
 
 **P7.** Text: on `Customers`, a `full_name` column = `PROPER(TRIM(first))&" "&PROPER(TRIM(last))`, and three count cells: first names with a trailing space (`LEN` vs `LEN(TRIM)`), surnames that are all lower-case, phones that are not 13 characters long.
 
 <details><summary>Answer</summary>
+
 `=SUMPRODUCT(--(LEN(tblCustomers[first_name])<>LEN(TRIM(tblCustomers[first_name]))))` → **18**; lower-case surnames: `=SUMPRODUCT(--EXACT(tblCustomers[last_name],LOWER(tblCustomers[last_name])))` → **40** (`EXACT` is the one case-sensitive comparison in Excel; `=` would say every surname is lower-case); `=SUMPRODUCT(--(LEN(tblCustomers[phone])<>13))` → 0. Row 6001 becomes `Malika Jalilova` — identical to row 4516. Wednesday finishes this.
+
 </details>
 
 **P8.** Payments by method **as recorded**: a `COUNTIFS` for each of the five clean names (`card`, `cash`, `transfer`, `payme`, `click`). Why do the five not add up to 52 875, and which 57 rows did Excel count that SQL did not?
 
 <details><summary>Answer</summary>
+
 card **17 621** · cash 8 760 · transfer 8 747 · payme 8 900 · click 8 790 = 52 818; missing 57 = 30 `CASH ` (trailing space) + 27 `bank transfer`. Excel's criteria are case-insensitive, so `"card"` already includes the 57 `Card` rows that week 2's raw `GROUP BY` kept apart (and `PayMe`, `Click` likewise) — but it cannot ignore a space or a different word. Σ amount for `"card"`: 84 774 870 979 = 33.2 % of the 255 173 169 976 recorded (33.3 % of the rows).
+
 </details>
 
 **P9.** Bekzod's ten-cell summary with number formats: the P1 and P2 numbers plus Σ principal ever lent (404 783 280 000), average ticket (51 709 668) and PAR30 as a percentage — in `#,##0`, `#,##0,,," bn"` and `0.00%`, each cell labelled.
 
 <details><summary>Answer</summary>
+
 PAR30 `=SUMPRODUCT((tblLoans[dpd]>30)*tblLoans[outstanding])/SUM(tblLoans[outstanding])` → 0.0312 → **3.12 %**. The bn format shows 404.8 bn, 208.7 bn, 162.3 bn; `=TEXT(K3,"#,##0,,,")&" bn"` makes the same display as *text* for a title cell. Rule: formats on numbers you will compute with, `TEXT()` only on labels.
+
 </details>
 
 **P10.** Month labels without a pivot: a column `month` on `tblLoans` as `=TEXT([@disbursed_at],"yyyy-mm")`, then a 2026 table of month → loans, principal, running total of principal (a `SUM` with a `$`-pinned start).
 
 <details><summary>Answer</summary>
+
 `=COUNTIFS(tblLoans[month],A3)`, `=SUMIFS(tblLoans[principal],tblLoans[month],A3)`, running `=SUM($C$3:C3)`. 2026-01 287 / 17 452 370 000 → … → 2026-09 361 / 17 015 490 000, running 161 480 300 000; 2026-10 21 / 852 760 000, running **162 333 060 000** = P2. Quarters by `=SUMIFS` on a `quarter` column (`="Q"&ROUNDUP(MONTH([@disbursed_at])/3,0)`): Q1 49.00 bn · Q2 52.48 · Q3 60.00 bn. (The `TEXT` month is text, so it sorts correctly and matches `COUNTIFS` exactly; a real date column + a pivot is Thursday's better way.)
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Week 3's `v_portfolio_monthly` had month-end outstanding. Reproduce **September 2026 month-end** from `Installments` + `Loans` with `SUMIFS` only: principal due on or after 2026-10-01 for loans disbursed before 2026-10-01. Why is it not 208 723 504 430?
 
 <details><summary>Answer</summary>
+
 Add to `tblInstallments` a column `disbursed` = the loan's `disbursed_at` (tomorrow's XLOOKUP — or today, a `SUMIFS(tblLoans[principal]…)` trick will not do it; use `=INDEX(tblLoans[disbursed_at], MATCH([@loan_id], tblLoans[loan_id], 0))`), then `=SUMIFS(tblInstallments[principal_due], tblInstallments[due_date], ">="&DATE(2026,10,1), tblInstallments[disbursed], "<"&DATE(2026,10,1))` → **208 243 879 623**. The 21 loans of 1 October (852 760 000) are excluded and the instalments due *on* 1 October (not yet due at midnight on 30 September) are included — week 3 P8's two definitions, now in Excel.
+
 </details>
 
 ### Mistakes that cost a point this week
@@ -265,7 +287,7 @@ Add to `tblInstallments` a column `disbursed` = the loan's `disbursed_at` (tomor
 
 ## 4. Homework <span class="badge hw">HW 4.1 — Due Day 3</span>
 
-**Bekzod's functions pack.** Submit `submissions/week-04/day-1/functions_pack.xlsx` (or a Sheets link exported to `.xlsx`) with one sheet `Pack`: ten labelled cells, each a **formula** on `tblLoans` / `tblApplications` (no typed numbers), and a column *SQL value from week 3* next to each so the two can be compared:
+**Bekzod's functions pack.** Hand in `functions_pack.xlsx` (📎 box below) (or a Sheets link exported to `.xlsx`) with one sheet `Pack`: ten labelled cells, each a **formula** on `tblLoans` / `tblApplications` (no typed numbers), and a column *SQL value from week 3* next to each so the two can be compared:
 
 | # | Cell | Must equal |
 |---|---|---|

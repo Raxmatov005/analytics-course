@@ -164,7 +164,7 @@ Here: row two. A screen change is cheap to reverse; FPD is a two-month-late sign
 - ▶ Validity check and launch decision — [A/B Testing in Data Science Interviews by a Google Data Scientist (DataInterview), 12:32](https://youtu.be/DUNk4GPZ9bw?t=752&end=913)
 - ▶ Common problems (RU) — Noukash lecture, [35:37](https://youtu.be/FEI1OA-zgb8?t=2137&end=2301)
 
-- RU deck `6.2 A_B Testing.pdf` (lesson 6.2): pp. 4–10 — hashing, salting, uneven splits (the logic behind the hash check).
+- RU deck (TBC Data Analytics 2.0, if you have it) `6.2 A_B Testing.pdf` (lesson 6.2): pp. 4–10 — hashing, salting, uneven splits (the logic behind the hash check).
 - Notebook `Lecture6.2 - Tests.ipynb`: the t-test step by step and with scipy (cells 3–19), "was it profitable?" — a skewed revenue metric and the Mann–Whitney U test (cells 20–40), **A/A tests and added-effect checks** — simulate many A/A splits, check the p-values are uniform, add an artificial effect and check the test finds it (cells 41–62), multiple comparisons (cell 63). Run its A/A loop on our `users` + `events` instead of the generated data.
 - `Howework_AB.ipynb` — the original course's A/B homework: a "For you" page recommendation test in an online shop; hypothesis + metric + criterion, split, comparability, a synthetic dataset, a power-vs-sample-size plot at MDE 5 %; then the same for profitability. Today's analysis is the next step after that design.
 - *Russian terms:* очистка данных эксперимента = experiment data cleaning, утечка в назначении = assignment leak, пересечение групп = group overlap, воронка = funnel, конверсия = conversion, относительный прирост (лифт) = relative lift, бутстрап = bootstrap, барьерная метрика = guardrail, взаимодействие = interaction, поэтапный запуск = staged rollout, контрольная (отложенная) группа = hold-out.
@@ -196,67 +196,89 @@ Open `data/python/week7/day2_starter.ipynb`: write `srm_by`, `clean_users`, `ab_
 **P1.** The naive result: conversion per variant on every row, z, p, relative lift. Then two reasons why this cannot go to Kamola yet.
 
 <details><summary>Answer</summary>
+
 A 1 147 / 13 845 = **8.28 %**, B 1 324 / 14 129 = **9.37 %**, z = 3.20, **p = 0.0014**, +13.1 %. Not yet: nobody has checked that rows are users (they are not: 27 974 rows, 27 674 users) or that the split is the planned 50/50 in every part of the experiment — a broken split makes the comparison non-random, and then a p-value means nothing.
+
 </details>
 
 **P2.** Duplicates: how many users appear more than once, in which variants, how far apart? Why remove all their rows rather than keep the first assignment?
 
 <details><summary>Answer</summary>
+
 **300 users**, 600 rows, every one of them in **both** A and B; first assignment A for 182, B for 118; second assignment 1.0–5.0 days later (mean 3.0). After the second assignment they saw the other screen — their outcome is caused by a mix of A and B, and their events (no variant column) would be counted in both arms. Keeping the first row would still attribute a mixed outcome to one screen; dropping them costs 1 % of the sample and removes the doubt.
+
 </details>
 
 **P3.** SRM with your `srm_by`: overall (rows and de-duplicated users), by device, by week, by device × week, by day. Which cell is broken, and why did the overall and the daily checks miss it?
 
 <details><summary>Answer</summary>
+
 Overall rows 13 845 / 14 129, **p = 0.090**; users 13 545 / 13 829, **p = 0.086**. Device: iOS **p = 2.2 × 10⁻⁵**; week 4 p = 0.0019; **iOS × week 4: 537 / 822 = 60.5 % B, p = 1.1 × 10⁻¹⁴**. By day only 2 of 28 days below 0.05 (smallest 0.024, 22 August). The broken cell is 1 359 of 27 374 users — 5 % of the data, diluted overall; and a day has only ~980 users, so a 60/40 split of its ~50 iOS users is invisible. Slice by how the software ships: client × release period.
+
 </details>
 
 **P4.** The hash check: recompute every row's variant from `sha256("offer_screen_v2" + user_id)`. How many rows disagree, and how do they split between the two problems?
 
 <details><summary>Answer</summary>
+
 **431 rows** disagree: **300** are the leaked users' re-assignments, **131** are non-duplicate iOS users assigned 22–28 August, **all logged B** although their hash says A. So the SRM is not "B got extra users from somewhere": specific A users were pushed into B — a bug in the iOS client (timeouts defaulting to B), not in the assignment service.
+
 </details>
 
 **P5.** Novelty: daily conversion by variant (de-duplicated), the lift on 1–3 August, a test on days 1–3 alone, and the weekly table with iOS week 4 removed. What does the pre-registered plan say you do?
 
 <details><summary>Answer</summary>
+
 Days 1–3: A 7.85 / 7.94 / 8.19 %, B 11.90 / 10.33 / 12.09 % → lifts **+4.0, +2.4, +3.9**; pooled days 1–3: 8.01 % vs 11.44 %, **+3.44 points, p = 0.0012**. Weekly: A 8.38 / 8.56 / 7.20 / 7.59 %, B 10.12 / 9.75 / 8.02 / 8.44 % — week 1 carries the spike. Plan: steady state (from 4 August) is the primary, the full period a sensitivity line. Leaving the spike in would sell Kamola a lift that the screen will not keep.
+
 </details>
 
 **P6.** The clean primary result with your `ab_readout`, then the cleaning-ladder table (raw → − leak → − iOS week 4 → − days 1–3). Which step changes the answer most?
 
 <details><summary>Answer</summary>
+
 Clean: **7.98 % vs 8.86 %, +0.88 points (+0.16 to +1.60), p = 0.016, +11.1 % (+2.0 to +21.0)**. Ladder: +1.09 (p 0.0014) → +1.11 (0.0010) → +1.19 (0.00059) → **+0.88 (0.016)**. The novelty exclusion moves it most (−0.31 points); the leak and the SRM each push B up a little. The conclusion holds throughout; the size drops by a fifth and the p-value rises tenfold.
+
 </details>
 
 **P7.** The funnel by variant on the clean users: step rates and a two-proportion test per step. Where does the lift come from, and which step would worry a risk manager?
 
 <details><summary>Answer</summary>
+
 Start 33.6 vs 33.7 % (p 0.91); submit 73.4 vs 74.5 % of starters (0.27); approved 39.7 vs 41.6 % of submitted (0.14); signed 88.4 vs 90.1 % of approved (0.17). The lift is not at the door but in finishing — small gains at every later step. The **approval** step worries risk: a higher approval share in B could mean different applicants; here it is within noise, so it goes on the watch list, not into the conclusion.
+
 </details>
 
 **P8.** Principal per loan: describe both arms, Mann–Whitney, a bootstrap CI of the mean difference (10 000 resamples, `default_rng(2026)`). Then disbursed principal per viewer with its bootstrap CI.
 
 <details><summary>Answer</summary>
+
 A 993 loans, mean **2 563 847**, median 2 270 000, sd 1 248 912; B 1 076, **2 494 675**, 2 245 000, 1 197 935. Mann–Whitney **p = 0.32** (P(B > A) = 0.487); mean difference **−69 172 (95 % CI −174 910 to +35 635)**, −2.7 %. Per viewer: A 203 824, B 220 024 (**+7.9 %**), CI of the difference −4 423 to +36 856 — 203.8 m vs 220.0 m per 1 000 viewers, not distinguishable from zero. More contracts, possibly smaller ones.
+
 </details>
 
 **P9.** The FPD guardrail: rates with Wilson intervals, z-test and Fisher, the CI of the difference, the power this test had, and the loans per arm needed. What sentence goes to Nilufar?
 
 <details><summary>Answer</summary>
+
 A 15 / 993 = **1.51 %** (0.92–2.48), B 24 / 1 076 = **2.23 %** (1.50–3.30); z-test **p = 0.23**, Fisher 0.26; difference **+0.72 points (−0.49 to +1.94)**. Power for a true +0.72 points: **23 %**; 80 % needs **5 508 loans per arm**. *"FPD is 0.7 points higher in B, which is within chance, but this test could not have detected a difference of that size; the interval runs up to +1.9 points, beyond the +0.9 to +1.25 points at which B stops paying for itself — so the guardrail is not cleared, it is unknown."*
+
 </details>
 
 **P10.** Segments: lift by device, new vs returning and segment, raw and Holm-adjusted p-values; then the interaction test new vs returning. Which sentence about segments is allowed on the slide?
 
 <details><summary>Answer</summary>
+
 Lifts +0.87 (Android, p 0.030), +0.94 (iOS, 0.31), +0.85 (new, 0.093), +0.96 (returning, 0.068), +1.71 (affluent, 0.047), +0.63 (mass, 0.17), +0.87 (sme, 0.30); **Holm: smallest 0.21** — none significant. Interaction new vs returning: z = −0.15, **p = 0.88**. Allowed: *"The lift is positive in every pre-registered segment and we find no evidence that it differs between segments."* Not allowed: "it works for affluent users" or "it works on Android only".
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Redo Day 1's unit economics with today's numbers (conversion, average principal per arm, FPD per arm; interest = 9.856 % of principal, i.e. 266 662 ÷ 2 705 586 as on Nur's Micro book; LGD 60 %). Profit per 1 000 viewers per arm; B's break-even FPD; B's profit if its FPD were at the upper end of the CI.
 
 <details><summary>Answer</summary>
+
 A: conversion 7.98 %, principal 2 563 847 → I = 252 692, L = 1 538 308, FPD 1.51 % → 225 638 per loan → **17 996 742** per 1 000 viewers. B: 8.86 %, 2 494 675 → I = 245 875, L = 1 496 805, FPD 2.23 % → 207 004 per loan → **18 339 646** (+1.9 %). Break-even FPD for B: **2.45 %**, i.e. **+0.94 points** over A (smaller than Day 1's +1.25 because B's loans are slightly smaller). At the CI's upper end (A + 1.94 = 3.45 %): **16 454 966**, 8.6 % below A. Expected gain small and positive; the bad case is bigger than the good one — exactly why the rollout is staged.
+
 </details>
 
 ### Mistakes people make
@@ -276,7 +298,7 @@ A: conversion 7.98 %, principal 2 563 847 → I = 252 692, L = 1 538 308, FPD 1.
 
 ## 4. Homework
 
-**HW 7.1** (the design document + the A/A check, Day 1) is due **tomorrow** in `submissions/week-07/day-1/`. Today's three TODO functions are practice, not graded — but the checkpoint (Day 5, Part A) is this analysis written up in full, so keep the notebook.
+**HW 7.1** (the design document + the A/A check, Day 1) is due **tomorrow** in Day 1's hand-in box. Today's three TODO functions are practice, not graded — but the checkpoint (Day 5, Part A) is this analysis written up in full, so keep the notebook.
 
 ---
 

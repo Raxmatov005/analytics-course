@@ -92,7 +92,7 @@ Careful with `applied_at`: it holds a date *and a time* (`2025-06-02 10:35:00`),
 ### Depth (optional)
 
 - ▶ Baraa, *Query data (SELECT)* [0:34:01](https://youtu.be/SSKVgrwhzus?t=2041&end=5551) — 60 min, SELECT/DISTINCT/TOP/ORDER BY on his SalesDB; ▶ *Filtering data* [2:08:03](https://youtu.be/SSKVgrwhzus?t=7683&end=10077) — 40 min, every operator above.
-- RU deck `2.1 SQL-1-46.pdf`, pages 1–46 (SELECT, WHERE, ORDER BY). *Russian terms:* запрос = query, выборка = selection/result set, условие = condition, сортировка = sorting, псевдоним = alias.
+- RU deck (TBC Data Analytics 2.0, if you have it) `2.1 SQL-1-46.pdf`, pages 1–46 (SELECT, WHERE, ORDER BY). *Russian terms:* запрос = query, выборка = selection/result set, условие = condition, сортировка = sorting, псевдоним = alias.
 
 ---
 
@@ -137,6 +137,7 @@ Write each query in the box under its question — it is saved in this browser. 
 SELECT DISTINCT status FROM loans ORDER BY status;
 ```
 Four: active, closed, default, written_off.
+
 </details>
 
 **P2.** All Auto loans (product_id 4) with principal over 200 000 000 disbursed in 2026, biggest first. How many rows, and what is the biggest?
@@ -151,6 +152,7 @@ WHERE product_id = 4 AND principal > 200000000
 ORDER BY principal DESC;
 ```
 Expect 89 rows; the biggest is loan 7608, 396 210 000, disbursed 2026-05-26.
+
 </details>
 
 **P3.** Customers with an empty monthly income. Count them. Then count those with a filled income and check the two numbers add up to 6 040.
@@ -162,6 +164,7 @@ SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;      -- expect 356
 SELECT COUNT(*) FROM customers WHERE monthly_income IS NOT NULL;  -- expect 5684
 ```
 356 + 5 684 = 6 040. If you wrote `= NULL` you got 0 — reread "Three things that bite".
+
 </details>
 
 **P4.** Applications that came through the app and were rejected, ordered by credit score from highest to lowest. How many, and what is the highest rejected score? Where did the rows with an empty score land?
@@ -175,6 +178,7 @@ WHERE channel = 'app' AND status = 'rejected'
 ORDER BY credit_score DESC;
 ```
 Expect 1 359 rows; the top is application 10764 with score 821 (then 811, 806). 38 rows have `credit_score` NULL; both engines treat NULL as the smallest value, so with `DESC` they are at the bottom (with `ASC` they come first). A rejection at score 821 is odd — note it for Thursday.
+
 </details>
 
 **P5.** How many customers live in Nukus or Termez? Write it once with `OR`, once with `IN`.
@@ -186,6 +190,7 @@ SELECT COUNT(*) FROM customers WHERE region = 'Nukus' OR region = 'Termez';
 SELECT COUNT(*) FROM customers WHERE region IN ('Nukus', 'Termez');
 ```
 Both expect 737.
+
 </details>
 
 **P6.** How many loans are *not* active? Check against the active count.
@@ -197,6 +202,7 @@ SELECT COUNT(*) FROM loans WHERE status <> 'active';   -- expect 4476
 SELECT COUNT(*) FROM loans WHERE status = 'active';    -- expect 3352
 ```
 4 476 + 3 352 = 7 828.
+
 </details>
 
 **P7.** Customers whose first name starts with `M`. Then narrow to names starting with `Ma`.
@@ -208,6 +214,7 @@ SELECT COUNT(*) FROM customers WHERE first_name LIKE 'M%';    -- expect 570
 SELECT COUNT(*) FROM customers WHERE first_name LIKE 'Ma%';   -- expect 419
 ```
 (Madina, Malika, Maftuna, Murod…). On SQLite `LIKE` ignores case by default for ASCII letters; on SQL Server it follows the collation — here both give the same.
+
 </details>
 
 **P8.** Loans with principal between 1 000 000 and 5 000 000 inclusive.
@@ -218,6 +225,7 @@ SELECT COUNT(*) FROM customers WHERE first_name LIKE 'Ma%';   -- expect 419
 SELECT COUNT(*) FROM loans WHERE principal BETWEEN 1000000 AND 5000000;   -- expect 3228
 ```
 Same as `principal >= 1000000 AND principal <= 5000000`.
+
 </details>
 
 **P9.** The five largest loans ever disbursed: loan id, principal, product id.
@@ -231,6 +239,7 @@ SELECT TOP 5 loan_id, principal, product_id FROM loans ORDER BY principal DESC;
 SELECT loan_id, principal, product_id FROM loans ORDER BY principal DESC LIMIT 5;
 ```
 Loan 2861 with 599 060 000 on top, then 4570, 4601, 4970, 7520 — all product 5 (SME).
+
 </details>
 
 **P10.** Approved SME applications (product_id 5) with a requested amount of at least 500 000 000. Count them. Then remove the parentheses/AND-OR care deliberately — write `product_id = 5 AND requested_amount >= 500000000 OR status = 'approved'` — and see what happens.
@@ -245,6 +254,7 @@ SELECT COUNT(*) FROM applications
 WHERE product_id = 5 AND requested_amount >= 500000000 OR status = 'approved';    -- expect 8010 (!)
 ```
 The second counts *every* approved application of any product plus the big SME ones. 128 vs 8 010 — and no error message. Parentheses whenever `AND` meets `OR`.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** Customers born before 1960 with a monthly income above 30 000 000, richest first. How many, and who is first? Then write one sentence on whether this group looks plausible for a mass-market lender.
@@ -258,13 +268,14 @@ WHERE birth_date < '1960-01-01' AND monthly_income > 30000000
 ORDER BY monthly_income DESC;
 ```
 Expect 108 rows; first is Zafar Mirzaev (customer 3056), born 1958-12-02, income 59 867 394. Plausible as a small affluent/SME tail; what is *not* plausible is anyone born before 1920 or after today — see what you find on Thursday.
+
 </details>
 
 ---
 
 ## 4. Homework <span class="badge hw">HW 1.2 — Due Day 4</span>
 
-**Bekzod's list.** He sent ten questions. Answer each with one query and the resulting number (or the first rows). Submit to `submissions/week-01/day-2/`:
+**Bekzod's list.** He sent ten questions. Answer each with one query and the resulting number (or the first rows). Hand in with the 📎 box below:
 
 1. `bekzod.sql` — ten queries, each preceded by `-- Qn: <his question>` and followed by `-- result: <number or first rows>`.
 2. `surprised.md` — 5–10 lines: *what surprised you* in the data while doing this (a value you did not expect, a column that behaved strangely, a count that did not add up).
@@ -298,7 +309,7 @@ Graded on: (a) every query runs and the result line matches the data, (b) `WHERE
 
 **Definition.** The approval rate (*уровень одобрения*) is the share of loan applications the company said *yes* to:
 
-$$\text{approval rate} = \frac{\text{approved applications}}{\text{applications decided}}$$
+> **approval rate = approved applications ÷ applications decided**
 
 It is the first number a risk manager looks at after a change in scoring rules, and the first number a sales manager complains about. Two queries, and a division by hand (next week `GROUP BY` and `CASE` do the division for you):
 

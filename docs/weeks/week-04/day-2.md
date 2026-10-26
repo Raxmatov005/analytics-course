@@ -195,67 +195,89 @@ Copy `nur_week4_start.xlsx` to `week-04/day-2/practice.xlsx`. Add columns to `tb
 **P1.** Add `rate` to `tblLoans` with `VLOOKUP` (exact), then the portfolio's **monthly interest run-rate**: Σ outstanding × rate ÷ 12, one `SUMPRODUCT`.
 
 <details><summary>Answer</summary>
+
 `=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)`; `=SUMPRODUCT(tblLoans[outstanding], tblLoans[rate])/12` → **4 491 202 901** a month (~4.5 bn). BNPL contributes 0 (rate 0); SME 125.9 bn × 26 % / 12 is 2.7 bn of it.
+
 </details>
 
 **P2.** Show trap 1: the same `VLOOKUP` without `FALSE` for a Micro loan and for a Small business loan. What comes back, and why is one of them *correct by accident*?
 
 <details><summary>Answer</summary>
+
 Approximate match assumes the key column is sorted ascending and does a binary search for the last row ≤ the key. Our product column is in `product_id` order (Micro, Consumer, BNPL, Auto, SME), not alphabetical, so the search jumps to the wrong half of the list: some products return another product's rate, some return `#N/A`, and which is which depends on where the binary search lands — write down what *your* Excel returned for each of the five. The one that comes back right is right by accident (the search happened to stop on its row). The point is not the particular wrong value; it is that **there is no error message** — a wrong rate flows into the interest run-rate silently. Add the sentence to your header: "VLOOKUP exact only"; sort the lookup table anyway.
+
 </details>
 
 **P3.** A lookup cell: type a `loan_id` in B1 and show customer, branch, status, dpd, outstanding with `XLOOKUP` (or `INDEX/MATCH`), `not found` for a missing id. Test with 2167, 1 and 99999.
 
 <details><summary>Answer</summary>
+
 `=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], "not found")` and four more with other return columns (or one `XLOOKUP` returning `tblLoans[[customer]:[outstanding]]` that spills across). 2167 → Dilnoza Abdullaeva · Tashkent North · written_off · 919 · 0; 1 → Gulbahor Sobirova · Termez Central · active · 0 · 9 593 064; 99999 → not found ×5. `INDEX/MATCH` version: `=IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[loan_id], 0)), "not found")`.
+
 </details>
 
 **P4.** Add `lk_bucket` to `tblLoans` by **approximate** lookup against `Lookup!A11:B15` (`XLOOKUP … -1`, or `VLOOKUP … TRUE`, or `INDEX/MATCH(…,1)`); count mismatches against `bucket`, then the five bucket counts.
 
 <details><summary>Answer</summary>
+
 `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` ≡ `=VLOOKUP([@dpd], Lookup!$A$11:$B$15, 2, TRUE)` ≡ `=INDEX(Lookup!$B$11:$B$15, MATCH([@dpd], Lookup!$A$11:$A$15, 1))`. Mismatches `=SUMPRODUCT(--(tblLoans[lk_bucket]<>tblLoans[bucket]))` → **0**; `COUNTIFS(tblLoans[lk_bucket], "0")` … → **7 429 / 124 / 25 / 16 / 234**. The approximate match needs `dpd_from` sorted ascending (it is) and the *lower* edge as the key; a table keyed on the upper edge (30, 60, 90) needs `match_mode 1` instead. Changing a bucket boundary is now a one-cell edit on `Lookup`, not 7 828 `IFS` edits — the reason bands live in a table.
+
 </details>
 
 **P5.** A region × product outstanding matrix (`SUMIFS`, yesterday), then a two-way `INDEX/MATCH/MATCH` that returns one cell for a region and a product typed in two input cells. Fergana × Small business loan?
 
 <details><summary>Answer</summary>
+
 `=INDEX($B$3:$F$10, MATCH($I$1, $A$3:$A$10, 0), MATCH($I$2, $B$2:$F$2, 0))` → **14 734 245 108** (95 loans). Same as `=SUMIFS(tblLoans[outstanding], tblLoans[region], $I$1, tblLoans[product], $I$2)` directly — the matrix + `INDEX/MATCH` way is for when the matrix *is* the report and you need one number pulled from it for a title or a tile.
+
 </details>
 
 **P6.** `UNIQUE` counts: branches, regions, statuses, products — and `customer`. Which of the five is not a count of anything real, and what would you need to count borrowers?
 
 <details><summary>Answer</summary>
+
 `=ROWS(UNIQUE(tblLoans[branch]))` → 10 · regions 8 · statuses 4 · products 5 · customers **747**. The data has 4 335 borrowers (week 3 S4) but only 747 distinct *names*; `loans_status.csv` carries the name, not the id, so you cannot count borrowers from it — you would need `customer_id` (it is in `Applications`). A lookup or a `UNIQUE` on names is never a people count.
+
 </details>
 
 **P7.** `FILTER` the active loans in bucket 61-90, sorted by outstanding descending (`SORTBY`): how many, how much, and which one should Sevara visit first?
 
 <details><summary>Answer</summary>
+
 `=SORTBY(FILTER(tblLoans, (tblLoans[status]="active")*(tblLoans[bucket]="61-90")), FILTER(tblLoans[outstanding], (tblLoans[status]="active")*(tblLoans[bucket]="61-90")), -1)` → **16** rows, Σ outstanding **439 441 377**. First row: loan **4567**, Auto loan, Tashkent Central, 84 DPD, 301 482 053 outstanding — 69 % of the bucket's money in one car loan. Then 2147 (Auto, Tashkent South, 46.6 m) and 4984 (Consumer, Tashkent North, 36.9 m). `(tblLoans[status]="active")` changes nothing here (all 16 are active) but is the honest filter.
+
 </details>
 
 **P8.** Top-5 branches by outstanding with `UNIQUE` + `SUMIFS` on the spill + `SORTBY`, and their combined share of the book.
 
 <details><summary>Answer</summary>
+
 `A3 =UNIQUE(tblLoans[branch])`, `B3 =SUMIFS(tblLoans[outstanding], tblLoans[branch], A3#)` (spills alongside), `D3 =SORTBY(A3#, B3#, -1)`, `E3 =SORTBY(B3#, B3#, -1)`. Tashkent Central 28 716 674 373 · Tashkent South 26 787 392 136 · Tashkent North 26 175 671 562 · Fergana Central 24 797 334 197 · Samarkand Central 24 655 889 676; `=SUM(E3:E7)/SUM(B3#)` → **62.8 %**. Older Excel / no spill: a pivot sorted descending with a Top 10 filter (Thursday).
+
 </details>
 
 **P9.** `SEQUENCE`: the ten first-of-month dates of 2026 in one formula, then `COUNTIFS`/`SUMIFS` per month with the half-open filter using `EDATE`.
 
 <details><summary>Answer</summary>
+
 `A3 =DATE(2026, SEQUENCE(10), 1)`; `B3 =COUNTIFS(tblLoans[disbursed_at], ">="&A3, tblLoans[disbursed_at], "<"&EDATE(A3, 1))` filled down (or `A3#` inside for a spilling version); `C3` the `SUMIFS`. Jan 287 / 17 452 370 000 … Aug 358 / 22 290 210 000 · Sep 361 / 17 015 490 000 · Oct 21 / 852 760 000; `SUM(C3#)` = 162 333 060 000. `EDATE(d, 1)` is `DATEADD(month, 1, d)`; the half-open pair works for 28- and 31-day months alike.
+
 </details>
 
 **P10.** Conditional formatting on `Loans`: a formula rule red for 90+, orange 61-90, yellow 31-60; a colour scale on `outstanding`; data bars on `dpd`. Then one cell that says how many rows are red.
 
 <details><summary>Answer</summary>
+
 Rules on `A2:M7829` with `=$M2="90+"` etc. (Table rows extend them). Red rows `=COUNTIFS(tblLoans[bucket], "90+")` → **234** — conditional formatting has no count of its own; the rule and the `COUNTIFS` share the condition, so write the condition once in a cell and point both at it when you can. Colour scale: the 2026 SME loans glow (586 068 714 is the largest outstanding — loan 4597, Bukhara, disbursed 2026-09-08). Data bars make 919 the full bar and everything active a sliver — a scale problem Thursday's chart chapter names.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** A dropdown for `grade` (A–D) and a spilled table under it: product → loans, loans in 90+, share in 90+ (`0.0%`), all driven by the chosen grade. What is the 90+ share by grade over all products?
 
 <details><summary>Answer</summary>
+
 `UNIQUE(tblLoans[product])` down, `COUNTIFS(tblLoans[product], A3#, tblLoans[grade], $B$1)`, same with `tblLoans[bucket], "90+"`, and the ratio. Over all products: A **0.9 %** (17 of 1 821) · B 1.9 % (64 of 3 404) · C 5.1 % (116 of 2 264) · D 10.9 % (37 of 339). Monotonic in the grade — week 2's scorecard check, now a dropdown Nilufar can click. Sheets: the same with `ARRAYFORMULA(COUNTIFS(…))`.
+
 </details>
 
 ### Mistakes that cost a point this week

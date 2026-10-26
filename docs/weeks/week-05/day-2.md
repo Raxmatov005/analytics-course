@@ -171,7 +171,7 @@ Same questions, same answers, a third spelling — and the only one of the three
 - ▶ Missing values (isna, fillna, dropna) — Keith Galli same video, [58:33](https://youtu.be/2uvysYbKdjM?t=3513&end=3845)
 - ▶ Missing values (alternative, slower) — [Python Pandas Tutorial 5: Handle Missing Data: fillna, dropna, interpolate (codebasics), 04:10](https://youtu.be/EaGbS7eWSs0?t=250&end=455)
 
-- RU deck `4.3_Python.pdf`: Series and DataFrame pp. 10–15, dtypes and `astype` / `to_numeric` pp. 14–22, reading and writing pp. 23–30, first look pp. 31–37, `loc` / `iloc` / boolean indexing pp. 38–44, missing values pp. 45–52, `.str` pp. 55–67, categorical pp. 68–72, sorting pp. 104–108. (pp. 82–103 are tomorrow.)
+- RU deck (TBC Data Analytics 2.0, if you have it) `4.3_Python.pdf`: Series and DataFrame pp. 10–15, dtypes and `astype` / `to_numeric` pp. 14–22, reading and writing pp. 23–30, first look pp. 31–37, `loc` / `iloc` / boolean indexing pp. 38–44, missing values pp. 45–52, `.str` pp. 55–67, categorical pp. 68–72, sorting pp. 104–108. (pp. 82–103 are tomorrow.)
 - *Russian terms:* датафрейм = DataFrame, серия = Series, индекс = index, булева маска = boolean mask, фильтрация = filtering, пропущенные значения / NaN = missing values, приведение типов = type casting, категориальный тип = category dtype, биннинг / разбиение на корзины = `pd.cut`.
 
 ---
@@ -210,67 +210,89 @@ Notebook `data/python/day2_starter.ipynb` (the walk-through cells are in it; add
 **P1.** Read `loans_status.csv` *without* `parse_dates`. What is the dtype of `disbursed_at`, and what does `loans["disbursed_at"].dt.year` do? Fix it two ways.
 
 <details><summary>Answer</summary>
+
 `object`; `.dt` raises `AttributeError: Can only use .dt accessor with datetimelike values`. Fix: `parse_dates=["disbursed_at"]` in `read_csv`, or `loans["disbursed_at"] = pd.to_datetime(loans["disbursed_at"])` afterwards. `info()` then shows `datetime64[ns]`.
+
 </details>
 
 **P2.** From `describe()` alone: median principal, mean principal, the 75th percentile of `dpd`, max `dpd`. What does the gap between mean and median tell you?
 
 <details><summary>Answer</summary>
+
 5 790 000 · 51 709 668 · 0 · 919. Mean nine times the median = a long right tail: a few SME/Auto loans carry the money (week 3's two-books finding). 75 % of loans have `dpd = 0`, so the 399 late loans are the top 5 %.
+
 </details>
 
 **P3.** How many loans are late (`dpd > 0`) per `status`? Which combination should not exist, and does it?
 
 <details><summary>Answer</summary>
+
 active 151 · closed 14 · default 44 · written_off 190 (`loans[loans["dpd"] > 0]["status"].value_counts()`). "Closed and late" looks impossible — 14 loans: closed because the last instalment's due date has passed, but with a payment short; week 2 found the same 14 (13 in 1–30, 1 in 31–60). Not a bug to fix in pandas — a question for Sevara.
+
 </details>
 
 **P4.** Three filters, three counts: SME or Auto (`isin`), principal between 10 m and 50 m (`between`), branch containing `Tashkent` (`str.contains`). Then the September-2026 loans with the half-open rule — and show that `between("2026-09-01", "2026-09-30")` happens to agree here, and why it would not on `applied_at`.
 
 <details><summary>Answer</summary>
+
 1 172 · 2 087 · 3 020; September 361 both ways. `disbursed_at` is a pure date, so the 30th at 00:00 is included; `applied_at` carries a time, and `between(…, "2026-09-30")` would drop everything after midnight on the 30th (week 1's 23 lost applications). Half-open, always.
+
 </details>
 
 **P5.** The three loans with the largest `outstanding`, with `loan_id`, `product`, `outstanding` only — once with `sort_values().head(3)`, once with `nlargest`. Then the three largest by `principal`.
 
 <details><summary>Answer</summary>
+
 Outstanding: 4597 (586 068 714) · 6478 (577 813 979) · 2936 (574 094 643), all SME. Principal: 2861 (599 060 000) · 4570 (598 450 000) · 4601 (597 540 000) — SME's `max_amount` is 600 m, and the biggest loans sit against it (week 3 S6).
+
 </details>
 
 **P6.** Add `year` and `month` columns from `disbursed_at`; count 2026 loans per month and per quarter.
 
 <details><summary>Answer</summary>
+
 Months: 287 · 265 · 330 · 312 · 377 · 373 · 367 · 358 · 361 (+ 21 on 1 October); quarters Q1 882 · Q2 1 062 · Q3 1 086 · Q4 21. `loans["disbursed_at"].dt.to_period("M").value_counts().sort_index()` — the `strftime('%Y-%m')` + `GROUP BY` of week 3 S7 in one line.
+
 </details>
 
 **P7.** Shares with `value_counts(normalize=True)`: products, grades, channels of *loans* (channel is not in the file — which week-3 fact lets you derive it from `product`?).
 
 <details><summary>Answer</summary>
+
 Products 34.1 / 30.9 / 20.0 / 10.0 / 5.0 %; grades B 43.5 · C 28.9 · A 23.3 · D 4.3. Each channel sells one product family (week 3 S2): app = Micro (34.1 %), partner = BNPL (20.0 %), branch = the rest (45.9 %) — so `loans["product"].map({...})` builds the channel column without a join.
+
 </details>
 
 **P8.** `pd.cut` on `dpd` with the standard edges; prove it equals the file's `bucket` column for all 7 828 rows. Then the mean and median `dpd` of the late loans — which one goes in the report?
 
 <details><summary>Answer</summary>
+
 `(loans["bucket_pd"].astype(str) == loans["bucket"]).all()` → `True` (the `astype(str)` matters: a category compared with text is otherwise a dtype mismatch). Late loans: mean 246 days, median 159 — the 234 write-offs at 500–900 days drag the mean; report the median, or better the buckets.
+
 </details>
 
 **P9.** `customers_dirty.csv`: how many `monthly_income` are missing, the mean with and without `fillna(0)`, the mean after a median fill, and the row count after `dropna()` with and without `subset`.
 
 <details><summary>Answer</summary>
+
 356 missing; mean 15 245 933 → 14 347 331 with zeros (−0.9 m) → 14 812 719 with the median. `dropna()` and `dropna(subset=["monthly_income"])` both give 5 684 here because income is the only column with gaps — on tomorrow's merged tables that luck ends. Never fill an income with 0; fill with a labelled estimate or keep the NaN and show the "unknown" band (week 3 S10: 466 loans).
+
 </details>
 
 **P10.** Build a frame `bucket · loans · outstanding · share_pct` (five rows, shares of total outstanding) and write it to `portfolio_buckets.csv` and to a sheet `buckets` of `portfolio.xlsx`. Open the Excel file and check the total.
 
 <details><summary>Answer</summary>
+
 0 → 7 429 / 197 486 207 578 / 94.62 % · 1–30 124 / 4 729 769 899 / 2.27 · 31–60 25 / 748 610 049 / 0.36 · 61–90 16 / 439 441 377 / 0.21 · 90+ 234 / 5 319 475 527 / 2.55 — week 3 S9's table. `index=False`, or the sheet gets a `0…4` column Bekzod will ask about. Σ outstanding 208 723 504 430.
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P11.** PAR30 by product and by region in one line each (Σ outstanding where `dpd > 30` ÷ Σ outstanding, per group — you may peek at tomorrow's `groupby`). Which region would you flag, and what makes a small region's rate fragile?
 
 <details><summary>Answer</summary>
+
 Product: Auto 4.44 % · Consumer 3.09 · SME 2.55 · BNPL 1.28 · Micro 0.72. Region: Nukus **6.84 %** · Bukhara 4.81 · Andijan 4.02 · Tashkent 3.38 · Samarkand 3.04 · Namangan 1.71 · Fergana 0.69 · Termez 0.68. Nukus has 492 loans and 13.3 bn outstanding — one 500 m SME loan going 31+ moves its PAR30 by 3.8 points; quote the count and the amount next to the rate.
+
 </details>
 
 ### Mistakes that cost a point this week

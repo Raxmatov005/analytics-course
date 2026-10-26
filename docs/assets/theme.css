@@ -501,3 +501,33 @@ body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
 .sidebar, .sidebar-toggle { position: fixed; }
 .sidebar .app-sub-sidebar li.active > a { box-shadow: none; background: transparent; font-weight: 400; color: var(--muted) !important; }
 .sidebar .app-sub-sidebar li.nav-here > a { box-shadow: inset 2px 0 0 var(--brand); background: transparent; font-weight: 700; color: var(--brand-d) !important; }
+
+/* the homework box when the bot opened the page at it (?id=hand-in) */
+.sq-ws { scroll-margin-top: 16px; }
+.sq-ws.sq-ws-here { animation: ws-here 1.2s ease 2; }
+@keyframes ws-here { 50% { box-shadow: 0 0 0 8px rgba(15, 118, 110, .25); } }
+
+/* SQL boxes: plain-language error hints, and blocks that are for reading only (sqlrun.js hint / shape) */
+.sq-hint-box { margin-top: .45em; font-size: .86em; color: var(--body); background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: .55em .75em; line-height: 1.5; }
+.sq-static { margin: 1.1em 0 -.6em; font-size: .78em; font-weight: 600; color: var(--muted); background: #f1f5f9; border-radius: 10px 10px 0 0; padding: .45em .9em; border: 1px solid var(--line); border-bottom: 0; }
+.markdown-section pre.sq-static-code { border-top-left-radius: 0; border-top-right-radius: 0; }
+.sq-build-views { display: inline-block; margin-top: .45em; font: 700 .95em var(--sans); border: 0; border-radius: 9px; padding: .45em .85em; background: var(--brand); color: #fff; cursor: pointer; }
+
+/* wide tables scroll inside themselves; the page never moves sideways on a phone */
+.markdown-section table:not(.sq-table):not(.gx-table) { display: block; width: max-content; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.markdown-section table:not(.sq-table):not(.gx-table) td, .markdown-section table:not(.sq-table):not(.gx-table) th { min-width: 4.5em; }
+.markdown-section { overflow-wrap: break-word; }
+.markdown-section pre, .markdown-section .qz, .markdown-section .sq-box, .markdown-section .sq-ws, .markdown-section .gx, .yt-panel { max-width: 100%; box-sizing: border-box; }
+.markdown-section code { overflow-wrap: anywhere; }
+.markdown-section pre code { overflow-wrap: normal; }
+
+/* course files: a download button after the file name (files.js) */
+.markdown-section .fl-dl { display: inline-flex; align-items: center; gap: .25em; margin: 0 .25em; padding: .12em .6em; font: 700 .76em var(--sans); color: var(--brand-d); background: var(--brand-xl); border: 1px solid #99f6e4; border-radius: 999px; cursor: pointer; text-decoration: none; vertical-align: .08em; white-space: nowrap; }
+.markdown-section .fl-dl:hover { background: #ccfbf1; }
+
+/* floating buttons step aside while reading down (nav.js) */
+#sq-db-btn, .sidebar-toggle { transition: transform .25s ease, opacity .25s ease; }
+body.reading-down #sq-db-btn { transform: translateY(160%); opacity: 0; pointer-events: none; }
+@media (max-width: 768px) { body.reading-down:not(.close) .sidebar-toggle { transform: translateY(160%); opacity: 0; pointer-events: none; } }
+.markdown-section table:not(.sq-table):not(.gx-table) td, .markdown-section table:not(.sq-table):not(.gx-table) th { min-width: 6.5em; max-width: 17em; }
+.markdown-section table code { overflow-wrap: normal; white-space: nowrap; }

@@ -144,8 +144,8 @@ Write the design down — dated, in the repo — **before** the test starts: hyp
 - ▶ Peeking — [Тонкости A/B тестирования: проблема подглядывания (Анатолий Карпов, karpov.courses)](https://youtu.be/jnFVmtaeSA0)
 - ▶ A/A test / validity checks — DataInterview video, [12:32](https://youtu.be/DUNk4GPZ9bw?t=752&end=913)
 
-- RU deck `6.1 Introduction.pdf` (lesson 6.1, Sanjar Khakimov, TBC): why A/B testing — asking clients vs testing pp. 4–6; examples pp. 7–10; definition p. 11; the **HADI** cycle (hypothesis → action → data → interpretation) pp. 12–16; what an experiment design contains (metric + MDE, criteria, split, A/A, simulated effect, power) pp. 18–21; metric types and relative vs absolute change pp. 23–26; how often and how long to test pp. 27–28; historical data and distributions pp. 29–31; MDE and minimum sample size pp. 32–33; the step-by-step approach (A/A → validate criteria → add effect → sample size) p. 34; reading results, and what an insignificant result means pp. 35–36.
-- RU deck `6.2 A_B Testing.pdf`: hash functions pp. 4–7, salting a split pp. 8–9, uneven splits by normalised hash p. 10.
+- RU deck (TBC Data Analytics 2.0, if you have it) `6.1 Introduction.pdf` (lesson 6.1, Sanjar Khakimov, TBC): why A/B testing — asking clients vs testing pp. 4–6; examples pp. 7–10; definition p. 11; the **HADI** cycle (hypothesis → action → data → interpretation) pp. 12–16; what an experiment design contains (metric + MDE, criteria, split, A/A, simulated effect, power) pp. 18–21; metric types and relative vs absolute change pp. 23–26; how often and how long to test pp. 27–28; historical data and distributions pp. 29–31; MDE and minimum sample size pp. 32–33; the step-by-step approach (A/A → validate criteria → add effect → sample size) p. 34; reading results, and what an insignificant result means pp. 35–36.
+- RU deck (TBC Data Analytics 2.0, if you have it) `6.2 A_B Testing.pdf`: hash functions pp. 4–7, salting a split pp. 8–9, uneven splits by normalised hash p. 10.
 - Notebook `Lecture6.2 - Data Generation and Split.ipynb`: a synthetic user base (cell 4), the SHA-256 split function with a salt and group percentages (cells 7–11), visual homogeneity checks by group (cells 12–23), Kolmogorov–Smirnov and chi-square homogeneity tests (cells 24–28). Re-run its split function on `aa_users.csv` — it reproduces today's logic.
 - *Russian terms:* A/B-тест = A/B test, контрольная / тестовая группа = control / treatment group, гипотеза = hypothesis, целевая (основная) метрика = primary metric, защитная (барьерная) метрика = guardrail metric, единица рандомизации = unit of randomisation, MDE = minimum detectable effect, мощность = power, объём выборки = sample size, хеш-функция = hash function, соль = salt, A/A-тест = A/A test, SRM (несоответствие соотношения выборок) = sample ratio mismatch, подглядывание = peeking, последовательное тестирование = sequential testing, эффект новизны = novelty effect, сетевой эффект = network effect, предрегистрация = pre-registration.
 
@@ -181,61 +181,81 @@ Open `data/python/week7/day1_starter.ipynb`. Part 0 is a walk-through; then the 
 **P1.** Kamola's before/after idea. Name **four** things other than the screen that differ between August and September for app users, and use the table in section 1 to say how big a month-to-month change can be with no intervention.
 
 <details><summary>Answer</summary>
+
 Seasonality (school start, salary and holiday cycles), marketing (a campaign, an SMS blast, a partner promotion), product and policy (another app release, a scorecard cut-off change, a new price), and the user mix (more new users after a campaign; new users convert less). With no change, the app approval rate moved **−3.5 points** July → August (71.4 → 67.9 %) and the average Micro ticket swung from 2.59 m (June) to 2.90 m (July) and back to 2.59 m (August) — ±12 %. A +0.9-point screen effect is far inside that noise.
+
 </details>
 
 **P2.** Write the design's first three lines for the offer screen: hypothesis, primary metric (with its exact definition), two guardrails. Then a bad primary metric and why it is bad.
 
 <details><summary>Answer</summary>
+
 Hypothesis: *a single button and the monthly payment in large type reduce hesitation, so more viewers sign.* Primary: users with a `contract_signed` within 7 × 24 h of their first `view_offer` ÷ users assigned. Guardrails: FPD rate of the resulting loans (risk), average principal (revenue); also crash rate (quality). Bad primaries: **clicks on the button** (moves easily, may not become loans — a "dark pattern" wins), **signed contracts in total** (not a rate: more traffic in B by chance or by bug inflates it), **conversion with no window** (users assigned later have less time, and the arms may differ in timing).
+
 </details>
 
 **P3.** For each change pick the unit — user, session or application — and one sentence why: (a) the offer screen; (b) a new interest-rate rule shown at the decision; (c) the order of products on the app's home screen for logged-out visitors; (d) an SMS reminder before the first due date (week 6).
 
 <details><summary>Answer</summary>
+
 (a) **User** — seen repeatedly; must be consistent. (b) **Application**, but with every application of the same customer forced into the same arm (hash the `customer_id`) — two prices for one person is a complaint and a fairness problem. (c) **Session** or a device cookie — no login, so no user id; accept the weaker consistency. (d) **Loan** (one SMS per loan; FPD is per loan) — but hashing `customer_id` again avoids one customer getting the SMS on one loan and not on another.
+
 </details>
 
 **P4.** Sample size with your `n_per_arm`: 8.0 → 8.9 % at 80 % and at 90 % power; one-sided at 80 %; and the days each needs at 1 000 users a day. When is the one-sided number legitimate?
 
 <details><summary>Answer</summary>
+
 80 %: **14 983** per arm → 30.0 days. 90 %: **20 057** → 40.1 days. One-sided 80 %: **11 802** → 23.6 days. One-sided is legitimate only if "B is worse" and "no difference" lead to the same action (do not ship) **and** you wrote that down before the start — for a screen redesign that is arguable, but most teams keep two-sided so that a harmful screen is also *detected*, not just "not shipped".
+
 </details>
 
 **P5.** Turn it round: with 28 days (~14 000 users per arm), what is the MDE, and what power does the test have for a true +0.9 point? With 10 000 per arm?
 
 <details><summary>Answer</summary>
+
 14 000 per arm: MDE **+0.93 pt** (11.6 % relative), power for +0.9 pt **77.3 %**. 10 000 per arm: MDE +1.11 pt (13.8 %), power for +0.9 pt 62.9 %. (`NormalIndPower().power(h, nobs1=n, alpha=0.05)`, and a root-finder on the power for the MDE.) Four weeks is slightly short of 80 % — acceptable if written down; three weeks would not be.
+
 </details>
 
 **P6.** Hashing: compute `hash_variant` for the first five A/A users with the A/A salt and with the salt `"another_test"`. Check that all 12 852 A/A rows match their logged variant. Why must the salt change between experiments?
 
 <details><summary>Answer</summary>
+
 With `offer_screen_aa_2026_07`: B, A, A, B, A (users 925601, 665666, 652995, 774155, 376261 — the notebook's table, which also shows the first 12 hex digits); with `another_test`: A, A, B, A, A. **All 12 852** rows match. Without a new salt, every experiment would put the same users in B: their "treated" history (fatigue, earlier changes) would follow them, and two simultaneous tests would be perfectly correlated — the effects of the two could not be separated.
+
 </details>
 
 **P7.** SRM: your `srm_pvalue` for 14 200 vs 13 800, 14 050 vs 13 950, and 9 000 vs 1 000 for a planned 90/10 split. Which would you investigate, and what threshold do you use?
 
 <details><summary>Answer</summary>
+
 **0.017**, **0.55**, and **1.0** for 9 000 vs 1 000 (`expected_share_b=0.1`: exactly the plan). Investigate the first (a 50.7 / 49.3 split of 28 000 is unusual) — and with the usual production threshold of p < 0.001 it would not raise an automatic alarm, which is why you also check by day and segment (Day 2). The strict threshold exists because SRM checks are run many times; the response to an alarm is not a correction but a search for the bug.
+
 </details>
 
 **P8.** Run the peeking simulation (section 0c). Report the false-positive rate for one look, weekly looks and daily looks, and the day on which half of the daily-peeking "wins" have already been declared.
 
 <details><summary>Answer</summary>
+
 One look **4.9 %**; weekly **12.4 %**; daily **27.2 %** — a null screen "wins" in more than one test in four. Half of the daily-peeking false wins are declared by **day 6** (median first crossing), when the sample is smallest and the p-value most volatile; 15.9 % of all A/A runs have a false win within the first week. With Pocock's 0.0182 at four weekly looks the rate is back to 4.8 %.
+
 </details>
 
 **P9.** The A/A check is HW 7.1 — compute it there, not here. Here: read the 1 000 re-splits (the notebook's bonus cell), the false-positive share and the decile counts. What would a failing A/A look like?
 
 <details><summary>Answer</summary>
+
 Re-splits: **4.0 %** below 0.05; deciles 92, 90, 110, 101, 115, 100, 99, 90, 101, 102 (flat) — the test behaves on this data. Your own A/A cell should show the same shape as the table in section 1: an SRM p far from the alarm, every row matching the hash, two close rates, an interval of the difference that contains 0. Failing: an SRM (p < 0.001), a "significant" A/A difference that repeats on a re-run, a re-split false-positive rate well above 5 % (the test is wrong for the data, e.g. sessions counted as independent users), or one arm missing events (a logging bug).
+
 </details>
 
 <span class="badge stretch">Stretch</span> **P10.** Novelty arithmetic. Suppose B's true lift is **+3.4 points** on days 1–3 (novelty) and **+0.9** afterwards, with equal traffic every day and A at 8.0 %. What lift would a test that stops after 7 days report? After 14 and 28? What does that say about "we saw a big win in the first week, let us ship"?
 
 <details><summary>Answer</summary>
+
 7 days: (3 × 3.4 + 4 × 0.9) / 7 = **+1.97 pt** (+24.6 % relative). 14 days: (10.2 + 11 × 0.9) / 14 = **+1.44 pt**. 28 days: (10.2 + 25 × 0.9) / 28 = **+1.17 pt** — and still above the steady +0.9. A first-week result overstates a novelty-driven change by more than double; the cure is whole weeks, the daily lift chart, and an analysis that excludes the novelty days (or reads only the last weeks) — decided in the pre-registration. (Day 2 will find exactly this pattern in the real data.)
+
 </details>
 
 ### Mistakes people make
@@ -255,7 +275,7 @@ Re-splits: **4.0 %** below 0.05; deciles 92, 90, 110, 101, 115, 100, 99, 90, 101
 
 ## 4. Homework <span class="badge hw">HW 7.1 — due Day 3</span>
 
-**The pre-registration for the offer-screen test.** Submit to `submissions/week-07/day-1/`:
+**The pre-registration for the offer-screen test.** Hand in with the 📎 box below:
 
 1. `experiment_design.md` — one page, using the template below, filled for Kamola's test (your own wording; the worked example is a model, not a text to copy).
 2. `day1_starter.ipynb` — executed (Kernel → Restart & Run All, then save) with the five TODO functions passing their asserts, the sample-size cell, and the **A/A check** cell printing the split, the SRM p, the conversion per group, the difference with its CI and the p-value.

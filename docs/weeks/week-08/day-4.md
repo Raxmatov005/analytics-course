@@ -104,6 +104,7 @@ Prepare one sentence and one number for each. Then open the fold for how to hand
 <details><summary>How to prepare</summary>
 
 BNPL is **1.5 %** of Jan–Sep 2026 disbursement (2.43 of 161.48 bn), 595 loans in 2026; its 2026 contribution is about −0.27 bn under the Day 2 assumptions. Customers whose first loan was BNPL come back as often as anyone (43.5 % within 12 months, Day 1 P11), so "stop" means losing a door, not only a product — which is why "renegotiate the merchant fee or slow" is a better recommendation than "stop". SME: count +40 % and amount +43 % (Jan–Sep), so not just bigger tickets — but its matured default rate (16 of 178, 9.0 %) is far above the crude 3.7 %; growth should wait for the 2024 vintage. Always give count *and* amount.
+
 </details>
 
 **Nilufar (risk):** *"Your PD is crude. Why should I believe your margins?"* · *"Is the app really riskier, or is that noise?"* · *"Why is that region's PAR30 so high?"*
@@ -111,6 +112,7 @@ BNPL is **1.5 %** of Jan–Sep 2026 disbursement (2.43 of 161.48 bn), 595 loans 
 <details><summary>How to prepare</summary>
 
 Agree first: *"It is crude, and here is how it moves the answer"* — the matured-PD sensitivity (SME 60.3 → 19.3 per 1 000) is exactly the slide for her. App vs branch FPD: 1.70 % vs 1.04 %, z = 2.15, p = 0.032 (week 6) — and the app's vintage curve sits above branch at every MOB (pooled 2025-01…2026-03, ever 30+ at MOB 6: app 9.21 %, branch 7.23 %, partner 4.99 %); but the app's FPD has fallen year by year (loans disbursed in 2024 / 2025 / 2026: 2.16 / 1.76 / 1.27 %). For the region: have the split by product, branch and officer ready in the appendix, or say *"I will check by officer and send it today."* Never guess a cause in front of risk.
+
 </details>
 
 **Sevara (collections):** *"My team makes six hundred contacts a month. Are you saying they call the wrong people?"*
@@ -118,6 +120,7 @@ Agree first: *"It is crude, and here is how it moves the answer"* — the mature
 <details><summary>How to prepare</summary>
 
 Do not say "wrong". Say what the data show and what you do not know: in Jan–Sep 2026, of 5 122 actions, **94.6 %** went to loans that are **now** 90+ (77.9 % to written-off loans — recoveries are a legitimate job), while in September only **13 of 124** loans in 1–30 DPD had any contact. The caveat she will raise and you must raise first: this uses each loan's bucket **today**, not at the time of the action — a loan contacted at 20 DPD may be 120 DPD now. Prepare the version with DPD at the action date if you can; otherwise say so. Value: a 1–30 loan averages 38.1 m outstanding, so each one that does not roll to default saves about 60 % × 38.1 m ≈ 22.9 m soum. And one process point: an outcome recorded as "paid" was followed by a payment within 7 days only about 6 % of the time — recorded outcomes cannot be her KPI; payments can.
+
 </details>
 
 **Kamola (product):** *"So what do I fix first in the app?"* · *"Can I grow Micro?"*
@@ -125,6 +128,7 @@ Do not say "wrong". Say what the data show and what you do not know: in Jan–Se
 <details><summary>How to prepare</summary>
 
 The funnel has no single cliff; the largest user-side loss is the **form** (start → submit, 552 sessions, 13.8 %), the second is the **payout after signing** (222 signed contracts never disbursed, 7.6 % of signed) — the second is an operations bug, cheap to investigate and bad for trust. Device and version do not matter. Micro: thin per soum (6.8 per 1 000) but a new customer pays back the acquisition on the first loan and repeat borrowing is rising (6-month repeat 22.3 % for 2024Q1 → 38.3 % for 2026Q1); the condition is risk — Micro stops paying on new customers at FPD30 ≈ 2.5 % vs 1.7 % today, so grow it **with an FPD guardrail of 2.5 %** and a hold-out.
+
 </details>
 
 **The CEO:** *"If you could do one thing, what would it be?"* — have one answer, the one with the largest value and the clearest owner, and say it in one sentence.
@@ -151,6 +155,7 @@ Built from the course's numbers; **yours may differ** — a different deep-dive,
 | 10 | Five changes, owners and what they are worth | **(1)** Collections: contact every 1–30 loan within the first week (Sevara; each prevented default ≈ 23 m). **(2)** BNPL: renegotiate merchant fees towards the ~11 % break-even or slow it (Bekzod + Finance; −0.27 bn a year today). **(3)** SME: hold growth flat until the 2024 vintage is read; price for a 9 % PD (Nilufar). **(4)** App: fix payout after signing and simplify the form; grow repeat Micro with an FPD30 guardrail of 2.5 % (Kamola). **(5)** Investigate Nukus (and Bukhara) by product and officer before the next quarter's targets (Nilufar + branch network). Risks: the cost figures and the funding rate are assumptions; PD is crude for young products. |
 
 Appendix: definitions; data problems and their handling; the sanity table; the full unit-economics table; collections by action type.
+
 </details>
 
 ---

@@ -33,6 +33,14 @@ that is often the wrong one; two movers fought and the menu jumped. Docsify only
     sb.scrollTo({ top: want, behavior: instant ? 'auto' : 'smooth' });
   }
   window.addEventListener('scroll', function () { if (!frame) frame = requestAnimationFrame(function () { update(false); }); }, { passive: true });
+  /* the floating buttons (Database, ☰) step aside while she reads down the page and come back when she scrolls up */
+  var lastY = window.scrollY;
+  window.addEventListener('scroll', function () {
+    var y = window.scrollY, b = document.body;
+    if (y > lastY + 6 && y > 160) b.classList.add('reading-down');
+    else if (y < lastY - 6 || y < 160 || y + window.innerHeight >= document.documentElement.scrollHeight - 40) b.classList.remove('reading-down');
+    lastY = y;
+  }, { passive: true });
   ['wheel', 'touchmove'].forEach(function (ev) {
     document.addEventListener(ev, function (e) { if (e.target.closest && e.target.closest('.sidebar')) userUntil = Date.now() + 2000; }, { passive: true });
   });

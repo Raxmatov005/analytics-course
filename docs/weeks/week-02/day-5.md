@@ -10,7 +10,7 @@
 - **Part B (25 pts):** eight interview questions answered in writing, 3–5 sentences each.
 - Allowed SQL: weeks 1–2 only — `SELECT/WHERE/ORDER BY`, joins, `GROUP BY/HAVING`, functions, `CASE`, set operators. The two `WITH` blocks printed on Day 3 (DPD) and Day 4 (FPD30) may be copied as they stand; no other subqueries, no window functions.
 
-**Rules.** Open book: your notes, this week's pages, your tool. Closed: the answer folds until you submit. Submit to **`submissions/week-02/day-5/`**: `queries.sql` (each task with `-- Tn:` above and `-- result:` below; say which dialect) and `interview.md`. Also due today: **HW 2.2** in `day-3/`. Expected numbers are as of 2026-10-01.
+**Rules.** Open book: your notes, this week's pages, your tool. Closed: the answer folds until you submit. Hand in with the **📎 box at the end of this page**: `queries.sql` (each task with `-- Tn:` above and `-- result:` below; say which dialect) and `interview.md`. Also due today: **HW 2.2** in `day-3/`. Expected numbers are as of 2026-10-01.
 
 **Working method** (the one the week taught): before each query write the noun that is "one row" of the table you aggregate; join dimensions many-to-one freely; when a join is one-to-many, run `COUNT(*)` next to `COUNT(DISTINCT key)` before you sum anything; filter periods half-open; put NULL tests first in a `CASE`; and report a count next to every average or rate.
 
@@ -31,6 +31,7 @@ SELECT p.name, COUNT(*) AS loans, SUM(l.principal) AS principal
 FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.name ORDER BY principal DESC;
 -- SME 781 / 241 117 150 000 · Auto 391 / 84 791 530 000 · Consumer 2418 / 65 109 280 000 · Micro 2669 / 7 221 210 000 · BNPL 1569 / 6 544 110 000
 ```
+
 </details>
 
 **T2.** Outstanding principal (instalments not yet due) by product, with the number of loans still owing.
@@ -44,6 +45,7 @@ WHERE i.due_date > '2026-10-01' GROUP BY p.name ORDER BY outstanding DESC;
 -- SME 125 892 942 411 / 603 · Auto 57 684 271 333 / 368 · Consumer 23 054 933 316 / 1398 · BNPL 1 135 251 000 / 474 · Micro 956 106 370 / 566
 ```
 Sums an *instalment* column over `installments`, so the join to `loans` (many-to-one from the instalment) is safe; summing `l.principal` here would be the trap. Total 208 723 504 430.
+
 </details>
 
 **T3.** 2026 disbursements by product: loans, amount, average ticket (whole UZS).
@@ -57,6 +59,7 @@ WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2027-01-01' GROUP BY 
 -- SME 305 / 95 235 100 000 / 312 246 230 · Auto 165 / 36 218 310 000 / 219 504 909 · Consumer 941 / 25 618 370 000 / 27 224 623
 -- Micro 1045 / 2 811 950 000 / 2 690 861 · BNPL 595 / 2 449 330 000 / 4 116 521            (total 3051 / 162 333 060 000)
 ```
+
 </details>
 
 **T4.** 2026 disbursements by month — which month was largest by amount, which by count?
@@ -69,6 +72,7 @@ FROM loans WHERE disbursed_at >= '2026-01-01' GROUP BY strftime('%Y-%m', disburs
 -- largest amount: 2026-08, 358 loans / 22 290 210 000; most loans: 2026-05, 377 / 18 531 830 000
 ```
 Ten rows; October has one day (21 loans). Count and amount peak in different months — two SME loans more or less move the amount by billions.
+
 </details>
 
 **T5.** Outstanding principal by region of the *branch*, largest first, with a `-- note:` on concentration.
@@ -83,6 +87,7 @@ WHERE i.due_date > '2026-10-01' GROUP BY b.region ORDER BY outstanding DESC;
 -- Namangan 18 696 787 066 / 290 · Bukhara 15 116 046 338 / 279 · Nukus 13 309 138 567 / 216 · Termez 10 670 177 559 / 203
 ```
 Note: Tashkent holds 39 % of outstanding with 38 % of the owing loans — the book is not concentrated by region; it is concentrated by product (T2: SME is 60 % of outstanding on 18 % of the owing loans).
+
 </details>
 
 **T6.** How many customers have five or more loans? Show the distribution of loans per customer (1, 2, 3 … → customers).
@@ -93,6 +98,7 @@ Note: Tashkent holds 39 % of outstanding with 38 % of the owing loans — the bo
 SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) >= 5;    -- 81 rows
 ```
 Distribution (`GROUP BY customer_id`, then count the rows per value — by eye today, with a subquery next week): 1 loan → 2 089 customers · 2 → 1 378 · 3 → 593 · 4 → 194 · 5 → 62 · 6 → 15 · 7 → 4. Total 4 335 borrowers.
+
 </details>
 
 **T7.** Bekzod's hardest: 2026 disbursed amount by product (rows) × quarter (Q1, Q2, Q3 as columns; 1 October belongs to Q4 — leave it out). Add a `-- note:` on which products grew every quarter.
@@ -111,6 +117,7 @@ WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY 
 --                SME 26 342 380 000 / 30 754 010 000 / 37 677 910 000
 ```
 Day 4's version let 1 October (21 loans, 852 760 000) leak into Q3; the half-open upper bound fixes it. Note: SME and Micro grew every quarter; BNPL and Consumer dipped in Q2 or Q3; Auto fell after Q1 and has not recovered. Full marks need the half-open filters and the note.
+
 </details>
 
 ### Sevara — delinquency and collections (6)
@@ -118,13 +125,17 @@ Day 4's version let 1 October (21 loans, 852 760 000) leak into Q3; the half-ope
 **T8.** How much is overdue right now: matured instalments **not fully paid** — count of instalments, loans, and the unpaid remainder.
 
 <details><summary>T8</summary>
+
 Copy Day 3's `WITH unpaid … dpd …` block and finish with `SELECT COUNT(*), COUNT(DISTINCT loan_id), SUM(total_due - paid) FROM unpaid;` → **1 784 instalments · 413 loans · 7 599 088 794 UZS**. (Day 1's simpler "no payment at all" version gives 1 357 / 399 / 6 475 544 633 — accepted with a note saying it ignores partial payments.)
+
 </details>
 
 **T9.** The DPD bucket table (0 / 1–30 / 31–60 / 61–90 / 90+) with loans and overdue amount per bucket, and the status check.
 
 <details><summary>T9</summary>
+
 From `dpd` with the bucket `CASE` (Day 3, Company corner): 0 → 14 / 53 018 776 · 1–30 → 124 / 499 314 822 · 31–60 → 25 / 74 348 104 · 61–90 → 16 / 109 375 982 · 90+ → 234 / 6 863 031 110. Note: 90+ = 44 `default` + 190 `written_off`, so the status column agrees with the computation; 399 loans have DPD > 0.
+
 </details>
 
 **T10.** The call list: loans with DPD 31–90, borrower name, phone, DPD and overdue amount, worst first. How many, how much?
@@ -138,12 +149,15 @@ FROM dpd d JOIN loans l ON l.loan_id = d.loan_id JOIN customers c ON c.customer_
 WHERE d.dpd BETWEEN 31 AND 90 ORDER BY d.dpd DESC;
 ```
 **41 loans, 183 724 086 UZS**; first row loan 2242, Abror Abdullaev, 89 DPD, 968 400 owed; the largest overdue amount in the list is loan 4567 (60 328 500 owed, 84 DPD). `BETWEEN` is fine on integers — the trap is on dates with times, not here.
+
 </details>
 
 **T11.** Delinquent loans (DPD > 0) and overdue amount by product, with a `-- note:`.
 
 <details><summary>T11</summary>
+
 From `dpd`, `WHERE d.dpd > 0`, joined to `loans → products`: SME 47 loans / 4 802 628 425 · Consumer 138 / 1 308 423 535 · Auto 29 / 1 161 471 073 · Micro 121 / 177 923 528 · BNPL 64 / 95 623 457. Note: Consumer has the most late *loans*, SME the most late *money* — ask Sevara which she is staffing for.
+
 </details>
 
 **T12.** Collections actions by type with the share ending in a promise to pay — one query, `SUM(CASE)`.
@@ -156,6 +170,7 @@ SELECT action_type, COUNT(*) AS actions,
 FROM collections_actions GROUP BY action_type ORDER BY actions DESC;
 -- sms 3265 / 38.4 · call 3114 / 25.2 · visit 1506 / 25.3 · restructure_offer 1476 / 23.3
 ```
+
 </details>
 
 **T13.** Sevara's hardest: delinquent loans that have **never** had a collections action — total, and how many of them are in the 1–30 bucket. `-- note:` what it says about the team's queue.
@@ -170,6 +185,7 @@ FROM dpd d LEFT JOIN collections_actions ca ON ca.loan_id = d.loan_id
 WHERE ca.action_id IS NULL;                                        -- 130 · 106
 ```
 The anti-join on `collections_actions`. 130 of the 413 loans with a matured unpaid instalment have no action — but 13 of those fall due today (DPD 0) and cannot have been called yet, so the fair answer is **117 of the 399 delinquent (DPD > 0) loans**; 106 of the 124 in 1–30 are among them, while the 234 loans in 90+ carry 9 058 actions (39 each). The team's effort sits on the dead debt; the fresh, curable cases wait. That sentence is the note.
+
 </details>
 
 ### Nilufar — approvals and risk (6)
@@ -186,35 +202,45 @@ SELECT channel, COUNT(*) AS apps,
 FROM applications GROUP BY channel;
 -- app 5006 / 58.2 / 68.2 · branch 6223 / 63.7 / 72.4 · partner 2771 / 61.9 / 70.5
 ```
+
 </details>
 
 **T15.** Approval rate by credit-score band (A ≥ 720, B 660–719, C 600–659, D < 600) **with a no-score band**; the bands must add up to 14 000.
 
 <details><summary>T15</summary>
+
 Day 4 P4: A 2 150 / 91.3 % · B 4 702 / 77.4 · C 4 605 / 52.2 · D 2 155 / 16.8 · no score 388 / 59.0 — sum 14 000. The NULL test comes first in the `CASE`; without it the 388 land in D and the D rate reads 23 % instead of 17 %.
+
 </details>
 
 **T16.** Approval rate (all applications) by band **and** channel. In which band is the app furthest below the branch?
 
 <details><summary>T16</summary>
+
 `GROUP BY band, channel`: A app 88.0 vs branch 93.0 (−5.0) · B 72.9 vs 80.2 (−7.3) · C 49.8 vs 54.3 (−4.5) · **D 11.6 vs 19.6 (−8.0)** · no score 57.6 vs 60.9. The app is strictest at the bottom — where Day 4's FPD says it should be — and still has the worse FPD.
+
 </details>
 
 **T17.** Share of approvals that were never disbursed (`approved_not_disbursed` ÷ all approved), by channel.
 
 <details><summary>T17</summary>
+
 `SUM(CASE WHEN status = 'approved_not_disbursed' THEN 1 ELSE 0 END) * 100.0 / SUM(CASE WHEN status LIKE 'approved%' THEN 1 ELSE 0 END)`: app 222 / 2 915 = **7.6 %** · branch 329 / 3 965 = 8.3 % · partner 127 / 1 715 = 7.4 %. Branch customers walk away slightly more often — they had two days to think (decision lag 2.0 days vs 0 in the app).
+
 </details>
 
 **T18.** FPD30 by channel (Day 4's definition and `WITH` block).
 
 <details><summary>T18</summary>
+
 app 2 411 / 41 / **1.70 %** · partner 1 425 / 16 / 1.12 % · branch 3 263 / 34 / 1.04 %; overall 7 099 / 91 / 1.28 %. State the definition in the `-- note:` (first instalment not fully paid within 30 days; base = first due date ≤ 2026-09-01).
+
 </details>
 
 **T19.** Nilufar's hardest: FPD30 **and** write-off share by risk grade in one table, with a `-- note:` on whether the grades order both.
 
 <details><summary>T19</summary>
+
 FPD from the `flags` block joined to `loans`, grouped by `l.risk_grade`; write-off share from `loans` alone (`SUM(CASE WHEN status = 'written_off' THEN 1 ELSE 0 END) / COUNT(*)`) — two queries, or one `UNION ALL` with a label column:
 
 | grade | loans in FPD scope | FPD30 | write-offs / loans | write-off % |
@@ -225,6 +251,7 @@ FPD from the `flags` block joined to `loans`, grouped by `l.risk_grade`; write-o
 | D | 314 | 2.23 % | 30 / 339 | 8.8 % |
 
 Both monotonic. FPD separates A/B from C/D (×2.2) but barely C from D; write-off separates every grade (×2 each step). FPD is the early signal, write-off the outcome — the scorecard works, and D is a small, expensive book.
+
 </details>
 
 ### Timur — data quality and grain (6)
@@ -232,37 +259,49 @@ Both monotonic. FPD separates A/B from C/D (×2.2) but barely C from D; write-of
 **T20.** Payments by `method` raw and cleaned (`LOWER`, `TRIM`, `REPLACE`), and the number of rows that needed cleaning.
 
 <details><summary>T20</summary>
+
 Raw: 10 groups on SQLite (SQL Server's default collation ignores case and trailing spaces and shows 6 — Day 2 P9). Cleaned with `REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')`: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774. Dirty rows: `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180** on SQLite (SQL Server: add `COLLATE Latin1_General_CS_AS` after `LOWER(TRIM(method))`, or its default collation finds only the 27 `bank transfer` rows). Note for Timur: the 27 `bank transfer` rows average 2.1 days late — a different source system, not a typo.
+
 </details>
 
 **T21.** Exact duplicate payments: how many groups, and how much money is counted twice?
 
 <details><summary>T21</summary>
+
 `GROUP BY installment_id, paid_at, amount HAVING COUNT(*) > 1` → **25** groups of 2; `SUM(amount)` over those groups → **58 397 800** double-counted. Also visible as 52 875 rows vs 52 850 distinct `installment_id`, and as 25 instalments "overpaid" by exactly one instalment.
+
 </details>
 
 **T22.** Closed loans with no `closed_at` — how many, and do they have an unpaid matured instalment?
 
 <details><summary>T22</summary>
+
 `SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL` → **15**. Joined to Day 3's `dpd` set, all 15 appear (13 in 1–30, 1 in 31–60, 1 at DPD 0): the system closed them when the schedule ended, not when the money arrived. Note: `status` should be derived from payments, not from the calendar.
+
 </details>
 
 **T23.** Payments dated **after** the as-of date: count, latest date, loans affected.
 
 <details><summary>T23</summary>
+
 `SELECT COUNT(*), MAX(paid_at), COUNT(DISTINCT loan_id) FROM payments WHERE paid_at > '2026-10-01'` → **24 · 2026-11-24 · 23**. Either the extract date is wrong or these are forward-dated entries; Day 4 P7 showed they do not change the DPD buckets, but they inflate "collected in October" before October exists.
+
 </details>
 
 **T24.** Loans disbursed before their application was submitted: count, and the rule that recovers the true date.
 
 <details><summary>T24</summary>
+
 `WHERE l.disbursed_at < date(a.applied_at)` (SQL Server `CAST(a.applied_at AS DATE)`) after `loans JOIN applications` → **12**. The true date is the first instalment's `due_date` minus one month — 0–3 days after `decided_at` for all twelve. Recommendation: restore `disbursed_at` from the schedule; add a load check `disbursed_at >= decided_at`.
+
 </details>
 
 **T25.** The grain question (no query, 5–8 sentences). Bekzod asks for *outstanding by product*; Sevara for *days late per payment*; Madina for *disbursements by month*. For each: what is one row of the table you aggregate, which tables may you join before aggregating, and which join would silently inflate the number?
 
 <details><summary>T25 — model answer</summary>
+
 *Outstanding by product:* one row = one **instalment** (`installments`, filtered to `due_date > as-of`); join `loans` → `products` (many-to-one from the instalment) to label; never sum `loans.principal` on this join — every loan would count once per instalment. *Days late per payment:* one row = one **payment** (`payments`); join `installments` on `installment_id` (one-to-one here, the 25 duplicates aside) for the due date and `loans → products` for labels; grouping by product is safe because each payment belongs to one loan. *Disbursements by month:* one row = one **loan** (`loans`); join `products`/`branches`/`dim_date`, all many-to-one; joining `installments` or `payments` first would multiply each loan by its term or its payment count. The method: name the noun that is "one row", aggregate that table's own measures, and treat every one-to-many join as a reason to aggregate separately and join the results (week 3).
+
 </details>
 
 ---
@@ -290,6 +329,7 @@ Answer in writing, 3–5 sentences each, as you would say it: 3 points per quest
 6. DPD measures the current state of each loan and drives collections and provisions (buckets, PAR30, NPL). FPD flags loans whose first instalment was not paid within X days — it appears within two months of disbursement, so it is the early warning for a new channel, product or scoring rule, and the classic fraud signal. Nur Finance: 1.28 % FPD30 overall, 1.70 % on the app vs 1.04 % at branches — visible years before the 36-month Auto book shows its losses.
 7. `BETWEEN '2026-09-01' AND '2026-09-30'` drops rows with a time on the last day (598 instead of 621 September applications), and functions on the column (`strftime(…) = '2026-09'`) stop indexes working. Write half-open ranges: `col >= '2026-09-01' AND col < '2026-10-01'` — works for days, months, years, datetimes alike.
 8. A one-to-many join repeats each parent row once per child; summing a parent column over it multiplies it by the child count (`SUM(principal)` over loans × instalments → 9.98 trillion, 24× the SME figure). Detect it with `COUNT(*)` vs `COUNT(DISTINCT parent_key)` side by side; avoid it by aggregating each table at its own grain and joining the aggregates (week 3's subqueries/CTEs), or by using `COUNT(DISTINCT)` for counts.
+
 </details>
 
 ---
@@ -302,9 +342,9 @@ Answer in writing, 3–5 sentences each, as you would say it: 3 points per quest
 | B — 8 questions × 3 + definitions note | 25 | |
 | **Total** | **100** | **≥ 70 → Week 3 on Monday** |
 
-Below 70: feedback names the sections to redo (most often Day 2's HAVING/multiplication or Day 4's NULL rules); re-submit the failed tasks Monday morning before Week 3. Points go to `docs/progress.md`.
+Below 70: feedback names the sections to redo (most often Day 2's HAVING/multiplication or Day 4's NULL rules); re-submit the failed tasks Monday morning before Week 3. Points go to the [Progress page](progress.md).
 
-**Submission checklist** — `submissions/week-02/day-5/`: `queries.sql` (25 tasks, 25 `-- result:` lines, dialect stated), `interview.md` (definitions note + 8 answers). Also due today: **HW 2.2** in `day-3/` (`lateness.sql`, `lateness.md`, `methods.sql`, `detective.md`).
+**Hand-in checklist** (the 📎 box below): `queries.sql` (25 tasks, 25 `-- result:` lines, dialect stated), `interview.md` (definitions note + 8 answers). Also due today: **HW 2.2** in `day-3/` (`lateness.sql`, `lateness.md`, `methods.sql`, `detective.md`).
 
 Madina, 17:40: *"Nilufar has her slide and the sentence under it. Sevara moved three collectors to the 1–30 queue. Timur found out about his fifteen closed loans from you, not from the board — he says thank you, in his way. Monday: window functions, and the twenty-five questions you could not answer this week because they needed 'the previous month'."*
 
