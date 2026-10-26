@@ -200,6 +200,14 @@ There are hits, and every one sits on a duplicate id. Look at their `registered_
 
 Graded on: (a) every issue type is in the memo with the count from your queries — the duplicate rows, the impossible birth dates, and the name pairs that are *not* duplicates, explained (step 8's future registration dates are not required; a memo that has them stands out), (b) the "what it changes" section names at least two downstream numbers with their size (loans, applications or new customers), (c) it fits on one page and a CFO could read it without knowing SQL.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-01/day-4/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W1D4", "lesson": "W1D4", "title": "HW 1.3", "tasks": [{"id": "memo.md", "file": "memo.md", "text": true, "minLines": 3, "q": "Write `memo.md` here — what the page above asks for."}, {"id": "case.sql", "file": "case.sql", "text": true, "minLines": 3, "q": "Write `case.sql` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

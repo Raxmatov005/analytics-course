@@ -332,6 +332,14 @@ A running sum divided by a grand total — two windows with different frames in 
 
 Graded on: (a) numbers match ours within rounding, (b) every window has the right `PARTITION BY`/`ORDER BY`/frame for the sentence next to it (a YTD that does not restart per product loses the point), (c) the six sentences say *share of what* and *period* every time.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-03/day-1/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W3D1", "lesson": "W3D1", "title": "HW 3.1", "tasks": [{"id": "shares.sql", "file": "shares.sql", "text": true, "minLines": 3, "q": "Write `shares.sql` here — what the page above asks for."}, {"id": "trend.sql", "file": "trend.sql", "text": true, "minLines": 3, "q": "Write `trend.sql` here — what the page above asks for."}, {"id": "pack.md", "file": "pack.md", "text": true, "minLines": 3, "q": "Write `pack.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

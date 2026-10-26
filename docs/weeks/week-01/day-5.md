@@ -279,6 +279,16 @@ Madina, 17:30: *"The CFO used your 6 000. IT got the Nur Pay model. Bekzod has h
 
 ---
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-01/day-5/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W1D5", "lesson": "W1D5", "title": "Checkpoint 1", "tasks": [{"id": "nur_pay.md", "file": "nur_pay.md", "text": true, "minLines": 3, "q": "Write `nur_pay.md` here — what the page above asks for."}, {"id": "queries.sql", "file": "queries.sql", "text": true, "minLines": 3, "q": "Write `queries.sql` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
+---
+
 ## Day quiz
 
 Pass with 80 % to finish the day. Retry as often as you like.

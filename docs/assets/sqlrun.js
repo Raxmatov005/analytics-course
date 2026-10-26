@@ -140,12 +140,13 @@ Work in progress is kept in localStorage "al.sql". */
     box.className = 'sq-box';
     box.innerHTML = '<textarea class="sq-edit" spellcheck="false" rows="' + Math.min(14, code.split('\n').length + 1) + '"></textarea>' +
       '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button><button type="button" class="sq-reset">↺ Reset</button>' +
-      '<span class="sq-hint">try changing it</span></div><div class="sq-out"></div>';
+      '<button type="button" class="sq-tables">🗂 Tables</button><span class="sq-hint">try changing it</span></div><div class="sq-out"></div>';
     pre.parentNode.replaceChild(box, pre);
     var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out');
     ta.value = code;
     tabKeys(ta);
     box.querySelector('.sq-reset').onclick = function () { ta.value = code; out.innerHTML = ''; };
+    box.querySelector('.sq-tables').onclick = function () { lastEditor = ta; explorer(); };
     box.querySelector('.sq-run').onclick = function () {
       out.innerHTML = '<div class="sq-note">Loading the Nur Finance data (once, ~10 MB)…</div>';
       ready().then(function () { out.innerHTML = table(run(play, ta.value, false)); })
@@ -168,19 +169,45 @@ Work in progress is kept in localStorage "al.sql". */
     pre.parentNode.replaceChild(box, pre);
     var s = store(), mine = s.sql[spec.check] = s.sql[spec.check] || { code: {}, ok: {} };
     save(s);
-    box.innerHTML = '<div class="sq-ws-head"><span class="sq-ws-title">🧑‍💻 Your workspace — ' + esc(spec.title || spec.check) + '</span>' +
-      '<span class="sq-ws-sub">Write → ▶ Run → ✔ Check → fix → 📤 Submit. Your work is saved in this browser. Ctrl+Enter runs.</span></div>' +
+    var hasSql = spec.tasks.some(function (t) { return !t.text && !t.upload; });
+    var picked = {};   // chosen files live in memory only: after a reload she picks them again
+    box.innerHTML = '<div class="sq-ws-head"><span class="sq-ws-title">' + (hasSql ? '🧑‍💻 Your workspace — ' : '📎 Hand in — ') + esc(spec.title || spec.check) + '</span>' +
+      '<span class="sq-ws-sub">' + (hasSql ? 'Write → ▶ Run → ✔ Check → fix → 📤 Submit. Saved in this browser. Ctrl+Enter runs.'
+        : 'Write or attach each part, then 📤 Submit. No GitHub needed.') + '</span>' +
+      (hasSql ? '<button type="button" class="sq-tables">🗂 Tables and columns</button>' : '') + '</div>' +
       spec.tasks.map(function (t, i) {
-        return '<div class="sq-task" data-i="' + i + '"><div class="sq-task-q"><span class="sq-chip"></span><b>' + esc(t.id) + '</b> ' + esc(t.q) + '</div>' +
-          '<textarea class="sq-edit" spellcheck="false" rows="' + (t.text ? 5 : 4) + '" placeholder="' + (t.text ? 'Write here…' : '-- your query') + '"></textarea>' +
-          '<div class="sq-bar">' + (t.text ? '' : '<button type="button" class="sq-run">▶ Run</button><button type="button" class="sq-check">✔ Check</button>') +
-          '<span class="sq-msg"></span></div><div class="sq-out"></div></div>';
+        var input = t.upload
+          ? '<label class="sq-file"><input type="file"' + (t.accept ? ' accept="' + esc(t.accept) + '"' : '') + '> 📎 Choose file</label><span class="sq-fname"></span>'
+          : '<textarea class="sq-edit" spellcheck="false" rows="' + (t.text ? 5 : 4) + '" placeholder="' + (t.text ? 'Write here…' : '-- your query') + '"></textarea>';
+        return '<div class="sq-task" data-i="' + i + '"><div class="sq-task-q"><span class="sq-chip"></span><b>' + esc(t.id) + '</b> ' + esc(t.q) +
+          (t.optional ? ' <span class="sq-opt">optional</span>' : '') + '</div>' +
+          (t.upload ? '<div class="sq-bar">' + input + '<span class="sq-msg"></span></div>' :
+            input + '<div class="sq-bar">' + (t.text ? '' : '<button type="button" class="sq-run">▶ Run</button><button type="button" class="sq-check">✔ Check</button>') +
+            '<span class="sq-msg"></span></div>') + '<div class="sq-out"></div></div>';
       }).join('') +
-      '<div class="sq-ws-foot"><button type="button" class="sq-all">✔ Check all</button><button type="button" class="sq-submit">📤 Submit</button>' +
+      '<div class="sq-ws-foot">' + (hasSql ? '<button type="button" class="sq-all">✔ Check all</button>' : '') + '<button type="button" class="sq-submit">📤 Submit</button>' +
       '<div class="sq-ws-state"></div></div>';
+    if (hasSql) box.querySelector('.sq-tables').onclick = explorer;
     var cards = box.querySelectorAll('.sq-task');
     spec.tasks.forEach(function (t, i) {
       var c = cards[i], ta = c.querySelector('textarea'), out = c.querySelector('.sq-out'), msg = c.querySelector('.sq-msg');
+      if (t.upload) {
+        paint(c, undefined);
+        msg.textContent = t.accept ? 'A ' + t.accept.split(',').join(' / ') + ' file, up to 5 MB.' : 'Up to 5 MB.';
+        c.querySelector('input[type=file]').addEventListener('change', function () {
+          var f = this.files[0];
+          if (!f) return;
+          if (f.size > 5 * 1024 * 1024) { msg.textContent = 'That file is over 5 MB — send it as a zip in 📤 Homework instead.'; delete picked[t.id]; paint(c, false); foot(); return; }
+          var rd = new FileReader();
+          rd.onload = function () {
+            picked[t.id] = { name: f.name, type: f.type || 'application/octet-stream', b64: String(rd.result).split(',')[1] };
+            c.querySelector('.sq-fname').textContent = f.name + ' · ' + Math.max(1, Math.round(f.size / 1024)) + ' KB';
+            msg.textContent = ''; paint(c, true); foot();
+          };
+          rd.readAsDataURL(f);
+        });
+        return;
+      }
       ta.value = mine.code[t.id] || '';
       tabKeys(ta);
       paint(c, mine.ok[t.id]);
@@ -217,14 +244,14 @@ Work in progress is kept in localStorage "al.sql". */
         });
       }).catch(function (e) { console.error('check failed', e); msg.textContent = 'Could not check right now — try again.'; });
     }
-    box.querySelector('.sq-all').onclick = function () {
+    if (hasSql) box.querySelector('.sq-all').onclick = function () {
       var p = Promise.resolve();
-      spec.tasks.forEach(function (t, i) { if (!t.text) p = p.then(function () { return checkOne(t, cards[i]); }); });
+      spec.tasks.forEach(function (t, i) { if (!t.text && !t.upload) p = p.then(function () { return checkOne(t, cards[i]); }); });
       p.then(foot);
     };
     function foot() {
-      var m = store().sql[spec.check], need = spec.tasks.length;
-      var okN = spec.tasks.filter(function (t) { return m.ok[t.id] === true; }).length;
+      var m = store().sql[spec.check], must = spec.tasks.filter(function (t) { return !t.optional; }), need = must.length;
+      var okN = must.filter(function (t) { return t.upload ? !!picked[t.id] : m.ok[t.id] === true; }).length;
       var state = box.querySelector('.sq-ws-state'), btn = box.querySelector('.sq-submit');
       var key = wk();
       btn.disabled = okN < need;
@@ -236,13 +263,20 @@ Work in progress is kept in localStorage "al.sql". */
       var key = wk(), btn = this, state = box.querySelector('.sq-ws-state');
       if (!key) { window.open(BOT + 'connect', '_blank'); return; }
       var m = store().sql[spec.check], files = {}, sqlFile = spec.file || 'answers.sql';
-      var sqlText = spec.tasks.filter(function (t) { return !t.text; }).map(function (t) {
+      var sqlText = spec.tasks.filter(function (t) { return !t.text && !t.upload; }).map(function (t) {
         var res = clean ? run(clean, m.code[t.id] || '', true) : { cells: [] };
         var first = res.last && res.last.values.length ? res.last.values.slice(0, 3).map(function (r) { return r.join(', '); }).join('; ') : '';
         return '-- ' + t.id + ': ' + t.q + '\n' + (m.code[t.id] || '').trim() + '\n-- result: ' + first + '\n';
       }).join('\n');
       if (sqlText.trim()) files[sqlFile] = sqlText;
       spec.tasks.filter(function (t) { return t.text; }).forEach(function (t) { files[t.file] = (m.code[t.id] || '').trim() + '\n'; });
+      spec.tasks.filter(function (t) { return t.upload && picked[t.id]; }).forEach(function (t) {
+        var p = picked[t.id], ext = (p.name.match(/\.[A-Za-z0-9]+$/) || [''])[0].toLowerCase();
+        var own = p.name.replace(/[^\w.-]+/g, '_').slice(-60);   // the Extra slot keeps the file's own (safe) name
+        var name = (t.names || [t.file]).filter(function (n) { return ext && n.toLowerCase().slice(-ext.length) === ext; })[0] ||
+          (/\.\w+$/.test(t.file || '') ? t.file : own);
+        files[name] = { b64: p.b64, type: p.type };
+      });
       btn.disabled = true; state.innerHTML = 'Submitting…';
       fetch(WORKER + '/submit', { method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ key: key, lesson: spec.lesson, check: spec.check, files: files, ok: m.ok }) })
@@ -262,6 +296,87 @@ Work in progress is kept in localStorage "al.sql". */
     foot();
   }
 
+  /* ---------- 3. the database panel (like DBeaver / DataGrip): tables → columns → preview; tap a name to insert it ---------- */
+  var ABOUT = {   // what one row is, the primary key and the foreign keys (week 1 day 1's table; this copy declares no constraints)
+    customers: ['one person', 'customer_id', {}], products: ['one loan product', 'product_id', {}], branches: ['one office', 'branch_id', {}],
+    staff: ['one employee', 'staff_id', { branch_id: 'branches' }],
+    applications: ['one request for a loan', 'application_id', { customer_id: 'customers', product_id: 'products', branch_id: 'branches', officer_id: 'staff' }],
+    loans: ['one loan that was paid out', 'loan_id', { application_id: 'applications', customer_id: 'customers', product_id: 'products', branch_id: 'branches' }],
+    installments: ['one scheduled monthly payment', 'installment_id', { loan_id: 'loans' }],
+    payments: ['one payment received', 'payment_id', { loan_id: 'loans', installment_id: 'installments' }],
+    collections_actions: ['one SMS / call / visit to a late borrower', 'action_id', { loan_id: 'loans', collector_id: 'staff' }],
+    app_events: ['one tap in the mobile app', 'event_id', { customer_id: 'customers', application_id: 'applications' }],
+    dim_date: ['one calendar day', 'date_key', {}]
+  };
+  var lastEditor = null;
+  document.addEventListener('focusin', function (e) { if (e.target.classList && e.target.classList.contains('sq-edit')) lastEditor = e.target; });
+  function insert(text) {
+    var ta = lastEditor && document.body.contains(lastEditor) ? lastEditor : document.querySelector('.sq-edit');
+    if (!ta) return;
+    var a = ta.selectionStart || 0, b = ta.selectionEnd || 0;
+    ta.value = ta.value.slice(0, a) + text + ta.value.slice(b);
+    ta.selectionStart = ta.selectionEnd = a + text.length;
+    ta.focus(); ta.dispatchEvent(new Event('input'));
+  }
+  function explorer() {
+    var drawer = document.getElementById('sq-db');
+    if (drawer && drawer.dataset.failed) { drawer.remove(); drawer = null; }
+    if (drawer) { drawer.classList.toggle('open'); return; }
+    drawer = document.createElement('aside');
+    drawer.id = 'sq-db';
+    drawer.className = 'open';
+    drawer.innerHTML = '<div class="db-head"><b>🗂 Nur Finance database</b><button type="button" class="db-x" aria-label="Close">✕</button></div>' +
+      '<div class="db-tip">Tap a table to see its columns · tap a name to put it in your query · 👁 shows 5 rows.</div>' +
+      '<input class="db-find" type="search" placeholder="Find a table or column…"><div class="db-list">Loading…</div><div class="db-prev"></div>';
+    document.body.appendChild(drawer);
+    drawer.querySelector('.db-x').onclick = function () { drawer.classList.remove('open'); };
+    ready().then(function () {
+      var tables = play.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")[0].values.map(function (r) { return r[0]; });
+      var html = tables.map(function (t) {
+        var info = ABOUT[t] || ['', '', {}], rows = play.exec('SELECT COUNT(*) FROM "' + t + '"')[0].values[0][0];
+        var cols = play.exec('PRAGMA table_info("' + t + '")')[0].values;   // cid, name, type, notnull, default, pk
+        return '<details class="db-t" data-t="' + esc(t) + '"><summary><span class="db-tn">' + esc(t) + '</span><span class="db-rows">' + rows.toLocaleString('en').replace(/,/g, ' ') + '</span></summary>' +
+          '<div class="db-about">' + esc(info[0]) + '</div><div class="db-acts"><button type="button" class="db-ins" data-v="' + esc(t) + '">+ name</button>' +
+          '<button type="button" class="db-pv" data-v="' + esc(t) + '">👁 5 rows</button></div>' +
+          cols.map(function (c) {
+            var name = c[1], key = name === info[1] ? '<span class="db-k pk">PK</span>' : info[2][name] ? '<span class="db-k fk" title="points to ' + esc(info[2][name]) + '">FK → ' + esc(info[2][name]) + '</span>' : '';
+            return '<button type="button" class="db-c db-ins" data-v="' + esc(name) + '"><span>' + esc(name) + '</span>' + key + '<span class="db-ty">' + esc((c[2] || '').toLowerCase()) + '</span></button>';
+          }).join('') + '</details>';
+      }).join('');
+      var list = drawer.querySelector('.db-list');
+      list.innerHTML = html;
+      list.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.classList.contains('db-pv')) {
+          var res = run(play, 'SELECT * FROM "' + b.dataset.v + '" LIMIT 5', true);
+          drawer.querySelector('.db-prev').innerHTML = '<div class="db-prev-h">' + esc(b.dataset.v) + ' — first 5 rows <button type="button" class="db-prev-x">✕</button></div>' + table(res);
+          drawer.querySelector('.db-prev-x').onclick = function () { drawer.querySelector('.db-prev').innerHTML = ''; };
+        } else if (b.classList.contains('db-ins')) insert(b.dataset.v);
+      });
+      drawer.querySelector('.db-find').addEventListener('input', function () {
+        var q = this.value.trim().toLowerCase();
+        Array.prototype.forEach.call(list.querySelectorAll('.db-t'), function (d) {
+          var hit = !q || d.dataset.t.indexOf(q) >= 0 || Array.prototype.some.call(d.querySelectorAll('.db-c'), function (c) { return c.dataset.v.indexOf(q) >= 0; });
+          d.hidden = !hit;
+          if (q && hit) d.open = true;
+          Array.prototype.forEach.call(d.querySelectorAll('.db-c'), function (c) { c.classList.toggle('db-hit', !!q && c.dataset.v.indexOf(q) >= 0); });
+        });
+      });
+    }).catch(function () { drawer.querySelector('.db-list').textContent = 'Could not load the data — check the connection and tap 🗂 again.'; drawer.dataset.failed = '1'; });
+  }
+  function dbButton() {
+    var has = document.querySelector('.markdown-section .sq-box, .markdown-section .sq-ws .sq-run');
+    var btn = document.getElementById('sq-db-btn');
+    if (!has) { if (btn) btn.hidden = true; var d = document.getElementById('sq-db'); if (d) d.classList.remove('open'); return; }
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'sq-db-btn'; btn.type = 'button'; btn.textContent = '🗂 Database';
+      btn.onclick = explorer;
+      document.body.appendChild(btn);
+    }
+    btn.hidden = false;
+  }
+
   window.$docsify = window.$docsify || {};
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.doneEach(function () {
@@ -269,6 +384,7 @@ Work in progress is kept in localStorage "al.sql". */
       if (!sec) return;
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqltask"]'), workspace);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sql"]'), example);
+      dbButton();
     });
   });
 })();

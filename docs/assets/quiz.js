@@ -132,13 +132,45 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     var head = '<div class="quiz-head"><span class="quiz-title">Day quiz</span>' +
       '<span class="quiz-rule">' + quiz.questions.length + ' questions · ' + Math.round(pass * 100) + ' % finishes the day</span>' +
       (prev && prev.passedOn ? '<span class="quiz-done">Day done · best ' + prev.best + ' %</span>' : '') + '</div>';
-    box.innerHTML = head + quiz.questions.map(function (q, i) { return questionHtml(q, i, quiz.id); }).join('') +
-      '<div class="quiz-actions"><button type="button" class="quiz-check">Check my answers</button>' +
-      '<button type="button" class="quiz-retry" hidden>Try again</button></div><div class="quiz-result" hidden></div>';
+    var n = quiz.questions.length;
+    box.innerHTML = head + '<div class="quiz-prog"><div class="quiz-prog-bar"></div></div><div class="quiz-step"></div>' +
+      '<div class="quiz-result" hidden></div>' +
+      quiz.questions.map(function (q, i) { return questionHtml(q, i, quiz.id); }).join('') +
+      '<div class="quiz-actions"><button type="button" class="quiz-back">← Back</button><button type="button" class="quiz-next">Next →</button>' +
+      '<button type="button" class="quiz-check" hidden>Submit answers</button>' +
+      '<button type="button" class="quiz-retry" hidden>Try again</button></div>';
     pre.parentNode.replaceChild(box, pre);
 
     var checkBtn = box.querySelector('.quiz-check'), retryBtn = box.querySelector('.quiz-retry'), result = box.querySelector('.quiz-result');
+    var backBtn = box.querySelector('.quiz-back'), nextBtn = box.querySelector('.quiz-next'), cur = 0;
+    var qs = box.querySelectorAll('.quiz-q');
+    /* one question at a time (Khan-style): Next opens once this one is answered; the last one shows Submit */
+    function answered(el) {
+      return !!el.querySelector('input:checked') || Array.prototype.some.call(el.querySelectorAll('.quiz-input'), function (x) { return x.value.trim(); });
+    }
+    function show() {
+      Array.prototype.forEach.call(qs, function (el, i) { el.hidden = i !== cur; });
+      box.querySelector('.quiz-step').textContent = 'Question ' + (cur + 1) + ' of ' + n;
+      box.querySelector('.quiz-prog-bar').style.width = Math.round(100 * (cur + 1) / n) + '%';
+      backBtn.hidden = cur === 0;
+      nextBtn.hidden = cur === n - 1;
+      checkBtn.hidden = cur !== n - 1;
+      nextBtn.disabled = checkBtn.disabled = !answered(qs[cur]);
+    }
+    box.addEventListener('input', function () { if (!box.classList.contains('quiz-review')) show(); });
+    box.addEventListener('change', function () { if (!box.classList.contains('quiz-review')) show(); });
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target.classList.contains('quiz-input')) { e.preventDefault(); (cur === n - 1 ? checkBtn : nextBtn).click(); }
+    });
+    nextBtn.addEventListener('click', function () { if (cur < n - 1 && answered(qs[cur])) { cur++; show(); } });
+    backBtn.addEventListener('click', function () { if (cur > 0) { cur--; show(); } });
+    show();
     checkBtn.addEventListener('click', function () {
+      box.classList.add('quiz-review');
+      Array.prototype.forEach.call(qs, function (el) { el.hidden = false; });
+      backBtn.hidden = nextBtn.hidden = true;
+      box.querySelector('.quiz-step').textContent = 'Your answers';
+      box.querySelector('.quiz-prog').hidden = true;
       var right = 0;
       quiz.questions.forEach(function (q, i) {
         var el = box.querySelector('.quiz-q[data-i="' + i + '"]');

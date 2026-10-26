@@ -295,6 +295,14 @@ app 2 669 · branch 3 590 · partner 1 569 (= 7 828). Approved-with-no-loan: `ap
 
 Graded on: (a) every join uses the right key and the row count is stated and right, (b) LEFT vs INNER chosen deliberately in Q7 and Q9 (a comment saying why), (c) column names a manager can read (aliases, one name column).
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-02/day-1/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W2D1", "lesson": "W2D1", "title": "HW 2.1", "tasks": [{"id": "loan_book.sql", "file": "loan_book.sql", "text": true, "minLines": 3, "q": "Write `loan_book.sql` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

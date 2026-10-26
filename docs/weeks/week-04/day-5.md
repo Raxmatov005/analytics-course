@@ -303,6 +303,16 @@ Madina, 17:30: *"Bekzod has his page and refreshed it himself. Nilufar's age ban
 
 ---
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-04/day-5/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W4D5", "lesson": "W4D5", "title": "Checkpoint 4", "tasks": [{"id": "checkpoint.xlsx", "file": "checkpoint.xlsx", "names": ["checkpoint.xlsx"], "upload": true, "accept": ".xlsx", "q": "Attach `checkpoint.xlsx` — what the page above asks for."}, {"id": "findings.md", "file": "findings.md", "text": true, "minLines": 3, "q": "Write `findings.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
+---
+
 ## Day quiz
 
 Pass with 80 % to finish the day. Retry as often as you like.

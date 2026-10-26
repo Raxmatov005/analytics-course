@@ -12,16 +12,16 @@
 
 ---
 
-> **Short on time?** You can do today on this page alone: jump to **Step 3**, answer in the workspace, tap **Submit**. Steps 1–2 and 4–6 are the computer way — you will need it from week 4 (Excel), so try it once when you can.
+> **Nothing to install.** Today works on this page alone: jump to **Step 3**, answer in the workspace, tap **📤 Submit**. Steps 1–2 and 4–6 show the optional *computer way* (GitHub Desktop, DB Browser) — good to know for a job, not needed for the course.
 
-## Step 1 — the course on your computer (once, ~5 min)
+## Step 1 — the course on your computer (optional)
 
 1. Install **GitHub Desktop**: https://desktop.github.com and sign in with your GitHub account.
 2. *File → Clone repository* → choose **Raxmatov005/analytics-course** → pick a folder (e.g. Documents) → **Clone**.
 
 Done when GitHub Desktop shows *Current repository: analytics-course*.
 
-## Step 2 — open the database (once, ~3 min)
+## Step 2 — open the database in an app (optional)
 
 1. Install **DB Browser for SQLite**: https://sqlitebrowser.org/dl/ (Windows: *Standard installer*).
 2. *Open Database* → in the course folder choose `data/raw/nur.db`.
@@ -55,7 +55,7 @@ Not sure what a column holds? Look first: `SELECT DISTINCT role FROM staff;`
 
 ---
 
-## Step 4 — save your answers
+## Step 4 — save your answers in a file (optional, the computer way)
 
 1. In the course folder create the folders `submissions`, then inside it `practice`.
 2. Open **Notepad** and write your three answers in this shape — the question line, your query, and the result you got:
@@ -78,7 +78,7 @@ python scripts/check.py practice
 
 Each question shows **OK** or **NO** with the reason. It never shows the right answer: a NO means *look again*. No Python yet? Skip this step today; your mentor runs the same check.
 
-## Step 6 — send it
+## Step 6 — send it with GitHub Desktop (optional, the computer way)
 
 In GitHub Desktop you will see `answers.sql` in the list on the left.
 

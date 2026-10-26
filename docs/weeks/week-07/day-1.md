@@ -274,6 +274,14 @@ Re-splits: **4.0 %** below 0.05; deciles 92, 90, 110, 101, 115, 100, 99, 90, 101
 
 Graded on: (a) every number traceable — n per arm (14 983 or 14 992, with the method named), the A/A numbers matching the notebook; (b) a guardrail with a **quantified** threshold and a reason (Company corner); (c) the decision rule written as conditions someone else could apply without you.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-07/day-1/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W7D1", "lesson": "W7D1", "title": "HW 7.1", "tasks": [{"id": "experiment_design.md", "file": "experiment_design.md", "text": true, "minLines": 3, "q": "Write `experiment_design.md` here — what the page above asks for."}, {"id": "day1_starter.ipynb", "file": "day1_starter.ipynb", "names": ["day1_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day1_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

@@ -234,6 +234,14 @@ Self-join `loans` to find the repeat loans (same customer, `disbursed_at` later 
 
 Graded on: (a) the three views create and the checks pass, (b) the dictionary lets Timur use a column without reading the SQL, (c) one definition for DPD/outstanding across all three views — a `v_portfolio_monthly` outstanding that cannot be reconciled with `v_loan_status` loses the point.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-03/day-4/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W3D4", "lesson": "W3D4", "title": "HW 3.2", "tasks": [{"id": "views.sql", "file": "views.sql", "text": true, "minLines": 3, "q": "Write `views.sql` here — what the page above asks for."}, {"id": "dictionary.md", "file": "dictionary.md", "text": true, "minLines": 3, "q": "Write `dictionary.md` here — what the page above asks for."}, {"id": "checks.sql", "file": "checks.sql", "text": true, "minLines": 3, "q": "Write `checks.sql` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

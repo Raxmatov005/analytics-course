@@ -269,6 +269,14 @@ Same mean, wider spread (sd 2.74 vs 2.25), and the tail is **twice** (≥ 10: 6.
 
 Graded on (20 points): (a) all eight assert cells pass after *Restart & Run All* (2 points each, 16), (b) every function returns a value and has a docstring in your words (2), (c) the three sentences for Nilufar give the expected count, the normal range and the alarm level with its probability (2).
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-06/day-1/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W6D1", "lesson": "W6D1", "title": "HW 6.1", "tasks": [{"id": "day1_starter.ipynb", "file": "day1_starter.ipynb", "names": ["day1_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day1_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

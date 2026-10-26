@@ -260,6 +260,14 @@ Row-wise `apply(axis=1)` ≈ 0.7 s; `inst.principal_due + inst.interest_due` ≈
 
 Graded on: (a) the counts (6 000 / 7 / 52 850 / 5 / 24 / 399 and the buckets), (b) the asserts are present and the script runs top to bottom from the raw files — the reviewer deletes the CSVs and re-runs it, (c) the dedup keeps the right survivor (originals ≤ 6 000; lowest `payment_id`) and the DPD matches the SQL for all 7 828 loans. Also due today: **HW 5.1** in `day-1/`.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-05/day-3/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W5D3", "lesson": "W5D3", "title": "HW 5.2", "tasks": [{"id": "clean_nur.py", "file": "clean_nur.py", "names": ["clean_nur.py", "day3_starter.ipynb"], "upload": true, "accept": ".ipynb,.py", "q": "Attach `clean_nur.py` or `day3_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

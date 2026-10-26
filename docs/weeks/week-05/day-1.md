@@ -292,6 +292,14 @@ Section 9 of the notebook uses 6 and 8 together on `payments_dirty.csv` (five cl
 
 Graded on: (a) all assert cells pass after *Restart & Run All* (8 points, one per function), (b) no function prints — every one returns (1 point), (c) a docstring on each that says what it does and what it returns, in your words (1 point).
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-05/day-1/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W5D1", "lesson": "W5D1", "title": "HW 5.1", "tasks": [{"id": "day1_starter.ipynb", "file": "day1_starter.ipynb", "names": ["day1_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day1_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

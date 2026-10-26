@@ -82,6 +82,14 @@ Now you can read the whole database as sentences:
 
 ## 2. Set up your tools (45 min)
 
+**Start with nothing to install.** Every SQL box on these pages has **▶ Run** and works on the full Nur Finance database. **🗂 Tables** (on each box, and the 🗂 Database button at the bottom right) opens the database panel — every table, its columns, its keys and a 5-row preview — like the panel in DBeaver or DataGrip at work. Tap a name to put it into your query. Try it here:
+
+```sql
+SELECT COUNT(*) AS loans FROM loans;   -- expect 7828
+```
+
+The two paths below install the real tools banks use. They are **optional** for this course — do one when you have an evening, because interviewers like to hear you have used SSMS or DBeaver.
+
 You need a database engine and a program to type queries into. Pick **Path A** (what banks and the video use). If the install fights you for more than 30 minutes, take **Path B** today and come back to A on the weekend — both run the same course.
 
 <details>
@@ -209,6 +217,14 @@ Any two of: empty monthly_income cells; a birth date in the future or 1900-01-01
 3. `loan-1.md` — the one-sentence story of loan 1 from the worked example.
 
 Graded on: (a) the tool runs, (b) answers are in your own words, not copied from the folds, (c) the sentence is correct against the data.
+
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-01/day-1/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W1D1", "lesson": "W1D1", "title": "HW 1.1", "tasks": [{"id": "Screenshot", "file": "screenshot.png", "upload": true, "accept": ".png,.jpg,.jpeg", "q": "A screenshot of a ▶ Run box (or your SQL tool) showing SELECT COUNT(*) FROM loans; with the result 7828."}, {"id": "Answers", "file": "answers.md", "text": true, "minLines": 8, "q": "Your P1–P8 answers — after checking, mark where you were wrong and what you learned."}, {"id": "Loan 1", "file": "loan-1.md", "text": true, "minLines": 1, "q": "The one-sentence story of loan 1 from the worked example."}]}
+```
 
 ---
 

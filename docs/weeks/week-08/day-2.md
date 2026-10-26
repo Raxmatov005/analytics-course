@@ -299,6 +299,14 @@ What turns a list into a CV is **achievements with numbers**: the action, the to
 
 Graded on: (a) achievements are specific and true — tool + action + result + size, every number traceable to your own submissions; (b) focus: the CV fits the chosen role and `job_ad.md` maps every requirement; (c) form — one page, no typos, consistent formatting, links that open.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-08/day-2/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W8D2", "lesson": "W8D2", "title": "HW 8.1", "tasks": [{"id": "cv.pdf", "file": "cv.pdf", "names": ["cv.pdf"], "upload": true, "accept": ".pdf", "q": "Attach `cv.pdf` — what the page above asks for."}, {"id": "portfolio.md", "file": "portfolio.md", "text": true, "minLines": 3, "q": "Write `portfolio.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 6. Self-check

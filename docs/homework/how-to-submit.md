@@ -1,8 +1,19 @@
 # How to submit homework
 
-Every homework names a folder like `submissions/week-01/day-1/`. Put your files there and push. That's it.
+## The easy way — on the lesson page (no installs)
 
-## One-time setup (15 min)
+Every homework has a box at the end of its section:
+
+- **SQL homework** — the *workspace*: write each query, **▶ Run**, **✔ Check** (✅ or ❌ with why), fix, and **📤 Submit** when all are ✅.
+- **Everything else** — **📎 Hand in here**: write your notes in the box, attach files (Excel, notebooks, Power BI, images, PDFs), **📤 Submit**.
+
+The first time, the box shows **🔑 Connect this website to the course bot** — tap it once, then Submit works in this browser. Your mentor gets your work in 📤 Homework, and your feedback comes back there.
+
+## The computer way (optional) — GitHub Desktop
+
+What analysts do at work: each homework names a folder like `submissions/week-01/day-1/`. Put your files there and push.
+
+### One-time setup (15 min)
 
 1. Create a free account at https://github.com if you don't have one and send your username to the mentor; you'll be invited to the course repository (accept the e-mail from GitHub).
 2. Install **GitHub Desktop**: https://desktop.github.com → sign in → *Clone a repository* → pick the course repo → choose the folder on your PC.

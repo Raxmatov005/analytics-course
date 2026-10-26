@@ -260,6 +260,14 @@ Cauchy: −0.544, 0.554, −0.007, **1.058, 0.957** — still jumping at 100 000
 
 Graded on (20 points): (a) the numbers — FPD, n, rate, Wilson and bootstrap limits for 3 channels and 4 grades, matching the asserts and the model (8), (b) the chart — dots with error bars from zero-free axes in %, n in every label, grades in order A → D, a title that states the finding (6), (c) the five sentences — the overlap read correctly, the widest interval explained by n, Wilson vs bootstrap, a dashboard proposal, the question for tomorrow (6). **Bonus +20:** `clopper_pearson(k, n)` from `scipy.stats.beta` (not statsmodels) passing its assert, with the exact interval added to both tables and one sentence on when you would report it instead of Wilson.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-06/day-2/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W6D2", "lesson": "W6D2", "title": "HW 6.2", "tasks": [{"id": "day2_starter.ipynb", "file": "day2_starter.ipynb", "names": ["day2_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day2_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check

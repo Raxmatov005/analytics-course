@@ -272,6 +272,14 @@ Rows **600 + 600 + 500 = 1 700**, Σ `disbursed_amount` **404 783 280 000** — 
 
 The formulas are in `data/powerbi/measures.dax` (section 1). Graded on: (a) the six totals and the two product columns match; (b) the model is a clean star — no fact-to-fact relationship, no Both, no many-to-many, date table marked; (c) the 48-loan blank is fixed in Power Query (not hidden), and a short note in `notes.md` says how.
 
+### 📎 Hand in here
+
+Write or attach each part, then **📤 Submit** — no GitHub needed. (Prefer GitHub? Push to `submissions/week-07/day-3/` and tap 📤 I pushed my homework in the bot — both count.)
+
+```sqltask
+{"check": "handin-W7D3", "lesson": "W7D3", "title": "HW 7.2", "tasks": [{"id": "nur_week7.pbix", "file": "nur_week7.pbix", "names": ["nur_week7.pbix"], "upload": true, "accept": ".pbix", "q": "Attach `nur_week7.pbix` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
 ---
 
 ## 5. Self-check
