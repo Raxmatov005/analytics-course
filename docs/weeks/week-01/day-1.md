@@ -24,6 +24,10 @@ Think of Excel: a sheet is a table, but with three rules Excel does not enforce:
 2. Every row has an **ID** that is unique — the **primary key** (PK).
 3. Rows in one table point to rows in another by storing that ID — a **foreign key** (FK).
 
+```game
+{"type": "match", "id": "w01d1-terms", "title": "Words of the day", "pairs": [["Table", "a list of things of one kind (all customers)"], ["Row", "one thing in that list (one customer)"], ["Column", "one property every row has (birth date)"], ["Primary key", "the ID that names exactly one row"], ["Foreign key", "a column that stores another table's ID"]]}
+```
+
 ### The Nur Finance database
 
 Eleven tables. Learn them like a floor plan: you will walk these corridors for eight weeks.
@@ -44,6 +48,10 @@ Eleven tables. Learn them like a floor plan: you will walk these corridors for e
 
 Notice the shape: a few **"who/what" tables** (customers, products, branches, staff — and the calendar, dim_date) and a few **"what happened" tables** (applications, loans, installments, payments, actions, events). Almost every company's data has this shape; in week 4 you will learn its name (*dimensions and facts*).
 
+```game
+{"type": "sort", "id": "w01d1-kinds", "title": "Who/what or what happened?", "q": "Put each table into its kind.", "groups": {"Who / what (things)": ["customers", "products", "branches", "staff", "dim_date"], "What happened (events)": ["applications", "loans", "installments", "payments", "collections_actions", "app_events"]}}
+```
+
 ### Reading a relationship
 
 > "`loans.customer_id` is a foreign key to `customers.customer_id`"
@@ -56,6 +64,14 @@ Now you can read the whole database as sentences:
 - An approved application becomes at most one **loan**.
 - A loan has many **installments** (its schedule) and receives many **payments**.
 - A late loan gets many **collections actions**.
+
+```game
+{"type": "pick", "id": "w01d1-pk", "title": "Find the primary key", "q": "Four real rows of the loans table. Which column names exactly one row?", "columns": ["loan_id", "customer_id", "product_id", "principal", "disbursed_at", "status"], "rows": [[1, 3473, 2, 31150000, "2025-03-28", "active"], [2, 4570, 2, 40060000, "2025-12-05", "active"], [3, 1397, 1, 1590000, "2026-03-28", "closed"], [4, 4240, 1, 2520000, "2026-08-23", "active"]], "answer": ["loan_id"], "hint": "Not that one: could two loans share this value?", "why": "Every loan has its own loan_id; customer_id and product_id repeat — they point to other tables."}
+```
+
+```game
+{"type": "connect", "id": "w01d1-fk", "title": "Where does a loan point?", "left": {"name": "loans", "cols": ["loan_id", "application_id", "customer_id", "product_id", "branch_id", "principal"]}, "right": {"name": "the tables it points to", "cols": ["customers.customer_id", "applications.application_id", "staff.staff_id", "branches.branch_id", "products.product_id"]}, "links": [["application_id", "applications.application_id"], ["customer_id", "customers.customer_id"], ["product_id", "products.product_id"], ["branch_id", "branches.branch_id"]], "why": "These four are loans' foreign keys. principal is a plain number, and a loan stores no officer."}
+```
 
 ### Depth (optional)
 
@@ -217,6 +233,10 @@ Graded on: (a) the tool runs, (b) answers are in your own words, not copied from
 | 5. Delinquency | a payment is late | computed from 4 | **DPD**, **FPD**, buckets |
 | 6. Collection | we remind, call, visit, restructure | `collections_actions` | contact rate, cure rate |
 | 7. Write-off / recovery | we give up on the loan, or get some back | `loans.status` | **NPL**, write-off rate, recovery |
+
+```game
+{"type": "order", "id": "w01d1-lifecycle", "title": "The loan lifecycle, in order", "items": ["Application", "Decision", "Disbursement", "Repayment", "Delinquency", "Collection", "Write-off / recovery"], "why": "Each step leaves a trace in a table — that is what you will query."}
+```
 
 Two words to carry home today:
 

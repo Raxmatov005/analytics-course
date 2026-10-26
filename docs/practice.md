@@ -12,6 +12,8 @@
 
 ---
 
+> **Short on time?** You can do today on this page alone: jump to **Step 3**, answer in the workspace, tap **Submit**. Steps 1–2 and 4–6 are the computer way — you will need it from week 4 (Excel), so try it once when you can.
+
 ## Step 1 — the course on your computer (once, ~5 min)
 
 1. Install **GitHub Desktop**: https://desktop.github.com and sign in with your GitHub account.
@@ -44,6 +46,14 @@ SELECT name, min_amount FROM products ORDER BY min_amount DESC;  -- biggest firs
 ```
 
 Not sure what a column holds? Look first: `SELECT DISTINCT role FROM staff;`
+
+**Answer right here** — write each query, ▶ Run it, ✔ Check it, then 📤 Submit:
+
+```sqltask
+{"check": "practice", "lesson": "Practice", "title": "Practice day", "file": "answers.sql", "tasks": [{"id": "Q1", "q": "How many branches (offices) does Nur Finance have?"}, {"id": "Q2", "q": "Which product has the highest annual interest rate, and what is that rate, exactly as the table stores it?"}, {"id": "Q3", "q": "How many staff members work as loan officers?"}]}
+```
+
+---
 
 ## Step 4 — save your answers
 

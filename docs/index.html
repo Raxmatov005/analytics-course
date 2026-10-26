@@ -159,6 +159,64 @@
     .fb-title { font-weight: 700; font-size: 1.1em; color: #312e81; }
     .fb-text { color: #475569; margin: .2em 0 .7em; }
     .markdown-section a.fb-go { display: inline-block; padding: .45em 1.1em; border-radius: 8px; background: #4338ca; color: #fff; font-weight: 600; text-decoration: none; border: 0; }
+    /* SQL in the browser (sqlrun.js) */
+    .sq-box, .sq-ws { border: 1px solid #cbd5e1; border-radius: 10px; margin: 1em 0; background: #f8fafc; overflow: hidden; }
+    .sq-edit { display: block; width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid #e2e8f0; padding: .7em .9em; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #0f172a; color: #e2e8f0; resize: vertical; }
+    .sq-bar { display: flex; flex-wrap: wrap; gap: .5em; align-items: center; padding: .5em .8em; }
+    .sq-bar button, .sq-ws-foot button { font: inherit; font-size: .9em; padding: .35em .9em; border-radius: 7px; border: 0; cursor: pointer; background: #0f766e; color: #fff; }
+    .sq-bar .sq-reset { background: #64748b; }
+    .sq-bar .sq-check { background: #1d4ed8; }
+    .sq-hint, .sq-msg { font-size: .85em; color: #64748b; }
+    .sq-out { padding: 0 .8em .6em; }
+    .sq-note { font-size: .85em; color: #475569; margin: .3em 0; }
+    .sq-err { font-size: .9em; color: #b91c1c; background: #fef2f2; border-radius: 6px; padding: .4em .7em; margin: .3em 0; }
+    .sq-scroll { overflow-x: auto; max-height: 320px; overflow-y: auto; }
+    .markdown-section table.sq-table { display: table; width: auto; font-size: .82em; margin: .2em 0; }
+    .markdown-section table.sq-table td, .markdown-section table.sq-table th { padding: .25em .6em; }
+    .sq-ws { background: #fff; border: 2px solid #0f766e; }
+    .sq-ws-head { padding: .8em 1em; background: #f0fdfa; border-bottom: 1px solid #ccfbf1; }
+    .sq-ws-title { display: block; font-weight: 700; color: #0f766e; font-size: 1.1em; }
+    .sq-ws-sub { font-size: .85em; color: #475569; }
+    .sq-task { border-bottom: 1px solid #e2e8f0; }
+    .sq-task-q { padding: .6em .9em; }
+    .sq-task.ok .sq-task-q { background: #ecfdf5; }
+    .sq-task.bad .sq-task-q { background: #fef2f2; }
+    .sq-chip { display: inline-block; width: 1.6em; }
+    .sq-ws-foot { padding: .8em 1em; display: flex; flex-wrap: wrap; gap: .6em; align-items: center; }
+    .sq-ws-foot .sq-submit { background: #c2410c; }
+    .sq-ws-foot button:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .sq-ws-state { flex-basis: 100%; font-size: .9em; color: #334155; }
+    /* mini-games (games.js) */
+    .gm { border: 1px solid #c4b5fd; background: #faf5ff; border-radius: 12px; padding: .9em 1.1em; margin: 1.3em 0; }
+    .gm.gm-won { border-color: #059669; background: #f0fdf4; }
+    .gm-head { display: flex; gap: .6em; align-items: center; margin-bottom: .5em; }
+    .gm-badge { font-size: .75em; background: #6d28d9; color: #fff; border-radius: 999px; padding: .1em .6em; }
+    .gm-title { font-weight: 700; color: #4c1d95; }
+    .gm-q { margin-bottom: .5em; }
+    .gm-cols, .gm-bins { display: grid; grid-template-columns: 1fr 1fr; gap: .6em; }
+    .gm-col, .gm-pool { display: flex; flex-wrap: wrap; gap: .4em; align-content: flex-start; }
+    .gm-col { flex-direction: column; }
+    .gm-it, .gm-colbtn { font: inherit; font-size: .9em; text-align: left; padding: .4em .7em; border-radius: 8px; border: 1px solid #c4b5fd; background: #fff; color: #1f2937; cursor: pointer; }
+    .gm-it.gm-sel { border-color: #6d28d9; box-shadow: 0 0 0 2px #ddd6fe; }
+    .gm-it.gm-ok, .gm-colbtn.gm-ok { background: #059669; border-color: #059669; color: #fff; }
+    .gm-no { animation: gm-shake .4s; border-color: #dc2626 !important; }
+    @keyframes gm-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    .gm-seq { margin: .3em 0 .6em 1.2em; }
+    .gm-seq li { color: #065f46; font-weight: 600; }
+    .gm-bin { border: 1px dashed #a78bfa; border-radius: 10px; padding: .5em; min-height: 3.2em; cursor: pointer; background: #fff; }
+    .gm-bin-name { font-weight: 700; font-size: .85em; color: #5b21b6; margin-bottom: .3em; }
+    .gm-tag { display: inline-block; font-size: .8em; background: #059669; color: #fff; border-radius: 6px; padding: .1em .45em; margin: .1em; }
+    .gm-pool { margin-bottom: .6em; }
+    .gm-scroll { overflow-x: auto; }
+    .markdown-section table.gm-table { display: table; width: auto; font-size: .85em; }
+    .gm-join { position: relative; display: flex; justify-content: space-between; gap: 2.5em; }
+    .gm-tb { display: flex; flex-direction: column; gap: .3em; z-index: 1; }
+    .gm-tb-name { font-weight: 700; color: #4c1d95; }
+    .gm-lines { position: absolute; left: 0; top: 0; pointer-events: none; }
+    .gm-lines line { stroke: #059669; stroke-width: 3; }
+    .gm-foot { display: flex; justify-content: space-between; align-items: center; gap: .6em; margin-top: .6em; font-size: .9em; }
+    .gm-again { font: inherit; font-size: .85em; border: 0; background: transparent; color: #6d28d9; cursor: pointer; }
+    @media (max-width: 600px) { .gm-cols, .gm-bins { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -191,6 +249,8 @@
   <script src="assets/board.js?v=4"></script>
   <script src="assets/map.js?v=1"></script>
   <script src="assets/feedback.js?v=4"></script>
+  <script src="assets/sqlrun.js?v=2"></script>
+  <script src="assets/games.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@3.0.0/dist/docsify-copy-code.min.js"></script>
