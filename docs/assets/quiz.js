@@ -144,8 +144,9 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
         '<div class="qz-icon">✓</div>' +
         '<div class="qz-start-body"><div class="qz-title">' + (isPractice(quiz.id) ? 'Practice quiz' : 'Day quiz') + '</div>' +
         '<div class="qz-sub">' + n + ' questions · get ' + Math.round(pass * 100) + '% to finish the day · about ' + Math.max(2, Math.round(n * 0.6)) + ' min</div>' +
-        (prev && prev.passedOn ? '<div class="qz-badge">Done · best ' + prev.best + '%</div>' : '') + '</div>' +
-        '<button type="button" class="qz-btn qz-go">' + (prev && prev.attempts ? 'Try again' : 'Start quiz') + '</button>' +
+        (prev && prev.passedOn ? '<div class="qz-badge">✓ Passed · best ' + prev.best + '%</div>'
+          : prev && prev.attempts ? '<div class="qz-badge qz-badge-try">Best so far ' + prev.best + '% · ' + Math.round(pass * 100) + '% passes</div>' : '') + '</div>' +
+        '<button type="button" class="qz-btn qz-go">' + (prev && prev.passedOn ? 'Take it again' : prev && prev.attempts ? 'Try again' : 'Start quiz') + '</button>' +
       '</div>' +
       '<div class="qz-run" hidden>' +
         '<div class="qz-top"><span class="qz-title-s">' + (isPractice(quiz.id) ? 'Practice quiz' : 'Day quiz') + '</span><span class="qz-count"></span></div>' +

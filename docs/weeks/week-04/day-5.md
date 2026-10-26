@@ -24,7 +24,7 @@
 | 10:15–11:45 | Part B — six pivots on `Data`, tiles, three charts, slicer, layout | `OnePager` |
 | 11:45–12:00 | Refresh All, re-check, `findings.md` | five sentences |
 | 13:00–13:30 | Part C | `interview.md` |
-| 13:30–14:00 | reread the rubric, fix titles and formats, push | the folder |
+| 13:30–14:00 | reread the rubric, fix titles and formats, hand in (box below) | the folder |
 
 **Known numbers** — everything you can check against, on one card (all as of 2026-10-01):
 

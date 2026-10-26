@@ -23,7 +23,7 @@
 | 11:15–11:30 | Break; Restart & Run All; save | `checkpoint.ipynb` with outputs |
 | 11:30–12:15 | Part B in `quiz.md` — name the test before you look anything up, then check the Day 4 card | twelve lines |
 | 12:15–12:45 | Part C in `quiz.md` | eight short answers |
-| 12:45–13:00 | The checklist at the end; push to `submissions/week-06/day-5/` | done |
+| 12:45–13:00 | The checklist at the end; hand in (box below) | done |
 
 **The shape of one Part A answer** (Day 3's committee habit, shortened):
 

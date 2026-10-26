@@ -54,7 +54,7 @@ Each question is a section of the notebook and at least one slide. Suggested cut
 
 | Day | Morning | Afternoon | End-of-day output |
 |---|---|---|---|
-| **Wed (today)** | brief, issue tree, definitions | data checks, sanity numbers, Q1–Q3 first pass | checkpoint list (section 7) ticked; `day-3/issue_tree.md` + notebook draft pushed |
+| **Wed (today)** | brief, issue tree, definitions | data checks, sanity numbers, Q1–Q3 first pass | checkpoint list (section 7) ticked; `issue_tree.md` + notebook draft saved |
 | **Thu** | Q4–Q6; **storyline: slide titles first** (Day 4) | dashboard pages; draft deck; peer-review checklist against your own work | full draft deck; dashboard 2 pages |
 | **Fri** | rehearse twice (timer), final checks, Restart & Run All, export PDFs | present (10 min + questions); then the mock interview | everything in `submissions/week-08/day-5/` |
 
@@ -145,7 +145,7 @@ FROM delinquent d LEFT JOIN touched t ON t.loan_id = d.loan_id
 GROUP BY d.bucket;
 ```
 
-**Checkpoint — tick before you stop** (push to `submissions/week-08/day-3/`: `issue_tree.md`, `capstone.ipynb` draft):
+**Checkpoint — tick before you stop** (keep `issue_tree.md` and the `capstone.ipynb` draft on your computer — Friday's hand-in box takes the final versions):
 
 - [ ] The brief restated in one sentence at the top of the notebook, with the as-of date.
 - [ ] Issue tree with a hypothesis and a test per branch; your deep-dive chosen and written as a question.

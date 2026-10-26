@@ -204,7 +204,7 @@ Three honest notes:
 
 ## 7. "My plan" <span class="badge hw">Submit today</span>
 
-Copy this into `submissions/week-00/my-plan.md`, fill it, push (or upload via the GitHub web page). Keep answers short and true; Madina reads it before Monday.
+Copy this into the **📎 Hand in here** box below, fill it, tap **📤 Submit**. Keep answers short and true; Madina reads it before Monday.
 
 ```markdown
 # My plan — [your name], [date]
@@ -222,7 +222,7 @@ SQL __/8 · Excel __/8 · Python __/8 · Statistics __/8 · BI __/6
 [e.g. 3 h, 19:00–22:00; weekends free]
 
 ## Tools on my laptop
-- Database: [ ] SQL Server + SSMS  [ ] SQLite + DB Browser  [ ] none yet
+- Database: [ ] only this website (enough)  [ ] SQL Server + SSMS  [ ] SQLite + DB Browser
 - Excel or Sheets: [ ] Excel  [ ] Google Sheets
 - Python: [ ] installed  [ ] not yet
 - Power BI Desktop: [ ] installed  [ ] not yet (Windows only)

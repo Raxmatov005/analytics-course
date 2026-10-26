@@ -74,7 +74,7 @@ Not needed for this course. Good to know for a job, where analysts keep their wo
 1. Install **GitHub Desktop** (https://desktop.github.com), sign in, then *File → Clone repository* → **Raxmatov005/analytics-course** → **Clone**.
 2. Install **DB Browser for SQLite** (https://sqlitebrowser.org/dl/), *Open Database* → `data/raw/nur.db` in the course folder, tab **Execute SQL**.
 3. Save your answers as `submissions/practice/answers.sql` (in Notepad choose *Save as type: All files*).
-4. In GitHub Desktop: *Summary* `Practice: 3 warm-up queries` → **Commit to main** → **Push origin**. Then in the bot tap **📤 I pushed my homework** → **Practice day**.
+4. In GitHub Desktop: *Summary* `Practice: 3 warm-up queries` → **Commit to main** → **Push origin**. Then in the bot tap **📤 Hand in homework** → **Practice day** → **I pushed it to GitHub instead**.
 
 Both ways count the same.
 

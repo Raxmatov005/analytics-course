@@ -21,7 +21,7 @@
 | 11:15–11:30 | Break; Restart & Run All; save | `checkpoint_ab.ipynb` with outputs |
 | 11:30–13:30 | Part B: the three pages on yesterday's model; check every card against the checklist | `.pbix`, PDF, three PNGs |
 | 13:30–14:00 | Part C in `quiz.md` | eight answers |
-| 14:00–14:15 | The checklist at the end; push to `submissions/week-07/day-5/` | done |
+| 14:00–14:15 | The checklist at the end; hand in (box below) | done |
 
 ---
 

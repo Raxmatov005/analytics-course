@@ -42,7 +42,7 @@ All green? Send it. The mentor still reads your queries, comments and text: the 
 1. Create the folder the page names (e.g. `submissions/week-01/day-2/`).
 2. Save your files there. Use the names the page asks for. SQL in `.sql`, text in `.md`, screenshots in `.png`, notebooks in `.ipynb`, workbooks in `.xlsx`.
 3. In GitHub Desktop: write a one-line summary (e.g. `HW 1.2 — 10 queries for Bekzod`) → **Commit to main** → **Push origin**.
-4. In the course bot, tap **📤 I pushed my homework** and pick the homework. The bot checks that your files are really in GitHub (if one is missing, it tells you which) and lets your mentor know in the 📤 Homework topic.
+4. In the course bot, tap **📤 Hand in homework**, pick the homework, then **I pushed it to GitHub instead**. The bot checks that your files are really in GitHub (if one is missing, it tells you which) and lets your mentor know in the 📤 Homework topic.
 
 Can't make GitHub Desktop work? Use the box on the lesson page instead — it counts the same. Pushing files is part of the job.
 

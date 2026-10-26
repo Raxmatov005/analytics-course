@@ -10,7 +10,7 @@
 - **Practice answers are folded** on the page — try first, then open. **Homework** goes to the `submissions/` folder (see [How to submit](homework/how-to-submit.md)); you get written feedback within a day and points on the [progress board](progress.md).
 - **Every day ends with a short quiz.** Pass it with **80 %** and the day is done: it gets a tick in the sidebar, counts toward your streak and earns XP.
 - **Levels, badges and real rewards.** Points, quiz days and daily challenges add up to XP; XP takes you from Intern to Lead Analyst. Every checkpoint you pass (70 %+) wins a voucher you can spend, each one bigger than the last; big results unlock big rewards. See your [progress & rewards](progress.md) board.
-- **Check your homework yourself first:** `python scripts/check.py hw1.2` tells you task by task whether your numbers are right — without showing the answers ([how](homework/how-to-submit.md#check-before-you-send)).
+- **Check your homework yourself first:** the **✔ Check** button in each SQL workspace tells you task by task whether your numbers are right — without showing the answers. Then **📤 Submit** in the same box ([how](homework/how-to-submit.md)).
 - **Skip what you know.** Start with [Day 0](weeks/week-00/day-0.md): five short tests. Score 80 %+ on a module → skip that week, do only its Friday checkpoint.
 - **One dataset for everything:** the Nur Finance database (11 tables, 6,040 customers, 7,828 loans). You will know it like your own flat by week 3.
 - **Depth is optional.** Every day links to the exact video minute or deck page if you want more; nothing depends on it. The full map is in [Sources](sources.md).
