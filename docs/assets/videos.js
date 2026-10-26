@@ -78,7 +78,14 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
       '<div class="yp-track" role="slider" aria-label="Position in this part" tabindex="0"><div class="yp-fill"></div><div class="yp-knob"></div></div>' +
       '<button type="button" class="yp-speed" aria-label="Speed">1×</button>' +
       '<button type="button" class="yp-cc" aria-label="Subtitles">CC</button>' +
-      '<button type="button" class="yp-full" aria-label="Full screen">⛶</button></div>';
+      '<button type="button" class="yp-q" aria-label="Quality">Auto</button>' +
+      '<button type="button" class="yp-full" aria-label="Full screen">⛶</button></div>' +
+      '<div class="yp-qmenu" hidden><div class="yp-qmenu-h">Quality: <b class="yp-qnow">Auto</b></div>' +
+      '<p>YouTube picks the quality itself from the size of the player and your internet — websites are not allowed to set it. ' +
+      'For a sharper picture:</p>' +
+      '<button type="button" class="yp-qfull">⛶ Watch full screen <small>YouTube then switches to HD</small></button>' +
+      '<a class="yp-qyt" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + v.id + '&t=' + v.t + 's">⚙ Choose the quality on YouTube <small>' +
+      'opens at this part' + (v.end ? '; stop at ' + clock(v.end) : '') + '</small></a></div>';
     card.querySelector('.yt-thumb').replaceWith(stage);
     var go = card.querySelector('.yt-go');
     if (go) go.remove();
@@ -104,6 +111,8 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
         $('.yp-knob').style.left = (f * 100) + '%';
       }
       $('.yp-time').textContent = clock(Math.round(rel)) + ' / ' + clock(Math.round(len()));
+      var q = p.getPlaybackQuality ? QL[p.getPlaybackQuality()] || 'Auto' : 'Auto';
+      if ($('.yp-q').textContent !== q) { $('.yp-q').textContent = q; $('.yp-qnow').textContent = q === 'Auto' ? 'Auto' : q + ' (auto)'; }
       var on = playing() && !(end && t >= end - 0.25);
       $('.yp-pp').textContent = on ? '❚❚' : '▶';
       $('.yp-big').hidden = on;
@@ -124,11 +133,37 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
       try { if (cc) { p.loadModule('captions'); p.setOption('captions', 'track', { languageCode: 'en' }); } else p.unloadModule('captions'); } catch (e) { /* no captions */ }
       $('.yp-cc').classList.toggle('on', cc);
     };
-    $('.yp-full').onclick = function () {
-      var fs = document.fullscreenElement || document.webkitFullscreenElement;
-      if (fs) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-      else (stage.requestFullscreen || stage.webkitRequestFullscreen || function () {}).call(stage);
-    };
+    /* full screen: the browser's own where it is allowed; where it is not (iPhone Safari, some in-app browsers) the
+       player fills the window instead, so the button always does something */
+    function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement; }
+    function setMax(on) {
+      stage.classList.toggle('yp-max', on);
+      document.body.classList.toggle('yp-lock', on);
+      icon();
+    }
+    function icon() { $('.yp-full').textContent = fsEl() === stage || stage.classList.contains('yp-max') ? '✕' : '⛶'; }
+    function full() {
+      $('.yp-qmenu').hidden = true;
+      if (fsEl()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      if (stage.classList.contains('yp-max')) { setMax(false); return; }
+      var req = stage.requestFullscreen || stage.webkitRequestFullscreen;
+      var fallback = function () { if (!fsEl()) setMax(true); };
+      if (!req) { setMax(true); return; }
+      try {
+        var pr = req.call(stage);
+        if (pr && pr.then) pr.then(function () { try { screen.orientation.lock('landscape').catch(function () {}); } catch (e) { /* not on this device */ } }, fallback);
+      } catch (e) { setMax(true); return; }
+      setTimeout(fallback, 500);   // blocked without an error: fill the window instead
+    }
+    $('.yp-full').onclick = full;
+    $('.yp-qfull').onclick = full;
+    document.addEventListener('fullscreenchange', icon);
+    document.addEventListener('webkitfullscreenchange', icon);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && stage.classList.contains('yp-max')) setMax(false); });
+    var QL = { hd2160: '4K', hd1440: '1440p', hd1080: '1080p', hd720: '720p', large: '480p', medium: '360p', small: '240p', tiny: '144p', auto: 'Auto' };
+    $('.yp-q').onclick = function (e) { e.stopPropagation(); $('.yp-qmenu').hidden = !$('.yp-qmenu').hidden; };
+    $('.yp-qyt').onclick = function () { if (p && playing()) p.pauseVideo(); $('.yp-qmenu').hidden = true; };
+    document.addEventListener('click', function (e) { if (!e.target.closest('.yp-qmenu') && !e.target.closest('.yp-q')) $('.yp-qmenu').hidden = true; });
     var track = $('.yp-track');
     function frac(e) { var r = track.getBoundingClientRect(); return (e.clientX - r.left) / r.width; }
     function show(f) { f = Math.min(1, Math.max(0, f)); $('.yp-fill').style.width = (f * 100) + '%'; $('.yp-knob').style.left = (f * 100) + '%'; }

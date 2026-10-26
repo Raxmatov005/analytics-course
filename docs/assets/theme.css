@@ -481,3 +481,18 @@ body.db-on #sq-db-shade { opacity: 1; pointer-events: auto; }
   .yp-cc { display: none; }
   .yp-bar { gap: .35em; padding: .45em .5em; }
 }
+
+/* the part player: quality menu and the in-page full screen */
+.yp { position: relative; }
+.yp-q { min-width: 3.4em; border: 1px solid rgba(255, 255, 255, .25) !important; }
+.yp-qmenu { position: absolute; right: .6em; bottom: 3.2em; z-index: 5; width: min(320px, calc(100% - 1.2em)); box-sizing: border-box; background: #fff; color: var(--body); border-radius: 14px; box-shadow: 0 12px 34px rgba(0, 0, 0, .35); padding: .8em .9em; font-family: var(--sans); }
+.yp-qmenu-h { font-size: .9em; color: var(--ink); }
+.yp-qmenu p { font-size: .8em; color: var(--muted); margin: .35em 0 .6em; line-height: 1.45; }
+.yp-qmenu button, .markdown-section .yp-qmenu a { display: flex; flex-direction: column; align-items: flex-start; width: 100%; box-sizing: border-box; text-align: left; font: 700 .86em var(--sans); color: var(--ink); background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: .55em .7em; margin-top: .4em; cursor: pointer; text-decoration: none; }
+.yp-qmenu button:hover, .markdown-section .yp-qmenu a:hover { border-color: var(--brand); background: var(--brand-xl); }
+.yp-qmenu small { font-weight: 500; color: var(--muted); font-size: .9em; }
+.yp.yp-max { position: fixed; inset: 0; z-index: 2000; border-radius: 0; display: flex; flex-direction: column; background: #000; }
+.yp.yp-max .yp-screen { flex: 1; aspect-ratio: auto; }
+body.yp-lock { overflow: hidden; }
+body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
+.yp:fullscreen .yp-screen, .yp:-webkit-full-screen .yp-screen { flex: 1; aspect-ratio: auto; }
