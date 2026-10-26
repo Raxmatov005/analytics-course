@@ -496,3 +496,8 @@ body.db-on #sq-db-shade { opacity: 1; pointer-events: auto; }
 body.yp-lock { overflow: hidden; }
 body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
 .yp:fullscreen .yp-screen, .yp:-webkit-full-screen .yp-screen { flex: 1; aspect-ratio: auto; }
+
+/* the sidebar stays fixed without Docsify's "sticky" mode, and only nav.js marks the current section (nav.js) */
+.sidebar, .sidebar-toggle { position: fixed; }
+.sidebar .app-sub-sidebar li.active > a { box-shadow: none; background: transparent; font-weight: 400; color: var(--muted) !important; }
+.sidebar .app-sub-sidebar li.nav-here > a { box-shadow: inset 2px 0 0 var(--brand); background: transparent; font-weight: 700; color: var(--brand-d) !important; }
