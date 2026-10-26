@@ -154,7 +154,7 @@ The as-of date appears four times. In SQL Server, make it a parameter with an in
 
 ## 3. Practice (50 min)
 
-File `week-03/day-4/practice.sql`. Work on a **copy** of `nur.db` (indexes and tables change the file).
+Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer. Indexes and new tables change only your practice copy of the database — **Database → ↺ Reset** brings the original back.
 
 **P1.** Create `v_payments_clean` and prove it: rows, total, distinct methods, and that no instalment has two rows left.
 

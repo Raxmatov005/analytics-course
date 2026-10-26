@@ -153,7 +153,7 @@ Why `ROW_NUMBER` and not `GROUP BY … HAVING COUNT(*) > 1` (week 2's T21)? `HAV
 
 ## 3. Practice (50 min)
 
-File `week-03/day-2/practice.sql`.
+Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
 
 **P1.** Branches ranked by outstanding with `ROW_NUMBER`, `RANK` and `DENSE_RANK`. Why do all three agree here, and what would make them differ?
 

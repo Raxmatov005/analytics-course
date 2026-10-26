@@ -155,7 +155,7 @@ Check: the shares add to 100.0 and the outstanding to 208 723 504 430 — Friday
 
 ## 3. Practice (60 min)
 
-File `week-03/day-1/practice.sql`. One query per task; `-- result:` under each.
+Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
 
 **P1.** Every loan with the company total, the company average and how many loans there are — on each row. Then the same for loans of customer 3208 only; explain why the total changed.
 

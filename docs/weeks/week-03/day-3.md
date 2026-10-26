@@ -150,7 +150,7 @@ Loan 1: instalments 1–6 all `late30 = 0`, so `ever30 = 0` at every MOB — the
 
 ## 3. Practice (50 min)
 
-File `week-03/day-3/practice.sql`. Also due today: **HW 3.1** in `day-1/`.
+Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer. Also due today: **HW 3.1** (Day 1's hand-in box).
 
 **P1.** Loans larger than the average SME loan (scalar subquery), by product. Why is the answer not "all SME loans above average" only?
 
