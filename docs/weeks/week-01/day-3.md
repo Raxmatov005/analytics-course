@@ -103,7 +103,7 @@ Read it aloud: *"a demo row must have an id (unique) and a loan it belongs to (w
 
 ### DML — changing rows
 
-**DML** (Data Manipulation Language) changes *rows*: `INSERT`, `UPDATE`, `DELETE`. **Rule for this course: DML only on tables whose name starts with `scratch_` or `my_`.** The eleven course tables are read-only for you; if you change them, every "expect 7828" on every page stops being true, and your homework numbers will not match the keys. If it happens anyway: on SQL Server, drop the `nur` database and load it again (Day 1, Path A steps 3–4). On SQLite your tool writes into `data/raw/nur.db` itself, so reopening the file undoes nothing: before today's practice, copy `nur.db` to a spare file (e.g. `nur_backup.db`), and if a course table changes, close the tool and copy the spare back.
+**DML** (Data Manipulation Language) changes *rows*: `INSERT`, `UPDATE`, `DELETE`. **Rule for this course: DML only on tables whose name starts with `scratch_` or `my_`.** The eleven course tables are read-only for you; if you change them, every "expect 7828" on every page stops being true, and your homework numbers will not match the keys. If it happens anyway: everything you run here changes only *your practice copy* of the database, kept on your device. Open **Database** (bottom right) → **↺ Reset**, and the original data is back. Your homework checks always read the original, so they stay right either way.
 
 ```sql
 INSERT INTO scratch_demo (demo_id, loan_id, note, created_on)
@@ -195,7 +195,7 @@ Name every normalisation problem you see and which normal form it breaks.
 **P4.** Create the restructurings table from the worked example in your own database, named `scratch_restructurings` — the two keyed copies first, then the table. Check it exists with `SELECT COUNT(*) FROM scratch_restructurings;` (expect 0).
 
 <details><summary>Answer</summary>
-The DDL above, in your engine's dialect. On SQLite, foreign keys are only enforced while the connection has them switched on: run `PRAGMA foreign_keys = ON;` on its own first (it has no effect inside an open transaction). DB Browser usually switches them on for you (*Edit → Preferences → Database → Foreign keys*).
+The DDL above, in your engine's dialect. On SQLite, foreign keys are only enforced while the connection has them switched on: run `PRAGMA foreign_keys = ON;` on its own first (it has no effect inside an open transaction).
 </details>
 
 **P5.** Insert three rows: restructurings for loans 2242, 4567 and 4503 (three real, currently active loans that are the furthest behind), requested on 2026-09-28, old term 24, new term 36, reason `business_down`, status `requested`, decided_on and approved_by empty. Then count.

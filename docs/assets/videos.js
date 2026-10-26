@@ -42,22 +42,123 @@ Nothing loads from YouTube until a thumbnail is shown or play is tapped. */
   function cardHtml(v, i) {
     return '<div class="yt" data-i="' + i + '"><button type="button" class="yt-thumb" aria-label="Watch here">' +
       '<img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + v.id + '/mqdefault.jpg"><span class="yt-play">▶</span>' +
-      (v.t || v.end ? '<span class="yt-at">' + (v.end ? clock(v.t) + ' – ' + clock(v.end) : 'from ' + clock(v.t)) + '</span>' : '') + '</button>' +
+      (v.t || v.end ? '<span class="yt-at">' + (v.end ? clock(v.end - v.t) : 'from ' + clock(v.t)) + '</span>' : '') + '</button>' +
       '<div class="yt-body"><div class="yt-title">' + esc(v.topic) + '</div>' +
       ((v.title || v.len) ? '<div class="yt-meta">' + esc([v.title, v.len].filter(Boolean).join(' · ')) + '</div>' : '') +
-      '<div class="yt-acts"><button type="button" class="yt-go">▶ Watch here</button>' +
-      '<a class="yt-out" target="_blank" rel="noopener" href="' + esc(v.href) + '">Open on YouTube</a></div></div></div>';
+      '<div class="yt-acts"><button type="button" class="yt-go">▶ Watch this part</button></div></div></div>';
   }
+  /* The part player. YouTube's own controls show the whole video (30 hours for Baraa's course), so they are hidden
+     (controls=0, a cover over the frame takes every tap) and ours show only the part: time and slider run from 0 to
+     the part's length, seeking stays inside it, and at the part's end the video stops. YouTube IFrame API. */
+  var apiReady = null;
+  function api() {
+    if (apiReady) return apiReady;
+    apiReady = new Promise(function (ok, bad) {
+      if (window.YT && window.YT.Player) return ok(window.YT);
+      var prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function () { if (prev) prev(); ok(window.YT); };
+      var s = document.createElement('script');
+      s.src = 'https://www.youtube.com/iframe_api';
+      s.onerror = function () { apiReady = null; bad(); };
+      document.head.appendChild(s);
+    });
+    return apiReady;
+  }
+  var SPEEDS = [1, 1.25, 1.5, 2, 0.75];
   function play(card, v) {
     if (card.classList.contains('yt-on')) return;
-    var f = document.createElement('iframe');
-    f.className = 'yt-frame';
-    f.src = 'https://www.youtube-nocookie.com/embed/' + v.id + '?autoplay=1&rel=0' + (v.t ? '&start=' + v.t : '') + (v.end ? '&end=' + v.end : '');
-    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-    f.allowFullscreen = true;
     card.classList.add('yt-on');
-    card.querySelector('.yt-thumb').replaceWith(f);
-    card.querySelector('.yt-go').remove();
+    var stage = document.createElement('div');
+    stage.className = 'yp';
+    stage.innerHTML = '<div class="yp-screen"><div class="yp-frame"></div>' +
+      '<button type="button" class="yp-cover" aria-label="Play or pause"><span class="yp-big">▶</span></button>' +
+      '<div class="yp-done" hidden><div class="yp-done-t">✓ End of this part</div><button type="button" class="yp-again">↺ Watch it again</button></div></div>' +
+      '<div class="yp-bar"><button type="button" class="yp-pp" aria-label="Play or pause">▶</button>' +
+      '<span class="yp-time">0:00 / …</span>' +
+      '<div class="yp-track" role="slider" aria-label="Position in this part" tabindex="0"><div class="yp-fill"></div><div class="yp-knob"></div></div>' +
+      '<button type="button" class="yp-speed" aria-label="Speed">1×</button>' +
+      '<button type="button" class="yp-cc" aria-label="Subtitles">CC</button>' +
+      '<button type="button" class="yp-full" aria-label="Full screen">⛶</button></div>';
+    card.querySelector('.yt-thumb').replaceWith(stage);
+    var go = card.querySelector('.yt-go');
+    if (go) go.remove();
+    var $ = function (c) { return stage.querySelector(c); };
+    var start = v.t, end = v.end || 0, p = null, timer = null, sp = 0, cc = false, dragging = false;
+    function len() { return Math.max(1, end - start); }
+    function playing() { return p && p.getPlayerState && p.getPlayerState() === 1; }
+    function seek(f) { if (!p) return; f = Math.min(1, Math.max(0, f)); $('.yp-done').hidden = true; p.seekTo(start + f * len() - (f >= 1 ? 1 : 0), true); }
+    function paint() {
+      if (!document.body.contains(stage)) { clearInterval(timer); try { p.destroy(); } catch (e) { /* gone */ } return; }
+      if (!p || !p.getCurrentTime) return;
+      var t = p.getCurrentTime();
+      if (end && t >= end - 0.25) {   // the part is over: stop here, never run into the next topic
+        if (playing()) p.pauseVideo();
+        if (t > end + 1) p.seekTo(end - 0.5, true);
+        $('.yp-done').hidden = false;
+        t = end;
+      } else if (t < start - 1) p.seekTo(start, true);
+      var rel = Math.max(0, t - start);
+      if (!dragging) {
+        var f = Math.min(1, rel / len());
+        $('.yp-fill').style.width = (f * 100) + '%';
+        $('.yp-knob').style.left = (f * 100) + '%';
+      }
+      $('.yp-time').textContent = clock(Math.round(rel)) + ' / ' + clock(Math.round(len()));
+      var on = playing() && !(end && t >= end - 0.25);
+      $('.yp-pp').textContent = on ? '❚❚' : '▶';
+      $('.yp-big').hidden = on;
+      stage.classList.toggle('yp-paused', !on);
+    }
+    function toggle() {
+      if (!p) return;
+      if (playing()) p.pauseVideo();
+      else { if (end && p.getCurrentTime() >= end - 0.5) p.seekTo(start, true); $('.yp-done').hidden = true; p.playVideo(); }
+    }
+    $('.yp-cover').onclick = toggle;
+    $('.yp-pp').onclick = toggle;
+    $('.yp-again').onclick = function (e) { e.stopPropagation(); seek(0); p.playVideo(); };
+    $('.yp-speed').onclick = function () { sp = (sp + 1) % SPEEDS.length; if (p) p.setPlaybackRate(SPEEDS[sp]); $('.yp-speed').textContent = SPEEDS[sp] + '×'; };
+    $('.yp-cc').onclick = function () {
+      if (!p) return;
+      cc = !cc;
+      try { if (cc) { p.loadModule('captions'); p.setOption('captions', 'track', { languageCode: 'en' }); } else p.unloadModule('captions'); } catch (e) { /* no captions */ }
+      $('.yp-cc').classList.toggle('on', cc);
+    };
+    $('.yp-full').onclick = function () {
+      var fs = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fs) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else (stage.requestFullscreen || stage.webkitRequestFullscreen || function () {}).call(stage);
+    };
+    var track = $('.yp-track');
+    function frac(e) { var r = track.getBoundingClientRect(); return (e.clientX - r.left) / r.width; }
+    function show(f) { f = Math.min(1, Math.max(0, f)); $('.yp-fill').style.width = (f * 100) + '%'; $('.yp-knob').style.left = (f * 100) + '%'; }
+    track.addEventListener('pointerdown', function (e) { dragging = true; track.setPointerCapture(e.pointerId); show(frac(e)); });
+    track.addEventListener('pointermove', function (e) { if (dragging) show(frac(e)); });
+    track.addEventListener('pointerup', function (e) { if (!dragging) return; dragging = false; seek(frac(e)); });
+    track.addEventListener('keydown', function (e) {
+      if (!p) return;
+      var rel = p.getCurrentTime() - start;
+      if (e.key === 'ArrowRight') { e.preventDefault(); seek((rel + 10) / len()); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); seek((rel - 10) / len()); }
+    });
+    api().then(function (YT) {
+      p = new YT.Player($('.yp-frame'), {
+        videoId: v.id, host: 'https://www.youtube-nocookie.com',
+        playerVars: { start: start, controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, fs: 0, cc_load_policy: 0 },
+        events: {
+          onReady: function () {
+            if (!end) end = Math.floor(p.getDuration()) || start + 600;
+            p.playVideo();
+            timer = setInterval(paint, 250);
+            paint();
+          }
+        }
+      });
+    }).catch(function () {   // the API could not load: the plain player, still starting and ending at the part
+      $('.yp-screen').innerHTML = '<iframe class="yt-frame" allow="autoplay; encrypted-media; fullscreen" allowfullscreen src="https://www.youtube-nocookie.com/embed/' +
+        v.id + '?autoplay=1&rel=0&start=' + start + (v.end ? '&end=' + v.end : '') + '"></iframe>';
+      $('.yp-bar').remove();
+    });
   }
   function build() {
     var sec = document.querySelector('.markdown-section');

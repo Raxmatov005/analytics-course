@@ -35,7 +35,7 @@ Running through all eight weeks: the **Company & metrics** track — the loan li
 
 | Day | Page | Homework |
 |---|---|---|
-| 1 | [How a company keeps its data](weeks/week-01/day-1.md) — tables, keys, install, loan lifecycle | HW 1.1 (due D3) |
+| 1 | [How a company keeps its data](weeks/week-01/day-1.md) — tables, keys, your SQL workspace, loan lifecycle | HW 1.1 (due D3) |
 | 2 | [Your first queries](weeks/week-01/day-2.md) — SELECT, WHERE, ORDER BY, approval rate | HW 1.2 (due D4) |
 | 3 | [Tables that talk to each other](weeks/week-01/day-3.md) — ER model, normalisation, DDL/DML, DPD & FPD | — |
 | 4 | [Warehouses, stars and a detective case](weeks/week-01/day-4.md) — OLTP/OLAP, star schema, duplicate customers | HW 1.3 (due D5) |

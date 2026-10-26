@@ -66,16 +66,4 @@ Every real day ends with a quiz like this; 80 % finishes the day. This one is pr
 
 ---
 
-<details>
-<summary>Optional — the computer way (GitHub Desktop and DB Browser)</summary>
-
-Not needed for this course. Good to know for a job, where analysts keep their work in GitHub and query a database in an app.
-
-1. Install **GitHub Desktop** (https://desktop.github.com), sign in, then *File → Clone repository* → **Raxmatov005/analytics-course** → **Clone**.
-2. Install **DB Browser for SQLite** (https://sqlitebrowser.org/dl/), *Open Database* → `data/raw/nur.db` in the course folder, tab **Execute SQL**.
-3. Save your answers as `submissions/practice/answers.sql` (in Notepad choose *Save as type: All files*).
-4. In GitHub Desktop: *Summary* `Practice: 3 warm-up queries` → **Commit to main** → **Push origin**. Then in the bot tap **📤 Hand in homework** → **Practice day** → **I pushed it to GitHub instead**.
-
-Both ways count the same.
-
-</details>
+Later, for a job: **[Tools at work](tools-at-work.md)** shows how analysts do the same with installed apps. Not needed for this course.

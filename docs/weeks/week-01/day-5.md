@@ -10,7 +10,7 @@
 - **Part B (40 pts):** twenty queries on Nur Finance using only this week's SQL — single-table `SELECT`, `WHERE`, `ORDER BY`, `DISTINCT`, `TOP`/`LIMIT`, `COUNT(*)`.
 - **Part C (20 pts):** eight interview questions answered in writing, 3–5 sentences each.
 
-**Rules.** Open book: your notes, this week's pages, your query tool. Closed: the answer folds until you have submitted. No `JOIN`, `GROUP BY` or subqueries in Part B — if you know them, resist; the point is to show the basics are solid. Submit everything to **`submissions/week-01/day-5/`** by the end of the day: `nur_pay.md` + `nur_pay.sql` (Part A), `queries.sql` (Part B, each query with `-- Bn:` above and `-- result:` below), `interview.md` (Part C).
+**Rules.** Open book: your notes, this week's pages, the SQL boxes and the playground. Closed: the answer folds until you have submitted. No `JOIN`, `GROUP BY` or subqueries in Part B — if you know them, resist; the point is to show the basics are solid. Submit everything to **`submissions/week-01/day-5/`** by the end of the day: `nur_pay.md` + `nur_pay.sql` (Part A), `queries.sql` (Part B, each query with `-- Bn:` above and `-- result:` below), `interview.md` (Part C).
 
 ---
 

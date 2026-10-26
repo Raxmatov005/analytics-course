@@ -1,6 +1,6 @@
 # Week 1 · Day 1 — How a company keeps its data
 
-<span class="badge">Learn 60 min</span> <span class="badge">Practice 60 min</span> <span class="badge">Setup 45 min</span> <span class="badge company">Company corner</span>
+<span class="badge">Learn 60 min</span> <span class="badge">Practice 60 min</span> <span class="badge">Workspace 15 min</span> <span class="badge company">Company corner</span>
 
 > STORY **Monday, 9:02.** You badge into Nur Finance for the first time. Your lead, Madina, puts a coffee on your desk and says: *"We lend money to people and small businesses. Everything that happens — every application, every loan, every payment that comes in late — ends up in a database. Your job is to turn that database into answers. Today: learn how it's organised and get it running on your laptop. Tomorrow you write your first query."*
 
@@ -80,56 +80,15 @@ Now you can read the whole database as sentences:
 
 ---
 
-## 2. Set up your tools (45 min)
+## 2. Your SQL workspace (15 min)
 
-**Start with nothing to install.** Every SQL box on these pages has **▶ Run** and works on the full Nur Finance database. The **Database** button at the bottom right opens the database panel — every table, its columns, its keys and a 5-row preview — like the panel in DBeaver or DataGrip at work. Tap a name to put it into your query. Try it here:
+**Nothing to install — ever.** Every SQL box on these pages has **▶ Run** and works on the full Nur Finance database. The **Database** button at the bottom right opens the database panel — every table, its columns, its keys and its rows — like the panel in DBeaver or DataGrip at work. Tap a name to put it into your query. For free practice (creating tables, inserting, updating, deleting) there is the **[SQL playground](playground.md)**: your own copy of the database, kept on your device. Try it here:
 
 ```sql
 SELECT COUNT(*) AS loans FROM loans;   -- expect 7828
 ```
 
-The two paths below install the real tools banks use. They are **optional** for this course — do one when you have an evening, because interviewers like to hear you have used SSMS or DBeaver.
 
-If you try one: **Path A** is what banks and the video use; **Path B** takes 10 minutes. If an install fights you for more than 30 minutes, stop — the boxes on these pages are enough for the whole SQL part.
-
-<details>
-<summary><b>Path A — SQL Server Express + SSMS (recommended)</b></summary>
-
-1. Download **SQL Server 2022 Express** (free): https://www.microsoft.com/en-us/sql-server/sql-server-downloads → *Express* → run the installer → **Basic**.
-2. Download **SQL Server Management Studio (SSMS)**: https://aka.ms/ssmsfullsetup → install → open → *Connect* with the server name the Express installer showed (usually `localhost\SQLEXPRESS`), Windows Authentication.
-3. In SSMS: *File → New → Query*. Paste and run (F5):
-
-```sql
-CREATE DATABASE nur;
-GO
-USE nur;
-GO
-```
-
-4. Open the file `data/sql/sqlserver.sql` from the course folder (*File → Open*). Run the **CREATE TABLE** block first (select it, F5), then the **BULK INSERT** lines. If `BULK INSERT` complains about the path, edit the path to where your course folder is.
-5. Check:
-
-```sql
-SELECT COUNT(*) AS loans FROM loans;        -- expect 7828
-SELECT COUNT(*) AS customers FROM customers; -- expect 6040
-```
-
-▶ Baraa shows the same install at [0:22:33](https://youtu.be/SSKVgrwhzus?t=1353&end=2041).
-</details>
-
-<details>
-<summary><b>Path B — SQLite with DB Browser (10-minute fallback)</b></summary>
-
-1. Download **DB Browser for SQLite**: https://sqlitebrowser.org/dl/ → Windows installer → install.
-2. *Open Database* → choose `data/raw/nur.db` in the course folder. All 11 tables are already there.
-3. Tab *Execute SQL* → paste → Ctrl+Enter:
-
-```sql
-SELECT COUNT(*) AS loans FROM loans;  -- expect 7828
-```
-
-Differences you will meet: SQLite writes `LIMIT 10` where SQL Server writes `TOP 10`; dates are text in `YYYY-MM-DD`. The pages always show both when they differ.
-</details>
 
 ---
 
@@ -210,9 +169,9 @@ Any two of: empty monthly_income cells; a birth date in the future or 1900-01-01
 
 ## 5. Homework <span class="badge hw">Due Day 3</span>
 
-**HW 1.1 — Your tool is ready.** Submit to `submissions/week-01/day-1/`:
+**HW 1.1 — Your workspace works.** Submit to `submissions/week-01/day-1/`:
 
-1. `screenshot.png` — your query tool showing `SELECT COUNT(*) FROM loans;` with the result **7828**.
+1. `screenshot.png` — a ▶ Run box on this page showing `SELECT COUNT(*) FROM loans;` with the result **7828**.
 2. `answers.md` — your P1–P8 answers (after checking: mark where you were wrong and what you learned).
 3. `loan-1.md` — the one-sentence story of loan 1 from the worked example.
 
@@ -289,7 +248,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w01d1", "q": "Without writing any join yet: how many of the 11 Nur Finance tables have a column called loan_id? (Count the loans table too.)", "type": "number", "dp": 0, "h": ["5ed11dd9bd72633a27942522"], "hint": "Open each table's columns (SSMS: expand the table → Columns; DB Browser: Database Structure tab). A primary key named loan_id counts as well as a foreign key.", "sol": "NCB0YWJsZXM6IGxvYW5zIChsb2FuX2lkIGlzIGl0cyBwcmltYXJ5IGtleSksIGluc3RhbGxtZW50cywgcGF5bWVudHMgYW5kIGNvbGxlY3Rpb25zX2FjdGlvbnMgKHRoZXJlIGl0IGlzIGEgZm9yZWlnbiBrZXkgcG9pbnRpbmcgYmFjayB0byBsb2FucykuCk5vdCBhcHBsaWNhdGlvbnMgKGEgbG9hbiBwb2ludHMgdG8gaXRzIGFwcGxpY2F0aW9uLCBub3QgdGhlIG90aGVyIHdheSByb3VuZCkgYW5kIG5vdCBhcHBfZXZlbnRzICh0aGV5IHBvaW50IHRvIGFwcGxpY2F0aW9ucykuClRoZSBwYXR0ZXJuIHRvIHJlbWVtYmVyOiB0aGUgJ21hbnknIHNpZGUgY2FycmllcyB0aGUga2V5IG9mIHRoZSAnb25lJyBzaWRlLg=="}
+{"id": "w01d1", "q": "Without writing any join yet: how many of the 11 Nur Finance tables have a column called loan_id? (Count the loans table too.)", "type": "number", "dp": 0, "h": ["5ed11dd9bd72633a27942522"], "hint": "Open each table in the Database panel (bottom right) and read its columns. A primary key named loan_id counts as well as a foreign key.", "sol": "NCB0YWJsZXM6IGxvYW5zIChsb2FuX2lkIGlzIGl0cyBwcmltYXJ5IGtleSksIGluc3RhbGxtZW50cywgcGF5bWVudHMgYW5kIGNvbGxlY3Rpb25zX2FjdGlvbnMgKHRoZXJlIGl0IGlzIGEgZm9yZWlnbiBrZXkgcG9pbnRpbmcgYmFjayB0byBsb2FucykuCk5vdCBhcHBsaWNhdGlvbnMgKGEgbG9hbiBwb2ludHMgdG8gaXRzIGFwcGxpY2F0aW9uLCBub3QgdGhlIG90aGVyIHdheSByb3VuZCkgYW5kIG5vdCBhcHBfZXZlbnRzICh0aGV5IHBvaW50IHRvIGFwcGxpY2F0aW9ucykuClRoZSBwYXR0ZXJuIHRvIHJlbWVtYmVyOiB0aGUgJ21hbnknIHNpZGUgY2FycmllcyB0aGUga2V5IG9mIHRoZSAnb25lJyBzaWRlLg=="}
 ```
 
 <!-- challenge:end -->

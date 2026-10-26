@@ -83,14 +83,50 @@ Work in progress is kept in localStorage "al.sql". */
       return fetch(REPO_RAW + 'data/raw/nur.db').then(function (r) { return r.arrayBuffer(); });
     });
   }
+  /* her practice copy lives in IndexedDB (the browser's own storage, big enough for 10 MB): key "play" in "al-db" */
+  var SQLJS = null, base = null, saveTimer = null;
+  function idb(op, value) {
+    return new Promise(function (ok) {
+      try {
+        var rq = indexedDB.open('al-db', 1);
+        rq.onupgradeneeded = function () { rq.result.createObjectStore('kv'); };
+        rq.onerror = function () { ok(null); };
+        rq.onsuccess = function () {
+          var tx = rq.result.transaction('kv', op === 'get' ? 'readonly' : 'readwrite'), st = tx.objectStore('kv');
+          var r = op === 'get' ? st.get('play') : op === 'put' ? st.put(value, 'play') : st.delete('play');
+          r.onsuccess = function () { ok(op === 'get' ? r.result || null : true); };
+          r.onerror = function () { ok(null); };
+        };
+      } catch (e) { ok(null); }
+    });
+  }
+  var CHANGES = /\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|REPLACE)\b/i;
+  function runPlay(text) {   // every run on her copy; a change is saved shortly after, and the Database panel refreshes
+    var res = run(play, text, false);
+    if (CHANGES.test(stripComments(text)) && res.ran) {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () { idb('put', play.export()); }, 300);
+      document.dispatchEvent(new Event('al-db-changed'));
+    }
+    return res;
+  }
+  function resetPlay() {
+    if (!SQLJS || !base) return Promise.resolve();
+    try { play.close(); } catch (e) { /* already closed */ }
+    play = new SQLJS.Database(base.slice());
+    return idb('delete').then(function () { document.dispatchEvent(new Event('al-db-changed')); });
+  }
   function ready() {
     if (engine) return engine;
     engine = loadScript(ENGINE + 'sql-wasm.js')
       .then(function () { return window.initSqlJs({ locateFile: function (f) { return ENGINE + f; } }); })
       .then(function (SQL) {
-        return dbBytes().then(function (buf) {
-          var bytes = new Uint8Array(buf);
-          play = new SQL.Database(bytes);           // examples may change this one
+        return Promise.all([dbBytes(), idb('get')]).then(function (a) {
+          var bytes = new Uint8Array(a[0]);
+          SQLJS = SQL; base = bytes;
+          // her practice copy: whatever she created, inserted, updated or deleted, kept on this device until Reset
+          try { play = a[1] ? new SQL.Database(a[1]) : new SQL.Database(bytes.slice()); }
+          catch (e) { play = new SQL.Database(bytes.slice()); }
           clean = new SQL.Database(bytes.slice());  // checks always read the untouched data
         });
       });
@@ -132,6 +168,7 @@ Work in progress is kept in localStorage "al.sql". */
             out.last = r; out.rows = r.values.length;
             r.values.forEach(function (row) { row.forEach(function (v) { out.cells.push(v); }); });
           } else if (/^\s*(SELECT|WITH)\b/i.test(tries[i])) { out.last = { columns: [], values: [] }; out.rows = 0; }
+          else { out.changed = (out.changed || 0) + db.getRowsModified(); out.kind = (/^\s*(\w+)/.exec(tries[i]) || [])[1]; }
           done = true;
         } catch (e) { out.error = e.message; }
       }
@@ -140,10 +177,16 @@ Work in progress is kept in localStorage "al.sql". */
   }
   function table(res) {
     if (res.error) return '<div class="sq-err">⚠ ' + esc(res.error) + '</div>';
-    if (!res.last) return '<div class="sq-note">Done' + (res.ran ? ' (' + res.ran + ' statement' + (res.ran > 1 ? 's' : '') + ')' : '') + '.</div>';
+    if (!res.last) {
+      var kind = (res.kind || '').toUpperCase();
+      return '<div class="sq-done">✓ Done' + (/INSERT|UPDATE|DELETE|REPLACE/.test(kind) ? ' — ' + res.changed + ' row' + (res.changed === 1 ? '' : 's') + ' changed' :
+        /CREATE|DROP|ALTER/.test(kind) ? ' — table ' + (kind === 'DROP' ? 'removed' : kind === 'CREATE' ? 'created' : 'changed') : '') +
+        '. Saved in your practice copy of the database (Database → Reset brings back the original).</div>';
+    }
     var r = res.last, shown = r.values.slice(0, 50);
-    if (!r.columns.length) return '<div class="sq-note">0 rows.</div>';
-    return '<div class="sq-note">' + r.values.length + ' row' + (r.values.length === 1 ? '' : 's') + (r.values.length > 50 ? ' (first 50 shown)' : '') + '</div>' +
+    var saved = res.changed != null ? '<div class="sq-done">✓ Your changes are saved in your practice copy of the database.</div>' : '';
+    if (!r.columns.length) return saved + '<div class="sq-note">0 rows.</div>';
+    return saved + '<div class="sq-note">' + r.values.length + ' row' + (r.values.length === 1 ? '' : 's') + (r.values.length > 50 ? ' (first 50 shown)' : '') + '</div>' +
       '<div class="sq-scroll"><table class="sq-table"><thead><tr>' + r.columns.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') +
       '</tr></thead><tbody>' + shown.map(function (row) { return '<tr>' + row.map(function (v) { return '<td>' + (v === null ? '<i>NULL</i>' : esc(v)) + '</td>'; }).join('') + '</tr>'; }).join('') +
       '</tbody></table></div>';
@@ -202,7 +245,7 @@ Work in progress is kept in localStorage "al.sql". */
     rs.onclick = function () { ta.value = code; fit(ta); rs.hidden = true; out.innerHTML = ''; };
     box.querySelector('.sq-run').onclick = function () {
       out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
-      ready().then(function () { out.innerHTML = table(run(play, ta.value, false)); })
+      ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
         .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the internet connection and try again.</div>'; });
     };
   }
@@ -282,7 +325,7 @@ Work in progress is kept in localStorage "al.sql". */
       if (t.text) { msg.textContent = 'At least ' + (t.minLines || 3) + ' lines.'; return; }
       c.querySelector('.sq-run').onclick = function () {
         out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
-        ready().then(function () { out.innerHTML = table(run(play, ta.value, false)); }).catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — try again.</div>'; });
+        ready().then(function () { out.innerHTML = table(runPlay(ta.value)); }).catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — try again.</div>'; });
       };
       c.querySelector('.sq-check').onclick = function () { checkOne(t, c).then(foot); };
     });
@@ -371,64 +414,139 @@ Work in progress is kept in localStorage "al.sql". */
   };
   var lastEditor = null;
   document.addEventListener('focusin', function (e) { if (e.target.classList && e.target.classList.contains('sq-edit')) lastEditor = e.target; });
-  function insert(text) {
+  function insert(text, block) {
     var ta = lastEditor && document.body.contains(lastEditor) ? lastEditor : document.querySelector('.sq-edit');
     if (!ta) return;
     var a = ta.selectionStart || 0, b = ta.selectionEnd || 0;
+    if (block && ta.value.slice(0, a).trim()) text = (/\n\s*$/.test(ta.value.slice(0, a)) ? '\n' : '\n\n') + text;   // a whole query starts on its own line
     ta.value = ta.value.slice(0, a) + text + ta.value.slice(b);
     ta.selectionStart = ta.selectionEnd = a + text.length;
     ta.focus(); ta.dispatchEvent(new Event('input'));
   }
+  /* ---------- the Database panel: every table of her practice copy, like the schema tree in DBeaver or DataGrip ----------
+     A table opens to its columns (PK / FK marked; an FK jumps to the table it points to), the tables that point to it,
+     and three actions: put its name in the query, put a ready SELECT in the query, show its first rows. Tables she
+     created herself are listed apart. Reset brings the original data back. */
+  var ICON_T = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>';
+  var openTables = {}, toastTimer = null;
+  function toast(drawer, text) {
+    var t = drawer.querySelector('.db-toast');
+    t.textContent = text; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 1600);
+  }
+  function fmt(n) { return Number(n).toLocaleString('en').replace(/,/g, ' '); }
+  function tableCard(t, mine) {
+    var info = ABOUT[t] || ['a table you made', '', {}];
+    var rows = play.exec('SELECT COUNT(*) FROM "' + t + '"')[0].values[0][0];
+    var cols = play.exec('PRAGMA table_info("' + t + '")')[0].values;   // cid, name, type, notnull, default, pk
+    var into = Object.keys(ABOUT).filter(function (o) { return Object.keys(ABOUT[o][2]).some(function (c) { return ABOUT[o][2][c] === t; }); });
+    return '<div class="db-t' + (openTables[t] ? ' open' : '') + (mine ? ' mine' : '') + '" data-t="' + esc(t) + '">' +
+      '<button type="button" class="db-row"><span class="db-ico">' + ICON_T + '</span><span class="db-name"><b>' + esc(t) + '</b><small>' + esc(info[0]) + '</small></span>' +
+      '<span class="db-count">' + fmt(rows) + '</span><span class="db-caret">›</span></button>' +
+      '<div class="db-open">' +
+      '<div class="db-acts"><button type="button" class="db-act" data-do="name" data-v="' + esc(t) + '">+ Name</button>' +
+      '<button type="button" class="db-act" data-do="select" data-v="' + esc(t) + '">+ SELECT</button>' +
+      '<button type="button" class="db-act" data-do="rows" data-v="' + esc(t) + '">Show rows</button></div>' +
+      '<div class="db-cols">' + cols.map(function (c) {
+        var name = c[1], fk = info[2][name], pk = name === info[1] || c[5];
+        return '<div class="db-c"><button type="button" class="db-cn" data-v="' + esc(name) + '" title="Put in the query">' + esc(name) + '</button>' +
+          (pk ? '<span class="db-k pk" title="primary key: one value per row">PK</span>' : '') +
+          (fk ? '<button type="button" class="db-k fk" data-go="' + esc(fk) + '" title="foreign key: open ' + esc(fk) + '">→ ' + esc(fk) + '</button>' : '') +
+          '<span class="db-ty">' + esc((c[2] || '').toLowerCase()) + '</span></div>';
+      }).join('') + '</div>' +
+      (into.length ? '<div class="db-into">Pointed to by: ' + into.map(function (o) { return '<button type="button" class="db-k fk" data-go="' + esc(o) + '">' + esc(o) + '</button>'; }).join(' ') + '</div>' : '') +
+      '</div></div>';
+  }
+  function fill(drawer) {
+    var all = play.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")[0];
+    var names = all ? all.values.map(function (r) { return r[0]; }) : [];
+    var mine = names.filter(function (n) { return !ABOUT[n]; }), company = names.filter(function (n) { return ABOUT[n]; });
+    var missing = Object.keys(ABOUT).filter(function (n) { return names.indexOf(n) < 0; });
+    drawer.querySelector('.db-sub').textContent = company.length + ' company tables' + (mine.length ? ' · ' + mine.length + ' of yours' : '') + ' · your practice copy';
+    drawer.querySelector('.db-list').innerHTML =
+      (mine.length ? '<div class="db-sec">Your tables</div>' + mine.map(function (n) { return tableCard(n, true); }).join('') : '') +
+      '<div class="db-sec">Nur Finance tables</div>' + company.map(function (n) { return tableCard(n, false); }).join('') +
+      (missing.length ? '<div class="db-warn">Missing in your copy: ' + missing.map(esc).join(', ') + ' (dropped). Reset brings them back.</div>' : '');
+    var q = drawer.querySelector('.db-find').value;
+    if (q) filter(drawer, q);
+  }
+  function filter(drawer, q) {
+    q = q.trim().toLowerCase();
+    Array.prototype.forEach.call(drawer.querySelectorAll('.db-t'), function (d) {
+      var cols = d.querySelectorAll('.db-cn');
+      var hit = !q || d.dataset.t.indexOf(q) >= 0 || Array.prototype.some.call(cols, function (c) { return c.dataset.v.indexOf(q) >= 0; });
+      d.hidden = !hit;
+      d.classList.toggle('open', !!(q && hit && d.dataset.t.indexOf(q) < 0) || !!openTables[d.dataset.t]);
+      Array.prototype.forEach.call(cols, function (c) { c.classList.toggle('db-hit', !!q && c.dataset.v.indexOf(q) >= 0); });
+    });
+  }
   function explorer() {
     var drawer = document.getElementById('sq-db');
     if (drawer && drawer.dataset.failed) { drawer.remove(); drawer = null; }
-    if (drawer) { drawer.classList.toggle('open'); return; }
+    if (drawer) { drawer.classList.toggle('open'); document.body.classList.toggle('db-on', drawer.classList.contains('open')); return; }
     drawer = document.createElement('aside');
     drawer.id = 'sq-db';
     drawer.className = 'open';
-    drawer.innerHTML = '<div class="db-head"><b>Nur Finance database</b><button type="button" class="db-x" aria-label="Close">✕</button></div>' +
-      '<div class="db-tip">Tap a table to see its columns · tap a name to put it in your query · 👁 shows 5 rows.</div>' +
-      '<input class="db-find" type="search" placeholder="Find a table or column…"><div class="db-list sq-loading">Loading…</div><div class="db-prev"></div>';
+    drawer.setAttribute('aria-label', 'Database');
+    drawer.innerHTML = '<div class="db-head"><span class="db-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="8" ry="3"/>' +
+      '<path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span>' +
+      '<div class="db-title"><b>Nur Finance database</b><span class="db-sub">loading…</span></div>' +
+      '<button type="button" class="db-x" aria-label="Close">✕</button></div>' +
+      '<div class="db-search"><input class="db-find" type="search" placeholder="Find a table or column…" autocomplete="off"></div>' +
+      '<div class="db-list sq-loading">Opening the database…</div>' +
+      '<div class="db-prev" hidden></div>' +
+      '<div class="db-foot"><span>Tap a name to put it in your query.</span><button type="button" class="db-reset">↺ Reset</button></div>' +
+      '<div class="db-toast" hidden></div>';
+    var shade = document.createElement('div');
+    shade.id = 'sq-db-shade';
+    shade.onclick = close;
+    document.body.appendChild(shade);
     document.body.appendChild(drawer);
-    drawer.querySelector('.db-x').onclick = function () { drawer.classList.remove('open'); };
+    document.body.classList.add('db-on');
+    function close() { drawer.classList.remove('open'); document.body.classList.remove('db-on'); }
+    drawer.querySelector('.db-x').onclick = close;
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && drawer.classList.contains('open')) close(); });
     ready().then(function () {
-      var tables = play.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")[0].values.map(function (r) { return r[0]; });
-      var html = tables.map(function (t) {
-        var info = ABOUT[t] || ['', '', {}], rows = play.exec('SELECT COUNT(*) FROM "' + t + '"')[0].values[0][0];
-        var cols = play.exec('PRAGMA table_info("' + t + '")')[0].values;   // cid, name, type, notnull, default, pk
-        return '<details class="db-t" data-t="' + esc(t) + '"><summary><span class="db-tn">' + esc(t) + '</span><span class="db-rows">' + rows.toLocaleString('en').replace(/,/g, ' ') + '</span></summary>' +
-          '<div class="db-about">' + esc(info[0]) + '</div><div class="db-acts"><button type="button" class="db-ins" data-v="' + esc(t) + '">+ name</button>' +
-          '<button type="button" class="db-pv" data-v="' + esc(t) + '">👁 5 rows</button></div>' +
-          cols.map(function (c) {
-            var name = c[1], key = name === info[1] ? '<span class="db-k pk">PK</span>' : info[2][name] ? '<span class="db-k fk" title="points to ' + esc(info[2][name]) + '">FK → ' + esc(info[2][name]) + '</span>' : '';
-            return '<button type="button" class="db-c db-ins" data-v="' + esc(name) + '"><span>' + esc(name) + '</span>' + key + '<span class="db-ty">' + esc((c[2] || '').toLowerCase()) + '</span></button>';
-          }).join('') + '</details>';
-      }).join('');
+      fill(drawer);
+      document.addEventListener('al-db-changed', function () { fill(drawer); });
       var list = drawer.querySelector('.db-list');
-      list.innerHTML = html;
       list.addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
-        if (b.classList.contains('db-pv')) {
-          var res = run(play, 'SELECT * FROM "' + b.dataset.v + '" LIMIT 5', true);
-          drawer.querySelector('.db-prev').innerHTML = '<div class="db-prev-h">' + esc(b.dataset.v) + ' — first 5 rows <button type="button" class="db-prev-x">✕</button></div>' + table(res);
-          drawer.querySelector('.db-prev-x').onclick = function () { drawer.querySelector('.db-prev').innerHTML = ''; };
-        } else if (b.classList.contains('db-ins')) insert(b.dataset.v);
+        var card = b.closest('.db-t');
+        if (b.classList.contains('db-row')) {
+          openTables[card.dataset.t] = !card.classList.contains('open');
+          card.classList.toggle('open');
+        } else if (b.dataset.go) {
+          var to = list.querySelector('.db-t[data-t="' + b.dataset.go + '"]');
+          if (to) { openTables[b.dataset.go] = true; to.hidden = false; to.classList.add('open', 'db-flash'); to.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(function () { to.classList.remove('db-flash'); }, 1200); }
+        } else if (b.classList.contains('db-cn')) { insert(b.dataset.v); toast(drawer, '“' + b.dataset.v + '” added to your query'); }
+        else if (b.dataset.do === 'name') { insert(b.dataset.v); toast(drawer, '“' + b.dataset.v + '” added to your query'); }
+        else if (b.dataset.do === 'select') { insert('SELECT *\nFROM ' + b.dataset.v + '\nLIMIT 10;', true); toast(drawer, 'A SELECT on ' + b.dataset.v + ' is in your query'); }
+        else if (b.dataset.do === 'rows') {
+          var pv = drawer.querySelector('.db-prev');
+          pv.innerHTML = '<div class="db-prev-h"><b>' + esc(b.dataset.v) + '</b> · first 10 rows <button type="button" class="db-prev-x" aria-label="Close">✕</button></div>' +
+            table(run(play, 'SELECT * FROM "' + b.dataset.v + '" LIMIT 10', true));
+          pv.hidden = false;
+          pv.querySelector('.db-prev-x').onclick = function () { pv.hidden = true; };
+        }
       });
-      drawer.querySelector('.db-find').addEventListener('input', function () {
-        var q = this.value.trim().toLowerCase();
-        Array.prototype.forEach.call(list.querySelectorAll('.db-t'), function (d) {
-          var hit = !q || d.dataset.t.indexOf(q) >= 0 || Array.prototype.some.call(d.querySelectorAll('.db-c'), function (c) { return c.dataset.v.indexOf(q) >= 0; });
-          d.hidden = !hit;
-          if (q && hit) d.open = true;
-          Array.prototype.forEach.call(d.querySelectorAll('.db-c'), function (c) { c.classList.toggle('db-hit', !!q && c.dataset.v.indexOf(q) >= 0); });
-        });
-      });
+      drawer.querySelector('.db-find').addEventListener('input', function () { filter(drawer, this.value); });
+      var rs = drawer.querySelector('.db-reset');
+      rs.onclick = function () {
+        if (!rs.classList.contains('sure')) {
+          rs.classList.add('sure'); rs.textContent = 'Tap again: undo all my changes';
+          setTimeout(function () { rs.classList.remove('sure'); rs.textContent = '↺ Reset'; }, 4000);
+          return;
+        }
+        rs.classList.remove('sure'); rs.textContent = '↺ Reset';
+        resetPlay().then(function () { toast(drawer, 'The original data is back'); });
+      };
     }).catch(function () { drawer.querySelector('.db-list').textContent = 'Could not load the data — check the connection and tap Database again.'; drawer.dataset.failed = '1'; });
   }
   function dbButton() {
-    var has = document.querySelector('.markdown-section .sq-box, .markdown-section .sq-ws .sq-run');
+    var has = document.querySelector('.markdown-section .sq-box, .markdown-section .sq-ws .sq-run, .markdown-section .sq-play');
     var btn = document.getElementById('sq-db-btn');
-    if (!has) { if (btn) btn.hidden = true; var d = document.getElementById('sq-db'); if (d) d.classList.remove('open'); return; }
+    if (!has) { if (btn) btn.hidden = true; var d = document.getElementById('sq-db'); if (d) d.classList.remove('open'); document.body.classList.remove('db-on'); return; }
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'sq-db-btn'; btn.type = 'button'; btn.setAttribute('aria-label', 'Database: tables and columns');
@@ -500,7 +618,7 @@ Work in progress is kept in localStorage "al.sql". */
     box.querySelector('.sq-run').onclick = function () {
       if (!ta.value.trim()) { msg.textContent = 'Write a query first.'; return; }
       out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
-      ready().then(function () { out.innerHTML = table(run(play, ta.value, false)); })
+      ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
         .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the connection and try again.</div>'; });
     };
     if (!exam) box.querySelector('.sq-check').onclick = function () {
@@ -526,12 +644,55 @@ Work in progress is kept in localStorage "al.sql". */
     };
   }
 
+  /* ---------- 4. the playground (```sqlplay): one big editor on her practice copy, starters for every kind of
+     statement, the text kept in this browser (al.sql → playText) ---------- */
+  var STARTERS = [
+    ['SELECT', 'SELECT customer_id, first_name, last_name, region\nFROM customers\nWHERE region = \'Tashkent\'\nORDER BY customer_id\nLIMIT 20;'],
+    ['GROUP BY', 'SELECT status, COUNT(*) AS loans, SUM(principal) AS total\nFROM loans\nGROUP BY status\nORDER BY loans DESC;'],
+    ['JOIN', 'SELECT l.loan_id, c.first_name, c.last_name, p.name AS product, l.principal\nFROM loans l\nJOIN customers c ON c.customer_id = l.customer_id\nJOIN products p ON p.product_id = l.product_id\nLIMIT 20;'],
+    ['CREATE TABLE', 'CREATE TABLE my_notes (\n  note_id   INTEGER PRIMARY KEY,\n  loan_id   INTEGER REFERENCES loans(loan_id),\n  note      TEXT NOT NULL,\n  created   TEXT DEFAULT (date(\'now\'))\n);'],
+    ['INSERT', 'INSERT INTO my_notes (loan_id, note)\nVALUES (1, \'Called the customer\'),\n       (2, \'Paid early\');\n\nSELECT * FROM my_notes;'],
+    ['UPDATE', 'UPDATE my_notes\nSET note = \'Called twice\'\nWHERE note_id = 1;\n\nSELECT * FROM my_notes;'],
+    ['DELETE', 'DELETE FROM my_notes\nWHERE note_id = 2;\n\nSELECT * FROM my_notes;'],
+    ['DROP', 'DROP TABLE my_notes;']
+  ];
+  function playground(pre) {
+    var box = document.createElement('div');
+    box.className = 'sq-play';
+    box.innerHTML = '<div class="sq-play-chips"><span>Start from:</span>' + STARTERS.map(function (s, i) { return '<button type="button" data-i="' + i + '">' + s[0] + '</button>'; }).join('') + '</div>' +
+      '<div class="sq-box"><div class="sq-top"><span class="sq-lang">SQL · YOUR PRACTICE DATABASE</span><span class="sq-tip">saved in this browser</span>' +
+      '<button type="button" class="sq-reset">Clear</button></div>' +
+      '<textarea class="sq-edit sq-big" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="-- write any SQL here: SELECT, CREATE TABLE, INSERT, UPDATE, DELETE…"></textarea>' +
+      '<div class="sq-bar"><button type="button" class="sq-run">▶ Run</button><span class="sq-keys">Ctrl + Enter</span>' +
+      '<button type="button" class="sq-open-db">Database</button></div><div class="sq-out"></div></div>';
+    pre.parentNode.replaceChild(box, pre);
+    var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out');
+    ta.value = store().playText || STARTERS[0][1];
+    tabKeys(ta);
+    function keep() { var s = store(); s.playText = ta.value; save(s); }
+    ta.addEventListener('input', keep);
+    box.querySelector('.sq-reset').onclick = function () { ta.value = ''; keep(); out.innerHTML = ''; ta.focus(); };
+    box.querySelector('.sq-open-db').onclick = function () { var d = document.getElementById('sq-db'); if (!d || !d.classList.contains('open')) explorer(); };
+    Array.prototype.forEach.call(box.querySelectorAll('.sq-play-chips button'), function (b) {
+      b.onclick = function () { ta.value = STARTERS[Number(b.dataset.i)][1]; keep(); out.innerHTML = ''; ta.focus(); };
+    });
+    box.querySelector('.sq-run').onclick = function () {
+      if (!ta.value.trim()) return;
+      out.innerHTML = '<div class="sq-note sq-loading">' + (play ? 'Running…' : 'Opening the Nur Finance database (first time only)…') + '</div>';
+      ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
+        .catch(function () { out.innerHTML = '<div class="sq-err">Could not load the data — check the connection and try again.</div>'; });
+    };
+    lastEditor = ta;
+    if (window.innerWidth >= 1200) setTimeout(function () { var d = document.getElementById('sq-db'); if (!d || !d.classList.contains('open')) explorer(); }, 300);
+  }
+
   window.$docsify = window.$docsify || {};
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.doneEach(function () {
       var sec = document.querySelector('.markdown-section');
       if (!sec) return;
       Array.prototype.forEach.call(sec.querySelectorAll('details'), practice);
+      Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqlplay"]'), playground);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqltask"]'), workspace);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sql"]'), example);
       dbButton();

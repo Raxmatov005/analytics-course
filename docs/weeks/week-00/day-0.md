@@ -222,7 +222,7 @@ SQL __/8 · Excel __/8 · Python __/8 · Statistics __/8 · BI __/6
 [e.g. 3 h, 19:00–22:00; weekends free]
 
 ## Tools on my laptop
-- Database: [ ] only this website (enough)  [ ] SQL Server + SSMS  [ ] SQLite + DB Browser
+- Database: nothing to install — SQL runs on the course website
 - Excel or Sheets: [ ] Excel  [ ] Google Sheets
 - Python: [ ] installed  [ ] not yet
 - Power BI Desktop: [ ] installed  [ ] not yet (Windows only)
