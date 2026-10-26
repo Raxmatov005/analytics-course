@@ -21,8 +21,8 @@ GitHub, then asks the questions with buttons. The same button follows every less
       '<svg class="al-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
       'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' +
       '<div class="fb-body"><div class="fb-title">How was today?</div>' +
-      '<div class="fb-text">When you have finished this lesson and pushed its homework, tap the button: the course bot checks that your ' +
-      'work is in, then asks seven quick questions with buttons (2 minutes). Only your mentor reads it, and the course gets better from what you write.</div>' +
+      '<div class="fb-text">Finished the lesson and pushed its homework? Tap below: 7 quick questions in the course bot (2 minutes). ' +
+      'Only your mentor reads it — and the course gets better from it.</div>' +
       '<a class="fb-go" target="_blank" rel="noopener" href="' + BOT + lesson + '">Leave feedback on ' + lesson + '</a></div>';
     var pager = section.querySelector('.docsify-pagination-container');  // keep Previous / Next as the very last thing
     section.insertBefore(card, pager || null);
