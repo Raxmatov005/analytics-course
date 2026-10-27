@@ -58,7 +58,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
       return '<div class="fb-top"><span class="fb-icon">' + ICON + '</span><div><div class="fb-title">' + T('How was today?', 'Как прошёл день?') + '</div>' +
         '<div class="fb-sub">' + sub + '</div></div></div>';
     }
-    function note(sub, html) { card.innerHTML = head(sub) + '<div class="fb-foot">' + html + '</div>'; }
+    function note(sub, html) { resting = null; card.innerHTML = head(sub) + '<div class="fb-foot">' + html + '</div>'; }
     function intro() {
       var loc = getLocal(lesson);
       if (loc && loc.answers) return localSummary(loc.sent ? T('✅ Sent to your mentor · also saved on this device', '✅ Отправлено ментору · сохранено и на этом устройстве')
@@ -66,7 +66,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
       card.innerHTML = head(T('7 quick questions · 2 minutes · saved as you answer · only your mentor reads it', '7 коротких вопросов · 2 минуты · сохраняется сразу · читает только ваш ментор')) +
         '<div class="fb-foot"><button type="button" class="qz-btn fb-open">' + T('Leave feedback', 'Оставить отзыв') + '</button></div>';
       card.querySelector('.fb-open').onclick = function () { if (key()) load(); else local(); };
-      tail();
+      tail(intro);
     }
 
     /* ---------- on this device ---------- */
@@ -89,7 +89,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
       card.querySelector('.fb-change').onclick = local;
       var s = card.querySelector('.fb-send');
       if (s) s.onclick = sendLocal;
-      tail();
+      tail(function () { localSummary(sub); });
     }
     /* not signed in (or signed out): the sign-in card (signin.js); after it, the saved answers are sent */
     function connect(signedOut) {
@@ -101,11 +101,17 @@ practice day. Local-first: it always works, and it is saved on this device the m
       card.querySelector('.fb-back').onclick = intro;
       if (window.ALSignIn) card.querySelector('.fb-foot').insertAdjacentElement('beforebegin', ALSignIn.card({ done: sendLocal }));
     }
-    /* "Signed in as … · sign out" at the bottom of the card */
-    function tail() {
+    /* "Signed in as … · sign out" at the bottom of the card; a resting view (start, summary) is drawn again when she signs
+       in or out elsewhere on the page, so the line is always current */
+    var resting = null;
+    function tail(view) {
+      resting = view || null;
       var l = window.ALSignIn ? ALSignIn.line() : '';
       if (l) card.insertAdjacentHTML('beforeend', l);
     }
+    document.addEventListener('al-signin', function () {
+      if (document.body.contains(card) && resting && !card.querySelector('.si-card')) resting();
+    });
     function sendLocal() {
       var loc = getLocal(lesson);
       if (!loc || !loc.answers) return intro();
@@ -166,11 +172,12 @@ practice day. Local-first: it always works, and it is saved on this device the m
         return '<dt>' + esc(s.label) + '</dt><dd>' + (v == null || v === '' ? '—' : esc(v)) + '</dd>';
       }).join('') + '</dl><div class="fb-foot"><button type="button" class="qz-btn qz-ghost fb-change">' + T('Change my answers', 'Изменить ответы') + '</button></div>';
       card.querySelector('.fb-change').onclick = function () { cur = 0; step(); };
-      tail();
+      tail(function () { summary(sub); });
     }
 
     /* ---------- one question at a time (both ways) ---------- */
     function step() {
+      resting = null;
       var s = data.steps[cur], n = data.steps.length, v = answers[s.key], last = cur === n - 1;
       var body = s.choices
         ? '<div class="fb-chips">' + s.choices.map(function (c, i) {
