@@ -45,9 +45,11 @@ quality picker that works (by player size, below) and asks the questions of the 
   function save(k, o) { try { localStorage.setItem(k, JSON.stringify(o)); } catch (e) { /* private window: kept for this visit only */ } }
   function changed() { document.dispatchEvent(new CustomEvent('al:change')); }   // the section frames recount their done-state
 
-  /* Questions inside a video. A ```videoquiz block on the page — {"video": id, "stops": [{at, q, options, answer,
+  /* Questions about a video part. A ```videoquiz block on the page — {"video": id, "stops": [{at, q, options, answer,
   explain, back?}]}, at = seconds from the start of the whole video — is taken off the page and its stops go to every
-  card of that video whose part contains them. The player pauses at a stop and asks; answers are kept per browser in
+  card of that video whose part contains them ("at" only decides which part a question belongs to and its order). When
+  the part has played to its end, the player asks its questions one after another (also from the end screen's button,
+  any time); answers are kept per browser in
   "al.vq" ({id: {at: {ok, tries}}}), parts watched to the end in "al.vw" ({"id@start": 1}). A card is marked done (yt-done: a ✓ on the card only; videos are optional, so it is no al-block)
   when its part was watched to the end and every question in it answered. */
   var VQ = 'al.vq', VW = 'al.vw';
@@ -93,7 +95,7 @@ quality picker that works (by player size, below) and asks the questions of the 
       '<img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + v.id + '/mqdefault.jpg"><span class="yt-play">▶</span>' +
       (v.t || v.end ? '<span class="yt-at">' + (v.end ? clock(v.end - v.t) : T('from ', 'с ') + clock(v.t)) + '</span>' : '') + '</button>' +
       '<div class="yt-body"><div class="yt-title">' + esc(v.topic) + '</div>' +
-      ((v.title || v.len || n) ? '<div class="yt-meta">' + esc([v.title, v.len, n ? questions(n) : ''].filter(Boolean).join(' · ')) + '</div>' : '') +
+      ((v.title || v.len || n) ? '<div class="yt-meta">' + esc([v.title, v.len, n ? questions(n) + T(' at the end', ' в конце') : ''].filter(Boolean).join(' · ')) + '</div>' : '') +
       '<div class="yt-acts"><button type="button" class="yt-go">' + T('▶ Watch this part', '▶ Смотреть этот фрагмент') + '</button></div></div></div>';
   }
   /* The part player. YouTube's own controls show the whole video (30 hours for Baraa's course), so they are hidden
@@ -141,6 +143,7 @@ quality picker that works (by player size, below) and asks the questions of the 
     stage.innerHTML = '<div class="yp-screen"><div class="yp-frame"></div>' +
       '<button type="button" class="yp-cover" aria-label="' + PP + '"><span class="yp-big">▶</span></button>' +
       '<div class="yp-done" hidden><div class="yp-done-t">' + T('✓ End of this part', '✓ Конец фрагмента') + '</div><div class="yp-done-q" hidden></div>' +
+      '<button type="button" class="yp-qs" hidden></button>' +
       '<button type="button" class="yp-again">' + T('↺ Watch it again', '↺ Посмотреть ещё раз') + '</button></div>' +
       '<div class="yp-quiz" role="dialog" aria-live="polite" hidden></div></div>' +
       '<div class="yp-bar"><button type="button" class="yp-pp" aria-label="' + PP + '">▶</button>' +
@@ -251,27 +254,34 @@ quality picker that works (by player size, below) and asks the questions of the 
     });
     document.addEventListener('click', function (e) { if (!e.target.closest || !e.target.closest('.yp-set') && !e.target.closest('.yp-gear')) menu(false); });
     // ---- questions inside the part ------------------------------------------------------------------------------
-    function marks() {
-      if (!end || !stops.length) return;
-      $('.yp-marks').innerHTML = stops.map(function (s) {
-        var r = rec[s.at], f = Math.min(1, Math.max(0, (s.at - start) / len()));
-        return '<i class="yp-mark' + (r ? r.ok ? ' ok' : ' bad' : '') + '" style="left:' + (f * 100) + '%">' + (r && r.ok ? '✓' : '') + '</i>';
-      }).join('');
-    }
+    /* the questions come when the part ends, one after another — not at timed stops inside it (their "at" seconds were
+       never checked against the videos, so a question could come before its answer was shown) */
+    var round = [];
+    function marks() { $('.yp-marks').innerHTML = ''; }
     function doneLine() {
-      var el = $('.yp-done-q'), s = score(v);
-      el.hidden = !s.n;
+      var el = $('.yp-done-q'), s = score(v), b = $('.yp-qs');
+      el.hidden = b.hidden = !s.n;
       if (!s.n) return;
       el.textContent = s.done < s.n ? T('Questions answered: ' + s.done + ' of ' + s.n, 'Отвечено вопросов: ' + s.done + ' из ' + s.n) :
         s.ok === s.n ? T('✓ ' + s.n + ' of ' + s.n + ' questions right', '✓ Верных ответов: ' + s.n + ' из ' + s.n) :
         T(s.ok + ' of ' + s.n + ' — review the explanations', 'Верных ответов: ' + s.ok + ' из ' + s.n + ' — перечитайте пояснения');
+      b.textContent = s.done < s.n ? T('▶ Answer the ' + questions(s.n - s.done), '▶ Ответить: ' + questions(s.n - s.done))
+        : s.ok < s.n ? T('↺ Try the missed ones again', '↺ Ещё раз — те, где ошиблись') : T('↺ Answer them again', '↺ Ответить ещё раз');
+    }
+    /* a round: the questions not yet answered right (all of them again when every one is right) */
+    function startRound() {
+      var todo = stops.filter(function (s) { return !(rec[s.at] && rec[s.at].ok); });
+      round = (todo.length ? todo : stops).slice();
+      if (!round.length) return;
+      $('.yp-done').hidden = true;
+      ask(round[0]);
     }
     function ask(s) {
       asking = s; picked = false; fired[s.at] = 1;
       if (playing()) p.pauseVideo();
       menu(false);
-      var box = $('.yp-quiz'), n = stops.indexOf(s) + 1;
-      box.innerHTML = '<div class="yp-quiz-in"><div class="yp-quiz-k">' + T('Quick question', 'Быстрый вопрос') + (stops.length > 1 ? ' · ' + n + '/' + stops.length : '') + '</div>' +
+      var box = $('.yp-quiz'), n = round.indexOf(s) + 1;
+      box.innerHTML = '<div class="yp-quiz-in"><div class="yp-quiz-k">' + T('About this part', 'По этому фрагменту') + (round.length > 1 ? ' · ' + n + '/' + round.length : '') + '</div>' +
         '<div class="yp-quiz-q">' + esc(s.q) + '</div><div class="yp-quiz-opts">' +
         s.options.map(function (o, i) { return '<button type="button" class="yp-quiz-o" data-i="' + i + '"><b>' + (i + 1) + '</b><span>' + esc(o) + '</span></button>'; }).join('') +
         '</div><div class="yp-quiz-res" hidden></div><div class="yp-quiz-acts" hidden></div></div>';
@@ -296,19 +306,17 @@ quality picker that works (by player size, below) and asks the questions of the 
       var res = box.querySelector('.yp-quiz-res'), acts = box.querySelector('.yp-quiz-acts');
       res.innerHTML = '<b class="' + (ok ? 'ok' : 'bad') + '">' + (ok ? T('✓ Correct', '✓ Верно') : T('✗ Not quite', '✗ Не совсем')) + '</b> ' + esc(s.explain || '');
       res.hidden = false;
-      acts.innerHTML = ok ? '<button type="button" class="yp-quiz-go">' + T('▶ Continue', '▶ Продолжить') + '</button>' :
-        '<button type="button" class="yp-quiz-back">' + T('↺ Watch that bit again', '↺ Посмотреть этот кусок ещё раз') + '</button>' +
-        '<button type="button" class="yp-quiz-go">' + T('Continue anyway', 'Всё равно продолжить') + '</button>';
+      var nextQ = round[round.indexOf(s) + 1];
+      acts.innerHTML = (ok ? '' : '<button type="button" class="yp-quiz-back">' + T('↺ Watch the part again', '↺ Посмотреть фрагмент ещё раз') + '</button>') +
+        '<button type="button" class="yp-quiz-go">' + (nextQ ? T('Next question ›', 'Следующий вопрос ›') : T('✓ Done', '✓ Готово')) + '</button>';
       acts.hidden = false;
-      acts.querySelector('.yp-quiz-go').onclick = function () { unask(); resume(); };
-      var back = acts.querySelector('.yp-quiz-back');
-      if (back) back.onclick = function () {
-        var to = Math.max(start, s.at - (s.back || 45));
-        unask();
-        rearm(to);
-        p.seekTo(to, true);
-        resume(to);
+      acts.querySelector('.yp-quiz-go').onclick = function () {
+        if (nextQ) { ask(nextQ); return; }
+        unask(); round = [];
+        doneLine(); $('.yp-done').hidden = false;
       };
+      var back = acts.querySelector('.yp-quiz-back');
+      if (back) back.onclick = function () { unask(); round = []; seek(0); resume(start); };
       acts.querySelector('button').focus({ preventScroll: true });
       marks(); doneLine(); mark(card, v);
       changed();
@@ -337,18 +345,14 @@ quality picker that works (by player size, below) and asks the questions of the 
       if (!document.body.contains(stage)) { clearInterval(timer); if (ro) ro.disconnect(); try { p.destroy(); } catch (e) { /* gone */ } return; }
       if (!p || !p.getCurrentTime) return;
       var t = p.getCurrentTime();
-      if (playing() && !asking && Date.now() > hold) {   // a question due here? (once per play-through, ±0.6 s; a slow tick still catches it)
-        for (var i = 0; i < stops.length; i++) {
-          var s = stops[i];
-          if (fired[s.at] || rec[s.at] && rec[s.at].ok) continue;
-          if (t >= s.at - 0.6 && (t <= s.at + 0.6 || lastT != null && lastT < s.at && t - lastT < 3)) { ask(s); break; }
-        }
-      }
       if (playing()) lastT = t;
-      if (end && t >= end - 0.25) {   // the part is over: stop here, never run into the next topic
-        if (playing()) { p.pauseVideo(); watched(); }
+      if (end && t >= end - 0.25) {   // the part is over: stop here, never run into the next topic — then its questions
+        if (playing()) {
+          p.pauseVideo(); watched();
+          if (stops.length && !asking && score(v).ok < stops.length) { doneLine(); startRound(); }   // all right already: the end screen offers them again
+        }
         if (t > end + 1) p.seekTo(end - 0.5, true);
-        if ($('.yp-done').hidden) { doneLine(); $('.yp-done').hidden = false; }
+        if ($('.yp-done').hidden && !asking) { doneLine(); $('.yp-done').hidden = false; }
         t = end;
       } else if (t < start - 1 && Date.now() > hold) p.seekTo(start, true);   // (a reload reports 0 for a moment)
       var rel = Math.max(0, t - start);
@@ -373,6 +377,7 @@ quality picker that works (by player size, below) and asks the questions of the 
     $('.yp-cover').onclick = function () { if (!$('.yp-set').hidden) { menu(false); return; } toggle(); };
     $('.yp-pp').onclick = toggle;
     $('.yp-again').onclick = function (e) { e.stopPropagation(); seek(0); resume(start); };
+    $('.yp-qs').onclick = function (e) { e.stopPropagation(); startRound(); };
     $('.yp-speed').onclick = function () { sp = (sp + 1) % SPEEDS.length; if (p) p.setPlaybackRate(SPEEDS[sp]); $('.yp-speed').textContent = SPEEDS[sp] + '×'; };
     function captions() {
       try { if (cc) { p.loadModule('captions'); p.setOption('captions', 'track', { languageCode: 'en' }); } else p.unloadModule('captions'); } catch (e) { /* no captions */ }

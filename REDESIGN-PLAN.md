@@ -73,15 +73,17 @@ Russian copy stays a 1:1 mirror. New blocks:
 ```
 Three questions, one at a time, instant feedback, no pass mark, saved score, 1 XP each.
 
-### `videoquiz` — questions inside a video
+### `videoquiz` — questions at the end of a video part
 ```json
 {"video": "SSKVgrwhzus", "stops": [
   {"at": 700, "q": "…", "options": ["…"], "answer": 0, "explain": "…"},
   {"at": 1100, "q": "…", "options": ["…"], "answer": 2, "explain": "…", "back": 60}]}
 ```
-`at` = absolute seconds in the video. The player pauses at each stop inside the segment and shows the
-question over the video; right → continue; wrong → explanation + "↺ watch that bit again" (seeks back
-`back` seconds, default 45). Answered stops are remembered per browser.
+`at` = absolute seconds in the video; it only says which part a question belongs to (the part whose start–end
+contains it) and the order. Since 2026-10-27 the questions come **when the part has played to its end**, one after
+another over the video (also from the end screen's "Answer the questions" button, any time): right → next; wrong →
+explanation + "↺ Watch the part again". A stop in the middle could come before the video had shown its answer, because
+the times were never checked against the videos. Answers are remembered per browser; `back` is no longer used.
 
 ### `game` — four new types (five existing stay)
 - `flash` — flashcards: `{"type":"flash","title":"…","cards":[["Portfolio","all loans outstanding, together"],…]}`;
@@ -151,8 +153,8 @@ blocks parse, no console errors, structure parity), a cross-week flow review, co
 
 ## 4. Honest limits
 - **In-video questions** are written from each segment's topic and the lesson text, not from a
-  transcript (agents cannot watch the videos). They check the idea the segment teaches; timestamps are
-  spread evenly inside the segment. You can retime or reword any stop in the `videoquiz` block.
+  transcript (agents cannot watch the videos). They check the idea the segment teaches and are asked when
+  the part ends, so their `at` seconds need not be exact. You can reword any stop in the `videoquiz` block.
 - **Quality picker**: YouTube still decides the final stream; the picker sets the player's pixel size
   (which is what YouTube bases its choice on), so "1080p" means "ask for 1080p". The menu shows what
   YouTube actually delivers.
@@ -173,5 +175,5 @@ integration: the homework "why / graded" card is drawn by the hand-in box only (
 required blocks (watching is optional); Submit opens once every task has an answer, not only when every check is
 ✅; stretch tasks are worth 5 XP (as `docs/rewards.json` says); Quick checks earn no XP.
 
-Open: the Telegram "Connect" step (needs the worker's code — see `HANDOFF.md`), retiming of `videoquiz` stops by
-someone who watches the videos, and the two small items listed at the end of `HANDOFF.md`.
+Done 2026-10-27: the name + PIN sign-in (see `HANDOFF.md`), `award.py` on this repo, one definition of bucket 0, and
+video questions asked at the end of each part (no retiming needed).
