@@ -10,9 +10,25 @@
 - **Part B (20 pts):** eight interview questions on this week's material, answered in writing.
 - Allowed: everything from weeks 1–3, including the three HW 3.2 views (ship `views.sql` with the report so the reviewer can run it).
 
-**Rules.** Open book: your pages, your files, your tool. Closed: the model-answer folds until you submit. Everything goes into the **📎 box at the end of this page**: one box per report section **S1–S10** (the query in a code block, the first rows as a Markdown table, 1–3 sentences of findings), eight **checked numbers N1–N8** (a query each; the page tells you whether the number is right, not what it is), and `interview.md` (Part B). Also due today: **HW 3.2** in Day 4's 📎 box. All numbers as of **2026-10-01**; use `v_payments_clean` wherever payments are summed.
+**Rules**
 
-**Working method.** For each section: say the grain before the query; name *share of what* and *period* in every sentence; a count next to every rate; half-open date filters; a window for shares and running totals, a CTE chain where you aggregate twice; and one finding per section that Bekzod could read aloud — not a description of the table.
+- **Open book:** your pages, your files, your tool. **Closed:** the model-answer folds, until you submit.
+- **Where everything goes:** the **📎 box at the end of this page**:
+  - **S1–S10** — one box per report section: the query in a code block, the first rows as a Markdown table, 1–3 sentences of findings;
+  - **N1–N8** — eight checked numbers, one query each: the page tells you whether the number is right, not what it is;
+  - **`interview.md`** — Part B.
+- **As-of date:** every number as of **2026-10-01**.
+- **Payments:** use `v_payments_clean` wherever payments are summed.
+- **Also due today:** **HW 3.2**, in Day 4's 📎 box.
+
+**Working method — in every section**
+
+1. Say the grain before the query.
+2. Name *share of what* and *period* in every sentence.
+3. Put a count next to every rate.
+4. Use half-open date filters.
+5. A window for shares and running totals; a CTE chain where you aggregate twice.
+6. Write one finding Bekzod could read aloud — not a description of the table.
 
 > 💡 **Key idea.** A finding is a sentence Bekzod could say to the board and act on — *"by count we are a Micro lender, by money an SME lender"*. "The table has five rows" is a description; it scores nothing.
 
@@ -48,7 +64,13 @@ Five lines of Markdown per section, not fifty: the reviewer reads the finding fi
 
 ## Part A — The report (150 min, 80 pts)
 
-Eight points per section: 3 for a query that runs and answers the heading, 3 for the numbers, 2 for the finding sentence(s). The model answers below are *an* answer; a different cut with correct numbers and a real finding scores the same.
+**Scoring — 8 points per section:**
+
+- **3** — the query runs and answers the heading;
+- **3** — the numbers are right;
+- **2** — the finding sentence(s).
+
+The model answers below are *an* answer; a different cut with correct numbers and a real finding scores the same.
 
 Write each section into its own box **S1–S10** in the 📎 hand-in at the end. Eight sections have one number at their heart; the boxes **N1–N8** check it for you — S3 forward-dated payments, S4 collected to date, S5 Tashkent's share, S6 the top branch of 2026, S7 May's year-on-year, S8 the book's growth, S9 PAR30, S10 the top decile.
 

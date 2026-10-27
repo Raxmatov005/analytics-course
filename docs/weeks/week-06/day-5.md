@@ -59,10 +59,13 @@ One sentence of this A0 write-up would lose points — tap it:
 
 ### A1. CI for the average principal by product (t interval) — 10 pts
 
-For each of the five products: n, mean, sd, the 95 % t interval, the half-width as % of the mean. Which product's average do you know least precisely, and why (n or sd)?
+- **Data.** `loans` — one row per loan (7 828), grouped by product (`code`).
+- **Do.** For each of the five products: n, mean, sd (ddof = 1), the 95 % t interval, and the half-width as % of the mean.
+- **Answer.** Which product's average do you know least precisely, and why — n or sd?
+- **Taught in.** Day 2, "Confidence interval for a mean — t, not z".
 
 ```task
-{"id": "w06d5-a1", "kind": "number", "answer": 4.46, "dp": 2, "unit": "% of the mean (AUTO half-width)", "hint": "Half-width = t(0.975, n − 1) × s / √n, with s from ddof = 1; divide by the mean. Day 2, 'z or t'."}
+{"id": "w06d5-a1", "kind": "number", "answer": 4.46, "dp": 2, "unit": "% of the mean (AUTO half-width)", "hint": "Half-width = t(0.975, n − 1) × s / √n, with s from ddof = 1; divide by the mean. Day 2, 'Confidence interval for a mean'."}
 ```
 
 <details><summary>Model answer (open after submitting)</summary>
@@ -93,7 +96,10 @@ a1 = pd.DataFrame(rows, columns=["product", "n", "mean", "sd", "ci_lo", "ci_hi",
 
 ### A2. CI for the approval rate by channel (Wilson) — 10 pts
 
-Approved = status starting with `approved`; denominator = **decided** applications (cancelled out). Wilson 95 % per channel. Do the app and branch intervals overlap?
+- **Data.** `apps` — one row per application; keep the **decided** ones (status ≠ `cancelled`, 12 183 rows).
+- **Do.** Approved = status starting with `approved`. Per channel: approved, decided, the rate and its Wilson 95 % interval.
+- **Answer.** Do the app and branch intervals overlap, and what does that say about the gap?
+- **Taught in.** Day 2, "The Wilson interval — the right default for a rate" and the Worked example.
 
 ```task
 {"id": "w06d5-a2", "kind": "number", "answer": 66.79, "dp": 2, "unit": "% (lower Wilson limit, app)", "hint": "Denominator: decided applications only (status ≠ cancelled); numerator: status starting with 'approved'. Day 2, worked example."}
@@ -124,10 +130,13 @@ a2[["wilson_lo", "wilson_hi"]] = [proportion_confint(k, n, method="wilson") for 
 
 ### A3. Test: late-payment rate, customer segment sme vs mass — 10 pts
 
-Late = paid after the due date, on the 52 850 clean payments; the segment is the customer's (`customers.segment`, reached through `loans.customer_id`). Two-proportion z-test or χ² on the 2 × 2. Report p, the difference in points and the relative risk; one sentence on what the grain (payments, not loans) does to the test, and the loan-level check.
+- **Data.** `x` — the 52 850 clean payments; late = paid after the due date. The segment is the customer's (`customers.segment`, reached through `loans.customer_id`).
+- **Do.** A two-proportion z-test (or χ² on the 2 × 2), sme vs mass, on payments. Then the loan-level check: any late payment per loan, same test.
+- **Answer.** p, the difference in points, the relative risk — and one sentence on what the grain (payments, not loans) does to the test.
+- **Taught in.** Day 3, "Test for two proportions — z", and Day 3 P12 (payments vs loans).
 
 ```task
-{"id": "w06d5-a3", "kind": "number", "answer": 1.26, "dp": 2, "unit": "z (payments, sme − mass)", "hint": "52 850 clean payments; late = paid after the due date; the segment comes through loans.customer_id. The order is sme first. Day 3, P9."}
+{"id": "w06d5-a3", "kind": "number", "answer": 1.26, "dp": 2, "unit": "z (payments, sme − mass)", "hint": "52 850 clean payments; late = paid after the due date; the segment comes through loans.customer_id. The order is sme first. Day 3, P12."}
 ```
 
 <details><summary>Model answer (open after submitting)</summary>
@@ -153,10 +162,13 @@ stats.chi2_contingency(t, correction=False)[:2]                        # chi2 = 
 
 ### A4. Test: days late, Consumer loans of grade B vs grade C — 10 pts
 
-Mann–Whitney U, two-sided. Before the test: the shape (median, mean, skew, share paid late) and one sentence on why not a t-test. After: the p-value and the probability of superiority U / (n₁·n₂).
+- **Data.** `x` — the clean payments of Consumer loans (`code == "CONS"`), grade B and grade C.
+- **Do.** First the shape of days late per grade: median, mean, skew, share paid late — and one sentence on why not a t-test. Then a two-sided Mann–Whitney U test, grade B first.
+- **Answer.** The p-value and the probability of superiority U / (n₁·n₂).
+- **Taught in.** Day 4, "Mann–Whitney U — two independent groups by ranks", and Day 4 P2.
 
 ```task
-{"id": "w06d5-a4", "kind": "number", "answer": 0.45, "dp": 3, "unit": "U / (n₁·n₂), grade B first", "hint": "Consumer payments only; stats.mannwhitneyu(grade_B, grade_C, alternative=\"two-sided\"); the order of the samples decides whether you get the number or one minus it. Day 4, P1."}
+{"id": "w06d5-a4", "kind": "number", "answer": 0.45, "dp": 3, "unit": "U / (n₁·n₂), grade B first", "hint": "Consumer payments only; stats.mannwhitneyu(grade_B, grade_C, alternative=\"two-sided\"); the order of the samples decides whether you get the number or one minus it. Day 4, P2."}
 ```
 
 <details><summary>Model answer (open after submitting)</summary>
@@ -185,7 +197,10 @@ Why not a t-test: days late is heavily right-skewed (skew 4–6) with the same m
 
 ### A5. Power: loans needed to detect +2 pp on the app approval rate — 10 pts
 
-Baseline = the app's decided approval rate (A2). Cohen's h, α 0.05 two-sided, power 0.80. Then: how many months of app applications is that, at the 2026 monthly volume of decided app applications?
+- **Data.** The baseline is the app's decided approval rate from A2; `apps` gives the monthly volume of decided app applications in 2026 (whole months only).
+- **Do.** Cohen's h for baseline + 2 points; α 0.05 two-sided, power 0.80 → decided applications per arm (round up).
+- **Answer.** n per arm, n in total, and how many months of app traffic that is.
+- **Taught in.** Day 4, "Power and sample size".
 
 ```task
 {"id": "w06d5-a5", "kind": "number", "answer": 8362, "dp": 0, "unit": "decided applications per arm", "hint": "p1 = the app's decided approval rate from A2; Cohen's h for p1 + 0.02 vs p1; round up. Day 4, 'Power and sample size'."}
@@ -211,10 +226,10 @@ dec.groupby(dec.applied_at.dt.to_period("M")).size().mean()      # 183.0 a month
 
 **If you are stuck (hints, not answers).**
 
-- A1: `loans.groupby("code")["principal"]`, then `stats.t.interval(0.95, n - 1, loc=mean, scale=sd / np.sqrt(n))` per group — Day 2, "z or t".
+- A1: `loans.groupby("code")["principal"]`, then `stats.t.interval(0.95, n - 1, loc=mean, scale=sd / np.sqrt(n))` per group — Day 2, "Confidence interval for a mean".
 - A2: filter `status != "cancelled"` first; `status.str.startswith("approved")` is the numerator; `proportion_confint(..., method="wilson")` — Day 2, worked example.
-- A3: the segment comes from `customers` through `loans.customer_id` — merge it onto `x` by `loan_id`; then `pd.crosstab(…, x.late)` on the two segments; for the loan level, `groupby(["loan_id", "segment"]).late.max()` — Day 3, P9.
-- A4: filter `x` on `code == "CONS"` and the grade first; describe (`median`, `mean`, `stats.skew`, `(v > 0).mean()`), then `stats.mannwhitneyu(..., alternative="two-sided")` — Day 4, P1.
+- A3: the segment comes from `customers` through `loans.customer_id` — merge it onto `x` by `loan_id`; then `pd.crosstab(…, x.late)` on the two segments; for the loan level, `groupby(["loan_id", "segment"]).late.max()` — Day 3, P12.
+- A4: filter `x` on `code == "CONS"` and the grade first; describe (`median`, `mean`, `stats.skew`, `(v > 0).mean()`), then `stats.mannwhitneyu(..., alternative="two-sided")` — Day 4, P2.
 - A5: your `n_per_arm` from Day 4 works with `p2 = p1 + 0.02`; the months are `2 * n / monthly_volume`, the volume from whole months only — Day 4, Company corner.
 
 ---
@@ -249,7 +264,10 @@ A break between Part A and Part B: the statistics lessons of the RU decks end wi
 
 ## Part B — The test-choice quiz (45 min, 30 pts)
 
-For each scenario: **the test** (and the correction or the follow-up, if one is needed) and **one line of why** — outcome type, number of groups, paired or not, what breaks the default. 2.5 points each.
+- **Do.** For each of the twelve scenarios, name **the test** — plus the correction or the follow-up, if one is needed.
+- **Write.** One line of **why**: the outcome type (number or yes/no), the number of groups, paired or not, and what breaks the default test.
+- **Where.** `quiz.md`, one line per scenario: `1. Test: … — Why: …`.
+- **Points.** 2.5 each: the right test 1.5, the reason 1.
 
 > ⚠️ **Watch out.** Name the test *before* you open the Day 4 card — the card is for checking your choice, not for making it. And watch for the two traps the scenarios hide: the same units measured twice (paired), and many tests at once (a correction).
 
@@ -287,7 +305,9 @@ For each scenario: **the test** (and the correction or the follow-up, if one is 
 
 ## Part C — Eight interview questions (30 min, 20 pts)
 
-Answer in `quiz.md`, 3–5 sentences each, with a Nur number where it helps. 2.5 points each.
+- **Do.** Answer each of the eight questions in 3–5 sentences: the definition, a Nur number that shows you have used it, the trap.
+- **Where.** `quiz.md`, under `## Part C`.
+- **Points.** 2.5 each: correct, in your own words, with a number or an example.
 
 > 🎯 **Interview version.** Every answer has the same skeleton: the definition in one sentence, a Nur number that shows you have used it, and the trap people fall into. "p = 0.03 means… — for app vs branch FPD that was… — it is *not* the probability that…".
 
@@ -339,6 +359,7 @@ Answer in `quiz.md`, 3–5 sentences each, with a Nur number where it helps. 2.5
 1. p-value: …
 …
 8. Power: …
+
 ```
 
 ---
@@ -392,7 +413,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
   {"type": "number", "q": "Applicants' scores: μ = 659.6, σ = 59.5. What is the z-score of a score of 780 (two decimals)?", "answer": 2.02, "tol": 0.01, "explain": "z = (780 − 659.6) / 59.5 = 2.02, so the normal model puts about 2.2 % at 780 or above (→ Warm-up 2)."},
   {"type": "multi", "q": "Which belong in every Part A interpretation?", "options": ["What someone should do — or not do — with it", "An effect size next to any p-value", "p = 0.000", "\"H₀ is rejected\" without saying which hypothesis, in business words", "The number with its uncertainty (interval or p-value) and the method named"], "answer": [0, 1, 4], "explain": "Two sentences: the number with its test, then the decision it supports; a correct number with no interpretation earns 6 of 10 (→ 'What every Part A answer contains')."},
   {"type": "single", "q": "A test gives p = 0.051. What do you report?", "options": ["'No effect'", "Switch to a one-sided test", "Re-run until p < 0.05", "Nothing magical happens at 0.05: the effect, its interval and the decision it supports"], "answer": 3, "explain": "α is a decision rule fixed in advance, not a cliff; report the size and the uncertainty (→ 'Follow-ups an interviewer adds')."},
-  {"type": "single", "q": "When is a one-sided test legitimate?", "options": ["When the two-sided p is just above 0.05", "Whenever n is small", "When it was written down before the data and a result in the other direction would lead to the same action as 'no difference'", "Always for rates"], "answer": 2, "explain": "Switching to one-sided after seeing the direction is the cheapest p-hacking there is (→ Day 3, 'One- or two-sided')."}
+  {"type": "single", "q": "When is a one-sided test legitimate?", "options": ["When the two-sided p is just above 0.05", "Whenever n is small", "When it was written down before the data and a result in the other direction would lead to the same action as 'no difference'", "Always for rates"], "answer": 2, "explain": "Switching to one-sided after seeing the direction is the cheapest p-hacking there is (→ Day 3, 'One-sided or two-sided')."}
 ]}
 ```
 

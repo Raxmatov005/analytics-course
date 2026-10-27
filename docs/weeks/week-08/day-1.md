@@ -12,89 +12,552 @@
 
 ---
 
-## 1. Learn — product analytics in a lending company
+## 1. Learn — product metrics: definitions, funnels and retention
 
-### What it is, and how it differs from risk analytics
+### What a metric is — numerator, denominator, filter, period
 
-Until now every request came from the **loan book**: Bekzod's outstanding, Nilufar's FPD, Sevara's buckets. The unit was a **loan**, the clock was **days past due**, the question was "how much will we lose?". **Product analytics** (*продуктовая аналитика*) asks about **people using a product**: how many arrive, how many get to the result they came for, how fast, and whether they come back. The unit is a **user or a session**, the clock is **time since the first visit**, the question is "where does the product lose people, and why?".
+**What it is.** A **metric** (*метрика*) is a number defined so exactly that two analysts get the same value. A rate-type metric has four parts: the **numerator** (the units that did the thing), the **denominator** (every unit that could have), the **filter** (which units count at all) and the **period** (when).
 
-| | Risk / portfolio analytics | Product analytics |
+**How to write it.**
+
+```sql
+-- shape of every rate metric
+SELECT SUM(CASE WHEN <did the thing> THEN 1 ELSE 0 END) AS numerator,     -- the units that did it
+       COUNT(*)                                          AS denominator,   -- every unit that could have
+       ROUND(100.0 * SUM(CASE WHEN <did the thing> THEN 1 ELSE 0 END) / COUNT(*), 1) AS rate_pct
+FROM <one row per unit>
+WHERE <filter>                                                              -- which units count at all
+  AND <date> >= '<start>' AND <date> < '<end>';                             -- the period, start included, end excluded
+```
+
+The approval rate of app applications in September 2026:
+
+```sql
+SELECT SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,   -- numerator
+       COUNT(*)                                                                           AS decided,    -- denominator
+       ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) / COUNT(*), 1) AS approval_pct
+FROM applications
+WHERE channel = 'app' AND status <> 'cancelled'                    -- filter: app channel, decided applications only
+  AND applied_at >= '2026-09-01' AND applied_at < '2026-10-01';    -- period: applied in September 2026
+```
+
+128 approved of 192 decided: 66.7 %. Written as a definition card, it reads:
+
+| part | approval rate, app, September 2026 |
+|---|---|
+| numerator | applications with status `approved` or `approved_not_disbursed` — 128 |
+| denominator | decided applications: every status except `cancelled` — 192 |
+| filter | `channel = 'app'` |
+| period | `applied_at` in September 2026 |
+
+**When you use it.**
+- Before you compute any number someone asked for: write the four parts first.
+- When two reports disagree about "the same" number: compare their four parts, one by one.
+
+> ⚠️ **Watch out.** The same name can hide two denominators. Divide by all 224 app applications (cancelled included) and the "approval rate" is 57.1 %, not 66.7 %. Write the definition card under every number you show.
+
+**Your turn.** The same metric for the **branch** channel: approved ÷ decided, applied in September 2026, in %. Change one word of the query above.
+
+```task
+{"id": "w08d1-l1", "kind": "number", "answer": 74.7, "dp": 1, "unit": "%", "hint": "WHERE channel = 'branch' — the other three parts stay the same.", "model": "186 approved of 249 decided = 74.7 %. Only the filter changed; numerator, denominator and period are the same, so the two channels can be compared."}
+```
+
+### A metric tree — from the North Star to its drivers
+
+**What it is.** A **North Star metric** (*метрика «Полярная звезда»*) is the one number that best shows the value a company creates. For a lender it is usually the amount disbursed per month. A **metric tree** (*дерево метрик*) splits that number into **drivers** — factors that multiply back to it, each one something a team can move.
+
+**How to write it.** Each factor's denominator is the previous factor's numerator, so the product cancels down to the total:
+
+```text
+amount disbursed  =  applications  ×  approved ÷ applications  ×  loans ÷ approved  ×  amount ÷ loans
+                     (how many ask)   (approval rate)             (take-up)            (average ticket)
+```
+
+On the applications made in September 2026:
+
+```sql
+WITH m AS (
+  SELECT COUNT(*)                                                                         AS applications,
+         SUM(CASE WHEN a.status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,
+         COUNT(l.loan_id)                                                                  AS loans,
+         SUM(l.principal)                                                                  AS amount
+  FROM applications a
+  LEFT JOIN loans l ON l.application_id = a.application_id          -- the loan, if the application became one
+  WHERE a.applied_at >= '2026-09-01' AND a.applied_at < '2026-10-01')
+SELECT applications,
+       ROUND(100.0 * approved / applications, 2) AS approval_pct,   -- driver 2
+       ROUND(100.0 * loans / approved, 2)        AS take_up_pct,    -- driver 3
+       ROUND(1.0 * amount / loans)                AS avg_ticket,     -- driver 4
+       ROUND(applications * (1.0 * approved / applications) * (1.0 * loans / approved) * (1.0 * amount / loans)) AS product,
+       amount
+FROM m;
+```
+
+621 applications × 61.67 % approved × 87.21 % taken up × 43 732 545 soum per loan = 14 606 670 000 soum — the product lands exactly on the amount.
+
+**When you use it.**
+- The total moved: walk down the tree and find the driver that moved.
+- A team asks for a target: give it the driver it can push, not the total.
+
+| | Input metric | Output metric |
 |---|---|---|
-| Unit | loan, instalment | user, session, event |
-| Typical table | `loans`, `installments`, `payments` | `app_events`, `applications`, `customers` |
-| Typical metric | PAR30, FPD, roll rate, vintage curve | funnel conversion, activation, retention, DAU/MAU |
-| Typical question | "Is the October vintage worse?" | "Why do people stop between the offer and the form?" |
-| Owner | portfolio manager, risk, collections | product manager, marketing, UX |
+| What it is | a driver a team pushes directly | the result the board reads |
+| Example | applications, approval rate, take-up | amount disbursed, profit |
+| | **Leading metric** (*опережающая*) — moves first | **Lagging metric** (*запаздывающая*) — confirms later |
+| Example | applications this week, FPD30 | NPL90 after a year, write-offs |
 
-They meet at two points, and a good lending analyst lives there: **approval** (a funnel step that is a risk decision) and **repeat borrowing** (a retention metric that is also a portfolio-growth metric).
+> ⚠️ **Watch out.** Put the risk report's approval rate (approved ÷ decided) in the middle of the chain and the product no longer equals the total. Inside a tree, every denominator must be the previous numerator.
 
-> 💡 **Key idea.** Product analytics is the SQL you already write, with a different unit and a different clock: people and sessions instead of loans, time since the first visit instead of days past due. The first question is always the same — a share **of what**?
-
-### North Star and the metric tree
-
-A **North Star metric** (*метрика «Полярная звезда»*) is the one number that best captures the value the company delivers and earns from — for a lender, usually **disbursed amount** (or the number of good loans) per month, sometimes **outstanding of performing loans**. One number is not enough to act on, so it is decomposed into a **metric tree** (*дерево метрик*): each node is the product (or sum) of its children, down to things a team can move.
-
-```
-monthly disbursed amount  =  active customers  ×  application rate  ×  approval rate  ×  take-up rate  ×  average ticket
-                              (people)            applications ÷        approved ÷        loans ÷          amount ÷
-                                                  active customers      applications      approved         loans
-```
-
-The rule that makes a tree a tree: **each factor's denominator is the previous factor's numerator**, so the product telescopes to the total *exactly*. If it does not multiply back, a definition is inconsistent (a different month, a different population, a different status list) — the check is free, so always run it. Two consequences:
-
-- The tree's approval rate is **approved ÷ all applications** (cancelled included), because the next factor starts from all approved. The risk report's approval rate excludes cancelled (week 1: approved ÷ decided). Both are legitimate; the tree simply needs the one that chains. Write the definition under the number.
-- Pick one **cohort** for the whole chain. Here: applications made in the month, followed to disbursement (even if the money went out on 1 October). The calendar figure "disbursed in September" includes loans applied for in August, and its ratios would mix two populations.
-
-When the total moves, ask **which factor moved**. With a product, use logs: ln(total₂ ÷ total₁) = Σ ln(factorₖ₂ ÷ factorₖ₁), so each factor's share of the change is its log-ratio divided by the total's log-ratio. Shares add to 100 %; a negative share means that factor worked against the change.
+**Your turn.**
 
 ```game
 {"type": "order", "id": "w08d1-g1", "title": "Chain the tree", "q": "Put the factors in the order that multiplies back to the monthly disbursed amount — each denominator is the previous numerator.", "items": ["active customers", "application rate = applications ÷ active customers", "approval rate = approved ÷ applications", "take-up = loans ÷ approved", "average ticket = amount ÷ loans"], "why": "Active × (applications ÷ active) × (approved ÷ applications) × (loans ÷ approved) × (amount ÷ loans): everything cancels except the amount. Change one denominator (approved ÷ decided) and the chain no longer telescopes."}
 ```
 
-> 💡 **Key idea.** A metric tree is a chain: each factor's denominator is the previous factor's numerator, so the product equals the total **to the soum**. If it does not multiply back, one definition is inconsistent — the check is free, so always run it.
+### The lending funnel — visit → application → approval → disbursement → repayment
 
-### Input vs output, leading vs lagging
+**What it is.** A **funnel** (*воронка*) is an ordered list of steps and the number of units that reached each one. A lender's funnel ends at money coming back: **visit → application → approval → disbursement → repayment**. **Step conversion** (*конверсия шага*) = reached this step ÷ reached the previous step. **Conversion from the top** = reached this step ÷ reached step 1.
 
-- An **output metric** is the result (disbursed amount, profit); an **input metric** is something a team can push directly (app sessions, offer views, the share of approved who sign). Teams get input metrics as targets; the board reads output metrics.
-- A **leading metric** (*опережающая метрика*) moves before the result (applications this week, FPD30 at 60 days); a **lagging metric** (*запаздывающая*) confirms it later (NPL90 after a year, write-offs). FPD is the lender's favourite leading indicator of loss; disbursements are a lagging indicator of marketing.
-- A metric a team can push **without** creating value is a vanity metric. App installs, or approval rate pushed up by a looser scorecard — the second one shows up a year later in the write-offs.
+**How to write it.** One row per unit with a 0/1 flag per step, then one sum per step:
 
-```game
-{"type": "sort", "id": "w08d1-g2", "title": "Leading, lagging or vanity?", "q": "Sort each Nur Finance number.", "groups": {"Leading (moves first)": ["Applications this week", "FPD30 of last month's loans", "1–30 DPD entries this month", "Offer views in the app"], "Lagging (confirms later)": ["NPL90 a year after disbursement", "Write-offs", "Net income for the year"], "Vanity (moves without value)": ["App installs", "Approval rate after loosening the cut-off"]}, "why": "Leading metrics warn you while you can still act; lagging ones confirm the result; vanity metrics can be pushed up without one more good loan."}
+```sql
+-- shape
+WITH u AS (
+  SELECT <unit id>,
+         MAX(CASE WHEN <step 1 happened> THEN 1 ELSE 0 END) AS step1,   -- 1 if this unit reached step 1
+         MAX(CASE WHEN <step 2 happened> THEN 1 ELSE 0 END) AS step2
+  FROM <events> GROUP BY <unit id>)
+SELECT SUM(step1), SUM(step2) FROM u;                                   -- units that reached each step
 ```
 
-> ⚠️ **Watch out.** A number a team can push without creating value — installs, registrations, an approval rate raised by a looser scorecard — makes a beautiful dashboard and an ugly P&L a year later. Before you accept a target, ask what it does to the **next** factor of the tree and to FPD.
+The unit here is an **app session** (`application_id` in `app_events`). Sessions opened January–June 2026, followed to the first instalment:
 
-### The funnel
+```sql
+WITH s AS (                                                    -- one row per app session
+  SELECT application_id, MIN(event_time) AS opened_at,
+         MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS visit,
+         MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS application,
+         MAX(CASE WHEN event_name = 'approved'           THEN 1 ELSE 0 END) AS approval
+  FROM app_events GROUP BY application_id),
+first_inst AS (                                                -- the first instalment of every loan and when it was paid
+  SELECT i.loan_id, i.due_date, MIN(p.paid_at) AS paid_at
+  FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id
+  WHERE i.installment_no = 1
+  GROUP BY i.loan_id, i.due_date)
+SELECT SUM(s.visit)                                             AS visit,
+       SUM(s.application)                                       AS application,
+       SUM(s.approval)                                          AS approval,
+       COUNT(l.loan_id)                                         AS disbursement,
+       SUM(CASE WHEN f.paid_at <= f.due_date THEN 1 ELSE 0 END) AS repayment     -- first instalment paid on time
+FROM s
+LEFT JOIN loans l      ON l.application_id = s.application_id
+LEFT JOIN first_inst f ON f.loan_id = l.loan_id
+WHERE s.opened_at >= '2026-01-01' AND s.opened_at < '2026-07-01';
+```
 
-A **funnel** (*воронка*) is an ordered list of steps and the number of units that reached each. For the Nur app:
+| step | sessions | step conversion | from the top |
+|---|---|---|---|
+| visit (`app_open`) | 1 252 | — | 100 % |
+| application (`submit_application`) | 854 | 68.2 % | 68.2 % |
+| approval (`approved`) | 719 | 84.2 % | 57.4 % |
+| disbursement (a row in `loans`) | 659 | 91.7 % | 52.6 % |
+| repayment (first instalment on time) | 549 | 83.3 % | 43.8 % |
 
-`app_open → view_offer → start_application → submit_application → approved → contract_signed` (+ **disbursed**, from `loans`)
+1 252 sessions started; 549 of them, 43.8 %, became a loan whose first instalment came back on time. The first half of 2026 is chosen on purpose: every first instalment of these loans fell due by 2 August, before the as-of date (2026-10-01).
 
-Two ways to express it, always both: **step conversion** (*конверсия шага*) = reached step k ÷ reached step k−1, and **conversion from the top** = reached step k ÷ reached step 1. **Drop-off** = the count lost at each step. Four decisions come before the first division:
+**When you use it.**
+- "Where do we lose people?" — read the step conversions.
+- "How many visits does one good loan cost?" — read the conversion from the top (1 252 ÷ 549 ≈ 2.3 visits).
 
-1. **The unit.** User, session or application? In `app_events` each row has an `application_id`, and every application opened in the app has exactly one session — so a session *is* an application here, and the funnel counts sessions.
-2. **Reached = has the event**, counted once per session (`MAX(CASE WHEN event_name = … THEN 1 ELSE 0 END)` per session), not "number of events".
-3. **The population.** The denominator is everyone who *could* have reached the step. A funnel built on a table that only exists for some customers says nothing about the others.
-4. **Attributes of the session** (device, version, region) are taken **once per session**, from a defined event (here: the `app_open`). If an attribute is logged per event, check that it is constant inside a session before you group by it.
+> ⚠️ **Watch out.** "Reached" means *the unit has the event*, counted once per unit. `COUNT(*)` of events counts clicks, and a session that opened the form twice would count twice.
 
-A step can be a **business decision**, not a user action: `approved` is the scorecard. A drop there is risk policy, not UX, and the product team cannot "fix" it with a button.
+**Your turn.**
 
 ```game
 {"type": "order", "id": "w08d1-g3", "title": "The Nur app funnel", "q": "Put the steps in the order a session reaches them, ending at money.", "items": ["app_open", "view_offer", "start_application", "submit_application", "approved", "contract_signed", "disbursed (from loans)"], "why": "Six events in app_events, then the money from loans. A funnel that stops at contract_signed misses the payouts that never happened (P7)."}
 ```
 
-> ⚠️ **Watch out.** A funnel built on a table that exists only for some people says nothing about the others. Before the first division, write down who **could** have reached step 1 — if that is not everyone in your denominator, your "drop-off" is a population, not a behaviour.
+Then read the table above: what is the step conversion from **approval to disbursement**, in %?
 
-### Retention in lending
+```task
+{"id": "w08d1-l2", "kind": "number", "answer": 91.7, "dp": 1, "unit": "%", "hint": "Disbursement ÷ approval: 659 ÷ 719.", "model": "659 ÷ 719 = 91.7 %. About one approved session in twelve never became money — the post-signature loss that P7 investigates."}
+```
 
-A social app measures retention as "came back on day 7". A lender's customer has no reason to open the app weekly; the behaviour that matters is **coming back for another loan**. So: **cohort** (*когорта*) = customers by the month of their **first** loan; **repeat borrowing within N months** = share whose second loan was disbursed within N months of the first. A **cohort triangle** (*треугольник когорт*) puts cohorts in rows and N in columns. A cell exists only when **every** customer in the cohort has had N months to come back — a customer whose first loan was last month cannot have a 12-month repeat, and counting them as "did not repeat" makes recent cohorts look worse (or, with a naive query, identical at 6 and 12 months). Same rule as week 3's vintage blanks.
+### Leaky steps — where to look
 
-Related words: **activation** (here, the first disbursed loan), **churn** (*отток*: a customer who repaid and did not come back), **DAU/MAU** (daily / monthly active users; the ratio, average DAU ÷ MAU, is "stickiness" — *липкость*).
+**What it is.** A **leaky step** is the step that loses the most units — in count (**drop-off**, *отвал*) or in step conversion. Finding it is half the job; the other half is checking that the leak is real and naming who can fix it.
 
-> 💡 **Key idea.** For a lender, retention means **coming back for another loan**, not opening the app on day 7. Cohort by the month of the first loan, count second loans within N months — and leave a cell blank until every customer in the cohort has had N months.
+**How to write it.** Split the big steps into their sub-steps and put the drop-off next to each one. `LAG` reads the previous step's count:
 
-> ⚠️ **Watch out.** A cell that cannot be observed yet is "not measured", not "did not repeat". Fill it with a number and recent cohorts look worse (or, with a naive query, identical at 6 and 12 months). The mirror trap: a cohort table that keeps only customers who are still here shows 100 % retention — survivors are not a cohort.
+```sql
+WITH s AS (                                                    -- every app session, one row each
+  SELECT application_id,
+         MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS opened,
+         MAX(CASE WHEN event_name = 'view_offer'         THEN 1 ELSE 0 END) AS viewed,
+         MAX(CASE WHEN event_name = 'start_application'  THEN 1 ELSE 0 END) AS started,
+         MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS submitted,
+         MAX(CASE WHEN event_name = 'approved'           THEN 1 ELSE 0 END) AS approved,
+         MAX(CASE WHEN event_name = 'contract_signed'    THEN 1 ELSE 0 END) AS signed
+  FROM app_events GROUP BY application_id),
+steps AS (
+  SELECT 1 AS k, 'app_open' AS step, SUM(opened) AS n FROM s UNION ALL
+  SELECT 2, 'view_offer',         SUM(viewed)    FROM s UNION ALL
+  SELECT 3, 'start_application',  SUM(started)   FROM s UNION ALL
+  SELECT 4, 'submit_application', SUM(submitted) FROM s UNION ALL
+  SELECT 5, 'approved',           SUM(approved)  FROM s UNION ALL
+  SELECT 6, 'contract_signed',    SUM(signed)    FROM s UNION ALL
+  SELECT 7, 'disbursed', COUNT(*) FROM s JOIN loans l ON l.application_id = s.application_id)
+SELECT k, step, n,
+       LAG(n) OVER (ORDER BY k) - n                    AS lost,        -- drop-off at this step
+       ROUND(100.0 * n / LAG(n) OVER (ORDER BY k), 1)  AS step_pct     -- step conversion
+FROM steps ORDER BY k;
+```
+
+5 006 sessions open the app. The steps lose 512, 491, 552, 536, 0 and 246 sessions. The largest user-side loss is the form (start → submit: 552, step conversion 86.2 %). The 536 at approval are the scorecard's decision, not a user leaving.
+
+**Where to look, in this order:**
+
+| # | Check | Nur example |
+|---|---|---|
+| 1 | Is the denominator the right population? | `app_events` exists only for app applications — branch and partner customers have no app steps to lose |
+| 2 | Split the leaky step into its sub-steps | "application" = view offer → start form → submit |
+| 3 | Segment by an attribute of the **unit** | device of the session's `app_open`, not of each event |
+| 4 | User action or business decision? | `approved` is the scorecard: Risk owns it, not the app team |
+| 5 | Has the last step had time to happen? | approvals of the last days of a month are still waiting for money |
+
+**When you use it.**
+- A funnel is on the table and someone asks "so what do we fix?"
+- Before you report a leak: run the five checks, so the leak survives the first question.
+
+> ⚠️ **Watch out.** A step that looks like a cliff is often a population, not a behaviour. Dividing app steps by all 14 000 applications would "show" that 64 % of applicants never open the app — they applied at a branch.
+
+**Your turn.** Submit → approved loses 536 sessions. Who owns that step?
+
+```task
+{"id": "w08d1-l3", "kind": "choice", "options": ["The app team — the button after the form is badly placed", "Risk — approval is the scorecard's decision, not a user action", "Marketing — they bring the wrong visitors", "Nobody — it is a tracking error"], "answer": 1, "explain": "The approved event is written when the scorecard says yes. A drop there is credit policy; the app team cannot fix it with a button. Report it, but give it to Risk."}
+```
+
+### Retention — coming back for another loan
+
+**What it is.** **Retention** (*удержание*) is the share of a group that comes back after a time N. A social app counts people who open it again on day 7. A lender counts borrowers who take **another loan**: retention at N months = customers with a second loan within N months of the first ÷ customers in the group.
+
+**How to write it.**
+
+```text
+retention(N) = customers whose 2nd loan is disbursed ≤ N months after their 1st  ÷  customers whose 1st loan is in the group
+```
+
+Customers whose first loan was disbursed in January 2025, N = 6 months:
+
+```sql
+WITH ranked AS (                                               -- number each customer's loans 1, 2, 3 … by date
+  SELECT customer_id, disbursed_at,
+         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS n
+  FROM loans),
+pairs AS (                                                     -- one row per customer: first and second loan dates
+  SELECT f.customer_id, f.disbursed_at AS first_at, s.disbursed_at AS second_at
+  FROM ranked f
+  LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2
+  WHERE f.n = 1)
+SELECT COUNT(*)                                                                  AS customers,
+       SUM(CASE WHEN second_at <= date(first_at, '+6 months') THEN 1 ELSE 0 END) AS came_back,
+       ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+6 months') THEN 1 ELSE 0 END) / COUNT(*), 1) AS retention_6m_pct
+FROM pairs
+WHERE first_at >= '2025-01-01' AND first_at < '2025-02-01';
+```
+
+141 customers took their first loan in January 2025; 38 of them took a second one within six months — 27.0 %.
+
+**When you use it.**
+- "Do borrowers come back?" — Kamola's question.
+- Repeat borrowers cost less to acquire, so retention feeds tomorrow's lifetime value.
+
+| | Social app | Lender |
+|---|---|---|
+| "Came back" means | opened the app again | took another loan |
+| Typical N | day 1, 7, 30 | 3, 6, 12 months |
+
+> ⚠️ **Watch out.** The denominator is everyone who started, not the people still here. Divide by today's active borrowers and you measure survivors, who always look loyal.
+
+**Your turn.** The same January 2025 group: retention at **12** months, in %.
+
+```task
+{"id": "w08d1-l4", "kind": "number", "answer": 46.1, "dp": 1, "unit": "%", "hint": "Change both '+6 months' to '+12 months'.", "model": "65 of 141 = 46.1 %. Retention only grows with N: everyone back within 6 months is also back within 12."}
+```
+
+### Cohort by month — grouping people by when they started
+
+**What it is.** A **cohort** (*когорта*) is a group of customers who started in the same period. For a lender, "started" means the first loan, so the **cohort month** is the month of the customer's first disbursement. It never changes, however many loans follow.
+
+**How to write it.**
+
+```sql
+WITH first_loan AS (
+  SELECT customer_id, MIN(disbursed_at) AS first_at              -- the start: the first disbursement
+  FROM loans GROUP BY customer_id)
+SELECT strftime('%Y-%m', first_at) AS cohort,                    -- SQL Server: FORMAT(first_at, 'yyyy-MM')
+       COUNT(*)                    AS customers
+FROM first_loan
+GROUP BY cohort ORDER BY cohort;
+```
+
+34 cohorts. The first, January 2024, has 79 customers; the monthly cohorts then grow to 130–165. The last row, October 2026, has 9 customers — it is one day old.
+
+**When you use it.**
+- Compare like with like: customers of the same age, in different months.
+- Whenever the question has "after N months" in it.
+
+| | Calendar month | Cohort month |
+|---|---|---|
+| A row holds | everyone active in that month, new and old | the same customers, followed over time |
+| Answers | "how much happened in May?" | "how do May's new borrowers behave as they age?" |
+
+> ⚠️ **Watch out.** Our data start in January 2024. A "first loan" in early 2024 is the first loan *in our data*, not in the customer's life. Say so under any chart with the 2024 cohorts.
+
+**Your turn.** How many customers are in the **June 2025** cohort?
+
+```task
+{"id": "w08d1-l5", "kind": "number", "answer": 148, "dp": 0, "unit": "customers", "hint": "Run the query above and read the 2025-06 row.", "model": "148 customers took their first Nur loan in June 2025."}
+```
+
+### The retention table and the retention curve
+
+**What it is.** A **retention table** puts cohorts in rows and the age N in columns; each cell is that cohort's retention at that age. A cell exists only when **every** customer of the cohort has had N months; otherwise it stays blank. A **retention curve** draws one row of the table as a line over N.
+
+**How to write it.** The retention query from above, grouped by cohort, with the blank rule wrapped around each cell:
+
+```sql
+WITH ranked AS (
+  SELECT customer_id, disbursed_at,
+         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS n
+  FROM loans),
+pairs AS (
+  SELECT f.disbursed_at AS first_at, s.disbursed_at AS second_at,
+         strftime('%Y', f.disbursed_at) || 'Q' || ((CAST(strftime('%m', f.disbursed_at) AS INTEGER) + 2) / 3) AS cohort
+  FROM ranked f LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2
+  WHERE f.n = 1)
+SELECT cohort, COUNT(*) AS customers,
+       CASE WHEN MAX(date(first_at, '+3 months')) <= '2026-10-01'            -- blank unless every customer had 3 months
+            THEN ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+3 months') THEN 1 ELSE 0 END) / COUNT(*), 1) END AS m3,
+       CASE WHEN MAX(date(first_at, '+6 months')) <= '2026-10-01'
+            THEN ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+6 months') THEN 1 ELSE 0 END) / COUNT(*), 1) END AS m6,
+       CASE WHEN MAX(date(first_at, '+12 months')) <= '2026-10-01'
+            THEN ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+12 months') THEN 1 ELSE 0 END) / COUNT(*), 1) END AS m12
+FROM pairs
+WHERE first_at >= '2025-01-01' AND first_at < '2026-07-01'
+GROUP BY cohort ORDER BY cohort;
+```
+
+| cohort | customers | m3 | m6 | m12 |
+|---|---|---|---|---|
+| 2025Q1 | 375 | 18.4 | 28.8 | 44.5 |
+| 2025Q2 | 414 | 23.7 | 32.4 | 44.7 |
+| 2025Q3 | 450 | 22.4 | 32.4 | 45.6 |
+| 2025Q4 | 443 | 25.1 | 36.1 | |
+| 2026Q1 | 399 | 30.8 | 38.3 | |
+| 2026Q2 | 463 | 33.0 | | |
+
+Read **down** a column to compare cohorts at the same age: at 6 months, retention rises from 28.8 % (2025Q1) to 38.3 % (2026Q1). Read **across** a row to follow one cohort as it ages. The empty cells form a triangle — those ages have not happened yet.
+
+The curve, drawn in Python from the same data:
+
+```python
+import sqlite3
+import pandas as pd
+import matplotlib.pyplot as plt
+
+con = sqlite3.connect("data/raw/nur.db")
+pairs = pd.read_sql("""
+    WITH ranked AS (SELECT customer_id, disbursed_at,
+                           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS n
+                    FROM loans)
+    SELECT f.disbursed_at AS first_at, s.disbursed_at AS second_at
+    FROM ranked f LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2
+    WHERE f.n = 1""", con, parse_dates=["first_at", "second_at"])
+pairs["cohort"] = pairs["first_at"].dt.to_period("Q").astype(str)
+as_of = pd.Timestamp("2026-10-01")
+
+for cohort in ["2024Q1", "2024Q3", "2025Q1", "2025Q3", "2026Q1"]:
+    g = pairs[pairs["cohort"] == cohort]
+    ages, values = [], []
+    for n in range(1, 25):
+        if g["first_at"].max() + pd.DateOffset(months=n) > as_of:   # not every customer has had n months: stop
+            break
+        ages.append(n)
+        values.append(100 * (g["second_at"] <= g["first_at"] + pd.DateOffset(months=n)).mean())
+    plt.plot(ages, values, marker="o", markersize=3, label=cohort)
+    print(cohort, len(g), "customers, last age", ages[-1], "months:", round(values[-1], 1), "%")
+
+plt.xlabel("months since the first loan")
+plt.ylabel("% with a second loan")
+plt.title("Later cohorts come back sooner")
+plt.legend()
+plt.show()
+```
+
+Each line is one cohort. At one month, 2024Q1 starts at 6.0 % and 2026Q1 at 22.8 %; at six months they are at 22.3 % and 38.3 %. Later lines start higher and climb faster: newer borrowers come back sooner. A newer cohort also has a shorter line — 2024Q1 reaches 24 months (68.8 %), 2026Q1 only 6.
+
+**When you use it.**
+- The table: to compare cohorts at the same age (down a column).
+- The curve: to show the shape — how fast retention climbs and where it flattens.
+
+> ⚠️ **Watch out.** A blank cell is "not measured yet", never "did not come back". Fill it with a number and the newest cohorts look worse — or, with a naive query, show the same value at 3, 6 and 12 months.
+
+**Your turn.** In the table above, what is the 6-month retention of the **2025Q4** cohort, in %?
+
+```task
+{"id": "w08d1-l6", "kind": "number", "answer": 36.1, "dp": 1, "unit": "%", "hint": "Row 2025Q4, column m6.", "model": "36.1 %. Its m12 cell is blank: the cohort's December customers reach 12 months only in December 2026."}
+```
+
+### Churn — the customers who leave
+
+**What it is.** **Churn** (*отток*) is the share of customers who stop being customers. A lender's customer can only leave after repaying. So: a customer **churns** when a loan closes, no other loan is running, and no new loan follows within a window (here 6 months). **Churn rate** = churned ÷ customers who could have churned.
+
+**How to write it.** Customers whose loan closed in the first quarter of 2026:
+
+```sql
+WITH closers AS (                                              -- customers who repaid a loan in Q1 2026
+  SELECT customer_id, MAX(closed_at) AS closed_at
+  FROM loans
+  WHERE status = 'closed' AND closed_at >= '2026-01-01' AND closed_at < '2026-04-01'
+  GROUP BY customer_id),
+still_borrowing AS (                                           -- had another loan running on that day: cannot churn
+  SELECT DISTINCT c.customer_id
+  FROM closers c
+  JOIN loans l ON l.customer_id = c.customer_id
+              AND l.disbursed_at <= c.closed_at AND (l.closed_at IS NULL OR l.closed_at > c.closed_at)),
+base AS (
+  SELECT * FROM closers WHERE customer_id NOT IN (SELECT customer_id FROM still_borrowing)),
+next_loan AS (                                                 -- the first loan after the closing, if any
+  SELECT b.customer_id, MIN(l.disbursed_at) AS next_at
+  FROM base b JOIN loans l ON l.customer_id = b.customer_id AND l.disbursed_at > b.closed_at
+  GROUP BY b.customer_id)
+SELECT COUNT(*)                                                                               AS could_churn,
+       SUM(CASE WHEN n.next_at <= date(b.closed_at, '+6 months') THEN 1 ELSE 0 END)           AS came_back,
+       SUM(CASE WHEN n.next_at IS NULL OR n.next_at > date(b.closed_at, '+6 months') THEN 1 ELSE 0 END) AS churned,
+       ROUND(100.0 * SUM(CASE WHEN n.next_at IS NULL OR n.next_at > date(b.closed_at, '+6 months') THEN 1 ELSE 0 END) / COUNT(*), 1) AS churn_pct
+FROM base b LEFT JOIN next_loan n ON n.customer_id = b.customer_id;
+```
+
+600 customers repaid a loan in Q1 2026; 220 of them still had another loan running, so 380 could churn. 72 came back within six months and 308 did not: churn 81.1 %.
+
+**When you use it.**
+- "How many customers do we lose after they repay?" — the question retention does not ask.
+- To size a win-back campaign: the 308 are its list.
+
+| | Retention | Churn |
+|---|---|---|
+| Starts the clock at | the first loan | the end of a loan |
+| Counts | who came back | who did not |
+| Equals 1 − the other | only for the same group and the same window | |
+
+> ⚠️ **Watch out.** Churn needs a finished window. A customer who repaid in September 2026 has had no time to come back; calling them "churned" inflates the rate. Q1 2026 is used here because its six months ended by 30 September.
+
+**Your turn.** The same customers with a **3-month** window: churn in %.
+
+```task
+{"id": "w08d1-l7", "kind": "number", "answer": 87.9, "dp": 1, "unit": "%", "hint": "Change both '+6 months' to '+3 months'.", "model": "46 came back within three months, 334 did not: 334 ÷ 380 = 87.9 %. A shorter window means more churn — so the window is part of the definition."}
+```
+
+### Active users — DAU, MAU and what "active" means here
+
+**What it is.** An **active user** did a defined action in the period. **DAU** counts distinct active users per day, **MAU** per month. **Stickiness** (*липкость*) = average DAU ÷ MAU: how many days of the month a typical user is active. The action that makes a user "active" is a choice you must write down.
+
+**How to write it.** September 2026, under two definitions of "active":
+
+```sql
+SELECT (SELECT COUNT(DISTINCT customer_id) FROM app_events
+         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')        AS app_mau,          -- opened the app
+       (SELECT COUNT(*) FROM (SELECT DISTINCT date(event_time), customer_id FROM app_events
+         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')) / 30.0 AS app_avg_dau,     -- 30 days in September
+       (SELECT COUNT(DISTINCT customer_id) FROM loans
+         WHERE status IN ('active', 'default'))                                   AS borrowers_now;   -- a loan running on 2026-10-01
+```
+
+201 customers opened the app in September; on an average day, 7.43 did. Stickiness is 7.43 ÷ 201 = 3.7 %. Under the second definition, 2 526 customers have a loan running — twelve times more "active" people.
+
+**When you use it.**
+- An app team tracks the habit of opening the app: DAU, MAU, stickiness.
+- A lender's book is "active" through its loans: borrowers with a running loan.
+
+> ⚠️ **Watch out.** Our event log records only sessions that create an application, so app MAU here is close to "app applicants". A low stickiness (3–4 %) is normal for a lender: a customer opens the app when they need money.
+
+**Your turn.** App MAU for **August 2026** (distinct customers with an app event in August).
+
+```task
+{"id": "w08d1-l8", "kind": "number", "answer": 214, "dp": 0, "unit": "customers", "hint": "The first subquery, with August dates.", "model": "214 — the highest month of the year; September has 201."}
+```
+
+### Vanity metrics vs actionable metrics
+
+**What it is.** A **vanity metric** (*метрика тщеславия*) goes up whatever you do, and no decision follows from it: total registered customers, all loans ever, app installs. An **actionable metric** can fall, has an owner, and a change in it tells someone what to do.
+
+**How to write it.** The same new customers, two ways:
+
+```sql
+WITH monthly AS (
+  SELECT strftime('%Y-%m', registered_at) AS month, COUNT(*) AS new_customers
+  FROM customers GROUP BY month),
+running AS (                                                      -- vanity: the running total can only go up
+  SELECT month, new_customers, SUM(new_customers) OVER (ORDER BY month) AS all_customers
+  FROM monthly),
+first_loan AS (
+  SELECT customer_id, MIN(disbursed_at) AS first_at FROM loans GROUP BY customer_id),
+activated AS (                                                    -- actionable: new customers with a first loan within 60 days
+  SELECT strftime('%Y-%m', c.registered_at) AS month,
+         ROUND(100.0 * SUM(CASE WHEN f.first_at >= date(c.registered_at)
+                                 AND f.first_at <= date(c.registered_at, '+60 days') THEN 1 ELSE 0 END) / COUNT(*), 1) AS loan_in_60d_pct
+  FROM customers c LEFT JOIN first_loan f ON f.customer_id = c.customer_id
+  GROUP BY month)
+SELECT r.month, r.new_customers, r.all_customers, a.loan_in_60d_pct
+FROM running r JOIN activated a ON a.month = r.month
+WHERE r.month >= '2026-01' AND r.month <= '2026-07'
+ORDER BY r.month;
+```
+
+"All customers" rises every month, from 5 183 to 5 820 — even in June, when new registrations fell from 119 to 104. The share of new customers with a first loan within 60 days moved from 52.0 % in January to 78.2 % in July: that number can fall, and if it does, someone has to act.
+
+**When you use it.**
+- When someone proposes a KPI: ask "if this falls, who does what?" No answer → vanity.
+- When a dashboard shows a cumulative line: replace it with the monthly rate behind it.
+
+| Vanity | Actionable twin |
+|---|---|
+| total registered customers | % of new customers with a first loan within 60 days |
+| app installs | app sessions that reach a submitted application |
+| approval rate pushed up by a looser cut-off | approval rate **and** FPD30 of the approved |
+
+**Your turn.**
+
+```game
+{"type": "sort", "id": "w08d1-g2", "title": "Leading, lagging or vanity?", "q": "Sort each Nur Finance number.", "groups": {"Leading (moves first)": ["Applications this week", "FPD30 of last month's loans", "1–30 DPD entries this month", "Offer views in the app"], "Lagging (confirms later)": ["NPL90 a year after disbursement", "Write-offs", "Net income for the year"], "Vanity (moves without value)": ["App installs", "Approval rate after loosening the cut-off"]}, "why": "Leading metrics warn you while you can still act; lagging ones confirm the result; vanity metrics can be pushed up without one more good loan."}
+```
+
+### Putting it together
+
+Kamola asks: *"Is the app getting better at turning visits into lasting customers?"* Four of today's concepts answer it in one query — app sessions by quarter of 2025, followed to money:
+
+```sql
+WITH s AS (                                                    -- funnel unit: the app session
+  SELECT application_id, MIN(event_time) AS opened_at,
+         MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS submitted
+  FROM app_events GROUP BY application_id)
+SELECT strftime('%Y', s.opened_at) || 'Q' || ((CAST(strftime('%m', s.opened_at) AS INTEGER) + 2) / 3) AS quarter,   -- period
+       COUNT(*)                                                    AS sessions,          -- denominator
+       ROUND(100.0 * SUM(s.submitted) / COUNT(*), 1)               AS visit_to_application_pct,
+       ROUND(100.0 * COUNT(l.loan_id) / COUNT(*), 1)               AS visit_to_money_pct  -- the end of the funnel
+FROM s LEFT JOIN loans l ON l.application_id = s.application_id
+WHERE s.opened_at >= '2025-01-01' AND s.opened_at < '2026-01-01'                        -- filter: closed quarters
+GROUP BY quarter ORDER BY quarter;
+```
+
+Sessions grow from 373 to 526 a quarter; visit → money is 51.7 %, 54.0 %, 52.1 % and 56.7 % — the best quarter is the last. Read it with the section's questions. *Definition:* sessions are the denominator, the quarter is the period. *Funnel:* the two rates are conversion from the top to two steps. *Leaky steps:* if visit → application falls while visit → money holds, the form is leaking, not the scorecard. *Retention:* the funnel only covers the first loan; the retention table says whether those borrowers come back (2025Q1: 44.5 % within a year).
+
+**Which concept answers which question?**
+
+```game
+{"id": "w08d1-g5", "type": "sort", "title": "Which concept?", "groups": {"Metric definition": ["Why does our approval rate not match the risk report?"], "Metric tree": ["Disbursements fell 37 % — which driver moved?"], "Funnel and leaky steps": ["Where do app users give up?", "Who owns the drop at approval?"], "Retention and cohorts": ["Do January's new borrowers come back within six months?"], "Churn": ["How many customers who repaid in Q1 never borrowed again?"], "Active users": ["How many customers used the app last month?"], "Vanity vs actionable": ["Should 'total registered customers' be on the board's first page?"]}}
+```
 
 ### Depth (optional)
 
@@ -135,7 +598,11 @@ Related words: **activation** (here, the first disbursed loan), **churn** (*от
 
 ## 2. Worked example — the metric tree for August 2026 (15 min)
 
-**Active customer** (our definition, write it under the number): a customer who, during the month, applied in any channel, opened the app, or had a loan outstanding. Cohort = applications made in the month.
+**Ask:** Bekzod wants August's disbursements explained as a chain of drivers, each with an owner.
+
+**Step 1 — the metric definitions.** Before any query, write a definition card for every factor. The **period** is August 2026. The **cohort** is the applications made in August, followed to disbursement (even if the money went out in September). **Active customer**: a customer who, during the month, applied in any channel, opened the app, or had a loan outstanding.
+
+**Step 2 — the metric tree.** Five drivers whose denominators chain: active customers × application rate × approval rate × take-up × average ticket. One query returns every numerator:
 
 ```sql
 WITH act AS (
@@ -155,6 +622,8 @@ SELECT (SELECT COUNT(*) FROM act)                                            AS 
 FROM apps;
 ```
 
+**Step 3 — check that the tree multiplies back.** Each factor is a numerator ÷ the previous numerator, so the product must equal the total:
+
 | factor | definition | August 2026 |
 |---|---|---|
 | active customers | as above | 2 846 |
@@ -164,7 +633,11 @@ FROM apps;
 | average ticket | 23 335 710 000 ÷ 363 | 64 285 702 |
 | **product** | 2 846 × 0.2280 × 0.6040 × 0.9260 × 64 285 702 | **23 335 710 000** ✓ |
 
-The product equals the disbursed amount of August's applications to the soum, because every denominator is the previous numerator. The risk report would say approval = 392 ÷ 566 decided = 69.3 %; the tree uses 60.4 % — the difference is the 83 cancelled applications, which in the tree sit inside "approval". **The sentence:** *"August's applications produced 363 loans and 23.3 bn soum: 2 846 active customers, 22.8 % of whom applied; 60.4 % of applications were approved and 92.6 % of approvals were disbursed, at an average ticket of 64.3 m."*
+The product equals the disbursed amount of August's applications to the soum.
+
+**Step 4 — the funnel inside the tree.** Approval and take-up are two steps of the **lending funnel**. The risk report would say approval = 392 ÷ 566 decided = 69.3 %; the tree uses 60.4 %. The gap is the 83 cancelled applications — a **leaky step** that sits inside "approval" in the tree. Same name, two denominators: write the definition card under both.
+
+**Step 5 — the sentence.** *"August's applications produced 363 loans and 23.3 bn soum: 2 846 active customers, 22.8 % of whom applied; 60.4 % of applications were approved and 92.6 % of approvals were disbursed, at an average ticket of 64.3 m."*
 
 `closed_at` is empty for 15 closed loans (week 3), so those customers count as "outstanding" forever in this definition; at most 15 people in a base of thousands — note it, do not let it stop you.
 
@@ -174,7 +647,7 @@ The product equals the disbursed amount of August's applications to the soum, be
 
 Every question has a box. SQL boxes run on the course database right here (the same `nur.db`); ✔ Check compares your result with the model answer without showing it. Most questions come in two steps: **compute** (a query) and **read it** (what the number means). Prefer pandas? `data/python/week8/day1_starter.ipynb` loads the tables and has a cell per task — the answers are the same, and the "read it" boxes still check you.
 
-**P1.** The metric tree for **September 2026** (the worked example's definitions). Change the dates in the worked example's query and add one column: the number of **decided** applications (not cancelled), which the risk report's approval rate needs.
+**P1.** *(metric definition)* The metric tree for **September 2026** (the worked example's definitions). Change the dates in the worked example's query and add one column: the number of **decided** applications (not cancelled), which the risk report's approval rate needs.
 
 ```task
 {"id": "w08d1-p1", "kind": "sql", "note": "One row, six numbers: active customers, applications, approved, loans, disbursed amount, decided. Dates: activity in September; loans live if disbursed before 1 October and not closed before 1 September.", "model": "WITH act AS (\n  SELECT customer_id FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01'\n  UNION SELECT customer_id FROM app_events WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01'\n  UNION SELECT customer_id FROM loans\n        WHERE disbursed_at < '2026-10-01' AND (closed_at IS NULL OR closed_at >= '2026-09-01')),\napps AS (\n  SELECT a.application_id, a.status, l.principal\n  FROM applications a LEFT JOIN loans l ON l.application_id = a.application_id\n  WHERE a.applied_at >= '2026-09-01' AND a.applied_at < '2026-10-01')\nSELECT (SELECT COUNT(*) FROM act) AS active_customers,\n       COUNT(*) AS applications,\n       SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,\n       COUNT(principal) AS loans,\n       SUM(principal) AS disbursed,\n       SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END) AS decided\nFROM apps;"}
@@ -186,7 +659,7 @@ Every question has a box. SQL boxes run on the course database right here (the s
 {"id": "w08d1-p1b", "kind": "number", "answer": 61.67, "dp": 2, "unit": "%", "hint": "383 approved ÷ 621 applications.", "model": "active 2 910 · application rate 621 ÷ 2 910 = 21.34 % · approval (tree) 383 ÷ 621 = 61.67 % · take-up 334 ÷ 383 = 87.21 % · ticket 14 606 670 000 ÷ 334 = 43 732 545 → product 14 606 670 000 ✓. The risk report's convention: 383 ÷ 540 decided = 70.9 % (81 cancelled out of the denominator). The tree's number is lower by construction, not because something is wrong — write the definition under each."}
 ```
 
-**P2.** September's applications produced less money than August's. By how much, and which factor explains most of the fall? Finish the code: print each factor's change and its **share of the log change** (section 1). Which factor's share is largest, in %?
+**P2.** *(metric tree)* September's applications produced less money than August's. By how much, and which factor explains most of the fall? Finish the code: print each factor's change and its **share of the log change** (section 1, 'A metric tree'). Which factor's share is largest, in %?
 
 ```task
 {"id": "w08d1-p2", "kind": "python", "starter": "import math\naug = {\"active\": 2846, \"applications\": 649, \"approved\": 392, \"loans\": 363, \"amount\": 23_335_710_000}\nsep = {\"active\": 2910, \"applications\": 621, \"approved\": 383, \"loans\": 334, \"amount\": 14_606_670_000}\n\ndef factors(m):\n    return {\"active customers\": m[\"active\"],\n            \"application rate\": m[\"applications\"] / m[\"active\"],\n            \"approval (tree)\":  m[\"approved\"] / m[\"applications\"],\n            \"take-up\":          m[\"loans\"] / m[\"approved\"],\n            \"average ticket\":   m[\"amount\"] / m[\"loans\"]}\n\nfa, fs = factors(aug), factors(sep)\ntotal = math.log(sep[\"amount\"] / aug[\"amount\"])\nprint(f\"total change {sep['amount'] / aug['amount'] - 1:.1%}\")\n# TODO: for each factor k print its change (fs[k] / fa[k] - 1) and its share of the log change,\n#       math.log(fs[k] / fa[k]) / total * 100, to one decimal\n", "answer": 82.2, "dp": 1, "model": "Total −37.4 % (23.34 bn → 14.61 bn). Change and share of the log change: active +2.2 % (−4.7 %), application rate −6.4 % (+14.2 %), approval +2.1 % (−4.5 %), take-up −5.8 % (+12.8 %), ticket −32.0 % (+82.2 %). The shares add to 100. The ticket is the story: August's applications carried 14.76 bn of SME loans (39 loans), September's 6.65 bn (26) — a mix effect of a few very large loans, not a change in how many people borrow."}
@@ -198,7 +671,7 @@ Every question has a box. SQL boxes run on the course database right here (the s
 {"id": "w08d1-p2b", "kind": "choice", "options": ["Yes — September's customers refused more of their approved loans", "No — 24 approvals of the last days of September were still waiting for the money on 1 October; without them take-up is about 93 %, the same as August", "No — take-up cannot be compared between months", "Yes — the app lost customers after the contract"], "answer": 1, "explain": "24 of September's approved applications had no loan yet on the as-of date: approvals of 29 September – 1 October. Without them take-up is 334 ÷ 359 = 93.0 %, the same as August's 92.6 %. A month that has just ended is right-censored at the bottom of the tree; read its last factor a week later, or compare it with August as it looked one day after month-end."}
 ```
 
-**P3.** Kamola's first question. Build the app funnel: one row per session (`application_id`) with a 0/1 flag per step (`MAX(CASE …)`), then the number of sessions that reached each step. Add **disbursed** from `loans` (a `LEFT JOIN` on `application_id`).
+**P3.** *(lending funnel)* Kamola's first question. Build the app funnel: one row per session (`application_id`) with a 0/1 flag per step (`MAX(CASE …)`), then the number of sessions that reached each step. Add **disbursed** from `loans` (a `LEFT JOIN` on `application_id`).
 
 ```task
 {"id": "w08d1-p3", "kind": "sql", "note": "One row, seven counts: opened, viewed offer, started, submitted, approved, signed, disbursed.", "model": "WITH s AS (\n  SELECT application_id,\n         MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS opened,\n         MAX(CASE WHEN event_name = 'view_offer'         THEN 1 ELSE 0 END) AS viewed,\n         MAX(CASE WHEN event_name = 'start_application'  THEN 1 ELSE 0 END) AS started,\n         MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS submitted,\n         MAX(CASE WHEN event_name = 'approved'           THEN 1 ELSE 0 END) AS approved,\n         MAX(CASE WHEN event_name = 'contract_signed'    THEN 1 ELSE 0 END) AS signed\n  FROM app_events GROUP BY application_id)\nSELECT SUM(opened), SUM(viewed), SUM(started), SUM(submitted), SUM(approved), SUM(signed),\n       SUM(CASE WHEN l.loan_id IS NOT NULL THEN 1 ELSE 0 END) AS disbursed\nFROM s LEFT JOIN loans l ON l.application_id = s.application_id;"}
@@ -210,7 +683,7 @@ Every question has a box. SQL boxes run on the course database right here (the s
 {"id": "w08d1-p3b", "kind": "choice", "options": ["At the offer (open → view)", "At the form (start → submit)", "At approval (submit → approved)", "After signing (signed → disbursed)"], "answer": 1, "explain": "Sessions 5 006 → 4 494 → 4 003 → 3 451 → 2 915 → 2 915 → 2 669. Step conversion 89.8 / 89.1 / 86.2 / 84.5 / 100 / 91.6 %; from the top 53.3 % reach money. A staircase with no cliff: 10–15 % lost at each of the first four steps. The largest user-side loss is the form (552 sessions, 13.8 %). Submit → approved (536) is the scorecard — a risk decision, not UX. And 246 signed contracts never became a loan (P7). The marketing deck's \"conversion\" is most likely approved (or signed) ÷ app opens = 58.2 %; the money conversion is 53.3 %. Ask for the definition before you agree or disagree."}
 ```
 
-**P4.** The other claim Kamola heard: "most applicants never open the app". Reproduce it: for **all** applications, left-join the sessions that have an `app_open` and count, by channel, the applications and how many of them have one; add the share in %.
+**P4.** *(leaky steps — the population)* The other claim Kamola heard: "most applicants never open the app". Reproduce it: for **all** applications, left-join the sessions that have an `app_open` and count, by channel, the applications and how many of them have one; add the share in %.
 
 ```task
 {"id": "w08d1-p4", "kind": "sql", "note": "Three rows (app, branch, partner): channel, applications, with an app_open, share in % to one decimal. Join to the DISTINCT application_ids that have an app_open, so a session is counted once.", "model": "SELECT a.channel, COUNT(*) AS applications, COUNT(o.application_id) AS with_app_open,\n       ROUND(100.0 * COUNT(o.application_id) / COUNT(*), 1) AS pct\nFROM applications a\nLEFT JOIN (SELECT DISTINCT application_id FROM app_events WHERE event_name = 'app_open') o\n       ON o.application_id = a.application_id\nGROUP BY a.channel ORDER BY a.channel;"}
@@ -222,7 +695,7 @@ Every question has a box. SQL boxes run on the course database right here (the s
 {"id": "w08d1-p4b", "kind": "free", "min": 40, "rubric": ["says app_events exists only for applications made in the app (app 100 %, branch and partner 0 %)", "calls the 35.8 % a population share, not a behaviour", "says an app funnel must be titled 'app applications only' with app sessions as the denominator", "gives the funnel every channel has: applied → decided → approved → disbursed, from applications + loans"], "model": "5 006 of 14 000 applications have an app_open (35.8 %) — but by channel it is app 5 006 / 5 006 = 100 %, branch 0 / 6 223, partner 0 / 2 771. app_events exists only for applications made in the app; branch and partner customers never had an app session to lose, so 35.8 % is the app's share of applications, not a behaviour. Any funnel built on app_events must say \"app applications only\", with app sessions as the denominator. The funnel every channel has comes from applications + loans: applied → decided (not cancelled) → approved → disbursed — app 5 006 · 85.4 % · 68.2 % · 91.6 % (53.3 % end to end), branch 6 223 · 88.0 % · 72.4 % · 90.5 % (57.7 %), partner 2 771 · 87.7 % · 70.5 % · 91.5 % (56.6 %). For branch and partner the steps before the application happen at a desk or a shop till and are not logged: the honest answer is \"we do not measure them\", not 0 %."}
 ```
 
-**P5.** The funnel by **device**. First check: is `device` constant inside a session? (`COUNT(DISTINCT device)` per `application_id` — try it in the box.) Then build the funnel by session, taking each session's device **from its `app_open` event**: sessions and step conversion at every step, plus open → disbursed.
+**P5.** *(leaky steps — segment by the unit)* The funnel by **device**. First check: is `device` constant inside a session? (`COUNT(DISTINCT device)` per `application_id` — try it in the box.) Then build the funnel by session, taking each session's device **from its `app_open` event**: sessions and step conversion at every step, plus open → disbursed.
 
 ```task
 {"id": "w08d1-p5", "kind": "sql", "note": "Two rows (android, ios), eight columns: device, sessions, then step conversion in % to one decimal — view ÷ open, start ÷ view, submit ÷ start, approved ÷ submit, disbursed ÷ signed — and disbursed ÷ sessions.", "model": "WITH s AS (\n  SELECT application_id,\n         MAX(CASE WHEN event_name = 'app_open' THEN device END)               AS device,\n         MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS opened,\n         MAX(CASE WHEN event_name = 'view_offer'         THEN 1 ELSE 0 END) AS viewed,\n         MAX(CASE WHEN event_name = 'start_application'  THEN 1 ELSE 0 END) AS started,\n         MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS submitted,\n         MAX(CASE WHEN event_name = 'approved'           THEN 1 ELSE 0 END) AS approved,\n         MAX(CASE WHEN event_name = 'contract_signed'    THEN 1 ELSE 0 END) AS signed\n  FROM app_events GROUP BY application_id)\nSELECT device, COUNT(*) AS sessions,\n       ROUND(100.0 * SUM(viewed) / SUM(opened), 1)      AS view_pct,\n       ROUND(100.0 * SUM(started) / SUM(viewed), 1)     AS start_pct,\n       ROUND(100.0 * SUM(submitted) / SUM(started), 1)  AS submit_pct,\n       ROUND(100.0 * SUM(approved) / SUM(submitted), 1) AS approved_pct,\n       ROUND(100.0 * COUNT(l.loan_id) / SUM(signed), 1) AS disbursed_pct,\n       ROUND(100.0 * COUNT(l.loan_id) / COUNT(*), 1)    AS open_to_money_pct\nFROM s LEFT JOIN loans l ON l.application_id = s.application_id\nGROUP BY device ORDER BY device;"}
@@ -234,7 +707,7 @@ Every question has a box. SQL boxes run on the course database right here (the s
 {"id": "w08d1-p5b", "kind": "choice", "options": ["The event table: iOS converts 6.5 points better after the form", "The session table: device changes inside a session, so grouping events by their own device counts each step on a different population — and no device leaks more than another", "Neither: device cannot be used at all", "Both: the difference is the scorecard"], "answer": 1, "explain": "Not constant: 3 660 of 5 006 sessions have events from more than one device value and 4 325 from more than one app_version — the SDK fills these per event (a tracking defect for Jasur's list). The 6.5-point \"iOS advantage\" is an artefact. By the app_open device: Android 3 368 sessions, 90.3 / 89.7 / 86.5 / 84.2 / 91.7 %, open → money 54.1 %; iOS 1 638, 88.7 / 87.7 / 85.6 / 85.0 / 91.3 %, 51.6 %. Versions 3.8.0 / 3.9.1 / 4.0.0 / 4.0.2: open → disbursed 52.4 / 54.1 / 52.6 / 54.3 %. Chi-square per step: smallest p = 0.045, and after a Holm correction for six tests nothing is close. The leak is in the product's steps, not in a client. All four versions are in use in every month: the app does not force updates — worth a line to Kamola."}
 ```
 
-**P6.** The funnel says approved ÷ submitted for the app is 84.5 %; week 1's approval rate for the app channel (approved ÷ decided) is another number. Explain the difference with a cross-tab: for app applications, by `applications.status`, the number of applications and how many of them have a `submit_application` event.
+**P6.** *(leaky steps — a business decision)* The funnel says approved ÷ submitted for the app is 84.5 %; week 1's approval rate for the app channel (approved ÷ decided) is another number. Explain the difference with a cross-tab: for app applications, by `applications.status`, the number of applications and how many of them have a `submit_application` event.
 
 ```task
 {"id": "w08d1-p6", "kind": "sql", "note": "Four rows (approved, approved_not_disbursed, cancelled, rejected): status, applications, with a submit event. App channel only.", "model": "SELECT a.status, COUNT(*) AS applications,\n       SUM(CASE WHEN s.application_id IS NOT NULL THEN 1 ELSE 0 END) AS with_submit\nFROM applications a\nLEFT JOIN (SELECT DISTINCT application_id FROM app_events WHERE event_name = 'submit_application') s\n       ON s.application_id = a.application_id\nWHERE a.channel = 'app'\nGROUP BY a.status ORDER BY a.status;"}
@@ -246,7 +719,7 @@ Every question has a box. SQL boxes run on the course database right here (the s
 {"id": "w08d1-p6b", "kind": "number", "answer": 1011, "dp": 0, "unit": "applications", "hint": "Rejected applications minus rejected applications with a submit event.", "model": "1 359 rejected − 348 with a submit = 1 011. Every approved application (2 693 + 222 = 2 915) has a submit event. The application row is created when the session opens, and the pre-check (age, blacklist, existing overdue debt) can reject it at any step before the form is sent; the 732 cancelled split 544 without a submit / 188 with. So the scorecard approves 2 915 ÷ 3 451 = 84.5 % of submitted forms, and the company approves 2 915 ÷ 4 274 decided = 68.2 % of applications. Two true numbers with two denominators — the classic \"your approval rate does not match the report\" (roles page, step 4)."}
 ```
 
-**P7.** The last step. Sessions with a `contract_signed` event but no loan: how many, by `applications.status`, and when were they decided (earliest and latest `decided_at`)?
+**P7.** *(leaky steps — the last step)* The last step. Sessions with a `contract_signed` event but no loan: how many, by `applications.status`, and when were they decided (earliest and latest `decided_at`)?
 
 ```task
 {"id": "w08d1-p7", "kind": "sql", "note": "Two rows: status, sessions, first decided_at, last decided_at.", "model": "SELECT a.status, COUNT(*) AS sessions, MIN(a.decided_at) AS first_decided, MAX(a.decided_at) AS last_decided\nFROM app_events e\nJOIN applications a ON a.application_id = e.application_id\nLEFT JOIN loans l  ON l.application_id = e.application_id\nWHERE e.event_name = 'contract_signed' AND l.loan_id IS NULL\nGROUP BY a.status ORDER BY a.status;"}
@@ -258,7 +731,7 @@ Every question has a box. SQL boxes run on the course database right here (the s
 {"id": "w08d1-p7b", "kind": "number", "answer": 7.6, "dp": 1, "unit": "% of signed", "hint": "Only the approved_not_disbursed sessions are final; divide them by all 2 915 signed contracts.", "model": "246 signed without a loan: 222 approved_not_disbursed — signed, and the money never went out (final; a question for operations: payout failures, card not linked, the customer withdrew); 24 approved, decided 29 September – 1 October — waiting for disbursement on the as-of date (censored, not lost). Real loss 222 ÷ 2 915 = 7.6 % — larger than any single UX step after the offer, and invisible in an event funnel that ends at contract_signed. Rule: end a funnel at money, from the table that books the money."}
 ```
 
-**P8.** Kamola's second question. One row per customer: first and second loan dates (`ROW_NUMBER` by `disbursed_at`, `loan_id` to break ties). For each first-loan month: customers, % with a second loan within 3, 6 and 12 months. Run the plain version first (below) and look at the cohorts of 2026 — then fix it: a cell gets a number only when **every** first loan of the cohort is at least N months old on 2026-10-01, otherwise `NULL`.
+**P8.** *(retention · cohort by month)* Kamola's second question. One row per customer: first and second loan dates (`ROW_NUMBER` by `disbursed_at`, `loan_id` to break ties). For each first-loan month: customers, % with a second loan within 3, 6 and 12 months. Run the plain version first (below) and look at the cohorts of 2026 — then fix it: a cell gets a number only when **every** first loan of the cohort is at least N months old on 2026-10-01, otherwise `NULL`.
 
 ```sql
 WITH ranked AS (
@@ -286,7 +759,7 @@ FROM pairs GROUP BY 1 ORDER BY 1;
 {"id": "w08d1-p8b", "kind": "text", "answer": ["2025-09", "2025-9", "september 2025", "sep 2025"], "model": "2025-09 (m6 exists up to 2026-03, m3 up to 2026-06). The plain version shows m12 from 2025-10 onwards although the window has not ended, and from 2026-04 m6 = m12 (2026-06: 37.4 / 37.4 / 37.4) — those customers had three months, not twelve. 4 335 borrowers: 2 089 took one loan, 2 246 two or more. The earliest cohort, January 2024: 79 customers, 10.1 % / 20.3 % (16 people) / 36.7 % at 3 / 6 / 12 months. One more caveat for the slide: the data start in January 2024, so some \"first\" loans of early 2024 are a customer's first loan in our data, not in their life."}
 ```
 
-**P9.** The cohort triangle by **quarter** of the first loan, columns at 1, 2, 3, 6, 9, 12, 18, 24 months, only observable cells. Tip: cross-join the cohorts with a small table of the eight N values, compute each cell once, then pivot with `MAX(CASE WHEN m = … THEN pct END)`.
+**P9.** *(retention table and curve)* The cohort triangle by **quarter** of the first loan, columns at 1, 2, 3, 6, 9, 12, 18, 24 months, only observable cells. Tip: cross-join the cohorts with a small table of the eight N values, compute each cell once, then pivot with `MAX(CASE WHEN m = … THEN pct END)`.
 
 ```task
 {"id": "w08d1-p9", "kind": "sql", "note": "12 rows (2024Q1 … 2026Q4): cohort as YYYYQn, customers, then m1, m2, m3, m6, m9, m12, m18, m24 in % to one decimal, NULL where not every customer of the cohort has had N months by 2026-10-01.", "model": "WITH ranked AS (\n  SELECT customer_id, disbursed_at,\n         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS n\n  FROM loans),\npairs AS (\n  SELECT f.customer_id, f.disbursed_at AS first_at, s.disbursed_at AS second_at,\n         strftime('%Y', f.disbursed_at) || 'Q' || ((CAST(strftime('%m', f.disbursed_at) AS INTEGER) + 2) / 3) AS cohort\n  FROM ranked f LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2\n  WHERE f.n = 1),\ngrid AS (SELECT 1 AS m UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 6 UNION ALL SELECT 9\n         UNION ALL SELECT 12 UNION ALL SELECT 18 UNION ALL SELECT 24),\ncells AS (\n  SELECT p.cohort, g.m, COUNT(*) AS customers,\n         MAX(date(p.first_at, '+' || g.m || ' months')) AS last_needed,\n         ROUND(100.0 * SUM(CASE WHEN p.second_at <= date(p.first_at, '+' || g.m || ' months') THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct\n  FROM pairs p CROSS JOIN grid g GROUP BY p.cohort, g.m)\nSELECT cohort, MAX(customers) AS customers,\n       MAX(CASE WHEN m = 1  AND last_needed <= '2026-10-01' THEN pct END) AS m1,\n       MAX(CASE WHEN m = 2  AND last_needed <= '2026-10-01' THEN pct END) AS m2,\n       MAX(CASE WHEN m = 3  AND last_needed <= '2026-10-01' THEN pct END) AS m3,\n       MAX(CASE WHEN m = 6  AND last_needed <= '2026-10-01' THEN pct END) AS m6,\n       MAX(CASE WHEN m = 9  AND last_needed <= '2026-10-01' THEN pct END) AS m9,\n       MAX(CASE WHEN m = 12 AND last_needed <= '2026-10-01' THEN pct END) AS m12,\n       MAX(CASE WHEN m = 18 AND last_needed <= '2026-10-01' THEN pct END) AS m18,\n       MAX(CASE WHEN m = 24 AND last_needed <= '2026-10-01' THEN pct END) AS m24\nFROM cells GROUP BY cohort ORDER BY cohort;"}
@@ -298,19 +771,37 @@ FROM pairs GROUP BY 1 ORDER BY 1;
 {"id": "w08d1-p9b", "kind": "free", "min": 40, "rubric": ["reads down a column: repeat borrowing rises for later cohorts, with a number (6 months 22.3 % → 38.3 %)", "reads across a row: about two in three 2024 customers came back within two years", "gives Kamola a one-line answer: yes, more and sooner every quarter", "names what it does not say: whether the repeat loans are good (FPD of second loans) or refinance a struggling first loan"], "model": "% with a second loan, cumulative — 2024Q1 (282): 6.0 / 10.3 / 13.1 / 22.3 / 31.9 / 41.1 / 55.3 / 68.8; 2024Q4 (399): 11.3 / 13.8 / 17.3 / 28.6 / 33.8 / 37.3 / 52.4; 2025Q4 (443): 18.1 / 21.7 / 25.1 / 36.1 / 42.2; 2026Q1 (399): 22.8 / 25.1 / 30.8 / 38.3; 2026Q2 (463): 26.1 / 29.2 / 33.0. Down a column, repeat borrowing rises steadily: at 6 months from 22.3 % (2024Q1) to 38.3 % (2026Q1), at 3 months from 13.1 % to 33.0 %. Across a row, about two in three customers of 2024 came back within two years. Kamola's answer: borrowers do come back, more and sooner every quarter. What it does not say: whether the repeat loans are good (FPD of second loans — Day 2 and the capstone) and whether quick repeats refinance a struggling first loan."}
 ```
 
-**P10.** DAU, MAU and stickiness from `app_events` for the twelve months October 2025 – September 2026: distinct customers per day and per month; average DAU over **all calendar days** of the month (a day with no events counts as 0 — `dim_date` has every day); stickiness = average DAU ÷ MAU.
+**P10.** *(churn)* Churn for the customers who repaid a loan in the **fourth quarter of 2025** (`closed_at` from 2025-10-01 to 2025-12-31), with a 6-month window. Start from the churn query in section 1 and change the dates. Return: customers who closed a loan, customers who could churn, came back within 6 months, churned, churn in %.
+
+```task
+{"id": "w08d1-p12", "kind": "sql", "note": "One row, five numbers: closers, could_churn, came_back, churned, churn_pct (one decimal).", "model": "WITH closers AS (\n  SELECT customer_id, MAX(closed_at) AS closed_at\n  FROM loans\n  WHERE status = 'closed' AND closed_at >= '2025-10-01' AND closed_at < '2026-01-01'\n  GROUP BY customer_id),\nstill_borrowing AS (\n  SELECT DISTINCT c.customer_id\n  FROM closers c\n  JOIN loans l ON l.customer_id = c.customer_id\n              AND l.disbursed_at <= c.closed_at AND (l.closed_at IS NULL OR l.closed_at > c.closed_at)),\nbase AS (SELECT * FROM closers WHERE customer_id NOT IN (SELECT customer_id FROM still_borrowing)),\nnext_loan AS (\n  SELECT b.customer_id, MIN(l.disbursed_at) AS next_at\n  FROM base b JOIN loans l ON l.customer_id = b.customer_id AND l.disbursed_at > b.closed_at\n  GROUP BY b.customer_id)\nSELECT (SELECT COUNT(*) FROM closers) AS closers,\n       COUNT(*) AS could_churn,\n       SUM(CASE WHEN n.next_at <= date(b.closed_at, '+6 months') THEN 1 ELSE 0 END) AS came_back,\n       SUM(CASE WHEN n.next_at IS NULL OR n.next_at > date(b.closed_at, '+6 months') THEN 1 ELSE 0 END) AS churned,\n       ROUND(100.0 * SUM(CASE WHEN n.next_at IS NULL OR n.next_at > date(b.closed_at, '+6 months') THEN 1 ELSE 0 END) / COUNT(*), 1) AS churn_pct\nFROM base b LEFT JOIN next_loan n ON n.customer_id = b.customer_id;"}
+```
+
+**P10 — read it.** Q1 2026's churn was 81.1 %. What is Q4 2025's, in %? And can you compare the two?
+
+```task
+{"id": "w08d1-p12b", "kind": "number", "answer": 76.7, "dp": 1, "unit": "%", "hint": "churned ÷ could_churn.", "model": "502 customers repaid a loan in Q4 2025; 184 still had another loan running, so 318 could churn; 74 came back within six months and 244 did not: 76.7 %. The two quarters can be compared because both windows have ended (Q4 2025's on 30 June 2026) and the definition is the same. 120 of the 318 have come back by 2026-10-01 — churn is not forever, which is why the window is part of the name: \"6-month churn\"."}
+```
+
+**P11.** *(active users)* DAU, MAU and stickiness from `app_events` for the twelve months October 2025 – September 2026: distinct customers per day and per month; average DAU over **all calendar days** of the month (a day with no events counts as 0 — `dim_date` has every day); stickiness = average DAU ÷ MAU.
 
 ```task
 {"id": "w08d1-p10", "kind": "sql", "note": "12 rows (2025-10 … 2026-09): month, MAU, average DAU to two decimals, stickiness in % to one decimal.", "model": "WITH d AS (SELECT date(event_time) AS day, COUNT(DISTINCT customer_id) AS dau FROM app_events GROUP BY 1),\nm AS (SELECT strftime('%Y-%m', event_time) AS month, COUNT(DISTINCT customer_id) AS mau FROM app_events GROUP BY 1),\ncal AS (SELECT date_key, substr(date_key, 1, 7) AS month FROM dim_date)\nSELECT m.month, m.mau,\n       ROUND(SUM(COALESCE(d.dau, 0)) * 1.0 / COUNT(*), 2) AS avg_dau,\n       ROUND(100.0 * SUM(COALESCE(d.dau, 0)) / COUNT(*) / m.mau, 1) AS stickiness_pct\nFROM m JOIN cal ON cal.month = m.month LEFT JOIN d ON d.day = cal.date_key\nWHERE m.month >= '2025-10' AND m.month <= '2026-09'\nGROUP BY m.month, m.mau ORDER BY m.month;"}
 ```
 
-**P10 — read it.** One sentence for Kamola: why is DAU/MAU not the app's North Star?
+**P11 — read it.** One sentence for Kamola: why is DAU/MAU not the app's North Star?
 
 ```task
 {"id": "w08d1-p10b", "kind": "free", "min": 25, "rubric": ["quotes the level: about 3.7 % (MAU about 200, average DAU about 7)", "says a lender's customer opens the app when they need money, so a habit metric is the wrong goal", "names what to steer by instead: applications, approval-to-money conversion, repeat borrowing", "notes the event log only records sessions that create an application"], "model": "September 2026: MAU 201, average DAU 7.43, stickiness 3.7 %; the twelve months run 3.3–3.8 %, MAU 151 (Oct 2025) → 214 (Aug 2026). A social app wants 20 %+; a lender's customer opens the app when they need money, so 3–4 % is normal and pushing it up is not the goal. And our event log only records sessions that create an application — a real app would log payments and balance checks too. \"DAU/MAU measures habit; our customers do not need a habit, they need a loan when they need one — so we steer by applications, approval-to-money conversion and repeat borrowing, and keep DAU/MAU as a health line.\""}
 ```
 
-> 🚀 **Stretch (optional, +5 XP).** **P11.** Repeat borrowing by the **product of the first loan** (`products.code`), for customers whose first loan was before October 2025 — so 12 months are observable for all of them. Does the first product matter for coming back? Then, in the same box, count which product the second loan is.
+**P12.** *(vanity vs actionable)* Bekzod's draft first page for the board has three numbers: *"6 040 customers registered"*, *"7 828 loans disbursed since 2024"* and *"approval rate up 5 points this year"*. For each: vanity or actionable, and what you would show instead. Use section 1's test: *if it falls, who does what?*
+
+```task
+{"id": "w08d1-p13", "kind": "free", "min": 40, "rubric": ["calls the two cumulative totals vanity: they can only go up and no decision follows", "gives an actionable twin for each, e.g. % of new customers with a first loan within 60 days, monthly disbursed amount against plan", "says an approval rate alone can be pushed up by a looser cut-off, so it needs FPD30 of the approved next to it", "names an owner for at least one replacement metric"], "model": "Registered customers (6 040) and loans since 2024 (7 828) are running totals: they rise every month whatever happens, so they are vanity. Instead: the share of new customers who take a first loan within 60 days (52 % in January 2026, 78 % in July — the product team owns it) and the monthly disbursed amount against plan (the portfolio manager). \"Approval up 5 points\" is actionable only with its guardrail: a looser cut-off raises approval and, a few months later, FPD — so show approval next to FPD30 of the approved, and give the pair to Risk."}
+```
+
+> 🚀 **Stretch (optional, +5 XP).** **P13.** *(retention by first product)* Repeat borrowing by the **product of the first loan** (`products.code`), for customers whose first loan was before October 2025 — so 12 months are observable for all of them. Does the first product matter for coming back? Then, in the same box, count which product the second loan is.
 
 ```task
 {"id": "w08d1-p11", "kind": "sql", "xp": 2, "note": "5 rows (AUTO, BNPL, CONS, MICRO, SME): first product, customers, m3, m6, m12 in % to one decimal.", "model": "WITH ranked AS (\n  SELECT l.customer_id, l.disbursed_at, p.code,\n         ROW_NUMBER() OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at, l.loan_id) AS n\n  FROM loans l JOIN products p ON p.product_id = l.product_id),\npairs AS (\n  SELECT f.customer_id, f.code AS first_product, f.disbursed_at AS first_at, s.disbursed_at AS second_at\n  FROM ranked f LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2\n  WHERE f.n = 1)\nSELECT first_product, COUNT(*) AS customers,\n       ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+3 months')  THEN 1 ELSE 0 END) / COUNT(*), 1) AS m3,\n       ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+6 months')  THEN 1 ELSE 0 END) / COUNT(*), 1) AS m6,\n       ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+12 months') THEN 1 ELSE 0 END) / COUNT(*), 1) AS m12\nFROM pairs WHERE first_at < '2025-10-01'\nGROUP BY first_product ORDER BY first_product;"}
@@ -331,7 +822,9 @@ MICRO (903) 18.7 / 29.8 / 42.2 %; CONS (809) 18.0 / 27.1 / 40.7; BNPL (526) 20.0
 - Grouping events by an attribute logged per event (device, version) instead of per session.
 - Ending the funnel at `contract_signed` — the money is in `loans`.
 - A cohort table with numbers in cells that cannot be observed yet (m12 for a three-month-old cohort).
+- Calling a customer "churned" before the window has ended, or comparing churn rates with different windows.
 - DAU/MAU as the North Star of a lender.
+- A running total (all customers, all loans ever) on the first page: it can only go up.
 
 ---
 
@@ -345,9 +838,9 @@ None today. **HW 8.1** (your CV draft and a one-page portfolio index) is set tom
 
 ```check
 {"id": "w08d1-sc", "questions": [
-  {"type": "single", "q": "Your tree's approval rate is 62 %; the risk report says 71 % for the same month. Who is wrong?", "options": ["The tree — approval must exclude cancelled applications", "Nobody: the tree divides approved by all applications so the chain multiplies back; the report divides by decided. Write the definition under each number", "The report — it ignores cancelled applications", "Both — approval should be approved ÷ app sessions"], "answer": 1, "explain": "Two true numbers with two denominators (→ 'North Star and the metric tree', P1, P6)."},
-  {"type": "single", "q": "A dashboard shows 'two thirds of applicants drop before opening the app'. What do you ask first?", "options": ["Which app version crashed", "What the number was last month", "Who is in the denominator — app_events exists only for applications made in the app", "Whether iOS is better than Android"], "answer": 2, "explain": "Branch and partner customers never had an app session to lose: the 'drop' is a population (→ 'The funnel', decision 3, P4)."},
-  {"type": "single", "q": "The 2026-06 cohort shows 37.4 % repeat borrowing at 3, 6 and 12 months. What is wrong?", "options": ["Those customers have had about three months, not twelve: the 6- and 12-month cells are not observable and must be blank", "Nothing — June borrowers repeat early", "The query counts loans instead of customers", "The cohort should be by application month"], "answer": 0, "explain": "Blank a cell unless every first loan of the cohort is at least N months old (→ 'Retention in lending', P8)."}
+  {"type": "single", "q": "Your tree's approval rate is 62 %; the risk report says 71 % for the same month. Who is wrong?", "options": ["The tree — approval must exclude cancelled applications", "Nobody: the tree divides approved by all applications so the chain multiplies back; the report divides by decided. Write the definition under each number", "The report — it ignores cancelled applications", "Both — approval should be approved ÷ app sessions"], "answer": 1, "explain": "Two true numbers with two denominators (→ 'What a metric is', P1, P6)."},
+  {"type": "single", "q": "A dashboard shows 'two thirds of applicants drop before opening the app'. What do you ask first?", "options": ["Which app version crashed", "What the number was last month", "Who is in the denominator — app_events exists only for applications made in the app", "Whether iOS is better than Android"], "answer": 2, "explain": "Branch and partner customers never had an app session to lose: the 'drop' is a population (→ 'Leaky steps', check 1, P4)."},
+  {"type": "single", "q": "The 2026-06 cohort shows 37.4 % repeat borrowing at 3, 6 and 12 months. What is wrong?", "options": ["Those customers have had about three months, not twelve: the 6- and 12-month cells are not observable and must be blank", "Nothing — June borrowers repeat early", "The query counts loans instead of customers", "The cohort should be by application month"], "answer": 0, "explain": "Blank a cell unless every first loan of the cohort is at least N months old (→ 'The retention table and the retention curve', P8)."}
 ]}
 ```
 
@@ -408,13 +901,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w08d1", "pass": 0.8, "questions": [
-  {"type": "single", "q": "What makes a metric tree multiply back to the total exactly?", "options": ["Each factor uses the same month's calendar data", "Approval must exclude cancelled applications", "Every factor is a percentage", "Each factor's denominator is the previous factor's numerator — so the tree's approval rate is approved ÷ all applications"], "answer": 3, "explain": "The product telescopes only when the chain is consistent; the risk report's approved ÷ decided is fine, just not in the tree (→ section 1, 'North Star and the metric tree')."},
+  {"type": "single", "q": "What makes a metric tree multiply back to the total exactly?", "options": ["Each factor uses the same month's calendar data", "Approval must exclude cancelled applications", "Every factor is a percentage", "Each factor's denominator is the previous factor's numerator — so the tree's approval rate is approved ÷ all applications"], "answer": 3, "explain": "The product telescopes only when the chain is consistent; the risk report's approved ÷ decided is fine, just not in the tree (→ section 1, 'A metric tree')."},
   {"type": "number", "q": "Active customers 2 846; application rate 22.80 %; approval (tree) 60.40 %; take-up 92.60 %. About how many loans did August's applications produce?", "answer": 363, "tol": 1, "explain": "2 846 × 0.2280 × 0.6040 × 0.9260 ≈ 363 — the tree multiplies back to the 363 loans and 23.3 bn of the worked example (→ section 2)."},
-  {"type": "single", "q": "Why is this not the funnel's 'reached' count?", "code": "SELECT event_name, COUNT(*) AS reached\nFROM app_events\nGROUP BY event_name;", "options": ["GROUP BY must come before FROM", "COUNT(*) skips NULLs", "It is the correct funnel", "It counts events, not sessions; reached = has the event, once per session — MAX(CASE …) per application_id, then SUM"], "answer": 3, "explain": "In this data each step happens at most once per session, but the definition must not depend on that luck (→ section 1, 'The funnel', decision 2)."},
+  {"type": "single", "q": "Why is this not the funnel's 'reached' count?", "code": "SELECT event_name, COUNT(*) AS reached\nFROM app_events\nGROUP BY event_name;", "options": ["GROUP BY must come before FROM", "COUNT(*) skips NULLs", "It is the correct funnel", "It counts events, not sessions; reached = has the event, once per session — MAX(CASE …) per application_id, then SUM"], "answer": 3, "explain": "In this data each step happens at most once per session, but the definition must not depend on that luck (→ section 1, 'The lending funnel', ⚠️)."},
   {"type": "single", "q": "A dashboard says '64 % of applicants drop before opening the app'. What is the first question?", "options": ["Who is in the denominator — app_events exists only for applications made in the app", "Whether the app crashed", "What the drop was last month", "Which app version they used"], "answer": 0, "explain": "Branch and partner customers never had an app session to lose; an app funnel must say 'app applications only' (→ P4)."},
-  {"type": "single", "q": "device and app_version are logged per event and change inside a session. How do you group the funnel by device?", "options": ["By the most common device in the table", "You cannot group by device", "By each event's own device", "By session, taking the device of the session's app_open"], "answer": 3, "explain": "Grouping events by their own device counts each step on a different population — the 'iOS advantage' was an artefact (→ section 1, decision 4, P5)."},
-  {"type": "multi", "q": "Which are leading metrics?", "options": ["FPD30 at 60 days", "Applications this week", "NPL90 after a year", "Write-offs", "1–30 DPD entries"], "answer": [0, 1, 4], "explain": "Leading metrics move before the result; NPL90 and write-offs confirm it later (→ section 1, 'Input vs output, leading vs lagging')."},
-  {"type": "single", "q": "What is wrong, and what is the fix?", "code": "-- repeat borrowing, first-loan cohort 2026-06\n-- m3 = 37.4 % · m6 = 37.4 % · m12 = 37.4 %", "options": ["Nothing — these customers repeat early", "The 6- and 12-month windows have not ended for this cohort; blank a cell unless every first loan of the cohort is at least N months old", "Use COUNT(DISTINCT customer_id)", "Start the cohort at the application date"], "answer": 1, "explain": "An unobservable cell is 'not measured', not 'did not repeat' — the same rule as week 3's vintage blanks (→ section 1, 'Retention in lending', P8)."},
+  {"type": "single", "q": "device and app_version are logged per event and change inside a session. How do you group the funnel by device?", "options": ["By the most common device in the table", "You cannot group by device", "By each event's own device", "By session, taking the device of the session's app_open"], "answer": 3, "explain": "Grouping events by their own device counts each step on a different population — the 'iOS advantage' was an artefact (→ section 1, 'Leaky steps', check 3, P5)."},
+  {"type": "multi", "q": "Which are leading metrics?", "options": ["FPD30 at 60 days", "Applications this week", "NPL90 after a year", "Write-offs", "1–30 DPD entries"], "answer": [0, 1, 4], "explain": "Leading metrics move before the result; NPL90 and write-offs confirm it later (→ section 1, 'A metric tree')."},
+  {"type": "single", "q": "What is wrong, and what is the fix?", "code": "-- repeat borrowing, first-loan cohort 2026-06\n-- m3 = 37.4 % · m6 = 37.4 % · m12 = 37.4 %", "options": ["Nothing — these customers repeat early", "The 6- and 12-month windows have not ended for this cohort; blank a cell unless every first loan of the cohort is at least N months old", "Use COUNT(DISTINCT customer_id)", "Start the cohort at the application date"], "answer": 1, "explain": "An unobservable cell is 'not measured', not 'did not repeat' — the same rule as week 3's vintage blanks (→ section 1, 'The retention table and the retention curve', P8)."},
   {"type": "single", "q": "Company corner: on the net-income tree, which branch does Sevara's cure rate belong to?", "options": ["Operating expenses", "Cost of risk → LGD", "Interest income → yield", "Disbursements → take-up"], "answer": 1, "explain": "Cure rate, recoveries and restructuring drive LGD, a child of cost of risk (→ Company corner)."}
 ]}
 ```

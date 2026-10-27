@@ -10,7 +10,13 @@
 - **Part B (25 pts):** eight interview questions answered in writing, 3–5 sentences each.
 - Allowed SQL: weeks 1–2 only — `SELECT/WHERE/ORDER BY`, joins, `GROUP BY/HAVING`, functions, `CASE`, set operators. The two `WITH` blocks printed on Day 3 (DPD) and Day 4 (FPD30) may be copied as they stand; no other subqueries, no window functions.
 
-**Rules.** Open book: your notes, this week's pages, your tool. Closed: the answer folds until you submit. Every task has a query box with **▶ Run** — on an exam day there is no **✔ Check**: you decide when a result is right. Hand in with the **📎 box at the end of this page**: `queries.sql` (each task with `-- Tn:` above and `-- result:` below; say which dialect) and `interview.md` (Part B). Also due today: **HW 2.2** — hand it in in its workspace on the [Week 2 · Day 3](weeks/week-02/day-3.md) page. Expected numbers are as of 2026-10-01.
+**Rules.**
+
+- **Open book:** your notes, this week's pages, your tool. **Closed:** the answer folds, until you submit.
+- **No ✔ Check today.** Every task has a query box with **▶ Run**; you decide when a result is right.
+- **As-of date:** 2026-10-01. Every expected number is computed on it.
+- **Hand in** with the 📎 box at the end of this page: `queries.sql` (each task: `-- Tn:` above the query, `-- result:` below it, the dialect on the first line) and `interview.md` (Part B).
+- **Also due today:** HW 2.2, in its workspace on the [Week 2 · Day 3](weeks/week-02/day-3.md) page.
 
 **Working method** — the one the week taught, in three habits:
 
@@ -34,7 +40,7 @@ Warm up for five minutes before the clock starts:
 
 ## Part A — Twenty-five tasks (120 min, 75 pts)
 
-Three points each: 1 for a query that runs and expresses the question, 1 for the right result, 1 for the one-line reading (`-- note:`) where the task asks for one.
+Three points per task: 1 for a query that runs and answers the question, 1 for the right result, 1 for the one-line reading (`-- note:`) where the task asks for one. Within each team the tasks get harder from first to last.
 
 ### Bekzod — the portfolio (7)
 
@@ -225,7 +231,7 @@ FROM applications GROUP BY channel;
 
 <details><summary>T15</summary>
 
-Day 4 P4: A 2 150 / 91.3 % · B 4 702 / 77.4 · C 4 605 / 52.2 · D 2 155 / 16.8 · no score 388 / 59.0 — sum 14 000. The NULL test comes first in the `CASE`; without it the 388 land in D and the D rate reads 23 % instead of 17 %.
+Day 4 P7: A 2 150 / 91.3 % · B 4 702 / 77.4 · C 4 605 / 52.2 · D 2 155 / 16.8 · no score 388 / 59.0 — sum 14 000. The NULL test comes first in the `CASE`; without it the 388 land in D and the D rate reads 23 % instead of 17 %.
 
 </details>
 
@@ -276,7 +282,7 @@ Both monotonic. FPD separates A/B from C/D (×2.2) but barely C from D; write-of
 
 <details><summary>T20</summary>
 
-Raw: 10 groups on SQLite (SQL Server's default collation ignores case and trailing spaces and shows 6 — Day 2 P9). Cleaned with `REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')`: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774. Dirty rows: `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180** on SQLite (SQL Server: add `COLLATE Latin1_General_CS_AS` after `LOWER(TRIM(method))`, or its default collation finds only the 27 `bank transfer` rows). Note for Timur: the 27 `bank transfer` rows average 2.1 days late — a different source system, not a typo.
+Raw: 10 groups on SQLite (SQL Server's default collation ignores case and trailing spaces and shows 6 — Day 2 P8). Cleaned with `REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')`: card 17 621 · payme 8 900 · click 8 790 · cash 8 790 · transfer 8 774. Dirty rows: `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180** on SQLite (SQL Server: add `COLLATE Latin1_General_CS_AS` after `LOWER(TRIM(method))`, or its default collation finds only the 27 `bank transfer` rows). Note for Timur: the 27 `bank transfer` rows average 2.1 days late — a different source system, not a typo.
 
 </details>
 
@@ -300,7 +306,7 @@ Raw: 10 groups on SQLite (SQL Server's default collation ignores case and traili
 
 <details><summary>T23</summary>
 
-`SELECT COUNT(*), MAX(paid_at), COUNT(DISTINCT loan_id) FROM payments WHERE paid_at > '2026-10-01'` → **24 · 2026-11-24 · 23**. Either the extract date is wrong or these are forward-dated entries; Day 4 P7 showed they do not change the DPD buckets, but they inflate "collected in October" before October exists.
+`SELECT COUNT(*), MAX(paid_at), COUNT(DISTINCT loan_id) FROM payments WHERE paid_at > '2026-10-01'` → **24 · 2026-11-24 · 23**. Either the extract date is wrong or these are forward-dated entries; Day 4 P12 showed they do not change the DPD buckets, but they inflate "collected in October" before October exists.
 
 </details>
 

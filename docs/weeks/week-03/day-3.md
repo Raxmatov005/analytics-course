@@ -16,126 +16,392 @@
 
 ### Scalar subquery — one value, used like a constant
 
-```sql
-SELECT COUNT(*) FROM loans WHERE principal > (SELECT AVG(principal) FROM loans);        -- 1130 loans above 51 709 668
-SELECT p.code, COUNT(*) AS loans, ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM loans), 1) AS share_pct
-FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.code;            -- MICRO 34.1 · CONS 30.9 · BNPL 20.0 · SME 10.0 · AUTO 5.0
-```
+**What it is.** A **subquery** (*подзапрос*) is a query in brackets inside another query. A **scalar subquery** returns exactly one row and one column — one value. The engine runs it and uses the value wherever you could write a number.
 
-The bracketed query (*подзапрос*) returns exactly one row and one column; the engine runs it once and uses the value. You used one in week 2 Day 3 for the share of payments. Monday's `SUM(COUNT(*)) OVER ()` does the same job for shares with no second query; the scalar subquery wins when the denominator comes from a *different* table or filter (loans above the company average, applications over the approval count).
-
-### IN — a list — and the NULL trap
+**How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE customer_id IN (SELECT customer_id FROM loans WHERE status = 'written_off');   -- 188
+SELECT COUNT(*) AS above_avg
+FROM loans
+WHERE principal > (SELECT AVG(principal) FROM loans);   -- (one value): 51 709 668
 ```
 
-`IN (subquery)` is true when the value appears in the list. `NOT IN` is the dangerous one. If the list contains a single **NULL**, `x NOT IN (…)` is *unknown* for every x (because `x <> NULL` is unknown) and the query returns **nothing**, silently:
+1 130 loans are larger than the company average of 51 709 668 — one loan in seven, because a few big SME and Auto loans pull the average up. A scalar subquery can also sit in `SELECT` as the denominator of a share:
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans);                            -- 0  (closed_at has 3 601 NULLs)
-SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans WHERE closed_at IS NOT NULL); -- 649
+SELECT p.code, COUNT(*) AS loans,
+       ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM loans), 1) AS share_pct   -- the same 7 828 on every row
+FROM loans l JOIN products p ON p.product_id = l.product_id
+GROUP BY p.code
+ORDER BY loans DESC;                                                             -- MICRO 34.1 · CONS 30.9 · BNPL 20.0 · SME 10.0 · AUTO 5.0
 ```
 
-> ⚠️ **Watch out.** Never `NOT IN` against a column that can be NULL without `IS NOT NULL` inside — or use `NOT EXISTS`, which has no such problem. The query does not fail; it quietly returns 0, and a 0 looks like an answer. (Primary and foreign keys in our tables are never NULL, so `customer_id NOT IN (SELECT customer_id FROM loans)` is safe here — but the habit matters more than the case.)
+**When you use it.**
+- One number to compare against or divide by: the average, the total, the as-of count.
+- A number from a **different** table or filter than the outer query (the average SME loan, the number of approvals) — the case a window cannot do.
 
-### EXISTS / NOT EXISTS — a test
+> ⚠️ **Watch out.** A scalar subquery must return one row. If it returns two, SQL Server stops with an error, and SQLite silently takes the first row. Make sure it is an aggregate (`AVG`, `COUNT`, `MAX`) or is filtered to one row.
+
+**Your turn.** How many loans are larger than the **average SME loan** (`product_id = 5`)? One scalar subquery with its own `WHERE`.
+
+```task
+{"id": "w03d3-l1", "kind": "number", "answer": 488, "dp": 0, "unit": "loans", "hint": "WHERE principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)", "model": "488 — 400 SME loans and 88 Auto loans exceed 308 728 745, the average SME loan."}
+```
+
+### IN with a subquery — is the value in that list?
+
+**What it is.** `IN (subquery)` is true when the value appears in the **list** the subquery returns. The subquery returns one column and any number of rows.
+
+**How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM customers c WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);          -- 1705 customers, no loan
-SELECT COUNT(*) FROM customers c WHERE EXISTS (SELECT 1 FROM applications a WHERE a.customer_id = c.customer_id)
-                                   AND NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);          -- 1118 applied, never borrowed
-SELECT COUNT(*) FROM applications a WHERE NOT EXISTS (SELECT 1 FROM app_events e WHERE e.application_id = a.application_id);  -- 8994 — all branch + partner (week 8)
+SELECT COUNT(*)
+FROM customers
+WHERE customer_id IN (SELECT customer_id              -- one column,
+                      FROM loans
+                      WHERE status = 'written_off');   -- many rows: the list
 ```
 
-`EXISTS` asks *is there at least one row?* — it stops at the first match, never multiplies rows, ignores NULLs, and reads like the sentence. `SELECT 1` because the content of the inner result is irrelevant. It is week 2's anti-join written differently — the same 1 705 customers both ways:
+188 customers have at least one written-off loan. There are 190 written-off loans: two customers have two each. A `JOIN` to `loans` would return 190 rows; `IN` returns each customer once, however often they appear in the list.
+
+**When you use it.**
+- "X that appear in that set": customers with a write-off, loans of the app channel, branches in a list of regions.
+- Membership without multiplying rows.
+
+> ⚠️ **Watch out.** `NOT IN` breaks on a single NULL in the list. `x NOT IN (a, b, NULL)` means `x <> a AND x <> b AND x <> NULL`, and `x <> NULL` is unknown — so no row passes, silently:
+>
+> `WHERE disbursed_at NOT IN (SELECT closed_at FROM loans)` → **0** (closed_at has 3 601 NULLs) · with `WHERE closed_at IS NOT NULL` inside → **649**.
+>
+> Filter the NULLs out inside, or use `NOT EXISTS` (next).
+
+**Your turn.** How many loans came through the **app** channel? The channel is on `applications`; use `application_id IN (…)`.
+
+```task
+{"id": "w03d3-l2", "kind": "number", "answer": 2669, "dp": 0, "unit": "loans", "hint": "SELECT COUNT(*) FROM loans WHERE application_id IN (SELECT application_id FROM applications WHERE channel = 'app');", "model": "2 669 — exactly the Micro loans: the app sells one product. IN brought the channel in without joining a second table into the result."}
+```
+
+### EXISTS and NOT EXISTS — is there at least one row?
+
+**What it is.** `EXISTS (subquery)` is true when the subquery returns **at least one row**; `NOT EXISTS` when it returns none. What the rows contain does not matter, so the subquery usually says `SELECT 1`. The subquery mentions the outer row (`a.customer_id = c.customer_id`), so it is checked once per outer row.
+
+**How to write it.** On the two small tables from week 2 — Aziz (1) has no application:
 
 ```sql
-SELECT COUNT(*) FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id WHERE l.loan_id IS NULL;      -- 1705 (week 2)
-SELECT COUNT(*) FROM customers c WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);    -- 1705 (today)
+WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
+     app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
+SELECT c.id, c.name
+FROM cust c
+WHERE NOT EXISTS (SELECT 1 FROM app a WHERE a.cust_id = c.id);   -- 1 row: Aziz
 ```
 
-The `LEFT JOIN` form can bring columns from the right side into the output (useful when you *want* the matches too); `NOT EXISTS` cannot multiply rows even if a customer had seven loans, and needs no `IS NULL` on a column you have to pick carefully. Pick the one that reads better; for "has none" it is usually `NOT EXISTS`.
+On the real data — staff who never handled an application:
 
-### Which form, when
+```sql
+SELECT s.role, COUNT(*) AS staff
+FROM staff s
+WHERE NOT EXISTS (SELECT 1 FROM applications a
+                  WHERE a.officer_id = s.staff_id)     -- linked to the outer row
+GROUP BY s.role;
+```
 
-| You need | Form | Example today |
+Two rows: 10 branch managers and 30 collectors — 40 of the 100 staff. Every one of the 60 loan officers has handled at least one application, which is the check you wanted.
+
+**When you use it.**
+
+| | `NOT EXISTS` | `LEFT JOIN … WHERE right.key IS NULL` (week 2) |
 |---|---|---|
-| one number to compare against or divide by | scalar subquery | loans above the company average (1 130) |
-| membership in a set | `IN` / `EXISTS` | customers with a written-off loan (188) |
-| absence from a set | `NOT EXISTS` (or `NOT IN` + `IS NOT NULL`) | customers who never borrowed (1 705) |
-| a comparison with the row's own group | correlated subquery — or a window | above the product average (3 919) |
-| aggregate twice | derived table / CTE | loans per customer → customers per count |
-| several named steps, different grains | CTE chain | vintage: instalment → flag → ever → cohort |
-| rows that exist in no table | recursive CTE (or `dim_date`) | the month calendar (21 rows) |
+| customers with no loan | 1 705 | 1 705 |
+| a NULL on the other side | never matches — no trap | needs `IS NULL` on a column that is never NULL |
+| can multiply rows | never | not in the anti-join, but yes if you drop the `IS NULL` filter |
+| can show the other table's columns | no | yes |
 
-```game
-{"type": "match", "id": "w03d3-g1", "title": "Which form, when?", "pairs": [["Scalar subquery", "one number to compare with or divide by"], ["IN / EXISTS", "is the value in that set?"], ["NOT EXISTS", "has none — safe with NULLs"], ["Correlated subquery", "compare a row with its own group, under a different filter"], ["Derived table / CTE", "aggregate twice: per customer, then per count"], ["Recursive CTE", "rows that exist in no table: a month calendar"]]}
+Both give the same 1 705 customers. For "has none" `NOT EXISTS` usually reads better; when you also want columns from the other table, use the join.
+
+> ⚠️ **Watch out.** Forget the link to the outer row (`WHERE l.customer_id = c.customer_id`) and the subquery asks "does **any** loan exist?" — always yes. `NOT EXISTS` then returns 0 rows, `EXISTS` returns every customer.
+
+**Your turn.** How many of the ten branches have **no** written-off Auto loan? `NOT EXISTS` on `loans`, linked on `branch_id`, with `status = 'written_off' AND product_id = 4` inside.
+
+```task
+{"id": "w03d3-l3", "kind": "number", "answer": 3, "dp": 0, "unit": "branches", "hint": "SELECT COUNT(*) FROM branches b WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.branch_id = b.branch_id AND l.status = 'written_off' AND l.product_id = 4);", "model": "3 branches have never written off an Auto loan; the other 7 have at least one."}
 ```
 
-### Correlated subqueries — the inner query looks at the outer row
+### Derived table — a subquery in FROM
 
-In the `EXISTS` examples the inner query mentions `c.customer_id` — a column of the **outer** row. That makes it **correlated** (*коррелированный подзапрос*): conceptually it runs once per outer row. The classic use is "compared to its own group":
+**What it is.** A **derived table** (*производная таблица*) is a subquery in `FROM`: its result is used as a table. It needs an alias, and every column needs a name.
 
-```sql
-SELECT COUNT(*) FROM loans l WHERE l.principal > (SELECT AVG(x.principal) FROM loans x WHERE x.product_id = l.product_id);   -- 3919
-SELECT COUNT(*) FROM loans l WHERE l.principal = (SELECT MAX(x.principal) FROM loans x WHERE x.customer_id = l.customer_id); -- 4335 (one per borrower)
-```
-
-3 919 is Monday's P6 answer, obtained without a window. Both are right; the window version is usually faster and shows the comparison value in the output; the correlated version is what you reach for when the comparison needs a *different filter* than the outer row (e.g. "loans larger than the average of *closed* loans in their product").
-
-### Derived tables — a query in FROM
+**How to write it.**
 
 ```sql
 SELECT loans_per_customer, COUNT(*) AS customers
-FROM (SELECT customer_id, COUNT(*) AS loans_per_customer FROM loans GROUP BY customer_id) AS t
-GROUP BY loans_per_customer ORDER BY loans_per_customer;
--- 1 → 2089 · 2 → 1378 · 3 → 593 · 4 → 194 · 5 → 62 · 6 → 15 · 7 → 4
+FROM (SELECT customer_id, COUNT(*) AS loans_per_customer     -- step 1: one row per customer
+      FROM loans
+      GROUP BY customer_id) AS t                             -- the alias is required
+GROUP BY loans_per_customer                                  -- step 2: one row per count
+ORDER BY loans_per_customer;
 ```
 
-A derived table (*производная таблица*) is a result set used as a table: it must have an alias (`t`) in SQL Server, and every column a name. It is how you **aggregate twice** — week 2's T6 by eye becomes one query. It is also where a window goes before you filter on it (Monday's P6).
+| loans_per_customer | customers |
+|---|---|
+| 1 | 2 089 |
+| 2 | 1 378 |
+| 3 | 593 |
+| 4 | 194 |
+| 5 | 62 |
+| 6 | 15 |
+| 7 | 4 |
 
-### CTEs — derived tables with names, in order
+Seven rows: 2 089 borrowers have one loan, 4 have seven. 4 335 borrowers in all. The inner query **aggregates once** (per customer), the outer query **aggregates again** (per count) — two `GROUP BY`s in a row, which one query cannot do.
 
-`WITH name AS (…)` defines a result once, at the top, and the main query uses it by name. Several in a row — a **chain** — read like steps of a recipe. You have used two already:
+**When you use it.**
+- Aggregate twice: per customer, then per count; per day, then the average day.
+- Filter on a window (Day 1): the window goes inside, the `WHERE` outside.
+
+> ⚠️ **Watch out.** A derived table without an alias works in SQLite but fails in SQL Server (*Incorrect syntax near ')'*). Always write `AS t`.
+
+**Your turn.** What share of borrowers have exactly **one** loan? (%, one decimal — 2 089 of 4 335; or add a Day 1 share column to the outer query.)
+
+```task
+{"id": "w03d3-l4", "kind": "number", "answer": 48.2, "dp": 1, "unit": "%", "hint": "ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) in the outer SELECT.", "model": "48.2 % — 2 089 of 4 335 borrowers took one loan only. Half the customers never came back for a second."}
+```
+
+### Correlated subquery — the inner query reads the outer row
+
+**What it is.** A **correlated subquery** (*коррелированный подзапрос*) uses a column of the **outer** row, so its answer is different for every outer row. The `EXISTS` tests above were correlated. A scalar subquery can be too: "the limit of **this loan's** product".
+
+**How to write it.**
 
 ```sql
-WITH unpaid AS ( … matured instalments not fully paid … ),         -- step 1: grain = instalment
-     dpd    AS ( … per loan: MIN(due_date), days … ),              -- step 2: grain = loan, built from step 1
-     buckets AS ( SELECT loan_id, CASE … END AS bucket FROM dpd )  -- step 3: a label per loan
-SELECT bucket, COUNT(*) FROM buckets GROUP BY bucket;               -- step 4: the answer
+SELECT COUNT(*)
+FROM loans l
+WHERE l.principal >= 0.99 * (SELECT p.max_amount
+                             FROM products p
+                             WHERE p.product_id = l.product_id);   -- l = the outer row: its own product
 ```
 
-Each CTE may use every CTE above it. The chain fixes the grain explicitly at every step — the cure for week 2's row-multiplication problem: *aggregate at each grain, then join the aggregates*. **When a CTE beats a subquery:** when the same result is needed twice (two snapshots, two aggregates from one base), when the nesting would exceed two levels, or when a reader must follow it — a CTE chain is read top-down, a nested subquery inside-out. When a subquery is fine: a one-line scalar or a single `EXISTS`. Performance is the same on both engines today (both are inlined); Thursday's views are CTEs that *persist*.
+85 loans are within 1 % of their own product's maximum amount. Read it as: for each loan `l`, look up the limit of `l`'s product, then compare. The classic form compares a row with its own group — `l.principal > (SELECT AVG(x.principal) FROM loans x WHERE x.product_id = l.product_id)` gives 3 919, Monday's P13 without a window — but on our tables, which have no indexes yet, it reads 7 828 × 7 828 rows and takes seconds (Day 4).
 
-> 💡 **Key idea.** A CTE chain is a recipe with one grain per step: instalment → loan → customer → answer. If you can say in three words what one row of each step is, the chain is right; if you cannot, that step is where the numbers will multiply.
+**When you use it.**
+- Compare a row with its own group under a **different filter**: "larger than the average *closed* loan of its product" — a window cannot change the filter.
+- One-row lookups: the customer's largest loan, the latest payment date of this loan.
 
-> ⚠️ **Watch out.** A CTE lives for **one statement only** — the `SELECT` right after the `WITH`. Put a `;` after it and the next query cannot see the name (*no such table*). To reuse a result across several queries you need a view or a table — Thursday.
+| | correlated subquery | window (Day 1) |
+|---|---|---|
+| comparison value visible in the output | no | yes |
+| a different filter for the group | yes | no |
+| work | conceptually once per outer row | one pass |
 
-Put the pieces of a chain together — the words on the tiles are all you need:
+> ⚠️ **Watch out.** When inner and outer query read the same table, the aliases must differ (`l` and `x`). Write `WHERE product_id = product_id` and both sides mean the inner row: always true, and the subquery averages the whole table.
 
-```game
-{"type": "cloze", "id": "w03d3-g2", "title": "Assemble the chain", "text": "WITH {{0}} AS (SELECT customer_id, COUNT(*) AS n FROM loans {{1}})\nSELECT n AS loans_per_customer, COUNT(*) AS customers\nFROM per_customer\n{{2}}\nORDER BY n;", "blanks": [["per_customer"], ["GROUP BY customer_id"], ["GROUP BY n"]], "distractors": ["WHERE n > 1", "per_loan", "GROUP BY loan_id", "HAVING COUNT(*) > 1"]}
+**Your turn.** How many loans are at least **90 %** of their product's maximum amount?
+
+```task
+{"id": "w03d3-l5", "kind": "number", "answer": 846, "dp": 0, "unit": "loans", "hint": "Change 0.99 to 0.9 in the query above.", "model": "846 loans — about one in nine sits in the top tenth of its product's range, close to the limit."}
 ```
+
+### CTE — WITH name AS (…), and why it reads better
+
+**What it is.** A **CTE** (common table expression, *обобщённое табличное выражение*) is a derived table with a **name**, written **before** the query that uses it: `WITH name AS (…) SELECT … FROM name`. It exists only for that one statement.
+
+**How to write it.** The derived table from above, as a CTE:
+
+```sql
+WITH per_customer AS (                                   -- the name, then the query in brackets
+  SELECT customer_id, COUNT(*) AS loans_per_customer
+  FROM loans
+  GROUP BY customer_id)
+SELECT loans_per_customer, COUNT(*) AS customers         -- the main query uses the name like a table
+FROM per_customer
+GROUP BY loans_per_customer
+ORDER BY loans_per_customer;
+```
+
+The same seven rows: 2 089, 1 378, 593 … 4. The work is identical; the order of reading changes. The derived table is read inside-out (the brackets first); the CTE is read top-down, step 1 then step 2, each with a name that says what one row is.
+
+**When you use it.**
+- Any query with a step a reader must understand on its own.
+- The same result needed twice in one query (two snapshots from one base, a total and a breakdown).
+
+| | Derived table | CTE |
+|---|---|---|
+| where | inside `FROM` | above the query, named |
+| read | inside-out | top-down |
+| use the result twice | write it twice | name it once, use it twice |
+| lives | one query | one query |
+
+> ⚠️ **Watch out.** A CTE lives for **one statement only** — the `SELECT` right after the `WITH`. Put a `;` after it and the next query cannot see the name (*no such table*). To reuse a result across queries you need a view or a table — Thursday.
+
+**Your turn.**
 
 ```game
 {"type": "bug", "id": "w03d3-g3", "title": "Find the broken line", "q": "Two questions about the same CTE. The first runs; the second says no such table: per_loan. Which line fails?", "code": "WITH per_loan AS (SELECT loan_id, SUM(principal_due) AS outstanding\n                  FROM installments WHERE due_date > '2026-10-01' GROUP BY loan_id)\nSELECT COUNT(*) FROM per_loan;\nSELECT AVG(outstanding) FROM per_loan;", "answer": [3], "why": "A CTE exists only for the one statement that follows it; after the semicolon it is gone. Repeat the WITH, put both numbers in one SELECT, or save the result as a view or table (Day 4)."}
 ```
 
-### Recursive CTE — generating rows that are not in any table
+### A chain of CTEs — one grain per step
 
-`GROUP BY month` only shows months that **have** rows. A month with zero disbursements of a product at a branch simply vanishes — and a chart with a missing month lies. You need a **calendar**, and a recursive CTE (*рекурсивный CTE*) builds one from nothing:
+**What it is.** One `WITH` can define **several** CTEs, separated by commas. Each may use every CTE above it. A **chain** turns a long analysis into named steps, each with one **grain** — one thing that a row is.
+
+**How to write it.** Outstanding per loan → per customer → customers by number of owing loans:
 
 ```sql
-WITH RECURSIVE months(month_start) AS (
-  SELECT '2025-01-01'                                             -- anchor
+WITH per_loan AS (                                        -- step 1, grain: loan
+  SELECT loan_id, SUM(principal_due) AS outstanding
+  FROM installments
+  WHERE due_date > '2026-10-01'
+  GROUP BY loan_id),
+per_customer AS (                                         -- step 2, grain: customer — built from step 1
+  SELECT l.customer_id, COUNT(*) AS owing_loans, SUM(pl.outstanding) AS outstanding
+  FROM per_loan pl
+  JOIN loans l ON l.loan_id = pl.loan_id
+  GROUP BY l.customer_id)
+SELECT owing_loans, COUNT(*) AS customers,                -- step 3, grain: number of owing loans
+       ROUND(AVG(outstanding)) AS avg_outstanding
+FROM per_customer
+GROUP BY owing_loans
+ORDER BY owing_loans;
+```
+
+Six rows. 1 859 borrowers owe on one loan (63 340 783 on average); one borrower owes on six (701 901 165). One `WITH`, two names, a comma between them. Step 2 joins `loans` to 3 409 loan rows, not to 92 193 instalments — the grain was fixed in step 1, so nothing multiplies.
+
+**When you use it.**
+- Two or more levels of aggregation: instalment → loan → customer → answer.
+- Week 2's cure for row multiplication: aggregate each table at its own grain, then join the aggregates.
+
+> 💡 **Key idea.** A CTE chain is a recipe with one grain per step. If you can say in three words what one row of each step is, the chain is right; if you cannot, that step is where the numbers will multiply.
+
+> ⚠️ **Watch out.** `WITH` is written once, at the top. The second CTE starts with a comma, not a second `WITH`: `WITH a AS (…), b AS (…)`.
+
+**Your turn.** Put the pieces of a chain together — the words on the tiles are all you need.
+
+```game
+{"type": "cloze", "id": "w03d3-g2", "title": "Assemble the chain", "text": "WITH {{0}} AS (SELECT customer_id, COUNT(*) AS n FROM loans {{1}})\nSELECT n AS loans_per_customer, COUNT(*) AS customers\nFROM per_customer\n{{2}}\nORDER BY n;", "blanks": [["per_customer"], ["GROUP BY customer_id"], ["GROUP BY n"]], "distractors": ["WHERE n > 1", "per_loan", "GROUP BY loan_id", "HAVING COUNT(*) > 1"]}
+```
+
+### Recursive CTE — rows that are in no table
+
+**What it is.** A **recursive CTE** (*рекурсивный CTE*) refers to **itself**. It starts from an **anchor** row and adds new rows from the last ones until a stop condition fails. It generates rows that exist in no table: a calendar, the numbers 1 to n.
+
+**How to write it.**
+
+```sql
+WITH RECURSIVE months(month_start) AS (                           -- SQL Server: no RECURSIVE keyword
+  SELECT '2025-01-01'                                             -- anchor: the first row
   UNION ALL
-  SELECT date(month_start, '+1 month') FROM months                -- recursive step; SQL Server: DATEADD(month, 1, month_start), no RECURSIVE keyword
+  SELECT date(month_start, '+1 month')                            -- recursive step: the next row from the last one
+  FROM months                                                     -- SQL Server: DATEADD(month, 1, month_start)
   WHERE month_start < '2026-09-01')                               -- stop condition
 SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;  -- 21 · 2025-01-01 · 2026-09-01
 ```
 
-Anchor row, then "take the last rows and produce the next" until the condition fails. `LEFT JOIN` your aggregate onto it and the empty months appear as zeros: in 2026 the branch × product × month grid has 450 cells and **16 are empty** — 13 Auto months, 3 SME months at small branches — invisible to a plain `GROUP BY`. **The `dim_date` alternative:** `SELECT DISTINCT date(date_key, 'start of month') FROM dim_date WHERE year = 2026` — simpler, identical on both engines, and the reason week 1 shipped the table; use the recursion when there is no date dimension or when you need another sequence (numbers 1..6 for months-on-book: `WITH RECURSIVE k(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM k WHERE n < 6)`).
+21 rows: January 2025 to September 2026. Each pass adds one month while the last one is before September 2026. The numbers 1 to 6 work the same way: `WITH RECURSIVE k(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM k WHERE n < 6) SELECT n FROM k`.
+
+**When you use it.**
+- A complete calendar to `LEFT JOIN` counts onto, so a month with zero loans shows 0 instead of vanishing. In 2026 the branch × product × month grid has 450 cells and 16 are empty — invisible to a plain `GROUP BY` (P8).
+- A sequence of numbers: months on book 1..6, buckets, test cases. (When a date table exists — our `dim_date` — `SELECT DISTINCT date(date_key, 'start of month') FROM dim_date …` is simpler.)
+
+> ⚠️ **Watch out.** Without a stop condition the recursion never ends. SQLite runs until memory runs out; SQL Server stops after 100 levels (`OPTION (MAXRECURSION n)` changes it). Write the `WHERE` first.
+
+**Your turn.** How many rows does this calendar have?
+
+```task
+{"id": "w03d3-l6", "kind": "number", "answer": 6, "dp": 0, "unit": "rows", "hint": "WITH RECURSIVE m(d) AS (SELECT '2026-01-01' UNION ALL SELECT date(d, '+1 month') FROM m WHERE d < '2026-06-01') SELECT COUNT(*) FROM m; — the last row added is the first one that is not before June.", "model": "6: January to June. The step runs while the last month is before June, so June itself is still added, and then the recursion stops."}
+```
+
+### The vintage table — built step by step
+
+**What it is.** A **vintage** (*винтаж*, *поколение*) or **cohort** (*когорта*) is the set of loans disbursed in one month. A **vintage table** follows each cohort by its age in **months on book** (MOB, *месяц жизни*) — here, the instalment number — and shows the share of loans that have **ever** been 30+ days late by that age. Reading every cohort at the same age makes old and new cohorts comparable.
+
+The trick is "ever": once a loan is late, it stays "ever late". A running `MAX` of a 0/1 flag (Day 1's running window) does exactly that:
+
+| loan | MOB | late30 (this instalment) | ever30 = `MAX(late30) OVER (PARTITION BY loan ORDER BY MOB)` |
+|---|---|---|---|
+| 1 | 1 | 0 | 0 |
+| 1 | 2 | 1 | **1** |
+| 1 | 3 | 0 | **1** — stays on |
+| 2 | 1 | 0 | 0 |
+| 2 | 2 | 0 | 0 |
+| 2 | 3 | 0 | 0 |
+
+At MOB 3: 1 of 2 loans ever late = 50 %.
+
+**How to write it.** Four CTEs, one grain each, then the rate per MOB for the 2025 cohorts pooled:
+
+```sql
+WITH inst AS (                                      -- grain: instalment — how much was paid within 30 days of due?
+  SELECT i.loan_id, i.installment_no, i.total_due,
+         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30   -- SQL Server: DATEADD(day, 30, i.due_date)
+  FROM installments i
+  LEFT JOIN payments p ON p.installment_id = i.installment_id
+  WHERE i.installment_no <= 6
+    AND date(i.due_date, '+30 days') <= '2026-10-01'   -- only instalments whose 30 days are over
+  GROUP BY i.installment_id, i.loan_id, i.installment_no, i.total_due),
+flag AS (                                           -- grain: instalment — 1 if 30+ late
+  SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30
+  FROM inst),
+ever AS (                                           -- grain: instalment — ever late so far (running MAX)
+  SELECT loan_id, installment_no,
+         MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30
+  FROM flag),
+base AS (                                           -- grain: loan — the cohorts we read
+  SELECT loan_id FROM loans
+  WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-01-01')
+SELECT e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever30,
+       ROUND(100.0 * SUM(e.ever30) / COUNT(*), 2) AS rate_pct
+FROM base b
+JOIN ever e ON e.loan_id = b.loan_id
+GROUP BY e.installment_no
+ORDER BY mob;
+```
+
+| MOB | observed | ever 30+ | rate % |
+|---|---|---|---|
+| 1 | 2 347 | 34 | 1.45 |
+| 2 | 2 347 | 67 | 2.85 |
+| 3 | 2 347 | 102 | 4.35 |
+| 4 | 2 347 | 129 | 5.50 |
+| 5 | 2 347 | 150 | 6.39 |
+| 6 | 2 347 | 175 | 7.46 |
+
+2 347 loans of 2025 with at least six instalments, all observed at every MOB. By the sixth instalment 175 of them — 7.46 % — have been 30+ days late at least once. The curve only goes up, as a running `MAX` must. Add `strftime('%Y-%m', disbursed_at) AS cohort` to `base` and to the `GROUP BY`, and the same chain gives one curve per cohort (P9).
+
+**When you use it.**
+- Comparing cohorts at equal age: "is the new book cleaner than the old one?"
+- Any "has it ever happened by step k": ever 30+, ever contacted, ever upgraded.
+
+> ⚠️ **Watch out.** A cell where some loans are not yet old enough is not "nobody was late" — it is "not measured yet". Keep only instalments whose 30 days are over (the `WHERE` in `inst`), and leave a cell blank when not every loan of the cohort is observed (P10).
+
+**Your turn.** At MOB 1 this table must equal week 2's FPD30 (first payment 30+ days late). Why does the rate at MOB 3 **have** to be at least the rate at MOB 2?
+
+```task
+{"id": "w03d3-l7", "kind": "choice", "options": ["Because later instalments are larger", "Because ever30 is a running MAX: once a loan is late it stays counted, and the same loans are observed at every MOB", "Because 2025 was a bad year", "It does not have to — a curve can fall"], "answer": 1, "explain": "With the same loans in every column, a running MAX can only stay or rise. A curve that falls means the denominator changed (different loans at different MOBs) or the query is wrong."}
+```
+
+### Putting it together
+
+One request, several of today's tools. *"Auto loans larger than the average SME loan, from customers who never had a loan written off — per year of disbursement, against the number of Auto loans that year."*
+
+```sql
+WITH big_auto AS (                                                                          -- CTE: name the step
+  SELECT l.loan_id, strftime('%Y', l.disbursed_at) AS yr
+  FROM loans l
+  WHERE l.product_id = 4
+    AND l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)                 -- scalar subquery, its own filter
+    AND NOT EXISTS (SELECT 1 FROM loans w                                                     -- correlated NOT EXISTS
+                    WHERE w.customer_id = l.customer_id AND w.status = 'written_off'))
+SELECT yr, COUNT(*) AS big_auto_loans,
+       (SELECT COUNT(*) FROM loans x                                                           -- correlated scalar subquery in SELECT
+        WHERE x.product_id = 4 AND strftime('%Y', x.disbursed_at) = b.yr) AS auto_loans
+FROM big_auto b
+GROUP BY yr
+ORDER BY yr;
+```
+
+Three rows, one per year. Each tool does one job: the CTE names the set, the scalar subquery brings a benchmark from another product, `NOT EXISTS` excludes customers by their history, and the correlated subquery in `SELECT` adds a denominator per year. Read the result: 17 of 82 Auto loans in 2024, 29 of 144 in 2025, 40 of 165 in 2026 — every year about one Auto loan in five is larger than the average SME loan.
+
+**Which form, when?**
+
+```game
+{"type": "match", "id": "w03d3-g1", "title": "Which form, when?", "pairs": [["Scalar subquery", "one number to compare with or divide by"], ["IN / EXISTS", "is the value in that set?"], ["NOT EXISTS", "has none — safe with NULLs"], ["Correlated subquery", "compare a row with its own group, under a different filter"], ["Derived table / CTE", "aggregate twice: per customer, then per count"], ["Recursive CTE", "rows that exist in no table: a month calendar"]]}
+```
 
 ### Depth (optional)
 
@@ -152,46 +418,78 @@ Anchor row, then "take the last rows and produce the next" until the condition f
 
 ---
 
-## 2. Worked example — one loan's vintage flags, by hand (15 min)
+## 2. Worked example — lent to again after a write-off (15 min)
 
-Before the matrix, one loan. Nilufar's definition, written out: *loan is "ever 30+ by MOB k" if any of its instalments 1..k was not fully paid 30 days after its due date* (as of 2026-10-01). Three grains, three CTEs:
+**Ask (Nilufar):** *"Customers who had a loan written off and later got another loan from us: how many, how much do they owe today, and is that more or less than a typical borrower?"* Each step is one concept from section 1, in the same order.
+
+**Step 1 — scalar subquery: the benchmark.** "A typical borrower" = outstanding per owing borrower, one number:
 
 ```sql
-WITH inst AS (                                   -- grain: instalment — was it paid within 30 days?
-  SELECT i.loan_id, i.installment_no, i.due_date, i.total_due,
-         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30   -- DATEADD(day, 30, i.due_date)
-  FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id
-  WHERE i.installment_no <= 6 AND date(i.due_date, '+30 days') <= '2026-10-01'            -- only instalments whose 30 days have passed
-  GROUP BY i.installment_id, i.loan_id, i.installment_no, i.due_date, i.total_due),
-flag AS (                                        -- grain: instalment — 1 if 30+ late
-  SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30 FROM inst),
-ever AS (                                        -- grain: instalment — "ever so far": running MAX over the loan's instalments (Monday's frame)
-  SELECT loan_id, installment_no, late30, MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30 FROM flag)
-SELECT * FROM ever WHERE loan_id = 1 ORDER BY installment_no;
+SELECT (SELECT SUM(principal_due) FROM installments WHERE due_date > '2026-10-01')
+     / (SELECT COUNT(DISTINCT l.customer_id)
+        FROM installments i JOIN loans l ON l.loan_id = i.loan_id
+        WHERE i.due_date > '2026-10-01') AS avg_per_borrower;
+-- 208 723 504 430 / 2 535 = 82 336 688
 ```
 
-Loan 1: instalments 1–6 all `late30 = 0`, so `ever30 = 0` at every MOB — the March instalment was 45 days late but that is instalment 12, outside MOB 1..6. A loan whose instalment 2 is late shows `late30` 0, 1, 0, 0, 0, 0 and `ever30` 0, **1, 1, 1, 1, 1**: once late, "ever late" stays on. That running `MAX` is the whole trick — it turns a per-instalment event into a cumulative loan state.
+**Step 2 — IN: who had a write-off.** `WHERE customer_id IN (SELECT customer_id FROM loans WHERE status = 'written_off')` → 188 customers. `IN` counts each once, even the two with two write-offs.
 
-> 💡 **Key idea.** "Ever happened so far" = a running `MAX` of a 0/1 flag: `MAX(flag) OVER (PARTITION BY loan ORDER BY step)`. It can only go up, which is also your test — a vintage curve that falls somewhere is a broken query.
+**Step 3 — derived table: the date of the first write-off, then the loans after it.** A loan is a *repeat loan* when it was disbursed after the customer's first written-off loan. One row per customer with that date, joined back to `loans`:
 
-Check the base: `inst` has 33 198 rows for 7 099 loans; 967 of those instalments, on 457 loans, are 30+ late; at MOB 1 the flag equals week 2's FPD30 to the loan (91 of 7 099 = 1.28 %) — the two definitions meet, which is the check that you built it right.
+```sql
+SELECT COUNT(*) AS repeat_loans, COUNT(DISTINCT l.customer_id) AS customers
+FROM loans l
+JOIN (SELECT customer_id, MIN(disbursed_at) AS first_wo          -- one row per customer with a write-off
+      FROM loans
+      WHERE status = 'written_off'
+      GROUP BY customer_id) AS f
+  ON f.customer_id = l.customer_id
+ AND l.disbursed_at > f.first_wo;                                 -- only the loans that came later
+-- 145 repeat loans · 101 customers
+```
+
+The same set can be written as a correlated `EXISTS (SELECT 1 FROM loans w WHERE w.customer_id = l.customer_id AND w.status = 'written_off' AND w.disbursed_at < l.disbursed_at)` — 145 again, but it reads 7 828 × 7 828 rows on our unindexed tables. The derived table aggregates once and joins once.
+
+**Step 4 — a chain of CTEs: what they owe, against the benchmark.** One grain per step: customer → repeat loan → customer who still owes → answer.
+
+```sql
+WITH first_wo AS (                                                   -- grain: customer with a write-off
+  SELECT customer_id, MIN(disbursed_at) AS first_wo
+  FROM loans WHERE status = 'written_off' GROUP BY customer_id),
+repeat_loans AS (                                                    -- grain: loan disbursed after it
+  SELECT l.loan_id, l.customer_id, l.status
+  FROM loans l JOIN first_wo f ON f.customer_id = l.customer_id AND l.disbursed_at > f.first_wo),
+owed AS (                                                            -- grain: customer who still owes on a repeat loan
+  SELECT r.customer_id, SUM(i.principal_due) AS outstanding
+  FROM repeat_loans r
+  JOIN installments i ON i.loan_id = r.loan_id
+  WHERE i.due_date > '2026-10-01'
+  GROUP BY r.customer_id)
+SELECT COUNT(*) AS still_owing, SUM(outstanding) AS outstanding, ROUND(AVG(outstanding)) AS avg_outstanding
+FROM owed;
+-- 50 customers · 2 857 616 393 · 57 152 328 per customer
+```
+
+**Reading.** 101 customers were lent to again after a loan that was written off — 145 repeat loans. 50 of them still owe 2 857 616 393, about 57.2 m each: **69 %** of the typical borrower's 82.3 m. Of the 145 repeat loans, 81 are closed, 61 active, and only 3 went bad again (1 default, 2 written off). For Nilufar: *the re-lending is small, smaller per head than the book, and has not repeated the loss so far — but it is a policy question, not an accident, and the 61 active loans are the ones to watch.*
+
+> 💡 **Key idea.** Each step answered one small question with one tool: a number (scalar subquery), a set (IN), an aggregate used as a table (derived table), and the steps glued together with names (CTE chain). That is how a vague request becomes a query you can defend.
 
 ---
 
 ## 3. Practice (50 min)
 
-Start with the lab — you build a small vintage table on your own copy, step by step, with a CTE chain. Then the questions: write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer. Also due today: **HW 3.1** (Day 1's hand-in box).
+Start with the lab — you build a small vintage table on your own copy, step by step, with a CTE chain. Then the questions, in the order of section 1; the concept each one trains is in italics. Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer. Also due today: **HW 3.1** (Day 1's hand-in box).
 
 ```sqllab
-{"id": "w03d3-lab", "title": "A vintage table of your own", "intro": "Nilufar's matrix, built as two tables in your practice copy: cohort sizes, then cohort × MOB cells from the worked example's CTE chain. Then you add the rate and remove the cells that are not yet observable — the same rules as the Company corner.", "steps": [
+{"id": "w03d3-lab", "title": "A vintage table of your own", "intro": "Nilufar's matrix, built as two tables in your practice copy: cohort sizes, then cohort × MOB cells from section 1's vintage chain. Then you add the rate and remove the cells that are not yet observable — the same rules as the Company corner.", "steps": [
   {"say": "Create my_cohorts(cohort, loans): loans with term_months >= 6 disbursed 2025-01-01 to 2026-03-31, grouped by strftime('%Y-%m', disbursed_at).", "hint": "CREATE TABLE my_cohorts AS SELECT strftime('%Y-%m', disbursed_at) AS cohort, COUNT(*) AS loans FROM loans WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01' GROUP BY 1;", "expect": "SELECT COUNT(*) FROM my_cohorts", "want": 15},
-  {"say": "Create my_vintage(cohort, mob, observed, ever30) with CREATE TABLE … AS WITH inst AS (…), flag AS (…), ever AS (…) SELECT … — the worked example's three CTEs, joined to the same loans, grouped by cohort and installment_no.", "hint": "CREATE TABLE my_vintage AS WITH inst AS (SELECT i.loan_id, i.installment_no, i.total_due, COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30 FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id WHERE i.installment_no <= 6 AND date(i.due_date, '+30 days') <= '2026-10-01' GROUP BY i.installment_id, i.loan_id, i.installment_no, i.total_due), flag AS (SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30 FROM inst), ever AS (SELECT loan_id, installment_no, MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30 FROM flag) SELECT strftime('%Y-%m', l.disbursed_at) AS cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever30 FROM loans l JOIN ever e ON e.loan_id = l.loan_id WHERE l.term_months >= 6 AND l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2026-04-01' GROUP BY 1, 2;", "expect": "SELECT ever30 FROM my_vintage WHERE cohort = '2025-10' AND mob = 3", "want": 15},
+  {"say": "Create my_vintage(cohort, mob, observed, ever30) with CREATE TABLE … AS WITH inst AS (…), flag AS (…), ever AS (…) SELECT … — section 1's vintage CTEs, joined to the same loans, grouped by cohort and installment_no.", "hint": "CREATE TABLE my_vintage AS WITH inst AS (SELECT i.loan_id, i.installment_no, i.total_due, COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30 FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id WHERE i.installment_no <= 6 AND date(i.due_date, '+30 days') <= '2026-10-01' GROUP BY i.installment_id, i.loan_id, i.installment_no, i.total_due), flag AS (SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30 FROM inst), ever AS (SELECT loan_id, installment_no, MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30 FROM flag) SELECT strftime('%Y-%m', l.disbursed_at) AS cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever30 FROM loans l JOIN ever e ON e.loan_id = l.loan_id WHERE l.term_months >= 6 AND l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2026-04-01' GROUP BY 1, 2;", "expect": "SELECT ever30 FROM my_vintage WHERE cohort = '2025-10' AND mob = 3", "want": 15},
   {"say": "Add a column rate (ALTER TABLE … ADD COLUMN rate REAL) and fill it with UPDATE: 100.0 * ever30 / observed, rounded to 2 decimals.", "hint": "ALTER TABLE my_vintage ADD COLUMN rate REAL; UPDATE my_vintage SET rate = ROUND(100.0 * ever30 / observed, 2);", "expect": "SELECT CAST(ROUND(rate * 100) AS INTEGER) FROM my_vintage WHERE cohort = '2025-10' AND mob = 3", "want": 691},
   {"say": "Delete the cells that are not fully observable: where observed is smaller than the cohort's size in my_cohorts (a correlated subquery in the WHERE).", "hint": "DELETE FROM my_vintage WHERE observed < (SELECT c.loans FROM my_cohorts c WHERE c.cohort = my_vintage.cohort);", "expect": "SELECT COUNT(*) FROM my_vintage", "want": 88}],
  "cleanup": "DROP TABLE IF EXISTS my_vintage; DROP TABLE IF EXISTS my_cohorts"}
 ```
 
-**P1.** Loans larger than the average SME loan (scalar subquery), by product. Why is the answer not "all SME loans above average" only?
+**P1.** *(scalar subquery)* Loans larger than the average SME loan (scalar subquery), by product. Why is the answer not "all SME loans above average" only?
 
 <details><summary>Answer</summary>
 
@@ -212,7 +510,7 @@ SME 400, AUTO 88 — Auto's biggest loans exceed the average SME loan; no other 
 {"id": "w03d3-p1b", "kind": "number", "answer": 88, "dp": 0, "unit": "loans", "hint": "The AUTO row of your P1 result.", "model": "88 of Auto's 391 loans exceed 308 728 745, the average SME loan. The scalar subquery has its own filter (product_id = 5), different from the outer query's rows — that is when it beats a window.", "xp": 1}
 ```
 
-**P2.** Customers who have a written-off loan: once with `IN`, once with `EXISTS`. Same count? Which reads better when you also want to exclude customers with an *active* loan?
+**P2.** *(IN and EXISTS)* Customers who have a written-off loan: once with `IN`, once with `EXISTS`. Same count? Which reads better when you also want to exclude customers with an *active* loan?
 
 <details><summary>Answer</summary>
 
@@ -222,7 +520,7 @@ SELECT COUNT(*) FROM customers c
 WHERE EXISTS     (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'written_off')
   AND NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active');            -- 127
 ```
-188 both ways. The second condition is a second `NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active')` → 127 customers with a write-off and no live loan — two tests side by side read as a sentence; with `IN` it becomes `IN (…) AND customer_id NOT IN (…)`, which also works because `customer_id` is never NULL. Count both and keep the one you can explain.
+188 both ways. The second condition is a second `NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active')` → 127 customers with a write-off and no live loan — two tests side by side read as a sentence; with `IN` it becomes `IN (…) AND customer_id NOT IN (…)`, which also works because `customer_id` is never NULL. Count both and keep the one you can explain. In the browser this correlated form takes about ten seconds — `loans` has no index on `customer_id` yet; tomorrow you create one, and the same query runs in a blink.
 
 </details>
 
@@ -232,7 +530,7 @@ WHERE EXISTS     (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND 
 {"id": "w03d3-p2b", "kind": "number", "answer": 127, "dp": 0, "unit": "customers", "hint": "EXISTS for the write-off, NOT EXISTS for the active loan, both correlated on customer_id.", "model": "127 of the 188 customers with a write-off have no live loan; the other 61 are still borrowing from us. Two tests side by side read as the sentence.", "xp": 1}
 ```
 
-**P3.** The `NOT IN` trap, demonstrated: loans disbursed on a date on which no loan was closed, written three ways (NOT IN raw, NOT IN with `IS NOT NULL`, NOT EXISTS). Explain the 0.
+**P3.** *(NOT IN vs NOT EXISTS)* The `NOT IN` trap, demonstrated: loans disbursed on a date on which no loan was closed, written three ways (NOT IN raw, NOT IN with `IS NOT NULL`, NOT EXISTS). Explain the 0.
 
 <details><summary>Answer</summary>
 
@@ -251,28 +549,32 @@ SELECT COUNT(*) FROM loans l WHERE NOT EXISTS (SELECT 1 FROM loans x WHERE x.clo
 {"id": "w03d3-p3b", "kind": "choice", "options": ["No loan was ever disbursed on a closing day", "closed_at has NULLs; x NOT IN (…, NULL) is unknown for every x, so no row passes", "NOT IN cannot compare dates", "The subquery returns too many rows"], "answer": 1, "explain": "x <> NULL is unknown, and NOT IN is a chain of <>. Filter the NULLs out inside, or use NOT EXISTS.", "xp": 1}
 ```
 
-**P4.** With a derived table: the distribution of **instalments per loan** (term) — how many loans have 3, 6, 12 … instalments — and check it against `term_months`.
+**P4.** *(derived table)* With a derived table: the distribution of **instalments per loan** (term) — how many loans have 3, 6, 12 … instalments — and check it against `term_months`.
 
 <details><summary>Answer</summary>
 
 ```sql
 SELECT n_inst, COUNT(*) AS loans FROM (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id) t GROUP BY n_inst ORDER BY n_inst;
 -- 3 → 1867 · 6 → 2483 · 12 → 1346 · 18 → 621 · 24 → 973 · 36 → 401 · 48 → 137
-SELECT COUNT(*) FROM loans l WHERE term_months <> (SELECT COUNT(*) FROM installments i WHERE i.loan_id = l.loan_id);   -- 0
+SELECT COUNT(*) FROM loans l
+JOIN (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id) t ON t.loan_id = l.loan_id
+WHERE t.n_inst <> l.term_months;                                                                                      -- 0
 ```
-Every schedule has exactly `term_months` rows (the correlated subquery proves it: 0 mismatches). Counts: 3-month = Micro 1 335 + BNPL 532 = 1 867 — the sum reconciles with Tuesday's product × term table.
+Every schedule has exactly `term_months` rows (the derived table joined back to `loans` proves it: 0 mismatches). Counts: 3-month = Micro 1 335 + BNPL 532 = 1 867 — the sum reconciles with Tuesday's product × term table.
 
 </details>
 
-**P5.** Correlated: each customer's **largest** loan — count the rows, then explain why `WHERE principal = (SELECT MAX …)` gives exactly 4 335 and when it could give more.
+**P5.** *(correlated subquery)* Each SME borrower's **largest SME** loan — count the rows, then explain why `WHERE principal = (SELECT MAX …)` gives exactly one row per SME borrower here and when it could give more.
 
 <details><summary>Answer</summary>
 
 ```sql
 SELECT COUNT(*) FROM loans l
-WHERE l.principal = (SELECT MAX(x.principal) FROM loans x WHERE x.customer_id = l.customer_id);   -- 4335
+WHERE l.product_id = 5
+  AND l.principal = (SELECT MAX(x.principal) FROM loans x
+                     WHERE x.customer_id = l.customer_id AND x.product_id = 5);   -- 724
 ```
-4 335 = one per borrower. It would give more if a customer had two loans with the *same* maximal principal (both match `= MAX`); `ROW_NUMBER() … ORDER BY principal DESC, loan_id` with `rn = 1` is the version that guarantees one row. Know both; say which you used.
+724 = one per SME borrower (`COUNT(DISTINCT customer_id)` of SME loans is also 724). It would give more if a customer had two loans with the *same* maximal principal (both match `= MAX`); `ROW_NUMBER() … ORDER BY principal DESC, loan_id` with `rn = 1` is the version that guarantees one row. Know both; say which you used.
 
 </details>
 
@@ -282,7 +584,21 @@ WHERE l.principal = (SELECT MAX(x.principal) FROM loans x WHERE x.customer_id = 
 {"id": "w03d3-p5b", "kind": "choice", "options": ["When a customer has loans in two products", "When a customer has two loans with exactly the same, maximal principal", "When the subquery is not correlated", "Never"], "answer": 1, "explain": "Both tied loans match '= MAX'. ROW_NUMBER with a tiebreaker (ORDER BY principal DESC, loan_id) and rn = 1 guarantees one row.", "xp": 1}
 ```
 
-**P6.** A CTE chain in four steps: (1) outstanding per loan, (2) outstanding per customer, (3) the customer's rank, (4) the top 10 with name and segment. One `WITH`, four names.
+**P6.** *(CTE)* Rewrite P4's derived table as a CTE named `per_loan`, and add each count's share of all loans (%, one decimal). Which term is the most common?
+
+<details><summary>Answer</summary>
+
+```sql
+WITH per_loan AS (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id)
+SELECT n_inst, COUNT(*) AS loans, ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS share_pct
+FROM per_loan GROUP BY n_inst ORDER BY n_inst;
+-- 3 → 1867 (23.9 %) · 6 → 2483 (31.7 %) · 12 → 1346 (17.2 %) · 18 → 621 (7.9 %) · 24 → 973 (12.4 %) · 36 → 401 (5.1 %) · 48 → 137 (1.8 %)
+```
+Six months is the most common term: 2 483 loans, 31.7 %. The same result as P4; the CTE names the first step, and the main query reads like a sentence.
+
+</details>
+
+**P7.** *(a chain of CTEs)* A CTE chain in four steps: (1) outstanding per loan, (2) outstanding per customer, (3) the customer's rank, (4) the top 10 with name and segment. One `WITH`, four names.
 
 <details><summary>Answer</summary>
 
@@ -298,7 +614,7 @@ Each step has one grain (instalment → loan → customer → ranked customer). 
 
 </details>
 
-**P7.** Recursive calendar 2026-01..2026-09 × products × branches, `LEFT JOIN` the monthly disbursement counts. How many empty cells, and for which products?
+**P8.** *(recursive CTE)* Recursive calendar 2026-01..2026-09 × products × branches, `LEFT JOIN` the monthly disbursement counts. How many empty cells, and for which products?
 
 <details><summary>Answer</summary>
 
@@ -318,13 +634,13 @@ GROUP BY g.code;
 
 </details>
 
-**P7 — count.** How many of the 450 branch × product × month cells of 2026 are empty?
+**P8 — count.** How many of the 450 branch × product × month cells of 2026 are empty?
 
 ```task
 {"id": "w03d3-p7b", "kind": "number", "answer": 16, "dp": 0, "unit": "cells", "hint": "LEFT JOIN the counts onto the calendar grid; count the cells where the joined count is NULL.", "model": "16 empty cells: Auto 13, SME 3. A plain GROUP BY returns 434 rows and never shows them — a chart drawn from it joins the dots across months that had no loans.", "xp": 1}
 ```
 
-**P8.** Nilufar's matrix, long form: cohort × MOB → loans observed, ever-30+ count, rate — for cohorts 2025-01..2026-03, loans with `term_months >= 6`. Which cohort is worst at MOB 3?
+**P9.** *(the vintage table)* Nilufar's matrix, long form: cohort × MOB → loans observed, ever-30+ count, rate — for cohorts 2025-01..2026-03, loans with `term_months >= 6`. Which cohort is worst at MOB 3?
 
 <details><summary>Answer</summary>
 
@@ -345,31 +661,31 @@ FROM base b JOIN ever e ON e.loan_id = b.loan_id
 GROUP BY b.cohort, e.installment_no ORDER BY b.cohort, mob;
 -- 90 rows; at MOB 3: 2025-10 217 / 15 / 6.91 · 2025-09 5.70 · 2025-03 5.59 · 2025-05 5.41
 ```
-The worked example's three CTEs plus a `base` CTE, joined and grouped by `cohort, installment_no`. Worst at MOB 3: **2025-10 — 15 of 217 = 6.91 %**; then 2025-09 5.70 %, 2025-03 5.59 %, 2025-05 5.41 %. The Company corner pivots this into the wide matrix.
+Section 1's vintage chain with `cohort` added to `base` and to the `GROUP BY`. Worst at MOB 3: **2025-10 — 15 of 217 = 6.91 %**; then 2025-09 5.70 %, 2025-03 5.59 %, 2025-05 5.41 %. The Company corner pivots this into the wide matrix.
 
 </details>
 
-**P8 — name it.** Which cohort is worst at MOB 3? Write it as `YYYY-MM`.
+**P9 — name it.** Which cohort is worst at MOB 3? Write it as `YYYY-MM`.
 
 ```task
 {"id": "w03d3-p8b", "kind": "text", "answer": ["2025-10", "2025-10 cohort", "october 2025", "oct 2025"], "model": "2025-10: 15 of 217 loans ever 30+ by MOB 3 = 6.91 %. Next: 2025-09 (5.70 %), 2025-03 (5.59 %).", "xp": 1}
 ```
 
-**P9.** Pivot P8 to wide (MOB 1..6 as columns, `SUM(CASE WHEN installment_no = k THEN ever30 END) / SUM(installment_no = k)`), and make a cell **NULL when not every loan of the cohort is observable** at that MOB. Which cells go blank?
+**P10.** *(the vintage table — observable cells)* Pivot P9 to wide (MOB 1..6 as columns, `SUM(CASE WHEN installment_no = k THEN ever30 END) / SUM(installment_no = k)`), and make a cell **NULL when not every loan of the cohort is observable** at that MOB. Which cells go blank?
 
 <details><summary>Answer</summary>
 
-Add `COUNT(*)` per cohort×MOB and the cohort size (`(SELECT COUNT(*) FROM base x WHERE x.cohort = b.cohort)`), and `CASE WHEN observed = size THEN rate END`. Blank: **2026-03 at MOB 5 (250 of 251 observed) and MOB 6 (5 of 251)** — the March loans' sixth instalment falls due after 1 September for 246 of the 251, so its 30 days are not up by 1 October. A 0.0 % in that cell would be a lie: not "nobody late", but "nobody measured".
+Add `COUNT(*)` per cohort×MOB and the cohort size (`(SELECT COUNT(*) FROM base x WHERE x.cohort = b.cohort)` — a correlated scalar subquery), and `CASE WHEN observed = size THEN rate END`. The Company corner prints the full query. Blank: **2026-03 at MOB 5 (250 of 251 observed) and MOB 6 (5 of 251)** — the March loans' sixth instalment falls due after 1 September for 246 of the 251, so its 30 days are not up by 1 October. A 0.0 % in that cell would be a lie: not "nobody late", but "nobody measured".
 
 </details>
 
-**P9 — which cells?** Which cells of the wide matrix go blank?
+**P10 — which cells?** Which cells of the wide matrix go blank?
 
 ```task
 {"id": "w03d3-p9b", "kind": "choice", "options": ["Every cell of 2026", "2026-03 at MOB 5 and MOB 6", "2025-01 at MOB 1 and MOB 2", "None — every cell is observable"], "answer": 1, "explain": "2026-03 at MOB 5 has 250 of 251 loans observed and at MOB 6 only 5 of 251: their 30 days are not up by 1 October. Blank, not 0.00.", "xp": 1}
 ```
 
-**P10.** Vintage curve pooled by **grade** instead of by month (2025-01..2026-03, term ≥ 6): rate at MOB 1, 3, 6. Does the scorecard order the curves?
+**P11.** *(the vintage table — by grade)* Vintage curve pooled by **grade** instead of by month (2025-01..2026-03, term ≥ 6): rate at MOB 1, 3, 6. Does the scorecard order the curves?
 
 <details><summary>Answer</summary>
 
@@ -394,7 +710,7 @@ A 0.43 / 1.86 / 3.13 % · B 0.93 / 2.49 / 5.18 · C 1.99 / 7.18 / 11.52 · D 2.1
 
 </details>
 
-**P10 — read it.** What does the grade table say about the scorecard?
+**P11 — read it.** What does the grade table say about the scorecard?
 
 ```task
 {"id": "w03d3-p10b", "kind": "choice", "options": ["Nothing — grades cross each other", "The curves are ordered A < B < C < D at every MOB, and the gap widens with age", "Only grade D is different", "Grade A is the riskiest early on"], "answer": 1, "explain": "A 3.13 % vs D 19.08 % at MOB 6, ordered at MOB 1 and 3 as well: the scorecard ranks risk, and the difference grows as loans age.", "xp": 1}
@@ -402,7 +718,7 @@ A 0.43 / 1.86 / 3.13 % · B 0.93 / 2.49 / 5.18 · C 1.99 / 7.18 / 11.52 · D 2.1
 
 > 🚀 **Stretch (optional, +5 XP).** Longer curves need a stricter base — here you see what happens when cohorts of different ages are pooled.
 
-**P11.** Build the calendar with `dim_date` instead of recursion, and extend the vintage chain to MOB 1..12 for the 2025 cohorts. At which MOB does the pooled 2025 curve pass 10 %?
+**P12.** *(putting it together)* Build the calendar with `dim_date` instead of recursion, and extend the vintage chain to MOB 1..12 for the 2025 cohorts. At which MOB does the pooled 2025 curve pass 10 %?
 
 <details><summary>Answer</summary>
 
@@ -425,7 +741,7 @@ GROUP BY e.installment_no ORDER BY mob;
 
 </details>
 
-**P11 — the number.** On the cohorts observable at MOB 12, at which MOB does the curve pass 10 %?
+**P12 — the number.** On the cohorts observable at MOB 12, at which MOB does the curve pass 10 %?
 
 ```task
 {"id": "w03d3-p11", "kind": "number", "answer": 12, "dp": 0, "unit": "MOB", "hint": "Term >= 12, cohorts 2025-01..2025-08, MOB 1..12; read the first MOB with a rate above 10.", "model": "MOB 12 (10.21 %, 852 loans). If you pooled every 2025 cohort you got MOB 10 — and a curve that falls at MOB 11, which a running MAX cannot do: the denominator changed under you. Fix the base first, then read the curve.", "xp": 2}
@@ -437,9 +753,9 @@ GROUP BY e.installment_no ORDER BY mob;
 
 ```check
 {"id": "w03d3-sc", "questions": [
-  {"type": "multi", "q": "x NOT IN (subquery) returned no rows although you know matches exist. Which fixes work?", "options": ["Add WHERE column IS NOT NULL inside the subquery", "Rewrite it as NOT EXISTS with a correlated =", "Replace NOT IN with IN", "Add DISTINCT to the subquery"], "answer": [0, 1], "explain": "The list contains a NULL, which makes NOT IN unknown for every row; drop the NULLs or use NOT EXISTS (→ section 1, IN — a list — and the NULL trap)."},
-  {"type": "single", "q": "When is a plain scalar subquery enough, and a CTE chain unnecessary?", "options": ["When you aggregate at three grains", "For one value to compare with or divide by, e.g. > (SELECT AVG(principal) FROM loans)", "When the same result is needed twice", "When a reader must follow several steps"], "answer": 1, "explain": "One-line scalar or a single EXISTS: subquery. Reuse, deeper nesting or several grains: a chain (→ section 1, CTEs)."},
-  {"type": "single", "q": "What does a recursive month calendar add to a monthly chart that GROUP BY month cannot?", "options": ["Faster queries", "Months with no rows appear, as zeros, instead of vanishing", "It removes duplicate months", "It sorts the months"], "answer": 1, "explain": "GROUP BY only shows months that have rows; LEFT JOIN the counts onto a calendar (recursive CTE or dim_date) and the empty months appear (→ section 1, Recursive CTE)."}]}
+  {"type": "multi", "q": "x NOT IN (subquery) returned no rows although you know matches exist. Which fixes work?", "options": ["Add WHERE column IS NOT NULL inside the subquery", "Rewrite it as NOT EXISTS with a correlated =", "Replace NOT IN with IN", "Add DISTINCT to the subquery"], "answer": [0, 1], "explain": "The list contains a NULL, which makes NOT IN unknown for every row; drop the NULLs or use NOT EXISTS (→ section 1, IN with a subquery; P3)."},
+  {"type": "single", "q": "When is a plain scalar subquery enough, and a CTE chain unnecessary?", "options": ["When you aggregate at three grains", "For one value to compare with or divide by, e.g. > (SELECT AVG(principal) FROM loans)", "When the same result is needed twice", "When a reader must follow several steps"], "answer": 1, "explain": "One-line scalar or a single EXISTS: subquery. Reuse, deeper nesting or several grains: a chain (→ section 1, CTE; A chain of CTEs)."},
+  {"type": "single", "q": "What does a recursive month calendar add to a monthly chart that GROUP BY month cannot?", "options": ["Faster queries", "Months with no rows appear, as zeros, instead of vanishing", "It removes duplicate months", "It sorts the months"], "answer": 1, "explain": "GROUP BY only shows months that have rows; LEFT JOIN the counts onto a calendar (recursive CTE or dim_date) and the empty months appear (→ section 1, Recursive CTE; P8)."}]}
 ```
 
 ---
@@ -453,7 +769,7 @@ A **vintage** (*винтаж*) is the set of loans disbursed in one month; a **v
 - **Base:** loans with `term_months >= 6` (so every loan has all six instalments); a cell is shown only when **all** of the cohort's loans have had their 30 days at that MOB.
 
 ```sql
-WITH inst AS ( … ), flag AS ( … ), ever AS ( … ),                        -- the worked example
+WITH inst AS ( … ), flag AS ( … ), ever AS ( … ),                        -- section 1's vintage chain
 base AS (SELECT loan_id, strftime('%Y-%m', disbursed_at) AS cohort FROM loans
          WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01'),
 cells AS (SELECT b.cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever,
@@ -521,13 +837,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w03d3", "pass": 0.8, "questions": [
-  {"type": "single", "q": "closed_at is NULL for every loan still open. What does this return, and why?", "code": "SELECT COUNT(*) FROM loans\nWHERE disbursed_at NOT IN (SELECT closed_at FROM loans);", "options": ["The loans disbursed on a day no loan was closed", "0 — one NULL in the list makes NOT IN unknown for every row", "An error", "Every loan"], "answer": 1, "explain": "x <> NULL is unknown; add WHERE closed_at IS NOT NULL inside, or use NOT EXISTS (→ section 1, IN — a list — and the NULL trap)."},
-  {"type": "multi", "q": "Which statements about NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id) are true?", "options": ["It stops at the first matching row", "It cannot multiply rows, even for a customer with seven loans", "A NULL in the inner table simply never matches, so there is no NULL trap", "It needs an IS NULL test on a right-hand column", "It can show the matching loan's columns in the output"], "answer": [0, 1, 2], "explain": "IS NULL on a carefully picked column and right-side columns in the output belong to the LEFT JOIN anti-join (→ section 1, EXISTS / NOT EXISTS)."},
-  {"type": "single", "q": "What does this query return?", "code": "SELECT loans_per_customer, COUNT(*) AS customers\nFROM (SELECT customer_id, COUNT(*) AS loans_per_customer\n      FROM loans GROUP BY customer_id) AS t\nGROUP BY loans_per_customer;", "options": ["One row per customer with their loan count", "How many customers have 1 loan, 2 loans, 3 loans …", "The total number of loans", "An error — GROUP BY cannot be used twice"], "answer": 1, "explain": "A derived table lets you aggregate twice: first per customer, then per count (→ section 1, Derived tables)."},
-  {"type": "single", "q": "What makes a subquery correlated?", "options": ["It returns more than one row", "It refers to a column of the outer query's current row, so conceptually it runs once per outer row", "It sits in the FROM clause", "It uses GROUP BY"], "answer": 1, "explain": "E.g. WHERE l.principal > (SELECT AVG(x.principal) FROM loans x WHERE x.product_id = l.product_id) (→ section 1, Correlated subqueries)."},
-  {"type": "number", "q": "How many rows does this calendar have?", "code": "WITH RECURSIVE months(month_start) AS (\n  SELECT '2026-01-01'\n  UNION ALL\n  SELECT date(month_start, '+1 month') FROM months\n  WHERE month_start < '2026-06-01')\nSELECT COUNT(*) FROM months;", "answer": 6, "explain": "The anchor gives January; each step adds a month while the last one is before June, so June is the last row: January to June (→ section 1, Recursive CTE)."},
-  {"type": "single", "q": "When does a CTE chain beat nested subqueries?", "options": ["Never — they are always slower", "When the same result is needed twice, when nesting goes deeper than two levels, or when someone must read the steps top-down", "Only in SQL Server", "When you need a single scalar value"], "answer": 1, "explain": "A chain fixes one grain per step and reads like a recipe; a one-line scalar or a single EXISTS is fine as a subquery (→ section 1, CTEs)."},
-  {"type": "single", "q": "A loan's late30 flags for instalments 1–6 are 0, 1, 0, 0, 0, 0. What does MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) give?", "options": ["0, 1, 0, 0, 0, 0", "0, 1, 1, 1, 1, 1", "1, 1, 1, 1, 1, 1", "0, 0, 0, 0, 0, 1"], "answer": 1, "explain": "The running MAX turns a per-instalment event into 'ever late so far', which stays on once set (→ section 2, Worked example)."},
+  {"type": "single", "q": "closed_at is NULL for every loan still open. What does this return, and why?", "code": "SELECT COUNT(*) FROM loans\nWHERE disbursed_at NOT IN (SELECT closed_at FROM loans);", "options": ["The loans disbursed on a day no loan was closed", "0 — one NULL in the list makes NOT IN unknown for every row", "An error", "Every loan"], "answer": 1, "explain": "x <> NULL is unknown; add WHERE closed_at IS NOT NULL inside, or use NOT EXISTS (→ section 1, IN with a subquery; P3)."},
+  {"type": "multi", "q": "Which statements about NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id) are true?", "options": ["It stops at the first matching row", "It cannot multiply rows, even for a customer with seven loans", "A NULL in the inner table simply never matches, so there is no NULL trap", "It needs an IS NULL test on a right-hand column", "It can show the matching loan's columns in the output"], "answer": [0, 1, 2], "explain": "IS NULL on a carefully picked column and right-side columns in the output belong to the LEFT JOIN anti-join (→ section 1, EXISTS and NOT EXISTS)."},
+  {"type": "single", "q": "What does this query return?", "code": "SELECT loans_per_customer, COUNT(*) AS customers\nFROM (SELECT customer_id, COUNT(*) AS loans_per_customer\n      FROM loans GROUP BY customer_id) AS t\nGROUP BY loans_per_customer;", "options": ["One row per customer with their loan count", "How many customers have 1 loan, 2 loans, 3 loans …", "The total number of loans", "An error — GROUP BY cannot be used twice"], "answer": 1, "explain": "A derived table lets you aggregate twice: first per customer, then per count (→ section 1, Derived table; P4)."},
+  {"type": "single", "q": "What makes a subquery correlated?", "options": ["It returns more than one row", "It refers to a column of the outer query's current row, so conceptually it runs once per outer row", "It sits in the FROM clause", "It uses GROUP BY"], "answer": 1, "explain": "E.g. WHERE l.principal > (SELECT AVG(x.principal) FROM loans x WHERE x.product_id = l.product_id) (→ section 1, Correlated subquery; P5)."},
+  {"type": "number", "q": "How many rows does this calendar have?", "code": "WITH RECURSIVE months(month_start) AS (\n  SELECT '2026-01-01'\n  UNION ALL\n  SELECT date(month_start, '+1 month') FROM months\n  WHERE month_start < '2026-06-01')\nSELECT COUNT(*) FROM months;", "answer": 6, "explain": "The anchor gives January; each step adds a month while the last one is before June, so June is the last row: January to June (→ section 1, Recursive CTE; P8)."},
+  {"type": "single", "q": "When does a CTE chain beat nested subqueries?", "options": ["Never — they are always slower", "When the same result is needed twice, when nesting goes deeper than two levels, or when someone must read the steps top-down", "Only in SQL Server", "When you need a single scalar value"], "answer": 1, "explain": "A chain fixes one grain per step and reads like a recipe; a one-line scalar or a single EXISTS is fine as a subquery (→ section 1, CTE; A chain of CTEs)."},
+  {"type": "single", "q": "A loan's late30 flags for instalments 1–6 are 0, 1, 0, 0, 0, 0. What does MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) give?", "options": ["0, 1, 0, 0, 0, 0", "0, 1, 1, 1, 1, 1", "1, 1, 1, 1, 1, 1", "0, 0, 0, 0, 0, 1"], "answer": 1, "explain": "The running MAX turns a per-instalment event into 'ever late so far', which stays on once set (→ section 1, The vintage table)."},
   {"type": "single", "q": "At MOB 3 the 2026-03 cohort shows 3.98 % ever-30+, and the 2025-03 cohort shows 9.94 % at MOB 6. Is the new book cleaner?", "options": ["Yes — 3.98 is far below 9.94", "Not from these two cells: compare cohorts at the same MOB (read down a column)", "Yes, because 2026 has more loans", "No — newer cohorts are always worse"], "answer": 1, "explain": "The newer cohort is younger, not necessarily better; at MOB 3, 2025-03 was 5.59 % (→ section 5, Company corner)."}
 ]}
 ```

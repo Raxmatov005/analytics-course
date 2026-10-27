@@ -14,123 +14,465 @@
 
 ## 1. Learn — the same aggregate, without losing the rows
 
-### The problem GROUP BY cannot solve alone
+### What a window is — an aggregate that keeps every row
 
-Friday's T2 gave five rows: outstanding by product. Bekzod wants a sixth column, *share of total*. `GROUP BY` has already collapsed the rows, so the total is not in the result — you would need a second query, or last week's one-value subquery `(SELECT SUM(...) FROM ...)` repeated with the same joins and filters. A **window function** (*оконная функция*) solves it in place: it looks at a "window" of rows around the current one, computes an aggregate over them, and writes the answer **on the current row**. No rows disappear.
+**What it is.** A **window function** (*оконная функция*) computes an aggregate — a sum, an average, a count — over a set of rows and writes the answer **on every row**. `GROUP BY` folds the rows into one per group; a window keeps them all. The set of rows it adds up is the **window**.
+
+**The small table used on this page.** Every window below is shown on these five payments first, so you can check each number by hand.
+
+| `pay` | loan | month | amount |
+|---|---|---|---|
+| | A | 1 | 100 |
+| | A | 2 | 200 |
+| | A | 3 | 300 |
+| | B | 1 | 50 |
+| | B | 2 | 50 |
+
+**How to write it.** The same `SUM`, once as an ordinary aggregate and once as a window:
+
+```sql
+WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
+SELECT SUM(amount) AS total FROM pay;                                   -- 1 row: 700
+```
+
+```sql
+WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
+SELECT loan, month, amount,
+       SUM(amount) OVER () AS total                                     -- the word OVER makes SUM a window
+FROM pay;                                                               -- 5 rows, 700 on each
+```
+
+| loan | month | amount | total |
+|---|---|---|---|
+| A | 1 | 100 | 700 |
+| A | 2 | 200 | 700 |
+| A | 3 | 300 | 700 |
+| B | 1 | 50 | 700 |
+| B | 2 | 50 | 700 |
+
+The first query returns one row: 700. The second returns all five payments, each with 700 beside it. Nothing was folded; the total was added as a column.
+
+**When you use it.**
+- A row's detail and a group's number in the same row: each loan with the company total, each payment with its loan's total.
+- Anything that compares a row with its group: share of total, difference from the average, rank, running total.
+
+**Your turn.** How many rows does `SELECT loan_id, SUM(principal) OVER () FROM loans` return? (`loans` has 7 828 rows.)
+
+```task
+{"id": "w03d1-l1", "kind": "choice", "options": ["1 — SUM always returns one row", "5 — one per product", "7 828 — a window keeps every row", "An error — SUM needs GROUP BY"], "answer": 2, "explain": "A window never removes rows: 7 828 loans in, 7 828 rows out, each with the same total beside it."}
+```
+
+### OVER () — one window over all the rows
+
+**What it is.** `OVER ()` with **empty brackets** makes one window that contains every row of the result. The aggregate is computed once over all of them and written on each row.
+
+**How to write it.**
 
 ```sql
 SELECT loan_id, principal,
-       SUM(principal) OVER ()                 AS company_total,     -- the same number on all 7 828 rows
-       AVG(principal) OVER ()                 AS company_avg,
-       COUNT(*) OVER ()                       AS loans
-FROM loans LIMIT 3;
--- 1 · 31 150 000 · 404 783 280 000 · 51 709 668 · 7828   (and the same three values on rows 2 and 3 — the window ran over all 7 828 rows before LIMIT cut the display)
+       SUM(principal)        OVER () AS company_total,    -- aggregate(column) OVER ()
+       ROUND(AVG(principal) OVER ()) AS company_avg,
+       COUNT(*)              OVER () AS loans
+FROM loans
+ORDER BY loan_id
+LIMIT 3;
 ```
 
-Read `OVER ()` as *"over all rows of the result"*. Empty brackets = one window containing everything. The two engines agree on every window keyword today — SQL Server and SQLite differ only in the functions you put in front (`julianday` vs `DATEDIFF`, as before).
+| loan_id | principal | company_total | company_avg | loans |
+|---|---|---|---|---|
+| 1 | 31 150 000 | 404 783 280 000 | 51 709 668 | 7 828 |
+| 2 | 40 060 000 | 404 783 280 000 | 51 709 668 | 7 828 |
+| 3 | 1 590 000 | 404 783 280 000 | 51 709 668 | 7 828 |
 
-> 💡 **Key idea.** `GROUP BY` collapses rows into one per group. A window keeps every row and writes the aggregate *next to* it. Same `SUM`, `AVG`, `COUNT` — the word `OVER` is what changes their behaviour.
+Three rows on screen, but the window ran over all 7 828 loans: 404 783 280 000 is the whole company's principal. `LIMIT` cut the display after the window was computed.
+
+**When you use it.**
+- A grand total or company average next to every row.
+- The denominator of a share (later in this section).
+
+> ⚠️ **Watch out.** The window sees only the rows that survive `WHERE`. Add `WHERE customer_id = 3208` and `company_total` becomes 1 023 170 000 — the total of that customer's two loans. `OVER ()` means "all rows of *this* result", not "all rows of the table".
+
+**Your turn.** Add `WHERE product_id = 5` (SME) to the query above. What does `company_total` show now?
+
+```task
+{"id": "w03d1-l2", "kind": "number", "answer": 241117150000, "dp": 0, "unit": "UZS", "hint": "WHERE runs before the window, so the window adds up only the SME loans.", "model": "241 117 150 000 — the principal of the 781 SME loans. WHERE removed the other products before the window ran."}
+```
 
 ### PARTITION BY — one window per group
 
-`PARTITION BY` splits the rows into groups, exactly like `GROUP BY` — but each row stays, and gets its group's aggregate:
+**What it is.** `PARTITION BY column` inside the brackets splits the rows into groups, one window per group. Each row gets the aggregate of **its own group**. The rows stay; only the window changes.
+
+**How to write it.** On the small table:
+
+```sql
+WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
+SELECT loan, month, amount,
+       SUM(amount) OVER (PARTITION BY loan) AS loan_total    -- one window per loan
+FROM pay;
+```
+
+| loan | month | amount | loan_total |
+|---|---|---|---|
+| A | 1 | 100 | 600 |
+| A | 2 | 200 | 600 |
+| A | 3 | 300 | 600 |
+| B | 1 | 50 | 100 |
+| B | 2 | 50 | 100 |
+
+Loan A's three rows carry 600, loan B's two rows carry 100. On the real data:
 
 ```sql
 SELECT l.loan_id, p.code, l.principal,
-       ROUND(AVG(l.principal) OVER (PARTITION BY p.code))        AS product_avg,
-       ROUND(100.0 * l.principal / AVG(l.principal) OVER (PARTITION BY p.code)) AS pct_of_avg,
-       MAX(l.principal) OVER (PARTITION BY p.code)               AS product_max,
-       COUNT(*) OVER (PARTITION BY p.code)                       AS loans_in_product
-FROM loans l JOIN products p ON p.product_id = l.product_id
-WHERE l.loan_id <= 5;
+       ROUND(AVG(l.principal) OVER (PARTITION BY p.code)) AS product_avg,
+       COUNT(*)               OVER (PARTITION BY p.code)  AS loans_in_product
+FROM loans l
+JOIN products p ON p.product_id = l.product_id
+ORDER BY l.loan_id
+LIMIT 5;
 ```
 
-Careful reading: `WHERE loan_id <= 5` runs **before** the window, so `product_avg` here is the average of the 2 Consumer loans among loans 1–5 (35 605 000), not of all 2 418. **Windows are computed after `WHERE`, `GROUP BY` and `HAVING`, and before `ORDER BY`/`LIMIT`.** That order is the single most useful fact of the day: it is why you can filter first and why you cannot put a window in `WHERE` — you compute the window inside a query in brackets (a *derived table*) and filter outside it. You will write that shape in P6; Day 3 explains it in full.
+Loans 1 and 2 are Consumer loans, so both show the Consumer average, 26 926 915, and 2 418 loans in the product. Loan 3 is Micro: average 2 705 586, 2 669 loans.
 
-> ⚠️ **Watch out.** `PARTITION BY` is not `GROUP BY`. `GROUP BY p.code` returns 5 rows; `OVER (PARTITION BY p.code)` returns every loan, each with its product's number beside it. If you expected five rows and got 7 828, you wrote a partition where you meant a group.
+**When you use it.**
+- Each row with its group's number: each loan with its product's average, each payment with its loan's total.
+- Several groupings at once: one column `OVER (PARTITION BY product_id)`, the next `OVER (PARTITION BY branch_id)`.
 
-```game
-{"type": "bug", "id": "w03d1-g1", "title": "Find the broken line", "q": "Bekzod wants the loans above their product's average principal. One line breaks this query.", "code": "SELECT l.loan_id, p.code, l.principal\nFROM loans l\nJOIN products p ON p.product_id = l.product_id\nWHERE l.principal > AVG(l.principal) OVER (PARTITION BY p.code);", "answer": [3], "why": "Windows are computed after WHERE, so a window cannot sit in WHERE. Compute it in a derived table, then filter outside (P6)."}
+> ⚠️ **Watch out.** `PARTITION BY` is not `GROUP BY`. `GROUP BY p.code` returns 5 rows; `OVER (PARTITION BY p.code)` returns all 7 828. If you expected five rows and got 7 828, you wrote a partition where you meant a group.
+
+**Your turn.** In the result above, how many loans are in loan 5's product (`loans_in_product`)?
+
+```task
+{"id": "w03d1-l3", "kind": "number", "answer": 781, "dp": 0, "unit": "loans", "hint": "Loan 5 is an SME loan. Read loans_in_product on its row.", "model": "781 — every SME loan. COUNT(*) OVER (PARTITION BY p.code) counts the rows of the row's own product."}
 ```
 
-### Share of total — the column Bekzod asked for
+### ORDER BY inside OVER — a running total
+
+**What it is.** `ORDER BY` inside the brackets puts the rows of each window in order. The aggregate then covers the rows **from the first one up to the current one**. A `SUM` becomes a **running total** (*накопительный итог*).
+
+**How to write it.** On the small table:
 
 ```sql
-SELECT p.code, SUM(i.principal_due) AS outstanding,
+WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
+SELECT loan, month, amount,
+       SUM(amount) OVER (PARTITION BY loan ORDER BY month) AS running   -- restart per loan, add up in month order
+FROM pay;
+```
+
+| loan | month | amount | running |
+|---|---|---|---|
+| A | 1 | 100 | 100 |
+| A | 2 | 200 | 300 |
+| A | 3 | 300 | 600 |
+| B | 1 | 50 | 50 |
+| B | 2 | 50 | 100 |
+
+Loan A climbs 100 → 300 → 600. Loan B starts again at 50: `PARTITION BY` restarts the sum for each loan. On the real data, loan 1's payments:
+
+```sql
+SELECT payment_id, paid_at, amount,
+       SUM(amount) OVER (ORDER BY paid_at, payment_id) AS collected_so_far
+FROM payments
+WHERE loan_id = 1
+ORDER BY paid_at;
+```
+
+18 rows. The running column grows by 1 741 700 at each payment and ends at 31 350 600 — everything loan 1 has paid by 1 October 2026. The step from 26 February to 25 April is the missed March instalment.
+
+**When you use it.**
+- Year-to-date, collected so far, cumulative disbursement.
+- "Ever happened so far" with `MAX` instead of `SUM` (Day 3's vintages).
+
+> ⚠️ **Watch out.** Two `ORDER BY`s do two different jobs. The one inside `OVER` decides the order of adding up. The one at the end of the query only sorts what you see. Without the inner one there is no running total, only the full sum on every row.
+
+**Your turn.** Change `loan_id = 1` to `loan_id = 2` and run it. What is the running total on loan 2's last payment?
+
+```task
+{"id": "w03d1-l4", "kind": "number", "answer": 25119000, "dp": 0, "unit": "UZS", "hint": "Read collected_so_far on the last row (paid 2026-09-03).", "model": "25 119 000 — nine payments of 2 791 000. The running total on the last row is everything paid so far."}
+```
+
+### Window vs GROUP BY — the same sum, two shapes
+
+**What it is.** `GROUP BY` and a window compute the same aggregate. The difference is the **shape of the result**: `GROUP BY` returns one row per group, a window returns every row with the group's number beside it.
+
+| `GROUP BY loan` → 2 rows | loan | SUM(amount) |
+|---|---|---|
+| | A | 600 |
+| | B | 100 |
+
+| `SUM(amount) OVER (PARTITION BY loan)` → 5 rows | loan | month | amount | loan_total |
+|---|---|---|---|---|
+| | A | 1 | 100 | 600 |
+| | A | 2 | 200 | 600 |
+| | A | 3 | 300 | 600 |
+| | B | 1 | 50 | 100 |
+| | B | 2 | 50 | 100 |
+
+**How to write it.** The two shapes on `loans`:
+
+```sql
+SELECT product_id, COUNT(*) AS loans
+FROM loans
+GROUP BY product_id;                                                -- 5 rows
+```
+
+```sql
+SELECT loan_id, product_id, COUNT(*) OVER (PARTITION BY product_id) AS loans_in_product
+FROM loans;                                                         -- 7 828 rows
+```
+
+5 rows against 7 828 rows — the same counts (2 669, 2 418, 1 569, 391, 781), once folded and once written on every loan.
+
+**When you use it.**
+
+| You want | Use | Rows out |
+|---|---|---|
+| one number per group | `GROUP BY` | one per group |
+| every row, with its group's number beside it | a window with `PARTITION BY` | all rows |
+| one row per group **plus** a share or running total across groups | `GROUP BY` and a window on top | one per group |
+
+**Your turn.** Bekzod wants **every loan with its product's average principal beside it**. Which do you write?
+
+```task
+{"id": "w03d1-l5", "kind": "choice", "options": ["GROUP BY product_id", "AVG(principal) OVER (PARTITION BY product_id)", "AVG(principal) OVER ()", "GROUP BY loan_id"], "answer": 1, "explain": "Every loan must stay, and each needs its own product's average: a window partitioned by product. GROUP BY would leave five rows; OVER () would give the company average."}
+```
+
+### SUM, AVG, COUNT, MIN, MAX as windows
+
+**What it is.** Every ordinary aggregate works as a window: `SUM`, `AVG`, `COUNT(*)`, `COUNT(column)`, `MIN`, `MAX`. Put `OVER (…)` after it and it stops folding rows.
+
+**How to write it.** Each loan against its product's smallest, largest and average loan:
+
+```sql
+SELECT l.loan_id, p.code, l.principal,
+       MIN(l.principal)        OVER (PARTITION BY p.code) AS product_min,
+       MAX(l.principal)        OVER (PARTITION BY p.code) AS product_max,
+       ROUND(AVG(l.principal)  OVER (PARTITION BY p.code)) AS product_avg,
+       ROUND(l.principal - AVG(l.principal) OVER (PARTITION BY p.code)) AS vs_avg   -- a window inside arithmetic
+FROM loans l
+JOIN products p ON p.product_id = l.product_id
+ORDER BY l.loan_id
+LIMIT 5;
+```
+
+Loan 1 (Consumer, 31 150 000) sits between 3 110 000 and 49 990 000 and is 4 223 085 above the Consumer average. Loan 3 (Micro, 1 590 000) is 1 115 586 below the Micro average. A window is a number like any other: you can subtract, divide and round it.
+
+**When you use it.**
+- "How far is this row from its group?" — `x - AVG(x) OVER (…)`, `x / MAX(x) OVER (…)`.
+- Group size beside each row — `COUNT(*) OVER (PARTITION BY …)`.
+
+> ⚠️ **Watch out.** `COUNT(DISTINCT …) OVER (…)` is not allowed — SQLite stops with *DISTINCT is not supported for window functions*, and SQL Server refuses it too. Count distinct values with `GROUP BY` in a separate step, then join or window over that.
+
+**Your turn.** In the query above, replace `ORDER BY l.loan_id LIMIT 5` with `ORDER BY vs_avg DESC LIMIT 1`. The top row is loan 2861, the largest SME loan. How far above the SME average is it (`vs_avg`, whole UZS)?
+
+```task
+{"id": "w03d1-l6", "kind": "number", "answer": 290331255, "dp": 0, "unit": "UZS", "hint": "Sort, do not filter: WHERE l.loan_id = 2861 would leave the window one loan to average.", "model": "290 331 255: 599 060 000 − 308 728 745 (the SME average). With WHERE l.loan_id = 2861 the window sees one row and vs_avg is 0 — WHERE runs before the window."}
+```
+
+### Share of total — value / SUM() OVER ()
+
+**What it is.** A **share of total** (*доля от итога*) is a row's value divided by the total of all rows. The total comes from a window, so it sits in the same row as the value — no second query.
+
+**How to write it.** Two forms, one per shape:
+
+```sql
+-- every row: a row's value / the window's total
+SELECT loan_id, principal,
+       ROUND(100.0 * principal / SUM(principal) OVER (), 4) AS share_pct
+FROM loans ORDER BY principal DESC LIMIT 3;                         -- loan 2861: 0.148 % of all principal
+```
+
+```sql
+-- one row per group: GROUP BY first, then a window over the grouped rows
+SELECT p.code,
+       SUM(i.principal_due) AS outstanding,
        ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1) AS share_pct
-FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
-WHERE i.due_date > '2026-10-01'
-GROUP BY p.code ORDER BY outstanding DESC;
--- SME 125 892 942 411 · 60.3 % · AUTO 57 684 271 333 · 27.6 · CONS 23 054 933 316 · 11.0 · BNPL 1 135 251 000 · 0.5 · MICRO 956 106 370 · 0.5
+FROM installments i
+JOIN loans l    ON l.loan_id = i.loan_id
+JOIN products p ON p.product_id = l.product_id
+WHERE i.due_date > '2026-10-01'                                     -- outstanding = principal of instalments not yet due
+GROUP BY p.code
+ORDER BY outstanding DESC;
 ```
 
-`SUM(SUM(x)) OVER ()` looks odd and is the key pattern of the week: the inner `SUM` is the GROUP BY aggregate (one value per product); the outer `SUM(...) OVER ()` adds those five values up and writes the total on each of the five rows. **GROUP BY and a window in the same query** — the window runs on the *grouped* result. `100.0 *` at the front, as always.
+| code | outstanding | share_pct |
+|---|---|---|
+| SME | 125 892 942 411 | 60.3 |
+| AUTO | 57 684 271 333 | 27.6 |
+| CONS | 23 054 933 316 | 11.0 |
+| BNPL | 1 135 251 000 | 0.5 |
+| MICRO | 956 106 370 | 0.5 |
 
-> 💡 **Key idea.** Share of total = `100.0 * SUM(x) / SUM(SUM(x)) OVER ()`. Inner `SUM`: one value per group. Outer `SUM … OVER ()`: those group values added up and written on every group's row. Learn this one line by heart — you will use it all week.
+Five rows; the shares add to 100. SME holds 60.3 % of the 208 723 504 430 outstanding. Read `SUM(SUM(x)) OVER ()` from the inside out: the inner `SUM` is the `GROUP BY` aggregate, one value per product; the outer `SUM … OVER ()` adds those five values and writes the total on each row. The window runs **after** `GROUP BY`, on the grouped rows.
 
-### ORDER BY inside OVER — running totals
+**When you use it.**
+- Share of the company: `x / SUM(x) OVER ()`.
+- Share inside a group: `x / SUM(x) OVER (PARTITION BY region)` — each region's branches add to 100.
+- Share of count: `COUNT(*) / SUM(COUNT(*)) OVER ()`.
 
-Add `ORDER BY` inside the brackets and the window becomes *"all rows from the start of the partition up to the current one"*. The aggregate turns into a **running total** (*накопительный итог*):
+> ⚠️ **Watch out.** `principal / SUM(principal) OVER ()` divides two whole numbers, and integer division rounds every share down to 0. Start with `100.0 *` so the arithmetic is decimal.
+
+**Your turn.** What share of all loans (by **count**) are Micro loans, in %, one decimal? Use `COUNT(*)` in the second form.
+
+```task
+{"id": "w03d1-l7", "kind": "number", "answer": 34.1, "dp": 1, "unit": "%", "hint": "SELECT p.code, COUNT(*), ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) … GROUP BY p.code", "model": "34.1 % — 2 669 of 7 828 loans. By count Micro is the biggest product; by outstanding it is 0.5 %. Always say share of what."}
+```
+
+### The frame — ROWS BETWEEN, and the default that lumps ties
+
+**What it is.** The **frame** (*рамка окна*) is the part of the window that the aggregate actually reads, counted from the current row. You set it with `ROWS BETWEEN <start> AND <end>`.
+
+```text
+UNBOUNDED PRECEDING   the first row of the window
+n PRECEDING           n rows before the current one
+CURRENT ROW           the current row
+n FOLLOWING           n rows after the current one
+UNBOUNDED FOLLOWING   the last row of the window
+```
+
+**How to write it.** A running total with the frame spelled out:
 
 ```sql
-WITH m AS (
-  SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed    -- FORMAT(disbursed_at, 'yyyy-MM')
-  FROM loans GROUP BY strftime('%Y-%m', disbursed_at))
-SELECT month, loans, disbursed,
-       SUM(disbursed) OVER (PARTITION BY substr(month, 1, 4) ORDER BY month) AS ytd     -- SQL Server: LEFT(month, 4)
-FROM m ORDER BY month;
--- 2026-01 287 / 17 452 370 000 / ytd 17 452 370 000 · 2026-02 265 / 11 893 850 000 / 29 346 220 000 · … · 2026-09 361 / 17 015 490 000 / 161 480 300 000 · 2026-10 21 / 852 760 000 / 162 333 060 000
+SUM(amount) OVER (PARTITION BY loan ORDER BY month
+                  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)   -- from the first row to this one
 ```
 
-`PARTITION BY` the year, `ORDER BY` the month: the running sum restarts each January (2025 ends at 155 927 230 000; 2026 restarts at 17.45 bn). The `WITH m AS (...)` is Day 3's CTE; use it as you did last week — a named result you then query.
+When you write `ORDER BY` inside `OVER` and no frame, the engine uses a default: `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. **RANGE** includes every row whose `ORDER BY` value equals the current one. With ties, the two frames differ:
 
-### The default frame and ROWS BETWEEN
+| day | x | default (RANGE) | `ROWS UNBOUNDED PRECEDING` |
+|---|---|---|---|
+| 28 Sep | 10 | **30** | 10 |
+| 28 Sep | 20 | 30 | 30 |
+| 29 Sep | 5 | 35 | 35 |
 
-With `ORDER BY` inside `OVER`, the window has a **frame** (*рамка окна*): which rows around the current one are in. The default is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` — and `RANGE` means *"up to and including every row with the same ORDER BY value"*. Run a daily running total on raw loans and the trap shows:
+On the real data, a running total of principal by disbursement date in the last week of September:
 
 ```sql
-SELECT disbursed_at, principal,
-       SUM(principal) OVER (ORDER BY disbursed_at)                              AS range_run,   -- default frame
-       SUM(principal) OVER (ORDER BY disbursed_at ROWS UNBOUNDED PRECEDING)     AS rows_run
-FROM loans WHERE disbursed_at >= '2026-09-28' ORDER BY disbursed_at, loan_id;
--- 2026-09-28: all seven loans show range_run = 543 980 000 (the whole day); rows_run climbs 135 550 000 → 140 420 000 → … → 543 980 000
+SELECT disbursed_at, loan_id, principal,
+       SUM(principal) OVER (ORDER BY disbursed_at)                               AS range_run,  -- default frame
+       SUM(principal) OVER (ORDER BY disbursed_at, loan_id ROWS UNBOUNDED PRECEDING) AS rows_run   -- row by row
+FROM loans
+WHERE disbursed_at >= '2026-09-24' AND disbursed_at < '2026-10-01'
+ORDER BY disbursed_at, loan_id;
 ```
 
-Both are "right" — `RANGE` says *total through this date*, `ROWS` says *total through this row*. Rule: when `ORDER BY` has ties, decide which one you mean; when you order by a unique key (one row per month) they agree. The explicit frame syntax is `ROWS BETWEEN <start> AND <end>` with `UNBOUNDED PRECEDING`, `n PRECEDING`, `CURRENT ROW`, `n FOLLOWING`, `UNBOUNDED FOLLOWING`.
+77 loans in seven days. `range_run` shows the same value on every loan of a day — the total through that date. `rows_run` climbs loan by loan. They agree only on the last loan of each day: 7 rows of 77.
 
-> ⚠️ **Watch out.** The moment you write `ORDER BY` inside `OVER`, a frame appears even if you did not ask for one — and its default is `RANGE … CURRENT ROW`, which lumps ties together. On a column with repeated values (dates, grades, rounded amounts) say `ROWS` explicitly.
+**When you use it.**
+- `ROWS` when you mean "through this row"; the default `RANGE` when you mean "through this value" (all loans of the day).
+- A fixed-length frame for moving averages — the next subsection.
 
-The clauses inside `OVER` always come in the same order: partition, then order, then frame. Put them together once by hand:
+> ⚠️ **Watch out.** The default frame appears as soon as you write `ORDER BY` inside `OVER`. On a column with repeated values (dates, grades, rounded amounts) say `ROWS` and add a tiebreaker (`, loan_id`), or the running total jumps by a whole day at a time.
+
+**Your turn.** The clauses inside `OVER` always come in the same order: partition, then order, then frame. Build one.
 
 ```game
 {"type": "build", "id": "w03d1-g2", "title": "Build the window", "q": "Bekzod's year-to-date per product: a running sum of monthly disbursement that restarts for every product, row by row.", "tokens": ["SUM(disbursed)", "OVER (", "PARTITION BY code", "ORDER BY month", "ROWS UNBOUNDED PRECEDING", ")"], "distractors": ["GROUP BY code", "WHERE month >= '2026-01'", "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW"]}
 ```
 
-### Moving averages — a frame of fixed length
+### Moving average — a frame of fixed length
 
-A **moving average** (*скользящее среднее*) smooths a monthly series: each month is replaced by the average of itself and the two before it.
+**What it is.** A **moving average** (*скользящее среднее*) replaces each value by the average of itself and a fixed number of neighbours. `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW` is a three-row frame that slides down the rows:
+
+```text
+month    disbursed   frame of the 3-month average
+2026-06  16.1 bn     ┐
+2026-07  20.7 bn     │ ← frame for 2026-08: Jun + Jul + Aug, / 3 = 19.7 bn
+2026-08  22.3 bn     ┘
+2026-09  17.0 bn       (next row: the frame moves down one month)
+```
+
+**How to write it.** Monthly disbursement first, then the average over it. `WITH m AS (…)` names a result so the next `SELECT` can read it like a table — Day 3 teaches it; read it as "first make `m`, then query it".
 
 ```sql
--- after the same WITH m AS (...)
+WITH m AS (
+  SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed      -- SQL Server: FORMAT(disbursed_at, 'yyyy-MM')
+  FROM loans
+  WHERE disbursed_at < '2026-10-01'                                                 -- October has one day only: leave it out
+  GROUP BY strftime('%Y-%m', disbursed_at))
 SELECT month, disbursed,
        ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3,
        COUNT(*)            OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)  AS months_in_window
-FROM m ORDER BY month;
--- 2024-01 ma3 = 3 872 450 000 (1 month) · 2024-02 4 236 505 000 (2) · 2024-03 4 966 556 667 (3) … 2026-08 19 678 126 667 · 2026-09 19 999 856 667 · 2026-10 13 386 153 333
+FROM m
+ORDER BY month;
 ```
 
-Two honest readings: the first two months average fewer than three values (show `months_in_window` or start the chart at month 3), and October 2026 is **one day** of data (852 760 000) — it drags the 3-month average down by a third. Filter `WHERE month < '2026-10'` before smoothing. A **centred** average is `ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING`; a 12-month one is `11 PRECEDING`.
+33 rows, January 2024 to September 2026. August 2026 reads 22 290 210 000 against a 3-month average of 19 678 126 667. The first two rows average fewer than three months: `months_in_window` shows 1 and 2.
 
-### Window vs GROUP BY — which, and when both
+**When you use it.**
+- Smoothing a monthly series before you call a trend: 3 months (`2 PRECEDING`), 12 months (`11 PRECEDING`).
+- A centred average: `ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING`.
 
-| You want | Use | Rows out |
-|---|---|---|
-| one number per group | `GROUP BY` | one per group |
-| every row, with its group's number beside it | window with `PARTITION BY` | all rows |
-| one number per group, **plus** the share/running total across groups | `GROUP BY` **and** a window on top (`SUM(SUM(x)) OVER ()`) | one per group |
-| a filter on the window's result ("loans above their product's average") | window in a CTE/derived table, filter outside | subset |
+> ⚠️ **Watch out.** A partial month poisons the average. With 1 October in the data, "October" is one day (852 760 000) and drags its 3-month average down by a third. Cut the series at the last full month before you smooth it.
 
-Windows never reduce rows; `GROUP BY` always does; the pattern `SUM(SUM())` is the handshake between them.
+**Your turn.** Which frame gives a **12-month** moving average (this month and the eleven before)?
+
+```task
+{"id": "w03d1-l8", "kind": "choice", "options": ["ROWS BETWEEN 12 PRECEDING AND CURRENT ROW", "ROWS BETWEEN 11 PRECEDING AND CURRENT ROW", "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW", "ROWS BETWEEN 6 PRECEDING AND 6 FOLLOWING"], "answer": 1, "explain": "Eleven rows back plus the current row = twelve months. 12 PRECEDING would be thirteen; UNBOUNDED is a running average; 6/6 is a centred thirteen-month frame."}
+```
+
+### Where a window may appear — SELECT and ORDER BY, not WHERE
+
+**What it is.** A query is worked out in a fixed order. Windows are computed late: after `WHERE`, `GROUP BY` and `HAVING`. So a window may appear in `SELECT` and in `ORDER BY`, but not in `WHERE`, `GROUP BY` or `HAVING` — when those run, the window does not exist yet.
+
+```text
+FROM / JOIN → WHERE → GROUP BY → HAVING → windows → SELECT → ORDER BY → LIMIT
+                ✗         ✗         ✗        ✓         ✓          ✓
+```
+
+**How to write it.** To filter on a window, compute it inside a query in brackets — a **derived table** — and filter outside:
+
+```sql
+SELECT COUNT(*) AS above_product_avg
+FROM (SELECT l.loan_id, l.principal,
+             AVG(l.principal) OVER (PARTITION BY l.product_id) AS product_avg   -- step 1: the window, inside
+      FROM loans l) AS t
+WHERE principal > product_avg;                                                  -- step 2: the filter, outside
+```
+
+3 919 loans are larger than their own product's average — about half of every product. `WITH t AS (…) SELECT … FROM t WHERE …` does the same; Day 3 explains both.
+
+**When you use it.**
+- "Rows above their group's average", "the top 3 per group" (tomorrow), "months that beat the previous one".
+- Sorting by a window is allowed directly: `ORDER BY SUM(x) OVER (…) DESC`.
+
+> ⚠️ **Watch out.** The order also explains the `WHERE` effect from `OVER ()`: `WHERE` decides which rows the window sees. Filter in `WHERE` when you want a smaller window; filter outside when you want the full window and fewer rows on screen.
+
+**Your turn.**
+
+```game
+{"type": "bug", "id": "w03d1-g1", "title": "Find the broken line", "q": "Bekzod wants the loans above their product's average principal. One line breaks this query.", "code": "SELECT l.loan_id, p.code, l.principal\nFROM loans l\nJOIN products p ON p.product_id = l.product_id\nWHERE l.principal > AVG(l.principal) OVER (PARTITION BY p.code);", "answer": [3], "why": "Windows are computed after WHERE, so a window cannot sit in WHERE. Compute it in a derived table, then filter outside."}
+```
+
+### Putting it together
+
+One request, five of today's tools. *"2026 monthly disbursement, January to September: each month's share of the nine months, the running year-to-date, the 3-month moving average, and the month as a % of the best month."*
+
+```sql
+WITH m AS (
+  SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
+  FROM loans
+  WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'              -- the nine full months
+  GROUP BY strftime('%Y-%m', disbursed_at))
+SELECT month, loans, disbursed,
+       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1)                         AS share_pct,    -- share of total
+       SUM(disbursed) OVER (ORDER BY month ROWS UNBOUNDED PRECEDING)                AS ytd,          -- running total
+       ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3, -- moving average
+       ROUND(100.0 * disbursed / MAX(disbursed) OVER (), 1)                         AS pct_of_best   -- MAX as a window
+FROM m
+ORDER BY month;
+```
+
+| month | loans | disbursed | share % | ytd | ma3 | % of best |
+|---|---|---|---|---|---|---|
+| 2026-01 | 287 | 17 452 370 000 | 10.8 | 17 452 370 000 | 17 452 370 000 | 78.3 |
+| 2026-02 | 265 | 11 893 850 000 | 7.4 | 29 346 220 000 | 14 673 110 000 | 53.4 |
+| … | | | | | | |
+| 2026-08 | 358 | 22 290 210 000 | 13.8 | 144 464 810 000 | 19 678 126 667 | 100.0 |
+| 2026-09 | 361 | 17 015 490 000 | 10.5 | 161 480 300 000 | 19 999 856 667 | 76.3 |
+
+Nine rows, one per month: `GROUP BY` made them, the windows only added columns. `share_pct` and `pct_of_best` read all nine months (`OVER ()`); `ytd` reads January up to this month; `ma3` reads this month and the two before. The running total ends at 161 480 300 000 — the year to date through September. The `WHERE` keeps 1 October out; leave it in and "September YTD" quietly becomes 162.3 bn. (Here 2026 starts the series, so the first two moving averages cover only 1 and 2 months.)
+
+**GROUP BY, a window, or both?**
 
 ```game
 {"type": "sort", "id": "w03d1-g3", "title": "GROUP BY, window, or both?", "q": "Tap each of Bekzod's asks, then the tool that answers it.", "groups": {"GROUP BY alone": ["Outstanding per product, five rows", "Number of loans per branch"], "Window (PARTITION BY), every row kept": ["Every loan with its product's average beside it", "Each payment of loan 1 with the loan's total collected"], "GROUP BY + a window on top": ["Outstanding per product with its share of the total", "Monthly disbursement with a running YTD"]}}
@@ -153,39 +495,49 @@ Windows never reduce rows; `GROUP BY` always does; the pattern `SUM(SUM())` is t
 
 ## 2. Worked example — Bekzod's branch table (15 min)
 
-*"Each branch's outstanding and its share of the company."* Noun that is one row of what we sum: an **instalment** not yet due (as in T2). Join `loans → branches` many-to-one for the label. Group by branch. Then the share is a window over the grouped result:
+**Ask:** *"Each branch's outstanding, its share of the company, its share of its region, and how much of the book the biggest branches hold together."* Each step is one concept from section 1, in the same order.
+
+1. **Window vs GROUP BY — one row per branch.** The answer has ten rows, so the base is `GROUP BY` branch. One row before grouping is an instalment not yet due (outstanding, as in the share-of-total example); `loans → branches` is many-to-one and adds only the label.
+2. **Share of total — `OVER ()`.** `SUM(SUM(x)) OVER ()` adds the ten branch totals and puts the company total on each row.
+3. **PARTITION BY — share inside the region.** The same expression with `OVER (PARTITION BY b.region)`: each region's branches add to 100.
+4. **ORDER BY inside OVER — a running share.** `SUM(SUM(x)) OVER (ORDER BY SUM(x) DESC)` adds the branches from the biggest down; divided by the total, it reads "the top N hold …".
+5. **Check.** The shares add to 100.0, the outstanding to 208 723 504 430 (Friday's total), and the running share ends at 100.0.
 
 ```sql
 SELECT b.branch_name, b.region,
-       SUM(i.principal_due)                                                   AS outstanding,
-       COUNT(DISTINCT i.loan_id)                                              AS loans,
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1)                      AS share_pct,
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY b.region), 1) AS share_in_region
-FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN branches b ON b.branch_id = l.branch_id
+       SUM(i.principal_due)                                                                             AS outstanding,
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1)                      AS share_pct,        -- step 2
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY b.region), 1) AS share_in_region,  -- step 3
+       ROUND(100.0 * SUM(SUM(i.principal_due)) OVER (ORDER BY SUM(i.principal_due) DESC)
+                   / SUM(SUM(i.principal_due)) OVER (), 1)                                              AS cum_share_pct     -- step 4
+FROM installments i
+JOIN loans l    ON l.loan_id = i.loan_id
+JOIN branches b ON b.branch_id = l.branch_id
 WHERE i.due_date > '2026-10-01'
-GROUP BY b.branch_name, b.region ORDER BY outstanding DESC;
+GROUP BY b.branch_name, b.region                                                                         -- step 1
+ORDER BY outstanding DESC;
 ```
 
-| branch | outstanding | share % | share in region % |
-|---|---|---|---|
-| Tashkent Central | 28 716 674 373 | 13.8 | 35.2 |
-| Tashkent South | 26 787 392 136 | 12.8 | 32.8 |
-| Tashkent North | 26 175 671 562 | 12.5 | 32.0 |
-| Fergana Central | 24 797 334 197 | 11.9 | 100.0 |
-| Samarkand Central | 24 655 889 676 | 11.8 | 100.0 |
-| Andijan Central | 19 798 392 956 | 9.5 | 100.0 |
-| Namangan Central | 18 696 787 066 | 9.0 | 100.0 |
-| Bukhara Central | 15 116 046 338 | 7.2 | 100.0 |
-| Nukus Central | 13 309 138 567 | 6.4 | 100.0 |
-| Termez Central | 10 670 177 559 | 5.1 | 100.0 |
+| branch | outstanding | share % | share in region % | cumulative % |
+|---|---|---|---|---|
+| Tashkent Central | 28 716 674 373 | 13.8 | 35.2 | 13.8 |
+| Tashkent South | 26 787 392 136 | 12.8 | 32.8 | 26.6 |
+| Tashkent North | 26 175 671 562 | 12.5 | 32.0 | 39.1 |
+| Fergana Central | 24 797 334 197 | 11.9 | 100.0 | 51.0 |
+| Samarkand Central | 24 655 889 676 | 11.8 | 100.0 | 62.8 |
+| Andijan Central | 19 798 392 956 | 9.5 | 100.0 | 72.3 |
+| Namangan Central | 18 696 787 066 | 9.0 | 100.0 | 81.3 |
+| Bukhara Central | 15 116 046 338 | 7.2 | 100.0 | 88.5 |
+| Nukus Central | 13 309 138 567 | 6.4 | 100.0 | 94.9 |
+| Termez Central | 10 670 177 559 | 5.1 | 100.0 | 100.0 |
 
-Check: the shares add to 100.0 and the outstanding to 208 723 504 430 — Friday's total. Two windows in one query, two partitions: `OVER ()` for the company, `OVER (PARTITION BY region)` for the region. The second column is only interesting in Tashkent, where three branches split the region almost evenly; it also shows that a share column is meaningless without saying *share of what*.
+Ten rows, five window expressions over three different windows: the whole company, the region, and "from the biggest branch down to this one". The share in region is only interesting in Tashkent, where three branches split the region almost evenly; elsewhere one branch is its region (100.0). The cumulative column answers Bekzod's last question: the three Tashkent branches hold **39.1 %** of the book. A share column is meaningless without *share of what* — here, three different "whats" side by side.
 
 ---
 
 ## 3. Practice (60 min)
 
-Start with the lab: four steps on your own copy of the database, so the running total becomes a table you made. Then the questions: write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
+Start with the lab: four steps on your own copy of the database, so the running total becomes a table you made. Then the questions, in the order of section 1 — the concept each one trains is in italics. Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
 
 ```sqllab
 {"id": "w03d1-lab", "title": "Your own monthly table with a running total", "intro": "You build Bekzod's 2026 table yourself: monthly disbursement stored with CREATE TABLE … AS, then a running total computed by a window and stored next to it. Everything happens in your practice copy; the real tables are not touched.", "steps": [
@@ -198,7 +550,7 @@ Start with the lab: four steps on your own copy of the database, so the running 
 
 > 💡 **Key idea.** A table you make with `CREATE TABLE … AS SELECT` is frozen: add a new loan to `loans` tomorrow and `my_ytd` will not change. That is useful for a pack sent on Wednesday, and dangerous if someone reads the table next month. Day 4 is about this choice.
 
-**P1.** Every loan with the company total, the company average and how many loans there are — on each row. Then the same for loans of customer 3208 only; explain why the total changed.
+**P1.** *(OVER ())* Every loan with the company total, the company average and how many loans there are — on each row. Then the same for loans of customer 3208 only; explain why the total changed.
 
 <details><summary>Answer</summary>
 
@@ -217,112 +569,23 @@ Without the `WHERE`: total 404 783 280 000, average 51 709 668, n 7 828 on every
 {"id": "w03d1-p1b", "kind": "choice", "options": ["OVER () ignores WHERE and adds the whole table, so the number must be a bug", "WHERE runs before the window, so the window only sees the customer's two loans", "SUM inside a window always returns one row's value", "LIMIT cut the result"], "answer": 1, "explain": "Order of work: FROM → WHERE → GROUP BY → HAVING → window → ORDER BY → LIMIT. The window adds up whatever survived the filter.", "xp": 1}
 ```
 
-**P2.** Outstanding by **risk grade** with share of total, one decimal. Which grade carries the most money, and is that what the grade *counts* would suggest?
+**P2.** *(PARTITION BY)* Every loan with the number of loans and the average principal **of its branch** beside it (whole UZS), ordered by `loan_id`. How many loans does loan 1's branch have?
 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT l.risk_grade, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans,
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1) AS share_pct
-FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01'
-GROUP BY l.risk_grade ORDER BY outstanding DESC;
--- B 93 317 343 066 / 1457 loans / 44.7 % · C 56 322 842 888 / 1040 / 27.0 · A 48 417 895 338 / 754 / 23.2 · D 10 665 423 138 / 158 / 5.1
+SELECT l.loan_id, b.branch_name, l.principal,
+       COUNT(*)               OVER (PARTITION BY l.branch_id) AS branch_loans,
+       ROUND(AVG(l.principal) OVER (PARTITION BY l.branch_id)) AS branch_avg
+FROM loans l JOIN branches b ON b.branch_id = l.branch_id
+ORDER BY l.loan_id;
+-- 7 828 rows; loan 1 · Termez Central · 31 150 000 · 483 · 47 593 561; loan 2 · Nukus Central · 492 · 47 610 488
 ```
-B holds 45 % of the money on 43 % of the owing loans; D is 5 % of the book — small, as a cut-off should make it.
+Loan 1 belongs to Termez Central, the smallest branch: 483 loans, average 47 593 561. Partitioning by `branch_id` (not by name) is safer — two branches could share a name.
 
 </details>
 
-**P2 — read it.** What share of outstanding does grade D carry, in %, one decimal?
-
-```task
-{"id": "w03d1-p2b", "kind": "number", "answer": 5.1, "dp": 1, "unit": "%", "hint": "The share_pct column of your P2 result, on the D row.", "model": "D: 10 665 423 138 of 208 723 504 430 = 5.1 % of outstanding, on 158 of the 3 409 owing loans (4.6 %). The risky grade is small in money as well as in count.", "xp": 1}
-```
-
-**P3.** Outstanding by **product × grade** with the grade's share *inside its product*. In which product is grade C the largest share?
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT p.code, l.risk_grade, SUM(i.principal_due) AS outstanding,
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY p.code), 1) AS share_in_product
-FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
-WHERE i.due_date > '2026-10-01' GROUP BY p.code, l.risk_grade ORDER BY p.code, l.risk_grade;
--- MICRO C 35.2 % (A 22.7 · B 40.0 · D 2.1); BNPL C 31.4; CONS 30.8; AUTO 28.9; SME 25.3
-```
-Twenty rows; each product's four shares add to 100. Micro carries the most grade-C weight — the app product, consistent with the FPD finding of week 2.
-
-</details>
-
-**P4.** 2026 monthly disbursement (all products, January–September) with: share of the nine-month total, running YTD, and each month as % of the best month.
-
-<details><summary>Answer</summary>
-
-```sql
-WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
-           FROM loans WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01' GROUP BY 1)
-SELECT month, loans, disbursed,
-       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1)      AS share_of_ytd,
-       SUM(disbursed) OVER (ORDER BY month)                       AS ytd,
-       ROUND(100.0 * disbursed / MAX(disbursed) OVER (), 1)      AS pct_of_best
-FROM m ORDER BY month;
--- 2026-01 10.8 % / ytd 17 452 370 000 / 78.3 % of best · 2026-02 7.4 / 29 346 220 000 / 53.4 · 2026-03 12.2 / 49 003 630 000 / 88.2
--- … 2026-08 13.8 / 144 464 810 000 / 100.0 · 2026-09 10.5 / 161 480 300 000 / 76.3
-```
-Three windows, three frames: `OVER ()` for the total and the max, `OVER (ORDER BY month)` for the running sum. The half-open filter keeps 1 October out — leave it in and "September YTD" quietly becomes 162.3 bn.
-
-</details>
-
-**P5.** Bekzod's second ask: per **product**, monthly 2026 disbursement with running YTD — the running sum must restart per product.
-
-<details><summary>Answer</summary>
-
-```sql
-WITH m AS (SELECT p.code, strftime('%Y-%m', l.disbursed_at) AS month, COUNT(*) AS loans, SUM(l.principal) AS disbursed
-           FROM loans l JOIN products p ON p.product_id = l.product_id
-           WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY 1, 2)
-SELECT code, month, loans, disbursed, SUM(disbursed) OVER (PARTITION BY code ORDER BY month) AS ytd
-FROM m ORDER BY code, month;
--- AUTO: Jan 4 620 560 000 → ytd Sep 36 021 820 000 · SME: Jan 10 042 990 000 → ytd Sep 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL → 2 431 040 000
-```
-45 rows (5 products × 9 months). Forget `PARTITION BY code` and Auto's September "YTD" includes every other product's January.
-
-</details>
-
-**P6.** How many loans are **above their product's average** principal? (Window in a derived table, filter outside.)
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT code, SUM(above) AS above_avg, COUNT(*) AS loans
-FROM (SELECT p.code, CASE WHEN l.principal > AVG(l.principal) OVER (PARTITION BY p.code) THEN 1 ELSE 0 END AS above
-      FROM loans l JOIN products p ON p.product_id = l.product_id) t
-GROUP BY code;
--- AUTO 189 of 391 · BNPL 787 of 1569 · CONS 1212 of 2418 · MICRO 1331 of 2669 · SME 400 of 781   (3 919 in all)
-```
-`WHERE principal > AVG(principal) OVER (...)` is an error — windows do not exist yet when `WHERE` runs. Wrap, then filter. Roughly half above average in every product: the ticket sizes are symmetric, no long tail of giants.
-
-</details>
-
-**P7.** Three-month moving average of monthly disbursement for 2025-01 to 2026-09, plus the number of months in each window. Which month is furthest above its moving average?
-
-<details><summary>Answer</summary>
-
-```sql
-WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed
-           FROM loans WHERE disbursed_at < '2026-10-01' GROUP BY 1),
-w AS (SELECT month, disbursed,
-             ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3,
-             COUNT(*)            OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)  AS months_in_window,
-             ROUND(100.0 * disbursed / AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) - 100, 1) AS vs_ma_pct
-      FROM m)
-SELECT * FROM w WHERE month >= '2025-01' ORDER BY month;
--- 2025-07: 14 590 460 000 vs ma3 11 240 216 667 → +29.8 % (the furthest); 2025-08 +24.0 %; 2026-03 19 657 410 000 vs 16 334 543 333 → +20.3 %
-```
-Two CTEs: the window runs in `w` over the **whole** series, the display filter sits in the outer query. Put `WHERE month >= '2025-01'` inside `w` instead and `WHERE` runs *before* the window: January 2025 averages one month, February two — `months_in_window` shows 1 and 2 instead of 3. Filter the frame's input and the display separately, always.
-
-</details>
-
-**P8.** Payments of loan 1 with each payment's share of the loan's total collected and the running collected amount, ordered by date. What does the running column show about April–May 2026?
+**P3.** *(ORDER BY inside OVER — running total)* Payments of loan 1 with each payment's share of the loan's total collected and the running collected amount, ordered by date. What does the running column show about April–May 2026?
 
 <details><summary>Answer</summary>
 
@@ -338,7 +601,7 @@ The March instalment was paid 45 days late (week 2's loan 1 story) — visible a
 
 </details>
 
-**P9.** Schedule of loan 1: per instalment, cumulative principal due and the **remaining principal** after it (principal − cumulative principal). On which instalment does the remaining balance drop below half?
+**P4.** *(running total)* Schedule of loan 1: per instalment, cumulative principal due and the **remaining principal** after it (principal − cumulative principal). On which instalment does the remaining balance drop below half?
 
 <details><summary>Answer</summary>
 
@@ -353,7 +616,88 @@ Annuity: principal parts grow (962 950 → 1 698 725), so half the balance is go
 
 </details>
 
-**P10.** Collected per month in 2026 (payments, from `payments`) with a running total — then say in one line why "collected YTD 125.7 bn" and "disbursed YTD 161.5 bn" are not comparable.
+**P5.** *(PARTITION BY + ORDER BY — a running total per group)* Bekzod's second ask: per **product**, monthly 2026 disbursement with running YTD — the running sum must restart per product.
+
+<details><summary>Answer</summary>
+
+```sql
+WITH m AS (SELECT p.code, strftime('%Y-%m', l.disbursed_at) AS month, COUNT(*) AS loans, SUM(l.principal) AS disbursed
+           FROM loans l JOIN products p ON p.product_id = l.product_id
+           WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY 1, 2)
+SELECT code, month, loans, disbursed, SUM(disbursed) OVER (PARTITION BY code ORDER BY month) AS ytd
+FROM m ORDER BY code, month;
+-- AUTO: Jan 4 620 560 000 → ytd Sep 36 021 820 000 · SME: Jan 10 042 990 000 → ytd Sep 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL → 2 431 040 000
+```
+45 rows (5 products × 9 months). Forget `PARTITION BY code` and Auto's September "YTD" includes every other product's January.
+
+</details>
+
+**P6.** *(window vs GROUP BY)* The number of loans per branch, twice: once with `GROUP BY`, once as a window beside every loan. How many rows does each return, and which number appears on both?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT branch_id, COUNT(*) AS loans FROM loans GROUP BY branch_id;                          -- 10 rows
+SELECT loan_id, branch_id, COUNT(*) OVER (PARTITION BY branch_id) AS loans FROM loans;      -- 7 828 rows
+```
+10 rows against 7 828. The counts are the same (Tashkent South 1 012 … Termez Central 483): in the first query once per branch, in the second on every loan of the branch. Same aggregate, two shapes.
+
+</details>
+
+**P7.** *(MIN, MAX, AVG as windows)* Every Auto loan (`product_id = 4`) with the smallest, the largest and the average Auto principal beside it, and its distance from the average. Sort by the distance, largest first. Which loan is furthest above the average, and by how much?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT loan_id, principal,
+       MIN(principal) OVER () AS auto_min, MAX(principal) OVER () AS auto_max,
+       ROUND(AVG(principal) OVER ()) AS auto_avg,
+       ROUND(principal - AVG(principal) OVER ()) AS vs_avg
+FROM loans WHERE product_id = 4
+ORDER BY vs_avg DESC;
+-- 391 rows; 1501 · 399 530 000 · min 50 280 000 · max 399 530 000 · avg 216 858 133 · +182 671 867
+```
+Here `WHERE product_id = 4` makes the window the Auto loans, so `OVER ()` is enough — no `PARTITION BY` needed. Loan 1501 is 182 671 867 above the Auto average, just under the product's 400 m limit.
+
+</details>
+
+**P8.** *(share of total)* Outstanding by **risk grade** with share of total, one decimal. Which grade carries the most money, and is that what the grade *counts* would suggest?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT l.risk_grade, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans,
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1) AS share_pct
+FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01'
+GROUP BY l.risk_grade ORDER BY outstanding DESC;
+-- B 93 317 343 066 / 1457 loans / 44.7 % · C 56 322 842 888 / 1040 / 27.0 · A 48 417 895 338 / 754 / 23.2 · D 10 665 423 138 / 158 / 5.1
+```
+B holds 45 % of the money on 43 % of the owing loans; D is 5 % of the book — small, as a cut-off should make it.
+
+</details>
+
+**P8 — read it.** What share of outstanding does grade D carry, in %, one decimal?
+
+```task
+{"id": "w03d1-p2b", "kind": "number", "answer": 5.1, "dp": 1, "unit": "%", "hint": "The share_pct column of your P8 result, on the D row.", "model": "D: 10 665 423 138 of 208 723 504 430 = 5.1 % of outstanding, on 158 of the 3 409 owing loans (4.6 %). The risky grade is small in money as well as in count.", "xp": 1}
+```
+
+**P9.** *(share inside a group)* Outstanding by **product × grade** with the grade's share *inside its product*. In which product is grade C the largest share?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT p.code, l.risk_grade, SUM(i.principal_due) AS outstanding,
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY p.code), 1) AS share_in_product
+FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
+WHERE i.due_date > '2026-10-01' GROUP BY p.code, l.risk_grade ORDER BY p.code, l.risk_grade;
+-- MICRO C 35.2 % (A 22.7 · B 40.0 · D 2.1); BNPL C 31.4; CONS 30.8; AUTO 28.9; SME 25.3
+```
+Twenty rows; each product's four shares add to 100. Micro carries the most grade-C weight — the app product, consistent with the FPD finding of week 2.
+
+</details>
+
+**P10.** *(a running total over GROUP BY)* Collected per month in 2026 (payments, from `payments`) with a running total — then say in one line why "collected YTD 125.7 bn" and "disbursed YTD 161.5 bn" are not comparable.
 
 <details><summary>Answer</summary>
 
@@ -373,9 +717,58 @@ Collected includes interest and repays loans from 2024–2025; disbursed is prin
 {"id": "w03d1-p10b", "kind": "multi", "options": ["Collected includes interest; disbursed is principal only", "Collected in 2026 repays loans lent in 2024 and 2025 as well", "The two sums come from different tables, and that alone makes them incomparable", "Disbursed counts new 2026 loans; most of their repayments fall due later"], "answer": [0, 1, 3], "explain": "Different content (interest vs principal) and different populations (old loans repaying vs new loans going out). Two tables are fine to compare when they measure the same thing; these do not. The real collection rate (due vs paid on the same instalments) is on Day 4.", "xp": 1}
 ```
 
+**P11.** *(the frame — ROWS vs RANGE)* Loans disbursed 24–30 September 2026, one row per loan, with a running total of principal twice: the default frame (`ORDER BY disbursed_at`) and `ROWS UNBOUNDED PRECEDING` with `loan_id` as a tiebreaker. On how many of the rows do the two columns differ?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT SUM(CASE WHEN range_run <> rows_run THEN 1 ELSE 0 END) AS rows_that_differ, COUNT(*) AS loans
+FROM (SELECT SUM(principal) OVER (ORDER BY disbursed_at)                                AS range_run,
+             SUM(principal) OVER (ORDER BY disbursed_at, loan_id ROWS UNBOUNDED PRECEDING) AS rows_run
+      FROM loans WHERE disbursed_at >= '2026-09-24' AND disbursed_at < '2026-10-01') t;
+-- 70 · 77
+```
+They differ on 70 of 77 rows and agree on 7 — the last loan of each of the seven days, where "through this row" and "through this date" are the same thing.
+
+</details>
+
+**P12.** *(moving average)* Three-month moving average of monthly disbursement for 2025-01 to 2026-09, plus the number of months in each window. Which month is furthest above its moving average?
+
+<details><summary>Answer</summary>
+
+```sql
+WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed
+           FROM loans WHERE disbursed_at < '2026-10-01' GROUP BY 1),
+w AS (SELECT month, disbursed,
+             ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3,
+             COUNT(*)            OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)  AS months_in_window,
+             ROUND(100.0 * disbursed / AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) - 100, 1) AS vs_ma_pct
+      FROM m)
+SELECT * FROM w WHERE month >= '2025-01' ORDER BY month;
+-- 2025-07: 14 590 460 000 vs ma3 11 240 216 667 → +29.8 % (the furthest); 2025-08 +24.0 %; 2026-03 19 657 410 000 vs 16 334 543 333 → +20.3 %
+```
+Two CTEs: the window runs in `w` over the **whole** series, the display filter sits in the outer query. Put `WHERE month >= '2025-01'` inside `w` instead and `WHERE` runs *before* the window: January 2025 averages one month, February two — `months_in_window` shows 1 and 2 instead of 3. Filter the frame's input and the display separately, always.
+
+</details>
+
+**P13.** *(where a window may appear)* How many loans are **above their product's average** principal, per product? (Window in a derived table, filter outside.)
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT code, SUM(above) AS above_avg, COUNT(*) AS loans
+FROM (SELECT p.code, CASE WHEN l.principal > AVG(l.principal) OVER (PARTITION BY p.code) THEN 1 ELSE 0 END AS above
+      FROM loans l JOIN products p ON p.product_id = l.product_id) t
+GROUP BY code;
+-- AUTO 189 of 391 · BNPL 787 of 1569 · CONS 1212 of 2418 · MICRO 1331 of 2669 · SME 400 of 781   (3 919 in all)
+```
+`WHERE principal > AVG(principal) OVER (...)` is an error — windows do not exist yet when `WHERE` runs. Wrap, then filter. Roughly half above average in every product: the ticket sizes are symmetric, no long tail of giants.
+
+</details>
+
 > 🚀 **Stretch (optional, +5 XP).** Concentration — the question a board asks right after the portfolio mix: *how much of the book hangs on a few names or a few branches?*
 
-**P11.** Concentration curve of customers: rank borrowers by outstanding, and show the cumulative share of outstanding held by the top 10, top 25 and top 25 % of borrowers. Then the same idea for branches: how much of the book do the top three hold?
+**P14.** *(putting it together)* Concentration curve of customers: rank borrowers by outstanding, and show the cumulative share of outstanding held by the top 10, top 25 and top 25 % of borrowers. Then the same idea for branches: how much of the book do the top three hold?
 
 <details><summary>Answer</summary>
 
@@ -388,11 +781,11 @@ SELECT customer_id, outstanding,
 FROM c ORDER BY outstanding DESC;
 -- 2 535 borrowers; row 1: customer 3208, 977 697 006, 0.47 % ; row 10 cumulative 3.60 %; row 25 cumulative 7.80 %
 ```
-A running sum divided by a grand total — two windows with different frames in one expression. The top quarter of borrowers (634 people, via `NTILE(4)` tomorrow) holds 82.7 % of outstanding; the bottom quarter 0.5 %. For branches the same query on the worked example's branch table gives cumulative 13.8 → 26.6 → **39.1 %** after three rows — the Company corner reads it.
+A running sum divided by a grand total — two windows with different frames in one expression. The top quarter of borrowers (634 people, via `NTILE(4)` tomorrow) holds 82.7 % of outstanding; the bottom quarter 0.5 %. For branches the worked example's cumulative column gives 13.8 → 26.6 → **39.1 %** after three rows — the Company corner reads it.
 
 </details>
 
-**P11 — the number.** What share of outstanding do the top three branches hold together, in %, one decimal?
+**P14 — the number.** What share of outstanding do the top three branches hold together, in %, one decimal?
 
 ```task
 {"id": "w03d1-p11", "kind": "number", "answer": 39.1, "dp": 1, "unit": "%", "hint": "Branch outstanding, ordered DESC; a running SUM(...) OVER (ORDER BY outstanding DESC) divided by SUM(...) OVER (); read row 3.", "model": "Tashkent Central 13.8 + Tashkent South 12.8 + Tashkent North 12.5 = 39.1 % of 208 723 504 430. One city, three branches, two fifths of the book.", "xp": 2}
@@ -405,7 +798,7 @@ A running sum divided by a grand total — two windows with different frames in 
 **Bekzod's share-and-trend pack.** Six queries and six sentences, all in the 📎 box below. The page checks every query itself: **▶ Run** shows your result, **✔ Check** compares it with ours (without showing ours). No screenshots, no `-- result:` lines to copy — when all six are ✅ and the sentences are written, **📤 Submit** sends the pack to your mentor.
 
 - **Q1–Q3 — shares** (`GROUP BY` + a window each), outstanding = `principal_due` of instalments due after 2026-10-01: Q1 by product with share of total; Q2 by branch with share of total **and** share in region; Q3 by grade with share of total. Shares to 1 decimal.
-- **Q4–Q6 — trend:** Q4 2026 monthly disbursement (January–September) with running YTD and share of the nine months (P4); Q5 the same per product, the running sum restarting per product (P5); Q6 the 3-month moving average of monthly disbursement 2025-01..2026-09 with the window-count column (P7) — the window runs on the whole series, the display filter sits outside.
+- **Q4–Q6 — trend:** Q4 2026 monthly disbursement (January–September) with running YTD and share of the nine months (section 1, Putting it together); Q5 the same per product, the running sum restarting per product (P5); Q6 the 3-month moving average of monthly disbursement 2025-01..2026-09 with the window-count column (P12) — the window runs on the whole series, the display filter sits outside.
 - **pack.md** — six sentences for Bekzod: the biggest product and its share; the biggest branch and whether Tashkent as a region is concentrated; the YTD figure through September; the strongest and weakest months of 2026; the moving-average trend since spring; the month of 2025–2026 furthest above its moving average.
 
 > ⚠️ **Watch out.** The checker runs your query on an untouched copy of the data, as one self-contained query: put the `WITH m AS (…)` part inside the same box, and do not rely on tables you created in the lab.
@@ -422,9 +815,9 @@ A running sum divided by a grand total — two windows with different frames in 
 
 ```check
 {"id": "w03d1-sc", "questions": [
-  {"type": "single", "q": "SUM(SUM(principal_due)) OVER () — which SUM runs first, and what does each add up?", "options": ["The outer one first: every instalment of the company", "The inner one first: one total per group (GROUP BY); then the outer window adds those group totals", "Both at once, over all instalments", "Neither — nested aggregates are an error"], "answer": 1, "explain": "The window runs on the grouped result: five product totals in, the grand total written on each of the five rows (→ section 1, Share of total)."},
-  {"type": "single", "q": "Seven loans were disbursed on 28 September. A running total ORDER BY disbursed_at with the default frame, and one with ROWS UNBOUNDED PRECEDING — what do the seven rows show?", "options": ["Both climb row by row", "The default (RANGE) shows the whole day's total on all seven rows; ROWS climbs row by row", "ROWS shows the day's total; RANGE climbs", "Both show NULL on ties"], "answer": 1, "explain": "RANGE includes every row with the same ORDER BY value; ROWS stops at the current row (→ section 1, The default frame)."},
-  {"type": "single", "q": "You want only the loans above their product's average principal. Where does the window go?", "options": ["In WHERE", "In HAVING", "In a derived table (or CTE); the filter goes in the outer query", "In GROUP BY"], "answer": 2, "explain": "Windows are computed after WHERE, GROUP BY and HAVING — wrap, then filter (→ P6)."}]}
+  {"type": "single", "q": "SUM(SUM(principal_due)) OVER () — which SUM runs first, and what does each add up?", "options": ["The outer one first: every instalment of the company", "The inner one first: one total per group (GROUP BY); then the outer window adds those group totals", "Both at once, over all instalments", "Neither — nested aggregates are an error"], "answer": 1, "explain": "The window runs on the grouped result: five product totals in, the grand total written on each of the five rows (→ section 1, Share of total — value / SUM() OVER ())."},
+  {"type": "single", "q": "Seven loans were disbursed on 28 September. A running total ORDER BY disbursed_at with the default frame, and one with ROWS UNBOUNDED PRECEDING — what do the seven rows show?", "options": ["Both climb row by row", "The default (RANGE) shows the whole day's total on all seven rows; ROWS climbs row by row", "ROWS shows the day's total; RANGE climbs", "Both show NULL on ties"], "answer": 1, "explain": "RANGE includes every row with the same ORDER BY value; ROWS stops at the current row (→ section 1, The frame — ROWS BETWEEN)."},
+  {"type": "single", "q": "You want only the loans above their product's average principal. Where does the window go?", "options": ["In WHERE", "In HAVING", "In a derived table (or CTE); the filter goes in the outer query", "In GROUP BY"], "answer": 2, "explain": "Windows are computed after WHERE, GROUP BY and HAVING — wrap, then filter (→ section 1, Where a window may appear; P13)."}]}
 ```
 
 ---
@@ -468,13 +861,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w03d1", "pass": 0.8, "questions": [
-  {"type": "single", "q": "In this query, what does the outer SUM(…) OVER () add up?", "code": "SELECT p.code, SUM(i.principal_due) AS outstanding,\n       100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER () AS share_pct\nFROM installments i JOIN loans l ON l.loan_id = i.loan_id\nJOIN products p ON p.product_id = l.product_id\nWHERE i.due_date > '2026-10-01'\nGROUP BY p.code;", "options": ["Every instalment of the company again, row by row", "The five per-product sums, giving the grand total on each of the five rows", "Only the current product's instalments", "It is an error — aggregates cannot be nested"], "answer": 1, "explain": "The inner SUM is the GROUP BY aggregate; the window runs on the grouped result and adds those values up (→ section 1, Share of total)."},
-  {"type": "single", "q": "What does total show on each row?", "code": "SELECT loan_id, principal,\n       SUM(principal) OVER () AS total\nFROM loans\nWHERE customer_id = 3208;", "options": ["The company's total principal", "The total principal of customer 3208's loans only", "NULL", "The principal of the row itself"], "answer": 1, "explain": "Windows are computed after WHERE, GROUP BY and HAVING, so the window only sees the rows that survived the filter (→ section 1, PARTITION BY; P1)."},
-  {"type": "single", "q": "Why does this fail, and where does the window go instead?", "code": "SELECT l.loan_id\nFROM loans l\nWHERE l.principal > AVG(l.principal) OVER (PARTITION BY l.product_id);", "options": ["AVG cannot take PARTITION BY", "Windows do not exist yet when WHERE runs; compute the window in a derived table or CTE and filter outside", "Put the window in GROUP BY instead", "It does not fail — it returns loans above their product's average"], "answer": 1, "explain": "Wrap, then filter (→ section 1, Window vs GROUP BY; P6)."},
-  {"type": "number", "q": "Three rows, ordered as shown. What is run on the FIRST row (the default frame, RANGE)?", "code": "day        | x\n2026-09-28 | 10\n2026-09-28 | 20\n2026-09-29 | 5\n\nSELECT day, x, SUM(x) OVER (ORDER BY day) AS run FROM t;", "answer": 30, "explain": "RANGE takes every row with the same ORDER BY value, so both 28 September rows show the day's total, 30; ROWS UNBOUNDED PRECEDING would give 10 (→ section 1, The default frame and ROWS BETWEEN)."},
-  {"type": "single", "q": "Bekzod wants a year-to-date running sum per product. What is wrong with this?", "code": "SELECT code, month, disbursed,\n       SUM(disbursed) OVER (ORDER BY month) AS ytd\nFROM m;", "options": ["Nothing", "Without PARTITION BY code the running sum runs across all products, so Auto's YTD includes every other product too", "ORDER BY is not allowed inside OVER", "It needs GROUP BY month"], "answer": 1, "explain": "PARTITION BY restarts the running sum per group (→ P5)."},
-  {"type": "single", "q": "Which window gives a 3-month moving average of monthly disbursement (this month and the two before)?", "options": ["AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND CURRENT ROW)", "AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)", "AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)", "AVG(disbursed) OVER (ORDER BY month)"], "answer": 1, "explain": "2 PRECEDING + the current row = 3 months; 3 PRECEDING is four months, the 1/1 frame is a centred average, and no frame is a running average (→ section 1, Moving averages)."},
-  {"type": "multi", "q": "Which of these need a window function (GROUP BY alone cannot do it)?", "options": ["Every loan with its product's average principal beside it", "Each product's outstanding with its share of the total in the same row", "One total of outstanding per product", "Monthly disbursement with a running year-to-date column", "The number of loans in the company"], "answer": [0, 1, 3], "explain": "Windows keep rows and add a group's number, a total or a running sum beside them; plain totals are GROUP BY (→ section 1, Window vs GROUP BY)."},
+  {"type": "single", "q": "In this query, what does the outer SUM(…) OVER () add up?", "code": "SELECT p.code, SUM(i.principal_due) AS outstanding,\n       100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER () AS share_pct\nFROM installments i JOIN loans l ON l.loan_id = i.loan_id\nJOIN products p ON p.product_id = l.product_id\nWHERE i.due_date > '2026-10-01'\nGROUP BY p.code;", "options": ["Every instalment of the company again, row by row", "The five per-product sums, giving the grand total on each of the five rows", "Only the current product's instalments", "It is an error — aggregates cannot be nested"], "answer": 1, "explain": "The inner SUM is the GROUP BY aggregate; the window runs on the grouped result and adds those values up (→ section 1, Share of total — value / SUM() OVER ())."},
+  {"type": "single", "q": "What does total show on each row?", "code": "SELECT loan_id, principal,\n       SUM(principal) OVER () AS total\nFROM loans\nWHERE customer_id = 3208;", "options": ["The company's total principal", "The total principal of customer 3208's loans only", "NULL", "The principal of the row itself"], "answer": 1, "explain": "Windows are computed after WHERE, GROUP BY and HAVING, so the window only sees the rows that survived the filter (→ section 1, OVER (); P1)."},
+  {"type": "single", "q": "Why does this fail, and where does the window go instead?", "code": "SELECT l.loan_id\nFROM loans l\nWHERE l.principal > AVG(l.principal) OVER (PARTITION BY l.product_id);", "options": ["AVG cannot take PARTITION BY", "Windows do not exist yet when WHERE runs; compute the window in a derived table or CTE and filter outside", "Put the window in GROUP BY instead", "It does not fail — it returns loans above their product's average"], "answer": 1, "explain": "Wrap, then filter (→ section 1, Where a window may appear; P13)."},
+  {"type": "number", "q": "Three rows, ordered as shown. What is run on the FIRST row (the default frame, RANGE)?", "code": "day        | x\n2026-09-28 | 10\n2026-09-28 | 20\n2026-09-29 | 5\n\nSELECT day, x, SUM(x) OVER (ORDER BY day) AS run FROM t;", "answer": 30, "explain": "RANGE takes every row with the same ORDER BY value, so both 28 September rows show the day's total, 30; ROWS UNBOUNDED PRECEDING would give 10 (→ section 1, The frame — ROWS BETWEEN; P11)."},
+  {"type": "single", "q": "Bekzod wants a year-to-date running sum per product. What is wrong with this?", "code": "SELECT code, month, disbursed,\n       SUM(disbursed) OVER (ORDER BY month) AS ytd\nFROM m;", "options": ["Nothing", "Without PARTITION BY code the running sum runs across all products, so Auto's YTD includes every other product too", "ORDER BY is not allowed inside OVER", "It needs GROUP BY month"], "answer": 1, "explain": "PARTITION BY restarts the running sum per group (→ section 1, ORDER BY inside OVER; P5)."},
+  {"type": "single", "q": "Which window gives a 3-month moving average of monthly disbursement (this month and the two before)?", "options": ["AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND CURRENT ROW)", "AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)", "AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)", "AVG(disbursed) OVER (ORDER BY month)"], "answer": 1, "explain": "2 PRECEDING + the current row = 3 months; 3 PRECEDING is four months, the 1/1 frame is a centred average, and no frame is a running average (→ section 1, Moving average; P12)."},
+  {"type": "multi", "q": "Which of these need a window function (GROUP BY alone cannot do it)?", "options": ["Every loan with its product's average principal beside it", "Each product's outstanding with its share of the total in the same row", "One total of outstanding per product", "Monthly disbursement with a running year-to-date column", "The number of loans in the company"], "answer": [0, 1, 3], "explain": "Windows keep rows and add a group's number, a total or a running sum beside them; plain totals are GROUP BY (→ section 1, Window vs GROUP BY; P6)."},
   {"type": "single", "q": "By loan count the book is mostly Consumer, Micro and BNPL; by money it is mostly SME and Auto. What should a portfolio-mix table show?", "options": ["Money share only — it is what the board cares about", "Count share and money share side by side, saying share of what", "Count share only", "The average ticket only"], "answer": 1, "explain": "Count speaks to operations, money to risk; a share without 'of what' is meaningless (→ section 6, Company corner)."}
 ]}
 ```

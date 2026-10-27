@@ -14,104 +14,489 @@
 
 ## 1. Learn — functions change a value on the way out
 
-A **function** takes a value from a row and returns a changed value. Nothing in the table changes; the result does. Functions work in `SELECT`, `WHERE`, `GROUP BY`, `ORDER BY` and `HAVING`. This is the day the two dialects differ most, so every example shows both.
+### What a function does — a value in, a changed value out
+
+**What it is.** A **function** takes a value from a row and returns a changed value. Nothing in the table changes; only the result does. Functions work in `SELECT`, `WHERE`, `GROUP BY`, `HAVING` and `ORDER BY`. The two dialects differ most on this day: every example is written for SQLite, with the SQL Server spelling in a trailing comment.
+
+**How to write it.** `function(value, other arguments)`, wherever a column could stand:
+
+```sql
+SELECT DISTINCT method, LOWER(TRIM(method)) AS cleaned   -- two functions, one inside the other
+FROM payments
+ORDER BY cleaned;                                        -- 10 rows: 10 raw spellings, 6 cleaned values
+```
+
+Ten raw spellings come back next to their cleaned value: `Card` and `card` both become `card`, `CASH ` and `cash` both become `cash`. The inner function runs first: `TRIM`, then `LOWER`.
+
+**When you use it.** Cleaning labels before you group, computing a number from other numbers (a rate, an age in days), cutting a part out of a text or a date.
 
 > 💡 **Key idea.** A function changes a value on its way out of the query — `LOWER(method)` shows `card` for `Card`, but the table still holds `Card`. Whatever you group or filter on, group or filter on the *same* expression.
 
-### Strings (*строковые функции*)
+**Your turn.** After `SELECT LOWER(method) FROM payments`, what does the table hold for the 57 rows spelt `Card`?
 
-| Does | SQL Server | SQLite | On our data |
-|---|---|---|---|
-| upper / lower case | `UPPER(s)`, `LOWER(s)` | same | `LOWER('CASH ')` → `'cash '` |
-| remove spaces at the ends | `TRIM(s)` (also `LTRIM`, `RTRIM`) | `TRIM(s)` | `TRIM('CASH ')` → `'CASH'` |
-| length | `LEN(s)` (ignores trailing spaces!) | `LENGTH(s)` | `LENGTH('Bobur ')` → 6 |
-| first n characters | `LEFT(s, n)` | `SUBSTR(s, 1, n)` | `SUBSTR(phone, 1, 6)` → `'+99890'` |
-| part from position | `SUBSTRING(s, start, n)` | `SUBSTR(s, start, n)` | |
-| replace text | `REPLACE(s, 'old', 'new')` | same | `REPLACE(phone, '+998', '8')` |
-| join texts | `a + ' ' + b` or `CONCAT(a, ' ', b)` | `a \|\| ' ' \|\| b` | `first_name \|\| ' ' \|\| last_name` |
+```task
+{"id": "w02d3-l1", "kind": "choice", "options": ["Still 'Card' — a function changes only the result", "'card' — LOWER rewrites the table", "NULL", "It depends on the engine"], "answer": 0, "explain": "SELECT never changes the table. Only UPDATE does (Week 1). Every query that wants the clean value must apply the same LOWER(TRIM(…)) again."}
+```
+
+### Concatenation — joining texts with ||
+
+**What it is.** **Concatenation** (*конкатенация*) glues texts into one text. SQLite writes `||`; SQL Server writes `+` or `CONCAT(…)`.
+
+**How to write it.**
+
+```sql
+SELECT first_name || ' ' || last_name AS full_name,      -- SQL Server: first_name + ' ' + last_name, or CONCAT(first_name, ' ', last_name)
+       'Loan ' || 42                  AS label           -- a number is turned into text: 'Loan 42'
+FROM customers
+WHERE customer_id = 1;                                   -- Eldor Olimov · Loan 42
+```
+
+Customer 1 is *Eldor Olimov*. The `' '` in the middle is a text of one space; without it you get `EldorOlimov`.
+
+**When you use it.** One readable column out of several: a full name, a label such as `'2026-Q3'`, a match key for finding duplicates.
+
+> ⚠️ **Watch out.** Anything `||` NULL is NULL: `'Eldor' || ' ' || NULL` returns NULL, and the whole name disappears. (SQL Server's `CONCAT` treats NULL as empty text; its `+` returns NULL too.) And in SQLite `+` only adds numbers: `'a' + 'b'` is 0.
+
+**Your turn.** Write the expression that shows customer 1 as `Olimov, Eldor`.
+
+```task
+{"id": "w02d3-l2", "kind": "sql", "model": "SELECT last_name || ', ' || first_name AS name FROM customers WHERE customer_id = 1;", "note": "last name, then the text ', ' (comma and space), then the first name. SQL Server: last_name + ', ' + first_name."}
+```
+
+### UPPER and LOWER — one case for every value
+
+**What it is.** **UPPER** turns every letter into a capital; **LOWER** into a small letter. Other characters stay as they are. Same spelling on both engines.
+
+**How to write it.**
+
+```sql
+SELECT customer_id, first_name, last_name, UPPER(last_name) AS upper_last
+FROM customers
+WHERE last_name = LOWER(last_name);                      -- 40 rows: surnames typed all in small letters
+```
+
+40 customers have a surname typed entirely in small letters, such as `jalilova`. All 40 have an id of 6001 or above — last week's duplicates.
+
+**When you use it.** Before comparing or grouping text typed by people: `LOWER(a) = LOWER(b)`, `GROUP BY LOWER(method)`. And to find badly typed rows: `WHERE x = LOWER(x)` or `WHERE x = UPPER(x)`.
+
+**Your turn.** How many customers have a first name written entirely in capitals (`MALIKA`)?
+
+```task
+{"id": "w02d3-l3", "kind": "number", "answer": 22, "dp": 0, "unit": "customers", "hint": "WHERE first_name = UPPER(first_name).", "model": "22 — all of them among the duplicates with ids 6001+."}
+```
+
+### TRIM — remove spaces at the ends
+
+**What it is.** **TRIM** removes spaces at the start and at the end of a text. `LTRIM` removes only the left ones, `RTRIM` only the right ones. Spaces inside the text stay.
+
+**How to write it.**
+
+```sql
+SELECT TRIM('CASH '),          -- 'CASH'
+       TRIM('  bank transfer ')  -- 'bank transfer': the inner space stays
+;
+SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);   -- 18
+```
+
+18 first names carry a space at an end, like `'Yulduz '`. To the database `'Yulduz '` and `'Yulduz'` are different values.
+
+**When you use it.** On every text column typed by a person or copied from a file, before you compare, group or join on it.
+
+**Your turn.** How many payment rows have a `method` with a space at one of its ends?
+
+```task
+{"id": "w02d3-l4", "kind": "number", "answer": 30, "dp": 0, "unit": "payments", "hint": "WHERE method <> TRIM(method).", "model": "30 — the 30 rows spelt 'CASH ' with a trailing space."}
+```
+
+### LENGTH — how many characters
+
+**What it is.** **LENGTH** returns the number of characters in a text. SQL Server calls it `LEN`.
+
+**How to write it.**
+
+```sql
+SELECT LENGTH(phone) AS characters, COUNT(*) AS customers   -- SQL Server: LEN(phone)
+FROM customers
+GROUP BY LENGTH(phone);                                      -- one row: 13 · 6 040
+```
+
+One row: all 6 040 phone numbers have 13 characters (`+998` and nine digits). A length check is the quickest format test for codes, phones and ids.
+
+**When you use it.** To check a format (every phone 13 characters), to find hidden spaces (`LENGTH(x) <> LENGTH(TRIM(x))`), to find empty texts (`LENGTH(x) = 0`).
 
 > ⚠️ **Watch out.** SQL Server's `LEN` ignores trailing spaces: `LEN('Bobur ')` is 5, SQLite's `LENGTH('Bobur ')` is 6. A length test that finds dirty names on one engine finds nothing on the other — on SQL Server compare `DATALENGTH` instead.
 
-The one that fixes yesterday's P9:
+**Your turn.** On SQLite, what does `LENGTH('CASH ')` return?
+
+```task
+{"id": "w02d3-l5", "kind": "number", "answer": 5, "dp": 0, "unit": "characters", "hint": "Count the space too.", "model": "5: C, A, S, H and the space. SQL Server's LEN('CASH ') would say 4."}
+```
+
+### SUBSTR — a piece of a text
+
+**What it is.** **SUBSTR**`(text, start, n)` returns `n` characters starting at position `start`; the first character is position 1. Without `n` it returns everything to the end. A negative start counts from the end. SQL Server writes `SUBSTRING(text, start, n)`, `LEFT(text, n)` and `RIGHT(text, n)`.
+
+**How to write it.** A datetime stored as text is a string with fixed positions:
+
+```text
+2026-09-27 14:05:00
+1234567890123456789      → SUBSTR(applied_at, 1, 10) = '2026-09-27'   SUBSTR(applied_at, 12, 2) = '14'
+```
 
 ```sql
-SELECT LOWER(TRIM(method)) AS method, COUNT(*) AS payments
+SELECT SUBSTR(applied_at, 12, 2) AS hour, COUNT(*) AS applications   -- SQL Server: DATEPART(hour, applied_at)
+FROM applications
+GROUP BY SUBSTR(applied_at, 12, 2)
+ORDER BY applications DESC;                                           -- 15 → 1 089 first
+```
+
+Applications arrive from 08:00 to 21:59; the busiest hour is 15:00 with 1 089 applications. `SUBSTR(phone, -4)` gives the last four digits (`RIGHT(phone, 4)` on SQL Server).
+
+**When you use it.** Fixed-position codes: the hour of a text datetime, the region part of an account number, the last digits of a phone.
+
+**Your turn.** What is the earliest hour of the day at which an application arrives? (Two digits, as `SUBSTR` returns it.)
+
+```task
+{"id": "w02d3-l6", "kind": "text", "answer": ["08", "8"], "hint": "MIN(SUBSTR(applied_at, 12, 2)) FROM applications.", "model": "'08' — applications run from 08:00 to 21:59. The text '08' sorts before '15' because both have two digits."}
+```
+
+### REPLACE — swap one text for another
+
+**What it is.** **REPLACE**`(text, 'old', 'new')` swaps **every** occurrence of `'old'` inside the text for `'new'`. `'new'` may be empty, which deletes `'old'`. Same spelling on both engines.
+
+**How to write it.** The fix for yesterday's ten payment methods:
+
+```sql
+SELECT REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method, COUNT(*) AS payments
 FROM payments
-GROUP BY LOWER(TRIM(method))
+GROUP BY REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')
 ORDER BY payments DESC;
--- card 17621 · payme 8900 · click 8790 · cash 8790 · transfer 8747 · bank transfer 27
+-- card 17621 · payme 8900 · click 8790 · cash 8790 · transfer 8774
 ```
 
-Six rows, not ten — `Card`→`card`, `CASH `→`cash`, `PayMe`→`payme`, `Click`→`click`. The last stray is a different *word*, so case and spaces cannot fix it: `REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')` → five rows, transfer 8 774. Wrap the expression once and reuse it everywhere; week 3 turns it into a view so nobody retypes it.
+Five rows, the five real methods. `TRIM` and `LOWER` merge `Card`, `CASH `, `PayMe` and `Click` into their groups; the last stray, `bank transfer`, is a different *word*, so only `REPLACE` can merge it: transfer goes from 8 747 to 8 774.
 
-How many rows were dirty? `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180** on SQLite. (SQL Server's default collation ignores case and trailing spaces, so there the same test finds only the 27 `bank transfer` rows; write `method <> LOWER(TRIM(method)) COLLATE Latin1_General_CS_AS` to get the same 180.) Small number, five phantom categories — Timur's tile moved because 0.3 % of the payments were spelt differently.
+**When you use it.** A known wrong spelling into the right one; removing a character (`REPLACE(phone, '-', '')`); a local format (`REPLACE(phone, '+998', '8')`).
 
-Which spelling belongs to which engine? Sort them before you go on — you will translate between the two all day:
+> ⚠️ **Watch out.** REPLACE changes every occurrence, also inside longer words. `REPLACE(method, 'transfer', 'bank transfer')` turns the 27 rows already spelt `bank transfer` into `bank bank transfer`. Replace the longer, rarer text into the shorter one, as above.
 
-```game
-{"id": "w02d3-g1", "type": "sort", "title": "SQL Server, SQLite, or both?", "groups": {"SQL Server": ["LEN(s)", "DATEDIFF(day, a, b)", "DATEADD(month, 1, d)", "a + ' ' + b"], "SQLite": ["LENGTH(s)", "julianday(b) - julianday(a)", "date(d, '+1 month')", "a || ' ' || b"], "Both": ["LOWER(TRIM(s))", "REPLACE(s, 'old', 'new')", "ROUND(x, 2)"]}}
+**Your turn.** How many rows of `payments` did the cleaning change? On SQLite: `WHERE method <> REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer')`.
+
+```task
+{"id": "w02d3-l7", "kind": "number", "answer": 180, "dp": 0, "unit": "rows", "hint": "COUNT(*) with that WHERE.", "model": "180: 57 Card + 36 Click + 30 PayMe + 30 'CASH ' + 27 bank transfer. Timur's card tile moved because 0.3 % of the payments were spelt differently. (SQL Server's default collation ignores case and trailing spaces; there add COLLATE Latin1_General_CS_AS to see the same 180.)"}
 ```
 
-### Numbers (*числовые функции*)
+### INSTR — where a text starts
 
-**Integer division.** Both engines divide two integers *as integers*: `7917 / 14000` → **0**. The approval rate becomes zero, silently. Make one side a decimal — multiply by `1.0` or `100.0`, or `CAST`:
+**What it is.** **INSTR**`(text, 'piece')` returns the position where `'piece'` first starts inside `text`, or 0 if it is not there. SQL Server writes `CHARINDEX('piece', text)` — the arguments in the opposite order.
+
+**How to write it.**
 
 ```sql
-SELECT 7917 / 14000,            -- 0
-       7917 * 100 / 14000,      -- 56   (integer again: truncated, not rounded)
-       7917 * 100.0 / 14000,    -- 56.55
-       ROUND(7917 * 100.0 / 14000, 2);   -- 56.55
+SELECT INSTR('bank transfer', ' '),      -- 5: the space is the 5th character      SQL Server: CHARINDEX(' ', 'bank transfer')
+       INSTR('card', ' ');               -- 0: no space
+```
+
+Its usual partner is `SUBSTR`: find where something starts, then cut there. The major version of the mobile app is the text before the first dot:
+
+```sql
+SELECT SUBSTR(app_version, 1, INSTR(app_version, '.') - 1) AS major, COUNT(*) AS events
+FROM app_events
+GROUP BY major;                          -- 3 → 11 325 · 4 → 11 459
+```
+
+App events split almost evenly: 11 325 from version 3.x and 11 459 from version 4.x.
+
+**When you use it.** Cutting at a separator whose position changes from row to row: the part before `@` in an email, before `.` in a version, before a space in a full name. And as a test: `INSTR(x, ' ') > 0` means "contains a space".
+
+**Your turn.** What does `INSTR('bank transfer', 'transfer')` return?
+
+```task
+{"id": "w02d3-l8", "kind": "number", "answer": 6, "dp": 0, "unit": "position", "hint": "'bank' is 4 characters, then a space.", "model": "6: b-a-n-k-space are positions 1–5, and 'transfer' starts at 6."}
+```
+
+### LIKE — patterns with % and _
+
+**What it is.** **LIKE** compares a text with a **pattern**. `%` stands for any number of characters (also none); `_` stands for exactly one character. You met it in Week 1; here are its rules in full.
+
+**How to write it.**
+
+```sql
+SELECT COUNT(*) FROM applications WHERE status LIKE 'approved%';   -- 8 595: 'approved' and 'approved_not_disbursed'
+SELECT COUNT(*) FROM customers    WHERE last_name LIKE '%ova';     -- 2 447 surnames ending in 'ova'
+SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';   -- 1 862 first names of exactly 5 characters
+```
+
+8 595 applications start with `approved`: 7 917 `approved` and 678 `approved_not_disbursed`.
+
+**When you use it.** "Starts with", "ends with", "contains": `'approved%'`, `'%ova'`, `'%transfer%'`. For an exact value use `=`.
+
+> ⚠️ **Watch out.** In SQLite, `LIKE` ignores upper and lower case for Latin letters, but `=` does not: `'card' LIKE 'Card'` is true, `'card' = 'Card'` is false. So `method LIKE 'card'` finds 17 621 rows and `method = 'card'` finds 17 564. On SQL Server both follow the column's collation (by default case does not matter).
+
+**Your turn.** How many customers have a surname ending in `ov`?
+
+```task
+{"id": "w02d3-l9", "kind": "number", "answer": 2622, "dp": 0, "unit": "customers", "hint": "WHERE last_name LIKE '%ov'.", "model": "2 622. With 2 447 ending in 'ova', most customers carry one of the two endings."}
+```
+
+### ROUND — round to n decimals
+
+**What it is.** **ROUND**`(x, n)` rounds `x` to `n` digits after the decimal point; `ROUND(x)` rounds to a whole number. A 5 rounds away from zero: `ROUND(2.5)` is 3.
+
+**How to write it.**
+
+```sql
+SELECT p.name, ROUND(AVG(l.principal) / 1000000.0, 1) AS avg_ticket_m      -- divide first, then round once
+FROM loans l JOIN products p ON p.product_id = l.product_id
+GROUP BY p.name
+ORDER BY avg_ticket_m DESC;               -- SME 308.7 · Auto 216.9 · Consumer 26.9 · BNPL 4.2 · Micro 2.7
+```
+
+The average SME loan is 308.7 m UZS; the average Micro loan is 2.7 m. Divided by a million and rounded to one decimal, the numbers are ready for a slide.
+
+**When you use it.** At the very end, on the number you show. SQL Server also rounds to the left of the point — `ROUND(x, -6)` is "to the nearest million"; SQLite does not, so divide first, as above.
+
+> ⚠️ **Watch out.** Round once, at the end. Rounding the parts and then adding them drifts: five rounded shares rarely add up to 100.0.
+
+**Your turn.** What does `SELECT ROUND(51709667.858, 2)` return?
+
+```task
+{"id": "w02d3-l10", "kind": "number", "answer": 51709667.86, "dp": 2, "unit": "", "hint": "Two digits after the point; the third digit, 8, rounds up.", "model": "51 709 667.86 — the average principal of all loans, ready to print."}
+```
+
+### Integer and decimal division
+
+**What it is.** Both engines divide two whole numbers **as whole numbers**: `7917 / 14000` is **0**. The fraction is cut off, silently. If one side is a decimal number, the result is a decimal.
+
+**How to write it.**
+
+```sql
+SELECT 7917 / 14000,                   -- 0
+       7917 * 100 / 14000,             -- 56   (whole again: cut, not rounded)
+       7917 * 100.0 / 14000,           -- 56.55
+       ROUND(7917 * 100.0 / 14000, 2); -- 56.55
 -- SQL Server alternative: CAST(7917 AS FLOAT) / 14000
 ```
 
-> ⚠️ **Watch out.** Whole number ÷ whole number = whole number, on SQL Server and SQLite alike: `7917 / 14000` is 0 and `7917 * 100 / 14000` is 56, not 56.55. No error, no warning — just a wrong rate. Put `100.0 *` at the front of every percentage.
+7 917 of 14 000 applications were approved: 56.55 %. Only the versions with `100.0` say so.
 
-Rule: put `100.0 *` at the *front* of every percentage. **`ROUND(x, n)`** rounds to n decimals; `ROUND(x)` to a whole number; `ROUND(x, -6)` to the nearest million (SQL Server; SQLite rounds to a whole number — divide first). **`CAST(x AS type)`** converts: `CAST(AVG(principal) AS INTEGER)` → 51 709 667 — CAST cuts the decimals off, it does not round (SQL Server: `AS BIGINT`); `CAST(julianday(...) AS INTEGER)` turns SQLite's fractional days into whole days. For money reports, divide by a billion and round once: `ROUND(SUM(principal) / 1000000000.0, 1)` → SME 241.1 bn, Auto 84.8, Consumer 65.1, Micro 7.2, BNPL 6.5.
+**When you use it.** Every rate, share, average-by-hand and ratio.
 
-Timur's approval tile shows 0 % for every channel. Find the line:
+> ⚠️ **Watch out.** Whole number ÷ whole number = whole number, on SQL Server and SQLite alike. No error, no warning — just a wrong rate. Put `100.0 *` at the **front** of every percentage, so the very first operation already makes a decimal.
+
+**Your turn.** Timur's approval tile shows 0 % for every channel. Find the line:
 
 ```game
 {"id": "w02d3-g2", "type": "bug", "title": "The approval rate that was always zero", "q": "Every channel shows approval_pct = 0. One line is wrong.", "code": "SELECT channel,\n       COUNT(*) AS applications,\n       SUM(status LIKE 'approved%') / COUNT(*) * 100 AS approval_pct\nFROM applications\nGROUP BY channel;", "answer": [2], "why": "Both SUM(…) and COUNT(*) are whole numbers, so 2915 / 5006 is 0 before it is ever multiplied by 100. Write 100.0 * SUM(…) / COUNT(*) — the decimal goes first."}
 ```
 
-### Dates (*функции дат*)
+### CAST — change the type of a value
 
-SQL Server stores dates as a date type; SQLite stores ours as text `YYYY-MM-DD` (and `applied_at`, `event_time` as `YYYY-MM-DD HH:MM:SS`). Text in that format sorts and compares correctly, which is why week 1's `WHERE applied_at >= '2025-01-01'` worked. For arithmetic you need functions:
+**What it is.** **CAST**`(x AS type)` converts a value to another type: text to number, number to text, decimal to whole number. SQLite's types are `INTEGER`, `REAL`, `TEXT`; SQL Server's include `INT`, `BIGINT`, `FLOAT`, `DECIMAL(18,2)`, `DATE`.
 
-| Does | SQL Server | SQLite |
-|---|---|---|
-| year, month as numbers | `YEAR(d)`, `MONTH(d)` | `CAST(strftime('%Y', d) AS INTEGER)`, `strftime('%m', d)` |
-| year-month label | `FORMAT(d, 'yyyy-MM')` | `strftime('%Y-%m', d)` |
-| difference in days (b − a) | `DATEDIFF(day, a, b)` | `julianday(b) - julianday(a)` |
-| add / subtract time | `DATEADD(month, 1, d)`, `DATEADD(day, -30, d)` | `date(d, '+1 month')`, `date(d, '-30 days')` |
-| first day of the month | `DATEFROMPARTS(YEAR(d), MONTH(d), 1)` | `date(d, 'start of month')` |
-| date part of a datetime | `CAST(dt AS DATE)` | `date(dt)` |
-| weekday | `DATENAME(weekday, d)` | `strftime('%w', d)` (0 = Sunday) — or join `dim_date` |
+**How to write it.**
+
+```sql
+SELECT CAST(AVG(principal) AS INTEGER),   -- 51 709 667: the .86 is cut off, not rounded      SQL Server: CAST(… AS BIGINT)
+       ROUND(AVG(principal)),             -- 51 709 668: rounded
+       CAST('2026' AS INTEGER) + 1,       -- 2027: text into a number
+       CAST(7917 AS REAL) / 14000         -- 0.5655: one side made decimal before dividing
+FROM loans;
+```
+
+`CAST … AS INTEGER` and `ROUND` differ by one here: CAST cuts the fraction, ROUND rounds it.
+
+**When you use it.** Whole days from SQLite's fractional `julianday` difference (below); a text code compared with a number; a decimal before a division.
+
+> ⚠️ **Watch out.** A CAST of a finished result is too late: `CAST(7917 / 14000 AS REAL)` is 0.0, because the whole-number division already threw the fraction away. Convert an input, not the output.
+
+**Your turn.** What does `SELECT CAST(-2.99 AS INTEGER)` return?
+
+```task
+{"id": "w02d3-l11", "kind": "number", "answer": -2, "dp": 0, "unit": "", "hint": "CAST cuts the fraction off; it does not round.", "model": "−2: the .99 is cut off toward zero. ROUND(-2.99) would give −3."}
+```
+
+### ABS — the size of a number without its sign
+
+**What it is.** **ABS**`(x)` returns `x` without its minus sign: `ABS(-45)` is 45, `ABS(45)` is 45. Same on both engines.
+
+**How to write it.** How far is each payment from the amount its instalment asked for, in either direction?
+
+```sql
+SELECT COUNT(*) AS different,
+       SUM(p.amount > i.total_due) AS over_paid,          -- SQL Server: SUM(IIF(p.amount > i.total_due, 1, 0))
+       SUM(p.amount < i.total_due) AS under_paid
+FROM payments p JOIN installments i ON i.installment_id = p.installment_id
+WHERE ABS(p.amount - i.total_due) > 0;                    -- 427 · 0 · 427
+```
+
+427 payments differ from the amount due, and all 427 are smaller: partial payments. Nobody paid more than asked.
+
+**When you use it.** "More than X away, in either direction": a payment far from its due date (early or late), a forecast far from the actual, a balance that does not reconcile.
+
+**Your turn.** How many of those 427 payments differ from the amount due by more than 100 000 UZS?
+
+```task
+{"id": "w02d3-l12", "kind": "number", "answer": 405, "dp": 0, "unit": "payments", "hint": "WHERE ABS(p.amount - i.total_due) > 100000.", "model": "405 of 427 — most partial payments leave a real gap, not a rounding difference."}
+```
+
+### Percentages — a part of a whole, times 100
+
+**What it is.** A **percentage** (*доля, процент*) is a part divided by its whole, times 100. In SQL: `100.0 * part / whole`, rounded once at the end. A difference between two percentages is measured in **percentage points**.
+
+**How to write it.** In SQLite a comparison is 1 or 0, so `SUM(condition)` counts the rows where it is true:
+
+```sql
+SELECT channel,
+       COUNT(*) AS applications,
+       ROUND(100.0 * SUM(status LIKE 'approved%') / COUNT(*), 1) AS approval_pct   -- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0))
+FROM applications
+GROUP BY channel;                        -- app 58.2 · branch 63.7 · partner 61.9
+```
+
+The branch approves 63.7 % of its applications, the app 58.2 %: a gap of 5.5 percentage points (not "5.5 %").
+
+**When you use it.** Approval rate, share late, share of a product in the book, the interest share of a payment. Thursday's `SUM(CASE …)` is the portable spelling of the counted part.
+
+> ⚠️ **Watch out.** Say what the whole is. "Approved ÷ all applications" and "approved ÷ decided applications" are both approval rates and give different numbers. Name the denominator next to the number.
+
+**Your turn.** What share of all payments is made by card, after cleaning the method? (% to one decimal)
+
+```task
+{"id": "w02d3-l13", "kind": "number", "answer": 33.3, "dp": 1, "unit": "%", "hint": "ROUND(100.0 * SUM(LOWER(TRIM(method)) = 'card') / COUNT(*), 1) FROM payments.", "model": "33.3 %: 17 621 of 52 875. On the raw spelling (method = 'card') it is 33.2 % — Timur's moving tile."}
+```
+
+### Dates are text in a fixed shape — and "today" is 2026-10-01
+
+**What it is.** SQLite stores our dates as **text** `'YYYY-MM-DD'` and datetimes as `'YYYY-MM-DD HH:MM:SS'`. SQL Server has real date types. Text in this shape sorts and compares correctly, because every part has a fixed number of digits and the biggest unit comes first. The **as-of date** of this course — "today" — is **2026-10-01**: write it as a literal.
+
+**How to write it.**
+
+```sql
+SELECT COUNT(*) FROM loans WHERE disbursed_at = '2026-10-01';   -- 21 loans paid out on the as-of date
+SELECT date('2026-09-30 14:05:00');                             -- '2026-09-30': the date part of a datetime      SQL Server: CAST(… AS DATE)
+SELECT '2026-9-5' < '2026-10-01';                               -- 0 (false): '9' sorts after '1' — the zeros matter
+```
+
+21 loans were paid out on 1 October 2026, the last day of the data.
+
+**When you use it.** Every date filter and every "as of" calculation. Write dates with four-two-two digits and dashes, always.
+
+> ⚠️ **Watch out.** Never use `date('now')` (SQL Server `GETDATE()`) in this course. It returns the real calendar date, so a query about "today" would give a different answer each day, and none of them would match the data, which stops on 2026-10-01. And a datetime never equals a date: `applied_at = '2026-09-30'` finds 0 rows, although 23 applications were made that day.
+
+**Your turn.** How many applications were made on the as-of date, 1 October 2026? (`applied_at` carries a time — compare `date(applied_at)`.)
+
+```task
+{"id": "w02d3-l14", "kind": "number", "answer": 129, "dp": 0, "unit": "applications", "hint": "WHERE date(applied_at) = '2026-10-01' — or the half-open range from 2026-10-01 to 2026-10-02.", "model": "129 applications on 1 October — about six times a normal September day (621 ÷ 30 ≈ 21), a question for Timur. WHERE applied_at = '2026-10-01' would find none: the stored value has a time."}
+```
+
+### strftime — the parts of a date
+
+**What it is.** **strftime**`('format', date)` returns parts of a date as **text**: `%Y` year, `%m` month, `%d` day, `%H` hour, `%w` weekday (0 = Sunday), and any combination such as `'%Y-%m'`. SQL Server has a function per part: `YEAR(d)`, `MONTH(d)`, `DAY(d)`, `DATEPART(hour, d)`, `DATEPART(weekday, d)`, `FORMAT(d, 'yyyy-MM')`.
+
+**How to write it.**
+
+```sql
+SELECT strftime('%w', disbursed_at) AS weekday, COUNT(*) AS loans   -- SQL Server: DATEPART(weekday, disbursed_at)
+FROM loans
+GROUP BY strftime('%w', disbursed_at)
+ORDER BY weekday;                        -- 0 (Sun) 1 125 · 1 1 106 · … · 6 (Sat) 1 081
+```
+
+Loans are paid out evenly on all seven days, about 1 100 each, Sundays included: this synthetic company never closes. Our `dim_date` table is the no-function alternative: `JOIN dim_date d ON d.date_key = l.disbursed_at` gives `d.year`, `d.month_name`, `d.is_weekend` on both engines (2 206 loans on a Saturday or Sunday).
+
+**When you use it.** Grouping by year, month or weekday; a year-month label for a chart axis; the hour of a datetime.
+
+> ⚠️ **Watch out.** strftime returns text. `strftime('%m', disbursed_at) = 9` finds 0 loans; `= '09'` finds 780. Compare with a two-digit text, or `CAST(strftime('%m', …) AS INTEGER) = 9`.
+
+**Your turn.** What does `strftime('%w', '2026-10-01')` return? (The as-of date was a Thursday.)
+
+```task
+{"id": "w02d3-l15", "kind": "number", "answer": 4, "dp": 0, "unit": "", "hint": "0 is Sunday, 1 Monday …", "model": "'4' — Thursday. (It comes back as text; the box reads it as the number 4.)"}
+```
+
+### Date arithmetic — days between two dates, months added to a date
+
+**What it is.** Two operations cover most needs. **The difference in days**: SQLite `julianday(b) - julianday(a)`, SQL Server `DATEDIFF(day, a, b)`. **A date moved by a period**: SQLite `date(d, '+1 month')`, `date(d, '-30 days')`, `date(d, 'start of month')`; SQL Server `DATEADD(month, 1, d)`, `DATEADD(day, -30, d)`, `DATEFROMPARTS(YEAR(d), MONTH(d), 1)`.
+
+**How to write it.**
 
 ```sql
 -- how old is loan 1 on the as-of date?
-SELECT DATEDIFF(day, disbursed_at, '2026-10-01') FROM loans WHERE loan_id = 1;                      -- SQL Server
-SELECT CAST(julianday('2026-10-01') - julianday(disbursed_at) AS INTEGER) FROM loans WHERE loan_id = 1;  -- SQLite → 552
+SELECT CAST(julianday('2026-10-01') - julianday(disbursed_at) AS INTEGER) AS age_days   -- SQL Server: DATEDIFF(day, disbursed_at, '2026-10-01')
+FROM loans WHERE loan_id = 1;                                                            -- 552
+
+SELECT date('2026-10-01', '-30 days'),                          -- '2026-09-01'      DATEADD(day, -30, '2026-10-01')
+       date('2026-10-01', 'start of month', '+1 month', '-1 day');   -- '2026-10-31': the last day of the month   EOMONTH('2026-10-01')
 ```
 
-Our `dim_date` table is the no-function alternative: `JOIN dim_date d ON d.date_key = l.disbursed_at` and then `GROUP BY d.year, d.month_name` — identical on both engines, and it already knows weekends (2 206 of 7 828 loans were disbursed on a Saturday or Sunday — this synthetic company never closes).
+Loan 1 was paid out on 2025-03-28, 552 days before the as-of date. `julianday` counts fractional days when a time is present, so wrap the difference in `CAST(… AS INTEGER)` for whole days.
 
-**Filtering a period — the trap you met in week 1 B10.** Never `BETWEEN '2026-09-01' AND '2026-09-30'` on a column that may carry a time: September 30th's 23 applications made after midnight are lost (598 instead of 621). Also never `strftime('%Y-%m', applied_at) = '2026-09'` in a `WHERE` on a big table — it computes a function on every row and defeats indexes (week 3). The right shape, always:
+**When you use it.** Days late (paid date − due date), the age of a loan, DPD (as-of − oldest unpaid due date), "30 days before the as-of date" for a scope, the first and last day of a month.
+
+> ⚠️ **Watch out.** SQLite does not stop at the month's end: `date('2026-01-31', '+1 month')` is `'2026-03-03'` (31 February overflows into March). SQL Server's `DATEADD(month, 1, '2026-01-31')` gives 2026-02-28. For month arithmetic, go to `'start of month'` first.
+
+**Your turn.** What does `date('2026-10-01', '-30 days')` return?
+
+```task
+{"id": "w02d3-l16", "kind": "text", "answer": ["2026-09-01"], "hint": "September has 30 days.", "model": "'2026-09-01'. Tomorrow's FPD30 uses exactly this date: the base is loans whose first instalment fell due on or before it."}
+```
+
+### Filtering a period — the half-open range
+
+**What it is.** A **half-open range** keeps the start of a period and stops just before the start of the next one: `col >= start AND col < next_start`. It is right for dates, for datetimes, for months of 28 to 31 days and across year ends.
+
+**How to write it.**
 
 ```sql
-WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01'     -- half-open: start inclusive, next period exclusive
+SELECT COUNT(*) FROM applications
+WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';     -- 621: all of September, every time of day
 ```
 
-It works for dates, datetimes, months of 28–31 days and year ends alike. Make it a habit today; week 3's performance chapter will thank you.
+621 applications in September 2026. `BETWEEN '2026-09-01' AND '2026-09-30'` returns 598: it stops at 30 September **00:00:00**, so the 23 applications made later that day are lost.
 
-> ⚠️ **Watch out.** `BETWEEN '2026-09-01' AND '2026-09-30'` reads as "all of September" but stops at 30 September **00:00:00** — every application made later that day is gone (23 of them here).
+**When you use it.** Every period report: a month, a quarter, a year, "the last 30 days". Do not filter with `strftime('%Y-%m', applied_at) = '2026-09'` either: it returns the same 621 rows, but computes a function on every row and stops the database from using an index (Week 3).
 
-> 💡 **Key idea.** One shape for every period: `col >= start AND col < start of the next period`. Start inclusive, next period exclusive — right for dates, datetimes, any month length and year ends.
+> ⚠️ **Watch out.** `BETWEEN '2026-09-01' AND '2026-09-30'` reads as "all of September" but stops at 30 September 00:00:00 — every row stamped later that day is gone (23 here).
 
-Fill the gaps of Sevara's September filter:
+> 💡 **Key idea.** One shape for every period: `col >= start AND col < start of the next period`. Start inclusive, next period exclusive.
+
+**Your turn.** Fill the gaps of Sevara's September filter:
 
 ```game
 {"id": "w02d3-g3", "type": "cloze", "title": "The half-open filter", "text": "SELECT COUNT(*) FROM applications\nWHERE applied_at {{0}} '2026-09-01'\n  AND applied_at {{1}} {{2}};", "blanks": [[">="], ["<"], ["'2026-10-01'"]], "distractors": ["<=", "'2026-09-30'", "BETWEEN"]}
+```
+
+### Putting it together
+
+One request, functions of all three kinds. *"For September 2026: payments by cleaned method, with the share paid late and the average days late."*
+
+```sql
+SELECT REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer') AS method,             -- strings: TRIM, LOWER, REPLACE
+       COUNT(*) AS payments,
+       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1)  AS late_pct,             -- numbers: 100.0 first, ROUND last
+       ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_late       -- dates: julianday difference
+FROM payments p
+JOIN installments i ON i.installment_id = p.installment_id                               -- the due date lives on the instalment
+WHERE p.paid_at >= '2026-09-01' AND p.paid_at < '2026-10-01'                             -- half-open period
+GROUP BY REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer')                     -- the same expression as in SELECT
+ORDER BY payments DESC;
+```
+
+| method | payments | late_pct | avg_days_late |
+|---|---|---|---|
+| card | 1 051 | 12.3 | 0.02 |
+| payme | 548 | 14.8 | 0.45 |
+| click | 526 | 12.7 | 0.15 |
+| transfer | 524 | 11.8 | 0.10 |
+| cash | 510 | 12.4 | 0.22 |
+
+3 159 September payments in five clean groups. 11.8 to 14.8 % of each method's payments came late, and the average payment is less than half a day late: the method does not drive lateness.
+
+**Your turn.** You will translate between the two dialects all week. Sort the spellings:
+
+```game
+{"id": "w02d3-g1", "type": "sort", "title": "SQL Server, SQLite, or both?", "groups": {"SQL Server": ["LEN(s)", "DATEDIFF(day, a, b)", "DATEADD(month, 1, d)", "a + ' ' + b"], "SQLite": ["LENGTH(s)", "julianday(b) - julianday(a)", "date(d, '+1 month')", "a || ' ' || b"], "Both": ["LOWER(TRIM(s))", "REPLACE(s, 'old', 'new')", "ROUND(x, 2)"]}}
 ```
 
 ### Depth (optional)
@@ -131,9 +516,9 @@ Fill the gaps of Sevara's September filter:
 
 ## 2. Worked example — loans paid out before they were requested (detective, 30 min)
 
-Madina's tip: *some loans were disbursed before the customer applied.* That is a date comparison across two tables.
+Madina's tip: *some loans were disbursed before the customer applied.* That is a date comparison across two tables. Steps 1 and 2 use the date subsections of section 1; step 3 is Timur's question and goes back to the string and percentage subsections.
 
-**Step 1 — the distribution.** Days from application to disbursement, per loan, counted:
+**Step 1 — the distribution (dates as text, date arithmetic, CAST).** `date(a.applied_at)` takes the date part of the application's datetime; `julianday(…) - julianday(…)` gives the days in between; `CAST(… AS INTEGER)` makes them whole. Then count the loans per number of days:
 
 ```sql
 -- SQL Server: DATEDIFF(day, CAST(a.applied_at AS DATE), l.disbursed_at)
@@ -148,7 +533,7 @@ Values 0 to 7 carry 7 816 loans (0 days: 925 — the app channel pays out the sa
 
 </details>
 
-**Step 2 — list them.**
+**Step 2 — list them (a date comparison across two joined tables).** A negative difference means `l.disbursed_at < date(a.applied_at)`; that is the filter.
 
 ```sql
 SELECT l.loan_id, l.application_id, date(a.applied_at) AS applied, a.decided_at, l.disbursed_at,
@@ -170,7 +555,7 @@ How many loans were paid out before their application was submitted?
 
 </details>
 
-**Step 3 — Timur's tile.** Rebuild "share of payments by method" with the cleaned expression and compare with the raw one. The share needs the total number of payments as its denominator; `(SELECT COUNT(*) FROM payments)` is a one-value subquery — week 3's tool; copy it as it stands today.
+**Step 3 — Timur's tile (TRIM, LOWER, REPLACE, then a percentage).** Rebuild "share of payments by method" with the cleaned expression and compare with the raw one. The share needs the total number of payments as its denominator; `(SELECT COUNT(*) FROM payments)` is a one-value subquery — week 3's tool; copy it as it stands today.
 
 <details><summary>Result</summary>
 
@@ -188,20 +573,9 @@ Raw `card` was 17 564 = 33.2 % on SQLite (SQL Server's default collation already
 
 ## 3. Practice (50 min)
 
-Questions whose answer is a query have a box under them — write, **▶ Run**, then **✔ Check** compares your result with the answer without showing it; your query is saved in this browser. Questions that ask for a number or a reason have an answer box of their own. Show both dialects where they differ, or say which one you used; the **Database** panel lists every table and column.
+Questions whose answer is a query have a box under them — write, **▶ Run**, then **✔ Check** compares your result with the answer without showing it; your query is saved in this browser. Questions that ask for a number or a reason have an answer box of their own. The questions follow section 1 in order; the label in brackets names the subsection each one trains. P1–P15 are one-liners of a few minutes each; the work is in P16–P21. Show both dialects where they differ, or say which one you used; the **Database** panel lists every table and column.
 
-**P1.** The 18 customers whose first name has a trailing space, found with a length comparison (not `LIKE`).
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_name));   -- 18
--- SQL Server: LEN() ignores trailing spaces, so use DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))
-```
-
-</details>
-
-**P2.** One `full_name` column for customers 6001–6003, cleaned: trimmed, first letter logic ignored, surname lower-cased for comparison.
+**P1.** *(Concatenation)* One `full_name` column for customers 6001–6003, cleaned: trimmed, first letter logic ignored, surname lower-cased for comparison.
 
 <details><summary>Answer</summary>
 
@@ -213,7 +587,144 @@ The `match_key` is what last Thursday's duplicate search grouped on.
 
 </details>
 
-**P3.** Share of total due that is interest, per product, one decimal. Which product is 0 %, and why?
+**P2.** *(UPPER and LOWER)* Compare `COUNT(DISTINCT last_name)` with `COUNT(DISTINCT LOWER(last_name))` on `customers`. How many surname spellings exist only because of upper and lower case?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(DISTINCT last_name) AS spellings, COUNT(DISTINCT LOWER(last_name)) AS surnames
+FROM customers;                                                        -- 60 · 36
+```
+60 − 36 = **24** spellings are lower-case copies of a real surname (`karimova` next to `Karimova`). Group on `LOWER(last_name)` and there are 36 surnames.
+
+</details>
+
+**P3.** *(TRIM)* List the distinct payment methods that change under `TRIM`, with brackets around them so that the space is visible: `'[' || method || ']'`.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT DISTINCT '[' || method || ']' AS shown
+FROM payments
+WHERE method <> TRIM(method);                                          -- [CASH ]
+```
+One value, `[CASH ]`: the trailing space is invisible in a normal result and obvious between brackets.
+
+</details>
+
+**P4.** *(LENGTH)* The 18 customers whose first name has a trailing space, found with a length comparison (not `LIKE`).
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_name));   -- 18
+-- SQL Server: LEN() ignores trailing spaces, so use DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))
+```
+
+</details>
+
+**P5.** *(SUBSTR)* Loans per year of disbursement, with `SUBSTR(disbursed_at, 1, 4)` as the year.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT SUBSTR(disbursed_at, 1, 4) AS yr, COUNT(*) AS loans          -- SQL Server: YEAR(disbursed_at)
+FROM loans
+GROUP BY SUBSTR(disbursed_at, 1, 4)
+ORDER BY yr;                                                           -- 2024 1736 · 2025 3041 · 2026 3051
+```
+The same numbers as Tuesday's `strftime('%Y', …)`: on a `'YYYY-MM-DD'` text, the first four characters are the year.
+
+</details>
+
+**P6.** *(REPLACE)* Show customer 44's phone in the local format: `+998` replaced by `8`.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT customer_id, phone, REPLACE(phone, '+998', '8') AS local_phone
+FROM customers WHERE customer_id = 44;                                 -- +998902229531 → 8902229531
+```
+
+</details>
+
+**P7.** *(INSTR)* How many payment rows have a `method` that contains a space anywhere?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*), COUNT(DISTINCT method)
+FROM payments
+WHERE INSTR(method, ' ') > 0;                                          -- 57 · 2
+```
+57 rows in two spellings: 30 `CASH ` (a space at the end) and 27 `bank transfer` (a space inside). `TRIM` fixes only the first.
+
+</details>
+
+**P8.** *(LIKE)* How many customers have a phone number ending in `00`?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM customers WHERE phone LIKE '%00';                 -- 71
+```
+
+</details>
+
+**P9.** *(ROUND)* Total principal per product in billions of UZS, one decimal, largest first.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT p.name, ROUND(SUM(l.principal) / 1000000000.0, 1) AS disbursed_bn
+FROM loans l JOIN products p ON p.product_id = l.product_id
+GROUP BY p.name ORDER BY disbursed_bn DESC;      -- SME 241.1 · Auto 84.8 · Consumer 65.1 · Micro 7.2 · BNPL 6.5
+```
+Divide by a billion with a decimal point (`1000000000.0`), then round once.
+
+</details>
+
+**P10.** *(Integer and decimal division)* Approval rate per channel, twice: once as `100 * SUM(status LIKE 'approved%') / COUNT(*)`, once with `100.0`.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT channel,
+       100 * SUM(status LIKE 'approved%') / COUNT(*)   AS whole_pct,      -- 58 · 63 · 61
+       100.0 * SUM(status LIKE 'approved%') / COUNT(*) AS decimal_pct     -- 58.23 · 63.72 · 61.89
+FROM applications GROUP BY channel;
+-- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0)) for the count
+```
+The whole-number version cuts every rate down — branch 63.72 becomes 63, not 64. Here the error is small because `100 *` comes first; without it every rate would be 0.
+
+</details>
+
+**P11.** *(CAST)* Per product: `CAST(AVG(principal) AS INTEGER)` next to `ROUND(AVG(principal))`. In how many products do the two differ?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT p.name, CAST(AVG(l.principal) AS INTEGER) AS cut, ROUND(AVG(l.principal)) AS rounded
+FROM loans l JOIN products p ON p.product_id = l.product_id
+GROUP BY p.name;
+```
+In **3**: Auto (216 858 132 vs …133), BNPL (4 170 879 vs …880) and Consumer (26 926 914 vs …915) have a fraction of .5 or more, so CAST cuts down where ROUND goes up. Micro and SME agree.
+
+</details>
+
+**P12.** *(ABS)* The largest gap, in either direction, between a payment's amount and its instalment's `total_due`.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT MAX(ABS(p.amount - i.total_due)) AS largest_gap
+FROM payments p JOIN installments i ON i.installment_id = p.installment_id;     -- 38 721 136
+```
+38.7 m UZS: payment 46016 on loan 6877 paid 10 690 864 against 49 412 000 due — a partial payment of about a fifth.
+
+</details>
+
+**P13.** *(Percentages)* Share of total due that is interest, per product, one decimal. Which product is 0 %, and why?
 
 <details><summary>Answer</summary>
 
@@ -232,36 +743,18 @@ Why is one product at 0.0 %?
 {"id": "w02d3-p3", "kind": "choice", "options": ["BNPL charges the borrower no interest — its annual_rate is 0, the merchant pays", "The query divides two integers, so BNPL rounds down to 0", "BNPL loans have no instalments", "Micro loans are too small to carry interest"], "answer": 0, "explain": "BNPL's annual_rate is 0, so its interest_due is 0 on every instalment. Integer division would have zeroed every product, not just one — that is what the 100.0 prevents.", "xp": 1}
 ```
 
-**P4.** Loans disbursed in September 2026 — with the half-open filter — and the same for applications *submitted* in September, showing the BETWEEN mistake next to it.
+**P14.** *(Dates as text — and "today")* How many payments are dated on or after the as-of date `'2026-10-01'`? Why would `WHERE paid_at >= date('now')` give a different number next week?
 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';          -- 361
-SELECT COUNT(*) FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';       -- 621
-SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30';               -- 598 (wrong: loses 23)
+SELECT COUNT(*) FROM payments WHERE paid_at >= '2026-10-01';           -- 60
 ```
+60 payments. `date('now')` is the real calendar date, which moves every day, while the data stops on 2026-10-01: the same query would count fewer future-dated payments each week, and none of its answers would describe the data's "today".
 
 </details>
 
-How many September applications does the `BETWEEN` version lose?
-
-```task
-{"id": "w02d3-p4", "kind": "number", "answer": 23, "dp": 0, "unit": "applications", "hint": "Subtract the BETWEEN count from the half-open count.", "model": "621 − 598 = 23: every application made on 30 September after midnight. applied_at carries a time, and BETWEEN stops at '2026-09-30 00:00:00'."}
-```
-
-**P5.** Average age in days of active loans on the as-of date, as a whole number.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans WHERE status = 'active';   -- 221
--- SQL Server: AVG(DATEDIFF(day, disbursed_at, '2026-10-01'))  (integer average → CAST one side AS FLOAT first)
-```
-
-</details>
-
-**P6.** Disbursed loans and amount by month of 2026 using `dim_date` instead of a date function — month number, month name, loans, amount.
+**P15.** *(strftime — and the calendar table)* Disbursed loans and amount by month of 2026 using `dim_date` instead of a date function — month number, month name, loans, amount.
 
 <details><summary>Answer</summary>
 
@@ -275,7 +768,18 @@ Same numbers as Tuesday's `strftime` version, no dialect difference, and a reada
 
 </details>
 
-**P7.** Sevara's first ask: for every payment, days late = paid date − due date (`installments` via `installment_id`). Show the five latest payments and the overall count of late ones.
+**P16.** *(Date arithmetic)* Average age in days of active loans on the as-of date, as a whole number.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans WHERE status = 'active';   -- 221
+-- SQL Server: AVG(DATEDIFF(day, disbursed_at, '2026-10-01'))  (integer average → CAST one side AS FLOAT first)
+```
+
+</details>
+
+**P17.** *(Date arithmetic)* Sevara's first ask: for every payment, days late = paid date − due date (`installments` via `installment_id`). Show the five latest payments and the overall count of late ones.
 
 <details><summary>Answer</summary>
 
@@ -291,7 +795,7 @@ Negative days_late = paid early (34 649 payments); 11 557 on the day; 534 more t
 
 </details>
 
-**P8.** Sevara's second ask: average lateness by product — over *all* payments, and over *late* payments only.
+**P18.** *(Date arithmetic)* Sevara's second ask: average lateness by product — over *all* payments, and over *late* payments only.
 
 <details><summary>Answer</summary>
 
@@ -313,7 +817,7 @@ Which answer gives Sevara what she actually asked ("Micro feels worse than Auto"
 {"id": "w02d3-p8", "kind": "choice", "options": ["Micro is late more often (16.3 % vs 10.1 % of payments), but a late Micro payment is no later than a late Auto one (about 11 days each)", "Micro payments are 0.56 days late on average, so Micro is worse in every way", "Auto is worse: its average is −0.21 days", "There is no difference: late payments average 11 days in every product"], "answer": 0, "explain": "Frequency (share late) and severity (days of the late payments) are two numbers. Micro differs on the first, not the second; the all-payments average blends them into one misleading figure.", "xp": 1}
 ```
 
-**P9.** By risk grade: share of late payments and average days over all payments. Does the scorecard order the grades?
+**P19.** *(Date arithmetic)* By risk grade: share of late payments and average days over all payments. Does the scorecard order the grades?
 
 <details><summary>Answer</summary>
 
@@ -325,11 +829,29 @@ FROM payments p JOIN installments i ON i.installment_id = p.installment_id
 JOIN loans l ON l.loan_id = p.loan_id
 GROUP BY l.risk_grade ORDER BY l.risk_grade;
 ```
-A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 % / +2.96. Monotonic — the grade predicts payment behaviour. Same shape as P8 with `GROUP BY l.risk_grade`.
+A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 % / +2.96. Monotonic — the grade predicts payment behaviour. Same shape as P18 with `GROUP BY l.risk_grade`.
 
 </details>
 
-**P10.** Rewrite Tuesday's payments-by-method with the cleaned method *and* average lateness per method. Anything about the 27 `bank transfer` rows?
+**P20.** *(Filtering a period)* Loans disbursed in September 2026 — with the half-open filter — and the same for applications *submitted* in September, showing the BETWEEN mistake next to it.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';          -- 361
+SELECT COUNT(*) FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';       -- 621
+SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30';               -- 598 (wrong: loses 23)
+```
+
+</details>
+
+How many September applications does the `BETWEEN` version lose?
+
+```task
+{"id": "w02d3-p4", "kind": "number", "answer": 23, "dp": 0, "unit": "applications", "hint": "Subtract the BETWEEN count from the half-open count.", "model": "621 − 598 = 23: every application made on 30 September after midnight. applied_at carries a time, and BETWEEN stops at '2026-09-30 00:00:00'."}
+```
+
+**P21.** *(Putting it together)* Rewrite Tuesday's payments-by-method with the cleaned method *and* average lateness per method. Anything about the 27 `bank transfer` rows?
 
 <details><summary>Answer</summary>
 
@@ -354,7 +876,7 @@ What do the 27 raw `bank transfer` rows average, in days late? (Two decimals.)
 
 > 🚀 **Stretch (optional, +5 XP).** One more date rule for the curious — not needed to finish the day.
 
-**P11.** Reconstruct the true disbursement date of the twelve detective loans from their schedule: first `due_date` minus one month. How many days after `decided_at` is it for each? Then test the same rule on *all* loans — how many disagree with `disbursed_at`?
+**P22.** *(Date arithmetic)* Reconstruct the true disbursement date of the twelve detective loans from their schedule: first `due_date` minus one month. How many days after `decided_at` is it for each? Then test the same rule on *all* loans — how many disagree with `disbursed_at`?
 
 <details><summary>Answer</summary>
 
@@ -408,7 +930,7 @@ The 33 days customer 1039 asked for is the kind of number a function gives you i
  "why": "Sevara staffs her team on these numbers, Timur's method tile is wrong until the labels are clean, and an approval given to a minor is a compliance problem the board will ask about.",
  "graded": ["Every query passes ✔ Check: the right period filter, the right join, the right numbers", "Frequency and severity kept apart: share late and days of late payments are separate columns", "The notes answer Sevara's and Timur's actual questions in plain words"],
  "tasks": [
-  {"id": "Q1", "q": "Days late per payment (the P7 shape) for 2026 payments, and the count of late ones (`paid_at > due_date`)."},
+  {"id": "Q1", "q": "Days late per payment (the P17 shape) for 2026 payments, and the count of late ones (`paid_at > due_date`)."},
   {"id": "Q2", "q": "By customer segment: payments, share late %, average days over all payments, average days over late payments only — one query, four columns."},
   {"id": "Q3", "q": "The same four columns by region of the branch (from `branches`, not the customer's region)."},
   {"id": "lateness.md", "file": "lateness.md", "text": true, "minLines": 3, "q": "Three sentences for Sevara: which segment is late most often, how late a late payment typically is, and whether any region stands out."},
@@ -425,10 +947,10 @@ The 33 days customer 1039 asked for is the kind of number a function gives you i
 
 ```check
 {"id": "w02d3-sc", "questions": [
-  {"type": "single", "q": "Why does `SELECT 7917 / 14000` return 0, and what is the fix?", "options": ["Two whole numbers divide as whole numbers; write 7917 * 100.0 / 14000", "The result is too small to show; use ROUND", "Division needs CAST on the result: CAST(7917 / 14000 AS FLOAT)", "SQLite cannot divide; use SQL Server"], "answer": 0, "explain": "The decimal must be there before the division: CAST of the result is too late, the fraction is already gone (→ section 1, Numbers)."},
+  {"type": "single", "q": "Why does `SELECT 7917 / 14000` return 0, and what is the fix?", "options": ["Two whole numbers divide as whole numbers; write 7917 * 100.0 / 14000", "The result is too small to show; use ROUND", "Division needs CAST on the result: CAST(7917 / 14000 AS FLOAT)", "SQLite cannot divide; use SQL Server"], "answer": 0, "explain": "The decimal must be there before the division: CAST of the result is too late, the fraction is already gone (→ section 1, Integer and decimal division)."},
   {"type": "single", "q": "Which filter selects the payments received in the first quarter of 2026?", "options": ["paid_at BETWEEN '2026-01-01' AND '2026-03-31'", "paid_at >= '2026-01-01' AND paid_at < '2026-04-01'", "strftime('%m', paid_at) <= '03'", "paid_at > '2026-01-01' AND paid_at < '2026-03-31'"], "answer": 1, "explain": "Half-open: the start inclusive, the next period's start exclusive. BETWEEN loses times on 31 March; the strftime version takes every year's first quarter (→ section 1, Filtering a period)."},
-  {"type": "number", "q": "On SQLite, what does `LENGTH('Bobur ')` return?", "answer": 6, "explain": "SQLite counts the trailing space; SQL Server's LEN would say 5 — compare DATALENGTH there (→ section 1, Strings; P1)."},
-  {"type": "multi", "q": "Sevara asks for 'average lateness by product'. Which two numbers should you report, named?", "options": ["Share of payments that are late (how often)", "Average days of the late payments (how late)", "Total principal by product", "Number of products"], "answer": [0, 1], "explain": "An average over all payments mixes how often with how late; Micro is late more often, not later (→ P8)."}
+  {"type": "number", "q": "On SQLite, what does `LENGTH('Bobur ')` return?", "answer": 6, "explain": "SQLite counts the trailing space; SQL Server's LEN would say 5 — compare DATALENGTH there (→ section 1, LENGTH; P4)."},
+  {"type": "multi", "q": "Sevara asks for 'average lateness by product'. Which two numbers should you report, named?", "options": ["Share of payments that are late (how often)", "Average days of the late payments (how late)", "Total principal by product", "Number of products"], "answer": [0, 1], "explain": "An average over all payments mixes how often with how late; Micro is late more often, not later (→ P18)."}
 ]}
 ```
 
@@ -520,13 +1042,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w02d3", "pass": 0.8, "questions": [
-  {"type": "single", "q": "What does this return, on SQL Server and SQLite alike?", "code": "SELECT 7917 / 14000;", "options": ["0.5655", "0", "56.55", "An error"], "answer": 1, "explain": "Two integers divide as integers, so the fraction is cut off; put 100.0 * at the front of every percentage (→ section 1, Numbers)."},
-  {"type": "number", "q": "And what does this return?", "code": "SELECT 7917 * 100 / 14000;", "answer": 56, "explain": "Still integer division: 791 700 / 14 000 = 56.55, truncated (not rounded) to 56; 100.0 gives 56.55 (→ section 1, Numbers)."},
+  {"type": "single", "q": "What does this return, on SQL Server and SQLite alike?", "code": "SELECT 7917 / 14000;", "options": ["0.5655", "0", "56.55", "An error"], "answer": 1, "explain": "Two integers divide as integers, so the fraction is cut off; put 100.0 * at the front of every percentage (→ section 1, Integer and decimal division)."},
+  {"type": "number", "q": "And what does this return?", "code": "SELECT 7917 * 100 / 14000;", "answer": 56, "explain": "Still integer division: 791 700 / 14 000 = 56.55, truncated (not rounded) to 56; 100.0 gives 56.55 (→ section 1, Integer and decimal division)."},
   {"type": "single", "q": "Which filter is right for 'payments received in February 2026'?", "options": ["WHERE paid_at BETWEEN '2026-02-01' AND '2026-02-28'", "WHERE paid_at >= '2026-02-01' AND paid_at < '2026-03-01'", "WHERE MONTH(paid_at) = 2", "WHERE paid_at < '2026-02-28'"], "answer": 1, "explain": "Half-open: start inclusive, next period exclusive — safe for dates, datetimes and any month length; MONTH() = 2 takes every year's February (→ section 1, Filtering a period)."},
-  {"type": "multi", "q": "GROUP BY LOWER(TRIM(method)) — which raw values end up in the same group?", "options": ["'Card' with 'card'", "'CASH ' with 'cash'", "'PayMe' with 'payme'", "'bank transfer' with 'transfer'"], "answer": [0, 1, 2], "explain": "Case and end spaces are fixed by LOWER and TRIM; a different word needs REPLACE (→ section 1, Strings)."},
-  {"type": "single", "q": "On SQL Server, this finds no customers although 18 first names end with a space. Why?", "code": "SELECT COUNT(*) FROM customers\nWHERE LEN(first_name) <> LEN(TRIM(first_name));", "options": ["TRIM does not exist on SQL Server", "LEN ignores trailing spaces, so both sides are equal; compare DATALENGTH instead", "The names are NULL", "<> does not work on numbers"], "answer": 1, "explain": "SQLite's LENGTH counts the space, SQL Server's LEN does not (→ section 1, Strings; P1)."},
+  {"type": "multi", "q": "GROUP BY LOWER(TRIM(method)) — which raw values end up in the same group?", "options": ["'Card' with 'card'", "'CASH ' with 'cash'", "'PayMe' with 'payme'", "'bank transfer' with 'transfer'"], "answer": [0, 1, 2], "explain": "Case and end spaces are fixed by LOWER and TRIM; a different word needs REPLACE (→ section 1, UPPER and LOWER to REPLACE)."},
+  {"type": "single", "q": "On SQL Server, this finds no customers although 18 first names end with a space. Why?", "code": "SELECT COUNT(*) FROM customers\nWHERE LEN(first_name) <> LEN(TRIM(first_name));", "options": ["TRIM does not exist on SQL Server", "LEN ignores trailing spaces, so both sides are equal; compare DATALENGTH instead", "The names are NULL", "<> does not work on numbers"], "answer": 1, "explain": "SQLite's LENGTH counts the space, SQL Server's LEN does not (→ section 1, LENGTH; P4)."},
   {"type": "single", "q": "How do you find loans that were paid out before the customer applied?", "options": ["WHERE disbursed_at < applied_at on the loans table alone", "Join loans to applications on application_id and keep l.disbursed_at < date(a.applied_at)", "Join loans to customers and compare with registered_at", "Sort loans by disbursed_at and look at the first rows"], "answer": 1, "explain": "applied_at lives in applications, so it is a date comparison across two tables joined on their key (→ section 2, Detective)."},
-  {"type": "single", "q": "Sevara asks for 'average lateness by product'. Which pair of numbers keeps that question honest?", "options": ["Average principal and average term", "Share of payments that are late (how often) and average days of the late payments (how late)", "Total late days and number of products", "Maximum and minimum days late"], "answer": 1, "explain": "An average over all payments mixes frequency with severity; report both and name them (→ P8)."},
+  {"type": "single", "q": "Sevara asks for 'average lateness by product'. Which pair of numbers keeps that question honest?", "options": ["Average principal and average term", "Share of payments that are late (how often) and average days of the late payments (how late)", "Total late days and number of products", "Maximum and minimum days late"], "answer": 1, "explain": "An average over all payments mixes frequency with severity; report both and name them (→ P18)."},
   {"type": "single", "q": "In the DPD query, why is the condition HAVING COALESCE(SUM(p.amount), 0) < i.total_due, rather than 'instalments with no payment at all'?", "options": ["It runs faster", "A partly paid instalment is still past due; counting only unpaid-at-all ones drops loans from the 90+ bucket", "COALESCE removes duplicate payments", "HAVING is required whenever a JOIN is used"], "answer": 1, "explain": "The definition is the oldest instalment not fully paid; token payments would otherwise hide defaulted loans (→ section 6, Company corner)."}
 ]}
 ```

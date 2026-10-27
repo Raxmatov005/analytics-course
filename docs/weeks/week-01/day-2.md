@@ -16,91 +16,434 @@
 
 ### The shape of a query
 
-Yesterday you ran ready-made queries; today you write them. Every query you write this week has this skeleton. The order of the words is fixed; the database runs them in a different order (FROM → WHERE → SELECT → ORDER BY), which is why you can filter on a column you do not display.
+**What it is.** A **query** (*запрос*) is a question to the database, written in SQL. Every query you write this week has the same skeleton of **clauses** (*предложения*): `SELECT` names the columns, `FROM` the table, `WHERE` the rows, `ORDER BY` the order, `LIMIT` how many. Only `SELECT` and `FROM` are required.
+
+**How to write it.**
 
 ```sql
+-- the shape only: replace the names before you run it
 SELECT   column1, column2        -- which columns (or * for all)
 FROM     table_name              -- which table
 WHERE    condition               -- which rows (optional)
-ORDER BY column1 DESC;           -- in what order (optional)
+ORDER BY column1 DESC            -- in what order (optional)
+LIMIT    5;                      -- how many rows at most (optional; SQL Server: SELECT TOP 5 …)
 ```
 
-> 💡 **Key idea.** You *write* SELECT → FROM → WHERE → ORDER BY; the database *runs* FROM → WHERE → SELECT → ORDER BY. It first picks the table, then keeps the rows that pass the filter, then cuts out your columns, then sorts.
-
-Try it now — press **▶ Run** under the query:
+One real query with every clause — the five biggest loans in default:
 
 ```sql
-SELECT loan_id, principal, disbursed_at, status
-FROM loans;
+SELECT loan_id, principal, status
+FROM loans
+WHERE status = 'default'
+ORDER BY principal DESC
+LIMIT 5;
 ```
 
-7 828 rows: the loans table you looked at yesterday, but *you* chose the four columns. `SELECT *` gives every column — fine for looking, bad in a report.
+5 rows, biggest first: loan 370 with 589 000 000 on top. Read it as one sentence: *"from `loans`, keep the rows in default, show three columns, biggest principal first, stop after five."*
+
+**When you use it.**
+- Always: the clauses go in this order, or the database stops with a syntax error.
+- The database **runs** them in a different order: FROM → WHERE → SELECT → ORDER BY → LIMIT. It picks the table, keeps the rows that pass the filter, cuts out your columns, sorts, then stops. That is why `WHERE` can use a column you do not display.
+
+**Your turn.** Fill the skeleton for Bekzod: his Auto loans (product 4), biggest first.
 
 ```game
 {"type": "cloze", "id": "w01d2-g1", "title": "Bekzod's Auto loans, biggest first: fill the skeleton", "text": "SELECT {{0}} FROM {{1}} WHERE {{2}} ORDER BY {{3}};", "blanks": [["loan_id, principal"], ["loans"], ["product_id = 4"], ["principal DESC"]], "distractors": ["customers", "principal = NULL", "GROUP BY product_id"]}
 ```
 
-### Aliases, DISTINCT, and the first N rows
+### SELECT — choose the columns
+
+**What it is.** **SELECT** (*выбрать*) lists the columns you want, separated by commas, in the order you want them. `SELECT *` means every column. `SELECT COUNT(*)` returns one number: how many rows there are.
+
+**How to write it.**
 
 ```sql
-SELECT principal AS amount_uzs, disbursed_at AS paid_out_on   -- rename columns (alias, псевдоним)
+SELECT loan_id, principal, disbursed_at, status    -- four columns, in this order
 FROM loans;
-
-SELECT DISTINCT channel FROM applications;      -- one row per different value
 ```
 
-`DISTINCT` removes duplicate rows of the *selected columns*. Run the second query: three rows — `app`, `branch`, `partner`. This is the fastest way to learn what a column contains.
+7 828 rows — every loan — but only the four columns you named, in your order.
 
-The first N rows is the one place where SQL Server and SQLite spell things differently. The pages always show both:
+```sql
+SELECT COUNT(*) FROM customers;    -- one row, one number
+```
+
+6 040 — the number of rows in `customers`.
+
+**When you use it.**
+- Name the columns in every query you keep or send. `SELECT *` is for a first look at a table.
+- `COUNT(*)` when the question is "how many?". It is the only aggregate this week; the others come in Week 2.
+
+**Your turn.** Build the query: each customer's id, first name and region.
+
+```game
+{"type": "build", "id": "w01d2-g4", "title": "Choose the columns", "q": "The id, first name and region of every customer.", "tokens": ["SELECT", "customer_id,", "first_name,", "region", "FROM", "customers"], "distractors": ["loans", "WHERE", "*"]}
+```
+
+### Aliases — AS renames a column in the result
+
+**What it is.** An **alias** (*псевдоним*) is a new name for a column in the result. You write it after the column with `AS`. The table itself does not change.
+
+**How to write it.**
+
+```sql
+SELECT loan_id      AS loan,          -- column AS new_name
+       principal    AS amount_uzs,
+       disbursed_at AS paid_out_on
+FROM loans;
+```
+
+7 828 rows; the headers now read `loan`, `amount_uzs`, `paid_out_on`.
+
+**When you use it.**
+- To give a report readable headers.
+- To name a computed column: `SELECT COUNT(*) AS micro_loans_sep` (the Worked example).
+
+> ⚠️ **Watch out.** An alias with a space needs double quotes: `AS "amount UZS"`. Easier: use `_` instead of a space.
+
+**Your turn.** List every product: its `name` as `product` and its `annual_rate` as `rate` (5 rows).
+
+```task
+{"id": "w01d2-l1", "kind": "sql", "model": "SELECT name AS product, annual_rate AS rate FROM products;", "note": "Two columns, each followed by AS and its new name."}
+```
+
+### DISTINCT — one row per different value
+
+**What it is.** **DISTINCT** (*различные*) removes duplicate rows from the result. You write it right after `SELECT`. It keeps one row per different combination of the selected columns.
+
+**How to write it.**
+
+```sql
+SELECT DISTINCT channel FROM applications;
+```
+
+3 rows — `app`, `branch`, `partner` — although `applications` has 14 000 rows.
+
+```sql
+SELECT DISTINCT channel, status FROM applications;
+```
+
+12 rows: every channel appears with each of the four statuses (3 × 4 = 12).
+
+**When you use it.**
+- To learn what a column contains before you filter on it — the fastest look there is.
+- To list the different values of a column for a report: regions, products, statuses.
+
+**Your turn.** How many different values does `collections_actions.outcome` have?
+
+```task
+{"id": "w01d2-l2", "kind": "number", "answer": 4, "dp": 0, "unit": "values", "hint": "SELECT DISTINCT outcome FROM collections_actions; then count the rows.", "model": "4: promise_to_pay, refused, no_answer, paid."}
+```
+
+### ORDER BY — sort the rows
+
+**What it is.** **ORDER BY** (*сортировка*) sorts the result by one or more columns. `ASC` means smallest first and is the default. `DESC` means biggest first.
+
+**How to write it.**
+
+```sql
+SELECT loan_id, product_id, principal
+FROM loans
+ORDER BY product_id, principal DESC;    -- first by product (1, 2, 3 and on), inside each product the biggest first
+```
+
+7 828 rows. Product 1 (Micro) comes first, and inside it the biggest loans: 4 990 000 at the top.
+
+**When you use it.**
+- "Biggest first", "newest first", "alphabetically".
+- Several columns: the second column sorts only inside equal values of the first.
+
+> ⚠️ **Watch out.** An empty cell (**NULL**) counts as the smallest value in both SQLite and SQL Server. With `ASC` the empty cells come first, with `DESC` they come last.
+
+**Your turn.** What does `ORDER BY region, monthly_income DESC` do?
+
+```task
+{"id": "w01d2-l3", "kind": "choice", "options": ["Sorts by region A→Z; inside each region, the highest income first", "Sorts by income only; region is ignored", "Sorts both columns from the highest down", "Sorts by region Z→A, then income"], "answer": 0, "explain": "DESC belongs to monthly_income only. region has no word after it, so it uses the default ASC (A→Z)."}
+```
+
+### LIMIT and TOP — only the first N rows
+
+**What it is.** **LIMIT** returns at most N rows. It goes at the very end of the query. SQL Server writes the same thing as **TOP N** right after `SELECT`. This is the one place this week where the two engines spell a query differently.
+
+**How to write it.**
 
 ```sql
 -- SQL Server
-SELECT TOP 5 loan_id, principal FROM loans ORDER BY principal DESC;
+SELECT TOP 3 application_id, requested_amount FROM applications ORDER BY requested_amount DESC;
 -- SQLite / PostgreSQL / MySQL
-SELECT loan_id, principal FROM loans ORDER BY principal DESC LIMIT 5;
+SELECT application_id, requested_amount FROM applications ORDER BY requested_amount DESC LIMIT 3;
 ```
 
-`ORDER BY principal DESC` = biggest first; `ASC` (the default) = smallest first. You can sort by several columns: `ORDER BY region, principal DESC`.
+3 rows: application 5074 asked for 599 060 000, the most of all 14 000. (The box runs both lines: it turns `TOP` into `LIMIT` for you, and shows the last result.)
 
-### WHERE — the seven operators
+**When you use it.** "The five biggest", "the ten newest", "the first row" — always together with `ORDER BY`.
 
-| Operator | Example | Reads as |
-|---|---|---|
-| `=` | `status = 'active'` | exactly equal (text in single quotes) |
-| `<>` (also `!=`) | `status <> 'active'` | not equal |
-| `>`, `>=`, `<`, `<=` | `principal > 200000000` | compare numbers or dates |
-| `BETWEEN a AND b` | `principal BETWEEN 1000000 AND 5000000` | inclusive on both ends |
-| `IN (…)` | `region IN ('Nukus', 'Termez')` | equals any of the list |
-| `LIKE` | `first_name LIKE 'M%'` | pattern: `%` = any characters, `_` = exactly one |
-| `IS NULL` / `IS NOT NULL` | `monthly_income IS NULL` | the cell is empty |
+> ⚠️ **Watch out.** `LIMIT` without `ORDER BY` returns *some* N rows, not the biggest or the newest. Sort first, then cut.
 
-Combine with `AND`, `OR`, `NOT`. **`AND` binds tighter than `OR`** — exactly like multiplication before addition — so when you mix them, put parentheses:
+**Your turn.** What is the `application_id` of the most recent application (latest `applied_at`)?
+
+```task
+{"id": "w01d2-l4", "kind": "number", "answer": 6338, "dp": 0, "hint": "ORDER BY applied_at DESC, then LIMIT 1.", "model": "6338 — applied on 2026-10-01 at 21:36, the evening of the data's as-of date."}
+```
+
+### WHERE — keep only the rows you want
+
+**What it is.** **WHERE** (*условие*) keeps the rows for which a **condition** is true and drops the rest. A condition compares a column with a value. Text values go in single quotes: `'default'`.
+
+**How to write it.**
 
 ```sql
-WHERE product_id = 5 AND (status = 'approved' OR status = 'approved_not_disbursed')
+SELECT loan_id, principal, status
+FROM loans
+WHERE status = 'default';     -- column  operator  value
 ```
 
-Without the parentheses the database reads `(product_id = 5 AND status = 'approved') OR status = 'approved_not_disbursed'` — a different question, and it will not warn you. P10 shows how far off you land.
+44 rows — the loans in default. The other 7 784 loans are dropped.
 
-> ⚠️ **Watch out.** Whenever `AND` meets `OR` in one `WHERE`, add parentheses. A wrong grouping is not an error — it is a different question that runs fine and returns the wrong number.
+**When you use it.** Every question with a "which": which loans, which customers, which month. The next six subsections are the operators you can put in a condition.
 
-### Three things that bite beginners
+**Your turn.** Build the query: the id and principal of every written-off loan.
 
-1. **NULL is not a value.** `monthly_income = NULL` returns zero rows, always. Empty cells are found with `IS NULL`. (*NULL = пустое значение, "неизвестно"*.)
-2. **Text comparison.** In SQLite `status = 'Active'` finds nothing (case matters). In SQL Server with the default collation it finds `active` too. Write values exactly as they are stored and you are safe in both.
-3. **Dates are compared as text in SQLite** (`'2026-09-01'`) and as real dates in SQL Server — but the *same* `YYYY-MM-DD` literal works in both. For "in year 2026" prefer a range to a function:
+```game
+{"type": "build", "id": "w01d2-g5", "title": "Keep only some rows", "q": "The id and principal of every loan whose status is written_off.", "tokens": ["SELECT", "loan_id, principal", "FROM", "loans", "WHERE", "status = 'written_off'"], "distractors": ["status = written_off", "ORDER BY", "customers"]}
+```
+
+### The operators = and <> — equal and not equal
+
+**What it is.** `=` keeps the rows where the column **equals** the value. `<>` keeps the rows where it **does not equal** it (`!=` means the same).
+
+**How to write it.**
 
 ```sql
-WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2027-01-01'   -- both engines
--- alternatives:  SQL Server: YEAR(disbursed_at) = 2026   ·   SQLite: strftime('%Y', disbursed_at) = '2026'
+SELECT COUNT(*) FROM applications WHERE channel <> 'branch';
 ```
 
-Careful with `applied_at`: it holds a date *and a time* (`2025-06-02 10:35:00`), so `applied_at BETWEEN '2025-01-01' AND '2025-12-31'` silently drops every application made on 31 December after midnight. Use `>= '2025-01-01' AND < '2026-01-01'`.
+7 777 applications came through the app or a partner — everything except the branch channel.
 
-> 💡 **Key idea.** Two of these three give a wrong answer *without an error*: `= NULL` (always zero rows) and `BETWEEN` on a date-time column (drops the last day). Prefer `IS NULL` and half-open ranges `>= start AND < next_start` by habit.
+**When you use it.** Exact matches on codes, statuses, ids, regions: `region = 'Tashkent'`, `product_id = 5`, `status <> 'closed'`.
+
+**Your turn.** How many loans have risk grade `A`?
+
+```task
+{"id": "w01d2-l5", "kind": "number", "answer": 1821, "dp": 0, "unit": "loans", "hint": "WHERE risk_grade = 'A' — the letter in single quotes.", "model": "1 821 loans have risk grade A."}
+```
+
+### The operators >, <, >=, <= — bigger and smaller
+
+**What it is.** The **comparison operators** keep rows by size: `>` greater than, `<` less than, `>=` greater or equal, `<=` less or equal. They work on numbers and on dates.
+
+**How to write it.**
+
+```sql
+SELECT COUNT(*) FROM loans WHERE principal > 200000000;        -- numbers: no quotes, no spaces
+```
+
+755 loans are bigger than 200 000 000.
+
+```sql
+SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01'; -- dates: 'YYYY-MM-DD' in quotes
+```
+
+382 loans were paid out on or after 1 September 2026 — up to the data's last day, 1 October.
+
+**When you use it.** Thresholds and periods: "over 100 million", "a score below 500", "since 1 January".
+
+**Your turn.** How many loans run 36 months or longer?
+
+```task
+{"id": "w01d2-l6", "kind": "number", "answer": 538, "dp": 0, "unit": "loans", "hint": "\"36 or longer\" includes 36: >=.", "model": "538 loans have term_months >= 36."}
+```
+
+### BETWEEN — a range with both ends included
+
+**What it is.** **BETWEEN a AND b** keeps the values from `a` to `b`, **both ends included**. It is a short way to write `>= a AND <= b`.
+
+**How to write it.**
+
+```sql
+SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;   -- the same as term_months >= 12 AND term_months <= 24
+```
+
+2 940 loans run from 12 to 24 months — the 12-month and the 24-month loans included.
+
+**When you use it.** Ranges of numbers ("between 1 and 5 million") and of plain dates ("the first week of September").
+
+> ⚠️ **Watch out.** On a column that holds a date **and a time**, `BETWEEN '…-01' AND '…-31'` drops everything after midnight of the last day. See *Text, numbers and dates* below.
+
+**Your turn.** How many applications asked for 10 000 000 to 20 000 000, both ends included?
+
+```task
+{"id": "w01d2-l7", "kind": "number", "answer": 838, "dp": 0, "unit": "applications", "hint": "WHERE requested_amount BETWEEN 10000000 AND 20000000 — numbers without spaces.", "model": "838 applications."}
+```
+
+### IN — equal to one of a list
+
+**What it is.** **IN (…)** keeps the rows whose value equals **any** value in the list. It is a short way to write several `=` joined by `OR`.
+
+**How to write it.**
+
+```sql
+SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);   -- the same as product_id = 4 OR product_id = 5
+```
+
+1 172 loans are Auto (product 4) or SME (product 5): 391 + 781.
+
+**When you use it.** A short list of codes, statuses or regions: `region IN ('Nukus', 'Termez')`, `status IN ('approved', 'approved_not_disbursed')`.
+
+**Your turn.** How many customers are in the `affluent` or the `sme` segment?
+
+```task
+{"id": "w01d2-l8", "kind": "number", "answer": 2455, "dp": 0, "unit": "customers", "hint": "WHERE segment IN ('affluent', 'sme') — text values in quotes, separated by commas.", "model": "2 455 customers; the other 3 585 are mass."}
+```
+
+### LIKE — a text pattern
+
+**What it is.** **LIKE** keeps the text values that match a **pattern**. In the pattern, `%` stands for any number of characters (also none), and `_` for exactly one character.
+
+**How to write it.**
+
+```sql
+SELECT name FROM products WHERE name LIKE '%loan';   -- anything, then "loan" at the end
+```
+
+4 rows: Micro loan, Consumer loan, Auto loan, Small business loan. *Buy now pay later* does not end in "loan".
+
+```sql
+SELECT code FROM products WHERE code LIKE '____';    -- four underscores = exactly four characters
+```
+
+3 rows: CONS, BNPL, AUTO. MICRO has five letters and SME three.
+
+**When you use it.** "Starts with", "ends with", "contains": `LIKE 'M%'`, `LIKE '%ova'`, `LIKE '%loan%'`.
+
+> ⚠️ **Watch out.** In SQLite, `LIKE` ignores the case of Latin letters: `'m%'` also finds *Madina*. In SQL Server it follows the database's collation. `=` in SQLite does not ignore case.
+
+**Your turn.** How many customers have a surname that starts with `Abdu`?
+
+```task
+{"id": "w01d2-l9", "kind": "number", "answer": 317, "dp": 0, "unit": "customers", "hint": "WHERE last_name LIKE 'Abdu%' — % after the letters.", "model": "317 customers (Abdullaev, Abdullaeva, Abdurakhmonov…)."}
+```
+
+### IS NULL — the empty cell
+
+**What it is.** **NULL** (*пустое значение*) means "no value here — unknown". It is not zero and not an empty text. `IS NULL` finds the empty cells; `IS NOT NULL` finds the filled ones.
+
+**How to write it.**
+
+```sql
+SELECT COUNT(*) FROM applications WHERE credit_score IS NULL;       -- 388
+SELECT COUNT(*) FROM applications WHERE credit_score IS NOT NULL;   -- 13 612
+```
+
+The box shows the last count: 13 612 applications have a score. Run the first line alone: 388 have none. 388 + 13 612 = 14 000 — every application is in exactly one group.
+
+**When you use it.** Missing data: no income recorded, no score, a loan not yet closed.
+
+> ⚠️ **Watch out.** `credit_score = NULL` returns **0 rows, always**, with no error. Nothing is ever "equal" to unknown. Write `IS NULL`.
+
+**Your turn.** Find the line that makes this query wrong.
 
 ```game
 {"type": "bug", "id": "w01d2-g2", "title": "Find the bug", "q": "Madina wants the Tashkent customers with no recorded income. This query runs, returns 0 — and is wrong. Tap the line.", "code": "SELECT COUNT(*)\nFROM customers\nWHERE region = 'Tashkent'\n  AND monthly_income = NULL;", "answer": [3], "why": "= NULL is never true, so the count is 0 every time. Write AND monthly_income IS NULL."}
+```
+
+### AND, OR, NOT — combining conditions, with brackets
+
+**What it is.** **AND** keeps a row when **both** conditions are true. **OR** keeps it when **at least one** is true. **NOT** turns a condition around: `NOT IN`, `NOT LIKE`, `IS NOT NULL`, `NOT (…)`. **AND binds tighter than OR** — like multiplication before addition.
+
+**How to write it.** SME applications that we said yes to:
+
+```sql
+SELECT COUNT(*) FROM applications
+WHERE product_id = 5 AND (status = 'approved' OR status = 'approved_not_disbursed');
+```
+
+854 applications. Now the same words without the brackets:
+
+```sql
+SELECT COUNT(*) FROM applications
+WHERE product_id = 5 AND status = 'approved' OR status = 'approved_not_disbursed';
+```
+
+1 469. The database read it as `(product_id = 5 AND status = 'approved') OR status = 'approved_not_disbursed'`, so every not-disbursed approval of **any** product slipped in. No error, wrong number.
+
+```sql
+SELECT COUNT(*) FROM loans WHERE status NOT IN ('closed', 'written_off');
+```
+
+3 396 loans are neither closed nor written off: 3 352 active + 44 in default.
+
+**When you use it.** Every filter with more than one condition.
+
+| You mean | Write |
+|---|---|
+| both must hold | `a AND b` |
+| either may hold | `a OR b` |
+| one condition AND a choice of two | `a AND (b OR c)` — brackets, always |
+| not one of a list | `col NOT IN (…)` |
+
+> ⚠️ **Watch out.** Whenever `AND` meets `OR` in one `WHERE`, add brackets. A wrong grouping is not an error — it is a different question that runs fine.
+
+**Your turn.** How does the database read `WHERE a AND b OR c`?
+
+```task
+{"id": "w01d2-l10", "kind": "choice", "options": ["(a AND b) OR c", "a AND (b OR c)", "a, b and c must all be true", "It refuses to run without brackets"], "answer": 0, "explain": "AND binds tighter than OR, so a AND b is grouped first. If you mean a AND (b OR c), write the brackets."}
+```
+
+### Text, numbers and dates in conditions
+
+**What it is.** A value in a condition is written by its type. Each type has one rule and one trap.
+
+| Type | How to write the value | The trap |
+|---|---|---|
+| **text** | in single quotes, spelled exactly as stored: `'active'` | in SQLite `=` is case-sensitive: `status = 'Active'` finds 0 rows |
+| **number** | no quotes, no spaces: `200000000` | `200 000 000` is a syntax error |
+| **date** | text `'YYYY-MM-DD'` in quotes: `'2026-09-01'` | a column with a **time** as well (`applied_at`) does not equal a plain date |
+
+**How to write it.** `applied_at` holds a date and a time, such as `2025-06-02 10:35:00`:
+
+```sql
+SELECT COUNT(*) FROM applications WHERE applied_at = '2025-06-02';                               -- 0: no row is exactly midnight
+SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_at < '2025-06-03'; -- the whole day
+```
+
+14 applications were made on 2 June 2025. The first line finds 0, because `'2025-06-02 10:35:00'` is not equal to `'2025-06-02'`.
+
+**When you use it.** For a period, write a **half-open range**: `>= first day AND < first day of the next period`. It works on dates with and without a time, in every engine. For a year: `applied_at >= '2025-01-01' AND applied_at < '2026-01-01'`.
+
+> ⚠️ **Watch out.** `= NULL`, `'Active'` instead of `'active'`, and `BETWEEN` on a date-time column all run without an error and return a wrong number. Prefer `IS NULL`, exact spelling and half-open ranges by habit.
+
+**Your turn.** Which filter keeps **every** application of 2025?
+
+```task
+{"id": "w01d2-l11", "kind": "choice", "options": ["applied_at >= '2025-01-01' AND applied_at < '2026-01-01'", "applied_at BETWEEN '2025-01-01' AND '2025-12-31'", "applied_at = '2025'", "applied_at LIKE 2025"], "answer": 0, "explain": "The half-open range keeps every moment of 31 December. BETWEEN … '2025-12-31' stops at midnight, so the applications made later that day fall out; = '2025' matches nothing."}
+```
+
+### Putting it together
+
+Bekzod: *"The five biggest Auto or SME loans paid out in September 2026 that are still active."* Every clause from this section in one query:
+
+```sql
+SELECT loan_id      AS loan,
+       product_id   AS product,
+       principal    AS amount_uzs,
+       disbursed_at AS paid_out_on                                     -- SELECT + aliases
+FROM loans                                                             -- FROM
+WHERE product_id IN (4, 5)                                             -- IN
+  AND disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01'     -- a half-open date range
+  AND status = 'active'                                                -- =
+ORDER BY principal DESC                                                -- ORDER BY
+LIMIT 5;                                                               -- LIMIT (SQL Server: TOP 5 after SELECT instead)
+```
+
+5 rows. Loan 6478, an SME loan of 588 780 000 paid out on 1 September, is the biggest. 51 loans pass the filter; `LIMIT` shows the top five.
+
+Read it in the order the database runs it: **FROM** loans → **WHERE** keeps 51 rows → **SELECT** cuts four columns and renames them → **ORDER BY** sorts → **LIMIT** keeps five.
+
+**Your turn.** Put the clauses in the order the database **runs** them.
+
+```game
+{"type": "order", "id": "w01d2-g6", "title": "The order the database runs a query", "items": ["FROM", "WHERE", "SELECT", "ORDER BY", "LIMIT"], "why": "The table first, then the filter, then the columns, then the sort, then the cut — which is why WHERE can use a column SELECT does not show."}
 ```
 
 ### Depth (optional)
@@ -120,11 +463,11 @@ Careful with `applied_at`: it holds a date *and a time* (`2025-06-02 10:35:00`),
 
 ## 2. Worked example — Bekzod's first request
 
-*"How many Micro loans did we pay out in September? And show me the five biggest."*
+*"How many Micro loans did we pay out in September? And show me the five biggest."* Each step names the idea from Learn that it uses.
 
-**Step 1 — translate the words into table and columns.** "Micro loans" → `loans` with `product_id = 1` (check in `products`: Micro loan is id 1). "Paid out in September" → `disbursed_at` in September 2026 (the data is as of 1 October 2026). "Five biggest" → `ORDER BY principal DESC`, first five.
+**Step 1 — translate the words into a table, columns and conditions (FROM, WHERE with `=`, a date range).** "Micro loans" → `loans` with `product_id = 1` (check in `products`: Micro loan is id 1). "Paid out in September" → `disbursed_at` in September 2026 (the data is as of 1 October 2026). "Five biggest" → `ORDER BY principal DESC`, first five.
 
-**Step 2 — the rows first, the count second.** Always look at rows before you count them; a wrong filter is visible in rows and invisible in a number.
+**Step 2 — the rows first, the count second (SELECT columns, AND, BETWEEN, ORDER BY).** Always look at rows before you count them; a wrong filter is visible in rows and invisible in a number.
 
 ```sql
 SELECT loan_id, principal, disbursed_at
@@ -134,9 +477,9 @@ WHERE product_id = 1
 ORDER BY principal DESC;
 ```
 
-(`disbursed_at` holds a date only, no time, so `BETWEEN` is safe here — unlike `applied_at`.)
+123 rows. `disbursed_at` holds a date only, no time, so `BETWEEN` is safe here — unlike `applied_at`.
 
-**Step 3 — count.** Replace the column list with `COUNT(*)` (today's one aggregate; the rest come in week 2):
+**Step 3 — count (COUNT(*) and an alias).** Replace the column list with `COUNT(*)` and name it:
 
 ```sql
 SELECT COUNT(*) AS micro_loans_sep
@@ -145,11 +488,19 @@ WHERE product_id = 1
   AND disbursed_at BETWEEN '2026-09-01' AND '2026-09-30';     -- expect 123
 ```
 
-**Step 4 — the five biggest.** `SELECT TOP 5 …` / `… LIMIT 5` on the step-2 query. Bekzod gets 123 and a five-row table in 90 seconds, instead of a morning of scrolling.
+**Step 4 — the five biggest (ORDER BY + LIMIT/TOP).** Add `LIMIT 5` to the step-2 query (`SELECT TOP 5 …` on SQL Server). The top loan is 2663: 4 950 000, paid out on 2 September. Bekzod gets 123 and a five-row table in 90 seconds, instead of a morning of scrolling.
 
 ### Lab — keep the answer in a table of your own
 
-Bekzod likes the list and wants to keep it — and to add August. A query's result can be saved as a new table with `CREATE TABLE name AS SELECT …`; after that, it is a table like any other: you can add rows, add a column, delete rows. Remember the rule from yesterday: your own tables start with `my_`.
+**What this is.** Bekzod likes the list and wants to keep it — and to add August. This lab is a **first touch** of the commands that save and change a table. You learn each one properly on **Day 3**; today, **💡 Show me** gives you the exact text, and the table below reads each one in a line. Your own tables start with `my_`.
+
+| Step | 💡 Show me gives | Read it as |
+|---|---|---|
+| 1 | `CREATE TABLE my_micro AS SELECT …` | Run the query and save its rows as a new table `my_micro`. |
+| 2 | `INSERT INTO my_micro SELECT …` | Run another query and add its rows to `my_micro` — same columns, same order. |
+| 3 | `ALTER TABLE my_micro ADD COLUMN flag TEXT;` then `UPDATE my_micro SET flag = 'big' WHERE principal >= 4000000;` | Add an empty text column `flag`; then write 'big' into it on the rows of 4 000 000 or more. |
+| 4 | `DELETE FROM my_micro WHERE principal < 1000000;` | Remove the rows under 1 000 000 — from your table, never from `loans`. |
+| 5 | `CREATE TABLE my_micro_top AS SELECT * FROM my_micro ORDER BY principal DESC LIMIT 10;` | Save the ten biggest rows of `my_micro` as another table. |
 
 ```sqllab
 {"id": "w01d2-lab", "title": "Bekzod's Micro list", "intro": "Save the worked example's rows into `my_micro`, then shape the table the way Bekzod asks. Use **💡 Show me** whenever a command is new.", "steps": [
@@ -165,9 +516,15 @@ Bekzod likes the list and wants to keep it — and to add August. A query's resu
 
 ## 3. Practice (60 min)
 
-Write each query in the box under its question — it is saved in this browser. **▶ Run**, look at the rows, then count. **✔ Check** tells you whether your result matches the answer without showing it; then type the number your query gave into the box after the fold. Open the fold only after you have a number.
+Write each query in the box under its question — it is saved in this browser. **▶ Run**, look at the rows, then count. **✔ Check** tells you whether your result matches the answer without showing it; then type the number your query gave into the box after the fold. Open the fold only after you have a number. The questions follow the order of Learn; the label in italics names the idea each one trains.
 
-**P1.** List the distinct values of `loans.status`. How many are there?
+**P1.** *(SELECT and aliases)* List every branch: its `branch_name` as `branch` and its `region` (10 rows).
+
+```task
+{"id": "w01d2-l12", "kind": "sql", "model": "SELECT branch_name AS branch, region FROM branches;", "note": "Two columns from branches; the first one renamed with AS."}
+```
+
+**P2.** *(DISTINCT)* List the distinct values of `loans.status`. How many are there?
 
 <details><summary>Answer</summary>
 
@@ -178,13 +535,51 @@ Four: active, closed, default, written_off.
 
 </details>
 
-**P1.** How many different statuses did your query return?
+**P2.** How many different statuses did your query return?
 
 ```task
 {"id": "w01d2-p1", "kind": "number", "answer": 4, "dp": 0, "unit": "statuses", "hint": "Count the rows of the DISTINCT result.", "model": "4: active, closed, default, written_off."}
 ```
 
-**P2.** All Auto loans (product_id 4) with principal over 200 000 000 disbursed in 2026, biggest first. How many rows, and what is the biggest?
+**P3.** *(ORDER BY and LIMIT/TOP)* The five largest loans ever disbursed: loan id, principal, product id.
+
+<details><summary>Answer</summary>
+
+```sql
+-- SQL Server
+SELECT TOP 5 loan_id, principal, product_id FROM loans ORDER BY principal DESC;
+-- SQLite
+SELECT loan_id, principal, product_id FROM loans ORDER BY principal DESC LIMIT 5;
+```
+Loan 2861 with 599 060 000 on top, then 4570, 4601, 4970, 7520 — all product 5 (SME).
+
+</details>
+
+**P3.** Which loan id is at the top?
+
+```task
+{"id": "w01d2-p9", "kind": "number", "answer": 2861, "dp": 0, "hint": "Biggest first is DESC; then keep five rows.", "model": "Loan 2861, 599 060 000 — then 4570, 4601, 4970, 7520, all SME."}
+```
+
+**P4.** *(= and <>)* How many loans are *not* active? Check against the active count.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM loans WHERE status <> 'active';   -- expect 4476
+SELECT COUNT(*) FROM loans WHERE status = 'active';    -- expect 3352
+```
+4 476 + 3 352 = 7 828.
+
+</details>
+
+**P4.** How many loans are not active?
+
+```task
+{"id": "w01d2-p6", "kind": "number", "answer": 4476, "dp": 0, "unit": "loans", "model": "4 476 not active + 3 352 active = 7 828."}
+```
+
+**P5.** *(> and a date range)* All Auto loans (product_id 4) with principal over 200 000 000 disbursed in 2026, biggest first. How many rows, and what is the biggest?
 
 <details><summary>Answer</summary>
 
@@ -199,13 +594,66 @@ Expect 89 rows; the biggest is loan 7608, 396 210 000, disbursed 2026-05-26.
 
 </details>
 
-**P2.** How many rows?
+**P5.** How many rows?
 
 ```task
 {"id": "w01d2-p2", "kind": "number", "answer": 89, "dp": 0, "unit": "loans", "hint": "Three conditions joined with AND: the product, the size, and a 2026 date range.", "model": "89 rows; the biggest is loan 7608, 396 210 000, disbursed 2026-05-26."}
 ```
 
-**P3.** Customers with an empty monthly income. Count them. Then count those with a filled income and check the two numbers add up to 6 040.
+**P6.** *(BETWEEN)* Loans with principal between 1 000 000 and 5 000 000 inclusive.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM loans WHERE principal BETWEEN 1000000 AND 5000000;   -- expect 3228
+```
+Same as `principal >= 1000000 AND principal <= 5000000`.
+
+</details>
+
+**P6.** How many loans?
+
+```task
+{"id": "w01d2-p8", "kind": "number", "answer": 3228, "dp": 0, "unit": "loans", "model": "3 228 — BETWEEN includes both ends."}
+```
+
+**P7.** *(IN and OR)* How many customers live in Nukus or Termez? Write it once with `OR`, once with `IN`.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM customers WHERE region = 'Nukus' OR region = 'Termez';
+SELECT COUNT(*) FROM customers WHERE region IN ('Nukus', 'Termez');
+```
+Both expect 737.
+
+</details>
+
+**P7.** How many customers?
+
+```task
+{"id": "w01d2-p5", "kind": "number", "answer": 737, "dp": 0, "unit": "customers", "hint": "Got 0? A customer cannot live in both cities at once — that is OR, not AND.", "model": "737, with OR and with IN alike."}
+```
+
+**P8.** *(LIKE)* Customers whose first name starts with `M`. Then narrow to names starting with `Ma`.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM customers WHERE first_name LIKE 'M%';    -- expect 570
+SELECT COUNT(*) FROM customers WHERE first_name LIKE 'Ma%';   -- expect 419
+```
+(Madina, Malika, Maftuna, Murod…). On SQLite `LIKE` ignores case by default for ASCII letters; on SQL Server it follows the collation — here both give the same.
+
+</details>
+
+**P8.** How many first names start with `Ma`?
+
+```task
+{"id": "w01d2-p7", "kind": "number", "answer": 419, "dp": 0, "unit": "customers", "hint": "% stands for any characters after the pattern: LIKE 'Ma%'.", "model": "419 (and 570 start with M)."}
+```
+
+**P9.** *(IS NULL)* Customers with an empty monthly income. Count them. Then count those with a filled income and check the two numbers add up to 6 040.
 
 <details><summary>Answer</summary>
 
@@ -213,17 +661,17 @@ Expect 89 rows; the biggest is loan 7608, 396 210 000, disbursed 2026-05-26.
 SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;      -- expect 356
 SELECT COUNT(*) FROM customers WHERE monthly_income IS NOT NULL;  -- expect 5684
 ```
-356 + 5 684 = 6 040. If you wrote `= NULL` you got 0 — reread "Three things that bite".
+356 + 5 684 = 6 040. If you wrote `= NULL` you got 0 — reread *IS NULL — the empty cell*.
 
 </details>
 
-**P3.** How many customers have an empty monthly income?
+**P9.** How many customers have an empty monthly income?
 
 ```task
 {"id": "w01d2-p3", "kind": "number", "answer": 356, "dp": 0, "unit": "customers", "hint": "Got 0? Empty cells are found with IS NULL, not = NULL.", "model": "356 empty + 5 684 filled = 6 040."}
 ```
 
-**P4.** Applications that came through the app and were rejected, ordered by credit score from highest to lowest. How many, and what is the highest rejected score? Where did the rows with an empty score land?
+**P10.** *(= with AND, and NULLs in ORDER BY)* Applications that came through the app and were rejected, ordered by credit score from highest to lowest. How many, and what is the highest rejected score? Where did the rows with an empty score land?
 
 <details><summary>Answer</summary>
 
@@ -237,104 +685,13 @@ Expect 1 359 rows; the top is application 10764 with score 821 (then 811, 806). 
 
 </details>
 
-**P4.** How many rows — rejected app applications?
+**P10.** How many rows — rejected app applications?
 
 ```task
 {"id": "w01d2-p4", "kind": "number", "answer": 1359, "dp": 0, "unit": "applications", "hint": "Two equalities joined with AND; ORDER BY does not change the count.", "model": "1 359; the top score is 821 (application 10764), and the 38 empty scores sit at the bottom with DESC."}
 ```
 
-**P5.** How many customers live in Nukus or Termez? Write it once with `OR`, once with `IN`.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*) FROM customers WHERE region = 'Nukus' OR region = 'Termez';
-SELECT COUNT(*) FROM customers WHERE region IN ('Nukus', 'Termez');
-```
-Both expect 737.
-
-</details>
-
-**P5.** How many customers?
-
-```task
-{"id": "w01d2-p5", "kind": "number", "answer": 737, "dp": 0, "unit": "customers", "hint": "Got 0? A customer cannot live in both cities at once — that is OR, not AND.", "model": "737, with OR and with IN alike."}
-```
-
-**P6.** How many loans are *not* active? Check against the active count.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*) FROM loans WHERE status <> 'active';   -- expect 4476
-SELECT COUNT(*) FROM loans WHERE status = 'active';    -- expect 3352
-```
-4 476 + 3 352 = 7 828.
-
-</details>
-
-**P6.** How many loans are not active?
-
-```task
-{"id": "w01d2-p6", "kind": "number", "answer": 4476, "dp": 0, "unit": "loans", "model": "4 476 not active + 3 352 active = 7 828."}
-```
-
-**P7.** Customers whose first name starts with `M`. Then narrow to names starting with `Ma`.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*) FROM customers WHERE first_name LIKE 'M%';    -- expect 570
-SELECT COUNT(*) FROM customers WHERE first_name LIKE 'Ma%';   -- expect 419
-```
-(Madina, Malika, Maftuna, Murod…). On SQLite `LIKE` ignores case by default for ASCII letters; on SQL Server it follows the collation — here both give the same.
-
-</details>
-
-**P7.** How many first names start with `Ma`?
-
-```task
-{"id": "w01d2-p7", "kind": "number", "answer": 419, "dp": 0, "unit": "customers", "hint": "% stands for any characters after the pattern: LIKE 'Ma%'.", "model": "419 (and 570 start with M)."}
-```
-
-**P8.** Loans with principal between 1 000 000 and 5 000 000 inclusive.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*) FROM loans WHERE principal BETWEEN 1000000 AND 5000000;   -- expect 3228
-```
-Same as `principal >= 1000000 AND principal <= 5000000`.
-
-</details>
-
-**P8.** How many loans?
-
-```task
-{"id": "w01d2-p8", "kind": "number", "answer": 3228, "dp": 0, "unit": "loans", "model": "3 228 — BETWEEN includes both ends."}
-```
-
-**P9.** The five largest loans ever disbursed: loan id, principal, product id.
-
-<details><summary>Answer</summary>
-
-```sql
--- SQL Server
-SELECT TOP 5 loan_id, principal, product_id FROM loans ORDER BY principal DESC;
--- SQLite
-SELECT loan_id, principal, product_id FROM loans ORDER BY principal DESC LIMIT 5;
-```
-Loan 2861 with 599 060 000 on top, then 4570, 4601, 4970, 7520 — all product 5 (SME).
-
-</details>
-
-**P9.** Which loan id is at the top?
-
-```task
-{"id": "w01d2-p9", "kind": "number", "answer": 2861, "dp": 0, "hint": "Biggest first is DESC; then keep five rows.", "model": "Loan 2861, 599 060 000 — then 4570, 4601, 4970, 7520, all SME."}
-```
-
-**P10.** Approved SME applications (product_id 5) with a requested amount of at least 500 000 000. Count them. Then remove the parentheses/AND-OR care deliberately — write `product_id = 5 AND requested_amount >= 500000000 OR status = 'approved'` — and see what happens.
+**P11.** *(AND, OR and brackets)* Approved SME applications (product_id 5) with a requested amount of at least 500 000 000. Count them. Then mix `AND` and `OR` deliberately — write `product_id = 5 AND requested_amount >= 500000000 OR status = 'approved'` — and see what happens.
 
 <details><summary>Answer</summary>
 
@@ -345,17 +702,17 @@ WHERE product_id = 5 AND requested_amount >= 500000000 AND status = 'approved'; 
 SELECT COUNT(*) FROM applications
 WHERE product_id = 5 AND requested_amount >= 500000000 OR status = 'approved';    -- expect 8010 (!)
 ```
-The second counts *every* approved application of any product plus the big SME ones. 128 vs 8 010 — and no error message. Parentheses whenever `AND` meets `OR`.
+The second counts *every* approved application of any product plus the big SME ones. 128 vs 8 010 — and no error message. Brackets whenever `AND` meets `OR`.
 
 </details>
 
-**P10.** How many approved SME applications of 500 000 000 or more — the right count?
+**P11.** How many approved SME applications of 500 000 000 or more — the right count?
 
 ```task
 {"id": "w01d2-p10", "kind": "number", "answer": 128, "dp": 0, "unit": "applications", "hint": "Got 8 010? AND binds before OR — that query asks a different question.", "model": "128. Without care for AND/OR you get 8 010: every approved application of any product, plus the big SME ones."}
 ```
 
-> 🚀 **Stretch (optional, +5 XP).** **P11.** Customers born before 1960 with a monthly income above 30 000 000, richest first. How many, and who is first? Then write one sentence on whether this group looks plausible for a mass-market lender.
+> 🚀 **Stretch (optional, +5 XP).** **P12.** *(text, numbers and dates together)* Customers born before 1960 with a monthly income above 30 000 000, richest first. How many, and who is first? Then write one sentence on whether this group looks plausible for a mass-market lender.
 
 <details><summary>Answer</summary>
 
@@ -369,7 +726,7 @@ Expect 108 rows; first is Zafar Mirzaev (customer 3056), born 1958-12-02, income
 
 </details>
 
-**P11.** How many customers — and is the group plausible? Write the count and your one sentence.
+**P12.** How many customers — and is the group plausible? Write the count and your one sentence.
 
 ```task
 {"id": "w01d2-p11", "kind": "free", "min": 12, "model": "108 customers; the first is Zafar Mirzaev (3056), born 1958-12-02, 59 867 394 a month. Plausible: a small tail of older affluent and SME clients in a book of 6 040. What would not be plausible is anyone born before 1920 or after today.", "rubric": ["Gives the count 108", "Names the first customer (Zafar Mirzaev, 3056)", "Judges plausibility with a reason, not just yes or no"]}
@@ -391,9 +748,9 @@ Expect 108 rows; first is Zafar Mirzaev (customer 3056), born 1958-12-02, income
 
 ```check
 {"id": "w01d2-sc", "questions": [
-  {"type": "single", "q": "Why does WHERE monthly_income = NULL return nothing?", "options": ["Because no customer has an empty income", "Because NULL is not a value: = NULL is never true, so empty cells need IS NULL", "Because NULL must be written in quotes", "Because the column is a number"], "answer": 1, "explain": "356 customers have an empty income; only IS NULL finds them (→ section 1, Three things that bite)."},
-  {"type": "single", "q": "WHERE a AND b OR c — which conditions does the database group first?", "options": ["b OR c", "a AND b", "It reads them strictly left to right as a, then b, then c, all required", "It refuses to run"], "answer": 1, "explain": "AND binds tighter than OR, like multiplication before addition: (a AND b) OR c (→ section 1, WHERE — the seven operators)."},
-  {"type": "single", "q": "Why is applied_at BETWEEN '2025-01-01' AND '2025-12-31' wrong for 'applications in 2025'?", "options": ["BETWEEN leaves out both end dates", "applied_at also holds a time, so applications on 31 December after 00:00 fall outside", "Dates must be written as 31.12.2025", "BETWEEN works only on numbers"], "answer": 1, "explain": "'2025-12-31 10:35:00' is after '2025-12-31'; use >= '2025-01-01' AND < '2026-01-01' (→ section 1, Three things that bite, point 3)."}
+  {"type": "single", "q": "Why does WHERE monthly_income = NULL return nothing?", "options": ["Because no customer has an empty income", "Because NULL is not a value: = NULL is never true, so empty cells need IS NULL", "Because NULL must be written in quotes", "Because the column is a number"], "answer": 1, "explain": "356 customers have an empty income; only IS NULL finds them (→ section 1, IS NULL — the empty cell)."},
+  {"type": "single", "q": "WHERE a AND b OR c — which conditions does the database group first?", "options": ["b OR c", "a AND b", "It reads them strictly left to right as a, then b, then c, all required", "It refuses to run"], "answer": 1, "explain": "AND binds tighter than OR, like multiplication before addition: (a AND b) OR c (→ section 1, AND, OR, NOT)."},
+  {"type": "single", "q": "Why is applied_at BETWEEN '2025-01-01' AND '2025-12-31' wrong for 'applications in 2025'?", "options": ["BETWEEN leaves out both end dates", "applied_at also holds a time, so applications on 31 December after 00:00 fall outside", "Dates must be written as 31.12.2025", "BETWEEN works only on numbers"], "answer": 1, "explain": "'2025-12-31 10:35:00' is after '2025-12-31'; use >= '2025-01-01' AND < '2026-01-01' (→ section 1, Text, numbers and dates)."}
 ]}
 ```
 
@@ -412,7 +769,7 @@ SELECT COUNT(*) FROM applications;                                              
 SELECT COUNT(*) FROM applications WHERE status IN ('approved', 'approved_not_disbursed'); -- expect 8595
 ```
 
-8 595 / 14 000 = **61.4 %**. Notice that `approved_not_disbursed` counts as approved: the company *said yes*; the customer walked away. Approval is about our decision, not the customer's.
+8 595 / 14 000 = **61.4 %**. `approved_not_disbursed` counts as approved: the company *said yes*; the customer walked away. Approval is about our decision, not the customer's.
 
 **The trap — cancelled applications.** Run one more:
 
@@ -453,12 +810,12 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w01d2", "pass": 0.8, "questions": [
-  {"type": "single", "q": "What does this query return on the Nur Finance data?", "code": "SELECT COUNT(*) FROM customers\nWHERE monthly_income = NULL;", "options": ["The number of customers with an empty income", "0, always", "An error message", "Every customer"], "answer": 1, "explain": "NULL is not a value, so = NULL is never true; empty cells are found with IS NULL (→ section 1, Three things that bite)."},
-  {"type": "single", "q": "How does the database read this WHERE clause?", "code": "WHERE product_id = 5 AND status = 'approved'\n   OR status = 'approved_not_disbursed'", "options": ["product_id = 5 AND (status = 'approved' OR status = 'approved_not_disbursed')", "(product_id = 5 AND status = 'approved') OR status = 'approved_not_disbursed'", "It refuses to run without parentheses", "It ignores the OR line"], "answer": 1, "explain": "AND binds tighter than OR, so every approved_not_disbursed application of any product slips in, with no warning (→ section 1, P10)."},
-  {"type": "single", "q": "Why is this filter wrong for 'applications made in 2025'?", "code": "WHERE applied_at BETWEEN '2025-01-01' AND '2025-12-31'", "options": ["BETWEEN excludes both end dates", "applied_at holds a date and a time, so applications on 31 December after midnight are dropped", "Dates must be written as 01.01.2025", "BETWEEN only works on numbers"], "answer": 1, "explain": "'2025-12-31 10:35:00' is after '2025-12-31'; use >= '2025-01-01' AND < '2026-01-01' (→ section 1, Three things that bite, point 3)."},
-  {"type": "multi", "q": "Which WHERE clauses return the customers who live in Nukus or Termez?", "options": ["WHERE region IN ('Nukus', 'Termez')", "WHERE region = 'Nukus' OR region = 'Termez'", "WHERE region = 'Nukus' AND region = 'Termez'", "WHERE region BETWEEN 'Nukus' AND 'Termez'", "WHERE region LIKE 'Nukus, Termez'"], "answer": [0, 1], "explain": "IN is a short OR; AND asks for a row that is in both cities at once and returns nothing (→ P5)."},
-  {"type": "single", "q": "108 rejected applications have an empty credit_score. Where do they appear in this result?", "code": "SELECT application_id, credit_score\nFROM applications\nWHERE status = 'rejected'\nORDER BY credit_score DESC;", "options": ["At the top", "At the bottom", "They are left out of the result", "Wherever they were stored"], "answer": 1, "explain": "Both engines treat NULL as the smallest value, so DESC puts it last and ASC puts it first (→ P4)."},
-  {"type": "single", "q": "You work in SQLite. Which query gives the five biggest loans?", "options": ["SELECT TOP 5 loan_id, principal FROM loans ORDER BY principal DESC;", "SELECT loan_id, principal FROM loans ORDER BY principal DESC LIMIT 5;", "SELECT loan_id, principal FROM loans ORDER BY principal LIMIT 5;", "SELECT loan_id, principal FROM loans LIMIT 5 ORDER BY principal DESC;"], "answer": 1, "explain": "TOP is SQL Server; SQLite puts LIMIT at the very end, and without DESC you get the smallest five (→ section 1, Aliases, DISTINCT, and the first N rows)."},
+  {"type": "single", "q": "What does this query return on the Nur Finance data?", "code": "SELECT COUNT(*) FROM customers\nWHERE monthly_income = NULL;", "options": ["The number of customers with an empty income", "0, always", "An error message", "Every customer"], "answer": 1, "explain": "NULL is not a value, so = NULL is never true; empty cells are found with IS NULL (→ section 1, IS NULL — the empty cell)."},
+  {"type": "single", "q": "How does the database read this WHERE clause?", "code": "WHERE product_id = 5 AND status = 'approved'\n   OR status = 'approved_not_disbursed'", "options": ["product_id = 5 AND (status = 'approved' OR status = 'approved_not_disbursed')", "(product_id = 5 AND status = 'approved') OR status = 'approved_not_disbursed'", "It refuses to run without parentheses", "It ignores the OR line"], "answer": 1, "explain": "AND binds tighter than OR, so every approved_not_disbursed application of any product slips in, with no warning (→ section 1, AND, OR, NOT; P11)."},
+  {"type": "single", "q": "Why is this filter wrong for 'applications made in 2025'?", "code": "WHERE applied_at BETWEEN '2025-01-01' AND '2025-12-31'", "options": ["BETWEEN excludes both end dates", "applied_at holds a date and a time, so applications on 31 December after midnight are dropped", "Dates must be written as 01.01.2025", "BETWEEN only works on numbers"], "answer": 1, "explain": "'2025-12-31 10:35:00' is after '2025-12-31'; use >= '2025-01-01' AND < '2026-01-01' (→ section 1, Text, numbers and dates)."},
+  {"type": "multi", "q": "Which WHERE clauses return the customers who live in Nukus or Termez?", "options": ["WHERE region IN ('Nukus', 'Termez')", "WHERE region = 'Nukus' OR region = 'Termez'", "WHERE region = 'Nukus' AND region = 'Termez'", "WHERE region BETWEEN 'Nukus' AND 'Termez'", "WHERE region LIKE 'Nukus, Termez'"], "answer": [0, 1], "explain": "IN is a short OR; AND asks for a row that is in both cities at once and returns nothing (→ P7)."},
+  {"type": "single", "q": "108 rejected applications have an empty credit_score. Where do they appear in this result?", "code": "SELECT application_id, credit_score\nFROM applications\nWHERE status = 'rejected'\nORDER BY credit_score DESC;", "options": ["At the top", "At the bottom", "They are left out of the result", "Wherever they were stored"], "answer": 1, "explain": "Both engines treat NULL as the smallest value, so DESC puts it last and ASC puts it first (→ P10)."},
+  {"type": "single", "q": "You work in SQLite. Which query gives the five biggest loans?", "options": ["SELECT TOP 5 loan_id, principal FROM loans ORDER BY principal DESC;", "SELECT loan_id, principal FROM loans ORDER BY principal DESC LIMIT 5;", "SELECT loan_id, principal FROM loans ORDER BY principal LIMIT 5;", "SELECT loan_id, principal FROM loans LIMIT 5 ORDER BY principal DESC;"], "answer": 1, "explain": "TOP is SQL Server; SQLite puts LIMIT at the very end, and without DESC you get the smallest five (→ section 1, LIMIT and TOP)."},
   {"type": "single", "q": "A customer was approved but walked away without taking the money (status approved_not_disbursed). For the approval rate, this application counts as…", "options": ["approved — the company said yes", "rejected", "cancelled", "not counted anywhere"], "answer": 0, "explain": "Approval is about our decision, not the customer's (→ section 6, Company corner)."},
   {"type": "number", "q": "Approval rate, convention B (cancelled left out of the denominator): 8 595 approved, 14 000 applications, 1 817 cancelled. Answer in %, one decimal.", "answer": 70.5, "tol": 0.1, "explain": "8 595 / (14 000 − 1 817) = 8 595 / 12 183 ≈ 70.5 %, versus 61.4 % with all applications; always say which convention (→ section 6, Company corner)."}
 ]}

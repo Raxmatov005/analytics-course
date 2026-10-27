@@ -121,6 +121,7 @@ Work in progress is kept in localStorage "al.sql". */
   var CHANGES = /\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|REPLACE)\b/i;
   function runPlay(text) {   // every run on her copy; a change is saved shortly after, and the Database panel refreshes
     var res = run(play, text, false);
+    if (/foreign_keys/i.test(text)) { try { play.exec('PRAGMA foreign_keys = OFF'); } catch (e) { /* nothing */ } }   // a demo box turns it on; the next box starts clean
     if (CHANGES.test(stripComments(text)) && res.ran) {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(function () { idb('put', play.export()); }, 300);
@@ -146,6 +147,7 @@ Work in progress is kept in localStorage "al.sql". */
           try { play = a[1] ? new SQL.Database(a[1]) : new SQL.Database(bytes.slice()); }
           catch (e) { play = new SQL.Database(bytes.slice()); }
           clean = new SQL.Database(bytes.slice());  // checks always read the untouched data
+          [play, clean].forEach(function (d) { try { d.exec('CREATE INDEX IF NOT EXISTS ix_loans_closed ON loans (closed_at)'); } catch (e) { /* slower, not wrong */ } });   // never taught on the pages (Week 3 Day 4 indexes customer_id and payments), so the correlated NOT EXISTS demos run in a blink
         });
       });
     engine.catch(function () { engine = null; });
@@ -311,7 +313,7 @@ Work in progress is kept in localStorage "al.sql". */
   var ABOUT_NAMES = ['customers', 'products', 'branches', 'staff', 'applications', 'loans', 'installments', 'payments', 'collections_actions', 'app_events', 'dim_date'];
   /* a block that is not meant to run: a pattern with placeholders, or one piece of a longer query */
   function shape(code) {
-    if (/…|\btable_name\b|\bcolumn1\b/.test(code)) return T('The shape of a query — the words in it are placeholders, so this one is for reading, not running.',
+    if (/…|\btable_name\b|\bcolumn1\b/.test(stripComments(code))) return T('The shape of a query — the words in it are placeholders, so this one is for reading, not running.',
       'Это схема запроса — слова в ней лишь заполнители, поэтому его нужно читать, а не выполнять.');
     // "-- after the WITH block:" / "-- replace …" (a Russian page translates the comment: "-- после …" / "-- замените …")
     if (/^\s*--\s*(after the|replace|после|замени)/i.test(code)) return T('One piece of the longer query above — add it there, then run the whole query in a box.',

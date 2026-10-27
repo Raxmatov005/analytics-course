@@ -17,6 +17,117 @@ Everything you change is **kept on this device** — close the page, come back t
 ```sqlplay
 ```
 
+## The four commands — a mini-reference
+
+Four commands change data — **CREATE**, **INSERT**, **UPDATE**, **DELETE** — and two more change or remove a whole table: **ALTER** and **DROP**. One runnable example each, on a small table of your own, `my_notes`. Run the boxes in order. The full lesson, with keys and traps, is [Week 1 · Day 3](weeks/week-01/day-3.md).
+
+### CREATE TABLE — make an empty table
+
+**What it is.** **CREATE TABLE** makes a new, empty table: its name, then each column with its type and rules.
+
+**How to write it.**
+
+```sql
+CREATE TABLE my_notes (
+    note_id  INTEGER PRIMARY KEY,   -- the key: one value per row, filled in for you
+    loan_id  INTEGER NOT NULL,      -- must be filled
+    note     TEXT    NOT NULL
+);
+```
+
+*✓ Done — table created*. **Database → Your tables** now lists `my_notes` with 0 rows.
+
+**When you use it.** To keep a list, a log or a result of your own.
+
+**Your turn.** Step 1 of the lab below.
+
+### INSERT — add rows
+
+**What it is.** **INSERT** adds new rows. Name the columns, then one bracket of values per row, in the same order.
+
+**How to write it.**
+
+```sql
+INSERT INTO my_notes (loan_id, note)
+VALUES (1, 'Called the customer'), (2, 'Paid early');
+SELECT * FROM my_notes;
+```
+
+2 rows: notes 1 and 2. `note_id` filled itself.
+
+**When you use it.** To fill a table by hand, or from a query with `INSERT INTO … SELECT …`.
+
+**Your turn.** Step 2 of the lab below.
+
+### UPDATE — change rows
+
+**What it is.** **UPDATE … SET … WHERE** changes values in rows that exist. `WHERE` decides which rows; without it, every row changes.
+
+**How to write it.**
+
+```sql
+UPDATE my_notes SET note = 'Called twice' WHERE note_id = 1;
+SELECT * FROM my_notes;
+```
+
+Note 1 now reads *Called twice*; note 2 is untouched.
+
+**When you use it.** To correct or complete a row. Run the `WHERE` as a `SELECT` first.
+
+**Your turn.** Step 3 of the lab below.
+
+### DELETE — remove rows
+
+**What it is.** **DELETE FROM … WHERE** removes whole rows. The table stays.
+
+**How to write it.**
+
+```sql
+DELETE FROM my_notes WHERE note_id = 2;
+SELECT * FROM my_notes;
+```
+
+1 row left: note 1.
+
+**When you use it.** To remove a mistaken or unwanted row. There is no undo.
+
+**Your turn.** Step 4 of the lab below.
+
+### ALTER TABLE — change the columns
+
+**What it is.** **ALTER TABLE** changes the shape of a table that has rows: add, rename or remove a column, or rename the table.
+
+**How to write it.**
+
+```sql
+ALTER TABLE my_notes ADD COLUMN created_on TEXT;
+SELECT * FROM my_notes;
+```
+
+Note 1 now has a fourth column, `created_on`, empty (NULL) until you fill it.
+
+**When you use it.** When your table needs one more fact.
+
+**Your turn.** After the lab, in the editor at the top: add a text column `opened_on` to `my_branches`, then look at it with `SELECT * FROM my_branches;`.
+
+### DROP TABLE — remove the whole table
+
+**What it is.** **DROP TABLE** removes a table with all its rows and columns. `DELETE` empties a table; `DROP` makes it disappear.
+
+**How to write it.**
+
+```sql
+DROP TABLE IF EXISTS my_notes;   -- IF EXISTS: no error if it is already gone
+```
+
+*✓ Done — table removed*. `my_notes` is gone from **Your tables**.
+
+**When you use it.** To clean up tables you no longer need.
+
+> ⚠️ **Watch out.** No command here asks "are you sure?". On this page **↺ Reset** brings the original data back; at work only a backup does.
+
+**Your turn.** When you have finished with the lab, drop `my_branches` in the editor at the top.
+
 ## Your first table — a lab with checks
 
 Four steps, one editor. Each **▶ Run** works on your practice copy, then the lab checks the step and opens the next one. Open **Database** while you work: your table appears under *Your tables* as soon as it exists.

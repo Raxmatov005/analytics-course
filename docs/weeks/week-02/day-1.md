@@ -12,133 +12,441 @@
 
 ---
 
-## 1. Learn — one question, two tables
+## 1. Learn — joins: putting two tables side by side
 
-### Why join
+### Why a join — one question, two tables
 
-Last week every question lived in one table. Bekzod's does not: the *name* is in `customers`, the *principal* in `loans`. The two tables are connected by a key — `loans.customer_id` holds a `customers.customer_id` — and a **JOIN** (*соединение*) uses that key to put the matching rows side by side:
+**What it is.** A **JOIN** (*соединение*) takes rows from two tables and puts the matching ones side by side, in one row. Rows match when a **key** has the same value on both sides: `loans.customer_id` holds the `customer_id` of a row in `customers`, so a loan and its customer match on that number.
+
+You need a join whenever one question needs columns from two tables. "Each loan with the customer's name" needs `loans.principal` and `customers.first_name` — two tables, one key, one join.
+
+**The two small tables used on this page.** Every join below is shown on these first, so you can see each row, and then run on the real data.
+
+| `cust` | id | name |
+|---|---|---|
+| | 1 | Aziz |
+| | 2 | Bekzod |
+| | 3 | Dilnoza |
+
+| `app` | app_id | cust_id | amount |
+|---|---|---|---|
+| | 101 | 2 | 500 |
+| | 102 | 3 | 900 |
+| | 103 | 4 | 120 |
+
+Aziz (1) has no application. Application 103 points to customer 4, who is not in `cust`. Those two rows are what tells the join types apart.
 
 ```sql
-SELECT l.loan_id, c.first_name, c.last_name, c.region, l.principal, l.status
-FROM loans AS l
-INNER JOIN customers AS c ON c.customer_id = l.customer_id;
+-- the two small tables, built in the query itself (WITH … VALUES), so every box on this page can use them
+WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
+     app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
+SELECT * FROM cust;
 ```
 
-Read it as: *take every loan; for each one, find the customer whose id equals the loan's `customer_id`; glue that customer's columns onto the loan row.* 7 828 rows come back — one per loan — because every loan has exactly one customer.
+### The shape of a join — FROM … JOIN … ON
 
-Three things in that query:
-
-1. **Aliases** `l` and `c` (*псевдонимы*): short names for the tables. `AS` is optional (`FROM loans l`); everyone uses them because every column must now say which table it comes from.
-2. **Qualified columns** `c.region`, `l.principal`. If a column name exists in only one of the two tables, the prefix is optional — but `customer_id` exists in both, so `customer_id` alone is an error ("ambiguous column"). Prefix everything; your future self thanks you.
-3. **`ON`** — the join condition. Almost always `child.foreign_key = parent.primary_key`. Day 1 of week 1 gave you the list of those pairs; that list is your join map.
-
-> 💡 **Key idea.** A join puts two tables side by side through a key. In `ON` you write *child.foreign_key = parent.primary_key* — `c.customer_id = l.customer_id` — and every column you select says which table it comes from.
-
-The result has the columns of both tables, so `SELECT` can use any of them, and so can `WHERE` and `ORDER BY`:
+**How to write it.**
 
 ```sql
-SELECT l.loan_id, c.first_name, c.last_name, l.principal
-FROM loans l
-JOIN customers c ON c.customer_id = l.customer_id
-WHERE c.segment = 'affluent' AND l.product_id = 5
-ORDER BY l.principal DESC;                       -- 179 rows: SME loans to affluent customers
+SELECT l.loan_id, c.first_name, c.last_name, l.principal   -- columns from both tables, each with its table's alias
+FROM loans AS l                                           -- the first table, alias l
+JOIN customers AS c                                       -- the second table, alias c
+  ON c.customer_id = l.customer_id;                       -- the key: child.foreign_key = parent.primary_key
 ```
 
-`JOIN` alone means `INNER JOIN`. Bekzod wanted *customer name* as one column — that is string concatenation, Day 3's topic, but you need it today: SQL Server writes `c.first_name + ' ' + c.last_name`, SQLite (and PostgreSQL) write `c.first_name || ' ' || c.last_name`.
+Three parts, always the same:
 
-Now put the pieces in order yourself:
+1. **Aliases** (*псевдонимы*) — `l` and `c` are short names for the tables. `AS` is optional. Use them in every join.
+2. **Qualified columns** — `c.region`, `l.principal`. A column that exists in both tables (`customer_id`) must have a prefix, or the database stops with *ambiguous column*. Prefix every column; it is never wrong.
+3. **`ON`** — the match rule. Almost always `child.foreign_key = parent.primary_key`. The list of key pairs from Week 1 Day 1 is your **join map**.
+
+Run it: 7 828 rows — one per loan, because every loan has exactly one customer.
+
+**When you use it.** Every join on this page has this shape; only the word before `JOIN` changes (`INNER`, `LEFT`, `RIGHT`, `FULL`, `CROSS`).
+
+**Your turn.**
 
 ```game
-{"id": "w02d1-g1", "type": "build", "title": "Build the join", "q": "Every loan with its customer's region (an inner join).", "tokens": ["SELECT", "l.loan_id,", "c.region", "FROM loans l", "JOIN customers c", "ON c.customer_id = l.customer_id"], "distractors": ["ON c.customer_id = l.loan_id", "WHERE", "customer_id"]}
+{"id": "w02d1-g1", "type": "build", "title": "Build the join", "q": "Every loan with its customer's region.", "tokens": ["SELECT", "l.loan_id,", "c.region", "FROM loans l", "JOIN customers c", "ON c.customer_id = l.customer_id"], "distractors": ["ON c.customer_id = l.loan_id", "WHERE", "customer_id"]}
 ```
 
-### INNER vs LEFT — what happens to rows that do not match
+### INNER JOIN — only the rows that match
 
-`INNER JOIN` keeps only rows that have a partner on the other side. Turn the question round — *customers with their applications* — and the difference appears:
+**What it is.** **INNER JOIN** (*внутреннее соединение*) keeps a row only when it finds a partner on the other side. A row with no partner is left out. `JOIN` on its own means `INNER JOIN`.
+
+**How to write it.** On the small tables:
+
+```sql
+WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
+     app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
+SELECT c.id, c.name, a.app_id, a.amount
+FROM cust c
+INNER JOIN app a ON a.cust_id = c.id;
+```
+
+| id | name | app_id | amount |
+|---|---|---|---|
+| 2 | Bekzod | 101 | 500 |
+| 3 | Dilnoza | 102 | 900 |
+
+Two rows. Aziz is gone (no application); application 103 is gone (no customer).
+
+On the real data:
 
 ```sql
 SELECT c.customer_id, c.first_name, a.application_id, a.requested_amount
 FROM customers c
-LEFT JOIN applications a ON a.customer_id = c.customer_id;
+INNER JOIN applications a ON a.customer_id = c.customer_id;   -- 14 000 rows: one per application
 ```
 
-| | rows | why |
-|---|---|---|
-| `customers INNER JOIN applications` | 14 000 | one row per application; customers who never applied vanish |
-| `customers LEFT JOIN applications` | 14 587 | 14 000 application rows + 587 customers with no application, their `application_id` and `requested_amount` **NULL** |
+14 000 rows — one per application. The 587 customers who never applied are not in the result.
 
-**LEFT JOIN** (*левое соединение*) keeps every row of the left table (the one in `FROM`) and fills the right side with NULLs when nothing matches. 6 040 customers, 5 453 of them have at least one application, 587 have none: 14 000 + 587 = 14 587. Check that arithmetic every time you LEFT JOIN — it tells you whether the join did what you think.
+**When you use it.**
+- "Each X with its Y" when every X has a Y, or when an X without a Y does not matter: each loan with its customer, each payment with its loan.
+- Any report where a row without a partner would be a mistake.
 
-> 💡 **Key idea.** INNER keeps only the rows that found a partner; LEFT keeps every row of the left table and writes NULL where the partner is missing. LEFT rows = matched rows + unmatched left rows — check that sum every time.
+**Your turn.** How many rows does `SELECT COUNT(*) FROM loans l INNER JOIN customers c ON c.customer_id = l.customer_id` return? Run it in a box above if you are not sure.
 
-Those NULL rows are useful in themselves. *"Which customers have never applied?"* is a LEFT JOIN plus one filter — the **anti-join**:
+```task
+{"id": "w02d1-j1", "kind": "number", "answer": 7828, "dp": 0, "unit": "rows", "hint": "Every loan has exactly one customer. How many loans are there?", "model": "7 828 — one row per loan. INNER JOIN drops nothing here because every loan finds its customer."}
+```
+
+### LEFT JOIN — every row of the left table
+
+**What it is.** **LEFT JOIN** (*левое соединение*) keeps **every row of the left table** — the table named in `FROM`. When a left row has a partner, the partner's columns are filled in. When it has none, the row stays and the right-hand columns are **NULL** (empty).
+
+**How to write it.**
 
 ```sql
-SELECT COUNT(*)
+WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
+     app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
+SELECT c.id, c.name, a.app_id, a.amount
+FROM cust c
+LEFT JOIN app a ON a.cust_id = c.id;
+```
+
+| id | name | app_id | amount |
+|---|---|---|---|
+| 1 | Aziz | NULL | NULL |
+| 2 | Bekzod | 101 | 500 |
+| 3 | Dilnoza | 102 | 900 |
+
+Three rows — all three customers. Aziz stays, with NULL where his application would be. Application 103 is still gone: it is on the right side, and LEFT protects only the left.
+
+On the real data:
+
+```sql
+SELECT c.customer_id, c.first_name, a.application_id, a.requested_amount
+FROM customers c
+LEFT JOIN applications a ON a.customer_id = c.customer_id;    -- 14 587 rows
+```
+
+14 587 rows = 14 000 applications + 587 customers with no application.
+
+**When you use it.**
+- "Every X, with its Y if it has one": every customer with their applications, every branch with its loans.
+- When "none" is itself an answer you want to see — the customers who never applied are the NULL rows.
+
+> 💡 **Key idea.** Rows of a LEFT JOIN = matched rows + left rows with no match. 14 000 + 587 = 14 587. Do this sum every time you write LEFT JOIN; if it does not add up, the join is not doing what you think.
+
+**Your turn.** How many loans have **no payment at all**? Write a LEFT JOIN from `loans` to `payments` in any box and count the rows whose payment side is NULL.
+
+```task
+{"id": "w02d1-j2", "kind": "number", "answer": 392, "dp": 0, "unit": "loans", "hint": "FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id — then count the rows where p.payment_id IS NULL.", "model": "392. LEFT JOIN keeps every loan; the ones with no payment have NULL in the payment columns."}
+```
+
+### INNER vs LEFT — the row with no partner
+
+**What it is.** The only difference between the two is what happens to a left row that finds **no partner**: INNER drops it, LEFT keeps it with NULLs.
+
+| | INNER JOIN | LEFT JOIN |
+|---|---|---|
+| Left row **with** a partner | kept | kept |
+| Left row **without** a partner | dropped | kept, right columns NULL |
+| Right row without a partner | dropped | dropped |
+| `customers` → `applications` | 14 000 rows | 14 587 rows |
+
+**When to choose which.** Ask one question: *"if an X has no Y, do I still want to see the X?"* Yes → LEFT. No → INNER.
+
+> ⚠️ **Watch out.** A `WHERE` on a right-table column turns a LEFT JOIN back into an INNER JOIN. `LEFT JOIN applications a … WHERE a.status = 'approved'` drops every customer without an application, because for them `a.status` is NULL and NULL is never equal to anything. If the condition belongs to the right table, put it in `ON`: `LEFT JOIN applications a ON a.customer_id = c.customer_id AND a.status = 'approved'`.
+
+**Your turn.** Madina wants **a list of all ten branches** with their loans. Which join?
+
+```task
+{"id": "w02d1-j3", "kind": "choice", "options": ["INNER JOIN — branches with no loans are not interesting", "LEFT JOIN from branches to loans — a branch with no loans must still appear, with NULLs", "LEFT JOIN from loans to branches — every loan must appear", "It does not matter; both give the same rows"], "answer": 1, "explain": "The branch list must be complete, so branches is the left table and LEFT keeps the ones with no loan. (Today every branch has loans, so the counts happen to match — the choice still matters the day a new branch opens.)"}
+```
+
+### The anti-join — rows that have no partner
+
+**What it is.** An **anti-join** finds the left rows that have **no** match on the right. It is a LEFT JOIN followed by a filter on the NULL side. There is no `ANTI JOIN` keyword; this pattern *is* the anti-join.
+
+**How to write it.**
+
+```sql
+SELECT c.customer_id, c.first_name, c.last_name
 FROM customers c
 LEFT JOIN applications a ON a.customer_id = c.customer_id
-WHERE a.application_id IS NULL;                   -- 587
+WHERE a.application_id IS NULL;                           -- 587 customers who never applied
 ```
 
-Copy the pattern today: LEFT JOIN, then `WHERE right_table.key IS NULL` = "rows on the left with no match on the right". (Why the test is `IS NULL` and never `= NULL` is Day 4's NULL lesson; the pattern works without it.)
+587 rows — exactly the customers whose application columns came back NULL.
 
-> ⚠️ **Watch out.** The anti-join needs **LEFT**. After an INNER JOIN every row has a partner, so `WHERE a.application_id IS NULL` always returns 0 — a plausible, wrong "nobody". And NULL never matches anything in `ON`: a row whose key is empty disappears from an INNER JOIN without a word.
+**When you use it.** "Which X have no Y": customers who never applied, loans with no payment, products nobody took this month, collectors with no actions this week.
 
-`RIGHT JOIN` exists (keep every row of the right table); nobody uses it — swap the tables and write LEFT. `FULL OUTER JOIN` keeps unmatched rows from both sides (SQL Server yes; SQLite only since 3.39). You will meet both in Baraa's chapter; in analyst code, 95 % of joins are INNER or LEFT.
+> ⚠️ **Watch out.** The test is `IS NULL`, never `= NULL` (Day 4 explains why). And the join must be LEFT: after an INNER JOIN every row has a partner, so `WHERE a.application_id IS NULL` returns 0 rows — a plausible, wrong "nobody".
 
-Which one answers which question? Sort them:
+**Your turn.** Count the loans that have no payment (expected: one number, 392).
 
-```game
-{"id": "w02d1-g2", "type": "sort", "title": "INNER or LEFT?", "groups": {"INNER JOIN": ["Active loans with their customer's name", "Collector calls by the region of the collector's branch", "SME loans taken by affluent customers"], "LEFT JOIN": ["Customers who have never applied", "Loan 1's schedule, unpaid instalments included", "Every branch with its loans, branches with none included"]}}
+```task
+{"id": "w02d1-j4", "kind": "sql", "model": "SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id WHERE p.payment_id IS NULL;", "note": "LEFT JOIN from loans to payments, then WHERE the payment side IS NULL."}
 ```
 
-### Many-to-one: why the row count changes
+### RIGHT JOIN — every row of the right table
 
-The direction of the relationship decides what a join does to your row count:
+**What it is.** **RIGHT JOIN** (*правое соединение*) is the mirror of LEFT: it keeps **every row of the right table** (the one after `JOIN`) and fills the left side with NULLs where nothing matches.
 
-- **many → one** (`loans → customers`): each loan finds exactly one customer. 7 828 in, 7 828 out. Safe.
-- **one → many** (`loans → installments`): each loan finds *all* its instalments. 7 828 loans in, **92 193** rows out — one per instalment, with the loan's columns *repeated* on every one.
+**How to write it.**
+
+```sql
+WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
+     app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
+SELECT c.id, c.name, a.app_id, a.amount
+FROM cust c
+RIGHT JOIN app a ON a.cust_id = c.id;
+```
+
+| id | name | app_id | amount |
+|---|---|---|---|
+| 2 | Bekzod | 101 | 500 |
+| 3 | Dilnoza | 102 | 900 |
+| NULL | NULL | 103 | 120 |
+
+Three rows — all three applications. Application 103 stays, with NULL where its customer would be. Aziz is gone: he is on the left, and RIGHT protects only the right.
+
+**When you use it.** Almost never, by choice: `A RIGHT JOIN B` gives the same rows as `B LEFT JOIN A`. Analysts write the table they want complete in `FROM` and use LEFT, so a reader knows which side is protected without thinking. You will meet RIGHT JOIN in other people's code and in Baraa's chapter — read it as "a LEFT JOIN written backwards".
+
+| These two return the same rows | |
+|---|---|
+| `FROM cust c RIGHT JOIN app a ON a.cust_id = c.id` | `FROM app a LEFT JOIN cust c ON a.cust_id = c.id` |
+
+**Your turn.** Which query returns the same rows as `SELECT … FROM loans l RIGHT JOIN customers c ON c.customer_id = l.customer_id`?
+
+```task
+{"id": "w02d1-j5", "kind": "choice", "options": ["SELECT … FROM loans l LEFT JOIN customers c ON c.customer_id = l.customer_id", "SELECT … FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id", "SELECT … FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id", "There is no LEFT JOIN with the same rows"], "answer": 1, "explain": "RIGHT keeps every row of the table after JOIN — customers. Put customers in FROM and write LEFT: every customer, with loans where they exist."}
+```
+
+### FULL OUTER JOIN — every row from both sides
+
+**What it is.** **FULL OUTER JOIN** (*полное внешнее соединение*) keeps every row of **both** tables: matched rows side by side, left rows without a partner with NULLs on the right, right rows without a partner with NULLs on the left. `FULL JOIN` is the same thing.
+
+**How to write it.**
+
+```sql
+WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
+     app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
+SELECT c.id, c.name, a.app_id, a.amount
+FROM cust c
+FULL OUTER JOIN app a ON a.cust_id = c.id
+ORDER BY COALESCE(c.id, a.cust_id);
+```
+
+| id | name | app_id | amount |
+|---|---|---|---|
+| 1 | Aziz | NULL | NULL |
+| 2 | Bekzod | 101 | 500 |
+| 3 | Dilnoza | 102 | 900 |
+| NULL | NULL | 103 | 120 |
+
+Four rows — nothing is lost from either side. Aziz has no application; application 103 has no customer; both are visible at once.
+
+**When you use it.** Comparing two lists that should agree: the loans in our database against the loans in the bank's file, this month's customers against last month's, a plan against actuals. The rows with NULL on either side are the differences. On the real data, `customers` ⟷ `applications` has no orphan applications (every `applications.customer_id` exists), so a FULL JOIN there gives the same 14 587 rows as the LEFT JOIN — that is a result too: the check passed.
+
+| Join | Keeps | Rows on `cust` ⟷ `app` |
+|---|---|---|
+| INNER | matched only | 2 |
+| LEFT | all left + matched | 3 |
+| RIGHT | all right + matched | 3 |
+| FULL | everything | 4 |
+
+**Your turn.** Finance sends a file of the loans the bank paid out. You must find loans that are in our database but not in the file **and** loans in the file that are not in our database. Which join?
+
+```task
+{"id": "w02d1-j6", "kind": "choice", "options": ["INNER JOIN — only loans that are in both", "LEFT JOIN from our table — loans missing from the bank's file", "FULL OUTER JOIN — loans missing on either side, in one result", "CROSS JOIN — every pair"], "answer": 2, "explain": "Both kinds of difference matter (a loan we have and the bank does not, and the reverse), so both sides must be kept: FULL OUTER JOIN, then look at the rows with a NULL on one side."}
+```
+
+### CROSS JOIN — every row with every row
+
+**What it is.** **CROSS JOIN** (*перекрёстное соединение*) has no `ON`. It pairs **every row of the first table with every row of the second**: 5 rows × 10 rows = 50 rows.
+
+**How to write it.**
+
+```sql
+SELECT p.name AS product, b.branch_name
+FROM products p
+CROSS JOIN branches b
+ORDER BY p.name, b.branch_name;                              -- 5 × 10 = 50 rows
+```
+
+50 rows: each of the 5 products paired with each of the 10 branches.
+
+**When you use it.** To build a **complete grid** before you fill it: every product in every branch (then LEFT JOIN the loan counts, so a product with zero loans in a branch shows 0 instead of disappearing); every day of the month for every branch; every size for every colour.
+
+> ⚠️ **Watch out.** A join whose `ON` is wrong or missing behaves like a CROSS JOIN: 7 828 loans × 6 040 customers = 47 million rows. If a query suddenly takes forever and the row count is huge, check the `ON`.
+
+**Your turn.** How many rows does `SELECT COUNT(*) FROM products CROSS JOIN branches` return?
+
+```task
+{"id": "w02d1-j7", "kind": "number", "answer": 50, "dp": 0, "unit": "rows", "hint": "Products × branches.", "model": "5 products × 10 branches = 50 rows — one per product-and-branch pair."}
+```
+
+### Self-join — a table joined to itself
+
+**What it is.** A **self-join** joins a table to **another copy of itself**. There is no special keyword: you name the same table twice with two aliases, and the `ON` compares two rows of that one table.
+
+**How to write it.** "Two customer rows that share a phone number" compares `customers` with `customers`:
+
+```sql
+SELECT a.customer_id, a.first_name, a.last_name,
+       b.customer_id AS other_id, b.first_name AS other_first, b.last_name AS other_last, a.phone
+FROM customers a
+JOIN customers b ON b.phone = a.phone
+               AND b.customer_id > a.customer_id          -- each pair once, never a row with itself
+ORDER BY a.customer_id;                                    -- 43 pairs
+```
+
+43 pairs. The first one is customer 44, *Yulduz Karimova*, and customer 6005, *"Yulduz "* *"karimova"* — the same person typed twice, with a trailing space and a lower-case surname. (Keep this query: Thursday's detective case is built on rows like these.)
+
+The second condition does two jobs: `b.customer_id > a.customer_id` stops a row matching itself (same phone, same id) and stops every pair appearing twice (44–6005 and 6005–44).
+
+**When you use it.** Rows that relate to other rows of the same table: duplicates (same phone, same name and birth date), an employee and their manager when both are rows of `staff`, a payment and the previous payment of the same loan, a customer's first loan and their next one.
+
+**Your turn.** Why does the self-join need `b.customer_id > a.customer_id`?
+
+```task
+{"id": "w02d1-j8", "kind": "choice", "options": ["It makes the query run faster", "It stops a row matching itself and shows each pair only once", "It sorts the result", "It removes customers with no phone"], "answer": 1, "explain": "Without it, customer 44 matches customer 44 (same phone) and every pair comes out twice, once in each order."}
+```
+
+### Many-to-one and one-to-many — what happens to your row count
+
+**What it is.** The **direction of the relationship** decides how many rows a join returns.
+
+- **Many → one** (`loans → customers`): every loan finds **one** customer. 7 828 loans in, 7 828 rows out. The row count does not change.
+- **One → many** (`loans → installments`): every loan finds **all** its instalments. 7 828 loans in, **92 193** rows out — one per instalment, and the loan's columns are **repeated** on every one of them.
 
 ```sql
 SELECT COUNT(*)
 FROM loans l
-JOIN installments i ON i.loan_id = l.loan_id;     -- 92193, not 7828
+JOIN installments i ON i.loan_id = l.loan_id;              -- 92 193, not 7 828
 ```
 
-That repetition is correct — it is what "one row per instalment with its loan's details" means — but it is a trap the moment you add up a loan column: `SUM(l.principal)` (tomorrow's adding-up function) over that join gives 9 981 530 850 000, every principal counted once per instalment. Tomorrow's aggregates make this the most common wrong number in lending reports; today just notice that **the grain of a join result is the grain of the "many" side**. Before summing, ask: *what is one row now?*
+The repetition is correct: "one row per instalment, with its loan's details" is what you asked for. It becomes a trap only when you **add up a loan column** over that result: `SUM(l.principal)` counts each principal once per instalment — 3 to 48 times.
 
-> 💡 **Key idea.** The grain of a join result is the grain of its "many" side. `loans → customers` keeps one row per loan; `loans → installments` gives one row per instalment, with the loan repeated on each.
+> 💡 **Key idea.** After a join, one row is one row of the **"many" side**. Before you count or sum anything, ask: *what is one row now?*
 
-Find the line that makes Bekzod's number 28 times too big — 8.43 trillion instead of 297.0 bn:
+**When you use it.** Always — it is the question to ask of every join: *which side is "many"? Is that the grain I want?*
+
+**Your turn.**
 
 ```game
 {"id": "w02d1-g3", "type": "bug", "title": "The book that grew overnight", "q": "Bekzod wants the total principal lent on active loans. One line multiplies every loan.", "code": "SELECT SUM(l.principal) AS active_lent\nFROM loans l\nJOIN installments i ON i.loan_id = l.loan_id\nWHERE l.status = 'active';", "answer": [2], "why": "Joining installments repeats each loan once per instalment, so each principal is added once per instalment — 3 to 48 times. A loan amount is summed over loans alone: drop the join."}
 ```
 
-### Three and four tables
+### Chaining tables — the path from one table to another
 
-Chain joins; each `JOIN … ON` adds one table and may use any table already joined:
+**What it is.** A query can join **as many tables as the question needs**. Each `JOIN … ON` adds one table. Its `ON` may use any table that is already in the query — not only the previous one.
+
+**The path.** Two tables that have no key between them are joined **through** the tables that connect them. `customers` and `products` share no key, so "which products do Tashkent customers take?" cannot join them directly. The join map from Week 1 shows the way:
+
+```text
+customers ──customer_id──▶ loans ──product_id──▶ products
+   (who)                 (the loan)              (what)
+```
+
+Each arrow is one `JOIN … ON` with that key. `loans` is the bridge: it points to both.
+
+**How to write it.** Write the tables in the order of the path, one `JOIN` per arrow:
+
+```sql
+SELECT p.name AS product, COUNT(*) AS loans
+FROM customers c
+JOIN loans    l ON l.customer_id = c.customer_id            -- arrow 1: customers → loans
+JOIN products p ON p.product_id  = l.product_id             -- arrow 2: loans → products
+WHERE c.region = 'Tashkent'
+GROUP BY p.name
+ORDER BY loans DESC;                                        -- 3 020 loans: Micro 1 041, Consumer 921, BNPL 594, SME 302, Auto 162
+```
+
+3 020 loans belong to Tashkent customers; grouped by product (tomorrow's `GROUP BY`, shown here only to read the result), Micro loans lead with 1 041. Without the bridge the question has no answer.
+
+**A path through a table you do not display.** "Who was the loan officer for loan 1?" The officer is stored on the **application**, not on the loan, and the officer's branch on `staff`:
+
+```text
+loans ──application_id──▶ applications ──officer_id──▶ staff ──branch_id──▶ branches
+```
+
+```sql
+SELECT l.loan_id, s.full_name AS officer, s.role, b.branch_name
+FROM loans l
+JOIN applications a ON a.application_id = l.application_id  -- through applications (no column of it is shown)
+JOIN staff        s ON s.staff_id       = a.officer_id
+JOIN branches     b ON b.branch_id      = s.branch_id
+WHERE l.loan_id = 1;                                        -- Ulugbek Qodirov, loan_officer, Termez Central
+```
+
+`applications` appears in `FROM … JOIN` but not in `SELECT`: it is there only to carry the key from the loan to the officer. That is normal.
+
+**Four tables, all many-to-one from the loan.** When every hop goes from "many" to "one", the row count stays at the starting table's:
 
 ```sql
 SELECT l.loan_id,
        c.first_name || ' ' || c.last_name AS customer,     -- SQL Server: c.first_name + ' ' + c.last_name
-       c.region, p.name AS product, b.branch_name,
-       l.principal, l.status
+       p.name AS product, b.branch_name, l.principal, l.status
 FROM loans l
 JOIN customers c ON c.customer_id = l.customer_id
 JOIN products  p ON p.product_id  = l.product_id
-JOIN branches  b ON b.branch_id   = l.branch_id;
+JOIN branches  b ON b.branch_id   = l.branch_id;            -- still 7 828 rows
 ```
 
-Still 7 828 rows: all three are many-to-one from the loan. A fourth hop can go *through* a table you do not display — the loan officer is reachable only via the application:
+Still 7 828 rows: a loan has one customer, one product, one branch. Add `installments` and the count jumps to 92 193 — the previous subsection.
+
+**How to find a path yourself.**
+1. Name the table that holds the column you want to *show* and the table that holds the column you want to *filter or group by*.
+2. On the join map, walk from one to the other along the keys. Write down every table on the way.
+3. One `JOIN … ON` per step, in walking order. Tables you walk through but do not show still need their `JOIN`.
+
+**Your turn.** "The region of the **customer** for every collections action." `collections_actions` has `loan_id` and `collector_id`, but no `customer_id`. Which path reaches the customer?
+
+```task
+{"id": "w02d1-j9", "kind": "choice", "options": ["collections_actions → customers (no bridge needed)", "collections_actions → loans → customers", "collections_actions → staff → customers", "collections_actions → installments → customers"], "answer": 1, "explain": "An action belongs to a loan (loan_id), and a loan belongs to a customer (customer_id). staff is the collector's side, not the customer's."}
+```
+
+Now write it: the number of collections actions per customer region (`collections_actions → loans → customers`). `GROUP BY` is tomorrow's topic — copy the `GROUP BY` line from the Tashkent example above.
+
+```task
+{"id": "w02d1-j10", "kind": "sql", "model": "SELECT c.region, COUNT(*) AS actions FROM collections_actions ca JOIN loans l ON l.loan_id = ca.loan_id JOIN customers c ON c.customer_id = l.customer_id GROUP BY c.region ORDER BY actions DESC;", "note": "Two hops: collections_actions → loans (loan_id), loans → customers (customer_id)."}
+```
+
+### Putting it together
+
+One request, several of today's tools. *"Every branch, with the number of its loans and the number of its active loans — branches with none included."*
 
 ```sql
-FROM loans l
-JOIN applications a ON a.application_id = l.application_id
-JOIN staff s        ON s.staff_id = a.officer_id
+SELECT b.branch_name,
+       COUNT(l.loan_id)                                      AS loans,          -- counts matched loans; NULL (no loan) is not counted
+       SUM(CASE WHEN l.status = 'active' THEN 1 ELSE 0 END)  AS active_loans
+FROM branches b                                              -- the list that must be complete goes in FROM …
+LEFT JOIN loans l ON l.branch_id = b.branch_id               -- … so LEFT protects it
+GROUP BY b.branch_name
+ORDER BY loans DESC;                                         -- 10 rows, one per branch
 ```
 
-Write joins in the order of the story (fact first, then its dimensions); the database picks its own execution order and the result is the same.
+Read it with the questions from this section: the complete list is `branches`, so it is the left table and the join is LEFT; the "many" side is `loans`, so one row before grouping is one loan; `GROUP BY` folds those rows back to one per branch (tomorrow). `COUNT(l.loan_id)` instead of `COUNT(*)` is on purpose: a branch with no loans would still have one row (with NULLs) and `COUNT(*)` would say 1.
+
+**Which join answers which question?**
+
+```game
+{"id": "w02d1-g2", "type": "sort", "title": "Which join?", "groups": {"INNER JOIN": ["Active loans with their customer's name", "Collector calls by the region of the collector's branch", "SME loans taken by affluent customers"], "LEFT JOIN": ["Customers who have never applied", "Every branch with its loans, branches with none included", "Loan 1's schedule, unpaid instalments included"], "FULL OUTER JOIN": ["Our loan list against the bank's file: differences on either side"], "CROSS JOIN": ["A blank grid of every product in every branch to fill in"], "Self-join": ["Pairs of customers who share a phone number"]}}
+```
 
 ### Depth (optional)
 
@@ -159,10 +467,14 @@ Write joins in the order of the story (fact first, then its dimensions); the dat
 
 **Ask:** one row per loan: customer, region, product, branch, principal, status; biggest first; show me the top five.
 
-1. *What is one row?* A loan → `FROM loans`.
-2. *Which columns live elsewhere?* name/region → `customers`; product name → `products`; branch name → `branches`. All reachable with a key sitting on `loans`.
-3. *Direction?* All three are many-to-one. Row count must stay 7 828 — check it before adding `ORDER BY`.
-4. Write, run, check:
+Each step uses one subsection of section 1, in the order you learned them.
+
+1. **Why a join.** The answer needs columns from four tables: name and region in `customers`, the product name in `products`, the branch name in `branches`, principal and status in `loans`. More than one table → a join.
+2. **The shape — FROM … JOIN … ON.** One row of the answer is one loan, so `loans` goes in `FROM` with the alias `l`. Every other table gets an alias too, and every column gets its prefix.
+3. **INNER vs LEFT.** Ask the question: *if a loan has no customer, do I still want it?* There is no such loan — the anti-join `loans LEFT JOIN customers … WHERE c.customer_id IS NULL` returns 0 — so INNER JOIN loses nothing. The same holds for products and branches.
+4. **Many-to-one.** Each hop goes from a loan to *one* customer, *one* product, *one* branch. The row count must stay 7 828. Run `COUNT(*)` before you add `ORDER BY`.
+5. **Chaining — the path.** `customers ← loans → products`, `loans → branches`: all three keys sit on `loans`, so `loans` is the hub and every `ON` uses `l.`.
+6. Write, run, check:
 
 ```sql
 -- SQL Server: SELECT TOP 5 …  (drop the LIMIT line)
@@ -190,9 +502,9 @@ Loan 4570 — last Friday's three 57 170 000 payments — is Umida Khasanova's c
 
 ## 3. Practice (60 min)
 
-Questions whose answer is a query have a box under them — write, **▶ Run**, then **✔ Check** compares your result with the answer without showing it; your query is saved in this browser. Questions that ask for a number or a reason have an answer box of their own. Only this week's and last week's SQL: `SELECT … JOIN … WHERE … ORDER BY`, `COUNT(*)`, `TOP`/`LIMIT`. No `GROUP BY` yet (tomorrow). Keep the **Database** panel (button at the bottom right) open while you work: it lists every table and its columns — your join map.
+Questions whose answer is a query have a box under them — write, **▶ Run**, then **✔ Check** compares your result with the answer without showing it; your query is saved in this browser. Questions that ask for a number or a reason have an answer box of their own. The questions follow section 1 in order; the label in brackets names the subsection each one trains. Only this week's and last week's SQL: `SELECT … JOIN … WHERE … ORDER BY`, `COUNT(*)`, `TOP`/`LIMIT`. No `GROUP BY` yet (tomorrow). Keep the **Database** panel (button at the bottom right) open while you work: it lists every table and its columns — your join map.
 
-**P1.** Join `loans` to `customers`. How many rows? Now run `SELECT COUNT(*) FROM loans`. Why the same?
+**P1.** *(INNER JOIN)* Join `loans` to `customers`. How many rows? Now run `SELECT COUNT(*) FROM loans`. Why the same?
 
 <details><summary>Answer</summary>
 
@@ -207,19 +519,7 @@ Every loan has exactly one customer (many-to-one), so the inner join neither dro
 {"id": "w02d1-p1", "kind": "choice", "options": ["Every loan finds exactly one customer: the join is many-to-one from loans", "JOIN removes duplicate rows", "customers has exactly as many rows as loans", "An INNER JOIN always returns the row count of the first table"], "answer": 0, "explain": "customers has 6 040 rows, loans 7 828; the join keeps 7 828 because each loan's customer_id finds one customer. A loan pointing at a missing customer would have vanished, and the count would be lower.", "xp": 1}
 ```
 
-**P2.** Active loans held at the Nukus and Termez branches (the branch's region, not the customer's).
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*)
-FROM loans l JOIN branches b ON b.branch_id = l.branch_id
-WHERE b.region IN ('Nukus', 'Termez') AND l.status = 'active';                    -- 413
-```
-
-</details>
-
-**P3.** SME loans (`product_id = 5`) taken by affluent customers — how many?
+**P2.** *(INNER JOIN)* SME loans (`product_id = 5`) taken by affluent customers — how many?
 
 <details><summary>Answer</summary>
 
@@ -230,7 +530,7 @@ WHERE l.product_id = 5 AND c.segment = 'affluent';                              
 
 </details>
 
-**P4.** Micro loans (`product_id = 1`) taken by customers living in Samarkand — how many?
+**P3.** *(INNER JOIN)* Micro loans (`product_id = 1`) taken by customers living in Samarkand — how many?
 
 <details><summary>Answer</summary>
 
@@ -241,7 +541,20 @@ WHERE l.product_id = 1 AND c.region = 'Samarkand';                              
 
 </details>
 
-**P5.** The three largest written-off loans with the borrower's name and region.
+**P4.** *(INNER JOIN)* Active loans held at the Nukus and Termez branches (the branch's region, not the customer's).
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*)
+FROM loans l JOIN branches b ON b.branch_id = l.branch_id
+WHERE b.region IN ('Nukus', 'Termez') AND l.status = 'active';                    -- 413
+```
+`customers` also has a `region` column. The question names the branch, so the join goes to `branches`.
+
+</details>
+
+**P5.** *(INNER JOIN)* The three largest written-off loans with the borrower's name and region.
 
 <details><summary>Answer</summary>
 
@@ -255,69 +568,7 @@ ORDER BY l.principal DESC LIMIT 3;                       -- TOP 3 on SQL Server
 
 </details>
 
-**P6.** Active Auto loans booked at the *Tashkent Central* branch. Use the product **code**, not the id, and the branch **name** — three tables.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*)
-FROM loans l
-JOIN products p ON p.product_id = l.product_id
-JOIN branches b ON b.branch_id = l.branch_id
-WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'active';   -- 60
-```
-
-</details>
-
-**P7.** Loans that have never had a collections action — and prove the number with two single-table counts.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*) FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id
-WHERE ca.action_id IS NULL;                                                         -- 7545
-SELECT COUNT(*) FROM loans;                                                         -- 7828
-SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                            -- 283
-```
-7 828 − 283 = 7 545: most loans never needed a reminder. The anti-join and the arithmetic must agree; when they do not, your join key is wrong.
-
-</details>
-
-**P8.** Row multiplication. Count the rows of `loans JOIN installments`, `loans JOIN payments`, and `loans LEFT JOIN payments`. Explain each number from the relationships.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id;         -- 92193
-SELECT COUNT(*) FROM loans l JOIN payments p ON p.loan_id = l.loan_id;             -- 52875
-SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id;        -- 53267
-```
-One-to-many: the count is the number of rows on the *many* side (92 193 instalments; 52 875 payments). The LEFT JOIN adds one row for each loan that has no payment at all: 53 267 − 52 875 = **392** loans with nothing paid yet (new loans whose first instalment is not due, and the worst defaulters).
-
-</details>
-
-From your three counts: how many loans have **no payment at all**?
-
-```task
-{"id": "w02d1-p8", "kind": "number", "answer": 392, "dp": 0, "unit": "loans", "hint": "The LEFT JOIN keeps every payment row plus one extra row per loan with no payment. Subtract.", "model": "53 267 − 52 875 = 392 loans with no payment yet: new loans whose first instalment is not due, and the worst defaulters."}
-```
-
-**P9.** Week 1, Day 1, P7c asked "how many calls did collectors make in Fergana?". Answer it now: `collections_actions → staff → branches`.
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT COUNT(*)
-FROM collections_actions ca
-JOIN staff s    ON s.staff_id = ca.collector_id
-JOIN branches b ON b.branch_id = s.branch_id
-WHERE ca.action_type = 'call' AND b.region = 'Fergana';                              -- 416
-```
-The branch is the *collector's* branch, reached through `staff`. Joining `collections_actions → loans → branches` would give the loan's branch — the same here (collectors work their own branch's loans), but not the same question.
-
-</details>
-
-**P10.** Loan 1's schedule with its payments: instalment number, due date, amount due, paid date, amount paid — including instalments not yet paid.
+**P6.** *(LEFT JOIN)* Loan 1's schedule with its payments: instalment number, due date, amount due, paid date, amount paid — including instalments not yet paid.
 
 <details><summary>Answer</summary>
 
@@ -338,9 +589,161 @@ Read your result: which instalment was paid latest relative to its due date? (Co
 {"id": "w02d1-p10", "kind": "number", "answer": 12, "dp": 0, "unit": "instalment no.", "hint": "Look for the row where paid_at is in a later month than due_date.", "model": "Instalment 12: due 2026-03-28, paid 2026-05-12 — 45 days late. Everything after it was paid on time."}
 ```
 
+**P7.** *(INNER vs LEFT)* Count the rows of `customers INNER JOIN loans` and of `customers LEFT JOIN loans` (same `ON`). Explain the difference.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id;   -- 7828
+SELECT COUNT(*) FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id;    -- 9533
+```
+INNER keeps one row per loan: 7 828. LEFT keeps those rows and adds one row for every customer with no loan: 9 533 − 7 828 = 1 705. Check it from the other side: 6 040 customers − 4 335 different borrowers = 1 705.
+
+</details>
+
+How many customers have no loan?
+
+```task
+{"id": "w02d1-l1", "kind": "number", "answer": 1705, "dp": 0, "unit": "customers", "hint": "Rows of the LEFT JOIN − rows of the INNER JOIN.", "model": "9 533 − 7 828 = 1 705 customers with no loan. They are the rows the LEFT JOIN keeps with NULL in every loan column."}
+```
+
+**P8.** *(Anti-join)* Loans that have never had a collections action — and prove the number with two single-table counts.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id
+WHERE ca.action_id IS NULL;                                                         -- 7545
+SELECT COUNT(*) FROM loans;                                                         -- 7828
+SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                            -- 283
+```
+7 828 − 283 = 7 545: most loans never needed a reminder. The anti-join and the arithmetic must agree; when they do not, your join key is wrong.
+
+</details>
+
+**P9.** *(RIGHT JOIN)* Every staff member with their collections actions, written as a RIGHT JOIN: `FROM collections_actions ca RIGHT JOIN staff s ON s.staff_id = ca.collector_id`. How many staff members have no action at all? Then write the same query as a LEFT JOIN.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM collections_actions ca RIGHT JOIN staff s ON s.staff_id = ca.collector_id
+WHERE ca.action_id IS NULL;                                                         -- 70
+SELECT COUNT(*) FROM staff s LEFT JOIN collections_actions ca ON ca.collector_id = s.staff_id
+WHERE ca.action_id IS NULL;                                                         -- 70, the same
+```
+70 of the 100 staff: the 60 loan officers and the 10 branch managers. Every one of the 30 collectors has actions. The LEFT version puts the complete list (`staff`) in `FROM` — easier to read.
+
+</details>
+
+```task
+{"id": "w02d1-l2", "kind": "number", "answer": 70, "dp": 0, "unit": "staff", "hint": "RIGHT keeps every staff member; count the rows whose action side is NULL.", "model": "70: the 60 loan officers and 10 branch managers. Collectors are the only staff who log collections actions, and all 30 of them have some."}
+```
+
+**P10.** *(FULL OUTER JOIN)* Our list has loans 1, 2, 3 and 5. The bank's file has loans 2, 3, 4, 5 and 6. Build both lists with `WITH … VALUES` (as in section 1) and show, in one result, every loan with the side it is missing from.
+
+<details><summary>Answer</summary>
+
+```sql
+WITH ours(loan_id) AS (VALUES (1), (2), (3), (5)),
+     bank(loan_id) AS (VALUES (2), (3), (4), (5), (6))
+SELECT o.loan_id AS in_ours, b.loan_id AS in_bank
+FROM ours o
+FULL OUTER JOIN bank b ON b.loan_id = o.loan_id
+ORDER BY COALESCE(o.loan_id, b.loan_id);
+```
+6 rows. Loans 2, 3, 5 are in both. Loan 1 has NULL in `in_bank` — the bank never paid it out. Loans 4 and 6 have NULL in `in_ours` — money went out for loans we do not have. A LEFT JOIN would show only the first kind of difference.
+
+</details>
+
+**P11.** *(CROSS JOIN)* A blank grid for Madina: every product at every branch in the Tashkent region. How many rows?
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT b.branch_name, p.name AS product
+FROM products p
+CROSS JOIN branches b
+WHERE b.region = 'Tashkent'
+ORDER BY b.branch_name, p.name;                                                     -- 15 rows
+```
+Tashkent has three branches (Central, North, South), so 5 products × 3 branches = 15 rows. The `WHERE` runs on the grid after it is built.
+
+</details>
+
+**P12.** *(Self-join)* Pairs of customers whose first name, last name **and** birth date are exactly the same. Each pair once.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT a.customer_id, b.customer_id AS other_id, a.first_name, a.last_name, a.birth_date, a.phone, b.phone AS other_phone
+FROM customers a
+JOIN customers b ON b.first_name = a.first_name
+               AND b.last_name  = a.last_name
+               AND b.birth_date = a.birth_date
+               AND b.customer_id > a.customer_id;                                    -- 2 pairs
+```
+2 pairs: 823 and 1197 (Nodir Nazarov), 2460 and 5562 (Eldor Karimov), each with two different phones. The 40 duplicates with ids 6001+ do not appear: they were typed with a trailing space or with different upper/lower case, so `=` does not match them. Wednesday's `TRIM` and `LOWER` fix that.
+
+</details>
+
+Why does the exact self-join miss the 40 known duplicates?
+
+```task
+{"id": "w02d1-l3", "kind": "choice", "options": ["Their names differ by a trailing space or by upper/lower case, so = finds no match", "A self-join cannot compare text columns", "b.customer_id > a.customer_id removes them", "Duplicates always have different birth dates"], "answer": 0, "explain": "'Yulduz ' is not equal to 'Yulduz', and 'karimova' is not equal to 'Karimova'. The join is right; the data needs cleaning first (Wednesday)."}
+```
+
+**P13.** *(Many-to-one and one-to-many)* Count the rows of `loans JOIN installments`, `loans JOIN payments`, and `loans LEFT JOIN payments`. Explain each number from the relationships.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id;         -- 92193
+SELECT COUNT(*) FROM loans l JOIN payments p ON p.loan_id = l.loan_id;             -- 52875
+SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id;        -- 53267
+```
+One-to-many: the count is the number of rows on the *many* side (92 193 instalments; 52 875 payments). The LEFT JOIN adds one row for each loan that has no payment at all: 53 267 − 52 875 = **392** loans with nothing paid yet (new loans whose first instalment is not due, and the worst defaulters).
+
+</details>
+
+From your three counts: how many loans have **no payment at all**?
+
+```task
+{"id": "w02d1-p8", "kind": "number", "answer": 392, "dp": 0, "unit": "loans", "hint": "The LEFT JOIN keeps every payment row plus one extra row per loan with no payment. Subtract.", "model": "53 267 − 52 875 = 392 loans with no payment yet: new loans whose first instalment is not due, and the worst defaulters."}
+```
+
+**P14.** *(Chaining tables)* Active Auto loans booked at the *Tashkent Central* branch. Use the product **code**, not the id, and the branch **name** — three tables.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*)
+FROM loans l
+JOIN products p ON p.product_id = l.product_id
+JOIN branches b ON b.branch_id = l.branch_id
+WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'active';   -- 60
+```
+The path: `products ← loans → branches`. Both keys sit on `loans`, so both `ON`s use `l.`.
+
+</details>
+
+**P15.** *(The path through a table you do not show)* Week 1, Day 1, P7c asked "how many calls did collectors make in Fergana?". Answer it now: `collections_actions → staff → branches`.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT COUNT(*)
+FROM collections_actions ca
+JOIN staff s    ON s.staff_id = ca.collector_id
+JOIN branches b ON b.branch_id = s.branch_id
+WHERE ca.action_type = 'call' AND b.region = 'Fergana';                              -- 416
+```
+The branch is the *collector's* branch, reached through `staff`; no column of `staff` is shown. Joining `collections_actions → loans → branches` would give the loan's branch — the same here (collectors work their own branch's loans), but not the same question.
+
+</details>
+
 > 🚀 **Stretch (optional, +5 XP).** One more join for the curious — not needed to finish the day.
 
-**P11.** Join `loans` to `applications`. How many loans came through each channel? (One `COUNT(*)` with a `WHERE` per channel.) Then: how many applications have `status = 'approved'` but no loan at all?
+**P16.** *(Anti-join)* Join `loans` to `applications`. How many loans came through each channel? (One `COUNT(*)` with a `WHERE` per channel.) Then: how many applications have `status = 'approved'` but no loan at all?
 
 <details><summary>Answer</summary>
 
@@ -412,7 +815,7 @@ An INNER JOIN on the shortened lookup would now return 4 789 customers without a
 {"id": "w02d1-sc", "questions": [
   {"type": "single", "q": "In `FROM customers c JOIN loans l ON l.customer_id = c.customer_id`, which customers are missing from the result?", "options": ["Customers who have no loan", "Customers with more than one loan", "Customers whose loans are closed", "None — an INNER JOIN keeps every customer"], "answer": 0, "explain": "An INNER JOIN keeps only rows with a partner on both sides; customers without a loan need a LEFT JOIN (→ section 1, INNER vs LEFT)."},
   {"type": "number", "q": "`loans JOIN installments` returns 92 193 rows. How many different loan_id values does that result contain?", "answer": 7828, "explain": "Each of the 7 828 loans appears once per instalment. COUNT(*) vs COUNT(DISTINCT l.loan_id) shows the multiplication (→ section 1, Many-to-one)."},
-  {"type": "text", "q": "Complete the anti-join for 'customers who never applied': `FROM customers c LEFT JOIN applications a ON a.customer_id = c.customer_id WHERE ___ IS NULL` — what goes in the gap?", "answer": ["a.application_id", "application_id", "a.customer_id"], "explain": "Test the right-hand table's key: on a matched row it is never NULL, so IS NULL keeps exactly the customers without a partner (→ section 1, the anti-join; P7)."}
+  {"type": "text", "q": "Complete the anti-join for 'customers who never applied': `FROM customers c LEFT JOIN applications a ON a.customer_id = c.customer_id WHERE ___ IS NULL` — what goes in the gap?", "answer": ["a.application_id", "application_id", "a.customer_id"], "explain": "Test the right-hand table's key: on a matched row it is never NULL, so IS NULL keeps exactly the customers without a partner (→ section 1, the anti-join; P8)."}
 ]}
 ```
 
@@ -470,13 +873,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w02d1", "pass": 0.8, "questions": [
-  {"type": "single", "q": "What happens when you run this?", "code": "SELECT customer_id, l.principal\nFROM loans l\nJOIN customers c ON c.customer_id = l.customer_id;", "options": ["One row per loan with the customer id", "An 'ambiguous column' error", "One row per customer", "Zero rows"], "answer": 1, "explain": "customer_id exists in both tables, so the database cannot tell which one you mean; prefix every column (→ section 1, Why join)."},
+  {"type": "single", "q": "What happens when you run this?", "code": "SELECT customer_id, l.principal\nFROM loans l\nJOIN customers c ON c.customer_id = l.customer_id;", "options": ["One row per loan with the customer id", "An 'ambiguous column' error", "One row per customer", "Zero rows"], "answer": 1, "explain": "customer_id exists in both tables, so the database cannot tell which one you mean; prefix every column (→ section 1, The shape of a join)."},
   {"type": "single", "q": "customers LEFT JOIN loans returns more rows than customers INNER JOIN loans. Why?", "options": ["LEFT JOIN counts every loan twice", "Customers without a loan keep one row each, with NULL in the loan columns", "LEFT JOIN also adds loans without a customer", "It is a bug in the join condition"], "answer": 1, "explain": "LEFT keeps every row of the left table and fills the right side with NULLs when nothing matches (→ section 1, INNER vs LEFT)."},
   {"type": "number", "q": "A small bank has 10 customers. 7 of them have loans — 12 loans in total — and 3 have none. How many rows does customers LEFT JOIN loans return?", "answer": 15, "explain": "12 loan rows + 3 customers with no loan; check this arithmetic every time you LEFT JOIN (→ section 1, INNER vs LEFT)."},
-  {"type": "single", "q": "What does this query return?", "code": "SELECT COUNT(*)\nFROM customers c\nJOIN loans l ON l.customer_id = c.customer_id\nWHERE l.loan_id IS NULL;", "options": ["The number of customers who never borrowed", "0 — the INNER JOIN already removed customers without a loan", "The number of loans with no customer", "An error"], "answer": 1, "explain": "The anti-join needs LEFT JOIN; an inner join never produces the NULL rows the filter is looking for (→ section 1, the anti-join; P7)."},
+  {"type": "single", "q": "What does this query return?", "code": "SELECT COUNT(*)\nFROM customers c\nJOIN loans l ON l.customer_id = c.customer_id\nWHERE l.loan_id IS NULL;", "options": ["The number of customers who never borrowed", "0 — the INNER JOIN already removed customers without a loan", "The number of loans with no customer", "An error"], "answer": 1, "explain": "The anti-join needs LEFT JOIN; an inner join never produces the NULL rows the filter is looking for (→ section 1, the anti-join; P8)."},
   {"type": "single", "q": "This join returns 92 193 rows. What is one row of the result?", "code": "SELECT COUNT(*)\nFROM loans l\nJOIN installments i ON i.loan_id = l.loan_id;", "options": ["One loan", "One instalment, with its loan's columns repeated", "One customer", "One payment"], "answer": 1, "explain": "The grain of a join result is the grain of the many side; SUM(l.principal) here would count each principal once per instalment (→ section 1, Many-to-one)."},
-  {"type": "multi", "q": "Starting FROM loans with INNER JOINs, which joins keep the result at one row per loan?", "options": ["JOIN customers ON customer_id", "JOIN products ON product_id", "JOIN branches ON branch_id", "JOIN installments ON loan_id", "JOIN payments ON loan_id"], "answer": [0, 1, 2], "explain": "Many-to-one joins find exactly one partner per loan; one-to-many joins to installments or payments multiply the rows (→ section 1, Many-to-one; P8)."},
-  {"type": "single", "q": "You want loan 1's full schedule with its payments, including instalments not paid yet. Which join?", "options": ["installments INNER JOIN payments", "installments LEFT JOIN payments", "payments LEFT JOIN installments", "No join — payments alone"], "answer": 1, "explain": "The schedule is the left table; an inner join would hide every open instalment (→ P10)."},
+  {"type": "multi", "q": "Starting FROM loans with INNER JOINs, which joins keep the result at one row per loan?", "options": ["JOIN customers ON customer_id", "JOIN products ON product_id", "JOIN branches ON branch_id", "JOIN installments ON loan_id", "JOIN payments ON loan_id"], "answer": [0, 1, 2], "explain": "Many-to-one joins find exactly one partner per loan; one-to-many joins to installments or payments multiply the rows (→ section 1, Many-to-one; P13)."},
+  {"type": "single", "q": "You want loan 1's full schedule with its payments, including instalments not paid yet. Which join?", "options": ["installments INNER JOIN payments", "installments LEFT JOIN payments", "payments LEFT JOIN installments", "No join — payments alone"], "answer": 1, "explain": "The schedule is the left table; an inner join would hide every open instalment (→ P6)."},
   {"type": "single", "q": "Bekzod asks 'how much principal is still outstanding as of 2026-10-01?'. Which query answers it?", "options": ["SUM(principal) FROM loans WHERE status = 'active'", "SUM(principal_due) FROM installments WHERE due_date > '2026-10-01'", "SUM(total_due) of matured instalments with no payment", "SUM(amount) FROM payments"], "answer": 1, "explain": "Outstanding is the principal not yet due on the schedule; SUM(principal) is what was originally lent, and matured-unpaid is the overdue amount (→ section 6, Company corner)."}
 ]}
 ```

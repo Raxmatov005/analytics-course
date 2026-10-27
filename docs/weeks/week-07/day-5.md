@@ -10,7 +10,13 @@
 - **Part B (40 pts):** the **3-page Power BI dashboard** (Portfolio, Risk, Collections) on `data/powerbi/` — `nur_dashboard.pbix`, a PDF export, a screenshot of each page; graded by the numbers each card must show.
 - **Part C (20 pts):** eight interview questions (SRM, peeking, MDE, guardrails, A/A, `CALCULATE` and filter context, measure vs calculated column, the star schema in Power BI), 3–5 sentences each, in `quiz.md`.
 
-**Rules.** Open book: this week's pages, your notebooks, `data/ab/README.md`, `data/powerbi/README.md`, `measures.dax`. Hand in with the **📎 box at the end of this page**: `checkpoint_ab.ipynb` (executed — Kernel → Restart & Run All, then save), `nur_dashboard.pbix`, `nur_dashboard.pdf`, `page1_portfolio.png`, `page2_risk.png`, `page3_collections.png`, `quiz.md`. Also due today: **HW 7.2** in `day-3/`. Closed: the model answers until you submit. Power BI click paths are for the current Desktop release; if a menu has moved in yours, the result is what is graded, not the path.
+**Rules.**
+
+- **Open book:** this week's pages, your notebooks, `data/ab/README.md`, `data/powerbi/README.md`, `measures.dax`.
+- **Closed:** the model answers, until you submit.
+- **Hand in** with the **📎 box at the end of this page**: `checkpoint_ab.ipynb` (executed — Kernel → Restart & Run All, then save), `nur_dashboard.pbix`, `nur_dashboard.pdf`, `page1_portfolio.png`, `page2_risk.png`, `page3_collections.png`, `quiz.md`.
+- **Also due today:** **HW 7.2** in Day 3's box.
+- **Power BI click paths** are for the current Desktop release; if a menu has moved in yours, the result is graded, not the path.
 
 **Plan for the day.**
 
@@ -77,7 +83,7 @@ Every task: code with printed output, then **two sentences** for Kamola (product
 
 ### A1. Sanity checks before any result — 8 pts
 
-Rows vs users; SRM overall (rows and users) and by device, week, device × week, with your threshold stated; the hash check; users in both variants. Every problem with its size.
+**Task.** Rows vs users; SRM overall (rows and users) and by device, week, device × week, with your threshold stated; the hash check; users in both variants. Every problem with its size.
 
 <details><summary>Model answer (open after submitting)</summary>
 
@@ -105,6 +111,8 @@ Threshold: p < 0.001 for SRM (many slices are checked). Problems: (1) **180 user
 
 ### A2. Novelty — 4 pts
 
+**Task.** Daily conversion by variant (de-duplicated users) with a chart of the lift; the lift on 1–3 August and a test on those days; the weekly table with iOS week 4 out. Say what the pre-registered plan does with days 1–3.
+
 <details><summary>Model answer (open after submitting)</summary>
 
 Daily conversion (de-duplicated), B − A on 1–3 August: **+2.8, +0.3, +2.0** points; single days afterwards swing from −4.3 to +5.9 (14 August). Days 1–3 pooled: 8.50 % vs **10.16 %**, +1.66 points, p = 0.22; from 4 August (clean): +1.05. Weekly (iOS week 4 out): A 8.45 / 8.32 / 6.32 / 8.04 %, B 9.57 / 9.85 / 7.30 / 8.84 %.
@@ -117,7 +125,7 @@ Daily conversion (de-duplicated), B − A on 1–3 August: **+2.8, +0.3, +2.0** 
 
 ### A3. The primary result — 8 pts
 
-Clean population: conversion per variant, the difference with a 95 % CI, the p-value, the relative lift with its CI; then the same on raw data.
+**Task.** Clean population: conversion per variant, the difference with a 95 % CI, the p-value, the relative lift with its CI; then the same on raw data.
 
 <details><summary>Model answer (open after submitting)</summary>
 
@@ -147,6 +155,8 @@ ab_readout(with_conversion(reg, events))
 
 ### A4. Funnel and money — 6 pts
 
+**Task.** The funnel step rates by variant with a test per step; principal per loan (Mann–Whitney and a bootstrap CI of the mean difference); disbursed principal per viewer with its bootstrap CI.
+
 <details><summary>Model answer (open after submitting)</summary>
 
 Funnel (clean): start 33.3 vs 33.3 % (p 0.95); submit 73.5 vs 74.6 % of starters (0.37); approved 38.4 vs 41.2 % of submitted (0.10); signed 88.9 vs 90.7 % of approved (0.26). Principal per loan: A 2 640 243 (median 2 330 000, 575 loans), B 2 513 443 (2 290 000, 636); Mann–Whitney **p = 0.15**; bootstrap mean difference **−126 800 (−265 376 to +14 550)**, −4.8 %. Disbursed per viewer: A 202 840, B 219 744 (**+8.3 %**), bootstrap CI of the difference −10 048 to +43 827 (202.8 m vs 219.7 m per 1 000 viewers).
@@ -158,6 +168,8 @@ Funnel (clean): start 33.3 vs 33.3 % (p 0.95); submit 73.5 vs 74.6 % of starters
 *Deductions seen most often:* a t-test on principal with "loans are smaller" from p = 0.15; disbursed per viewer averaged over converters only; five funnel p-values read as five findings.
 
 ### A5. The guardrail — 8 pts
+
+**Task.** FPD per variant with Wilson intervals; the z-test and Fisher; the CI of the difference; the power for the observed difference and the loans per arm for 80 %. Then the unit economics: profit per 1 000 viewers per arm and B's break-even FPD, recomputed on the regional numbers.
 
 <details><summary>Model answer (open after submitting)</summary>
 
@@ -179,6 +191,8 @@ Unit economics (interest 9.856 % of principal = 266 662 ÷ 2 705 586, LGD 60 %, 
 *Deductions seen most often:* "FPD not significant — guardrail passed"; the break-even from Day 1 (+1.25) or Day 2 (+0.94) copied without recomputing on the regional principal and FPD; no power statement; FPD on all loans including the leaked users.
 
 ### A6. Segments — 6 pts
+
+**Task.** The lift by device, new vs returning and customer segment, with raw and Holm-adjusted p-values; the interaction test new vs returning.
 
 <details><summary>Model answer (open after submitting)</summary>
 
@@ -202,6 +216,8 @@ Interaction new vs returning: z = −0.82, **p = 0.41**.
 
 ### The decision memo (inside the 40 points)
 
+**Task.** One decision word first (ship / ship in stages / do not ship / extend), then the eight readout lines of Day 2's Company corner, each with its numbers.
+
 <details><summary>Model answer (open after submitting)</summary>
 
 **Decision: extend — do not roll B out to the regions yet.** B converts better by about +1 point, but its first-payment defaults are already above the break-even in the point estimate; keep the 50/50 test running in the regions until FPD can be read.
@@ -221,12 +237,12 @@ Interaction new vs returning: z = −0.82, **p = 0.41**.
 
 **If you are stuck (hints, not answers).**
 
-- A1: filter `region != "Tashkent"` first; then `duplicated(keep=False)`; your Day-2 `srm_by` on `["device", "week"]`; Day 1's `hash_variant` with the salt from `data/ab/README.md` — Day 2, Step 1.
-- A2: `groupby([assigned_at.dt.date, "variant"])["conv"].mean().unstack()`, then a line chart — Day 2, Step 1d, P5.
+- A1: filter `region != "Tashkent"` first; then `duplicated(keep=False)`; your Day-2 `srm_by` on `["device", "week"]`; Day 1's `hash_variant` with the salt from `data/ab/README.md` — Day 2, 'The data layout' and 'Sanity check 1–3'.
+- A2: `groupby([assigned_at.dt.date, "variant"])["conv"].mean().unstack()`, then a line chart — Day 2, 'The daily lift', P6.
 - A3: your `clean_users` and `ab_readout` on the regional rows; `compare="ratio", method="log"` for the relative CI — Day 2, worked example.
-- A4: one `isin` per event name for the funnel; `stats.mannwhitneyu`; a bootstrap loop with `default_rng(2026)` — Day 2, P7–P8.
-- A5: `proportion_confint(..., method="wilson")`, `NormalIndPower().power(...)`, `zt_ind_solve_power(...)`; the break-even formula from Day 1's Company corner with the regional principal and FPD — Day 2, P9 and P11.
-- A6: a loop over three columns, then `multipletests(p, method="holm")`; the interaction as a z on the difference of two differences — Day 2, P10.
+- A4: one `isin` per event name for the funnel; `stats.mannwhitneyu`; a bootstrap loop with `default_rng(2026)` — Day 2, 'Secondary metrics', P8–P9.
+- A5: `proportion_confint(..., method="wilson")`, `NormalIndPower().power(...)`, `zt_ind_solve_power(...)`; the break-even formula from Day 1's Company corner with the regional principal and FPD — Day 2, 'Guardrails', P10 and P15.
+- A6: a loop over three columns, then `multipletests(p, method="holm")`; the interaction as a z on the difference of two differences — Day 2, 'Segments', P11.
 
 ```game
 {"type": "bug", "id": "w07d5-g1", "title": "Two lines of a regional memo that fail review", "q": "A draft memo for the regional sales head. Tap the lines that would lose marks.", "code": "Decision: extend — do not roll B out to the regions yet.\nSanity: 180 users in both variants removed; iOS 22–28 Aug removed from both arms.\nGuardrail: FPD p = 0.11, not significant — guardrail passed.\nBreak-even: +1.25 points, from Day 1's Company corner.\nPrimary: 7.70 % → 8.75 %, +1.05 pt (95 % CI +0.14 to +1.98), p = 0.025.\nSegments: all seven positive, none after Holm (min 0.13).", "answer": [2, 3], "why": "A test with 37 % power cannot pass a guardrail — it is unresolved; and the break-even must be recomputed on the regional principal and FPD (+0.99 points), not copied from Day 1."}
@@ -308,7 +324,7 @@ Build on yesterday's model (`nur_week7.pbix` → save as `nur_dashboard.pbix`). 
 
 *Deductions seen most often:* the as-of `Outstanding` on a monthly trend line (it is dated by disbursement); Month-End summed over the year; FPD by vintage including August 2026 (11 loans, 0 %); a pie with five products; red used as a series colour; a slicer that does not reach the Collections page; an absolute file path, so the refresh fails elsewhere.
 
-**If you are stuck (hints).** Build page 1 completely before starting page 2 — copy the page (right-click its tab → Duplicate) to keep the top strip. A card shows the wrong number → check the slicers on the page and *Edit interactions* first, then the measure's filter context (Day 4, P3), then the relationship (Day 3, P6). Month-end trend → `Outstanding Month-End` and a visual filter `year_month` ≤ 2026-09. Top N → the Filters pane on the table visual, *Filter type: Top N*, by `Actions`. PDF export exports what is on screen: clear the slicers first.
+**If you are stuck (hints).** Build page 1 completely before starting page 2 — copy the page (right-click its tab → Duplicate) to keep the top strip. A card shows the wrong number → check the slicers on the page and *Edit interactions* first, then the measure's filter context (Day 4, P4), then the relationship (Day 3, P6). Month-end trend → `Outstanding Month-End` and a visual filter `year_month` ≤ 2026-09. Top N → the Filters pane on the table visual, *Filter type: Top N*, by `Actions`. PDF export exports what is on screen: clear the slicers first.
 
 **No work account?** Then the `.pbix` and the PDF *are* the publication — say so in a one-line `README.md` in the folder. If you do have one: publish to a workspace, set a scheduled refresh (it needs a gateway for files on your PC) and add the link to the README — a bonus mention, no points.
 
@@ -410,13 +426,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 ```quiz
 {"id": "w07d5", "pass": 0.8, "questions": [
   {"type": "single", "q": "B vs A gives p = 0.016. Which reading is right?", "options": ["If the screens did not differ, a gap at least this large would appear in about 1.6 % of experiments of this size", "B is 1.6 % better", "1.6 % of users prefer A", "There is a 98.4 % chance that B is better"], "answer": 0, "explain": "The p-value is computed assuming no difference; it is not the probability that B is better (→ A3 deductions, week 6 Day 3)."},
-  {"type": "single", "q": "Some users were assigned to both arms. What do you do with them?", "options": ["Keep their first assignment", "Keep them — they are only 1 %", "Remove only their second row", "Remove every row of those users and report how many"], "answer": 3, "explain": "After the second assignment their outcome comes from a mix of A and B; they belong to neither arm (→ A1 deductions, Day 2 'Step 1a')."},
+  {"type": "single", "q": "Some users were assigned to both arms. What do you do with them?", "options": ["Keep their first assignment", "Keep them — they are only 1 %", "Remove only their second row", "Remove every row of those users and report how many"], "answer": 3, "explain": "After the second assignment their outcome comes from a mix of A and B; they belong to neither arm (→ A1 deductions, Day 2 'The data layout')."},
   {"type": "single", "q": "Why a strict SRM threshold such as p < 0.001?", "options": ["The regulator requires it", "SRM is checked on many slices; a strict threshold keeps false alarms rare, and an alarm means a search for the bug", "0.05 is for A/A tests only", "The arms are large"], "answer": 1, "explain": "Many checks at 5 % would always raise something; the response to a real alarm is finding the cause, not reweighting (→ A1, Day 1 'SRM')."},
   {"type": "single", "q": "B converts better, yet z is negative. Why?", "code": "z, p = proportions_ztest([conv_A, conv_B], [n_A, n_B])\n# z = -2.41", "options": ["A negative z means B is worse", "The p-value must be halved", "A is listed first, so z measures A − B; put B first or say which order you used", "The test is broken"], "answer": 2, "explain": "An unexplained sign is a deduction; the worked example lists B first so that z > 0 means B is higher (→ A3 deductions)."},
   {"type": "number", "q": "Conversion goes from 8.0 % to 8.9 %. What is the relative lift, in %?", "answer": 11.25, "tol": 0.05, "explain": "0.9 / 8.0 = 11.25 % relative; the absolute lift is +0.9 points — always say which (→ Warm-up 6)."},
   {"type": "multi", "q": "Which are correct practices for the Part B dashboard?", "options": ["Put the as-of Outstanding measure on the monthly trend line", "Point the source at a parameter or a relative folder so the refresh works on Timur's PC", "Sum Outstanding Month-End over the year", "A pie chart of the five products", "'Data as of 1 Oct 2026' and a definitions line on every page", "Hide FPD vintages with fewer than 50 loans in scope"], "answer": [1, 4, 5], "explain": "The as-of Outstanding is dated by disbursement, month-end balances are not added, and a pie of five slices breaks the chart rules (→ Part B deductions)."},
-  {"type": "single", "q": "What happens on a card when [Due] is 0 or blank, and what should you write instead?", "code": "Collection Rate = [Paid] / [Due]", "options": ["It shows the company total", "It shows Infinity or NaN instead of a blank; write DIVIDE ( [Paid], [Due] )", "Power BI hides the card", "It shows 0 % — fine"], "answer": 1, "explain": "DIVIDE returns blank (or a chosen value) when the denominator is 0 or blank — always DIVIDE for ratios (→ Day 4, 'DIVIDE and VAR … RETURN')."},
-  {"type": "single", "q": "One day of the test shows a lift of +5.2 points. Is that a novelty effect?", "options": ["Yes, if p < 0.05 that day", "No — novelty only exists in social apps", "Yes — it is far above the average", "Not by itself: single days swing by ±3 points; novelty is a pattern of the first days with a mechanism, excluded only as pre-registered"], "answer": 3, "explain": "Calling one high day 'novelty' is a listed deduction; exclusions must follow the pre-registered rule (→ A2 deductions, Day 2 'Step 1d')."}
+  {"type": "single", "q": "What happens on a card when [Due] is 0 or blank, and what should you write instead?", "code": "Collection Rate = [Paid] / [Due]", "options": ["It shows the company total", "It shows Infinity or NaN instead of a blank; write DIVIDE ( [Paid], [Due] )", "Power BI hides the card", "It shows 0 % — fine"], "answer": 1, "explain": "DIVIDE returns blank (or a chosen value) when the denominator is 0 or blank — always DIVIDE for ratios (→ Day 4, 'The first measures')."},
+  {"type": "single", "q": "One day of the test shows a lift of +5.2 points. Is that a novelty effect?", "options": ["Yes, if p < 0.05 that day", "No — novelty only exists in social apps", "Yes — it is far above the average", "Not by itself: single days swing by ±3 points; novelty is a pattern of the first days with a mechanism, excluded only as pre-registered"], "answer": 3, "explain": "Calling one high day 'novelty' is a listed deduction; exclusions must follow the pre-registered rule (→ A2 deductions, Day 2 'The daily lift')."}
 ]}
 ```
 

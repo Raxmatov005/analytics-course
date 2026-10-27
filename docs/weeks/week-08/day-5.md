@@ -62,17 +62,147 @@ Run by the mentor as an interviewer from another lender. The structure is the on
 
 > 💡 **Key idea.** Interviewers score the **process** as much as the result: restate the question, name the tables and the grain, check the answer against a number you know, say the trap out loud. A right query in silence scores less than a nearly-right one explained.
 
+Three methods carry most of the interview. Learn them here, in the course's shape, then use them in B1–B5.
+
+### The STAR answer — situation, task, action, result
+
+**What it is.** **STAR** is the shape of a story about your work: **S**ituation (who needed what, and why), **T**ask (what exactly you had to deliver), **A**ction (what you did — the method, not only the tool), **R**esult (a number, and what changed because of it). Interviewers use it to score "tell me about a time…" and the CV walk.
+
+**How to write it.** One sentence per letter; the result carries a number you can prove:
+
+```text
+S  Bekzod's outstanding did not match Finance's ledger.
+T  Find the difference before the month-end pack went out.
+A  Reconciled payments to instalments; found rows identical in instalment, date and amount; built a clean view.
+R  25 duplicate rows, 58 397 800 soum counted twice; every report since uses the clean payments.
+```
+
+The R line comes from a query, not from memory:
+
+```sql
+SELECT COUNT(*) AS duplicate_rows, SUM(amount) AS counted_twice
+FROM (SELECT amount,
+             ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
+      FROM payments)
+WHERE rn > 1;                                  -- every copy after the first
+```
+
+25 rows and 58 397 800 soum: the result line of the story, exact to the soum.
+
+**When you use it.**
+- "Tell me about yourself", "walk me through a project", "a time you disagreed", "a time you made a mistake".
+- On the CV: each portfolio line is a compressed STAR — action verb, method, result with a number.
+
+> ⚠️ **Watch out.** "I used pandas and Power BI" is a list of tools, not an action, and has no result. Say what you found and what changed.
+
+**Your turn.** Which line is a **Result**?
+
+```task
+{"id": "w08d5-l1", "kind": "choice", "options": ["I used SQL and Python.", "The product manager wanted to know if the new screen worked.", "300 users in both arms were removed; the lift fell from 13 % to 11 % and the screen shipped with an FPD guardrail.", "I had to analyse an A/B test."], "answer": 2, "explain": "A result has a number and a consequence. The others are a tool list, the situation and the task."}
+```
+
+### Live SQL habits — think aloud, check, name the trap
+
+**What it is.** In a live SQL task the interviewer scores the **process** as much as the query. Five habits: **restate** the task and ask one clarifying question; **name the tables and the grain**; **write in small steps** and run each; **check** the result against a number you already know; **say the trap** you avoided.
+
+**How to write it.** Add the check to the query itself, so it is on the screen when you say it:
+
+```sql
+-- task: loans and amount disbursed in September 2026 by channel
+-- grain: one loan, tables: loans → applications (for the channel)
+SELECT a.channel, COUNT(*) AS loans, SUM(l.principal) AS disbursed
+FROM loans l JOIN applications a ON a.application_id = l.application_id
+WHERE l.disbursed_at >= '2026-09-01' AND l.disbursed_at < '2026-10-01'      -- half-open: no BETWEEN on dates
+GROUP BY a.channel
+UNION ALL
+SELECT 'TOTAL', COUNT(*), SUM(principal)                                     -- the check: September's known total
+FROM loans
+WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';
+```
+
+Branch 172 loans, app 123, partner 66; the total row says 361 loans and 17 015 490 000 soum — sanity number 6, so the join lost nothing.
+
+**When you use it.** Every live task, from T1 to T4. Say each habit aloud as you do it:
+
+| Habit | What you say |
+|---|---|
+| restate | "So: one row per channel, September 2026, count and amount — loans, not applications?" |
+| grain | "One row of the result is a channel; one row before grouping is a loan." |
+| small steps | "First the filter alone, then the join, then the GROUP BY." |
+| check | "361 loans in total — that matches September." |
+| trap | "I used a half-open date range, because `BETWEEN` loses the last day's times." |
+
+> ⚠️ **Watch out.** A query that runs but answers a different question scores 0. Ask before you write: "loans or applications?", "by disbursement month or by application month?"
+
+**Your turn.** The interviewer says: *"Approval rate by month for the app."* What do you do first?
+
+```task
+{"id": "w08d5-l2", "kind": "choice", "options": ["Start typing SELECT at once to save time", "Restate it and ask about the denominator: decided or all applications, and is approved_not_disbursed approved?", "Ask which SQL dialect they prefer and stop there", "Write the query for all channels and filter later"], "answer": 1, "explain": "Approval rate has two common denominators (week 1, Day 1 of this week). One question settles it and shows the interviewer you know the trap."}
+```
+
+### The case method — is it real, how big, where, why, what now
+
+**What it is.** A **case** is an open business question ("FPD doubled — what do you do?"). The **case method** answers it in five steps, in this order: **is it real?** (same definition, same period, enough loans), **how big?** (counts, not only rates), **where?** (a MECE split: product, channel, grade, version, region, officer), **why?** (an event: a policy change, an outage, a campaign, fraud), **what now?** (a recommendation and a monitor).
+
+**How to write it.** The first two steps are a query. App FPD30 by the month the first instalment fell due:
+
+```sql
+WITH pay AS (                                                  -- clean payments
+  SELECT installment_id, paid_at, amount FROM (
+    SELECT installment_id, paid_at, amount,
+           ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
+    FROM payments) WHERE rn = 1),
+first_inst AS (                                                -- first instalments old enough to judge
+  SELECT i.loan_id, i.due_date, i.total_due, COALESCE(SUM(p.amount), 0) AS paid_in_30
+  FROM installments i
+  LEFT JOIN pay p ON p.installment_id = i.installment_id
+                 AND p.paid_at <= date(i.due_date, '+30 days') AND p.paid_at <= '2026-10-01'
+  WHERE i.installment_no = 1 AND i.due_date <= '2026-09-01'
+  GROUP BY i.loan_id, i.due_date, i.total_due)
+SELECT strftime('%Y-%m', f.due_date) AS due_month,
+       COUNT(*)                                                         AS loans,
+       SUM(CASE WHEN f.paid_in_30 < f.total_due THEN 1 ELSE 0 END)      AS fpd30,
+       ROUND(100.0 * SUM(CASE WHEN f.paid_in_30 < f.total_due THEN 1 ELSE 0 END) / COUNT(*), 2) AS fpd30_pct
+FROM first_inst f
+JOIN loans l    ON l.loan_id = f.loan_id
+JOIN products p ON p.product_id = l.product_id
+WHERE p.channel = 'app' AND f.due_date >= '2026-03-01'
+GROUP BY due_month ORDER BY due_month;
+```
+
+FPD30 "doubled" from July to August: 0.74 % to 1.64 %. In counts it is 1 loan of 136 against 2 of 122. One extra default on a hundred loans is not a crisis — it is a reason to keep watching, with an interval.
+
+**When you use it.**
+- B3, and every "X went up/down — what do you do?" question.
+- In the job: half of the "crises" in a lender's week are one extra default, a definition change or a payment outage.
+
+> ⚠️ **Watch out.** Jumping to "why" ("the new app version is buggy") before "is it real" and "how big" is the most common way to fail a case. Check the counts first, out loud.
+
+**Your turn.** *"Approval in the app fell from 70 % to 62 % last week."* What is your first move?
+
+```task
+{"id": "w08d5-l3", "kind": "choice", "options": ["Blame the new scorecard", "Ask for the counts and the definition: how many decisions last week, same denominator, any applications still undecided?", "Propose an A/B test of the form", "Split by region at once"], "answer": 1, "explain": "Is it real, how big: with about 45 app decisions a week, 8 points can be four applications — and the last days of a week may still be undecided. Only then where and why."}
+```
+
+### Putting it together
+
+One interview, three methods. B1 and the CV walk are **STAR** stories, each ending with a number from a query. B2 is the **live SQL habits**, said aloud while you type. B3 is the **case method**, step by step. B4 is definitions with one number or one trap each; B5 is your questions. The same discipline runs through all of them: say the definition, give the count, name the trap.
+
+```game
+{"id": "w08d5-g4", "type": "sort", "title": "Which method?", "groups": {"STAR": ["Situation: Bekzod's outstanding did not match Finance", "Result: 25 duplicate rows, 58 m soum counted twice"], "Live SQL habits": ["'One row before grouping is a loan'", "'361 in total — that matches September'"], "Case method": ["'How many loans is that, not only what percent?'", "'Was there a scorecard change that week?'"]}}
+```
+
 ### B1. Intro and CV walk (10 min)
 
 *"Tell me about yourself"* in two minutes: who you are (one line), what you learned and built (the course, framed as projects), the role you want and why this company. Then the interviewer picks one CV line — have STAR for each of your four portfolio deliverables (HW 8.1). The trap: describing the tools ("I used pandas") instead of the result ("I found 300 users in both arms and the iOS bug, and the lift went from 13 % to 11 %").
 
-**B1.1.** *"Tell me about yourself."* Write the two minutes as you would say them.
+**B1.1.** *(STAR — the two-minute version)* *"Tell me about yourself."* Write the two minutes as you would say them.
 
 ```task
 {"id": "w08d5-b1", "kind": "free", "min": 80, "rubric": ["who you are in one line", "what you built, framed as projects with at least one number", "the role you want and why this company", "no list of tools without results", "about 250 words or fewer (two minutes)"], "model": "I am a data analyst at the start of my career, coming from [your background], and for the last two months I have been doing the work of a junior analyst at a fictional lender, Nur Finance, on a realistic loan book of 7 800 loans. I built the portfolio reporting in SQL — outstanding, PAR30, vintages — and found that 25 duplicate payments were double-counting 58 m soum. I analysed a 28 000-user A/B test of a new offer screen, found an assignment leak and a client bug, and recommended a staged rollout with a default-rate guardrail. I built a three-page Power BI dashboard on a star schema, and for my final project I presented a portfolio review to a mock board: where to grow, where to slow down, and what to change, each with an owner and a value. I am looking for a risk or portfolio analyst role, and your company interests me because [one specific reason: your app lending, your SME book, a number from your annual report]."}
 ```
 
-**B1.2.** The interviewer points at one CV line: *"Tell me more about this one."* Tell one deliverable with **STAR** — situation, task, action, result — and a number in the result.
+**B1.2.** *(STAR)* The interviewer points at one CV line: *"Tell me more about this one."* Tell one deliverable with **STAR** — situation, task, action, result — and a number in the result.
 
 ```task
 {"id": "w08d5-b2", "kind": "free", "min": 50, "rubric": ["Situation: who asked and why, in one sentence", "Task: what exactly you had to deliver", "Action: what you did, with the method, not only the tool", "Result: a number and what changed because of it"], "model": "Situation: the product manager wanted to know whether a new loan-offer screen sold more loans. Task: analyse a four-week A/B test with 28 000 users and recommend ship or not. Action: before reading the result I checked the experiment — the split by user, a sample-ratio test, users who appeared in both arms — and found 300 users in both arms and a client bug on one iOS version; I removed them as the pre-registration allowed and ran the z-test with a confidence interval, plus a guardrail on first-payment default. Result: the lift fell from the reported +13 % to +11 %, still significant, and because the default-rate interval could not exclude a loss, I recommended a staged rollout with the guardrail monitored — which is what the team did."}
@@ -86,7 +216,7 @@ Think aloud: restate the task, name the tables and the grain, write, run, **chec
 {"type": "bug", "id": "w08d5-g2", "title": "Find the line that loses data", "q": "A candidate's T1. One line silently drops loans.", "code": "SELECT p.code, COUNT(*) AS loans, SUM(l.principal) AS disbursed\nFROM loans l\nJOIN products p ON p.product_id = l.product_id\nWHERE l.disbursed_at BETWEEN '2026-09-01' AND '2026-09-30'\nGROUP BY p.code\nORDER BY disbursed DESC;", "answer": [3], "why": "If disbursed_at ever carries a time, '2026-09-30' means midnight and everything later that day is lost. Use the half-open range: >= '2026-09-01' AND < '2026-10-01' — and say so aloud."}
 ```
 
-**T1 (easy, 3 min).** Loans and amount disbursed in September 2026 by product, with the average ticket, largest amount first.
+**T1 (easy, 3 min).** *(live SQL habits)* Loans and amount disbursed in September 2026 by product, with the average ticket, largest amount first.
 
 ```task
 {"id": "w08d5-t1", "kind": "sql", "note": "Five rows: product code, loans, disbursed, average ticket (rounded to the soum) — largest amount first.", "model": "SELECT p.code, COUNT(*) AS loans, SUM(l.principal) AS disbursed, ROUND(AVG(l.principal)) AS avg_ticket\nFROM loans l JOIN products p ON p.product_id = l.product_id\nWHERE l.disbursed_at >= '2026-09-01' AND l.disbursed_at < '2026-10-01'\nGROUP BY p.code ORDER BY disbursed DESC;"}
@@ -98,7 +228,7 @@ SME 30 · 8 601 880 000 · 286 729 333; AUTO 21 · 4 398 600 000; CONS 121 · 3 
 
 </details>
 
-**T2 (medium, 5 min).** Monthly approval rate of the **app** channel, April–September 2026, cancelled applications excluded; show the cancelled count too.
+**T2 (medium, 5 min).** *(live SQL habits)* Monthly approval rate of the **app** channel, April–September 2026, cancelled applications excluded; show the cancelled count too.
 
 ```task
 {"id": "w08d5-t2", "kind": "sql", "note": "Six rows (2026-04 … 2026-09): month, applications, cancelled, approval rate in % to one decimal (approved_not_disbursed counts as approved).", "model": "SELECT strftime('%Y-%m', applied_at) AS month,\n       COUNT(*) AS applications,\n       SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,\n       ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END)\n             / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 1) AS approval_rate_pct\nFROM applications\nWHERE channel = 'app' AND applied_at >= '2026-04-01' AND applied_at < '2026-10-01'\nGROUP BY 1 ORDER BY 1;"}
@@ -110,7 +240,7 @@ SME 30 · 8 601 880 000 · 286 729 333; AUTO 21 · 4 398 600 000; CONS 121 · 3 
 {"id": "w08d5-t2b", "kind": "free", "min": 30, "rubric": ["sizes the noise: about 190 decisions a month, a 95 % interval of roughly ±7 points", "compares with the other months (66.7–71.4 %) and calls a 3-point swing noise", "mentions that the last days of September may still lack decisions", "says what would make it a signal (several months in a row, or a rise in rejections at one step)"], "model": "Probably not. With about 190 decisions a month, a 95 % interval around 66.7 % is roughly ±7 points, and the six months run from 66.7 to 71.4 % — a 3-point swing is inside the noise. Also, September's last days may still have applications without a decision, which can move the month's rate. I would call it a signal if it kept falling for two or three months, or if rejections rose at one step — the pre-check, say — and then I would look at the score distribution of applicants to separate mix from policy."}
 ```
 
-**T3 (harder, 6 min).** For each branch, the loan officer with the most approved applications in January–September 2026 (all channels). Show ties.
+**T3 (harder, 6 min).** *(live SQL habits)* For each branch, the loan officer with the most approved applications in January–September 2026 (all channels). Show ties.
 
 ```task
 {"id": "w08d5-t3", "kind": "sql", "note": "One row per branch winner, ties kept: branch name, officer's full name, approved — most approved first, then branch name.", "model": "WITH o AS (\n  SELECT a.branch_id, a.officer_id, COUNT(*) AS approved\n  FROM applications a\n  WHERE a.status IN ('approved', 'approved_not_disbursed')\n    AND a.applied_at >= '2026-01-01' AND a.applied_at < '2026-10-01'\n  GROUP BY a.branch_id, a.officer_id),\nr AS (SELECT o.*, RANK() OVER (PARTITION BY branch_id ORDER BY approved DESC) AS rnk FROM o)\nSELECT b.branch_name, s.full_name, r.approved\nFROM r JOIN branches b ON b.branch_id = r.branch_id\n       JOIN staff s    ON s.staff_id = r.officer_id\nWHERE r.rnk = 1\nORDER BY r.approved DESC, b.branch_name;"}
@@ -128,7 +258,7 @@ SME 30 · 8 601 880 000 · 286 729 333; AUTO 21 · 4 398 600 000; CONS 121 · 3 
 {"id": "w08d5-t3b", "kind": "free", "min": 30, "rubric": ["says 'not from this table': most approvals can mean the loosest approvals", "names the missing measure: FPD (or default) of the officer's loans, ideally by grade", "mentions volume differences between branches (Tashkent vs Nukus)", "proposes the comparison: approvals and FPD per officer, with intervals for small numbers"], "model": "Not from this table. The most approvals can simply mean the loosest approvals — the officer we want approves a lot and their loans repay. I would add the FPD30 of each officer's loans, by risk grade so that officers with riskier customers are not punished, and the approval rate on their decided applications; and I would compare within a branch, because Tashkent South sees far more applications than Nukus. With 40–90 loans per officer the FPD rates are noisy, so I would show intervals before anyone gets a bonus or a warning."}
 ```
 
-**T4 (hardest, 6 min).** Repeat borrowing: for customers whose first loan was in 2025, by quarter of the first loan — customers, how many took a second loan within 6 months of the first, and the rate.
+**T4 (hardest, 6 min).** *(live SQL habits)* Repeat borrowing: for customers whose first loan was in 2025, by quarter of the first loan — customers, how many took a second loan within 6 months of the first, and the rate.
 
 ```task
 {"id": "w08d5-t4", "kind": "sql", "note": "Four rows (2025-Q1 … 2025-Q4): cohort, customers, repeat within 6 months, rate in % to one decimal. Find each customer's first loan on ALL loans before you filter to 2025.", "model": "WITH ranked AS (\n  SELECT customer_id, disbursed_at,\n         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS n\n  FROM loans),\npairs AS (\n  SELECT f.customer_id, f.disbursed_at AS first_at, s.disbursed_at AS second_at\n  FROM ranked f LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2\n  WHERE f.n = 1)\nSELECT strftime('%Y', first_at) || '-Q' || ((CAST(strftime('%m', first_at) AS INTEGER) + 2) / 3) AS cohort,\n       COUNT(*) AS customers,\n       SUM(CASE WHEN second_at <= date(first_at, '+6 months') THEN 1 ELSE 0 END) AS repeat_6m,\n       ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+6 months') THEN 1 ELSE 0 END) / COUNT(*), 1) AS repeat_6m_pct\nFROM pairs\nWHERE first_at >= '2025-01-01' AND first_at < '2026-01-01'\nGROUP BY 1 ORDER BY 1;"}
@@ -148,7 +278,7 @@ Five minutes to structure aloud, eight to go through it, two for the recommendat
 
 > 🎯 **Interview version.** Open every case with **"is it real, and how big?"** before **"why?"**: the definition, the period, the denominator and the counts. Half of the "crises" in a lender's week are one extra default on a small vintage, a definition change or a payment outage — and the candidate who checks that first is the one who gets hired.
 
-**B3.** Your answer to the case: structure it aloud, then write it here — what you check first, where you look, how you separate mix from rate, and what you recommend.
+**B3.** *(the case method)* Your answer to the case: structure it aloud, then write it here — what you check first, where you look, how you separate mix from rate, and what you recommend.
 
 ```task
 {"id": "w08d5-case", "kind": "free", "min": 120, "rubric": ["checks reality and size first: which FPD, which month, same definition, how many loans and defaults (on Nur's app: 1 → 2 defaults on about 120 loans)", "a MECE structure for 'where': version and device, term, grade/score, region and officer, acquisition source, new vs repeat", "separates mix from rate", "looks for an event: scorecard change, payment outage, campaign, fraud pattern", "ends with a recommendation and a monitor (rolling rate with its interval, a guardrail line)"], "model": "1. Is it real? Which FPD (FPD30? FPD7?), which 'last month' (loans disbursed last month cannot have an FPD30 yet — so probably the month whose first due date passed 30 days ago), the same definition and payment cut-off as before, no pipeline change? Then the size: on Nur's app, the monthly vintages of January–July 2026 have 74–136 loans each with a readable FPD30 and 0–2 defaults each — June 1 of 136 (0.74 %), July 2 of 122 (1.64 %): that is 'FPD doubled', and it is one extra default; a 95 % interval on 2 of 122 runs from about 0.5 % to 5.8 %. If it is a handful, the answer is 'watch the next vintage and the three-month rolling rate', not an alarm. 2. If it is real, where is it? App version and device (a release can break the payment reminder or auto-debit), product term, grade and score band, region and the officer who reviewed it, acquisition source (a campaign or new partner), new vs repeat customers. Concentrated in one cell means a cause; everywhere means policy or the economy. 3. Mix or rate? Did the share of riskier applicants rise with the same rate inside each group, or did the rate rise inside groups? Compare the score distribution of approved applicants month on month. 4. Look for an event: a scorecard or cut-off change, a new pre-check, a payment-channel outage on the first due dates (FPD that cures), a campaign, a fraud pattern (same device, same phone prefix, first payment never made). 5. Recommend: if a cell is found, fix or stop it — pause the campaign, block the pattern, patch the release — and have collections call those loans in the first week; if it is mix, decide with risk whether the new segment pays (break-even FPD about 2.5 % on Micro). Either way, add FPD by app version to the weekly monitor with its interval. In two sentences: first I check it is not one or two defaults on a small vintage or a definition change; if it is real, I locate it, separate mix from rate, fix the cell or re-price the segment, and add a monitor."}

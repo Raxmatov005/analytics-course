@@ -14,115 +14,381 @@
 
 ## 1. Learn — numbering rows and reading neighbours
 
-### Ranking: four functions, one difference
+### ROW_NUMBER — number the rows 1, 2, 3 …
 
-All four take `OVER (ORDER BY …)` — the `ORDER BY` *inside* the brackets decides what "first" means. `PARTITION BY` restarts the numbering per group.
+**What it is.** `ROW_NUMBER()` is a **ranking window function** (*функция ранжирования*). It gives the rows of each window the numbers 1, 2, 3 … in the order of the `ORDER BY` inside `OVER`. No two rows get the same number. With `PARTITION BY` the numbering restarts in every group.
+
+**How to write it.**
 
 ```sql
-SELECT p.code, l.term_months, COUNT(*) AS loans,
-       ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS rn,
-       RANK()       OVER (ORDER BY COUNT(*) DESC) AS rk,
-       DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS drk
-FROM loans l JOIN products p ON p.product_id = l.product_id
-GROUP BY p.code, l.term_months ORDER BY loans DESC;
--- MICRO 3 → 1335 loans, rn 1 rk 1 drk 1 · MICRO 6 → 1334, 2 2 2 · CONS 6 → 631, 3 3 3 … no ties here, so all three agree
+SELECT customer_id, loan_id, disbursed_at,
+       ROW_NUMBER() OVER (PARTITION BY customer_id          -- restart for every customer
+                          ORDER BY disbursed_at, loan_id)    -- what "first" means; loan_id breaks ties
+       AS loan_no
+FROM loans
+WHERE customer_id = 1893
+ORDER BY loan_no;
 ```
 
-They differ only on **ties** (*равные значения*). Rank loans by principal inside BNPL: four loans share the top amount 7 990 000. `ROW_NUMBER` gives them 1, 2, 3, 4 (in whatever order — add a tiebreaker like `, loan_id` to make it repeatable); `RANK` gives 1, 1, 1, 1 and the next loan **5**; `DENSE_RANK` gives 1, 1, 1, 1 and the next **2**. Rule of thumb: `ROW_NUMBER` when you need exactly one row per group (deduplication, "the latest loan per customer"); `RANK` for sports-style leaderboards; `DENSE_RANK` when you want "the top 3 *values*" even if more than three rows share them.
+| customer_id | loan_id | disbursed_at | loan_no |
+|---|---|---|---|
+| 1893 | 458 | 2025-03-02 | 1 |
+| 1893 | 4687 | 2025-03-03 | 2 |
+| 1893 | 5050 | 2025-06-10 | 3 |
+| … | | | |
+| 1893 | 4952 | 2026-05-08 | 7 |
 
-> 💡 **Key idea.** The three ranking functions agree until two rows tie. Then `ROW_NUMBER` still counts 1, 2, 3, 4 (and picks the order of the tied rows at random unless you add a tiebreaker), `RANK` repeats and skips, `DENSE_RANK` repeats and does not skip.
+Seven rows: customer 1893 has seven loans, numbered in the order they were paid out. Loan 458 was the first, loan 4952 the seventh. The brackets after `ROW_NUMBER` stay empty — the function needs no column, only an order.
+
+**When you use it.**
+- "The first / second / latest X of each Y": a customer's first loan, a loan's latest payment.
+- Exactly one row per group (`rn = 1`), even when values tie — the basis of top-N and de-duplication below.
+
+> ⚠️ **Watch out.** Without a tiebreaker `ROW_NUMBER` numbers tied rows in any order, and the next run may choose another. End the window's `ORDER BY` with a unique column (`, loan_id`) so the result is the same every time.
+
+**Your turn.** Number every customer's loans (no `WHERE`). How many customers have a **third** loan? Wrap the query and count the rows with `loan_no = 3` (Day 1: a window is filtered outside, in a derived table).
+
+```task
+{"id": "w03d2-l1", "kind": "number", "answer": 868, "dp": 0, "unit": "customers", "hint": "SELECT COUNT(*) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS loan_no FROM loans) t WHERE loan_no = 3;", "model": "868 customers have a loan numbered 3 — everyone with three or more loans (593 + 194 + 62 + 15 + 4)."}
+```
+
+### RANK and DENSE_RANK — what happens on a tie
+
+**What it is.** `RANK()` and `DENSE_RANK()` number rows like `ROW_NUMBER`, but rows with the **same value** (a tie, *равные значения*) get the **same number**. After a tie `RANK` skips numbers; `DENSE_RANK` does not.
+
+**How to write it.** Five loans, two of them tied at 700:
+
+```sql
+WITH t(loan, principal) AS (VALUES (101, 900), (102, 700), (103, 700), (104, 500), (105, 400))
+SELECT loan, principal,
+       ROW_NUMBER() OVER (ORDER BY principal DESC, loan) AS rn,     -- always unique
+       RANK()       OVER (ORDER BY principal DESC)       AS rk,     -- ties share, then a gap
+       DENSE_RANK() OVER (ORDER BY principal DESC)       AS drk     -- ties share, no gap
+FROM t;
+```
+
+| loan | principal | ROW_NUMBER | RANK | DENSE_RANK |
+|---|---|---|---|---|
+| 101 | 900 | 1 | 1 | 1 |
+| 102 | 700 | 2 | **2** | **2** |
+| 103 | 700 | 3 | **2** | **2** |
+| 104 | 500 | 4 | **4** | **3** |
+| 105 | 400 | 5 | 5 | 4 |
+
+Loan 104 is the fourth row. `RANK` calls it 4 (three rows are ahead of it); `DENSE_RANK` calls it 3 (two values are ahead of it). On the real data, BNPL loans by principal: four loans tie at the product's top amount, 7 990 000.
+
+```sql
+SELECT loan_id, principal,
+       ROW_NUMBER() OVER (ORDER BY principal DESC, loan_id) AS rn,
+       RANK()       OVER (ORDER BY principal DESC)          AS rk,
+       DENSE_RANK() OVER (ORDER BY principal DESC)          AS drk
+FROM loans
+WHERE product_id = 3                                                -- BNPL
+ORDER BY principal DESC, loan_id
+LIMIT 7;
+```
+
+Rows 1–4 (loans 448, 2680, 4162, 5855) are all `RANK` 1 and `DENSE_RANK` 1. The fifth loan, 1112 at 7 980 000, is `RANK` **5** and `DENSE_RANK` **2**.
+
+**When you use it.**
+
+| Function | On a tie | Use it for |
+|---|---|---|
+| `ROW_NUMBER` | different numbers | exactly one row per group |
+| `RANK` | same number, then a gap | a leaderboard: "two people share 2nd, nobody is 3rd" |
+| `DENSE_RANK` | same number, no gap | "the top 3 **values**", however many rows share them |
+
+**Your turn.**
 
 ```game
 {"type": "match", "id": "w03d2-g1", "title": "Four BNPL loans tie at 7 990 000", "pairs": [["ROW_NUMBER()", "1, 2, 3, 4 — then 5; always unique"], ["RANK()", "1, 1, 1, 1 — then 5; ties share, then a gap"], ["DENSE_RANK()", "1, 1, 1, 1 — then 2; ties share, no gap"], ["NTILE(4)", "four groups of (almost) equal count"], ["PERCENT_RANK()", "a position from 0 to 1"]]}
 ```
 
-**`NTILE(n)`** cuts the ordered rows into n groups of (almost) equal **count** — quartiles, deciles:
+### NTILE — cut the rows into n equal groups
+
+**What it is.** `NTILE(n)` splits the ordered rows into **n groups of (almost) equal count** and returns the group number, 1 to n. `NTILE(4)` gives quartiles, `NTILE(10)` deciles. When the rows do not divide evenly, the first groups get one row more.
+
+**How to write it.** Borrowers in four groups by outstanding, largest first:
 
 ```sql
-WITH c AS (SELECT l.customer_id, SUM(i.principal_due) AS outstanding
-           FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01' GROUP BY l.customer_id),
-q AS (SELECT customer_id, outstanding, NTILE(4) OVER (ORDER BY outstanding DESC) AS quartile FROM c)
+WITH c AS (                                                         -- one row per borrower: outstanding as of 2026-10-01
+  SELECT l.customer_id, SUM(i.principal_due) AS outstanding
+  FROM installments i JOIN loans l ON l.loan_id = i.loan_id
+  WHERE i.due_date > '2026-10-01'
+  GROUP BY l.customer_id),
+q AS (
+  SELECT customer_id, outstanding, NTILE(4) OVER (ORDER BY outstanding DESC) AS quartile
+  FROM c)
 SELECT quartile, COUNT(*) AS borrowers, SUM(outstanding) AS outstanding,
-       ROUND(100.0 * SUM(outstanding) / SUM(SUM(outstanding)) OVER (), 1) AS share_pct, MIN(outstanding), MAX(outstanding)
-FROM q GROUP BY quartile;
--- 1 · 634 · 172 574 767 663 · 82.7 % · 99 696 411 … 977 697 006
--- 2 · 634 ·  28 293 321 289 · 13.6 % · 20 334 600 … 99 426 707
--- 3 · 634 ·   6 745 172 423 ·  3.2 %
--- 4 · 633 ·   1 110 243 055 ·  0.5 % · 68 300 … 3 899 741
+       ROUND(100.0 * SUM(outstanding) / SUM(SUM(outstanding)) OVER (), 1) AS share_pct
+FROM q
+GROUP BY quartile
+ORDER BY quartile;
 ```
 
-Equal *count* per group, very unequal *money*: the top quarter of borrowers holds 83 % of the book. `PERCENT_RANK()` is the continuous version — a row's position as 0…1 (`CUME_DIST()` the share of rows at or below it); you will meet it in week 6 as a percentile. Lightly: `ROUND(PERCENT_RANK() OVER (PARTITION BY product_id ORDER BY principal), 3)` puts the largest SME loan (2861, 599 060 000) at 1.000 and the third largest at 0.997.
+| quartile | borrowers | outstanding | share % |
+|---|---|---|---|
+| 1 | 634 | 172 574 767 663 | 82.7 |
+| 2 | 634 | 28 293 321 289 | 13.6 |
+| 3 | 634 | 6 745 172 423 | 3.2 |
+| 4 | 633 | 1 110 243 055 | 0.5 |
 
-### Top-N per group
+2 535 borrowers: 634, 634, 634 and 633 — equal **count**, the one leftover row in the first groups. The **money** is far from equal: the top quarter holds 82.7 % of the book.
 
-The pattern you will write most often in your career: number the rows inside each group, then keep the small numbers. The filter has to be *outside* (windows do not exist in `WHERE`):
+**When you use it.**
+- Quartiles and deciles for a "who are our customers by exposure" slide.
+- Equal-sized test groups, score bands.
 
-```sql
-WITH r AS (
-  SELECT l.loan_id, p.code, l.principal, l.disbursed_at,
-         ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.principal DESC, l.loan_id) AS rn
-  FROM loans l JOIN products p ON p.product_id = l.product_id)
-SELECT * FROM r WHERE rn <= 3 ORDER BY code, rn;
--- AUTO 1501 399 530 000 · 1271 399 470 000 · 3382 398 180 000 | SME 2861 599 060 000 · 4570 598 450 000 · 4601 597 540 000 | CONS 1464 49 990 000 … | 15 rows
+> ⚠️ **Watch out.** `NTILE` makes groups of equal *count*, not equal *width*. Quartile 1 runs from 99.7 m to 977.7 m, quartile 4 from 68 300 to 3.9 m. Show the minimum and maximum of each group next to its count. (`PERCENT_RANK()` and `CUME_DIST()` give a 0-to-1 position instead; you meet them as percentiles in week 6.)
+
+**Your turn.** `NTILE(4)` over the ten values 1, 2, …, 10. How many rows land in group 1?
+
+```task
+{"id": "w03d2-l2", "kind": "number", "answer": 3, "dp": 0, "unit": "rows", "hint": "10 ÷ 4 = 2 rows each, with 2 left over. The leftovers go to the first groups.", "model": "3. The groups are 3, 3, 2, 2 rows: the two leftover rows go to groups 1 and 2."}
 ```
-
-Every product's top loans sit just under its `max_amount` (Auto 400 m, SME 600 m, Consumer 50 m): the limits bind. Change `rn <= 3` to `rn = 1` and you have **one row per group** — the latest loan per customer (`ORDER BY disbursed_at DESC`) gives 4 335 rows: 2 266 active, 1 950 closed, 30 default, 89 written off.
-
-> ⚠️ **Watch out.** Without a tiebreaker (`, l.loan_id` at the end of the window's `ORDER BY`) `ROW_NUMBER` picks *any* of the tied rows, and the next run may pick another. A top-3 list that changes between Monday and Tuesday with no new data is this bug.
 
 ### LAG and LEAD — the previous and the next row
 
-`LAG(col)` returns the value of `col` on the **previous** row of the window (by the window's `ORDER BY`); `LEAD(col)` the next. `LAG(col, 12)` looks twelve rows back — the same month last year. The first row has no previous row → `NULL`; a third argument gives a default: `LAG(col, 1, 0)`.
+**What it is.** `LAG(column)` returns the value of `column` on the **previous** row of the window; `LEAD(column)` on the **next** row. "Previous" is decided by the `ORDER BY` inside `OVER`. They are **value window functions** (*функции смещения*): they do not aggregate, they look sideways.
+
+**How to write it.**
 
 ```sql
-WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed FROM loans WHERE disbursed_at < '2026-10-01' GROUP BY 1)
-SELECT month, disbursed,
-       LAG(disbursed) OVER (ORDER BY month)                                                   AS prev_month,
-       disbursed - LAG(disbursed) OVER (ORDER BY month)                                       AS diff,
-       ROUND(100.0 * (disbursed - LAG(disbursed) OVER (ORDER BY month)) / LAG(disbursed) OVER (ORDER BY month), 1) AS mom_pct,
-       ROUND(100.0 * (disbursed - LAG(disbursed, 12) OVER (ORDER BY month)) / LAG(disbursed, 12) OVER (ORDER BY month), 1) AS yoy_pct
-FROM m ORDER BY month;
--- 2026-02 11 893 850 000 · prev 17 452 370 000 · −5 558 520 000 · −31.8 % · yoy +20.0 %
--- 2026-03 19 657 410 000 · +65.3 % mom · 2026-08 22 290 210 000 · +7.7 % mom · +26.2 % yoy · 2026-09 17 015 490 000 · −23.7 % mom · +16.2 % yoy
+LAG(column, offset, default) OVER (PARTITION BY … ORDER BY …)   -- offset: rows back (1 if left out); default: instead of NULL
 ```
 
-> ⚠️ **Watch out.** Filter the *display* in an outer query, not in the CTE's `WHERE` — `WHERE month >= '2026-01'` inside `m` removes 2025 from the window and every `yoy_pct` becomes NULL. And `LAG` reads the previous row **in the window's own `ORDER BY`** — the `ORDER BY` at the end of the query only sorts what you see. A `LAG` with no `ORDER BY` inside `OVER` reads an arbitrary neighbour.
-
-February −32 % month-on-month and +20 % year-on-year in the same row is why both columns exist: the first is seasonality, the second is growth.
-
-Per loan, `LAG` turns a list of payments into **gaps between payments**:
+Loan 1's payments, each with the one before and the one after:
 
 ```sql
 SELECT payment_id, paid_at,
-       LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id) AS prev_paid,
-       CAST(julianday(paid_at) - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS INTEGER) AS gap_days   -- DATEDIFF(day, LAG(...), paid_at)
-FROM payments WHERE loan_id = 1 ORDER BY paid_at;
--- gaps 31, 29, 29, 31, 35, 26, 34, 29, 32, 29, then 58 (2026-02-26 → 2026-04-25), 17, 14, 32 …
+       LAG(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id) AS prev_paid,
+       LEAD(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id) AS next_paid,
+       CAST(julianday(paid_at)
+          - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS INTEGER) AS gap_days   -- SQL Server: DATEDIFF(day, the same LAG, paid_at)
+FROM payments
+WHERE loan_id = 1
+ORDER BY paid_at;
 ```
+
+18 rows. The first has no previous row, so `prev_paid` and `gap_days` are NULL; the last has no next row. The gaps run 31, 29, 29, 31, 35 … then **58** (26 February → 25 April, the missed March instalment), 17 and 14 — the catch-up.
+
+The same tool compares a month with the month before (`LAG(x)`) and with the same month last year (`LAG(x, 12)`):
+
+```sql
+WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed
+           FROM loans WHERE disbursed_at < '2026-10-01' GROUP BY 1)
+SELECT month, disbursed,
+       LAG(disbursed) OVER (ORDER BY month) AS prev_month,
+       ROUND(100.0 * (disbursed - LAG(disbursed) OVER (ORDER BY month))
+             / LAG(disbursed) OVER (ORDER BY month), 1)      AS mom_pct,       -- month on month
+       ROUND(100.0 * (disbursed - LAG(disbursed, 12) OVER (ORDER BY month))
+             / LAG(disbursed, 12) OVER (ORDER BY month), 1)  AS yoy_pct        -- year on year
+FROM m
+ORDER BY month;
+```
+
+33 months. February 2026 reads −31.8 % month on month and +20.0 % year on year in the same row: a seasonal dip, not a decline. That is why both columns exist.
+
+**When you use it.**
+- Change against the previous period: month on month, year on year.
+- Days since the previous event of the same customer or loan.
+- `LEAD`: the next due date, the next status, "did anything happen after this?".
+
+> ⚠️ **Watch out.** `LAG` can only look at rows that reached the window. Put the display filter `WHERE month >= '2026-01'` inside `m` and 2025 is gone before `LAG(…, 12)` runs: every `yoy_pct` becomes NULL. Filter the display in an outer query.
+
+**Your turn.**
 
 ```game
 {"type": "bug", "id": "w03d2-g2", "title": "Find the broken line", "q": "Gaps between loan 1's payments. The result is sorted by date, yet prev_paid jumps around. Which line is wrong?", "code": "SELECT payment_id, paid_at,\n       LAG(paid_at) OVER (PARTITION BY loan_id) AS prev_paid\nFROM payments\nWHERE loan_id = 1\nORDER BY paid_at;", "answer": [1], "why": "LAG needs its own ORDER BY inside OVER (ORDER BY paid_at, payment_id). The ORDER BY at the end only sorts the display; it does not tell LAG which row is 'previous'."}
 ```
 
-The 58-day gap is March's missed instalment, the 17 and 14 the catch-up — the same story as yesterday's running total, now as a number per row. Over all 45 439 consecutive pairs the average gap is 30.9 days, 1 435 gaps exceed 45 days and the longest is 408; **63 gaps are 0 days** — two payments on the same day for one loan. Some of those are today's detective case.
+### FIRST_VALUE and LAST_VALUE — the edges of the window, and the frame trap
 
-### FIRST_VALUE, LAST_VALUE and the frame trap
+**What it is.** `FIRST_VALUE(column)` returns the value on the **first** row of the frame, `LAST_VALUE(column)` on the **last** row. Both write it on every row. They depend on the frame from Day 1 — and that is the trap.
 
-`FIRST_VALUE(col) OVER (PARTITION BY … ORDER BY …)` is the first row's value, written on every row. `LAST_VALUE` *should* be the last row's — but with `ORDER BY` the default frame ends at the **current row**, so `LAST_VALUE` returns the current row's value, which looks like a bug and is not:
+**How to write it.**
 
 ```sql
 SELECT paid_at,
        FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) AS first_payment,
-       LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_wrong,          -- = paid_at on every row
+       LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_wrong,      -- default frame: ends at this row
        LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at
                                   ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS last_payment
-FROM payments WHERE loan_id = 1;
--- first 2025-04-27 · last_wrong = the row's own date · last_payment 2026-09-26
+FROM payments
+WHERE loan_id = 1;
 ```
 
-Fix: spell out the frame, or use `FIRST_VALUE` with the reversed `ORDER BY … DESC`. `LEAD` on the schedule (`LEAD(due_date) OVER (PARTITION BY loan_id ORDER BY installment_no)`) checks that every instalment is one month after the previous — the month-end artefacts of week 2 Day 3's P11 show up here too.
+18 rows. `first_payment` is 2025-04-27 on every row. `last_payment` is 2026-09-26 on every row. `last_wrong` equals each row's own date: with `ORDER BY` the default frame ends at the current row, so the "last" row of the frame is the row itself.
 
-> 💡 **Key idea.** Ranking functions answer *"where is this row in its group?"*; value functions (`LAG`, `LEAD`, `FIRST_VALUE`, `LAST_VALUE`) answer *"what is in another row of its group?"*. Both need an `ORDER BY` inside `OVER` — without an order there is no "first" and no "previous".
+**When you use it.**
+- A customer's first product, a loan's first and last payment, the opening and closing value of a period — beside every row.
+- `FIRST_VALUE(x) OVER (… ORDER BY d DESC)` is the safe way to get the **latest** value.
+
+> ⚠️ **Watch out.** `LAST_VALUE` with `ORDER BY` and no frame returns the current row. Spell out `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`, or use `FIRST_VALUE` with the order reversed.
+
+**Your turn.** Which window gives every payment of a loan the date of the loan's **latest** payment?
+
+```task
+{"id": "w03d2-l3", "kind": "choice", "options": ["LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)", "FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at DESC)", "LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)", "FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)"], "answer": 1, "explain": "Reverse the order and take the first value. LAST_VALUE with the default frame returns each row's own date; LAG is the previous row; FIRST_VALUE ascending is the earliest payment."}
+```
+
+### Top-N per group — ROW_NUMBER in a CTE, filter outside
+
+**What it is.** **Top-N per group** (*топ-N в каждой группе*) keeps the N best rows of every group: the three biggest loans per product, the latest loan per customer. Number the rows inside each group with `ROW_NUMBER`, then keep the small numbers. The filter goes in an outer query, because a window does not exist yet in `WHERE`.
+
+**How to write it.**
+
+```sql
+WITH r AS (                                                          -- step 1: number the rows inside each product
+  SELECT l.loan_id, p.code, l.principal, l.disbursed_at,
+         ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.principal DESC, l.loan_id) AS rn
+  FROM loans l JOIN products p ON p.product_id = l.product_id)
+SELECT * FROM r                                                      -- step 2: keep the first three
+WHERE rn <= 3
+ORDER BY code, rn;
+```
+
+15 rows: three per product. SME's top three are loans 2861, 4570 and 4601 (599 060 000, 598 450 000, 597 540 000); Auto's are 1501, 1271 and 3382, just under 400 m. Every product's top loans sit just under its maximum amount: the limits bind.
+
+Change `rn <= 3` to `rn = 1` and the window to `PARTITION BY customer_id ORDER BY disbursed_at DESC, loan_id DESC`: one row per customer, their **latest** loan — 4 335 rows.
+
+**When you use it.**
+- The N largest, newest or worst per group.
+- One row per group (`rn = 1`): the latest status, the current address, the last payment.
+
+> ⚠️ **Watch out.** `ROW_NUMBER` keeps exactly N rows even when the N-th value ties with the next. If tied rows must all stay ("every loan with one of the top three amounts"), use `DENSE_RANK() … <= 3` instead.
+
+**Your turn.**
+
+```game
+{"type": "build", "id": "w03d2-g5", "title": "The latest loan of every customer", "q": "Build the inner query: each customer's loans numbered from the newest.", "tokens": ["SELECT customer_id, loan_id,", "ROW_NUMBER() OVER (", "PARTITION BY customer_id", "ORDER BY disbursed_at DESC, loan_id DESC", ") AS rn", "FROM loans"], "distractors": ["WHERE rn = 1", "GROUP BY customer_id", "ORDER BY disbursed_at ASC"]}
+```
+
+### Duplicates — find them and keep one with ROW_NUMBER
+
+**What it is.** A **duplicate** (*дубликат*) is a row that agrees with another row on **everything that defines sameness**, even if its id is different. Number the rows inside each group of "same" rows: row 1 is the original, every row numbered 2 or more is a repeat.
+
+**How to write it.** Write the definition of sameness first; it becomes the `PARTITION BY`. Two customer rows with the same phone number:
+
+```sql
+WITH r AS (
+  SELECT customer_id, first_name, last_name, phone,
+         ROW_NUMBER() OVER (PARTITION BY phone            -- what makes two rows "the same"
+                            ORDER BY customer_id) AS rn    -- which one counts as the original: the lowest id
+  FROM customers)
+SELECT * FROM r
+WHERE rn > 1                                               -- the repeats
+ORDER BY customer_id;
+```
+
+43 rows — the same 43 pairs the self-join found in week 2 (customer 6005 repeats customer 44, *Yulduz Karimova*). To **keep one row of each**, flip the filter: `WHERE rn = 1` returns 5 997 customers, every phone once.
+
+**Removing** them physically is the same list inside a `DELETE` — on your own copy only:
+
+```sql
+-- shape only: delete the repeats from a table of your own (the lab below does it for real)
+DELETE FROM my_table
+WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY … ORDER BY id) AS rn FROM my_table) t
+             WHERE rn > 1);
+```
+
+**When you use it.**
+- Data loaded twice, the same customer typed twice, a payment imported twice.
+- A clean query or view (`rn = 1`) that every report reads, while the raw table stays as evidence.
+
+| | `GROUP BY … HAVING COUNT(*) > 1` | `ROW_NUMBER() … rn > 1` |
+|---|---|---|
+| finds the duplicate **groups** | yes | yes |
+| says **which row** to keep | no | yes — `rn = 1` |
+| returns the clean rows | no | yes — `WHERE rn = 1` |
+
+> ⚠️ **Watch out.** The `ORDER BY` inside the window decides which row survives. `ORDER BY customer_id` keeps the oldest id; `ORDER BY customer_id DESC` would keep the newest and delete the originals — the same count, the wrong rows.
+
+**Your turn.** Sevara's payments: which `PARTITION BY` finds a payment that was imported twice (same instalment, same day, same amount, new `payment_id`)?
+
+```task
+{"id": "w03d2-l4", "kind": "choice", "options": ["PARTITION BY payment_id", "PARTITION BY installment_id, paid_at, amount", "PARTITION BY loan_id", "PARTITION BY paid_at"], "answer": 1, "explain": "The partition is the definition of sameness. payment_id is unique, so it never repeats; loan_id or paid_at alone would call two honest payments duplicates."}
+```
+
+### Roll rates with LAG — from one snapshot to the next
+
+**What it is.** A **roll rate** (*миграция между корзинами*) is the share of loans that moved from one DPD bucket at one date to another bucket at the next date. Stack the snapshots one under another — one row per loan per date — and `LAG(bucket)` puts the previous date's bucket on the same row.
+
+```text
+loan  asof        bucket      LAG(bucket) OVER (PARTITION BY loan ORDER BY asof)
+7     2026-09-01  1-30        NULL
+7     2026-10-01  31-60       1-30     → rolled forward
+8     2026-09-01  1-30        NULL
+8     2026-10-01  0           1-30     → cured
+9     2026-09-01  0           NULL
+9     2026-10-01  1-30        0        → new late loan
+```
+
+**How to write it.** Week 2's DPD rule, computed at two as-of dates at once, then `LAG`, then a count per from × to:
+
+```sql
+WITH snaps(asof) AS (VALUES ('2026-09-01'), ('2026-10-01')),            -- the two snapshot dates
+unpaid AS (                                                             -- matured instalments not fully paid, per date
+  SELECT s.asof, i.loan_id, i.due_date
+  FROM snaps s
+  JOIN installments i ON i.due_date <= s.asof
+  LEFT JOIN payments p ON p.installment_id = i.installment_id AND p.paid_at <= s.asof
+  GROUP BY s.asof, i.installment_id, i.loan_id, i.due_date, i.total_due
+  HAVING COALESCE(SUM(p.amount), 0) < i.total_due),
+dpd AS (SELECT asof, loan_id, CAST(julianday(asof) - julianday(MIN(due_date)) AS INTEGER) AS dpd
+        FROM unpaid GROUP BY asof, loan_id),
+b AS (                                                                  -- one row per loan per date; no unpaid instalment = DPD 0
+  SELECT s.asof, l.loan_id,
+         CASE WHEN COALESCE(d.dpd, 0) = 0 THEN '0' WHEN d.dpd <= 30 THEN '1-30' WHEN d.dpd <= 60 THEN '31-60'
+              WHEN d.dpd <= 90 THEN '61-90' ELSE '90+' END AS bucket
+  FROM snaps s
+  JOIN loans l ON l.disbursed_at < '2026-09-01'
+  LEFT JOIN dpd d ON d.asof = s.asof AND d.loan_id = l.loan_id),
+moves AS (SELECT asof, loan_id, bucket AS to_bucket,
+                 LAG(bucket) OVER (PARTITION BY loan_id ORDER BY asof) AS from_bucket   -- last month's bucket, same row
+          FROM b)
+SELECT from_bucket, to_bucket, COUNT(*) AS loans,
+       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY from_bucket), 1) AS pct_of_from
+FROM moves
+WHERE asof = '2026-10-01' AND from_bucket <> '0'
+GROUP BY from_bucket, to_bucket
+ORDER BY from_bucket, to_bucket;
+```
+
+8 rows. Of the 128 loans in 1–30 on 1 September, 97 cured (75.8 %), 6 stayed and 25 rolled to 31–60 (19.5 %). All 17 loans in 61–90 reached 90+. The last line is Day 1's share inside a group: each from-bucket's rows add to 100.
+
+**When you use it.**
+- The collections report card: does 1–30 cure or roll?
+- Any state that changes over time: status this month against last month, segment now against at signing.
+
+> ⚠️ **Watch out.** The as-of date must sit in **both** places: the instalment filter (`due_date <= asof`) and the payment join (`paid_at <= asof`). Leave it out of the join and a payment made on 15 September counts on 1 September — loans look cured before they paid.
+
+**Your turn.** In the matrix above, what share of the loans in 31–60 on 1 September had rolled to 61–90 by 1 October? (%, one decimal)
+
+```task
+{"id": "w03d2-l5", "kind": "number", "answer": 69.6, "dp": 1, "unit": "%", "hint": "The row from_bucket = '31-60', to_bucket = '61-90'.", "model": "69.6 % — 16 of 23 loans. In 31–60 more than two in three get worse; in 1–30 three in four cure."}
+```
+
+### Putting it together
+
+One request, several of today's tools. *"For every product: the latest loan, its principal against the loan before it, and whether it is in the product's top quarter by size."*
+
+```sql
+WITH r AS (
+  SELECT l.loan_id, p.code, l.disbursed_at, l.principal,
+         ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.disbursed_at DESC, l.loan_id DESC) AS newest_first,   -- ROW_NUMBER
+         LAG(l.principal) OVER (PARTITION BY p.code ORDER BY l.disbursed_at, l.loan_id)        AS prev_principal, -- LAG
+         NTILE(4) OVER (PARTITION BY p.code ORDER BY l.principal DESC)                          AS size_quartile   -- NTILE
+  FROM loans l JOIN products p ON p.product_id = l.product_id)
+SELECT code, loan_id, disbursed_at, principal, prev_principal, size_quartile
+FROM r
+WHERE newest_first = 1                                                                                            -- top-N, N = 1
+ORDER BY code;
+```
+
+Five rows, one per product. SME's latest loan, 3368, was paid out on 1 October: 460 800 000, in the top quarter of SME loans by size, and more than five times the SME loan before it (82 430 000). Three windows in one CTE, each with its own `PARTITION BY` and `ORDER BY`: `ROW_NUMBER` picks the row, `LAG` reads its neighbour in date order, `NTILE` places it by size. The filter on `newest_first` sits outside, as always.
+
+**Which window function?**
 
 ```game
 {"type": "sort", "id": "w03d2-g3", "title": "Which window function?", "q": "Tap each question from Bekzod, Sevara or Nilufar, then the function that answers it.", "groups": {"ROW_NUMBER": ["The latest loan of every customer, exactly one row each", "Which payment rows are repeats of an earlier one?"], "RANK / DENSE_RANK": ["A leaderboard of collectors where ties share a place", "Every loan with one of the top three principal amounts in its product"], "LAG / LEAD": ["Each month against the month before", "Days since the previous payment of the same loan"], "NTILE": ["Borrowers in four equal-sized groups by outstanding"]}}
@@ -145,7 +411,23 @@ Fix: spell out the frame, or use `FIRST_VALUE` with the reversed `ORDER BY … D
 
 ## 2. Worked example — the money received twice (detective, 30 min)
 
-Sevara's claim: *same instalment, same day, same amount, two payment rows.* Finance's defence: *payment_id is unique.* Both are true — a duplicate is not two identical rows, it is two rows that **agree on everything that matters**. Number the rows inside each (instalment, date, amount) group and anything numbered 2 is a repeat:
+Sevara's claim: *same instalment, same day, same amount, two payment rows.* Finance's defence: *payment_id is unique.* Each step uses one concept from section 1, in the same order.
+
+**Step 1 — LAG: look for the clue.** Gaps between consecutive payments of the same loan, as in section 1, over all loans:
+
+```sql
+WITH g AS (
+  SELECT loan_id,
+         julianday(paid_at) - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS gap
+  FROM payments)
+SELECT COUNT(gap) AS pairs, ROUND(AVG(gap), 1) AS avg_gap, SUM(CASE WHEN gap = 0 THEN 1 ELSE 0 END) AS same_day
+FROM g;
+-- 45 439 pairs · 30.9 days on average · 63 pairs paid on the same day
+```
+
+63 same-day pairs. Some are honest (two different instalments paid together), some may be Sevara's. Same day is a clue, not the definition.
+
+**Step 2 — duplicates: define sameness, number the rows.** A duplicate is not two identical rows; it is two rows that **agree on everything that matters**: instalment, date, amount. That is the `PARTITION BY`; anything numbered 2 is a repeat:
 
 ```sql
 WITH d AS (
@@ -163,7 +445,7 @@ SELECT * FROM d WHERE rn > 1 ORDER BY payment_id;
 
 > 💡 **Key idea.** A duplicate is not two identical rows — it is two rows that agree on **everything that defines sameness**. Write that definition down first (here: instalment, date, amount); it becomes the `PARTITION BY`.
 
-**The de-duplicated query.** Never `DELETE` from the course tables (or from a production table on your own authority): the de-duplicated *view* is the deliverable, the raw table stays as evidence. Keep `rn = 1` — the earliest `payment_id` in each group:
+**Step 3 — keep one: the de-duplicated query.** Never `DELETE` from the course tables (or from a production table on your own authority): the de-duplicated *query* is the deliverable, the raw table stays as evidence. Keep `rn = 1` — the earliest `payment_id` in each group:
 
 ```sql
 WITH d AS (
@@ -183,7 +465,7 @@ Rerun week 2's DPD block with this result in place of `payments`: still 1 784 un
 
 Why `ROW_NUMBER` and not `GROUP BY … HAVING COUNT(*) > 1` (week 2's T21)? `HAVING` *finds* the groups; it cannot tell you *which row to keep*, and it cannot return the non-duplicate rows alongside. The window does both in one pass.
 
-**Now do the whole cycle yourself — on a table of your own.** On the course tables you never delete; on your own copy you may, and that is how you learn what `DELETE` with a `ROW_NUMBER` list does before you ever propose it to anyone.
+**Step 4 — removing them, on a table of your own.** On the course tables you never delete; on your own copy you may, and that is how you learn what `DELETE` with a `ROW_NUMBER` list does before you ever propose it to anyone.
 
 ```sqllab
 {"id": "w03d2-lab", "title": "Make duplicates, find them, delete them", "intro": "You copy loan 1's payments into a table of your own, plant six duplicates the way the re-import did (same instalment, date and amount, new ids), find them with ROW_NUMBER and delete exactly those. The course table payments is not touched.", "steps": [
@@ -200,9 +482,24 @@ Why `ROW_NUMBER` and not `GROUP BY … HAVING COUNT(*) > 1` (week 2's T21)? `HAV
 
 ## 3. Practice (50 min)
 
-Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
+The questions follow the order of section 1; the concept each one trains is in italics. Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
 
-**P1.** Branches ranked by outstanding with `ROW_NUMBER`, `RANK` and `DENSE_RANK`. Why do all three agree here, and what would make them differ?
+**P1.** *(ROW_NUMBER)* Number every customer's loans in the order they were disbursed (ties by `loan_id`) and show the loans whose number is 1 — every customer's **first** loan. How many rows, and what is the product mix of first loans?
+
+<details><summary>Answer</summary>
+
+```sql
+WITH r AS (SELECT l.customer_id, l.loan_id, p.code,
+                  ROW_NUMBER() OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at, l.loan_id) AS loan_no
+           FROM loans l JOIN products p ON p.product_id = l.product_id)
+SELECT code, COUNT(*) AS first_loans FROM r WHERE loan_no = 1 GROUP BY code ORDER BY first_loans DESC;
+-- MICRO 1 531 · CONS 1 325 · BNPL 850 · SME 422 · AUTO 207
+```
+One first loan per borrower: 4 335 rows. A third of borrowers start with Micro (1 531), and only 207 start with Auto. `ROW_NUMBER` guarantees exactly one row with number 1 per customer, even when two loans were paid out on the same day — the tiebreaker decides which.
+
+</details>
+
+**P2.** *(RANK vs DENSE_RANK)* Branches ranked by outstanding with `ROW_NUMBER`, `RANK` and `DENSE_RANK`. Why do all three agree here, and what would make them differ?
 
 <details><summary>Answer</summary>
 
@@ -221,48 +518,50 @@ Yesterday's branch outstanding plus the three functions over `ORDER BY outstandi
 
 </details>
 
-**P1 — why?** All three columns agree on every branch. What would make them differ?
+**P2 — why?** All three columns agree on every branch. What would make them differ?
 
 ```task
 {"id": "w03d2-p1b", "kind": "choice", "options": ["A PARTITION BY region", "Two branches with exactly the same outstanding — a tie", "Sorting ASC instead of DESC", "More than ten branches"], "answer": 1, "explain": "The functions differ only on ties. Outstanding to the som never ties; coarse values do — 17 loans share the principal 4 880 000.", "xp": 1}
 ```
 
-**P2.** The three biggest loans per product (loan, principal, disbursed). Then the three biggest *per branch* — how many rows?
+**P3.** *(RANK)* Rank collectors by promises obtained (`outcome = 'promise_to_pay'`) with `RANK`; show actions, promises and promise rate for the top five.
 
 <details><summary>Answer</summary>
 
 ```sql
-WITH r AS (
-  SELECT b.branch_name, l.loan_id, p.code, l.principal, l.disbursed_at,
-         ROW_NUMBER() OVER (PARTITION BY b.branch_name ORDER BY l.principal DESC, l.loan_id) AS rn
-  FROM loans l JOIN branches b ON b.branch_id = l.branch_id JOIN products p ON p.product_id = l.product_id)
-SELECT * FROM r WHERE rn <= 3 ORDER BY branch_name, rn;
--- 30 rows; every one an SME loan; the largest per branch from 573 480 000 (Samarkand Central) to 599 060 000 (Tashkent Central)
+SELECT collector_id, COUNT(*) AS actions, SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) AS promises,
+       RANK() OVER (ORDER BY SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) DESC) AS rk
+FROM collections_actions GROUP BY collector_id ORDER BY rk LIMIT 5;
+-- 29 → 568 actions / 182 promises · 28 → 593 / 177 · 27 → 590 / 170 · 57 → 419 / 125 · 7 → 393 / 121
 ```
-The top-N pattern from section 1 gives 15 rows for products; for branches `PARTITION BY b.branch_name` → 30 rows, all thirty SME. Add `, l.loan_id` to the `ORDER BY` so a rerun gives the same rows.
+A window over an aggregate with `CASE` inside — three layers, still one query. Ranking by *count* rewards the busiest collector; add `100.0 * promises / actions` and rank by that too before anyone gets a bonus.
 
 </details>
 
-**P2 — count.** How many rows does the top-3-per-branch query return?
+**P4.** *(NTILE)* Customer quartiles by outstanding (`NTILE(4)`) with count, money and share — then deciles. How much does the top 10 % hold?
+
+<details><summary>Answer</summary>
+
+```sql
+WITH c AS (SELECT l.customer_id, SUM(i.principal_due) AS outstanding
+           FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01' GROUP BY l.customer_id),
+q AS (SELECT customer_id, outstanding, NTILE(10) OVER (ORDER BY outstanding DESC) AS decile FROM c)
+SELECT decile, COUNT(*) AS borrowers, SUM(outstanding) AS outstanding,
+       ROUND(100.0 * SUM(outstanding) / SUM(SUM(outstanding)) OVER (), 1) AS share_pct
+FROM q GROUP BY decile ORDER BY decile;
+-- 1 · 254 · 102 681 050 696 · 49.2 %   2 · 254 · 54 113 118 283 · 25.9 %   3 · 254 · 12.4 % …
+```
+Section 1 gives quartiles 82.7 / 13.6 / 3.2 / 0.5 %. `NTILE(10)`: the first decile (254 borrowers) holds **49.2 %** of the book, the second 25.9 % — three quarters of the outstanding in a fifth of the borrowers. A decile table is the standard "who are our customers by exposure" slide; quote the borrower count with every share.
+
+</details>
+
+**P4 — read it.** What share of outstanding does the top tenth of borrowers hold, in %, one decimal?
 
 ```task
-{"id": "w03d2-p2b", "kind": "number", "answer": 30, "dp": 0, "unit": "rows", "hint": "Ten branches, three rows each — if every branch has at least three loans.", "model": "30 rows: 10 branches × 3. All thirty are SME loans, so 'the biggest loans per branch' is really 'the SME book per branch'.", "xp": 1}
+{"id": "w03d2-p9b", "kind": "number", "answer": 49.2, "dp": 1, "unit": "%", "hint": "Decile 1 of NTILE(10) OVER (ORDER BY outstanding DESC).", "model": "49.2 %: 254 borrowers hold 102.7 bn of 208.7 bn. With the second decile (25.9 %) a fifth of the borrowers carries three quarters of the book.", "xp": 1}
 ```
 
-**P3.** The **latest loan of every customer**, and the status mix of those latest loans. What does "89 written off" mean here that `loans.status` alone did not say?
-
-<details><summary>Answer</summary>
-
-```sql
-WITH r AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at DESC, loan_id DESC) AS rn FROM loans)
-SELECT status, COUNT(*) FROM r WHERE rn = 1 GROUP BY status;
--- active 2266 · closed 1950 · default 30 · written_off 89   (4 335 customers)
-```
-89 customers' *most recent* loan was written off — but 188 customers have a written-off loan somewhere in their history, so **101 of them were lent to again after** a loan that went bad (self-join `loans` to `loans` on customer with a later `disbursed_at`). Bring that number to Nilufar; it is a scoring question, not a collections one.
-
-</details>
-
-**P4.** Monthly disbursement with month-on-month and year-on-year change for 2026-01..2026-09 (the display filtered *outside* the window). Which month fell most against the previous one and still grew year-on-year?
+**P5.** *(LAG — month on month)* Monthly disbursement with month-on-month and year-on-year change for 2026-01..2026-09 (the display filtered *outside* the window). Which month fell most against the previous one and still grew year-on-year?
 
 <details><summary>Answer</summary>
 
@@ -279,13 +578,13 @@ Section 1's `LAG` query wrapped, the display filter outside. February: −31.8 %
 
 </details>
 
-**P4 — read it.** Which month of 2026 fell most against the month before, and still grew year-on-year?
+**P5 — read it.** Which month of 2026 fell most against the month before, and still grew year-on-year?
 
 ```task
 {"id": "w03d2-p4b", "kind": "choice", "options": ["January 2026", "February 2026", "June 2026", "September 2026"], "answer": 1, "explain": "February: −31.8 % month-on-month and +20.0 % year-on-year — a seasonal dip, not a decline. September (−23.7 % / +16.2 %) is the second.", "xp": 1}
 ```
 
-**P5.** Per instalment of loan 1, the previous instalment's due date and the number of days between them (`LAG` on the schedule). Then over **all** loans: how many consecutive instalments are more than 31 days apart?
+**P6.** *(LAG and LEAD on the schedule)* Per instalment of loan 1, the previous instalment's due date and the number of days between them (`LAG` on the schedule). Then over **all** loans: how many consecutive instalments are more than 31 days apart?
 
 <details><summary>Answer</summary>
 
@@ -295,11 +594,11 @@ SELECT COUNT(*) FROM (
          julianday(due_date) - julianday(LAG(due_date) OVER (PARTITION BY loan_id ORDER BY installment_no)) AS gap
   FROM installments) WHERE gap > 31;
 ```
-Loan 1: 30, 31, 30, 31, 31, 30, 31, 30, 31, 31, **28** (28 Jan → 28 Feb), 31 … — month lengths, 28 to 31. Over all schedules no gap exceeds 31 — the schedule generator is monthly to the day; a gap of 32+ would mean a skipped instalment number.
+Loan 1: 30, 31, 30, 31, 31, 30, 31, 30, 31, 31, **28** (28 Jan → 28 Feb), 31 … — month lengths, 28 to 31. Over all schedules no gap exceeds 31 — the schedule generator is monthly to the day; a gap of 32+ would mean a skipped instalment number. `LEAD(due_date) OVER (PARTITION BY loan_id ORDER BY installment_no)` asks the same question from the other side: the next due date. The 28-day step is the month-end effect of week 2 Day 3's P22: a schedule that follows the calendar cannot keep a 29th–31st day in February.
 
 </details>
 
-**P6.** Gaps between consecutive **payments** per loan: the average gap, the longest, how many exceed 60 days, and how many are exactly 0. Which of those four is tonight's detective number?
+**P7.** *(LAG — gaps between payments)* Gaps between consecutive **payments** per loan: the average gap, the longest, how many exceed 60 days, and how many are exactly 0. Which of those four is the detective's number?
 
 <details><summary>Answer</summary>
 
@@ -317,66 +616,59 @@ FROM g;
 
 </details>
 
-**P6 — the detective number.** How many consecutive payment pairs of the same loan are exactly 0 days apart?
+**P7 — the detective number.** How many consecutive payment pairs of the same loan are exactly 0 days apart?
 
 ```task
-{"id": "w03d2-p6b", "kind": "number", "answer": 63, "dp": 0, "unit": "pairs", "hint": "The gap column of your P6 query; count the rows where it equals 0.", "model": "63 same-day pairs: the 25 duplicates plus 38 legitimate pairs where a borrower paid two different instalments on one day. A clue, not the definition — the definition is the (instalment, date, amount) partition.", "xp": 1}
+{"id": "w03d2-p6b", "kind": "number", "answer": 63, "dp": 0, "unit": "pairs", "hint": "The gap column of your P7 query; count the rows where it equals 0.", "model": "63 same-day pairs: the 25 duplicates plus 38 legitimate pairs where a borrower paid two different instalments on one day. A clue, not the definition — the definition is the (instalment, date, amount) partition.", "xp": 1}
 ```
 
-**P7.** Median principal per product with `ROW_NUMBER` and `COUNT(*) OVER` (pick the middle row(s)). Compare with the average — where do they differ most?
+**P8.** *(FIRST_VALUE)* For customers with at least two loans: the product of their **first** loan and of their **latest** loan (`FIRST_VALUE` twice, once in each order), counted as a from → to table. How many customers started with Micro and moved up to SME?
 
 <details><summary>Answer</summary>
 
 ```sql
-WITH r AS (SELECT p.code, l.principal,
-                  ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.principal) AS rn,
-                  COUNT(*)     OVER (PARTITION BY p.code) AS n
+WITH f AS (SELECT l.customer_id,
+                  FIRST_VALUE(p.code) OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at, l.loan_id)           AS first_product,
+                  FIRST_VALUE(p.code) OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at DESC, l.loan_id DESC) AS latest_product,
+                  COUNT(*)            OVER (PARTITION BY l.customer_id)                                              AS loans
            FROM loans l JOIN products p ON p.product_id = l.product_id)
-SELECT code, n, AVG(principal) AS median FROM r WHERE rn IN ((n + 1) / 2, (n + 2) / 2) GROUP BY code;
--- AUTO median 214 840 000 (avg 216 858 133) · SME 314 770 000 (308 728 745) · CONS 26 965 000 (26 926 915) · MICRO 2 700 000 (2 705 586) · BNPL 4 180 000 (4 170 880)
+SELECT first_product, latest_product, COUNT(DISTINCT customer_id) AS customers
+FROM f WHERE loans >= 2
+GROUP BY first_product, latest_product ORDER BY customers DESC;
+-- 25 rows: MICRO → MICRO 263 · MICRO → CONS 259 · CONS → MICRO 221 … MICRO → SME 70
 ```
-Integer division picks one middle row for odd n and two for even. Median ≈ mean everywhere: ticket sizes are spread evenly between the product's min and max, no skew. (SQL Server has `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY principal) OVER (PARTITION BY code)`; SQLite does not — this is the portable way.)
+70 customers took a Micro loan first and an SME loan last. The most common path out of Micro is Consumer (259). `FIRST_VALUE` with the order reversed is the safe "latest" — `LAST_VALUE` with the default frame would return each row's own product. `COUNT(DISTINCT customer_id)` because the window wrote the same pair on every loan of the customer.
 
 </details>
 
-**P8.** Rank collectors by promises obtained (`outcome = 'promise_to_pay'`) with `RANK`; show actions, promises and promise rate for the top five.
+**P9.** *(top-N per group)* The three biggest loans per **branch** (loan, product, principal, disbursed). How many rows? Then change it to one row per customer — their latest loan — and give the status mix of those latest loans.
 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT collector_id, COUNT(*) AS actions, SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) AS promises,
-       RANK() OVER (ORDER BY SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) DESC) AS rk
-FROM collections_actions GROUP BY collector_id ORDER BY rk LIMIT 5;
--- 29 → 568 actions / 182 promises · 28 → 593 / 177 · 27 → 590 / 170 · 57 → 419 / 125 · 7 → 393 / 121
+WITH r AS (
+  SELECT b.branch_name, l.loan_id, p.code, l.principal, l.disbursed_at,
+         ROW_NUMBER() OVER (PARTITION BY b.branch_name ORDER BY l.principal DESC, l.loan_id) AS rn
+  FROM loans l JOIN branches b ON b.branch_id = l.branch_id JOIN products p ON p.product_id = l.product_id)
+SELECT * FROM r WHERE rn <= 3 ORDER BY branch_name, rn;
+-- 30 rows; every one an SME loan; the largest per branch from 573 480 000 (Samarkand Central) to 599 060 000 (Tashkent Central)
 ```
-A window over an aggregate with `CASE` inside — three layers, still one query. Ranking by *count* rewards the busiest collector; add `100.0 * promises / actions` and rank by that too before anyone gets a bonus.
-
-</details>
-
-**P9.** Customer quartiles by outstanding (`NTILE(4)`) with count, money and share — then deciles. How much does the top 10 % hold?
-
-<details><summary>Answer</summary>
-
 ```sql
-WITH c AS (SELECT l.customer_id, SUM(i.principal_due) AS outstanding
-           FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01' GROUP BY l.customer_id),
-q AS (SELECT customer_id, outstanding, NTILE(10) OVER (ORDER BY outstanding DESC) AS decile FROM c)
-SELECT decile, COUNT(*) AS borrowers, SUM(outstanding) AS outstanding,
-       ROUND(100.0 * SUM(outstanding) / SUM(SUM(outstanding)) OVER (), 1) AS share_pct
-FROM q GROUP BY decile ORDER BY decile;
--- 1 · 254 · 102 681 050 696 · 49.2 %   2 · 254 · 54 113 118 283 · 25.9 %   3 · 254 · 12.4 % …
+WITH r AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at DESC, loan_id DESC) AS rn FROM loans)
+SELECT status, COUNT(*) FROM r WHERE rn = 1 GROUP BY status;
+-- active 2266 · closed 1950 · default 30 · written_off 89   (4 335 customers)
 ```
-Section 1 gives quartiles 82.7 / 13.6 / 3.2 / 0.5 %. `NTILE(10)`: the first decile (254 borrowers) holds **49.2 %** of the book, the second 25.9 % — three quarters of the outstanding in a fifth of the borrowers. A decile table is the standard "who are our customers by exposure" slide; quote the borrower count with every share.
+Branches: 30 rows, all thirty SME. Latest loans: 89 customers' *most recent* loan was written off — but 188 customers have a written-off loan somewhere in their history, so **101 of them were lent to again after** a loan that went bad (self-join `loans` to `loans` on customer with a later `disbursed_at`). Bring that number to Nilufar; it is a scoring question, not a collections one.
 
 </details>
 
-**P9 — read it.** What share of outstanding does the top tenth of borrowers hold, in %, one decimal?
+**P9 — count.** How many rows does the top-3-per-branch query return?
 
 ```task
-{"id": "w03d2-p9b", "kind": "number", "answer": 49.2, "dp": 1, "unit": "%", "hint": "Decile 1 of NTILE(10) OVER (ORDER BY outstanding DESC).", "model": "49.2 %: 254 borrowers hold 102.7 bn of 208.7 bn. With the second decile (25.9 %) a fifth of the borrowers carries three quarters of the book.", "xp": 1}
+{"id": "w03d2-p2b", "kind": "number", "answer": 30, "dp": 0, "unit": "rows", "hint": "Ten branches, three rows each — if every branch has at least three loans.", "model": "30 rows: 10 branches × 3. All thirty are SME loans, so 'the biggest loans per branch' is really 'the SME book per branch'.", "xp": 1}
 ```
 
-**P10.** Sevara's list, formatted: for each duplicate pair, one row with both payment ids, loan, instalment, date, amount, method — `MIN` and `MAX` of `payment_id` over the partition. Sorted by amount, largest first.
+**P10.** *(duplicates)* Sevara's list, formatted: for each duplicate pair, one row with both payment ids, loan, instalment, date, amount, method — `MIN` and `MAX` of `payment_id` over the partition. Sorted by amount, largest first.
 
 <details><summary>Answer</summary>
 
@@ -393,9 +685,7 @@ Aggregate windows over the duplicate partition; `DISTINCT` collapses the pair to
 
 </details>
 
-> 🚀 **Stretch (optional, +5 XP).** Before you trust any definition built on payments, know whether the data has split payments at all.
-
-**P11.** Payments of the same instalment on *different* days or with *different* amounts are not duplicates — they are partial payments. How many instalments have two or more distinct payments, and what share of them end up fully paid? (`COUNT(*) OVER (PARTITION BY installment_id)` on the de-duplicated set.)
+**P11.** *(duplicates — what is not a duplicate)* Payments of the same instalment on *different* days or with *different* amounts are not duplicates — they are partial payments. After removing the 25 duplicates, how many instalments have two or more distinct payments? (`COUNT(*) OVER (PARTITION BY installment_id)` on the de-duplicated set.)
 
 <details><summary>Answer</summary>
 
@@ -417,22 +707,72 @@ On the `rn = 1` set `COUNT(*) OVER (PARTITION BY installment_id)` is 1 for every
 {"id": "w03d2-p11", "kind": "number", "answer": 0, "dp": 0, "unit": "instalments", "hint": "COUNT(*) OVER (PARTITION BY installment_id) on the rows with rn = 1; count the instalments where it is 2 or more.", "model": "0. Every instalment is paid in one go or not at all; the only multi-payment instalments were the 25 duplicates. Week 2's 427 partly paid instalments are single payments smaller than total_due. So 'paid' never needs a SUM over several payments of one instalment in this data — write that in your notes.", "xp": 2}
 ```
 
+**P12.** *(roll rates with LAG)* One month is one data point. Build the same matrix as section 1 for **1 August → 1 September 2026** (snapshot dates `'2026-08-01'` and `'2026-09-01'`, loans disbursed before 1 August). What share of 1–30 rolled to 31–60 this time?
+
+<details><summary>Answer</summary>
+
+```sql
+WITH snaps(asof) AS (VALUES ('2026-08-01'), ('2026-09-01')),
+unpaid AS (
+  SELECT s.asof, i.loan_id, i.due_date
+  FROM snaps s
+  JOIN installments i ON i.due_date <= s.asof
+  LEFT JOIN payments p ON p.installment_id = i.installment_id AND p.paid_at <= s.asof
+  GROUP BY s.asof, i.installment_id, i.loan_id, i.due_date, i.total_due
+  HAVING COALESCE(SUM(p.amount), 0) < i.total_due),
+dpd AS (SELECT asof, loan_id, CAST(julianday(asof) - julianday(MIN(due_date)) AS INTEGER) AS dpd
+        FROM unpaid GROUP BY asof, loan_id),
+b AS (SELECT s.asof, l.loan_id,
+             CASE WHEN COALESCE(d.dpd, 0) = 0 THEN '0' WHEN d.dpd <= 30 THEN '1-30' WHEN d.dpd <= 60 THEN '31-60'
+                  WHEN d.dpd <= 90 THEN '61-90' ELSE '90+' END AS bucket
+      FROM snaps s
+      JOIN loans l ON l.disbursed_at < '2026-08-01'
+      LEFT JOIN dpd d ON d.asof = s.asof AND d.loan_id = l.loan_id),
+moves AS (SELECT asof, loan_id, bucket AS to_bucket, LAG(bucket) OVER (PARTITION BY loan_id ORDER BY asof) AS from_bucket FROM b)
+SELECT from_bucket, to_bucket, COUNT(*) AS loans,
+       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY from_bucket), 1) AS pct_of_from
+FROM moves WHERE asof = '2026-09-01' AND from_bucket <> '0'
+GROUP BY from_bucket, to_bucket ORDER BY from_bucket, to_bucket;
+-- 1-30 → 0 75 (74.3 %) · → 1-30 5 (5.0) · → 31-60 21 (20.8) | 31-60 → 0 16 (47.1) · → 1-30 1 · → 61-90 17 (50.0) | 61-90 → 90+ 16 | 90+ → 90+ 201
+```
+1–30 rolled forward at **20.8 %** (21 of 101) in August, 19.5 % in September: about one in five, stable. 31–60 is less stable — 50.0 % then 69.6 % — on 34 and 23 loans; small rows swing. Two months before you call any of these "the" roll rate.
+
+</details>
+
+> 🚀 **Stretch (optional, +5 XP).** A median without a median function — the portable trick with two windows.
+
+**P13.** *(ROW_NUMBER + COUNT as a window)* Median principal per product with `ROW_NUMBER` and `COUNT(*) OVER` (pick the middle row(s)). Compare with the average — where do they differ most?
+
+<details><summary>Answer</summary>
+
+```sql
+WITH r AS (SELECT p.code, l.principal,
+                  ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.principal) AS rn,
+                  COUNT(*)     OVER (PARTITION BY p.code) AS n
+           FROM loans l JOIN products p ON p.product_id = l.product_id)
+SELECT code, n, AVG(principal) AS median FROM r WHERE rn IN ((n + 1) / 2, (n + 2) / 2) GROUP BY code;
+-- AUTO median 214 840 000 (avg 216 858 133) · SME 314 770 000 (308 728 745) · CONS 26 965 000 (26 926 915) · MICRO 2 700 000 (2 705 586) · BNPL 4 180 000 (4 170 880)
+```
+Integer division picks one middle row for odd n and two for even. Median ≈ mean everywhere: ticket sizes are spread evenly between the product's min and max, no skew. (SQL Server has `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY principal) OVER (PARTITION BY code)`; SQLite does not — this is the portable way.)
+
+</details>
+
 ---
 
 ## 4. Self-check
 
 ```check
 {"id": "w03d2-sc", "questions": [
-  {"type": "single", "q": "Three loans share the top principal. What do ROW_NUMBER, RANK and DENSE_RANK (ORDER BY principal DESC) give the fourth loan?", "options": ["4, 4, 2", "4, 2, 2", "2, 4, 4", "4, 4, 4"], "answer": 0, "explain": "ROW_NUMBER never repeats; RANK repeats then skips to 4; DENSE_RANK repeats and continues with 2 (→ section 1, Ranking)."},
-  {"type": "single", "q": "LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) returns each row's own date. What is the fix?", "options": ["Remove PARTITION BY", "Spell out ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING (or use FIRST_VALUE with ORDER BY … DESC)", "Use LAG instead", "Add ORDER BY paid_at at the end of the query"], "answer": 1, "explain": "With ORDER BY the default frame ends at the current row, so 'last' is the row itself (→ section 1, FIRST_VALUE, LAST_VALUE and the frame trap)."},
-  {"type": "single", "q": "Finance says duplicates are impossible because payment_id is unique. Which window finds them anyway, and which row do you keep?", "options": ["ROW_NUMBER() OVER (PARTITION BY payment_id ORDER BY paid_at), keep rn = 2", "ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id), keep rn = 1", "RANK() OVER (ORDER BY amount), keep rank 1", "COUNT(*) OVER (), keep all"], "answer": 1, "explain": "Partition by what defines sameness, order by id, keep the earliest (→ section 2)."}]}
+  {"type": "single", "q": "Three loans share the top principal. What do ROW_NUMBER, RANK and DENSE_RANK (ORDER BY principal DESC) give the fourth loan?", "options": ["4, 4, 2", "4, 2, 2", "2, 4, 4", "4, 4, 4"], "answer": 0, "explain": "ROW_NUMBER never repeats; RANK repeats then skips to 4; DENSE_RANK repeats and continues with 2 (→ section 1, RANK and DENSE_RANK)."},
+  {"type": "single", "q": "LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) returns each row's own date. What is the fix?", "options": ["Remove PARTITION BY", "Spell out ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING (or use FIRST_VALUE with ORDER BY … DESC)", "Use LAG instead", "Add ORDER BY paid_at at the end of the query"], "answer": 1, "explain": "With ORDER BY the default frame ends at the current row, so 'last' is the row itself (→ section 1, FIRST_VALUE and LAST_VALUE)."},
+  {"type": "single", "q": "Finance says duplicates are impossible because payment_id is unique. Which window finds them anyway, and which row do you keep?", "options": ["ROW_NUMBER() OVER (PARTITION BY payment_id ORDER BY paid_at), keep rn = 2", "ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id), keep rn = 1", "RANK() OVER (ORDER BY amount), keep rank 1", "COUNT(*) OVER (), keep all"], "answer": 1, "explain": "Partition by what defines sameness, order by id, keep the earliest (→ section 1, Duplicates; section 2)."}]}
 ```
 
 ---
 
 ## 5. Company corner <span class="badge company">Roll rates</span>
 
-A **roll rate** (*миграция между корзинами*) is the share of loans that moved from one DPD bucket to another between two snapshot dates — usually month-end to month-end. It is the collections team's report card (did 1–30 cure or roll to 31–60?) and the input to provisioning (a 90+ bucket is fed by what rolls out of 61–90). Three steps, two of them yesterday's tools:
+A **roll rate** (*миграция между корзинами*) is the share of loans that moved from one DPD bucket to another between two snapshot dates — usually month-end to month-end. It is the collections team's report card (did 1–30 cure or roll to 31–60?) and the input to provisioning (a 90+ bucket is fed by what rolls out of 61–90). Section 1 built the matrix with `LAG` over stacked snapshots. Here is the other common way — the two snapshots side by side — and how to read the result. Three steps, two of them yesterday's tools:
 
 **1. A snapshot per date.** Week 2's DPD block, with the as-of date as a *parameter* in two places — the instalment filter **and** the payment filter. The second was not needed on 2026-10-01 (the extract date), but on 2026-09-01 a payment made on 15 September must not count:
 
@@ -509,13 +849,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w03d2", "pass": 0.8, "questions": [
-  {"type": "single", "q": "Three loans share the top principal; a fourth is next. What do ROW_NUMBER, RANK and DENSE_RANK (ORDER BY principal DESC) give the fourth loan?", "options": ["4, 4, 2", "4, 2, 2", "2, 4, 4", "4, 4, 4"], "answer": 0, "explain": "ROW_NUMBER never repeats; RANK gives ties one number and then skips; DENSE_RANK gives ties one number with no gap (→ section 1, Ranking)."},
-  {"type": "single", "q": "You need exactly one row per customer: their latest loan. Which function, and which filter?", "options": ["RANK() … WHERE rk = 1", "ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at DESC, loan_id DESC), keep rn = 1 in an outer query", "DENSE_RANK() … WHERE drk <= 1", "NTILE(1) OVER (PARTITION BY customer_id)"], "answer": 1, "explain": "ROW_NUMBER guarantees one row even on ties, the tiebreaker makes it repeatable, and the filter goes outside because windows do not exist in WHERE (→ section 1, Top-N per group; P3)."},
-  {"type": "number", "q": "NTILE(4) over these 10 rows: how many rows land in group 1?", "code": "SELECT x, NTILE(4) OVER (ORDER BY x) AS g\nFROM t;      -- t has the 10 values 1, 2, …, 10", "answer": 3, "explain": "NTILE cuts into groups of almost equal count; the leftover rows go to the first groups: 3, 3, 2, 2 (→ section 1, NTILE)."},
-  {"type": "single", "q": "Why does last_payment show each row's own date?", "code": "SELECT paid_at,\n       LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_payment\nFROM payments WHERE loan_id = 1;", "options": ["LAST_VALUE is broken in SQLite", "With ORDER BY, the default frame ends at the current row, so the 'last' row of the frame is the row itself", "PARTITION BY is wrong", "paid_at has duplicates"], "answer": 1, "explain": "Spell out ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING, or use FIRST_VALUE with ORDER BY … DESC (→ section 1, FIRST_VALUE, LAST_VALUE and the frame trap)."},
-  {"type": "single", "q": "m holds monthly disbursement and the query computes yoy_pct with LAG(disbursed, 12). Someone moves the display filter WHERE month >= '2026-01' inside m. What happens?", "code": "WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed\n           FROM loans\n           WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'\n           GROUP BY 1)\nSELECT month, disbursed, LAG(disbursed, 12) OVER (ORDER BY month) AS same_month_last_year\nFROM m;", "options": ["Nothing changes", "2025 is gone before the window runs, so every year-on-year value is NULL", "The query fails", "LAG reads 2025 from the loans table anyway"], "answer": 1, "explain": "Filter the display in an outer query; the window can only look back at rows that reached it (→ section 1, LAG and LEAD)."},
-  {"type": "single", "q": "To clean duplicate payments you number rows with ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id). Why not just GROUP BY … HAVING COUNT(*) > 1?", "options": ["HAVING is slower", "HAVING finds the duplicate groups but cannot say which row to keep or return the clean rows alongside; the window does both", "GROUP BY cannot take three columns", "They give different duplicate groups"], "answer": 1, "explain": "Keep rn = 1 (the earliest payment_id) as a view; never DELETE from the raw table (→ section 2, Detective)."},
-  {"type": "multi", "q": "You build a DPD snapshot as of 2026-09-01 from data extracted on 2026-10-01. Where must the as-of date appear?", "options": ["In the instalment filter: due_date <= '2026-09-01'", "In the payment join: p.paid_at <= '2026-09-01' (in ON)", "In a filter on loans.disbursed_at = '2026-09-01'", "Nowhere — DPD always uses today"], "answer": [0, 1], "explain": "A payment made on 15 September must not count on 1 September, and in a LEFT JOIN the payment condition belongs in ON (→ section 5, Company corner)."},
+  {"type": "single", "q": "Three loans share the top principal; a fourth is next. What do ROW_NUMBER, RANK and DENSE_RANK (ORDER BY principal DESC) give the fourth loan?", "options": ["4, 4, 2", "4, 2, 2", "2, 4, 4", "4, 4, 4"], "answer": 0, "explain": "ROW_NUMBER never repeats; RANK gives ties one number and then skips; DENSE_RANK gives ties one number with no gap (→ section 1, RANK and DENSE_RANK)."},
+  {"type": "single", "q": "You need exactly one row per customer: their latest loan. Which function, and which filter?", "options": ["RANK() … WHERE rk = 1", "ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at DESC, loan_id DESC), keep rn = 1 in an outer query", "DENSE_RANK() … WHERE drk <= 1", "NTILE(1) OVER (PARTITION BY customer_id)"], "answer": 1, "explain": "ROW_NUMBER guarantees one row even on ties, the tiebreaker makes it repeatable, and the filter goes outside because windows do not exist in WHERE (→ section 1, Top-N per group; P9)."},
+  {"type": "number", "q": "NTILE(4) over these 10 rows: how many rows land in group 1?", "code": "SELECT x, NTILE(4) OVER (ORDER BY x) AS g\nFROM t;      -- t has the 10 values 1, 2, …, 10", "answer": 3, "explain": "NTILE cuts into groups of almost equal count; the leftover rows go to the first groups: 3, 3, 2, 2 (→ section 1, NTILE; P4)."},
+  {"type": "single", "q": "Why does last_payment show each row's own date?", "code": "SELECT paid_at,\n       LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_payment\nFROM payments WHERE loan_id = 1;", "options": ["LAST_VALUE is broken in SQLite", "With ORDER BY, the default frame ends at the current row, so the 'last' row of the frame is the row itself", "PARTITION BY is wrong", "paid_at has duplicates"], "answer": 1, "explain": "Spell out ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING, or use FIRST_VALUE with ORDER BY … DESC (→ section 1, FIRST_VALUE and LAST_VALUE)."},
+  {"type": "single", "q": "m holds monthly disbursement and the query computes yoy_pct with LAG(disbursed, 12). Someone moves the display filter WHERE month >= '2026-01' inside m. What happens?", "code": "WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed\n           FROM loans\n           WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'\n           GROUP BY 1)\nSELECT month, disbursed, LAG(disbursed, 12) OVER (ORDER BY month) AS same_month_last_year\nFROM m;", "options": ["Nothing changes", "2025 is gone before the window runs, so every year-on-year value is NULL", "The query fails", "LAG reads 2025 from the loans table anyway"], "answer": 1, "explain": "Filter the display in an outer query; the window can only look back at rows that reached it (→ section 1, LAG and LEAD; P5)."},
+  {"type": "single", "q": "To clean duplicate payments you number rows with ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id). Why not just GROUP BY … HAVING COUNT(*) > 1?", "options": ["HAVING is slower", "HAVING finds the duplicate groups but cannot say which row to keep or return the clean rows alongside; the window does both", "GROUP BY cannot take three columns", "They give different duplicate groups"], "answer": 1, "explain": "Keep rn = 1 (the earliest payment_id) as a view; never DELETE from the raw table (→ section 1, Duplicates; section 2, step 2)."},
+  {"type": "multi", "q": "You build a DPD snapshot as of 2026-09-01 from data extracted on 2026-10-01. Where must the as-of date appear?", "options": ["In the instalment filter: due_date <= '2026-09-01'", "In the payment join: p.paid_at <= '2026-09-01' (in ON)", "In a filter on loans.disbursed_at = '2026-09-01'", "Nowhere — DPD always uses today"], "answer": [0, 1], "explain": "A payment made on 15 September must not count on 1 September, and in a LEFT JOIN the payment condition belongs in ON (→ section 1, Roll rates with LAG; section 5)."},
   {"type": "single", "q": "To build the roll-rate matrix you join the September and October DPD snapshots with a FULL OUTER JOIN. Why not an INNER JOIN?", "options": ["INNER JOIN is not allowed between CTEs", "A loan that cured is only in September and a newly late loan only in October; an inner join drops both", "FULL OUTER JOIN is faster", "To count loans twice"], "answer": 1, "explain": "Neither side may lose rows; absent = DPD 0 with COALESCE (→ section 5, Company corner)."}
 ]}
 ```

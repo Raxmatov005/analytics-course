@@ -16,115 +16,730 @@
 
 ## 1. Learn — cleaning is a pipeline, even when it is a formula
 
-### The cleaning rule from week 1, again
+Week 1's rule holds in Excel: **raw stays raw**. Never clean the only copy. Cleaning is a **recipe you can re-run** on next Monday's file — formulas on a clean tab, or a Power Query — not edits made with the mouse on the raw sheet. Today's order: hand tools to *discover* the dirt, Power Query to *deliver* the clean table.
 
-Never clean the only copy. In SQL you cleaned *on the way out* (a view); in Excel the equivalent is a **clean sheet built from the raw sheet** by formulas or a query — the raw sheet stays as evidence, and the cleaning is re-runnable. Anything you do with the mouse on the raw data (Find & Replace, Remove Duplicates, Text to Columns, Flash Fill) is a one-time edit: fine for a look, wrong for a Monday file. Today's structure: hand tools to *discover*, Power Query to *deliver*.
+**The dirty rows used on this page.** Real rows from the two Monday files. Every subsection below fixes something you can see here.
 
-> 💡 **Key idea.** Raw stays raw. Cleaning is a **recipe you can re-run** on next Monday's file — formulas on a clean tab or a Power Query — never a set of edits made with the mouse on the only copy.
+`customers_dirty.csv` (6 040 rows):
 
-### Text repair — TRIM, CLEAN, PROPER, SUBSTITUTE
+| customer_id | first_name | last_name | birth_date | phone | registered_at |
+|---|---|---|---|---|---|
+| 4516 | Malika | Jalilova | 1981-08-15 | +998908981002 | 2022-09-27 |
+| 6001 | MALIKA | jalilova | 1981-08-15 | +998908981002 | 2023-03-30 |
+| 44 | Yulduz | Karimova | 1988-07-12 | +998902229531 | 2026-03-29 |
+| 6005 | `Yulduz␣` | karimova | 1988-07-12 | +998902229531 | 2027-01-09 |
+| 927 | Nodir | Yusupov | 2031-04-12 | +998905551914 | 2026-01-30 |
+| 957 | Shahnoza | Ergasheva | 1900-01-01 | +998904393324 | 2022-04-18 |
 
+`payments_dirty.csv` (52 875 rows):
+
+| payment_id | installment_id | paid_at | amount | method |
+|---|---|---|---|---|
+| 265 | 404 | 2024-04-03 | 7 292 600 | PayMe |
+| 2184 | 3667 | 2025-05-15 | 19 668 600 | `CASH␣` |
+| 3184 | 5272 | 2024-05-04 | 863 300 | bank transfer |
+| 7172 | 12040 | 2024-12-26 | 253 400 | card |
+| 52859 | 12040 | 2024-12-26 | 253 400 | card |
+
+`␣` marks a space you cannot see in Excel.
+
+### What dirty data looks like — a checklist
+
+**What it is.** **Dirty data** (*грязные данные*) is data whose values mean the same thing but are written differently, or are impossible. Eight kinds cover almost every export:
+
+| Kind | Example above | How many in the Monday files |
+|---|---|---|
+| **Stray spaces** | `Yulduz␣`, `CASH␣` | 18 first names; 30 `CASH ` payments |
+| **Case** | `MALIKA`, `jalilova`, `PayMe` | 22 all-caps first names, 40 all-lower surnames; 123 payments in `Card` / `Click` / `PayMe` |
+| **Synonyms** | `bank transfer` = `transfer` | 27 payments |
+| **Duplicates** | 4516 = 6001; payment 7172 = 52859 | 40 people; 25 payments |
+| **Impossible values** | born 2031-04-12, born 1900-01-01, registered 2027-01-09 | 7 birth dates; 5 registration dates after the as-of date |
+| **Numbers stored as text** | a phone `+998…` read as a number loses its `+` | every phone, if the type is wrong |
+| **Dates stored as text** | `2024-04-03` that does not sort or compare as a date | every date column of a CSV, until it is typed |
+| **Blanks** | `monthly_income` empty | 356 customers; 388 applications without `credit_score` |
+
+**How to write it.** One formula per kind, on the raw sheet, before you change anything:
+
+```excel
+=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041))))     stray spaces → 18
+=SUMPRODUCT(--EXACT(C2:C6041, LOWER(C2:C6041)))         written all lower case → 40
+=ROWS(UNIQUE(F2:F52876))                                distinct raw methods (Payments)
+=COUNTBLANK(I2:I6041)                                   blanks in monthly_income → 356
+=SUMPRODUCT(--ISTEXT(E2:E6041))                         dates stored as text → must be 0
 ```
-=TRIM(B2)                          "Bobur "  → "Bobur"        (also collapses doubled inner spaces)
-=CLEAN(B2)                         removes non-printing characters (line breaks, tabs from a copy-paste)
-=PROPER(TRIM(C2))                  "jalilova" → "Jalilova";  "MALIKA" → "Malika"
-=LOWER(TRIM(F2))                   "CASH "  → "cash";  "PayMe" → "payme"
-=SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer")      week 2's expression, Excel spelling
-=TRIM(CLEAN(SUBSTITUTE(x, CHAR(160), " ")))                     the full armour: non-breaking spaces (CHAR 160) survive TRIM
-```
 
-`PROPER` capitalises after every non-letter — `"o'neil"` → `"O'Neil"` but also `"payme"` → `"Payme"` and `"bnpl"` → `"Bnpl"` — so it is for *names*, not for codes. A **normalised key** for matching people is lower-case, trimmed, concatenated with a separator: `=LOWER(TRIM(B2))&"|"&LOWER(TRIM(C2))&"|"&TEXT(E2,"yyyy-mm-dd")`. The separator matters: without it `"Ali"&"Nazarov"` and `"Alin"&"azarov"` collide.
+**When you use it.**
+- First thing with any new file: count each kind, write the counts down. They become your change log.
+- After cleaning: the same formulas on the clean table must say 0.
+
+**Your turn.** Sort the dirty values into their kind.
 
 ```game
-{"type": "cloze", "id": "w04d3-g1", "title": "Fill the matching key for a person", "text": "=LOWER({{0}}(B2))&{{1}}&LOWER(TRIM(C2))&\"|\"&{{2}}(E2,\"yyyy-mm-dd\")", "blanks": [["TRIM"], ["\"|\""], ["TEXT"]], "distractors": ["PROPER", "\"\"", "VALUE", "CLEAN"]}
+{"type": "sort", "id": "w04d3-g6", "title": "Which kind of dirt?", "q": "Drop each value from the Monday files into the kind of problem it shows.", "groups": {"Stray spaces": ["first_name 'Yulduz ' (trailing space)", "method 'CASH '"], "Case": ["first_name 'MALIKA'", "method 'PayMe'"], "Synonym": ["method 'bank transfer'"], "Duplicate": ["payment 52859 = payment 7172"], "Impossible value": ["birth_date 2031-04-12", "registered_at 2027-01-09"], "Blank": ["monthly_income empty"]}}
 ```
 
-### Find & Replace (*найти и заменить*) — Ctrl+H
+### Find & Replace — Ctrl+H
 
-Ctrl+H, *Find what* `bank transfer`, *Replace with* `transfer`, **Options**: *Match case*, *Match entire cell contents*, scope *Sheet* or *Workbook*. Replace All reports how many — write the count down. Three cautions: it also edits formulas that contain the text; without *Match entire cell contents* a search for `card` edits `discard`; and it is not recorded anywhere — write the count in your change log by hand. Wildcards: `*` any text, `?` one character, `~*` a literal asterisk. Find & Replace on `" "` (a space) with nothing is **not** TRIM — it removes the spaces inside names too.
+**What it is.** **Find & Replace** (*найти и заменить*) changes every occurrence of one text into another, in the selection, the sheet or the workbook. It is a one-time edit: nothing is recorded, and the next file does not get it.
 
-### Text to Columns (*текст по столбцам*) and Flash Fill
+**How to write it.**
 
-Data → Text to Columns: split one column by a delimiter (space, comma, `|`) or at fixed widths. `applied_at` = `2026-09-30 21:36:00` → a date and a time in two columns, each with a type you choose on step 3 (set the date column to **YMD** or Excel reads `2026-09-30` wrong in some locales). **Flash Fill** (Ctrl+E): type the result you want in the first cell (`Jalilova` next to `jalilova`), press Ctrl+E, Excel infers the pattern for the column — handy for a look, not reproducible (no formula is left behind; the next file does not get it). Sheets: Data → Split text to columns; no Flash Fill (use `SPLIT()`).
-
-### Dates stored as text (*даты в текстовом формате*)
-
-A date that is text is left-aligned, does not sort as a date, and `">="&DATE(…)` never matches it. Our CSVs carry `2026-09-30` as text; Excel converts it on open in most locales, Sheets usually too, Power Query always asks. If a column is text: `=DATEVALUE(E2)` turns `"1981-08-15"` into the date number 29 812 (format the cell as a date to see it); `=VALUE(E2)` does the same; Text to Columns with type *Date YMD* converts a whole column in place. Test with `=ISTEXT(E2)` / `=ISNUMBER(E2)`. The trap the other way: `14/03/2026` in a US locale becomes text (there is no 14th month) while `03/04/2026` becomes 4 March — half a column converts and half does not. ISO `yyyy-mm-dd` is the only safe exchange format; insist on it from whoever exports.
-
-> ⚠️ **Watch out.** The worst case is a column that is **half** converted: real dates and text dates mixed, so totals are low by exactly the rows that stayed text — and the sheet looks fine. One cell tells you: `=SUMPRODUCT(--ISTEXT(E2:E6041))` must be 0 in a date column.
-
-### Finding duplicates before removing them — COUNTIFS on a key
-
+```text
+Ctrl+H
+  Find what:     bank transfer
+  Replace with:  transfer
+  Options ▸  Match case                    off: card also finds Card and CARD
+             Match entire cell contents    on:  card does not find discard
+             Within: Sheet / Workbook
+  Replace All  →  "We made 27 replacements"   ← write this number down
 ```
-L2  key      =LOWER(TRIM(B2))&"|"&LOWER(TRIM(C2))&"|"&TEXT(E2,"yyyy-mm-dd")
-M2  n        =COUNTIFS($L$2:$L$6041, L2)                 how many rows share this key
-N2  rank     =COUNTIFS($L$2:L2, L2)                       1 for the first occurrence, 2 for the repeat  — ROW_NUMBER()
+
+The picture — `method` before and after:
+
+| before | after (Match entire cell contents on) |
+|---|---|
+| bank transfer | transfer |
+| transfer | transfer |
+| card | card |
+
+On a copy of `Payments` the run reports **27** replacements: the 27 `bank transfer` rows. Wildcards work in *Find what*: `*` any text, `?` one character, `~*` a real asterisk.
+
+**When you use it.**
+- A quick look on a **copy**: how many rows carry this spelling?
+- A one-off file you will never receive again.
+
+> ⚠️ **Watch out.** Replacing `" "` (a space) with nothing is not `TRIM`: it also removes the space *between* words. `Malika Jalilova` becomes `MalikaJalilova`.
+
+**Your turn.** On a copy of `Customers`, a `full_name` column holds `Malika Jalilova`. You run Ctrl+H with *Find what* = one space and *Replace with* empty, Replace All. What does the cell hold now?
+
+```task
+{"id": "w04d3-l1", "kind": "choice", "options": ["Malika Jalilova", "MalikaJalilova", "Malika  Jalilova", "#VALUE!"], "answer": 1, "explain": "Find & Replace removes every space, the one between the words too. To remove only the spaces at the ends and the doubled ones, use TRIM."}
 ```
+
+### Text to Columns — split one column into several
+
+**What it is.** **Text to Columns** (*текст по столбцам*) splits each cell of one column into several columns, at a **delimiter** (a space, a comma, `|`) or at fixed widths. Data → Text to Columns. It is a one-time edit on the sheet.
+
+**How to write it.**
+
+```text
+select applied_at → Data → Text to Columns
+  Step 1  Delimited                      (or Fixed width)
+  Step 2  Delimiter: Space
+  Step 3  column 1 → Date: YMD           column 2 → General
+          Destination: an EMPTY column   (the split overwrites the columns to the right)
+```
+
+| applied_at (before) | → date | → time |
+|---|---|---|
+| 2025-06-02 10:35:00 | 2025-06-02 | 10:35:00 |
+| 2026-09-30 21:36:00 | 2026-09-30 | 21:36:00 |
+
+On `applications.csv` the 14 000 `applied_at` values become a date column and a time column. With the date on its own, `<= DATE(2026,9,30)` no longer loses the applications sent during the evening of 30 September.
+
+**When you use it.**
+- A date and a time glued together; a `"region|product"` key; a full name to split into first and last.
+- Sheets: Data → Split text to columns, or the formula `=SPLIT(G2, " ")`, which re-runs.
+
+> ⚠️ **Watch out.** The split writes into the columns to the right. Excel asks *"replace the contents of the destination cells?"* once, and one click on OK overwrites them. Insert empty columns first, or set *Destination* to an empty area.
+
+**Your turn.** In `applications.csv`, `applied_at` is column G and `decided_at` is column H. You split G by space with the default destination. What happens to `decided_at`?
+
+```task
+{"id": "w04d3-l2", "kind": "choice", "options": ["Nothing — Excel inserts a new column", "It is overwritten by the time part of applied_at", "Excel refuses to split", "The time part goes to the end of the sheet"], "answer": 1, "explain": "The second part goes into the next column, H, and replaces decided_at after one OK on the warning. Insert an empty column first."}
+```
+
+### Flash Fill — Excel guesses the pattern
+
+**What it is.** **Flash Fill** (*мгновенное заполнение*, Ctrl+E) fills a column from one or two examples you type. Excel infers the pattern and writes **values**, not formulas.
+
+**How to write it.**
+
+```text
+B: first_name   H (new column)
+MALIKA          Malika        ← you type this one example
+Yulduz␣         Yulduz        ← Ctrl+E fills the rest
+Nodir           Nodir
+```
+
+On `Customers`, typing `Malika` next to row 6001 and pressing Ctrl+E fills all 6 040 rows with a capitalised first name. No formula is left behind.
+
+**When you use it.**
+- A one-off look: initials, a code cut out of a longer text, a name rearranged.
+- Never for a file that comes back every Monday: the next file gets nothing.
+
+| | Flash Fill | A formula (`=PROPER(TRIM(B2))`) |
+|---|---|---|
+| leaves behind | values | a rule |
+| next Monday's rows | empty | filled when you fill down / in a Table automatically |
+| can you check it? | only by comparing | yes, read the formula |
+
+> ⚠️ **Watch out.** Flash Fill can guess a *different* rule from the one you meant and still look right on the first screen. Compare its column with a formula version and count the mismatches before you trust it.
+
+**Your turn.** You Flash-Fill a clean `first_name` column on this Monday's file. Next Monday 40 new customers are appended under the Table. What does their Flash Fill cell hold?
+
+```task
+{"id": "w04d3-l3", "kind": "choice", "options": ["The cleaned name — Flash Fill re-runs", "Nothing — Flash Fill wrote values, so new rows get no rule", "#N/A", "A copy of the row above"], "answer": 1, "explain": "Flash Fill leaves values, not a formula. A Table copies formulas to new rows, never values."}
+```
+
+### TRIM, CLEAN, SUBSTITUTE — repairing text with formulas
+
+**What it is.** Text repair as a formula on a clean tab, so it re-runs. **TRIM** (*СЖПРОБЕЛЫ*) removes spaces at the ends and doubled spaces inside. **CLEAN** (*ПЕЧСИМВ*) removes non-printing characters — line breaks and tabs from a copy-paste. **SUBSTITUTE** (*ПОДСТАВИТЬ*) replaces one text with another inside a cell. **LOWER**, **UPPER** and **PROPER** fix case (Day 1).
+
+**How to write it.**
+
+```excel
+=TRIM(B2)                                        "Yulduz "  → "Yulduz"
+=CLEAN(B2)                                       removes line breaks and tabs
+=SUBSTITUTE(text, old, new)                      every "old" inside text becomes "new"
+=LOWER(TRIM(F2))                                 "CASH "  → "cash";  "PayMe" → "payme"
+=SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer")              one synonym
+=SUBSTITUTE(SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer"), "pay me", "payme")
+                                                 nested: the inner result goes into the outer one
+=TRIM(CLEAN(SUBSTITUTE(B2, CHAR(160), " ")))     non-breaking spaces (CHAR 160) survive TRIM
+```
+
+The picture — `method`, step by step:
+
+| raw | `LOWER(TRIM())` | `SUBSTITUTE(…, "bank transfer", "transfer")` |
+|---|---|---|
+| `CASH␣` | cash | cash |
+| PayMe | payme | payme |
+| bank transfer | bank transfer | transfer |
+| card | card | card |
+
+On `Payments`: 10 distinct raw methods. After the full formula, `=ROWS(UNIQUE(…))` → **5**: card, cash, transfer, payme, click.
+
+**When you use it.**
+- Any text you will compare, count or match on: methods, names, regions.
+- Nested `SUBSTITUTE` for a short list of synonyms; for a long list, a mapping table and a lookup (Day 2).
+
+> ⚠️ **Watch out.** `PROPER` capitalises after every non-letter: `"payme"` → `"Payme"`, `"o'neil"` → `"O'Neil"`. Use it for people's names, not for codes.
+
+**Your turn.** On `tblPayments`, how many distinct values does `=LOWER(TRIM([@method]))` leave, before any `SUBSTITUTE`?
+
+```task
+{"id": "w04d3-l4", "kind": "number", "answer": 6, "dp": 0, "unit": "values", "hint": "Case and spaces are gone; one synonym is still there.", "model": "6: card, cash, transfer, payme, click — and bank transfer, which only SUBSTITUTE can merge into transfer. 10 raw → 6 → 5."}
+```
+
+### Dates stored as text — ISNUMBER, DATEVALUE, locale
+
+**What it is.** A real date is a number (Day 1). A **date stored as text** (*дата в текстовом формате*) only looks like one: it sits left-aligned, sorts as text and is skipped by every date criterion. **DATEVALUE** (*ДАТАЗНАЧ*) turns date-text into a real date. **ISNUMBER** / **ISTEXT** tell you which one a cell holds.
+
+**How to write it.**
+
+```excel
+=ISNUMBER(E2)                    TRUE = a real date, FALSE = text
+=DATEVALUE(E2)                   "1981-08-15" → 29813 (format the cell as a date → 1981-08-15)
+=VALUE(E2)                       the same
+=SUMPRODUCT(--ISTEXT(E2:E6041))  text dates in the whole column — must be 0
+```
+
+How Excel reads typed text depends on the **locale** (the Windows regional setting):
+
+| typed | US locale (month first) | day-first locale (Russia, UK) |
+|---|---|---|
+| `2026-03-14` | 14 March 2026 | 14 March 2026 |
+| `03/04/2026` | 4 March 2026 | 3 April 2026 |
+| `14/03/2026` | **text** — there is no month 14 | 14 March 2026 |
+| `14.03.2026` | **text** | 14 March 2026 |
+
+Only ISO `yyyy-mm-dd` reads the same everywhere. Our CSVs use it.
+
+**Impossible dates** are real dates that cannot be true. In `customers_dirty.csv`, **7** birth dates are impossible: four in the future (`2031-04-12`, `2027-02-28`) and three at `1900-01-01`, a "no date" placeholder. **5** customers were registered after the as-of date 2026-10-01.
+
+**When you use it.**
+- Every date column of an imported file: `ISNUMBER` on the whole column before any date formula.
+- Impossible dates: blank them and add a flag column. Never invent a plausible date.
+
+> ⚠️ **Watch out.** The worst case is a column that is **half** converted: in a US locale `03/04/2026` becomes a date and `14/03/2026` stays text. Totals are low by exactly the text rows, and the sheet looks fine.
+
+**Your turn.** A colleague in a US-locale Excel types four dates. Which one stays **text**?
+
+```task
+{"id": "w04d3-l5", "kind": "choice", "options": ["2026-03-14", "03/14/2026", "14/03/2026", "3/14/2026"], "answer": 2, "explain": "US Excel reads month/day/year, and there is no month 14, so 14/03/2026 stays text. ISO 2026-03-14 is read correctly everywhere."}
+```
+
+### A matching key — one text that means "the same person"
+
+**What it is.** A **matching key** (*ключ сопоставления*) is one text built from the columns that identify a row, cleaned so that equal things give equal keys: trimmed, one case, joined with a **separator**.
+
+**How to write it.**
+
+```excel
+=LOWER(TRIM(B2)) & "|" & LOWER(TRIM(C2)) & "|" & TEXT(E2, "yyyy-mm-dd")
+ first_name         sep    last_name         sep    birth_date as text
+```
+
+| customer_id | key |
+|---|---|
+| 4516 | `malika|jalilova|1981-08-15` |
+| 6001 | `malika|jalilova|1981-08-15` |
+| 44 | `yulduz|karimova|1988-07-12` |
+| 6005 | `yulduz|karimova|1988-07-12` |
+
+4516 and 6001 now have the same key; so do 44 and 6005. A second key on `phone|birth_date` uses the identifying fields: `=D2&"|"&TEXT(E2,"yyyy-mm-dd")`.
+
+**When you use it.**
+- Before counting or removing duplicates: the key *is* your definition of "the same".
+- Payments: `installment_id|paid_at|amount` — the same instalment, paid the same day, the same amount.
+
+> ⚠️ **Watch out.** Without a separator, different parts can glue into the same key: `"Ali"&"Nazarov"` = `"Alin"&"azarov"` = `AliNazarov`. Always put `"|"` between the parts.
+
+**Your turn.** Fill the key for a person.
+
+```game
+{"type": "cloze", "id": "w04d3-g1", "code": true, "title": "Fill the matching key for a person", "text": "=LOWER({{0}}(B2))&{{1}}&LOWER(TRIM(C2))&\"|\"&{{2}}(E2,\"yyyy-mm-dd\")", "blanks": [["TRIM"], ["\"|\""], ["TEXT"]], "distractors": ["PROPER", "\"\"", "VALUE", "CLEAN"]}
+```
+
+### COUNTIFS on the key — find duplicates before you remove them
+
+**What it is.** Two `COUNTIFS` columns on the key show every duplicate **before** anything is deleted. **n** = how many rows share this key. **rank** = which copy this row is: 1 for the first, 2 for the repeat — Excel's `ROW_NUMBER() OVER (PARTITION BY key)`.
+
+**How to write it.**
+
+```excel
+L2  key    =LOWER(TRIM(B2))&"|"&LOWER(TRIM(C2))&"|"&TEXT(E2,"yyyy-mm-dd")
+M2  n      =COUNTIFS($L$2:$L$6041, L2)        the whole column: how many share the key
+N2  rank   =COUNTIFS($L$2:L2, L2)             a growing range: pinned start, free end
+```
+
+| customer_id | key | n | rank |
+|---|---|---|---|
+| 4516 | malika\|jalilova\|1981-08-15 | 2 | 1 |
+| 6001 | malika\|jalilova\|1981-08-15 | 2 | 2 |
+| 44 | yulduz\|karimova\|1988-07-12 | 2 | 1 |
+| 6005 | yulduz\|karimova\|1988-07-12 | 2 | 2 |
+
+Filter `n > 1` to see the groups, `rank = 2` to see the extra rows. On `Payments`, the key `installment_id|paid_at|amount` gives **50** rows with `n > 1` — 25 pairs, so 25 extra payments.
+
+**When you use it.**
+- Every time before Remove Duplicates: the count of `rank = 2` rows is the number the tool *should* report.
+- To compare keys: build two or three and read the rows where they disagree.
+
+> ⚠️ **Watch out.** The growing range `$L$2:L2` is slow on 50 000 rows — Power Query does the same in a second (below).
+
+**Your turn.**
 
 ```game
 {"type": "bug", "id": "w04d3-g2", "title": "Which column lies?", "q": "The rank column should say 1 for the first occurrence and 2 for the repeat, but it shows 2 on both rows of every pair. Tap the broken line.", "code": "L2  key   =LOWER(TRIM(B2))&\"|\"&LOWER(TRIM(C2))&\"|\"&TEXT(E2,\"yyyy-mm-dd\")\nM2  n     =COUNTIFS($L$2:$L$6041, L2)\nN2  rank  =COUNTIFS($L$2:$L$6041, L2)", "answer": [2], "why": "rank needs a growing range, $L$2:L2 — pinned start, free end — so it counts only the rows so far. With the whole range it is just n again."}
 ```
 
-Filter `n > 1` to see the groups and `rank = 2` for the "extra" rows, then compare the count with week 1's 40 duplicates — if they differ, read the extra pairs before you decide anything (section 2, step 2). Build a second key on `phone|birth_date` and a third on `phone` alone and compare the three counts. Every key has false positives; the `rank` column is the Excel `ROW_NUMBER() OVER (PARTITION BY key ORDER BY row)` and lets you *look* before you delete. The `$L$2:L2` growing range is slow on 50 000 rows — Power Query below does the same in a second.
+### Remove Duplicates — and why it lies
 
-### Remove Duplicates (*удалить дубликаты*) — and why it lies
+**What it is.** **Remove Duplicates** (*удалить дубликаты*, Data → Remove Duplicates) deletes rows that are equal on the columns you tick. It keeps the **first** row of each group and reports only *how many* it removed. It compares **case-insensitively** but **space-sensitively**.
 
-Data → Remove Duplicates, tick the columns that define sameness, OK; Excel reports *n duplicate values removed*. It compares the ticked columns **exactly as displayed**, case-**in**sensitively, space-**sensitively**, and keeps the **first** row. Three runs on `Customers` show the problem:
+**How to write it.**
 
-| Columns ticked | What can happen |
+```text
+select the table → Data → Remove Duplicates
+  ☑ installment_id   ☑ paid_at   ☑ amount     ← the columns that define "the same"
+  ☐ payment_id ☐ method …                      ← leave out what always differs
+  OK → "25 duplicate values found and removed; 52 850 unique values remain"
+```
+
+| payment_id | installment_id | paid_at | amount | kept? |
+|---|---|---|---|---|
+| 7172 | 12040 | 2024-12-26 | 253 400 | kept — first |
+| 52859 | 12040 | 2024-12-26 | 253 400 | removed |
+
+Why it lies, on `Customers`:
+
+| Columns ticked | What happens |
 |---|---|
-| first_name, last_name, birth_date (raw) | case is ignored, spaces are not: a duplicate whose name ends in a space survives |
-| the same after TRIM | every true duplicate goes — **and so does any pair of different people** who share a name and a birth date |
-| phone, birth_date | the identifying key, the one nobody ticks first — compare its count with week 1's |
+| first_name, last_name, birth_date (raw) | case is ignored, spaces are not: `Yulduz␣` survives — too few removed |
+| the same, after `TRIM` | every true duplicate goes — **and** two pairs of different people with the same name and birth date |
+| phone, birth_date | exactly the 40 true duplicates |
+| all columns | 0 removed — `customer_id` always differs |
 
-So it under-removes on raw text and over-removes on a loose key, says nothing about *which* rows went, and leaves no formula. On `Payments`: tick `installment_id`, `paid_at`, `amount` and compare the count with week 3's duplicate payments; tick all columns and nothing goes (the `payment_id` differs). Use it to *check a number* on a copy; deliver the result with Power Query, where the step is recorded and re-runs.
+**When you use it.**
+- On a **copy**, to check a number you already counted with `COUNTIFS`.
+- The delivered deletion is a recorded Power Query step (below).
 
-> ⚠️ **Watch out.** Remove Duplicates deletes rows and tells you only *how many*. It never says *which*, and Ctrl+Z is the only way back. Count the groups with a key and `COUNTIFS` first, on a copy; deliver the deletion as a recorded step.
+> ⚠️ **Watch out.** It never says *which* rows went, and Ctrl+Z is the only way back. Count the `rank = 2` rows first; if the tool's number differs, do not save.
+
+**Your turn.** Payments 7172 and 52859 are equal on `installment_id`, `paid_at` and `amount`. Payment 7172 is higher up the sheet. You run Remove Duplicates on those three columns. Which row stays?
+
+```task
+{"id": "w04d3-l6", "kind": "choice", "options": ["52859 — the newer one", "7172 — the first one in the sheet", "Both — the payment_ids differ", "Neither"], "answer": 1, "explain": "Remove Duplicates keeps the first row of each group in the current order. Sort first if a particular copy must survive."}
+```
+
+### Power Query — load, steps, load back
+
+**What it is.** **Power Query** (*Получить и преобразовать*, Get & Transform) imports a file and cleans it with **recorded steps**. Every click becomes a step in the **Applied Steps** pane. **Refresh** re-reads the file and replays every step. It is the Excel version of a SQL view.
+
+**How to write it.**
+
+```text
+Data → Get Data → From File → From Text/CSV → payments_dirty.csv → Transform Data
+                                                                        │
+   Power Query editor ─────────────────────────────────────────────────┘
+     preview of the rows            Applied Steps (right pane)
+                                      Source
+                                      Promoted Headers
+                                      Changed Type
+                                      … one step per click …
+   Home → Close & Load  →  a Table on a new sheet
+```
+
+Each step is one line of **M**, the query language, shown in the formula bar — a shape, not to type:
+
+```text
+= Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
+  function          previous step        the condition
+```
+
+You do not need to write M. You need to read it enough to see what a step does. Right-click a step → *Rename* so the pane reads like a change log: `Trim method`, `bank transfer → transfer`, `Drop 25 duplicates`.
+
+**When you use it.**
+- Any file that arrives again: the Monday export, the monthly bank file.
+- Power Query needs Excel for Windows or Microsoft 365. **Sheets** has none: its pipeline is a clean tab of formulas (`ARRAYFORMULA`, `UNIQUE`, `QUERY`), re-run by importing the new CSV over the raw tab.
+
+> ⚠️ **Watch out.** Steps run in order, top to bottom. Insert a step in the middle and every later step works on its result — check the row count at the last step after any change.
+
+**Your turn.** Which tools leave a recipe that re-runs on the next file?
 
 ```game
 {"type": "sort", "id": "w04d3-g3", "title": "Discover, or deliver?", "q": "Which tools leave a re-runnable recipe behind, and which are a one-time edit?", "groups": {"One-time edit — fine for a look, never for Monday's file": ["Find & Replace (Ctrl+H)", "Flash Fill (Ctrl+E)", "the Remove Duplicates button", "Text to Columns on the raw sheet"], "Recorded — re-runs on the next file": ["Power Query: Replace Values step", "Power Query: Remove Duplicates step", "=TRIM(…) on a clean tab", "Sheets: QUERY over the raw tab"]}}
 ```
 
-### Power Query (*Get & Transform*) — the recorded pipeline
+### Change Type — the first step after the headers
 
-Data → **Get Data** → From File → From Text/CSV (Sheets has no Power Query; see below). The editor opens: a preview, the **Applied Steps** pane on the right — every click becomes a step, in order, re-run on Refresh. The steps you will use:
+**What it is.** **Change Type** sets the type of each column: Whole Number, Decimal, Date, Text. It is SQL's `CAST`. Power Query guesses types on import; you check every guess.
 
-| Step | Where | Equivalent |
+**How to write it.**
+
+```text
+click the type icon in the column header (ABC / 123 / calendar) → choose
+M: = Table.TransformColumnTypes(#"Promoted Headers", {{"paid_at", type date}, {"amount", Int64.Type}, {"phone", type text}})
+```
+
+| column | wrong guess | right type | why |
+|---|---|---|---|
+| `paid_at` | Text | Date | date filters and month grouping need a date |
+| `amount` | Text | Whole Number | sums |
+| `phone` | Whole Number | **Text** | `+998902031105` as a number loses its `+`; a phone is an identifier, not a quantity |
+| `installment_id` | Whole Number | Whole Number | a key that joins to `installments` |
+
+**When you use it.**
+- Right after *Promoted Headers*, before any other step. Text steps need text columns; date filters need date columns.
+
+> ⚠️ **Watch out.** A `Trim` step on a column typed as a number does nothing and shows no error. A Date filter on a text column fails. Types first.
+
+**Your turn.** Power Query types `phone` as Whole Number. What does the first customer's phone `+998902031105` become?
+
+```task
+{"id": "w04d3-l7", "kind": "choice", "options": ["+998902031105", "998902031105 — the + is lost", "an error in every row", "9.98902E+11 stored as text"], "answer": 1, "explain": "A number cannot hold a +, so it is dropped. Type identifiers — phones, codes, account numbers — as Text."}
+```
+
+### Filter Rows — WHERE in Power Query
+
+**What it is.** **Filter Rows** keeps the rows that meet a condition. It is SQL's `WHERE`. Click the arrow in a column header.
+
+**How to write it.**
+
+```text
+paid_at header ▾ → Date Filters → Before… / On or before… → 2026-10-01
+M: = Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
+```
+
+| paid_at | kept by `<= 2026-10-01`? |
+|---|---|
+| 2026-09-30 | yes |
+| 2026-10-01 | yes |
+| 2026-10-02 | no — dated after the as-of |
+
+`payments_dirty.csv` has **24** rows dated after 2026-10-01. The filter drops them for any as-of report.
+
+**When you use it.**
+- An as-of cut, a period, one region or product.
+- Text filters (*equals*, *begins with*) and number filters work the same way.
+
+> ⚠️ **Watch out.** A filter on a column still typed as text compares text, not dates. Change Type first.
+
+**Your turn.** On the raw `payments_dirty.csv` (52 875 rows, duplicates still in), how many rows does `paid_at` *on or before* 2026-10-01 keep?
+
+```task
+{"id": "w04d3-l8", "kind": "number", "answer": 52851, "dp": 0, "unit": "rows", "hint": "All rows minus the forward-dated ones.", "model": "52 875 − 24 = 52 851. After the duplicates are removed the same filter keeps 52 826."}
+```
+
+### Split Column — Text to Columns, recorded
+
+**What it is.** **Split Column** cuts one column into several, by a delimiter or by a number of characters. It is Text to Columns as a recorded step: next Monday's file is split too.
+
+**How to write it.**
+
+```text
+select applied_at → Home → Split Column → By Delimiter → Space → At the left-most delimiter
+M: = Table.SplitColumn(#"Changed Type", "applied_at", Splitter.SplitTextByEachDelimiter({" "}), {"applied_at.1", "applied_at.2"})
+then Change Type: applied_at.1 → Date, applied_at.2 → Time
+```
+
+| applied_at | applied_at.1 | applied_at.2 |
 |---|---|---|
-| **Source** / **Promoted Headers** | automatic; Home → Use First Row as Headers if not | reading the CSV |
-| **Changed Type** | click the icon in each header: Whole Number, Decimal, Date, Text | `CAST`; set `paid_at` to Date, amounts to Whole Number, ids to Whole Number, phone to **Text** |
-| **Trim / Clean / lowercase / Capitalize Each Word** | Transform → Format | `TRIM`, `CLEAN`, `LOWER`, `PROPER` |
-| **Replace Values** | Transform → Replace Values (`bank transfer` → `transfer`; tick *Match entire cell contents*) | `REPLACE`, `SUBSTITUTE` |
-| **Remove Duplicates** | select the key columns → Home → Remove Rows → Remove Duplicates | `ROW_NUMBER … WHERE rn = 1` (keeps the first) |
-| **Filter Rows** | the header arrow → Date Filters → Before… | `WHERE paid_at <= '2026-10-01'` |
-| **Add Column → Custom / Conditional / Date → Month → Start of Month** | | a calculated column, `CASE`, `date(d, 'start of month')` |
-| **Group By** | Transform → Group By; one or more keys, aggregations Sum / Count / Min / Max | `GROUP BY` |
-| **Merge Queries** | Home → Merge Queries; pick the two tables, click the key columns, choose the **Join Kind** | `JOIN`: Left Outer / Right Outer / Full Outer / Inner / Left Anti / Right Anti — week 2's whole chapter in a dropdown |
-| **Append Queries** | Home → Append | `UNION ALL` |
-| **Close & Load To…** | Table on a new sheet / Only Create Connection / Add to Data Model | `CREATE VIEW` (connection only) or `CREATE TABLE AS` (loaded) |
+| 2025-06-02 10:35:00 | 2025-06-02 | 10:35:00 |
 
-```game
-{"type": "match", "id": "w04d3-g4", "title": "Power Query step ↔ SQL", "pairs": [["Merge Queries (Left Outer)", "LEFT JOIN"], ["Append Queries", "UNION ALL"], ["Group By", "GROUP BY"], ["Changed Type", "CAST"], ["Filter Rows", "WHERE"], ["Remove Duplicates on key columns", "ROW_NUMBER() … WHERE rn = 1"]]}
+**When you use it.**
+- The same cases as Text to Columns, on a file that comes back.
+- Split never overwrites a neighbour: Power Query adds new columns.
+
+**Your turn.** After the split, which type should `applied_at.1` get?
+
+```task
+{"id": "w04d3-l9", "kind": "choice", "options": ["Text", "Date", "Whole Number", "Date/Time"], "answer": 1, "explain": "It holds only the day now. As a Date it filters and groups by month; as Text it would sort but never compare as a date."}
 ```
 
-Each step has a line of **M** (the query language) in the formula bar — `= Table.Distinct(#"Lowercased Text", {"installment_id", "paid_at", "amount"})`. You do not need to write M; you need to read it enough to see what a step does. Right-click a step → *Rename* so the pane reads like a change log: `Trim method`, `Lowercase method`, `bank transfer → transfer`, `Drop 25 duplicates`. **Refresh All** (Data → Refresh All, Ctrl+Alt+F5) re-reads the CSV from the path in *Source* and re-runs every step — change the path once (Data Source Settings) when the file moves.
+### Replace Values, Trim, lowercase — text steps
 
-> 💡 **Key idea.** The Applied Steps pane is your change log and your SQL view at once. Rename every step after what it changed, and next Monday **Refresh All** replays the whole recipe on the new file.
+**What it is.** The text repairs of this page as steps. **Transform → Format** has Trim, Clean, lowercase, UPPERCASE and Capitalize Each Word (= `PROPER`). **Replace Values** is `SUBSTITUTE`.
 
-Two habits. **Count at every step**: the status bar shows the row count of the preview; for the real count, a Group By step with *Count Rows* on a duplicate of the query, or load and `=ROWS(tbl)`. **Types before text transforms**: a `Trim` on a column typed as number does nothing, a Date filter on a text column fails.
+**How to write it.**
 
-### Google Sheets: formulas, the Remove duplicates tool, and QUERY
-
-Sheets has no Power Query. The reproducible way is a **clean tab built by formulas** from the raw tab: `=ARRAYFORMULA(TRIM(Raw!B2:B))`, `PROPER`, `SUBSTITUTE`, and a `UNIQUE` over the key columns to deduplicate. Data → Data cleanup → **Remove duplicates** and **Trim whitespace** are the one-time tools, same caveats as Excel's. Then **`QUERY`** — the SQL you already speak, as a function:
-
+```text
+select method → Transform → Format → Trim                M: Table.TransformColumns(…, {{"method", Text.Trim}})
+select method → Transform → Format → lowercase           M: Text.Lower
+select method → Transform → Replace Values
+     Value To Find: bank transfer   Replace With: transfer
+     Advanced ▸ ☑ Match entire cell contents              M: Table.ReplaceValue(…, "bank transfer", "transfer", Replacer.ReplaceValue, {"method"})
 ```
-=QUERY(Payments!A1:H, "select F, count(A), sum(E) group by F order by count(A) desc", 1)
-=QUERY(Clean!A1:H, "select G, sum(E) where D >= date '2026-09-01' and D < date '2026-10-01' group by G", 1)
+
+| method (raw) | after Trim + lowercase + Replace |
+|---|---|
+| `CASH␣` | cash |
+| PayMe | payme |
+| bank transfer | transfer |
+
+**When you use it.**
+- Every text column you will group, filter or join on.
+- Capitalize Each Word on name columns only.
+
+> ⚠️ **Watch out.** Without *Match entire cell contents*, Replace Values works inside the text: replacing `card` with `bank card` would also turn `discard` into `disbank card`.
+
+**Your turn.** Which of these steps must **not** run on `method`?
+
+```task
+{"id": "w04d3-l10", "kind": "choice", "options": ["Trim", "lowercase", "Capitalize Each Word", "Replace Values bank transfer → transfer"], "answer": 2, "explain": "Capitalize Each Word turns payme into Payme and creates new spellings. It is for people's names."}
 ```
 
-Column letters instead of names, `label` to rename, `pivot` for a cross-tab (`select G, sum(E) group by G pivot H`). Importing the CSV through File → Import with *Replace data at selected cell* re-reads the Monday file; the formulas re-run — Sheets' version of Refresh.
+### Remove Duplicates — the recorded step
 
-### Excel ↔ Google Sheets, today's tools
+**What it is.** The same deletion as the button, as a step. Select the key columns, then Home → Remove Rows → Remove Duplicates. It keeps the first row of each group, like `ROW_NUMBER() … WHERE rn = 1`.
+
+**How to write it.**
+
+```text
+Ctrl+click installment_id, paid_at, amount → Home → Remove Rows → Remove Duplicates
+M: = Table.Distinct(#"Replaced Value", {"installment_id", "paid_at", "amount"})
+```
+
+On `payments_dirty.csv`: 52 875 → **52 850** rows, 25 removed, Σ amount down by 58 397 800. Rename the step `Drop 25 duplicates`.
+
+**When you use it.**
+- The delivered version of the deletion you checked with `COUNTIFS`.
+- Sort first (a *Sorted Rows* step) when a particular copy must be kept — the earlier `registered_at`, the lower `payment_id`.
+
+> ⚠️ **Watch out.** Selecting **all** columns removes nothing: `payment_id` differs on every row. A duplicate agrees on what matters, not on everything.
+
+**Your turn.** You select **every** column of `payments_dirty.csv` before Remove Duplicates. How many rows are left?
+
+```task
+{"id": "w04d3-l11", "kind": "number", "answer": 52875, "dp": 0, "unit": "rows", "hint": "Is any pair of rows equal on payment_id?", "model": "52 875 — nothing goes, because no two rows share a payment_id. Select installment_id, paid_at and amount to get 52 850."}
+```
+
+### Add Column — a calculated column
+
+**What it is.** **Add Column** creates a new column from the others: **Custom Column** takes a formula in M, **Conditional Column** is a `CASE` built with a form, **Date → Month → Start of Month** derives a month. It is a calculated column in `SELECT`.
+
+**How to write it.**
+
+```text
+Add Column → Custom Column
+  name:     birth_date_invalid
+  formula:  [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)
+M: = Table.AddColumn(#"Removed Duplicates", "birth_date_invalid", each [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1))
+```
+
+| customer_id | birth_date | birth_date_invalid |
+|---|---|---|
+| 4516 | 1981-08-15 | FALSE |
+| 927 | 2031-04-12 | TRUE |
+| 957 | 1900-01-01 | TRUE |
+
+**When you use it.**
+- A flag (`is_forward_dated`, `birth_date_invalid`), a month key, a cleaned copy of a column.
+- M is case-sensitive: `[birth_date]`, not `[Birth_Date]`.
+
+**Your turn.** Add a custom column `registered_in_future` = `[registered_at] > #date(2026,10,1)` to the raw customers query. How many rows say TRUE?
+
+```task
+{"id": "w04d3-l12", "kind": "number", "answer": 5, "dp": 0, "unit": "customers", "hint": "Change Type on registered_at to Date first.", "model": "5 — customers 6005, 6006, 6022, 6039 and 6040, all among the duplicate rows 6001–6040. A registration after the as-of date is an impossible value."}
+```
+
+### Group By — GROUP BY in Power Query
+
+**What it is.** **Group By** (Transform → Group By) folds the rows into one row per key, with aggregates: Sum, Count Rows, Min, Max, Average. It is SQL's `GROUP BY`.
+
+**How to write it.**
+
+```text
+Transform → Group By → Advanced
+  group by:  method
+  new column: payments = Count Rows
+  new column: amount   = Sum of amount
+M: = Table.Group(#"Removed Duplicates", {"method"}, {{"payments", each Table.RowCount(_)}, {"amount", each List.Sum([amount])}})
+```
+
+| method (3 rows in) | | method | payments | amount |
+|---|---|---|---|---|
+| card · 100 | → | card | 2 | 300 |
+| cash · 50 | | cash | 1 | 50 |
+| card · 200 | | | | |
+
+The same in Sheets, with `QUERY` — SQL as a function, column letters instead of names:
+
+```excel
+=QUERY(Clean!A1:H, "select F, count(A), sum(E) group by F order by count(A) desc", 1)
+```
+
+**When you use it.**
+- A summary that must refresh with the file: payments per instalment, amount per month.
+- Before a merge, to bring a "many" side down to one row per key (the Merge subsection).
+
+**Your turn.** On `payments_clean` filtered to `paid_at <= 2026-10-01`, you Group By `installment_id` with `paid = Sum(amount)`. How many rows come out?
+
+```task
+{"id": "w04d3-l13", "kind": "number", "answer": 52826, "dp": 0, "unit": "rows", "hint": "How many payments does one instalment have in this data?", "model": "52 826 — the same as the filtered payment rows, because after the dedup no instalment has two payments. Grouping still matters: next month's file may hold a split payment."}
+```
+
+### Unpivot — wide columns into rows
+
+**What it is.** **Unpivot** (*отменить свёртывание столбцов*) turns many value columns into two columns — **Attribute** (the old header) and **Value** — one row per old cell. It makes a report back into a proper table (Day 1).
+
+**How to write it.**
+
+```text
+select the label column (region) → Transform → Unpivot Columns ▾ → Unpivot Other Columns
+M: = Table.UnpivotOtherColumns(#"Changed Type", {"region"}, "Attribute", "Value")
+then rename Attribute → bucket, Value → outstanding
+```
+
+| region | 0 | 1-30 | → | region | bucket | outstanding |
+|---|---|---|---|---|---|---|
+| Andijan | a | b | | Andijan | 0 | a |
+| Bukhara | c | d | | Andijan | 1-30 | b |
+| | | | | Bukhara | 0 | c |
+| | | | | Bukhara | 1-30 | d |
+
+Rows after unpivot = label rows × value columns: 2 × 2 = 4.
+
+**When you use it.**
+- A file with months, products or buckets across the header — the "not a table" of Day 1.
+- *Unpivot Other Columns* (select the labels) keeps working when next month adds a column; *Unpivot Columns* (select the values) does not.
+
+**Your turn.** A sheet has 5 product rows and 34 month columns. You select `product` and choose Unpivot Other Columns. How many rows come out?
+
+```task
+{"id": "w04d3-l14", "kind": "number", "answer": 170, "dp": 0, "unit": "rows", "hint": "One row per old cell.", "model": "5 × 34 = 170 — exactly the shape of monthly_disbursements.csv: one row per month × product."}
+```
+
+### Merge Queries — a JOIN
+
+**What it is.** **Merge Queries** (*объединить запросы*) joins two queries on a key. It is SQL's `JOIN`; the **Join Kind** dropdown holds week 2's whole chapter.
+
+**How to write it.**
+
+```text
+Home → Merge Queries (as New)
+  top table:    installments        click installment_id
+  bottom table: paid_by_installment click installment_id
+  Join Kind:    Left Outer
+→ a new column of nested tables → click its expand icon → tick paid
+M: = Table.NestedJoin(installments, {"installment_id"}, paid_by_installment, {"installment_id"}, "paid", JoinKind.LeftOuter)
+```
+
+| Join Kind | SQL | keeps |
+|---|---|---|
+| Left Outer | `LEFT JOIN` | every row of the top table |
+| Right Outer | `RIGHT JOIN` | every row of the bottom table |
+| Full Outer | `FULL OUTER JOIN` | every row of both |
+| Inner | `INNER JOIN` | matched rows only |
+| Left Anti | `LEFT JOIN … WHERE right IS NULL` | top rows with **no** match |
+| Right Anti | the mirror | bottom rows with no match |
+
+On the data: `installments` (92 193 rows) Left Outer `paid_by_installment` → still **92 193** rows; unpaid instalments get `null` in `paid`. Left Anti, then a filter `due_date <= 2026-10-01` → **1 381** matured instalments with no payment at all by the as-of date.
+
+**When you use it.**
+- Bring a column from another file: the paid amount onto each instalment, a product rate onto each loan.
+- Check the row count right after every merge: a Left Outer must keep the top table's count.
+
+> ⚠️ **Watch out.** If the bottom table has two rows for one key, the merge **multiplies** the top rows — the one-to-many trap of week 2. Group By the bottom table to one row per key first.
+
+**Your turn.** Which Join Kind finds the instalments that have **no** payment?
+
+```task
+{"id": "w04d3-l15", "kind": "choice", "options": ["Inner", "Left Outer", "Left Anti", "Full Outer"], "answer": 2, "explain": "Left Anti keeps the top rows with no match — the anti-join of week 2, in one dropdown."}
+```
+
+### Append Queries — a UNION ALL
+
+**What it is.** **Append Queries** (*добавить запросы*) stacks the rows of two or more queries into one. It is SQL's `UNION ALL`: duplicates stay, and columns are matched **by name**.
+
+**How to write it.**
+
+```text
+Home → Append Queries (as New) → Two tables / Three or more → pick the queries
+M: = Table.Combine({payments_tashkent, payments_other})
+```
+
+| query 1 | | query 2 | | appended |
+|---|---|---|---|---|
+| amount | | amount | | amount |
+| 100 | | 300 | | 100 |
+| 200 | | | | 200 |
+| | | | | 300 |
+
+**When you use it.**
+- Twelve monthly files into one year; two branches' exports into one table.
+- Add a `source` column (Add Column → Custom, `"2026-09"`) to each query before appending, so every row remembers its file.
+
+> ⚠️ **Watch out.** `Amount` in one file and `amount` in the other become **two** columns, each half `null`. Rename to the same header before appending.
+
+**Your turn.** Query 1 has a column `amount`, query 2 has `Amount`. Each has 3 rows. What does Append give?
+
+```task
+{"id": "w04d3-l16", "kind": "choice", "options": ["6 rows, one amount column", "6 rows, two columns amount and Amount, each with 3 nulls", "3 rows — duplicates are removed", "An error"], "answer": 1, "explain": "Append matches columns by name, and M names are case-sensitive. Rename one header first."}
+```
+
+### Close & Load, and Refresh
+
+**What it is.** **Close & Load** writes the query's result to the workbook. **Refresh** (Data → Refresh All, Ctrl+Alt+F5) re-reads the source file and replays every step.
+
+**How to write it.**
+
+```text
+Home → Close & Load To…
+  ◉ Table, New worksheet          → a Table you can SUM, chart, pivot      (like CREATE TABLE AS)
+  ◉ Only Create Connection        → no sheet; other queries can use it      (like CREATE VIEW)
+  ☐ Add this data to the Data Model
+Data → Refresh All                → every query re-reads its Source and re-runs
+Data → Queries & Connections → right-click → Properties → Refresh data when opening the file
+```
+
+`payments_clean` loads as a 52 850-row Table. Next Monday you save the new export over `payments_dirty.csv`, press Refresh All, and the Table, its formulas and its pivots update.
+
+**When you use it.**
+- Load the tables people read; keep helper queries (`paid_by_installment`) as connections only.
+- When the file moves: Data → Get Data → Data Source Settings → Change Source, once.
+
+> ⚠️ **Watch out.** A formula typed *inside* a loaded Table next to the query columns stays, but values typed into the query's own columns are overwritten on the next refresh. Never edit a loaded table by hand.
+
+**Your turn.** `paid_by_installment` is only needed to feed the merge. How do you load it?
+
+```task
+{"id": "w04d3-l17", "kind": "choice", "options": ["Table on a new worksheet", "Only Create Connection", "Copy and paste as values", "Do not load it — the merge cannot use it then"], "answer": 1, "explain": "Connection only: the query exists and other queries can merge it, but it adds no sheet — a view, not a table."}
+```
+
+### Excel ↔ Google Sheets — reference
 
 | Excel | Sheets | Note |
 |---|---|---|
@@ -134,10 +749,34 @@ Column letters instead of names, `label` to rename, `pivot` for a cross-tab (`se
 | Flash Fill (Ctrl+E) | — ; Smart Fill suggestions | neither leaves a formula |
 | Data → Remove Duplicates | Data → Data cleanup → Remove duplicates | same exact-match caveats; Sheets is case-sensitive here |
 | — | Data → Data cleanup → Trim whitespace | one-time, like Find & Replace |
-| Power Query (Get & Transform), Applied Steps, Refresh All | formula tab + `UNIQUE`/`FILTER`/`ARRAYFORMULA`; re-import to refresh | no recorded pipeline in Sheets — the formulas *are* the pipeline |
-| Merge Queries (join kinds) | `XLOOKUP` / `VLOOKUP` column, or `QUERY` on one tab | Sheets `QUERY` cannot join two tabs; join first with a lookup |
-| Group By | `QUERY(…, "select … group by …")` or a pivot | |
+| Power Query, Applied Steps, Refresh All | formula tab + `UNIQUE`/`FILTER`/`ARRAYFORMULA`; re-import to refresh | no recorded pipeline in Sheets — the formulas *are* the pipeline |
+| Merge Queries (join kinds) | `XLOOKUP` column, or `QUERY` on one tab | Sheets `QUERY` cannot join two tabs; join first with a lookup |
+| Group By | `QUERY(…, "select … group by …")` or a pivot | `pivot` inside `QUERY` gives a cross-tab |
 | Append | `={Tab1!A2:H; Tab2!A2:H}` (array literal with `;`) | `UNION ALL` by position, not by name |
+
+### Putting it together
+
+Next Monday's payments file, cleaned in one query. Each step is a subsection of this page:
+
+```text
+Source                    From Text/CSV → payments_dirty.csv             Power Query: load
+Promoted Headers
+Changed Type              ids, amount → Whole Number; paid_at → Date      Change Type
+Trim method               Transform → Format → Trim                       text steps (TRIM)
+Lowercase method          Transform → Format → lowercase                  text steps (LOWER)
+bank transfer → transfer  Replace Values, match entire cell               text steps (SUBSTITUTE)
+Drop 25 duplicates        installment_id + paid_at + amount               Remove Duplicates (checked with COUNTIFS first)
+is_forward_dated          Custom Column [paid_at] > #date(2026,10,1)      Add Column
+Close & Load To           Table payments_clean                            Close & Load; Refresh next Monday
+```
+
+Read the result with the checklist from the top of the page: spaces 0, case 0, synonyms 0 — `UNIQUE(method)` gives 5; duplicates 0 — 52 850 rows; the 24 forward-dated rows kept and flagged. Section 2 builds exactly this.
+
+**Put the steps in order.**
+
+```game
+{"type": "order", "id": "w04d3-g7", "title": "Order the payments pipeline", "items": ["Source: From Text/CSV", "Promoted Headers", "Changed Type", "Trim method", "Lowercase method", "Replace bank transfer → transfer", "Remove Duplicates on installment_id, paid_at, amount", "Close & Load as payments_clean"], "why": "Types first, then text repairs, so the duplicate step compares cleaned values; load last."}
+```
 
 ### Depth (optional)
 
@@ -176,9 +815,9 @@ Column letters instead of names, `label` to rename, `pivot` for a cross-tab (`se
 
 ## 2. Worked example — Nilufar's two files (detective, 40 min)
 
-Work on `customers_dirty.csv` and `payments_dirty.csv` from `data/excel/` (the same rows as the `Customers` and `Payments` sheets, as raw files so Power Query has something to import). Grain of each: a customer *row* and a payment *row* — the question is how many *people* and *payments* they represent.
+Work on `customers_dirty.csv` and `payments_dirty.csv` from `data/excel/` (the same rows as the `Customers` and `Payments` sheets, as raw files so Power Query has something to import). Grain of each: a customer *row* and a payment *row* — the question is how many *people* and *payments* they represent. The steps follow the order of Learn.
 
-**Step 1 — the dirt inventory on Customers**, four formulas on the raw sheet: *In the box: first names written in ALL CAPS.*
+**Step 1 — the dirty-data checklist on Customers**, four formulas on the raw sheet (stray spaces with `LEN`/`TRIM`, case with `EXACT`). *In the box: first names written in ALL CAPS.*
 
 ```task
 {"id": "w04d3-d1", "kind": "number", "answer": 22, "dp": 0, "hint": "EXACT against UPPER, inside SUMPRODUCT(--…).", "explain": "=SUMPRODUCT(--EXACT(B2:B6041, UPPER(B2:B6041))) → 22. With = instead of EXACT every name would 'equal' its upper-case copy."}
@@ -190,7 +829,7 @@ Trailing spaces in `first_name` `=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041
 
 </details>
 
-**Step 2 — prove the duplicates** with the key + `COUNTIFS` block from section 1, then a second key on `phone|birth_date`. *In the box: how many pairs the phone|birth_date key finds.*
+**Step 2 — prove the duplicates** with a **matching key** and **COUNTIFS on the key** (n and rank), first on names, then a second key on `phone|birth_date`. *In the box: how many pairs the phone|birth_date key finds.*
 
 ```task
 {"id": "w04d3-d2", "kind": "number", "answer": 40, "dp": 0, "unit": "pairs", "explain": "Phone key: 80 rows with n = 2, i.e. 40 pairs — ids 6001–6040 and their originals. The name key finds 42: the two extra pairs are namesakes."}
@@ -202,7 +841,7 @@ Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly id
 
 </details>
 
-**Step 3 — the ages.** A column `age` `=DATEDIF(E2, DATE(2026,10,1), "y")` (Sheets: same), then filter `age < 18` or `age > 100`. *In the box: how many impossible birth dates.*
+**Step 3 — impossible dates.** A column `age` `=DATEDIF(E2, DATE(2026,10,1), "y")` (Sheets: same), then filter `age < 18` or `age > 100` — the **dates** subsection's impossible values. *In the box: how many impossible birth dates.*
 
 ```task
 {"id": "w04d3-d3", "kind": "number", "answer": 7, "dp": 0, "hint": "DATEDIF returns #NUM! for a birth date in the future — count the errors too.", "explain": "4 in the future (927, 2338, 3380, 964) + 3 at 1900-01-01 (957, 1020, 2934)."}
@@ -214,7 +853,7 @@ Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly id
 
 </details>
 
-**Step 4 — Payments.** Key `=C2&"|"&TEXT(D2,"yyyy-mm-dd")&"|"&E2` (instalment, day, amount), `n` and `rank` columns; and the method inventory with `=UNIQUE(F2:F52876)`. *In the box: Σ amount of the extra (rank = 2) rows, in soum.*
+**Step 4 — Payments: a key, n and rank, and the text inventory.** Key `=C2&"|"&TEXT(D2,"yyyy-mm-dd")&"|"&E2` (instalment, day, amount), `n` and `rank` columns (**COUNTIFS on the key**); and the method inventory with `=UNIQUE(F2:F52876)` before and after **TRIM / LOWER / SUBSTITUTE**. *In the box: Σ amount of the extra (rank = 2) rows, in soum.*
 
 ```task
 {"id": "w04d3-d4", "kind": "number", "answer": 58397800, "dp": 0, "unit": "UZS", "hint": "SUMIFS on amount with the rank column = 2.", "explain": "25 extra rows, Σ 58 397 800 — the gap on Timur's tile."}
@@ -226,9 +865,9 @@ Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly id
 
 </details>
 
-**Step 5 — build it once in Power Query** (the worked pipeline for `payments_dirty.csv`; `Customers` is HW 4.2):
+**Step 5 — build it once in Power Query** (the worked pipeline for `payments_dirty.csv`; `Customers` is HW 4.2). Each line is one step from Learn — **Change Type**, the **text steps**, **Remove Duplicates**, **Close & Load**:
 
-```
+```text
 Source               From Text/CSV → data/excel/payments_dirty.csv
 Promoted Headers
 Changed Type         payment_id, loan_id, installment_id, amount → Whole Number; paid_at → Date; method, product, region → Text
@@ -241,7 +880,7 @@ Close & Load To      Table "payments_clean" on a new sheet
 
 <details><summary>Checks after loading</summary>
 
-`=ROWS(payments_clean)` → **52 850**; `=SUM(payments_clean[amount])` → **255 114 772 176** (raw was 255 173 169 976; difference 58 397 800); `=ROWS(UNIQUE(payments_clean[method]))` → **5**; `=COUNTIFS(payments_clean[paid_at], ">"&DATE(2026,10,1))` → 24 forward-dated rows (53 438 947) — *not* removed here (they are real payments recorded with a future date; filter them where an as-of matters, as week 3 did). Change the Remove Duplicates step to all columns and the count is 52 875 again — the pane lets you try and undo. Then Data → Refresh All with the file untouched: the same 52 850. That is the deliverable.
+`=ROWS(payments_clean)` → **52 850**; `=SUM(payments_clean[amount])` → **255 114 772 176** (raw was 255 173 169 976; difference 58 397 800); `=ROWS(UNIQUE(payments_clean[method]))` → **5**; `=COUNTIFS(payments_clean[paid_at], ">"&DATE(2026,10,1))` → 24 forward-dated rows (53 438 947) — *not* removed here (they are real payments recorded with a future date; filter them where an as-of matters, as week 3 did). Change the Remove Duplicates step to all columns and the count is 52 875 again — the pane lets you try and undo. Then Data → **Refresh All** with the file untouched: the same 52 850. That is the deliverable.
 
 </details>
 
@@ -249,69 +888,99 @@ Close & Load To      Table "payments_clean" on a new sheet
 
 ## 3. Practice (45 min)
 
-File `week-04/day-3/practice.xlsx`: raw sheets untouched, a sheet per task or a Power Query per task. State the count you got next to each. Then type the count in the box under the question; it checks it and shows the full answer.
+File `week-04/day-3/practice.xlsx`: raw sheets untouched, a sheet per task or a Power Query per task. State the count you got next to each. Then type the count in the box under the question; it checks it and shows the full answer. The questions follow the order of Learn.
 
-**P1.** Ctrl+H on a *copy* of `Payments`: replace `bank transfer` with `transfer` (match entire cell). How many replacements? Then try `PayMe` → `payme` with and without *Match case*. Why does the second run report 8 900 without it? *In the box: replacements in the first run.*
+**P1.** *(the dirty-data checklist)* On a copy of `Payments`, list the raw spellings of `method` with `=UNIQUE(tblPayments[method])` and count each with `COUNTIFS`. *In the box: how many distinct raw spellings.*
+
+```task
+{"id": "w04d3-p12", "kind": "number", "answer": 10, "dp": 0, "unit": "spellings", "explain": "10: card 17 564 · payme 8 870 · cash 8 760 · click 8 754 · transfer 8 747 · Card 57 · Click 36 · PayMe 30 · CASH  30 · bank transfer 27. Note that COUNTIFS(…, \"card\") returns 17 621 for both card and Card — criteria ignore case, so count with EXACT if you need the raw split. Five clean values hide behind ten spellings: case (123 rows), a stray space (30) and a synonym (27) = the 180 dirty rows."}
+```
+
+**P2.** *(Find & Replace)* Ctrl+H on a *copy* of `Payments`: replace `bank transfer` with `transfer` (match entire cell). How many replacements? Then try `PayMe` → `payme` with and without *Match case*. Why does the second run report 8 900 without it? *In the box: replacements in the first run.*
 
 ```task
 {"id": "w04d3-p1", "kind": "number", "answer": 27, "dp": 0, "explain": "27. Without Match case, payme matches PayMe and the 8 870 payme rows — Excel replaces all 8 900 (harmless here, but 8 900 lines in a log for 30 real changes). Tick Match case → 30. Find & Replace ignores case by default, like the rest of Excel."}
 ```
 
-**P2.** Text to Columns on a copy of `applications.csv`'s `applied_at`: date and time in two columns, the date typed YMD. Count applications submitted in September 2026 from the date column with the half-open filter — and with `BETWEEN`-style `<= 30 Sep`. *In the box: September 2026 applications on the date column.*
+**P3.** *(Text to Columns · Split Column)* Text to Columns on a copy of `applications.csv`'s `applied_at`: date and time in two columns, the date typed YMD. Count applications submitted in September 2026 from the date column with the half-open filter — and with `BETWEEN`-style `<= 30 Sep`. *In the box: September 2026 applications on the date column.*
 
 ```task
-{"id": "w04d3-p2", "kind": "number", "answer": 621, "dp": 0, "unit": "applications", "explain": "621 both ways now — the time is split off, so <= DATE(2026,9,30) is safe on the date column. On the original datetime column <= DATE(2026,9,30) gives 598: 23 applications after midnight on the 30th are lost. The half-open form works on both columns; use it everywhere."}
+{"id": "w04d3-p2", "kind": "number", "answer": 621, "dp": 0, "unit": "applications", "explain": "621 both ways now — the time is split off, so <= DATE(2026,9,30) is safe on the date column. On the original datetime column <= DATE(2026,9,30) gives 598: 23 applications after midnight on the 30th are lost. The half-open form works on both columns; use it everywhere. In Power Query the same cut is Split Column → By Delimiter → Space, and it re-runs."}
 ```
 
-**P3.** `DATEVALUE`: paste `1981-08-15` as text into a cell (type an apostrophe first), prove it is text with `ISTEXT`, convert with `DATEVALUE`, and compute the age. Then try `15.08.1981` and `08/15/1981` — which converts on your machine? *In the box: the age on 2026-10-01.*
-
-```task
-{"id": "w04d3-p3", "kind": "number", "answer": 45, "dp": 0, "unit": "years", "explain": "ISTEXT → TRUE; =DATEVALUE(A1) → 29 812 (format as a date → 1981-08-15); =DATEDIF(DATEVALUE(A1), DATE(2026,10,1), \"y\") → 45. Which of 15.08.1981 and 08/15/1981 converts depends on your Windows regional format — one returns #VALUE!. That is why ISO is the export rule."}
-```
-
-**P4.** The three Remove Duplicates runs on copies of `Customers` from section 1 (raw names; trimmed names; phone + birth date). Report the three "removed" counts and which run deletes real people. *In the box: the count Excel reports for the first run (raw names).*
-
-```task
-{"id": "w04d3-p4", "kind": "number", "answer": 24, "dp": 0, "unit": "removed", "explain": "24 / 42 / 40. Run 1 misses the trailing-space duplicates; run 2 also deletes the two namesakes (1197 and 5562 go — the tool keeps the first of each pair); only run 3 removes exactly the 40 true duplicates. Sameness is defined on identifying fields, checked with a count before deletion, and executed as a recorded step."}
-```
-
-**P5.** Flash Fill: next to `first_name`, type the cleaned name for row 6001 (`Malika`) and press Ctrl+E. Check the column against `=PROPER(TRIM(B2))` with a mismatch count. What did Flash Fill guess wrong, if anything, and why would you not ship it? *In the box: your mismatch count, and in one or two sentences why you would not ship Flash Fill.*
+**P4.** *(Flash Fill)* Next to `first_name`, type the cleaned name for row 6001 (`Malika`) and press Ctrl+E. Check the column against `=PROPER(TRIM(B2))` with a mismatch count. What did Flash Fill guess wrong, if anything, and why would you not ship it? *In the box: your mismatch count, and in one or two sentences why you would not ship Flash Fill.*
 
 ```task
 {"id": "w04d3-p5", "kind": "free", "min": 20, "model": "Usually 0–3 mismatches (it may keep 'Bobur ' with its space, or capitalise after an apostrophe differently). Even at 0 there is no formula behind the cells, so next Monday's file gets nothing — Flash Fill is for a one-off column you paste as values and never update.", "rubric": ["gives a mismatch count from your own sheet", "says no formula or step is left behind", "says the next file would not be cleaned"]}
 ```
 
-**P6.** Power Query on `customers_dirty.csv`: types, Trim + Capitalize Each Word on the names, a custom column `birth_date_invalid` = `[birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)`, then Remove Duplicates on `phone`, `birth_date`. Load and count. *In the box: distinct phones in customers_clean.*
+**P5.** *(TRIM, SUBSTITUTE)* On `tblPayments`, a calculated column `method_clean` = `=SUBSTITUTE(LOWER(TRIM([@method])), "bank transfer", "transfer")`, then a `COUNTIFS` per clean value. *In the box: how many rows say `cash` in `method_clean`.*
+
+```task
+{"id": "w04d3-p13", "kind": "number", "answer": 8790, "dp": 0, "unit": "rows", "hint": "TRIM is what brings the 'CASH ' rows in.", "explain": "8 790 = 8 760 'cash' + 30 'CASH '. A plain COUNTIFS(tblPayments[method], \"cash\") gives 8 760: it ignores case but not the trailing space. transfer: 8 747 + 27 = 8 774. These counts still include the 25 duplicate payments — the clean table has cash 8 788."}
+```
+
+**P6.** *(dates stored as text · DATEVALUE)* Paste `1981-08-15` as text into a cell (type an apostrophe first), prove it is text with `ISTEXT`, convert with `DATEVALUE`, and compute the age. Then try `15.08.1981` and `08/15/1981` — which converts on your machine? *In the box: the age on 2026-10-01.*
+
+```task
+{"id": "w04d3-p3", "kind": "number", "answer": 45, "dp": 0, "unit": "years", "explain": "ISTEXT → TRUE; =DATEVALUE(A1) → 29 813 (format as a date → 1981-08-15); =DATEDIF(DATEVALUE(A1), DATE(2026,10,1), \"y\") → 45. Which of 15.08.1981 and 08/15/1981 converts depends on your Windows regional format — one returns #VALUE!. That is why ISO is the export rule."}
+```
+
+**P7.** *(a matching key · COUNTIFS on the key)* On `Customers`, a third key on `phone` alone, with an `n` column. Compare with the `phone|birth_date` key of the Worked example. *In the box: how many rows have n > 1 on the phone-only key.*
+
+```task
+{"id": "w04d3-p14", "kind": "number", "answer": 86, "dp": 0, "unit": "rows", "hint": "=COUNTIFS($K$2:$K$6041, K2) on the phone column, then count the rows where it is above 1.", "explain": "86 rows in 43 pairs: the 40 true duplicates (80 rows) plus 3 phone numbers shared by two different people — family members with different birth dates. phone|birth_date finds 80 rows; the name key finds 84 (two namesake pairs). Every key has false positives; the one built on identifying fields has the fewest."}
+```
+
+**P8.** *(Remove Duplicates)* The three Remove Duplicates runs on copies of `Customers` from Learn (raw names; trimmed names; phone + birth date). Report the three "removed" counts and which run deletes real people. *In the box: the count Excel reports for the first run (raw names).*
+
+```task
+{"id": "w04d3-p4", "kind": "number", "answer": 24, "dp": 0, "unit": "removed", "explain": "24 / 42 / 40. Run 1 misses the trailing-space duplicates; run 2 also deletes the two namesakes (1197 and 5562 go — the tool keeps the first of each pair); only run 3 removes exactly the 40 true duplicates. Sameness is defined on identifying fields, checked with a count before deletion, and executed as a recorded step."}
+```
+
+**P9.** *(Power Query: Change Type, text steps, Add Column, Remove Duplicates)* Power Query on `customers_dirty.csv`: types (phone as Text), Trim + Capitalize Each Word on the names, a custom column `birth_date_invalid` = `[birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)`, then Remove Duplicates on `phone`, `birth_date`. Load and count. *In the box: distinct phones in customers_clean.*
 
 ```task
 {"id": "w04d3-p6", "kind": "number", "answer": 5997, "dp": 0, "explain": "6 000 rows; =COUNTIFS(customers_clean[birth_date_invalid], TRUE) → 7; =ROWS(UNIQUE(customers_clean[phone])) → 5 997 (three family numbers). Capitalize Each Word gives Malika Jalilova — apply it to the name columns only. Add birth_date_clean = null when invalid, so the age band gets a blank, not −5."}
 ```
 
-**P7.** Group By in Power Query on `payments_clean`: method → count and sum. Then the same with `QUERY` in Sheets (or `COUNTIFS`/`SUMIFS` on the loaded table). Five rows? *In the box: the card count.*
+**P10.** *(Filter Rows)* On `payments_clean`, add a step Filter Rows → `paid_at` on or before 2026-10-01. *In the box: the rows the filter keeps.*
+
+```task
+{"id": "w04d3-p15", "kind": "number", "answer": 52826, "dp": 0, "unit": "rows", "explain": "52 850 − 24 forward-dated rows = 52 826. Filter in a duplicate of the query (right-click → Reference) so payments_clean itself keeps the 24 rows with their is_forward_dated flag; the as-of cut belongs to the reports that need it, like paid_by_installment in P13."}
+```
+
+**P11.** *(Group By · QUERY)* Group By in Power Query on `payments_clean`: method → count and sum. Then the same with `QUERY` in Sheets (or `COUNTIFS`/`SUMIFS` on the loaded table). Five rows? *In the box: the card count.*
 
 ```task
 {"id": "w04d3-p7", "kind": "number", "answer": 17612, "dp": 0, "unit": "payments", "explain": "card 17 612 / 84 747 182 579 · payme 8 897 / 42 929 061 915 · cash 8 788 / 41 431 864 371 · click 8 786 / 42 977 555 023 · transfer 8 767 / 43 029 108 288; Σ 52 850 / 255 114 772 176. Same shares as week 2, but each count a few rows lower: today you also removed the 25 duplicate payments."}
 ```
 
-**P8.** **Merge** = join: a query `paid_by_installment` = `payments_clean` filtered `paid_at <= 2026-10-01`, grouped by `installment_id` → `paid`; merge it into `installments.csv` (Left Outer, key `installment_id`), expand `paid`, replace null with 0, and name the merged query `installments_paid` (tomorrow and Friday reuse it). Count matured instalments (`due_date <= 2026-10-01`) with `paid < total_due`. *In the box: matured instalments not fully paid.*
+**P12.** *(Unpivot)* Monday's bucket matrix (Day 1's Worked example: 8 regions down, 5 buckets across) arrives as a sheet. Load it into Power Query, select `region`, Unpivot Other Columns, rename the columns `bucket` and `outstanding`. *In the box: how many rows come out.*
+
+```task
+{"id": "w04d3-p16", "kind": "number", "answer": 40, "dp": 0, "unit": "rows", "hint": "One row per cell of the matrix — leave the total row and column out.", "explain": "8 regions × 5 buckets = 40 rows; Σ outstanding still 208 723 504 430. If you got 54, the total column and the total row came along: 9 rows × 6 columns. Delete totals before unpivoting — they are not data."}
+```
+
+**P13.** *(Merge Queries = join)* A query `paid_by_installment` = `payments_clean` filtered `paid_at <= 2026-10-01`, grouped by `installment_id` → `paid`; merge it into `installments.csv` (Left Outer, key `installment_id`), expand `paid`, replace null with 0, and name the merged query `installments_paid` (tomorrow and Friday reuse it). Count matured instalments (`due_date <= 2026-10-01`) with `paid < total_due`. *In the box: matured instalments not fully paid.*
 
 ```task
 {"id": "w04d3-p8", "kind": "number", "answer": 1784, "dp": 0, "hint": "Check the row count after the merge first: it must still be 92 193.", "explain": "92 193 rows after the merge (Left Outer keeps every instalment; Inner would drop the unpaid ones, which are the point). Matured: 54 207; 1 784 not fully paid, 403 of them partly paid. Instalments with paid > total_due: 0 after the dedup, 25 before it — the duplicates were the only over-payments in the book."}
 ```
 
-**P9.** Append: split `payments_clean` into two queries by region (Tashkent / everyone else), then Append them back. Rows? Now add a `source` column to each before appending — what is that for? *In the box: the Tashkent query's rows.*
+**P14.** *(Append Queries = union)* Split `payments_clean` into two queries by region (Tashkent / everyone else), then Append them back. Rows? Now add a `source` column to each before appending — what is that for? *In the box: the Tashkent query's rows.*
 
 ```task
 {"id": "w04d3-p9", "kind": "number", "answer": 20437, "dp": 0, "unit": "rows", "explain": "20 437 + 32 413 = 52 850 (7 of the 25 duplicates were Tashkent's). Append is UNION ALL: it does not deduplicate and it matches columns by name — Amount in one file and amount in the other become two columns full of nulls. The source column tells you which monthly file a row came from after twelve appends."}
 ```
 
-**P10.** Refresh test: with the pipeline loaded, open `payments_dirty.csv` in a text editor, duplicate the **last line** once more, save, Refresh All. What do the counts do? Undo the edit and refresh again. *In the box: payments_clean rows after the refresh with the extra line.*
+**P15.** *(Close & Load, Refresh)* Refresh test: with the pipeline loaded, open `payments_dirty.csv` in a text editor, duplicate the **last line** once more, save, Refresh All. What do the counts do? Undo the edit and refresh again. *In the box: payments_clean rows after the refresh with the extra line.*
 
 ```task
 {"id": "w04d3-p10", "kind": "number", "answer": 52850, "dp": 0, "unit": "rows", "explain": "Raw 52 876, clean still 52 850 — the new line is a third copy of a known duplicate, Σ unchanged. Undo, refresh → 52 875 / 52 850. The cleaning is a property of the query, not of the file."}
 ```
 
-> 🚀 **Stretch (optional, +5 XP).** **P11.** Group By month on the merged `installments` query from P8: Σ `total_due`, Σ `paid`, and a rate column — the collection rate for every month of 2026. Where does it drop and why is the September figure *expected* to be lower? *In the box: September's rate, % with 1 decimal.*
+> 🚀 **Stretch (optional, +5 XP).** **P16.** *(Add Column · Group By on a merged query)* Group By month on the merged `installments_paid` query from P13: Σ `total_due`, Σ `paid`, and a rate column — the collection rate for every month of 2026. Where does it drop and why is the September figure *expected* to be lower? *In the box: September's rate, % with 1 decimal.*
 
 ```task
 {"id": "w04d3-p11", "kind": "number", "answer": 94.1, "dp": 1, "unit": "%", "xp": 2, "explain": "Jan 97.3 % · Feb 97.0 · Mar 96.8 · Apr 96.9 · May 97.1 · Jun 96.9 · Jul 96.7 · Aug 96.5 · Sep 94.1 %. September's instalments had at most 30 days to be paid by 1 October, the others 60–270: the latest month always reads low until it matures — compare months at the same age, or wait a month."}
@@ -321,9 +990,10 @@ File `week-04/day-3/practice.xlsx`: raw sheets untouched, a sheet per task or a 
 
 - Cleaning the raw sheet in place and saving — the evidence is gone; raw stays raw.
 - Remove Duplicates on all columns ("to be safe") — 0 removed, because ids differ.
-- Remove Duplicates on a loose key without a count first — real people deleted (P4).
+- Remove Duplicates on a loose key without a count first — real people deleted (P8).
 - `TRIM` not applied before matching — the trailing-space duplicates survive.
 - Text transforms on a column still typed as a number in Power Query — nothing happens, no error.
+- A phone typed as a number — the `+` is gone and the key no longer matches the other file.
 - A Merge with the default Left Outer when you meant Inner (or vice versa) — count rows after every merge.
 - Replacing a date you cannot trust with a plausible one — blank + flag, never a guess.
 - A change log that lists tools ("used Power Query") instead of changes ("removed 25 duplicate payments on installment_id + paid_at + amount, Σ 58 397 800").
@@ -381,10 +1051,10 @@ Four numbers from your own `cleaning.xlsx` that are not printed above — a ✓ 
 
 ```check
 {"id": "w04d3-sc", "questions": [
-  {"type": "multi", "q": "Remove Duplicates on first_name, last_name, birth_date removes 24 rows on the raw sheet and 42 after TRIM; the truth is 40. Which two facts explain it?", "options": ["It compares spaces exactly, so trailing-space duplicates survive on the raw names", "Name + birth date also matches two pairs of different people (namesakes)", "It is case-sensitive", "It only looks at the first ticked column"], "answer": [0, 1], "explain": "Space-sensitive and case-insensitive; a loose key deletes real people (→ section 1, Remove Duplicates; P4)."},
-  {"type": "single", "q": "Which Power Query step is a LEFT JOIN, and what do you check right after it?", "options": ["Append Queries; the column count", "Merge Queries with Left Outer; that the row count still equals the left table's (92 193 instalments)", "Group By; the sum", "Merge Queries with Inner; that unpaid instalments are gone"], "answer": 1, "explain": "Count rows after every merge; Inner would drop exactly the unpaid instalments you are looking for (→ P8)."},
+  {"type": "multi", "q": "Remove Duplicates on first_name, last_name, birth_date removes 24 rows on the raw sheet and 42 after TRIM; the truth is 40. Which two facts explain it?", "options": ["It compares spaces exactly, so trailing-space duplicates survive on the raw names", "Name + birth date also matches two pairs of different people (namesakes)", "It is case-sensitive", "It only looks at the first ticked column"], "answer": [0, 1], "explain": "Space-sensitive and case-insensitive; a loose key deletes real people (→ section 1, Remove Duplicates — and why it lies; P8)."},
+  {"type": "single", "q": "Which Power Query step is a LEFT JOIN, and what do you check right after it?", "options": ["Append Queries; the column count", "Merge Queries with Left Outer; that the row count still equals the left table's (92 193 instalments)", "Group By; the sum", "Merge Queries with Inner; that unpaid instalments are gone"], "answer": 1, "explain": "Count rows after every merge; Inner would drop exactly the unpaid instalments you are looking for (→ section 1, Merge Queries; P13)."},
   {"type": "single", "q": "A date column is left-aligned and \">=\"&DATE(2026,1,1) finds nothing. What happened?", "options": ["The dates are stored as text — convert with DATEVALUE/VALUE, Text to Columns (YMD) or Changed Type → Date", "The column is filtered", "The criterion needs quotes around DATE", "Excel cannot compare dates"], "answer": 0, "explain": "Text never compares as a date; test with ISTEXT / ISNUMBER (→ section 1, Dates stored as text)."},
-  {"type": "number", "q": "Column L holds the keys A, B, A, C, A in L2:L6. What does the rank formula in N4 return?", "code": "N4: =COUNTIFS($L$2:L4, L4)", "answer": 2, "explain": "$L$2:L4 holds A, B, A — the second A so far (→ section 1, Finding duplicates)."}
+  {"type": "number", "q": "Column L holds the keys A, B, A, C, A in L2:L6. What does the rank formula in N4 return?", "code": "N4: =COUNTIFS($L$2:L4, L4)", "answer": 2, "explain": "$L$2:L4 holds A, B, A — the second A so far (→ section 1, COUNTIFS on the key)."}
 ]}
 ```
 
@@ -443,14 +1113,14 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w04d3", "pass": 0.8, "questions": [
-  {"type": "single", "q": "You tick first_name, last_name, birth_date on the raw Customers sheet and run Remove Duplicates. Why does it miss some true duplicates?", "options": ["It only checks the first 1 000 rows", "It ignores case but not spaces, so 'Bobur ' and 'Bobur' stay different rows", "It is case-sensitive, so MALIKA and Malika stay apart", "It removes the first copy instead of the second"], "answer": 1, "explain": "Remove Duplicates compares exactly as displayed, case-insensitively and space-sensitively; TRIM before matching (→ section 1, Remove Duplicates — and why it lies; P4)."},
-  {"type": "single", "q": "Why does the matching key put a separator between the parts?", "code": "=LOWER(TRIM(B2))&\"|\"&LOWER(TRIM(C2))&\"|\"&TEXT(E2,\"yyyy-mm-dd\")", "options": ["Excel needs it to join text", "Without it, different names can glue into the same key: 'Ali'&'Nazarov' = 'Alin'&'azarov'", "It makes the key case-insensitive", "COUNTIFS cannot read keys without |"], "answer": 1, "explain": "A separator keeps the parts apart, so only true matches share a key (→ section 1, Text repair)."},
-  {"type": "single", "q": "In N2, filled down the sheet, what does this formula return?", "code": "=COUNTIFS($L$2:L2, L2)          (column L holds the key)", "options": ["How many rows in the whole sheet share the key", "1 for the first occurrence of a key, 2 for the second, … — Excel's ROW_NUMBER() OVER (PARTITION BY key)", "The row number", "TRUE when the key is unique"], "answer": 1, "explain": "The range grows row by row ($L$2 pinned, L2 free), so it counts how many times the key has appeared so far; filter rank = 2 to look at the extras before deleting (→ section 1, Finding duplicates before removing them)."},
-  {"type": "single", "q": "On Payments you tick ALL columns in Remove Duplicates 'to be safe'. Why is nothing removed?", "options": ["Payments has no duplicates", "payment_id differs on every row, so no two rows are equal on all columns; sameness must be defined on installment_id, paid_at and amount", "Remove Duplicates does not work on numbers", "The table must be sorted first"], "answer": 1, "explain": "A duplicate is two rows that agree on everything that matters, not on everything (→ section 1, Remove Duplicates; Mistakes that cost a point)."},
-  {"type": "multi", "q": "Which Power Query steps are matched with the right SQL idea?", "options": ["Merge Queries, join kind Left Outer = LEFT JOIN", "Append Queries = UNION ALL", "Merge Queries, join kind Left Anti = rows with no match (anti-join)", "Append Queries removes duplicate rows, like UNION", "Changed Type = WHERE"], "answer": [0, 1, 2], "explain": "Append keeps every row and matches columns by name; Changed Type is CAST (→ section 1, Power Query; P9)."},
-  {"type": "number", "q": "A customer was born on 2000-10-02. What age does the formula give as of 2026-10-01?", "code": "=DATEDIF(DATE(2000,10,2), DATE(2026,10,1), \"y\")", "answer": 25, "explain": "\"y\" counts completed years; the 26th birthday is one day after the as-of date (→ section 2, step 3; P3)."},
-  {"type": "single", "q": "A customer's birth date is 2031-04-12. What goes into customers_clean?", "options": ["A plausible date such as 1981-04-12", "The birth date left blank, with birth_date_invalid = TRUE", "Delete the customer", "Today's date"], "answer": 1, "explain": "Blank + flag, never a guess: an invented date would flow into age bands as if it were real (→ section 2, step 3; P6)."},
-  {"type": "single", "q": "The collection rate for instalments due in September (as of 1 October) is lower than for June–August. Why is that expected?", "options": ["September is always a bad month", "September's instalments have had at most 30 days to be paid, the earlier months much longer; the latest month reads low until it matures", "Duplicates were removed only for September", "The cash-basis rate was used for September"], "answer": 1, "explain": "Compare months at the same age, or wait a month (→ section 6, Company corner; P11)."}
+  {"type": "single", "q": "You tick first_name, last_name, birth_date on the raw Customers sheet and run Remove Duplicates. Why does it miss some true duplicates?", "options": ["It only checks the first 1 000 rows", "It ignores case but not spaces, so 'Bobur ' and 'Bobur' stay different rows", "It is case-sensitive, so MALIKA and Malika stay apart", "It removes the first copy instead of the second"], "answer": 1, "explain": "Remove Duplicates compares exactly as displayed, case-insensitively and space-sensitively; TRIM before matching (→ section 1, Remove Duplicates — and why it lies; P8)."},
+  {"type": "single", "q": "Why does the matching key put a separator between the parts?", "code": "=LOWER(TRIM(B2))&\"|\"&LOWER(TRIM(C2))&\"|\"&TEXT(E2,\"yyyy-mm-dd\")", "options": ["Excel needs it to join text", "Without it, different names can glue into the same key: 'Ali'&'Nazarov' = 'Alin'&'azarov'", "It makes the key case-insensitive", "COUNTIFS cannot read keys without |"], "answer": 1, "explain": "A separator keeps the parts apart, so only true matches share a key (→ section 1, A matching key)."},
+  {"type": "single", "q": "In N2, filled down the sheet, what does this formula return?", "code": "=COUNTIFS($L$2:L2, L2)          (column L holds the key)", "options": ["How many rows in the whole sheet share the key", "1 for the first occurrence of a key, 2 for the second, … — Excel's ROW_NUMBER() OVER (PARTITION BY key)", "The row number", "TRUE when the key is unique"], "answer": 1, "explain": "The range grows row by row ($L$2 pinned, L2 free), so it counts how many times the key has appeared so far; filter rank = 2 to look at the extras before deleting (→ section 1, COUNTIFS on the key)."},
+  {"type": "single", "q": "On Payments you tick ALL columns in Remove Duplicates 'to be safe'. Why is nothing removed?", "options": ["Payments has no duplicates", "payment_id differs on every row, so no two rows are equal on all columns; sameness must be defined on installment_id, paid_at and amount", "Remove Duplicates does not work on numbers", "The table must be sorted first"], "answer": 1, "explain": "A duplicate is two rows that agree on everything that matters, not on everything (→ section 1, Remove Duplicates — the recorded step; Mistakes that cost a point)."},
+  {"type": "multi", "q": "Which Power Query steps are matched with the right SQL idea?", "options": ["Merge Queries, join kind Left Outer = LEFT JOIN", "Append Queries = UNION ALL", "Merge Queries, join kind Left Anti = rows with no match (anti-join)", "Append Queries removes duplicate rows, like UNION", "Changed Type = WHERE"], "answer": [0, 1, 2], "explain": "Append keeps every row and matches columns by name; Changed Type is CAST (→ section 1, Merge Queries, Append Queries; P14)."},
+  {"type": "number", "q": "A customer was born on 2000-10-02. What age does the formula give as of 2026-10-01?", "code": "=DATEDIF(DATE(2000,10,2), DATE(2026,10,1), \"y\")", "answer": 25, "explain": "\"y\" counts completed years; the 26th birthday is one day after the as-of date (→ section 2, step 3; P6)."},
+  {"type": "single", "q": "A customer's birth date is 2031-04-12. What goes into customers_clean?", "options": ["A plausible date such as 1981-04-12", "The birth date left blank, with birth_date_invalid = TRUE", "Delete the customer", "Today's date"], "answer": 1, "explain": "Blank + flag, never a guess: an invented date would flow into age bands as if it were real (→ section 2, step 3; P9)."},
+  {"type": "single", "q": "The collection rate for instalments due in September (as of 1 October) is lower than for June–August. Why is that expected?", "options": ["September is always a bad month", "September's instalments have had at most 30 days to be paid, the earlier months much longer; the latest month reads low until it matures", "Duplicates were removed only for September", "The cash-basis rate was used for September"], "answer": 1, "explain": "Compare months at the same age, or wait a month (→ section 6, Company corner; P16)."}
 ]}
 ```
 

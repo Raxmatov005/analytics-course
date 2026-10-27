@@ -10,9 +10,26 @@
 - **Part B (20 pts):** eight interview questions on this week's material, in writing, 3–5 sentences each — in the boxes on this page, then in `interview.md`.
 - Allowed: everything from weeks 1–5 — `pd.read_sql` on `nur.db` (the SQL *is* allowed; the section must still end in a DataFrame and a pandas step), the CSV extracts, your HW 5.2 functions. Closed: the model answers until you submit.
 
-**Rules.** Open book. The report is a notebook file, so do Part A in Jupyter or Colab (Day 1, "Where your code runs"); the page's editors are for checking your key numbers before you hand in. Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save, so every output is inside the file) and `interview.md`. Also due today: **HW 5.2**, in Day 3's hand-in box. All numbers as of **2026-10-01**; payments de-duplicated (your `clean_payments`) and cut at the as-of wherever they are summed.
+**What you hand in** — with the **📎 box at the end of this page**:
 
-**Working method.** Per section: the grain in a comment; the code; the first rows (`head()` is an output — it counts); the week-3 number next to yours, as an `assert` where it must be exact (counts, sums) and as a printed pair where rounding may differ (rates); one finding Bekzod can read aloud.
+| File | Part | Points |
+|---|---|---|
+| `checkpoint.ipynb` — executed: Kernel → Restart & Run All, then save, so every output is inside the file | A — the report | 80 |
+| `interview.md` — the definitions note, then your eight answers | B — interview questions | 20 |
+
+Also due today: **HW 5.2**, in Day 3's hand-in box.
+
+**Rules.**
+1. **Open book.** Everything from weeks 1–5 is allowed; the model answers stay closed until you submit.
+2. **Where.** Part A is a notebook file: write it in Jupyter or Colab (Day 1, "Where your code runs"). The editors on this page are only for checking your key numbers.
+3. **Dates.** Every number is as of **2026-10-01**.
+4. **Payments.** De-duplicated (your `clean_payments`) and cut at the as-of wherever they are summed.
+
+**Working method — four things in every section.**
+1. **Grain.** A comment that says what one row is.
+2. **Code.** It ends in a DataFrame and a pandas step, even when the data came from `read_sql`. The first rows (`head()`) count as output.
+3. **Check.** The week-3 number next to yours: an `assert` where it must be exact (counts, sums), a printed pair where rounding may differ (rates).
+4. **Words.** A Markdown line *Match / Mismatch — why*, and one finding Bekzod can read aloud.
 
 > 💡 **Key idea.** A *mismatch* is not a failure if the line under it says why — a half-open vs inclusive filter, dirty vs clean payments, a cohort cut. Only an *unexplained* mismatch costs the number points. Two tools that disagree, with a reason written down, is analysis; two tools that agree by luck is not.
 
@@ -68,6 +85,8 @@ Eight points per section: 3 for code that runs and answers the heading, 3 for th
 
 ### S1. Database exploration — tables, row counts, grain
 
+**Do.** List every table of `nur.db` with its row count and its grain (one row = …). **Compare with:** week 3 S1.
+
 <details><summary>Model answer</summary>
 
 ```python
@@ -98,6 +117,8 @@ counts
 
 ### S2. Dimensions — products, grades, channels, status
 
+**Do.** Loans and their share (%) by product, grade, channel and status. **Compare with:** week 3 S2.
+
 <details><summary>Model answer</summary>
 
 ```python
@@ -117,6 +138,8 @@ Products MICRO 2 669 (34.1 %) · CONS 2 418 (30.9) · BNPL 1 569 (20.0) · SME 7
 
 ### S3. Date range — first/last disbursement, payments, as-of
 
+**Do.** The first and last disbursement, the first and last payment, the last due date; count the payments dated after the as-of. **Compare with:** week 3 S3.
+
 <details><summary>Model answer</summary>
 
 ```python
@@ -132,6 +155,8 @@ print(L["disbursed_at"].min(), L["disbursed_at"].max(), pay["paid_at"].min(), pa
 </details>
 
 ### S4. Key measures — the totals
+
+**Do.** Eight tiles: loans, borrowers, disbursed, average ticket, average term, outstanding, collected, interest. **Compare with:** week 3 S4.
 
 <details><summary>Model answer</summary>
 
@@ -153,6 +178,8 @@ tiles
 
 ### S5. Magnitude — by product, by region
 
+**Do.** Loans, money and both shares by product; the money share by region. **Chart:** one (by product, a sorted barh). **Compare with:** week 3 S5.
+
 <details><summary>Model answer</summary>
 
 ```python
@@ -171,6 +198,8 @@ Chart: the Day-4 barh of outstanding by product (60.3 / 27.6 / 11.0 / 0.5 / 0.5)
 </details>
 
 ### S6. Ranking — top and bottom
+
+**Do.** The ten branches ranked by 2026 disbursement (`rank(method="min")`), the top three borrowers by total principal, the largest loan of each product. **Compare with:** week 3 S6.
 
 <details><summary>Model answer</summary>
 
@@ -195,6 +224,8 @@ L.groupby("code")["principal"].max()     # AUTO 399 530 000 · BNPL 7 990 000 ·
 </details>
 
 ### S7. Change over time — monthly disbursements, 3-month average, mom %, yoy %
+
+**Do.** Monthly disbursements with the 3-month average, month-on-month % and year-on-year %. **Chart:** the month and its 3-month average (Day 4, figure 1). **Compare with:** week 3 S7.
 
 <details><summary>Model answer</summary>
 
@@ -221,6 +252,8 @@ Chart: Day-4 figure 1 (month in grey, average in blue). **Match:** all 33 rows i
 
 ### S8. Cumulative — month-end outstanding 2026
 
+**Do.** Month-end outstanding for January–September 2026 and the net growth of each month. **Compare with:** week 3 S8.
+
 <details><summary>Model answer</summary>
 
 ```python
@@ -241,6 +274,8 @@ s8
 </details>
 
 ### S9. Performance — buckets, PAR30, NPL90, FPD30, roll rates
+
+**Do.** DPD buckets with loans and outstanding, PAR30, NPL90; FPD30 by channel; roll rates. **Charts:** figures 3, 4, 5 of Day 4. **Compare with:** week 3 S9.
 
 <details><summary>Model answer</summary>
 
@@ -272,6 +307,8 @@ FPD30: Day 3's pivot — 91 / 7 099 = **1.28 %**, app 1.70 · partner 1.12 · br
 
 ### S10. Part-to-whole and segmentation — income band × grade
 
+**Do.** Loans by income band × grade with the C+D share per band — loans whose customer has no income included as an "unknown" band. **Chart:** one (a heatmap or stacked bars). **Compare with:** week 3 S10.
+
 <details><summary>Model answer</summary>
 
 ```python
@@ -298,6 +335,8 @@ Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borr
 
 ### The closing cell — what each tool made easier
 
+**Do.** Five sentences: which sections pandas made easier or safer, which SQL did, and the split you would use next time — each sentence with a section as evidence.
+
 <details><summary>Model answer (five sentences, yours will differ)</summary>
 
 1. pandas made S8 easier: a nine-step loop with a plain condition (`due_date >= next month`, loan disbursed before it) replaced a recursive CTE and a correlated aggregate, and `diff()` gave net growth in one call. 2. pandas made S7 and S9 safer: `pct_change(12)` runs on the whole frame before the display filter, `validate="1:1"` and an `assert` after the merge made the grain explicit, and `pd.cut` replaced four `CASE` branches. 3. SQL made S1–S3 and the vintage matrix easier: one `read_sql` of a CTE chain over 92 193 instalments is shorter and faster than the same joins in pandas, and the catalogue (`sqlite_master`) is a query. 4. SQL kept the definition in one place: `v_loan_status` once, read by Excel, Power BI and the notebook, whereas a pandas function lives in one notebook until someone packages it. 5. The right split: aggregate and join in SQL at the database's grain, then shape, cut, check and chart in pandas — and run the asserts in both, because the number that matters is the one both tools agree on.
@@ -308,7 +347,12 @@ Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borr
 
 ## Part B — Eight interview questions (30 min, 20 pts)
 
-Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per question (1 correct and complete, 1 with a Nur Finance example and number) plus 4 for the "definitions I used" note at the top of `interview.md` (as-of, DPD, FPD30, the dedup rule, outstanding). Write each answer in its box; **Compare** shows the model answer and the rubric — tick honestly. Then put the definitions note and your eight answers into `interview.md` in the 📎 box below: that file is what the mentor grades.
+**Do.**
+1. Write each answer in its box below: 3–5 sentences, as you would say it aloud. **Compare** shows the model answer and the rubric — tick honestly.
+2. Write the **definitions note** at the top of `interview.md`: as-of, DPD, FPD30, the dedup rule, outstanding (the flashcards below help).
+3. Paste your eight answers under it and hand `interview.md` in with the 📎 box below — that file is what the mentor grades.
+
+**Points.** 2 per question — 1 for correct and complete, 1 for a Nur Finance example with a number — plus 4 for the definitions note.
 
 ```game
 {"type": "flash", "id": "w05d5-g3", "title": "Definitions for interview.md", "cards": [["As-of", "the date every number is computed for — 2026-10-01; payments after it are excluded, instalments after it are not yet due"], ["DPD", "as-of − the due date of the oldest matured instalment not fully paid; 0 if none"], ["FPD30", "first instalment, in scope if due ≤ as-of − 30 days, late if not fully paid within 30 days"], ["Dedup rule", "payments: same installment_id + paid_at + amount, keep the lowest payment_id; customers: same phone + birth_date, keep the earliest registered_at"], ["Outstanding", "Σ principal_due of instalments due after the as-of — principal only, interest is revenue"], ["PAR30", "outstanding of loans with dpd > 30 ÷ total outstanding — whole-loan outstanding in the numerator"], ["NPL90", "the same with dpd > 90"], ["Vintage", "the month a loan was disbursed — the cohort its performance is compared within"]]}

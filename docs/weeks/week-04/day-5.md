@@ -10,11 +10,29 @@
 - **Part B (40 pts):** the **one-page board report** on the clean data — pivots, three charts, six tiles, a five-sentence findings note.
 - **Part C (20 pts):** **eight interview questions** on the week, answered in writing as you would say them aloud.
 
-**Today's files:** `data/excel/customers_dirty.csv`, `data/excel/payments_dirty.csv`, `data/excel/installments.csv` and `data/excel/monthly_disbursements.csv` (press **⬇ Download** next to each and put them in one fresh folder — Power Query reads them from there), plus `tblLoans` from `data/excel/nur_week4_start.xlsx`. Build everything in one new workbook, `checkpoint.xlsx`. **Done today** = the `Checks` sheet is all TRUE after Refresh All, the key-number boxes above the hand-in are ✓, the eight Part C boxes are written, `checkpoint.xlsx` + `change_log.md` + `findings.md` + `interview.md` are handed in, and the day quiz is passed.
+**Before you start**
 
-**Rules.** Open book: your pages, your files, the workbook. Closed: the model-answer folds until you submit (the Part C boxes show their model only after you have written your own answer). Hand in with the **📎 box at the end of this page**: `checkpoint.xlsx` (sheets `Raw_Customers`, `Raw_Payments` untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data` with the pivots; `OnePager`; `Checks`), `change_log.md`, `findings.md` (the five sentences), `interview.md`. Also due today: **HW 4.2** — hand it in through the 📎 box on the Day 3 page. Sheets users: one spreadsheet with the same tabs, exported to `.xlsx` **and** the share link in `README.md`; formulas stay visible in the export. As of **2026-10-01** everywhere; a cell on `OnePager` says so.
+- **Files.** `data/excel/customers_dirty.csv`, `payments_dirty.csv`, `installments.csv` and `monthly_disbursements.csv` — press **⬇ Download** next to each and save them in one fresh folder (Power Query reads them from there). Plus `tblLoans` from `data/excel/nur_week4_start.xlsx`.
+- **One workbook.** Build everything in a new file, `checkpoint.xlsx`, with these sheets: `Raw_Customers`, `Raw_Payments` (untouched) · `customers_clean`, `payments_clean`, `installments_paid` · `Data` (the pivots) · `OnePager` · `Checks`.
+- **As-of date.** 2026-10-01 everywhere; a cell on `OnePager` says so.
+- **Google Sheets.** One spreadsheet with the same tabs, exported to `.xlsx`, **and** the share link in `README.md`. Formulas stay visible in the export.
 
-**Working method.** Raw stays raw. Every clean table ends in a check cell against a number you know. Every tile has a one-line definition under it. Every chart title is a finding. Count rows after every merge. Refresh All before you save — if a number changes, something was pasted.
+**Rules**
+
+- **Open book:** your pages, your files, the workbook. **Closed:** the model-answer folds, until you submit. The Part C boxes show their model only after you have written your own answer.
+- **Raw stays raw.** Every clean table ends in a check cell against a number you know.
+- **Every tile** has a one-line definition under it. **Every chart title** is a finding.
+- **Count rows** after every merge. **Refresh All** before you save — if a number changes, something was pasted.
+
+**Hand in** (the 📎 box at the end of this page): `checkpoint.xlsx`, `change_log.md` (ten lines with counts), `findings.md` (the five sentences), `interview.md` (the definitions note + eight answers). **Also due today:** HW 4.2, through the 📎 box on the Day 3 page.
+
+**Done today** when all five are true:
+
+1. The `Checks` sheet is all TRUE after Refresh All.
+2. The key-number boxes K1–K3 above the hand-in are ✓.
+3. The eight Part C boxes are written.
+4. The four files are handed in.
+5. The day quiz is passed.
 
 > 💡 **Key idea.** The checkpoint is graded on whether the numbers **survive a refresh**, not on whether they are right once. A typed number that matches today still loses its point, because the reviewer presses Refresh All on a changed file.
 
@@ -49,13 +67,24 @@
 | FPD30 by vintage (first instalment) | May 7/377 = 1.86 % · Jun 3/373 = 0.80 % · **Jul 4/367 = 1.09 %** · Aug not mature |
 | collection rate (instalment basis, paid by as-of) | Jun 96.9 · Jul 96.7 · Aug 96.5 · **Sep 94.1 %** (15 982 118 926 / 16 987 977 718) |
 
-**Common mistakes from this week** (each costs the number point): Remove Duplicates on the raw names (24, not 40); the two namesakes deleted (5 998 rows); a pivot on a fixed range; `Average` where a ratio of sums was meant; October's one day plotted as a month; a `#N/A` hidden with `IFERROR(…, 0)` and summed; tiles typed as numbers; a dual axis nobody asked for.
+**Common mistakes from this week** (each costs the number point):
+
+- Remove Duplicates on the raw names — 24 removed, not 40.
+- The two namesakes deleted — 5 998 rows instead of 6 000.
+- A pivot on a fixed range instead of a Table or query.
+- `Average` where a ratio of sums was meant.
+- October's one day plotted as a month.
+- A `#N/A` hidden with `IFERROR(…, 0)` and then summed.
+- Tiles typed as numbers.
+- A dual axis nobody asked for.
 
 ---
 
 ## Part A — The cleaning pipeline (60 min, 40 pts)
 
-Twenty points per file: 8 for the row and value counts, 6 for the pipeline being recorded and refreshable (the reviewer presses Refresh All on a copy of the CSVs), 6 for the change log line that explains each step with its count.
+**Deliver.** Two clean tables built by a recorded pipeline — `customers_clean` (A1) and `payments_clean` with `installments_paid` (A2) — and `change_log.md`.
+
+**Graded on.** Twenty points per file: 8 for the row and value counts, 6 for a recorded, refreshable pipeline (the reviewer presses Refresh All on a copy of the CSVs), 6 for the change-log lines that explain each step with its count.
 
 | Criterion | customers_clean | payments_clean | Points |
 |---|---|---|---|
@@ -65,9 +94,9 @@ Twenty points per file: 8 for the row and value counts, 6 for the pipeline being
 | recorded and refreshable | Applied Steps renamed; Refresh All reproduces | same; `installments_paid` merge keeps 92 193 rows | 6 + 6 |
 | change log | one line per change, with counts and money | | 6 (shared) |
 
-**Sheets route** (same points): a `Raw_*` tab per CSV imported untouched; a `*_clean` tab built entirely by formulas — `=ARRAYFORMULA(PROPER(TRIM(Raw_Customers!B2:B)))`, a key column, `=UNIQUE(FILTER(…))` or `SORTN(range, 9^9, 2, key_col, TRUE)` (the *remove duplicates* mode of `SORTN`) for the dedup, `IF(OR(E2>DATE(2026,10,1), E2<DATE(1920,1,1)), TRUE, FALSE)` for the flag; the `Checks` tab the same as Excel's. Re-import the CSV over the raw tab to "refresh". State in `change_log.md` that the pipeline is formula-based.
+**Sheets route** (same points). a `Raw_*` tab per CSV imported untouched; a `*_clean` tab built entirely by formulas — `=ARRAYFORMULA(PROPER(TRIM(Raw_Customers!B2:B)))`, a key column, `=UNIQUE(FILTER(…))` or `SORTN(range, 9^9, 2, key_col, TRUE)` (the *remove duplicates* mode of `SORTN`) for the dedup, `IF(OR(E2>DATE(2026,10,1), E2<DATE(1920,1,1)), TRUE, FALSE)` for the flag; the `Checks` tab the same as Excel's. Re-import the CSV over the raw tab to "refresh". State in `change_log.md` that the pipeline is formula-based.
 
-**The step map** — every hand tool from Wednesday has a recorded equivalent; the checkpoint wants the right-hand column:
+**The step map.** Every hand tool from Wednesday has a recorded equivalent. The checkpoint wants the right-hand column.
 
 | You discovered it with | You deliver it as |
 |---|---|
@@ -88,7 +117,7 @@ Twenty points per file: 8 for the row and value counts, 6 for the pipeline being
 
 ### A1. `customers_clean` (20 pts)
 
-Deliver: 6 000 rows; `first_name`, `last_name` trimmed and capitalised; duplicates removed on `phone` + `birth_date`, keeping the row with the earlier `registered_at`; `birth_date_invalid` (TRUE for 7); `birth_date_clean` (blank for those 7); `age` as of 2026-10-01 from `birth_date_clean`; `monthly_income` numeric with blanks kept as null.
+**Deliver.** 6 000 rows; `first_name`, `last_name` trimmed and capitalised; duplicates removed on `phone` + `birth_date`, keeping the row with the earlier `registered_at`; `birth_date_invalid` (TRUE for 7); `birth_date_clean` (blank for those 7); `age` as of 2026-10-01 from `birth_date_clean`; `monthly_income` numeric with blanks kept as null.
 
 <details><summary>Model answer</summary>
 
@@ -114,7 +143,7 @@ Change-log lines (5 of the 10): *Trimmed and capitalised first_name/last_name �
 
 ### A2. `payments_clean` (20 pts)
 
-Deliver: 52 850 rows; `method` in five values (`card`, `cash`, `transfer`, `payme`, `click`); duplicates removed on `installment_id` + `paid_at` + `amount`, keeping the lower `payment_id`; `is_forward_dated` TRUE for the 24 rows after 2026-10-01 (kept); and `installments_paid` = `installments.csv` merged with the per-instalment sum of clean payments through the as-of date.
+**Deliver.** 52 850 rows; `method` in five values (`card`, `cash`, `transfer`, `payme`, `click`); duplicates removed on `installment_id` + `paid_at` + `amount`, keeping the lower `payment_id`; `is_forward_dated` TRUE for the 24 rows after 2026-10-01 (kept); and `installments_paid` = `installments.csv` merged with the per-instalment sum of clean payments through the as-of date.
 
 <details><summary>Model answer</summary>
 
@@ -144,9 +173,11 @@ Change-log lines: *Trimmed, lower-cased method and replaced "bank transfer" with
 
 ## Part B — The one-page board report (90 min, 40 pts)
 
-Points: tiles 12 (2 each: right number **and** a definition line), charts 12 (4 each: right type, honest axes, finding title), pivots and refreshability 8 (built on the clean tables, slicer connected, Refresh All leaves the page unchanged), findings note 8 (five sentences, each with a number and a *so what*).
+**Deliver.** The `Data` sheet with the pivots, the `OnePager` sheet (six tiles, three charts, a slicer, the definitions footnote) and `findings.md`.
 
-Build on **`customers_clean` / `payments_clean` / `installments_paid` / `tblLoans`** — the Loans sheet is already clean (it was built from the de-duplicated payments), which the note should say.
+**Graded on.** Tiles 12 (2 each: the right number **and** a definition line) · charts 12 (4 each: right type, honest axes, a finding title) · pivots and refreshability 8 (built on the clean tables, slicer connected, Refresh All leaves the page unchanged) · findings note 8 (five sentences, each with a number and a *so what*).
+
+**Build on** `customers_clean` / `payments_clean` / `installments_paid` / `tblLoans` — the Loans sheet is already clean (it was built from the de-duplicated payments), which the note should say.
 
 | Element | Must have | Points |
 |---|---|---|
@@ -162,11 +193,11 @@ Build on **`customers_clean` / `payments_clean` / `installments_paid` / `tblLoan
 | Pivots and refresh | on Tables / queries; slicer connected; Refresh All changes nothing; a Checks block | 8 |
 | Findings note | five sentences, each with a number and a consequence | 8 |
 
-**Sheets route:** pivots from Insert → Pivot table on the clean tabs (`Show as % of grand total` where needed; a `due_month` column added to `installments_paid` by formula since Sheets pivots do not group dates); `QUERY` for the top-5 (`order by sum(K) desc limit 5`); charts from the pivot ranges; Data → Add a slicer on `region`; tiles with `GETPIVOTDATA` or `SUMIFS`; `=SPARKLINE()` under the tiles. Set the sheet to landscape in File → Print, and export the one page to PDF as a second deliverable.
+**Sheets route.** Pivots from Insert → Pivot table on the clean tabs (`Show as % of grand total` where needed; a `due_month` column added to `installments_paid` by formula since Sheets pivots do not group dates); `QUERY` for the top-5 (`order by sum(K) desc limit 5`); charts from the pivot ranges; Data → Add a slicer on `region`; tiles with `GETPIVOTDATA` or `SUMIFS`; `=SPARKLINE()` under the tiles. Set the sheet to landscape in File → Print, and export the one page to PDF as a second deliverable.
 
 > 💡 **Key idea.** Every tile needs two things to score: the right number **from a formula**, and a one-line definition under it. A tile that says *n/a* with a correct definition keeps half its points; a right number with no definition keeps none.
 
-**Building order** (so a half-finished page is still a page):
+**Building order** — so a half-finished page is still a page:
 
 1. `Data` sheet: the product pivot and the bucket pivot (both on `tblLoans`) — ten minutes, and tiles 1, 3, 4 already have their numbers.
 2. `OnePager`: title, as-of, the six tile labels and definition lines; fill tiles 1–4 by `SUMIFS` / `GETPIVOTDATA`.
@@ -175,7 +206,7 @@ Build on **`customers_clean` / `payments_clean` / `installments_paid` / `tblLoan
 5. Slicer, Report Connections, the Checks block, Refresh All, print preview.
 6. `findings.md` from the finished page — the sentences describe what is on it, not what you meant to build.
 
-If you are stuck:
+**If you are stuck:**
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
@@ -233,7 +264,9 @@ If you are stuck:
 
 ## Part C — Eight interview questions (30 min, 20 pts)
 
-Answer in writing, 3–5 sentences each, as you would say them aloud: 2 points per question (1 correct and complete, 1 with a Nur Finance example and number) plus 4 for the "definitions I used" note at the top of `interview.md` (as-of, DPD, the dedup rule, collection rate basis, FPD30). Write each answer in its box below — it is saved as you go, and **Compare** shows the model answer once you have written at least 30 words. Then paste the definitions note and all eight answers into `interview.md` in the 📎 box.
+**How to answer.** Write 3–5 sentences per question, as you would say them aloud, in the box under it. The box saves as you go; **Compare** shows the model answer once you have written at least 30 words. Then paste the definitions note and all eight answers into `interview.md` (📎 box).
+
+**Graded on.** 2 points per question (1 for correct and complete, 1 for a Nur Finance example with a number) plus 4 for the "definitions I used" note at the top of `interview.md` (as-of, DPD, the dedup rule, the collection-rate basis, FPD30).
 
 <details><summary>The definitions note — model</summary>
 

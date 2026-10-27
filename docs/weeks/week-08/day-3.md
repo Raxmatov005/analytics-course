@@ -12,7 +12,258 @@
 
 ---
 
-## 1. The brief
+## 1. Learn — how a capstone analysis is done
+
+A capstone is one large request handled from start to finish. The six subsections below are the six moves of the first day, in the order you make them. Sections 2–8 then apply them to the board's brief.
+
+### Reading a brief — the question behind the question
+
+**What it is.** A **brief** (*бриф*, *техническое задание*) is the request in writing: the question, the **as-of date**, the audience, the deliverables and the deadline. Behind every brief sits a **decision** someone must make; that decision — **the question behind the question** — tells you what to look at and what to leave out.
+
+**How to write it.** Rewrite the request into six lines before you open the data:
+
+```text
+Decision      what will someone do differently after reading you?   e.g. set 2027 lending limits per product
+Question      the request as one sentence with a question mark
+As of         the date your numbers describe                          e.g. 2026-10-01
+Audience      who is in the room, and what each of them owns
+Deliverables  what they receive, in which format, by when
+Out of scope  what you will not answer this time
+```
+
+Then check the as-of date against the data itself:
+
+```sql
+SELECT (SELECT MAX(applied_at)   FROM applications)        AS last_application,
+       (SELECT MAX(disbursed_at) FROM loans)               AS last_loan,
+       (SELECT MAX(event_time)   FROM app_events)          AS last_app_event,
+       (SELECT MAX(paid_at)      FROM payments)            AS last_payment,       -- later than the as-of date
+       (SELECT MAX(action_date)  FROM collections_actions) AS last_action;        -- later too
+```
+
+Applications, loans and app events end on 1 October 2026 — the as-of date. Payments run to 24 November and collections actions to 4 October: rows dated after the as-of date exist, and every query must cut them off.
+
+**When you use it.**
+- At the start of any request bigger than one number.
+- When a request is vague ("look at the portfolio"): ask for the decision, not for more detail.
+
+> ⚠️ **Watch out.** Answering the literal question can miss the decision. "How many SME loans did we give?" from a budget owner means "should SME get more money next year?" — and that needs SME's risk and margin, not only its count.
+
+**Your turn.** Bekzod asks: *"How much did SME grow this year?"* He is writing the 2027 budget. What is the question behind the question?
+
+```task
+{"id": "w08d3-l1", "kind": "choice", "options": ["How many SME loans were disbursed in 2026", "Should SME get more of next year's lending budget — is its growth profitable and is its risk under control?", "Which SME customer borrowed the most", "How SME compares with Auto in loan count"], "answer": 1, "explain": "The decision is a budget allocation. Growth alone cannot decide it; the answer needs SME's margin per soum and its default rate next to the growth."}
+```
+
+### The issue tree — breaking the question into MECE branches
+
+**What it is.** An **issue tree** (*дерево проблем*) splits the big question into sub-questions, and those into smaller ones, until each leaf can be answered with one table. The branches must be **MECE** — *mutually exclusive, collectively exhaustive*: no overlaps (nothing counted twice) and no gaps (nothing left out).
+
+**How to write it.**
+
+```text
+Where do we grow, where do we stop, what do we change?
+├── 1. Where is the money made?        → contribution per product
+├── 2. Where did we grow, and how?     → growth by product / channel / region; count vs ticket
+├── 3. Where is the risk?              → FPD, vintages, PAR30
+├── 4. Where do we lose value?         → app funnel leaks, collections coverage
+└── 5. What would change the answer?   → the assumptions, the deep-dive
+```
+
+When a branch splits a number, MECE has a test you can run: the parts must add back to the whole.
+
+```sql
+SELECT p.channel, COUNT(*) AS loans, SUM(l.principal) AS amount          -- the branches
+FROM loans l JOIN products p ON p.product_id = l.product_id
+WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01'
+GROUP BY p.channel
+UNION ALL
+SELECT 'TOTAL', COUNT(*), SUM(principal)                                  -- the whole
+FROM loans
+WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01';
+```
+
+Branch 1 403 loans, app 1 036 and partner 591 add up to the 3 030 loans of the total; 156 258 020 000 + 2 791 240 000 + 2 431 040 000 = 161 480 300 000 soum. Every loan has exactly one channel, so the split is MECE.
+
+**When you use it.**
+- To decide what you will **not** analyse: a cut that answers no branch is cut.
+- To split the work into pieces of one table each, with a time box per branch.
+
+> ⚠️ **Watch out.** "Best region" next to "growth" and "risk" is an overlap: it re-cuts the same tables. Fold it into a sub-question of one branch ("is the risk where the growth is?").
+
+**Your turn.** Which split of "2026 disbursements" is MECE?
+
+```task
+{"id": "w08d3-l2", "kind": "choice", "options": ["SME · Auto · Consumer · app loans", "By channel: branch · app · partner", "Large loans · loans to Tashkent · new customers", "Growth · risk · best region"], "answer": 1, "explain": "Every loan has exactly one channel, so the three parts never overlap and add back to the total. The others overlap (an app loan can be Micro and in Tashkent) or leave gaps (BNPL and Micro are missing from the first)."}
+```
+
+### Sanity checks — prove the data before you analyse it
+
+**What it is.** A **sanity check** (*проверка на здравый смысл*) is a quick test that the data and your query are right before you build on them. Two kinds: **health checks** on the tables (row counts, duplicate keys, empty columns, dates after the as-of date) and **control totals** — numbers the company already trusts, which you must reproduce.
+
+**How to write it.** One query, one row, every check a column:
+
+```sql
+SELECT (SELECT COUNT(*) FROM loans)                                   AS loans,
+       (SELECT COUNT(DISTINCT loan_id) FROM loans)                    AS distinct_loan_ids,     -- equal: no duplicate keys
+       (SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL) AS closed_without_date,
+       (SELECT COUNT(*) - COUNT(DISTINCT installment_id || '|' || paid_at || '|' || amount)
+          FROM payments)                                              AS duplicate_payments,
+       (SELECT COUNT(*) FROM payments WHERE paid_at > '2026-10-01')   AS payments_after_as_of,
+       (SELECT COUNT(*) FROM applications WHERE credit_score IS NULL) AS applications_without_score;
+```
+
+7 828 loans and 7 828 distinct ids: no duplicate keys. 15 closed loans have no closing date, 25 payment rows are exact duplicates, 24 payments are dated after the as-of date and 388 applications have no credit score. Each number is a line in the notebook's data-checks section, with its handling.
+
+**When you use it.**
+- First thing after reading the brief — before any chart.
+- Whenever your number and someone else's differ: the usual culprits are raw payments instead of clean ones, `BETWEEN` on a date-time column, a different status list, and loans too young for the metric.
+
+| Health check | Control total |
+|---|---|
+| tests the **tables** | tests **your query** |
+| duplicates, NULLs, dates out of range, keys that do not join | outstanding 208 723 504 430 · PAR30 3.12 % · FPD30 1.28 % |
+
+> ⚠️ **Watch out.** A control total that does not match is a bug in **your** query until you can prove otherwise. Find it now, on a number you know, not on Friday in front of the board.
+
+**Your turn.** How many **collections actions** are dated after the as-of date (`action_date > '2026-10-01'`)?
+
+```task
+{"id": "w08d3-l3", "kind": "number", "answer": 72, "dp": 0, "unit": "actions", "hint": "SELECT COUNT(*) FROM collections_actions WHERE action_date > '2026-10-01'", "model": "72 actions are dated 2 – 4 October 2026. As of 1 October they have not happened yet: filter them out of every collections cut."}
+```
+
+### The analysis plan — which table, which grain, which metric
+
+**What it is.** An **analysis plan** gives each leaf of the tree five things: the **table(s)**, the **grain** (what one row is), the **metric** (its definition card from Day 1), the **cut** (by what) and the **comparison** (against what). The grain is the trap: a join to a "many" table changes what one row is.
+
+**How to write it.**
+
+| Leaf | Table(s) | Grain | Metric | Cut | Comparison |
+|---|---|---|---|---|---|
+| Q1 growth | `loans`, `products` | one loan | amount and count disbursed | product, channel, region | Jan–Sep 2026 vs Jan–Sep 2025 |
+| Q2 risk | `installments`, clean payments | one first instalment | FPD30 (due ≤ 2026-09-01) | channel, grade, quarter | the book |
+| Q3 collections | DPD chain, `collections_actions` | one delinquent loan | share contacted in September | DPD bucket | across buckets |
+
+Check the grain before you sum anything:
+
+```sql
+SELECT COUNT(*)                AS rows_after_join,          -- one row per instalment, not per loan
+       COUNT(DISTINCT l.loan_id) AS loans,
+       SUM(l.principal)        AS principal_summed_per_row  -- wrong: each principal counted once per instalment
+FROM loans l
+JOIN installments i ON i.loan_id = l.loan_id
+WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01';
+```
+
+36 408 rows for 3 030 loans: after the join, one row is an instalment. Summing principal there gives 4.15 trillion soum instead of 161.48 bn — 26 times too much.
+
+**When you use it.**
+- Before writing the first query of each leaf: fill the row of the plan.
+- When a total looks too big: ask "what is one row now?"
+
+> ⚠️ **Watch out.** A plan without a **comparison** produces facts, not findings. "SME disbursed 94.8 bn" says nothing until it sits next to last year or the book.
+
+**Your turn.** For the leaf "FPD30 by channel", what is one row?
+
+```task
+{"id": "w08d3-l4", "kind": "choice", "options": ["One payment", "One customer", "One loan's first instalment, due on or before 2026-09-01", "One application"], "answer": 2, "explain": "FPD30 asks whether the first instalment was paid within 30 days, so the grain is the first instalment of each loan old enough to be judged. Payments are joined to it, then folded back to one row each."}
+```
+
+### A finding — number, comparison, so-what
+
+**What it is.** A **finding** is one sentence with three parts: a **number**, a **comparison** that makes the number mean something, and a **so-what** that says why it matters for the decision. A table is not a finding; the sentence under it is.
+
+**How to write it.**
+
+```text
+finding = number + comparison + so-what
+        = "Disbursements grew 45.6 % in Jan–Sep 2026" + "against Jan–Sep 2025, and the count grew 40.3 %"
+          + "so the growth is more borrowers, not a few large loans"
+```
+
+```sql
+SELECT SUM(CASE WHEN disbursed_at >= '2025-01-01' AND disbursed_at < '2025-10-01' THEN 1 ELSE 0 END)         AS loans_2025,
+       SUM(CASE WHEN disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01' THEN 1 ELSE 0 END)         AS loans_2026,
+       SUM(CASE WHEN disbursed_at >= '2025-01-01' AND disbursed_at < '2025-10-01' THEN principal ELSE 0 END) AS amount_2025,
+       SUM(CASE WHEN disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01' THEN principal ELSE 0 END) AS amount_2026
+FROM loans;
+```
+
+2 159 loans and 110 929 400 000 soum in January–September 2025; 3 030 loans and 161 480 300 000 in 2026. Count +40.3 %, amount +45.6 %: the two grew together, so the growth is broad.
+
+**When you use it.**
+- Under every table of the notebook — the sentence is the candidate slide title.
+- To test a result: if you cannot write the so-what, the table has no message yet.
+
+> ⚠️ **Watch out.** "Amount grew 46 %" alone can hide a few huge loans. Put count and amount side by side whenever you report growth.
+
+**Your turn.**
+
+```game
+{"id": "w08d3-g5", "type": "sort", "title": "Finding or not yet?", "groups": {"A finding (number + comparison + so-what)": ["Disbursements grew 45.6 % against 2025, in count as well as amount — the growth is broad", "App FPD30 is 1.70 %, against 1.04 % at branches — the app needs a stricter first-loan limit", "Only 13 of 124 loans in 1–30 DPD were contacted in September, against all 61–90 loans — effort comes too late"], "Not yet a finding": ["Disbursements by product, January–September", "App FPD30 is 1.70 %", "Collections actions are interesting"]}}
+```
+
+### Logging assumptions — the choices you made
+
+**What it is.** An **assumption** is any choice the data did not make for you: a definition, a cost figure, a cut-off date, how a data problem is handled. An **assumption log** (*журнал допущений*) lists each one with what you chose, why, and what changes if it is wrong.
+
+**How to write it.**
+
+| # | Assumption | Why | If it is wrong |
+|---|---|---|---|
+| A1 | `approved_not_disbursed` counts as approved | the decision was yes | approval falls from 70.55 % to 64.98 % |
+| A2 | funding costs 18 % a year | Finance's rough figure | Auto's margin per 1 000 goes from 72.9 to 3.1 at 22 % |
+| A3 | rows dated after 2026-10-01 are ignored | the as-of date | totals include future rows |
+
+Show the effect of an assumption with a query, not a guess:
+
+```sql
+SELECT ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END)
+             / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_a1,        -- with assumption A1
+       ROUND(100.0 * SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END)
+             / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_without_a1
+FROM applications;
+```
+
+With A1 the approval rate is 70.55 % (8 595 of 12 183 decided); without it, 64.98 %. Five and a half points hang on one line of the log.
+
+**When you use it.**
+- Every time you choose: write the line at once, not on Friday.
+- In the deck: the log becomes the "assumptions and risks" slide and the appendix.
+
+> ⚠️ **Watch out.** An assumption nobody wrote down becomes a "fact" by Friday. When Nilufar asks why your approval rate differs from hers, the log line is the answer.
+
+**Your turn.** Which assumption-log entry is complete?
+
+```task
+{"id": "w08d3-l5", "kind": "choice", "options": ["LGD = 60 %", "LGD = 60 % — collections' rough figure; at 50 % or 70 % CONS's net per loan moves by ±68 882 soum", "We used the usual LGD", "LGD is not important"], "answer": 1, "explain": "A complete entry has the choice, why, and what changes if it is wrong. The last part tells the board how much the recommendation depends on it."}
+```
+
+### Putting it together
+
+One leaf, the six moves. *Brief:* the decision is where to put next year's lending. *Tree:* branch 2, "where did we grow, and how?". *Sanity:* the totals match sanity 5 (3 030 loans, 161 480 300 000). *Plan:* `loans` + `products`, one row per loan, count and amount, by channel, against 2025:
+
+```sql
+SELECT p.channel,
+       SUM(CASE WHEN l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-10-01' THEN 1 ELSE 0 END) AS loans_2025,
+       SUM(CASE WHEN l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' THEN 1 ELSE 0 END) AS loans_2026,
+       ROUND(100.0 * SUM(CASE WHEN l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' THEN l.principal ELSE 0 END)
+             / SUM(CASE WHEN l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-10-01' THEN l.principal ELSE 0 END) - 100, 1) AS amount_growth_pct
+FROM loans l JOIN products p ON p.product_id = l.product_id
+GROUP BY p.channel ORDER BY amount_growth_pct DESC;
+```
+
+Branch grew 45.9 % in amount (982 → 1 403 loans), the app 45.1 % (725 → 1 036), partners 27.8 % (452 → 591). *Finding:* "Branches and the app grew about 45 % in amount and 43 % in count; partners grew 28 % — BNPL is the slow part of the book." *Assumption:* the channel is the product's channel (`products.channel`), which here equals the application's channel.
+
+**The six moves, in order:**
+
+```game
+{"id": "w08d3-g6", "type": "order", "title": "The first day of a capstone", "q": "Put the moves in the order you make them.", "items": ["Rewrite the brief: decision, question, as-of date, audience", "Build the issue tree, MECE, a hypothesis per branch", "Run the health checks and reproduce the control totals", "Fill the analysis plan: table, grain, metric, cut, comparison", "Run the leaf and write the finding sentence", "Log every assumption you made on the way"], "why": "Each move uses the one before: no tree without the decision, no analysis on unchecked data, no finding without a comparison planned. The log grows all day, but its lines come from the choices made in moves 3–5."}
+```
+
+---
+
+## 2. The brief
 
 > **To:** Analyst, Nur Finance  **From:** Madina (Head of Analytics)  **Date:** Wednesday
 > **Subject:** Board, Friday 11:00 — the 2026 portfolio review
@@ -27,7 +278,7 @@
 
 The arc of the three days: **brief → analysis (today) → dashboard and story (Thursday) → the ten minutes (Friday)**. Each section below ends with a line *Done looks like* — tick it before you move on.
 
-**P1.** Restate the brief in **one sentence**, with the as-of date and who is in the room. It becomes the first line of your notebook.
+**P1.** *(reading a brief)* Restate the brief in **one sentence**, with the as-of date and who is in the room. It becomes the first line of your notebook.
 
 ```task
 {"id": "w08d3-p1", "kind": "free", "min": 20, "rubric": ["the three questions: where to grow, where to stop or slow, what to change", "the as-of date, 1 October 2026", "the audience: the board (CEO, Bekzod, Nilufar, Sevara, Kamola)", "the promise: a number, an owner and a value behind each recommendation"], "model": "As of 1 October 2026, the board — the CEO, portfolio, risk, collections and product — wants to know where Nur Finance should grow its lending, where it should stop or slow down, and what it should change in policy, process, product or pricing, with the number, the owner and the value behind every recommendation."}
@@ -37,7 +288,7 @@ The arc of the three days: **brief → analysis (today) → dashboard and story 
 
 ---
 
-## 2. What the board must hear about — five required questions
+## 3. What the board must hear about — five required questions
 
 Five required questions and one of your own (Q6). Each is a section of the notebook and at least one slide. Suggested cuts; you choose the ones that carry a message.
 
@@ -62,7 +313,7 @@ Five required questions and one of your own (Q6). Each is a section of the noteb
 - **Repeat borrowers' risk:** is the FPD of a customer's second loan lower or higher than of the first? Should the app make repeat loans easier?
 - **Signed but never paid out:** the app contracts that never became loans — how many, since when, which device/version, what they would have been worth.
 
-**P2.** Choose your deep-dive and write it as **one question** a board member would ask, plus the one table that would answer it.
+**P2.** *(the question behind the question)* Choose your deep-dive and write it as **one question** a board member would ask, plus the one table that would answer it.
 
 ```task
 {"id": "w08d3-p2", "kind": "free", "min": 20, "rubric": ["a question, not a topic (it ends with a question mark and could be answered yes / no / a number)", "it does not repeat Q1–Q5", "it names the table or cut that answers it", "it could lead to a recommendation with an owner"], "model": "\"Do customers who come back for a second loan default less than on their first loan — should the app make repeat loans easier?\" Table: FPD30 of first vs second loans, by product and by months between them (loans + installments + clean payments), with the number of loans in each cell. Owner if it holds: Kamola (a pre-approved repeat offer) with Nilufar's FPD guardrail."}
@@ -72,11 +323,11 @@ Five required questions and one of your own (Q6). Each is a section of the noteb
 
 ---
 
-## 3. The plan — three days
+## 4. The plan — three days
 
 | Day | Morning | Afternoon | End-of-day output |
 |---|---|---|---|
-| **Wed (today)** | brief, issue tree, definitions | data checks, sanity numbers, Q1–Q3 first pass | checkpoint list (section 7) ticked; `issue_tree.md` + notebook draft saved |
+| **Wed (today)** | brief, issue tree, definitions | data checks, sanity numbers, Q1–Q3 first pass | checkpoint list (section 8) ticked; `issue_tree.md` + notebook draft saved |
 | **Thu** | Q4–Q6; **storyline: slide titles first** (Day 4) | dashboard pages; draft deck; peer-review checklist against your own work | full draft deck; dashboard 2 pages |
 | **Fri** | rehearse twice (timer), final checks, Restart & Run All, export PDFs | present (10 min + questions); then the mock interview | everything in Day 5's hand-in box |
 
@@ -84,7 +335,7 @@ Time box it: if a cut has not produced a message in 30 minutes, write down what 
 
 ---
 
-## 4. Grading rubric (100 points)
+## 5. Grading rubric (100 points)
 
 | Criterion | Points | Full marks look like | Common deductions |
 |---|---|---|---|
@@ -96,7 +347,7 @@ Time box it: if a cut has not produced a message in 30 minutes, write down what 
 
 ---
 
-## 5. Framing — the issue tree (40 min)
+## 6. Framing — the issue tree (40 min)
 
 An **issue tree** (*дерево проблем*) breaks the question into sub-questions that are **mutually exclusive and collectively exhaustive** (MECE): no overlaps, no gaps. Each leaf is a question one table can answer. One possible start (make it yours):
 
@@ -118,7 +369,7 @@ For every branch write one **hypothesis** before you look ("SME grows fastest an
 {"type": "bug", "id": "w08d3-g2", "title": "Find the branch that breaks MECE", "q": "A colleague's issue tree for the same brief. One branch overlaps the others.", "code": "1. Where is the money made? → unit economics per product, 2026 contribution\n2. Where did we grow, and how? → growth by product, channel, region; count vs ticket\n3. Where is the risk? → FPD and vintages by channel, grade, product; PAR30 by region\n4. Which region is our best? → growth and PAR30 by region\n5. Do we lose value in the process? → app funnel leaks, collections coverage", "answer": [3], "why": "Branch 4 re-cuts branches 2 and 3 — the same tables twice, and 'best' has no definition. Fold it into branch 3 as the sub-question 'is the risk where the growth is?' (growth × PAR30 by region)."}
 ```
 
-**P3.** Your issue tree: five branches, and for each a **hypothesis** and the **test** that could break it. Copy it into `issue_tree.md` afterwards.
+**P3.** *(issue tree)* Your issue tree: five branches, and for each a **hypothesis** and the **test** that could break it. Copy it into `issue_tree.md` afterwards.
 
 ```task
 {"id": "w08d3-p3", "kind": "free", "min": 60, "rubric": ["five branches with no overlap and no gap (MECE) that together answer grow / stop / change", "a hypothesis per branch, written before looking", "a test per hypothesis that could break it, naming the table or cut", "the deep-dive sits in one branch", "at least one hypothesis that would change a recommendation if it were false"], "model": "1. Money — H: SME and Auto earn most per soum lent; test: their margin at the matured PD and at 22 % funding. 2. Growth — H: growth is broad, not a few big loans; test: count and amount growth by product and region side by side. 3. Risk — H: the app's loans start worse than the branches' but are improving; test: FPD30 by channel and disbursement year, vintages by channel; sub-question: is the risk where the growth is (growth × PAR30 by region)? 4. Process — H: we lose value after approval (signed but not paid out) and in the early bucket (few contacts at 1–30 DPD); test: signed-without-loan count, share contacted by bucket in September. 5. What would change the answer — H: the SME recommendation depends on its unobserved default rate; test: unit economics at matured PD; deep-dive: repeat borrowers' FPD vs first loans."}
@@ -128,7 +379,7 @@ For every branch write one **hypothesis** before you look ("SME grows fastest an
 
 ---
 
-## 6. Data checks and the sanity numbers (40 min)
+## 7. Data checks and the sanity numbers (40 min)
 
 ### Known problems — decide how each is handled, and write it in the notebook's first section
 
@@ -173,6 +424,12 @@ If your number differs, find out why **before** you build on it (usually: raw pa
 
 > ⚠️ **Watch out.** The four usual culprits, in order: raw `payments` instead of the de-duplicated ones; `BETWEEN '…-01' AND '…-30'` on a column with a time; a different status list (is `approved_not_disbursed` approved?); and loans too young for the metric in the denominator.
 
+**P4.** *(sanity checks)* One more health check before you trust `applications`: how many applications have a decision dated **after** the as-of date (`decided_at >= '2026-10-02'`)? Then say in the notebook how you handle them.
+
+```task
+{"id": "w08d3-p7", "kind": "number", "answer": 87, "dp": 0, "unit": "applications", "hint": "SELECT COUNT(*) FROM applications WHERE decided_at >= '2026-10-02'", "model": "87 applications carry a decision dated 2–5 October 2026 — a planned date, after the as-of date. Handling: an approval rate \"as of 1 October\" treats them as not yet decided (or says it keeps them, and why); write the line in the data-checks section and in the assumption log."}
+```
+
 ### Reproduce them here
 
 `v_loan_status` and `v_payments_clean` are not tables in `nur.db` — the capstone template creates them as TEMP views in its own connection. In these boxes, write the same logic as CTEs at the top of your query. The chain below gives every loan its outstanding and DPD on 2026-10-01 (▶ Run it, then build on `ls`):
@@ -208,28 +465,34 @@ Each box below runs your query on an untouched copy of the data and checks the n
 
 ---
 
-## 7. First analyses (70 min) and the end-of-day checkpoint
+## 8. First analyses (70 min) and the end-of-day checkpoint
 
 Run Q1, Q2 and Q3 at the level of the "minimum analysis" column. For each table write, in the notebook, **one sentence** that would be a slide title if it survived tomorrow. Do not format anything yet.
 
-Useful starting points: growth by product is week 2 with two `CASE WHEN` columns (2025 and 2026, Jan–Sep each); by region join `customers` (or `branches`; here they agree); vintages are week 3 Day 3's chain with `GROUP BY` channel or grade; collections coverage is the DPD chain of section 6 left-joined to the loans with a `collections_actions` row in September. In the notebook, `v_loan_status` exists (the template creates it), so the same queries are shorter there.
+Useful starting points: growth by product is week 2 with two `CASE WHEN` columns (2025 and 2026, Jan–Sep each); by region join `customers` (or `branches`; here they agree); vintages are week 3 Day 3's chain with `GROUP BY` channel or grade; collections coverage is the DPD chain of section 7 left-joined to the loans with a `collections_actions` row in September. In the notebook, `v_loan_status` exists (the template creates it), so the same queries are shorter there.
 
-**P4.** Q1, first cut: by product, loans and amount disbursed January–September 2025 and January–September 2026, and the growth of the amount in %. Largest 2026 amount first.
+**P5.** *(the analysis plan)* Q1, first cut: by product, loans and amount disbursed January–September 2025 and January–September 2026, and the growth of the amount in %. Largest 2026 amount first.
 
 ```task
 {"id": "w08d3-p4", "kind": "sql", "note": "Five rows, seven columns: product code, loans 2025, loans 2026, amount 2025, amount 2026, amount growth in % to one decimal — sorted by amount 2026, largest first.", "model": "SELECT p.code,\n       SUM(CASE WHEN l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-10-01' THEN 1 ELSE 0 END) AS loans_2025,\n       SUM(CASE WHEN l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' THEN 1 ELSE 0 END) AS loans_2026,\n       SUM(CASE WHEN l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-10-01' THEN l.principal ELSE 0 END) AS amount_2025,\n       SUM(CASE WHEN l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' THEN l.principal ELSE 0 END) AS amount_2026,\n       ROUND(100.0 * SUM(CASE WHEN l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' THEN l.principal ELSE 0 END)\n             / SUM(CASE WHEN l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-10-01' THEN l.principal ELSE 0 END) - 100, 1) AS growth_pct\nFROM loans l JOIN products p ON p.product_id = l.product_id\nGROUP BY p.code ORDER BY amount_2026 DESC;"}
 ```
 
-**P5.** Q3, first cut: for loans 1–90 days past due on 2026-10-01, by bucket — loans, how many had **any** collections action in September 2026, and their outstanding. Start from the DPD chain of section 6.
+**P6.** *(the analysis plan — the grain)* Q3, first cut: for loans 1–90 days past due on 2026-10-01, by bucket — loans, how many had **any** collections action in September 2026, and their outstanding. Start from the DPD chain of section 7.
 
 ```task
 {"id": "w08d3-p5", "kind": "sql", "note": "Three rows (1-30, 31-60, 61-90): bucket, loans, contacted in September, outstanding. COUNT(t.loan_id) after a LEFT JOIN counts only the contacted ones.", "model": "WITH pay AS (\n  SELECT installment_id, paid_at, amount FROM (\n    SELECT installment_id, paid_at, amount,\n           ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn\n    FROM payments) WHERE rn = 1),\nunpaid AS (\n  SELECT i.loan_id, i.due_date FROM installments i\n  LEFT JOIN pay p ON p.installment_id = i.installment_id AND p.paid_at <= '2026-10-01'\n  WHERE i.due_date <= '2026-10-01'\n  GROUP BY i.installment_id, i.loan_id, i.due_date, i.total_due\n  HAVING COALESCE(SUM(p.amount), 0) < i.total_due),\ndpd AS (SELECT loan_id, CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd FROM unpaid GROUP BY loan_id),\noutst AS (SELECT loan_id, SUM(principal_due) AS outstanding FROM installments WHERE due_date > '2026-10-01' GROUP BY loan_id),\ndelinquent AS (\n  SELECT d.loan_id, COALESCE(o.outstanding, 0) AS outstanding,\n         CASE WHEN d.dpd <= 30 THEN '1-30' WHEN d.dpd <= 60 THEN '31-60' ELSE '61-90' END AS bucket\n  FROM dpd d LEFT JOIN outst o ON o.loan_id = d.loan_id\n  WHERE d.dpd BETWEEN 1 AND 90),\ntouched AS (SELECT DISTINCT loan_id FROM collections_actions\n            WHERE action_date >= '2026-09-01' AND action_date < '2026-10-01')\nSELECT d.bucket, COUNT(*) AS loans, COUNT(t.loan_id) AS contacted_in_september, SUM(d.outstanding) AS outstanding\nFROM delinquent d LEFT JOIN touched t ON t.loan_id = d.loan_id\nGROUP BY d.bucket ORDER BY d.bucket;"}
 ```
 
-**P6.** Under each of your Q1, Q2 and Q3 tables, one sentence that would be a slide title if it survived tomorrow. Write the three here.
+**P7.** *(a finding)* Under each of your Q1, Q2 and Q3 tables, one sentence that would be a slide title if it survived tomorrow. Write the three here.
 
 ```task
 {"id": "w08d3-p6", "kind": "free", "min": 30, "rubric": ["three sentences, one per question (growth, risk, collections)", "each has a number and a comparison", "growth gives count and amount, not amount alone", "each says 'so what', not only 'what'"], "model": "Q1: \"Disbursements grew 46 % in January–September — in count (+40 %) as well as amount — with Auto fastest (+57 %) and BNPL slowest (+28 %).\" Q2: \"App loans start riskier than branch loans — FPD30 1.70 % vs 1.04 % — but the app's FPD has fallen every year.\" Q3: \"Only 13 of 124 loans in 1–30 DPD had any contact in September, while every 61–90 loan did: effort arrives after the cheap moment to act.\""}
+```
+
+**P8.** *(logging assumptions)* Start your assumption log: five lines from today, each with the assumption, why you chose it, and what changes if it is wrong. Copy it into the notebook's first section.
+
+```task
+{"id": "w08d3-p8", "kind": "free", "min": 50, "rubric": ["five assumptions, each a choice the data did not make", "a reason for each", "an effect for each, with a number where possible", "at least one definition (e.g. approved_not_disbursed counts as approved) and one cost or rate (e.g. funding 18 %)", "the as-of cut-off for rows dated after 2026-10-01"], "model": "A1 approved_not_disbursed counts as approved — the decision was yes; without it approval is 64.98 %, not 70.55 %. A2 rows dated after 2026-10-01 (24 payments, 72 actions, 87 decisions) are left out — the as-of date; with them, collections and approval look slightly better than they were on the day. A3 FPD30 only for first instalments due on or before 2026-09-01 — younger loans cannot be judged; including them pushes the app's FPD from 1.70 % to 2.01 %. A4 funding 18 % a year — Finance's rough figure; at 22 % Auto's margin falls from 72.9 to 3.1 per 1 000 lent. A5 the channel of a loan is its product's channel — they agree in this data; if they did not, the funnel and the unit economics would use different splits."}
 ```
 
 **Checkpoint — tick before you stop** (keep `issue_tree.md` and the `capstone.ipynb` draft on your computer — Friday's hand-in box takes the final versions):
@@ -238,13 +501,14 @@ Useful starting points: growth by product is week 2 with two `CASE WHEN` columns
 - [ ] Issue tree with a hypothesis and a test per branch; your deep-dive chosen and written as a question.
 - [ ] Definitions block (ten metrics, one line each).
 - [ ] Data-checks section: every known problem with its handling and the number of rows affected.
-- [ ] The ten sanity boxes of section 6 ✅, all 15 sanity numbers in notebook cells (or a written reason for any difference).
+- [ ] Assumption log started (P8): each choice, why, and what changes if it is wrong.
+- [ ] The ten sanity boxes of section 7 ✅, all 15 sanity numbers in notebook cells (or a written reason for any difference).
 - [ ] Q1, Q2, Q3: one table each, one candidate title sentence each.
 - [ ] A list of the three questions you most expect from the board (Day 4 prepares them).
 
 ---
 
-## 8. Common pitfalls
+## 9. Common pitfalls
 
 - **Charts before questions.** The tree first; a chart that answers no branch is cut.
 - **Growth without risk, risk without size.** "Region X grew most" and "region X has the highest PAR30" are two halves of one sentence — put them on one slide.
@@ -257,19 +521,19 @@ Useful starting points: growth by product is week 2 with two `CASE WHEN` columns
 
 ---
 
-## 9. Self-check
+## 10. Self-check
 
 ```check
 {"id": "w08d3-sc", "questions": [
-  {"type": "single", "q": "Which set of branches is MECE for 'where do we grow, where do we stop, what do we change'?", "options": ["Growth · Risk · Best region · App · Collections", "Money · Growth · Risk (incl. is the risk where the growth is?) · Process losses · What would change the answer", "SME · Auto · Consumer · Micro · BNPL · Everything else", "Charts · Tables · Slides"], "answer": 1, "explain": "No overlap, no gap; 'best region' re-cuts growth and risk (→ section 5)."},
-  {"type": "single", "q": "Your app FPD30 is 1.9 %; the sanity table says 1.70 %. What do you check first?", "options": ["Whether the app had an outage", "Raw vs clean payments, then the maturity rule (first instalment due on or before 2026-09-01), then the denominator", "Nothing — update the table", "The vintage curves"], "answer": 1, "explain": "The four usual culprits, in order (→ section 6). Including loans whose first instalment is not yet 30 days old gives about 2 % — the daily challenge."},
-  {"type": "single", "q": "Which hypothesis is useful?", "options": ["'Growth was good.'", "'SME earns most per soum lent — unless its matured default rate is much higher than the crude one.'", "'The data are interesting.'", "'Risk matters.'"], "answer": 1, "explain": "A hypothesis with a test that could break it — and if it breaks, the SME recommendation changes (→ section 5)."}
+  {"type": "single", "q": "Which set of branches is MECE for 'where do we grow, where do we stop, what do we change'?", "options": ["Growth · Risk · Best region · App · Collections", "Money · Growth · Risk (incl. is the risk where the growth is?) · Process losses · What would change the answer", "SME · Auto · Consumer · Micro · BNPL · Everything else", "Charts · Tables · Slides"], "answer": 1, "explain": "No overlap, no gap; 'best region' re-cuts growth and risk (→ section 6)."},
+  {"type": "single", "q": "Your app FPD30 is 1.9 %; the sanity table says 1.70 %. What do you check first?", "options": ["Whether the app had an outage", "Raw vs clean payments, then the maturity rule (first instalment due on or before 2026-09-01), then the denominator", "Nothing — update the table", "The vintage curves"], "answer": 1, "explain": "The four usual culprits, in order (→ section 7). Including loans whose first instalment is not yet 30 days old gives about 2 % — the daily challenge."},
+  {"type": "single", "q": "Which hypothesis is useful?", "options": ["'Growth was good.'", "'SME earns most per soum lent — unless its matured default rate is much higher than the crude one.'", "'The data are interesting.'", "'Risk matters.'"], "answer": 1, "explain": "A hypothesis with a test that could break it — and if it breaks, the SME recommendation changes (→ section 6)."}
 ]}
 ```
 
 ---
 
-## 10. Company corner <span class="badge company">How a board request travels</span>
+## 11. Company corner <span class="badge company">How a board request travels</span>
 
 At a lender the board pack is not one analyst's afternoon. A request like the chairman's moves through people, and each step exists because someone was burned once:
 
@@ -295,14 +559,14 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w08d3", "pass": 0.8, "questions": [
-  {"type": "text", "q": "An issue tree should be MECE: mutually exclusive and collectively … (one word)", "answer": ["exhaustive", "collectively exhaustive"], "explain": "No overlaps, no gaps — each leaf a question one table can answer (→ section 5)."},
-  {"type": "single", "q": "What makes a branch hypothesis useful?", "options": ["It is vague enough to always be true", "It comes with a test that could break it — 'SME grows fastest and earns most, unless its matured default rate is much higher'", "It has no number", "It matches what the board already believes"], "answer": 1, "explain": "A hypothesis you cannot break is an opinion (→ section 5)."},
-  {"type": "single", "q": "Your app FPD30 is 1.9 %; the sanity table says 1.70 %. What do you check first?", "options": ["Clean vs raw payments, the maturity rule (first instalment due on or before 2026-09-01) and the denominator", "Drop the app from the analysis", "Switch to a one-sided test", "Nothing — update the sanity table"], "answer": 0, "explain": "If a sanity number differs, find out why before building on it — usually raw payments, BETWEEN on a datetime, a status list or immature loans (→ section 6)."},
-  {"type": "multi", "q": "Which handlings of the known data problems are right?", "options": ["Use closed_at to decide whether a loan is live", "Build the app funnel on all applications", "FPD only for first instalments due on or before 2026-09-01", "Sum money from v_payments_clean", "Leave unobservable vintage cells blank"], "answer": [2, 3, 4], "explain": "closed_at is empty for some closed loans (use status and the schedule), and app_events exist only for app applications (→ section 6, 'Known problems')."},
-  {"type": "single", "q": "applied_at holds a date and a time. What does this filter lose?", "code": "WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30'", "options": ["Nothing", "Every application after midnight on 30 September", "Only applications with NULL dates", "Applications on 1 September"], "answer": 1, "explain": "'2026-09-30' means 00:00 on the 30th; use >= '2026-09-01' AND < '2026-10-01' — the half-open rule (→ section 6, sanity-number tips)."},
-  {"type": "single", "q": "Why COUNT(t.loan_id) for 'contacted'?", "code": "SELECT d.bucket, COUNT(*) AS loans, COUNT(t.loan_id) AS contacted_in_september\nFROM delinquent d LEFT JOIN touched t ON t.loan_id = d.loan_id\nGROUP BY d.bucket;", "options": ["It counts distinct loans", "After a LEFT JOIN, t.loan_id is NULL for loans with no action, and COUNT(column) skips NULLs — so only contacted loans are counted", "It equals COUNT(*)", "COUNT(*) would fail"], "answer": 1, "explain": "COUNT(*) counts rows, COUNT(column) counts non-null values — the week-2 NULL rule doing the work (→ section 7)."},
-  {"type": "single", "q": "SME disbursement grew strongly in amount. What must sit next to it?", "options": ["The median principal only", "Nothing — amount is what the board wants", "The approval rate", "The count of loans: amount growth can be a few very large loans, not more borrowing"], "answer": 3, "explain": "Count and amount, always both (→ section 8, 'Common pitfalls')."},
-  {"type": "single", "q": "How do you judge collections efficiency?", "options": ["By the outcomes collectors record ('paid')", "By the share of SMS", "By the number of calls", "By actual payments after the action, from the payments table"], "answer": 3, "explain": "Recorded outcomes are a collector's note, not money (→ section 8, 'Common pitfalls')."}
+  {"type": "text", "q": "An issue tree should be MECE: mutually exclusive and collectively … (one word)", "answer": ["exhaustive", "collectively exhaustive"], "explain": "No overlaps, no gaps — each leaf a question one table can answer (→ section 6)."},
+  {"type": "single", "q": "What makes a branch hypothesis useful?", "options": ["It is vague enough to always be true", "It comes with a test that could break it — 'SME grows fastest and earns most, unless its matured default rate is much higher'", "It has no number", "It matches what the board already believes"], "answer": 1, "explain": "A hypothesis you cannot break is an opinion (→ section 6)."},
+  {"type": "single", "q": "Your app FPD30 is 1.9 %; the sanity table says 1.70 %. What do you check first?", "options": ["Clean vs raw payments, the maturity rule (first instalment due on or before 2026-09-01) and the denominator", "Drop the app from the analysis", "Switch to a one-sided test", "Nothing — update the sanity table"], "answer": 0, "explain": "If a sanity number differs, find out why before building on it — usually raw payments, BETWEEN on a datetime, a status list or immature loans (→ section 7)."},
+  {"type": "multi", "q": "Which handlings of the known data problems are right?", "options": ["Use closed_at to decide whether a loan is live", "Build the app funnel on all applications", "FPD only for first instalments due on or before 2026-09-01", "Sum money from v_payments_clean", "Leave unobservable vintage cells blank"], "answer": [2, 3, 4], "explain": "closed_at is empty for some closed loans (use status and the schedule), and app_events exist only for app applications (→ section 7, 'Known problems')."},
+  {"type": "single", "q": "applied_at holds a date and a time. What does this filter lose?", "code": "WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30'", "options": ["Nothing", "Every application after midnight on 30 September", "Only applications with NULL dates", "Applications on 1 September"], "answer": 1, "explain": "'2026-09-30' means 00:00 on the 30th; use >= '2026-09-01' AND < '2026-10-01' — the half-open rule (→ section 7, sanity-number tips)."},
+  {"type": "single", "q": "Why COUNT(t.loan_id) for 'contacted'?", "code": "SELECT d.bucket, COUNT(*) AS loans, COUNT(t.loan_id) AS contacted_in_september\nFROM delinquent d LEFT JOIN touched t ON t.loan_id = d.loan_id\nGROUP BY d.bucket;", "options": ["It counts distinct loans", "After a LEFT JOIN, t.loan_id is NULL for loans with no action, and COUNT(column) skips NULLs — so only contacted loans are counted", "It equals COUNT(*)", "COUNT(*) would fail"], "answer": 1, "explain": "COUNT(*) counts rows, COUNT(column) counts non-null values — the week-2 NULL rule doing the work (→ section 8)."},
+  {"type": "single", "q": "SME disbursement grew strongly in amount. What must sit next to it?", "options": ["The median principal only", "Nothing — amount is what the board wants", "The approval rate", "The count of loans: amount growth can be a few very large loans, not more borrowing"], "answer": 3, "explain": "Count and amount, always both (→ section 9, 'Common pitfalls')."},
+  {"type": "single", "q": "How do you judge collections efficiency?", "options": ["By the outcomes collectors record ('paid')", "By the share of SMS", "By the number of calls", "By actual payments after the action, from the payments table"], "answer": 3, "explain": "Recorded outcomes are a collector's note, not money (→ section 9, 'Common pitfalls')."}
 ]}
 ```
 

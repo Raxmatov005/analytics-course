@@ -10,7 +10,14 @@
 - **Part B (40 pts):** twenty queries on Nur Finance using only this week's SQL — single-table `SELECT`, `WHERE`, `ORDER BY`, `DISTINCT`, `TOP`/`LIMIT`, `COUNT(*)`.
 - **Part C (20 pts):** eight interview questions answered in writing, 3–5 sentences each.
 
-**Rules.** Open book: your notes, this week's pages, the SQL boxes and the playground. Closed: the answer folds until you have submitted. Everything goes into the **📎 box at the end of this page** by the end of the day: Part A as `nur_pay.md` + `nur_pay.sql`, Part B as twenty queries — one editor each, with ▶ Run, and **✔ Check** saying *right* or *not yet* (never the answer) — and Part C as `interview.md`. The site writes `queries.sql` for you, each query with its `-- Bn:` and `-- result:` lines.
+**Rules.**
+- **Open book:** your notes, this week's pages, the SQL boxes and the playground.
+- **Closed:** the answer folds, until you have submitted.
+- **Where to hand in:** the **📎 box at the end of this page**, by the end of the day.
+  - **Part A** → `nur_pay.md` + `nur_pay.sql`.
+  - **Part B** → twenty queries, one editor each: **▶ Run**, then **✔ Check** says *right* or *not yet* (never the answer). The site writes `queries.sql` for you, each query with its `-- Bn:` and `-- result:` lines.
+  - **Part C** → `interview.md`.
+- **Pass mark:** 70 of 100 (table at the end).
 
 > ⚠️ **Watch out.** No `JOIN`, `GROUP BY` or subqueries in Part B — if you know them, resist; the point is to show the basics are solid. A query that gets the right number with next week's tools loses its "expresses the question" point.
 
@@ -118,7 +125,11 @@ Alternative accepted: no `payroll_runs` table, with `repayments` carrying `emplo
 
 ## Part B — Twenty queries (90 min, 40 pts)
 
-Two points each: 1 for a query that runs and expresses the question (your mentor reads it), 1 for the correct result (the site checks it — ✔ Check in the 📎 box). Expected numbers are as of the shipped dataset (2026-10-01). Difficulty rises; do not get stuck — skip and return. Write your queries in the 📎 box at the end; the questions below are the same as there.
+- **Where you write:** in the 📎 box at the end — the questions below are the same as there.
+- **Scoring:** 2 points per query — 1 for a query that runs and expresses the question (your mentor reads it), 1 for the correct result (the site checks it with ✔ Check).
+- **Tools:** this week's SQL only (see *Watch out* above).
+- **Numbers:** as of the shipped dataset (2026-10-01).
+- **Order:** difficulty rises. Do not get stuck — skip and return.
 
 **B1.** How many customers are in the table? · **B2.** How many loans are closed? · **B3.** How many applications were cancelled?
 
@@ -216,7 +227,7 @@ De Morgan: `NOT (a OR b)` = `NOT a AND NOT b`. Both forms score; the second is w
 -- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id;
 SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id LIMIT 3;
 ```
-Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 000 SME loan from Day 2 P9), 2025-01-26 / 02-27 / 03-27. Three equal amounts in a row is not a duplicate: they are three consecutive instalments. (Payment 30775 on the same loan has the same amount, so third place is a tie; `payment_id` in the `ORDER BY` makes the three rows the same on both engines.) (Write that sentence; it is the difference between a count and an analysis.)
+Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 000 SME loan from Day 2 P3), 2025-01-26 / 02-27 / 03-27. Three equal amounts in a row is not a duplicate: they are three consecutive instalments. (Payment 30775 on the same loan has the same amount, so third place is a tie; `payment_id` in the `ORDER BY` makes the three rows the same on both engines.) (Write that sentence; it is the difference between a count and an analysis.)
 
 </details>
 
@@ -250,7 +261,8 @@ First row: customer **6016**, `Bobur␣ rakhimov`, 59 962 504 — an id above 60
 
 ## Part C — Eight interview questions (20 min, 20 pts)
 
-Answer in writing, 3–5 sentences each, as you would speak. 2.5 points per question: 1 for correctness, 1 for a lending example, 0.5 for saying it in plain words.
+- **Format:** in writing, 3–5 sentences per question, as you would say it.
+- **Scoring:** 2.5 points per question — 1 for correctness, 1 for a lending example, 0.5 for plain words.
 
 1. Walk me through the life of a loan and where data is recorded at each step.
 2. What is the difference between a primary key and a foreign key? Give one of each from a lending database.
@@ -310,8 +322,8 @@ Pass with 80 % to finish the day. Retry as often as you like.
 ```quiz
 {"id": "w01d5", "pass": 0.8, "questions": [
   {"type": "single", "q": "In Nur Pay, one employee can have several advances. Where does the foreign key go?", "options": ["advances.employee_id", "employees.advance_id", "In both tables", "In a column listing all advance ids on the employee row"], "answer": 0, "explain": "The many side holds the key; a list of ids in one cell would also break 1NF (→ Part A, scoring)."},
-  {"type": "single", "q": "An advance can be covered by two payroll runs (the first was short), and one payroll run covers many advances. How do you model that?", "options": ["A repayments table, one row per advance per run, with FKs to both advances and payroll_runs", "A payroll_run_id column on advances", "An advance_id column on payroll_runs", "Store the run dates in a text column on the employee"], "answer": 0, "explain": "Like payments with its two FKs (loan and instalment), a linking table holds one row per pairing (→ Part A; Day 3, section 1)."},
-  {"type": "single", "q": "Strictly, salary belongs to the employee. When is it right to also store salary_at_request on each advance?", "options": ["Never — it breaks 3NF", "When the salary can change later and you must still explain the limit approved at that moment", "Only to save a join", "When the employee has more than one advance"], "answer": 1, "explain": "A snapshot is redundancy chosen on purpose: without it, next month's salary file overwrites the fact the decision was based on (→ Part A; Day 3, P9)."},
+  {"type": "single", "q": "An advance can be covered by two payroll runs (the first was short), and one payroll run covers many advances. How do you model that?", "options": ["A repayments table, one row per advance per run, with FKs to both advances and payroll_runs", "A payroll_run_id column on advances", "An advance_id column on payroll_runs", "Store the run dates in a text column on the employee"], "answer": 0, "explain": "Like payments with its two FKs (loan and instalment), a linking table holds one row per pairing (→ Part A; Day 3, section 1, The ER diagram)."},
+  {"type": "single", "q": "Strictly, salary belongs to the employee. When is it right to also store salary_at_request on each advance?", "options": ["Never — it breaks 3NF", "When the salary can change later and you must still explain the limit approved at that moment", "Only to save a join", "When the employee has more than one advance"], "answer": 1, "explain": "A snapshot is redundancy chosen on purpose: without it, next month's salary file overwrites the fact the decision was based on (→ Part A; Day 3, P15)."},
   {"type": "single", "q": "Which WHERE clause returns the same rows as this one?", "code": "WHERE NOT (segment = 'mass' OR region = 'Tashkent')", "options": ["WHERE segment <> 'mass' OR region <> 'Tashkent'", "WHERE segment <> 'mass' AND region <> 'Tashkent'", "WHERE NOT segment = 'mass' OR region = 'Tashkent'", "WHERE segment = 'mass' AND region = 'Tashkent'"], "answer": 1, "explain": "De Morgan: NOT (a OR b) = NOT a AND NOT b (→ B17)."},
   {"type": "number", "q": "How many rows of this small table does the query count?", "code": "id | segment  | region\n1  | mass     | Tashkent\n2  | affluent | Tashkent\n3  | mass     | Nukus\n4  | sme      | Fergana\n5  | affluent | Bukhara\n\nSELECT COUNT(*) FROM t\nWHERE NOT (segment = 'mass' OR region = 'Tashkent');", "answer": 2, "explain": "Only rows 4 and 5 are neither mass nor in Tashkent; 4 is the answer you get if you turn the OR into OR NOT (→ B17)."},
   {"type": "single", "q": "What does this filter count?", "code": "SELECT COUNT(*) FROM customers\nWHERE last_name LIKE '%ova';", "options": ["All women", "Customers whose surname ends in 'ova'", "Surnames that start with 'ova'", "Surnames with 'ova' anywhere"], "answer": 1, "explain": "% stands for any characters before; it is a text pattern, not 'female' (surnames in -eva are missed), so say what you measured (→ B8)."},
