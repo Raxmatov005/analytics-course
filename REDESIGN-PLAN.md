@@ -164,3 +164,14 @@ blocks parse, no console errors, structure parity), a cross-week flow review, co
 - **Excel and Power BI** cannot run in the page; those days get checked number/text answers, flashcards,
   cloze games and uploads of the real artefact.
 - **Python** loads Pyodide (~15 MB, cached after the first time) on the first ▶ Run of a page.
+
+## 5. Status (2026-10-27)
+
+Done and live: every workstream in section 3 (E1–E4, C0–C8), the cross-week flow review, and the integration
+pass (all 104 pages, EN + RU, render with no JavaScript errors and identical block counts). Decisions taken at
+integration: the homework "why / graded" card is drawn by the hand-in box only (sqlrun.js); video cards are not
+required blocks (watching is optional); Submit opens once every task has an answer, not only when every check is
+✅; stretch tasks are worth 5 XP (as `docs/rewards.json` says); Quick checks earn no XP.
+
+Open: the Telegram "Connect" step (needs the worker's code — see `HANDOFF.md`), retiming of `videoquiz` stops by
+someone who watches the videos, and the two small items listed at the end of `HANDOFF.md`.

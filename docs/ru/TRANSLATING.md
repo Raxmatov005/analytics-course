@@ -79,3 +79,12 @@ lower-cased, punctuation removed (keep letters, digits, spaces, `-`), spaces →
 | capstone | итоговый проект |
 | mentor | ментор |
 | branch | филиал |
+
+## The blocks added in the 2026-10 redesign (see REDESIGN-PLAN.md §2)
+- ```` ```task ````: translate `q` (if present), `options`, `explain`, `model`, `rubric`, `hint`, `unit`, `placeholder`, `starter` **comments only**; never `id`, `kind`, `answer` (indexes / numbers), `dp`, `min`. For `kind: "text"` you may **append** Russian aliases to the `answer` list after the English ones.
+- ```` ```check ````: same rules as `quiz`.
+- ```` ```videoquiz ````: translate `q`, `options`, `explain`; never `video`, `at`, `answer`, `back`.
+- ```` ```sqllab ````: translate `title`, `intro`, `say`; never `id`, `hint` (SQL), `expect`, `want`, `cleanup`.
+- ```` ```game ```` new types — `flash`: translate both sides of `cards`; `cloze`/`build`: translate `q`/`title` only, never `text`, `blanks`, `tokens`, `distractors` (they are code); `bug`: translate `q`, `title`, `why`; never `code`, `answer`.
+- Callouts keep the emoji and may translate the lead-in word: `> 💡 **Главное.**`, `> ⚠️ **Осторожно.**`, `> 🎯 **Версия для собеседования.**`, `> 🚀 **Со звёздочкой (по желанию, +5 XP).**`, `> 🧭 …` — the renderer recognises the emoji, not the word.
+- A Python block that must stay static starts with the English comment `# (shape only — not meant to run)` in both languages (the engine looks for it; Russian `# (только схема — не для запуска)` also works).
