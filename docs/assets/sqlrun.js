@@ -6,6 +6,14 @@
    same salted fingerprints as scripts/check.py, on an untouched copy of the data), work saved in this browser, and
    📤 Submit once every task passes: the course bot (bot/worker.js /submit) records it and tells the mentor.
    {"check": "hw1.2", "lesson": "W1D2", "tasks": [{"id": "Q1", "q": "…"}, {"id": "note", "file": "surprised.md", "text": true, "q": "…"}]}
+   Optional "why" (one sentence) and "graded" (a short list) show in the workspace header.
+3. A ```sqllab block is a guided lab on her practice copy: one editor, steps that tick off as the database reaches each
+   step's "expect" = "want" (first cell; numbers within 1e-9, text exactly). Finished labs go to al.v1 → labs[id].
+   {"id": "w01d2-lab", "title": "…", "intro": "…", "steps": [{"say": "…", "hint": "…", "expect": "SELECT …", "want": 1}], "cleanup": "DROP …"}
+4. window.ALSql lets other blocks use the same box: ALSql.editor(container, {id, run: 'play'|'clean', placeholder, starter, label, onRun})
+   → {get(), set(sql), run() → Promise<{res, error, html}>, el}; ALSql.compare(mine, model) → Promise<{ok, msg, html}> (the
+   practice boxes' ✔ Check); ALSql.exec(sql, {play: true}) → Promise<{columns, values, error}>; ALSql.ready().
+Blocks that can be finished carry the class "al-block" and get "al-done" when finished; every change fires "al:change" on document.
 The website is connected to her once from the bot (🔑 a link with ?wk=<key>); the key lives in this browser only.
 Work in progress is kept in localStorage "al.sql". */
 (function () {
@@ -143,10 +151,20 @@ Work in progress is kept in localStorage "al.sql". */
     engine.catch(function () { engine = null; });
     return engine;
   }
+  /* the fingerprints: the copy the site serves itself (scripts/merge_checks.py writes it), else the repository's */
   function loadChecks() {
-    if (!checks) checks = fetch(REPO_RAW + 'checks/checks.json', { cache: 'no-store' }).then(function (r) { return r.json(); });
+    if (!checks) {
+      var get = function (url) { return fetch(url, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
+      checks = get('assets/checks.json').catch(function () { return get(REPO_RAW + 'checks/checks.json'); });
+      checks.catch(function () { checks = null; });   // the next ✔ Check tries again
+    }
     return checks;
   }
+  function changed() { document.dispatchEvent(new CustomEvent('al:change')); }
+  /* al.v1 is shared with quiz.js / challenge.js / games.js: read it fresh right before writing */
+  function v1() { try { return JSON.parse(localStorage.getItem('al.v1')) || {}; } catch (e) { return {}; } }
+  function v1save(s) { try { localStorage.setItem('al.v1', JSON.stringify(s)); } catch (e) { /* private window */ } }
+  function inline(s) { return esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
 
   /* ---------- running SQL (mirrors scripts/check.py) ---------- */
   function translate(sql) {
@@ -336,7 +354,7 @@ Work in progress is kept in localStorage "al.sql". */
   function fit(ta) {   // the editor is as tall as its code, so nothing is cut off and nothing wraps
     var lines = ta.value.split('\n').length;   // counted from the text, so it also works inside a closed <details>
     if (ta.classList.contains('sq-text')) lines += Math.floor(ta.value.length / 60);
-    var least = ta.classList.contains('sq-text') ? 4 : ta.closest('.sq-task, .sq-prac') ? 3 : 1;
+    var least = ta.classList.contains('sq-text') || ta.closest('.sq-lab') ? 4 : ta.closest('.sq-task, .sq-prac, .sq-ed') ? 3 : 1;
     ta.rows = Math.max(least, Math.min(30, lines + (least > 1 ? 1 : 0)));
   }
   function tabKeys(ta) {
@@ -352,16 +370,20 @@ Work in progress is kept in localStorage "al.sql". */
     try { spec = JSON.parse((pre.querySelector('code') || pre).textContent); }
     catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('Workspace could not be read.', 'Не удалось прочитать рабочую область.') + '</p>'); return; }
     var box = document.createElement('div');
-    box.className = 'sq-ws';
+    box.className = 'sq-ws al-block';
     pre.parentNode.replaceChild(box, pre);
     var s = store(), mine = s.sql[spec.check] = s.sql[spec.check] || { code: {}, ok: {} };
     save(s);
     var hasSql = spec.tasks.some(function (t) { return !t.text && !t.upload; });
     var picked = {};   // chosen files live in memory only: after a reload she picks them again
+    var wasDone = null;   // the workspace's done-state, so al:change fires only when it turns
     box.innerHTML = '<div class="sq-ws-head"><span class="sq-ws-title">' + (hasSql ? T('🧑‍💻 Your workspace — ', '🧑‍💻 Ваша рабочая область — ') : T('📎 Hand in — ', '📎 Сдача работы — ')) + esc(spec.title || spec.check) + '</span>' +
       '<span class="sq-ws-sub">' + (hasSql ? T('Write each query → ▶ Run → ✔ Check. When every one is ✅, tap 📤 Submit. Saved in this browser.',
           'Напишите каждый запрос → ▶ Выполнить → ✔ Проверить. Когда все отмечены ✅, нажмите 📤 Сдать. Всё сохраняется в этом браузере.')
-        : T('Write or attach each part, then tap 📤 Submit. No GitHub needed.', 'Напишите или прикрепите каждую часть, затем нажмите 📤 Сдать. GitHub не нужен.')) + '</span></div>' +
+        : T('Write or attach each part, then tap 📤 Submit. No GitHub needed.', 'Напишите или прикрепите каждую часть, затем нажмите 📤 Сдать. GitHub не нужен.')) + '</span>' +
+      (spec.why ? '<span class="sq-ws-why"><b>' + T('Why this homework: ', 'Зачем это задание: ') + '</b>' + inline(spec.why) + '</span>' : '') + '</div>' +
+      (spec.graded && spec.graded.length ? '<div class="sq-ws-graded"><b>' + T('Graded on', 'Что оценивается') + '</b><ul>' +
+        spec.graded.map(function (g) { return '<li>' + inline(g) + '</li>'; }).join('') + '</ul></div>' : '') +
       spec.tasks.map(function (t, i) {
         var input = t.upload
           ? '<label class="sq-file"><input type="file"' + (t.accept ? ' accept="' + esc(t.accept) + '"' : '') + '> ' + T('📎 Choose file', '📎 Выбрать файл') + '</label><span class="sq-fname"></span>'
@@ -369,7 +391,7 @@ Work in progress is kept in localStorage "al.sql". */
             (t.text ? '' : ' wrap="off" autocapitalize="off" autocorrect="off"') +
             ' rows="' + (t.text ? 4 : 3) + '" placeholder="' + (t.text ? T('Write here…', 'Пишите здесь…') : T('-- write your query here', '-- напишите запрос здесь')) + '"></textarea>';
         return '<div class="sq-task" data-i="' + i + '"><div class="sq-task-q"><span class="sq-chip"></span><b>' + esc(hasSql ? t.id : String(i + 1)) + '</b><span>' + esc(t.q).replace(/`([^`]+)`/g, '<code>$1</code>') + '</span>' +
-          (t.optional ? ' <span class="sq-opt">' + T('optional', 'по желанию') + '</span>' : '') + '</div>' +
+          (t.optional ? ' <span class="sq-opt">' + T('optional', 'по желанию') + '</span>' : '') + '<span class="sq-state"></span></div>' +
           (t.upload ? '<div class="sq-bar">' + input + '<span class="sq-msg"></span></div>' :
             input + '<div class="sq-bar">' + (t.text ? '' : '<button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><button type="button" class="sq-check">' +
             T('✔ Check', '✔ Проверить') + '</button>') +
@@ -421,9 +443,18 @@ Work in progress is kept in localStorage "al.sql". */
       };
       c.querySelector('.sq-check').onclick = function () { checkOne(t, c).then(foot); };
     });
+    /* each card says where it stands: Not started / In progress / ❌ Not yet / ✅ Checked (✅ Written) / 📎 Attached */
     function paint(card, ok) {
       card.classList.toggle('ok', ok === true); card.classList.toggle('bad', ok === false);
-      card.querySelector('.sq-chip').textContent = ok === true ? '✅' : ok === false ? '❌' : '';
+      card.querySelector('.sq-chip').textContent = '';   // the state chip on the right says it now
+      var t = spec.tasks[Number(card.dataset.i)], ta = card.querySelector('textarea'), chip = card.querySelector('.sq-state'), k;
+      if (t.upload) k = ok === true ? 'att' : 'none';
+      else if (ok === true) k = t.text ? 'written' : 'ok';
+      else if (ok === false) k = 'bad';
+      else k = ta && ta.value.trim() ? 'run' : 'none';
+      chip.className = 'sq-state sq-state-' + k;
+      chip.textContent = { none: T('Not started', 'Не начато'), run: T('In progress', 'В работе'), bad: T('❌ Not yet', '❌ Пока нет'),
+        ok: T('✅ Checked', '✅ Проверено'), written: T('✅ Written', '✅ Написано'), att: T('📎 Attached', '📎 Прикреплено') }[k];
     }
     function checkOne(t, card) {
       var ta = card.querySelector('textarea'), msg = card.querySelector('.sq-msg'), out = card.querySelector('.sq-out');
@@ -450,9 +481,19 @@ Work in progress is kept in localStorage "al.sql". */
       var okN = must.filter(function (t) { return t.upload ? !!picked[t.id] : m.ok[t.id] === true; }).length;
       var state = box.querySelector('.sq-ws-state'), btn = box.querySelector('.sq-submit');
       var key = wk();
-      btn.disabled = okN < need;
+      /* Submit opens once every required task has an answer (a query, the text, a file) — a miss on a checked task does
+         not lock the hand-in: a checkpoint can be handed in with mistakes, and the mentor sees which tasks were ✅ */
+      var tried = must.filter(function (t) {
+        return t.upload ? !!picked[t.id] : t.text ? m.ok[t.id] === true : !!(m.code[t.id] || '').trim();
+      }).length;
+      var fin = okN >= need || !!m.submitted;
+      box.classList.toggle('al-done', fin);
+      if (wasDone !== null && wasDone !== fin) changed();
+      wasDone = fin;
+      btn.disabled = tried < need;
       state.innerHTML = '<b>' + okN + ' / ' + need + '</b>' + T(' done', ' готово') + (m.submitted ? T(' · ✅ submitted ', ' · ✅ сдано ') + esc(m.submitted) : '') +
-        (okN < need ? T(' · Submit opens when every task is ✅', ' · Кнопка «Сдать» откроется, когда все задания будут ✅') : '') +
+        (tried < need ? T(' · Submit opens once every task has an answer', ' · Кнопка «Сдать» откроется, когда у каждого задания будет ответ')
+          : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть') : '') +
         (key ? '' : T('<br>First time? <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Connect this website to the course bot</a> (once).',
           '<br>Впервые здесь? <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Подключите этот сайт к боту курса</a> (один раз).'));
     }
@@ -481,6 +522,7 @@ Work in progress is kept in localStorage "al.sql". */
         .then(function (x) {
           if (x.status === 200) {
             var st = store(); st.sql[spec.check].submitted = new Date().toISOString().slice(0, 10); save(st);
+            foot(); btn.disabled = true;
             state.innerHTML = T('✅ Submitted! Your mentor is notified — feedback will appear in 📤 Homework.', '✅ Сдано! Ментор получил уведомление — отзыв появится в 📤 Homework.');
           } else if (x.status === 401) {
             try { localStorage.removeItem(WK); } catch (e) { /* nothing */ }
@@ -723,7 +765,8 @@ Work in progress is kept in localStorage "al.sql". */
     var h1 = document.querySelector('.markdown-section h1');
     var exam = !!(h1 && /checkpoint|контрольн/i.test(h1.textContent));   // a test day: no checking against the folds before she submits
     var box = document.createElement('div');
-    box.className = 'sq-box sq-prac';
+    var okBefore = ((store().pracOk || {})[page] || {})[id];   // a test day has no ✔ Check, so its boxes are not blocks to finish
+    box.className = 'sq-box sq-prac' + (exam ? '' : ' al-block' + (okBefore ? ' al-done' : ''));
     box.innerHTML = '<div class="sq-top"><span class="sq-lang">' + T('YOUR QUERY · ', 'ВАШ ЗАПРОС · ') + esc(id) + '</span><span class="sq-tip">' + T('saved in this browser', 'сохраняется в этом браузере') + '</span>' +
       '<button type="button" class="sq-reset" hidden>' + T('Clear', 'Очистить') + '</button></div>' +
       '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="' + T('-- write your query here, then Run', '-- напишите запрос здесь и нажмите «Выполнить»') + '"></textarea>' +
@@ -749,31 +792,38 @@ Work in progress is kept in localStorage "al.sql". */
       if (!ta.value.trim()) { msg.textContent = T('Write a query first.', 'Сначала напишите запрос.'); return; }
       msg.textContent = T('Checking…', 'Проверяем…');
       ready().then(function () {
-        var want = results(clean, answer), got = results(clean, ta.value);
-        var mineRes = run(clean, ta.value, true);
-        out.innerHTML = table(mineRes);
-        if (!got.length) {
-          msg.textContent = mineRes.error ? T('The query did not run — see the message below.', 'Запрос не выполнился — смотрите сообщение ниже.') : T('No result to compare yet.', 'Пока нечего сравнивать.');
-          box.classList.add('bad'); return;
+        var r = compareNow(ta.value, answer);
+        out.innerHTML = table(r.res);
+        msg.textContent = r.msg;
+        box.classList.toggle('ok', r.ok); box.classList.toggle('bad', !r.ok);
+        if (r.ok && !box.classList.contains('al-done')) {   // a ✅ once is a finished question, also after a reload (al.sql → pracOk)
+          var s = store(); s.pracOk = s.pracOk || {}; s.pracOk[page] = s.pracOk[page] || {}; s.pracOk[page][id] = true; save(s);
+          box.classList.add('al-done'); changed();
         }
-        var last = got[got.length - 1], hit = -1, loose = -1;
-        want.forEach(function (w, i) {
-          if (hit < 0 && sameResult(last.r, w.r, w.ordered)) hit = i;
-          if (loose < 0 && sameResult(last.r, w.r, false)) loose = i;   // the same rows, sorted differently
-        });
-        var part = function (i) { return want.length > 1 ? T(' (part ' + (i + 1) + ' of ' + want.length + ')', ' (часть ' + (i + 1) + ' из ' + want.length + ')') : ''; };
-        box.classList.toggle('ok', hit >= 0 || loose >= 0); box.classList.toggle('bad', hit < 0 && loose < 0);
-        if (hit >= 0) msg.textContent = T('✅ Same result as the answer', '✅ Результат совпадает с ответом') + part(hit) + '.';
-        else if (loose >= 0) msg.textContent = T('✅ Same rows as the answer', '✅ Строки совпадают с ответом') + part(loose) + (last.ordered
-          ? T(', in a different order — check the ORDER BY.', ', но в другом порядке — проверьте ORDER BY.')
-          : T('. The answer also sorts them with ORDER BY.', '. В ответе они ещё и отсортированы с помощью ORDER BY.'));
-        else if (want.some(function (w) { return w.r.values.length === last.r.values.length; })) {
-          msg.textContent = T('❌ Same number of rows as the answer, but the columns or values differ.', '❌ Строк столько же, сколько в ответе, но столбцы или значения отличаются.');
-        }
-        else msg.textContent = T('❌ Not yet — the answer has a different number of rows (you have ' + last.r.values.length + ').',
-          '❌ Пока нет — в ответе другое число строк (у вас ' + last.r.values.length + ').');
       }).catch(function (e) { console.error('practice check failed', e); msg.textContent = T('Could not check right now — try again.', 'Сейчас проверить не получилось — попробуйте снова.'); });
     };
+  }
+  /* ✔ Check: her query and the model answer, both on the untouched data → {ok, msg, res: her result for the table} */
+  function compareNow(mine, model) {
+    var want = results(clean, model), got = results(clean, mine);
+    var mineRes = run(clean, mine, true);
+    if (!got.length) return { ok: false, res: mineRes, msg: mineRes.error ? T('The query did not run — see the message below.', 'Запрос не выполнился — смотрите сообщение ниже.') : T('No result to compare yet.', 'Пока нечего сравнивать.') };
+    var last = got[got.length - 1], hit = -1, loose = -1, msg;
+    want.forEach(function (w, i) {
+      if (hit < 0 && sameResult(last.r, w.r, w.ordered)) hit = i;
+      if (loose < 0 && sameResult(last.r, w.r, false)) loose = i;   // the same rows, sorted differently
+    });
+    var part = function (i) { return want.length > 1 ? T(' (part ' + (i + 1) + ' of ' + want.length + ')', ' (часть ' + (i + 1) + ' из ' + want.length + ')') : ''; };
+    if (hit >= 0) msg = T('✅ Same result as the answer', '✅ Результат совпадает с ответом') + part(hit) + '.';
+    else if (loose >= 0) msg = T('✅ Same rows as the answer', '✅ Строки совпадают с ответом') + part(loose) + (last.ordered
+      ? T(', in a different order — check the ORDER BY.', ', но в другом порядке — проверьте ORDER BY.')
+      : T('. The answer also sorts them with ORDER BY.', '. В ответе они ещё и отсортированы с помощью ORDER BY.'));
+    else if (want.some(function (w) { return w.r.values.length === last.r.values.length; })) {
+      msg = T('❌ Same number of rows as the answer, but the columns or values differ.', '❌ Строк столько же, сколько в ответе, но столбцы или значения отличаются.');
+    }
+    else msg = T('❌ Not yet — the answer has a different number of rows (you have ' + last.r.values.length + ').',
+      '❌ Пока нет — в ответе другое число строк (у вас ' + last.r.values.length + ').');
+    return { ok: hit >= 0 || loose >= 0, msg: msg, res: mineRes };
   }
 
   /* ---------- 4. the playground (```sqlplay): one big editor on her practice copy, starters for every kind of
@@ -819,6 +869,172 @@ Work in progress is kept in localStorage "al.sql". */
     if (window.innerWidth >= 1200) setTimeout(function () { var d = document.getElementById('sq-db'); if (!d || !d.classList.contains('open')) explorer(); }, 300);
   }
 
+  /* ---------- 5. one editor other blocks can use (task.js "sql" tasks, the daily challenge, the labs) ----------
+     The practice box without the fold: her text is kept in this browser (al.sql → ed[id]); ▶ Run runs on her practice
+     copy (run: 'play', CRUD allowed) or read-only on the untouched data (run: 'clean'); the result shows under it. */
+  function editorBox(container, opt) {
+    opt = opt || {};
+    var id = String(opt.id || 'box'), clean0 = opt.run === 'clean';
+    var box = document.createElement('div');
+    box.className = 'sq-box sq-ed';
+    box.innerHTML = '<div class="sq-top"><span class="sq-lang">' + esc(opt.label || T('YOUR QUERY', 'ВАШ ЗАПРОС')) + '</span><span class="sq-tip">' +
+      (clean0 ? T('saved in this browser', 'сохраняется в этом браузере') : T('runs on your practice copy · saved in this browser', 'выполняется в вашей учебной копии · сохраняется в этом браузере')) + '</span>' +
+      '<button type="button" class="sq-reset" hidden>' + T('Clear', 'Очистить') + '</button></div>' +
+      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="' +
+      esc(opt.placeholder || T('-- write your query here, then Run', '-- напишите запрос здесь и нажмите «Выполнить»')) + '"></textarea>' +
+      '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><span class="sq-keys">Ctrl + Enter</span>' +
+      '<span class="sq-msg"></span></div><div class="sq-out"></div>';
+    container.appendChild(box);
+    var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out'), msg = box.querySelector('.sq-msg'), clr = box.querySelector('.sq-reset');
+    var kept = (store().ed || {})[id];
+    ta.value = kept != null ? kept : (opt.starter || '');
+    clr.hidden = !ta.value;
+    fit(ta); tabKeys(ta);
+    function keep() { var s = store(); s.ed = s.ed || {}; s.ed[id] = ta.value; save(s); }
+    ta.addEventListener('input', function () { keep(); fit(ta); clr.hidden = !ta.value; msg.textContent = ''; });
+    clr.onclick = function () { ta.value = ''; ta.dispatchEvent(new Event('input')); out.innerHTML = ''; ta.focus(); };
+    function go() {
+      msg.className = 'sq-msg';
+      if (!ta.value.trim()) { msg.textContent = T('Write a query first.', 'Сначала напишите запрос.'); return Promise.resolve({ res: null, error: 'empty', html: '' }); }
+      msg.textContent = '';
+      out.innerHTML = '<div class="sq-note sq-loading">' + runningText() + '</div>';
+      return ready().then(function () {
+        var res = clean0 ? run(clean, ta.value, true) : runPlay(ta.value), html = table(res);
+        out.innerHTML = html;
+        var r = { res: res, error: res.error, html: html };
+        if (opt.onRun) opt.onRun(r);
+        return r;
+      }, function () {
+        out.innerHTML = '<div class="sq-err">' + T('Could not load the data — check the connection and try again.', 'Не удалось загрузить данные — проверьте подключение и попробуйте снова.') + '</div>';
+        return { res: null, error: 'load', html: out.innerHTML };
+      });
+    }
+    box.querySelector('.sq-run').onclick = function () { go(); };
+    return {
+      el: box, msg: msg, out: out, run: go,
+      get: function () { return ta.value; },
+      set: function (sql) { ta.value = sql == null ? '' : String(sql); keep(); fit(ta); clr.hidden = !ta.value; }
+    };
+  }
+
+  /* ---------- 6. the guided lab (```sqllab): steps that tick off as her practice copy reaches each one ----------
+     Progress lives in al.sql → lab[id] = {step, slips, shown}; a finished lab in al.v1 → labs[id] = {doneOn, slips}. */
+  function reached(st) {   // the step's "expect" query on her copy: is its first cell "want"?
+    var r = run(play, st.expect || '', true), got = r.last && r.last.values.length ? r.last.values[0][0] : null;
+    if (r.error && !r.last) return { ok: false, got: null };
+    var w = st.want, ok;
+    if (typeof w === 'number') { var n = toNum(got); ok = n !== null && Math.abs(n - w) <= 1e-9; }
+    else ok = got !== null && String(got) === String(w);
+    return { ok: ok, got: got };
+  }
+  function lab(pre) {
+    var spec;
+    try { spec = JSON.parse((pre.querySelector('code') || pre).textContent); }
+    catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This lab could not be read', 'Не удалось прочитать лабораторную') + ' (' + esc(e.message) + ').</p>'); return; }
+    var steps = spec.steps || [], id = spec.id || (location.hash.replace(/\?.*$/, '').replace(/^#\/ru(\/|$)/, '#/') + ':' + spec.title);
+    var box = document.createElement('div');
+    box.className = 'sq-lab al-block';
+    pre.parentNode.replaceChild(box, pre);
+    box.innerHTML = '<div class="sq-lab-head"><span class="sq-lab-kicker">' + T('🧪 SQL lab · on your practice copy', '🧪 SQL-практикум · в вашей учебной копии') + '</span>' +
+      '<span class="sq-lab-title">' + esc(spec.title || '') + '</span>' + (spec.intro ? '<span class="sq-lab-intro">' + inline(spec.intro) + '</span>' : '') + '</div>' +
+      '<div class="sq-lab-main"><ol class="sq-lab-steps"></ol><div class="sq-lab-work"><div class="sq-lab-cur"></div><div class="sq-lab-ed"></div></div></div>' +
+      '<div class="sq-lab-foot"><span class="sq-lab-count"></span><button type="button" class="sq-lab-db">' + T('Database', 'База данных') + '</button>' +
+      '<button type="button" class="sq-lab-over">' + T('↺ Start over', '↺ Начать заново') + '</button></div>';
+    function rec() { return (v1().labs || {})[id] || null; }
+    function prog() {
+      var p = (store().lab || {})[id];
+      return p || (rec() ? { step: steps.length, slips: rec().slips || 0, shown: {} } : { step: 0, slips: 0, shown: {} });
+    }
+    function keepProg(p) { var s = store(); s.lab = s.lab || {}; s.lab[id] = p; save(s); }
+    var ed = editorBox(box.querySelector('.sq-lab-ed'), { id: 'lab-' + id, run: 'play', label: T('SQL · YOUR PRACTICE DATABASE', 'SQL · ВАША УЧЕБНАЯ БАЗА'),
+      placeholder: T('-- write the SQL for this step, then Run', '-- напишите SQL для этого шага и нажмите «Выполнить»'), onRun: after });
+    function paint() {
+      var p = prog(), n = steps.length, fin = p.step >= n;
+      box.querySelector('.sq-lab-steps').innerHTML = steps.map(function (st, i) {
+        var k = i < p.step ? 'done' : i === p.step ? 'now' : 'todo';
+        return '<li class="sq-lab-' + k + '"><span class="sq-lab-n">' + (i + 1) + '</span><span class="sq-lab-mark">' + (k === 'done' ? '✓' : k === 'now' ? '●' : '○') + '</span>' +
+          '<span class="sq-lab-say">' + (k === 'todo' ? T('Step ' + (i + 1), 'Шаг ' + (i + 1)) : inline(st.say)) + '</span></li>';
+      }).join('');
+      var now = box.querySelector('.sq-lab-cur');
+      if (fin) {
+        now.innerHTML = '<div class="sq-lab-win"><b>' + T('🎉 Lab complete — all ' + n + ' steps done.', '🎉 Практикум пройден — все шаги (' + n + ') выполнены.') + '</b> ' +
+          (p.slips ? T('You opened ' + p.slips + ' hint' + (p.slips > 1 ? 's' : '') + '. ', 'Подсказок открыто: ' + p.slips + '. ') : T('No hints needed. ', 'Без единой подсказки. ')) +
+          T('Your work stays in your practice copy — open the Database panel to see it. ↺ Start over removes it and runs the lab again.',
+            'Ваша работа осталась в учебной копии — откройте панель «База данных», чтобы её увидеть. «↺ Начать заново» удалит её и запустит практикум снова.') + '</div>';
+      } else {
+        var st = steps[p.step], shown = !!p.shown[p.step];
+        now.innerHTML = '<div class="sq-lab-stepno">' + T('Step ' + (p.step + 1) + ' of ' + n, 'Шаг ' + (p.step + 1) + ' из ' + n) + '</div>' +
+          '<div class="sq-lab-task">' + inline(st.say) + '</div>' +
+          (st.hint ? (shown ? '' : '<button type="button" class="sq-lab-show">' + T('💡 Show me', '💡 Показать') + '</button>') +
+            '<pre class="sq-lab-hint"' + (shown ? '' : ' hidden') + '><code>' + esc(st.hint) + '</code></pre>' : '');
+        var sh = now.querySelector('.sq-lab-show');
+        if (sh) sh.onclick = function () {
+          var q = prog(); q.slips = (q.slips || 0) + 1; q.shown = q.shown || {}; q.shown[q.step] = true; keepProg(q);
+          sh.remove(); now.querySelector('.sq-lab-hint').hidden = false;
+        };
+      }
+      box.querySelector('.sq-lab-count').textContent = T(Math.min(p.step, n) + ' / ' + n + ' steps', Math.min(p.step, n) + ' / ' + n + ' ' + plural(n, 'шаг', 'шага', 'шагов'));
+      box.classList.toggle('sq-lab-fin', fin);
+      box.classList.toggle('al-done', fin || !!rec());
+    }
+    function after(r) {
+      if (!r.res || !play) return;
+      var p = prog(), from = p.step, last = null;
+      while (p.step < steps.length) { last = reached(steps[p.step]); if (!last.ok) break; p.step++; }
+      if (p.step > from) {
+        keepProg(p);
+        if (p.step >= steps.length) {
+          var s = v1(); s.labs = s.labs || {};
+          var old = s.labs[id];
+          s.labs[id] = { doneOn: old && old.doneOn || new Date().toISOString().slice(0, 10), slips: old ? Math.min(old.slips || 0, p.slips || 0) : p.slips || 0 };
+          v1save(s);
+        }
+        paint(); changed();
+        ed.msg.textContent = p.step >= steps.length ? T('✓ Every step done!', '✓ Все шаги выполнены!')
+          : p.step - from > 1 ? T('✓ Steps ' + (from + 1) + '–' + p.step + ' done. Next: step ' + (p.step + 1) + '.', '✓ Шаги ' + (from + 1) + '–' + p.step + ' выполнены. Дальше: шаг ' + (p.step + 1) + '.')
+          : T('✓ Step ' + p.step + ' done. Next: step ' + (p.step + 1) + '.', '✓ Шаг ' + p.step + ' выполнен. Дальше: шаг ' + (p.step + 1) + '.');
+        ed.msg.className = 'sq-msg sq-lab-yes';
+      } else if (p.step < steps.length && last && !r.res.error) {
+        ed.msg.textContent = T('It ran, but step ' + (p.step + 1) + ' is not there yet', 'Запрос выполнен, но шаг ' + (p.step + 1) + ' ещё не готов') +
+          (last.got !== null ? T(' (the check finds ' + last.got + ', the step wants ' + steps[p.step].want + ').', ' (проверка находит ' + last.got + ', а нужно ' + steps[p.step].want + ').') : '.');
+        ed.msg.className = 'sq-msg sq-lab-no';
+      }
+    }
+    box.querySelector('.sq-lab-db').onclick = function () { var d = document.getElementById('sq-db'); if (!d || !d.classList.contains('open')) explorer(); };
+    var over = box.querySelector('.sq-lab-over');
+    over.onclick = function () {
+      if (!over.classList.contains('sure')) {
+        over.classList.add('sure'); over.textContent = T('Tap again: remove my lab work', 'Нажмите ещё раз: удалить мою работу');
+        setTimeout(function () { over.classList.remove('sure'); over.textContent = T('↺ Start over', '↺ Начать заново'); }, 4000);
+        return;
+      }
+      over.classList.remove('sure'); over.textContent = T('↺ Start over', '↺ Начать заново');
+      ready().then(function () {
+        if (spec.cleanup) runPlay(spec.cleanup);
+        keepProg({ step: 0, slips: 0, shown: {} });
+        ed.set(''); ed.out.innerHTML = '';
+        paint(); changed();
+        ed.msg.className = 'sq-msg'; ed.msg.textContent = T('Clean slate — start with step 1.', 'Всё чисто — начните с шага 1.');
+      });
+    };
+    paint();
+  }
+
+  window.ALSql = {
+    ready: ready,
+    editor: editorBox,
+    compare: function (mine, model) {
+      if (!String(mine || '').trim()) return Promise.resolve({ ok: false, msg: T('Write a query first.', 'Сначала напишите запрос.'), html: '' });
+      return ready().then(function () { var r = compareNow(mine, model); return { ok: r.ok, msg: r.msg, html: table(r.res) }; });
+    },
+    exec: function (sql, opt) {
+      return ready().then(function () {
+        var r = opt && opt.play ? runPlay(sql) : run(clean, sql, true);
+        return { columns: r.last ? r.last.columns : [], values: r.last ? r.last.values : [], error: r.error };
+      });
+    }
+  };
+
   window.$docsify = window.$docsify || {};
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.doneEach(function () {
@@ -826,6 +1042,7 @@ Work in progress is kept in localStorage "al.sql". */
       if (!sec) return;
       Array.prototype.forEach.call(sec.querySelectorAll('details'), practice);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqlplay"]'), playground);
+      Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqllab"]'), lab);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sqltask"]'), workspace);
       Array.prototype.forEach.call(sec.querySelectorAll('pre[data-lang="sql"]'), example);
       dbButton();

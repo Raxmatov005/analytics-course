@@ -7,12 +7,14 @@
 ## Today in 3 lines
 
 - What a **BI tool** is and why the banks in the region mostly run **Power BI**; its parts (**Desktop** — free, Windows — **Service**, **Mobile**, **Report Server**) and the build process: get data → transform → model → measures → visuals → publish.
-- **Get data** from CSV (`data/powerbi/`) or from SQL Server (your week-1 Nur database), **Power Query** in Power BI (the same editor as Excel's in week 4: types, cleaning, merge, append; M in one paragraph), Import vs DirectQuery.
+- **Get data** from CSV (`data/powerbi/`) or from SQL Server (the optional `nur` database from [Tools at work](tools-at-work.md)), **Power Query** in Power BI (the same editor as Excel's in week 4: types, cleaning, merge, append; M in one paragraph), Import vs DirectQuery.
 - The **star schema** in the Model view — facts `v_loan_status`, `v_payments_clean`, `v_portfolio_monthly` (+ four small facts), dimensions date / product / branch / customer — **one-to-many, single direction**, `dim_date` marked as the date table; and the first look at **calculated columns vs measures**. The first card shows **208 723 504 430**.
 
 ---
 
 ## 1. Learn — from a file that breaks to a model that refreshes
+
+> 🧭 **Before you start.** Today you build in **Power BI Desktop** (free, Windows; on a Mac, a Windows virtual machine) — Power BI cannot run inside this page. Download the files from `data/powerbi` (every file name with a ⬇ button saves it): for the worked example `data/powerbi/v_loan_status.csv`, `data/powerbi/products.csv`, `data/powerbi/branches.csv` and `data/powerbi/dim_date.csv`; for Practice the rest of the folder, including `data/powerbi/customer_id_map.csv` and `data/powerbi/README.md` (the relationships). Keep them in one folder. **End state today:** one file `nur_week7.pbix` with the 14 tables loaded, a star in the Model view (every line 1 : *, single direction), `dim_date` marked as the date table, and a card that shows **208 723 504 430**. The boxes on this page check the numbers you read off your visuals.
 
 ### What BI is, and which tool
 
@@ -43,7 +45,7 @@ Desktop has four views on the left edge: **Report** (the canvas), **Table** (the
 
 - **Text/CSV** — Home → Get data → Text/CSV → `data/powerbi/v_loan_status.csv` → the preview → **Transform data** (always, not Load: you check types first). Repeat per file, or use the next one.
 - **Folder** — Get data → Folder → a folder of **same-shaped** files (one CSV per month) → *Combine & Transform*: Power BI stacks them, adds the file name, and next month's file is picked up by the refresh. Our 14 files have different shapes, so for them Folder only lists the files; it is the right connector for monthly exports (Stretch).
-- **SQL Server** — Get data → SQL Server → Server `localhost` (or `.\SQLEXPRESS`), Database `nur` (the database you created from `data/sql/sqlserver.sql` in week 1, with week 3's views from HW 3.2) → choose the views `v_loan_status`, `v_portfolio_monthly`, `v_payments_clean` in the Navigator. *Advanced options* lets you paste a SQL statement instead (`SELECT loan_id, product, branch_name, outstanding, dpd FROM v_loan_status`) — habit 1 of week 3: only the columns you need. SQLite (`nur.db`) needs an ODBC driver; for the course, the CSVs are its exports.
+- **SQL Server** — Get data → SQL Server → Server `localhost` (or `.\SQLEXPRESS`), Database `nur` (if you built it from `data/sql/sqlserver.sql` as [Tools at work](tools-at-work.md) shows, and added week 3's views from HW 3.2) → choose the views `v_loan_status`, `v_portfolio_monthly`, `v_payments_clean` in the Navigator. *Advanced options* lets you paste a SQL statement instead (`SELECT loan_id, product, branch_name, outstanding, dpd FROM v_loan_status`) — habit 1 of week 3: only the columns you need. SQLite (`nur.db`) needs an ODBC driver; for the course, the CSVs are its exports.
 - **Import vs DirectQuery.** *Import* copies the data into the `.pbix` (fast visuals, all DAX, refreshed on a schedule — our choice); *DirectQuery* leaves it in the database and sends a query for every visual (always current, slower, some DAX limits — for tables too big to copy or data that must be live). The Import refresh re-runs the views: definitions live in SQL, Power BI only reads them.
 
 | Storage mode | Data lives | Visual speed | Freshness | Use when |
@@ -62,7 +64,7 @@ Desktop has four views on the left edge: **Report** (the canvas), **Table** (the
 2. **Profile** — View → *Column quality*, *Column distribution*, *Column profile*. The profile is computed on the **first 1 000 rows** unless you switch the status-bar setting to *entire data set*: `outstanding` in the first 1 000 rows is not the same as in 7 828.
 3. **Merge** (Home → Merge Queries) — a lookup: `v_payments_clean` ← `v_loan_status` on `loan_id`, *Left Outer*, expand **only** `product` and `branch_name`. Rows stay 52 850. Expanding `outstanding` here would copy a loan's balance onto each of its payments (Company corner).
 4. **Append** (Home → Append Queries) — stacking same-shaped tables (two years of exports); the Folder connector is an automatic append.
-5. **Replace / fix keys** — the 48 loans whose customer was removed as a duplicate in week 4 (P8).
+5. **Replace / fix keys** — the 48 loans whose customer was removed as a duplicate in week 4 (P8 below).
 
 **M in one paragraph.** Every query is a little program in **M** (*язык M*, Power Query's formula language), visible in *Advanced Editor*: a `let` block where each step is a named variable built from the previous one, and `in` returns the last. You rarely write M; you read it to see what the clicks did, and you copy it between files. DAX (tomorrow) is the other language: M shapes **tables before they are loaded**, DAX calculates **numbers after**.
 
@@ -77,6 +79,8 @@ in
 ```
 
 **One trap for a refreshing report**: the file path in `Source` is absolute. Move the folder and the refresh breaks; make the folder a *parameter* (Home → Manage parameters) and every query uses it.
+
+> 💡 **Key idea.** M shapes tables before they are loaded; DAX calculates numbers after. The definitions live in the SQL views — Power BI reads them, and Refresh replays every step.
 
 ### The model — a star, drawn in the Model view
 
@@ -102,6 +106,12 @@ Dimensions: `dim_date` (1 461 days), `products` (5), `branches` (10), `customers
 
 **Mark `dim_date` as the date table** — select it, Table tools → *Mark as date table* → column `date`. Power BI then trusts it for time intelligence (`TOTALYTD`, `SAMEPERIODLASTYEAR`, tomorrow) and switches off its own hidden auto-date tables. And sort the text columns by their numbers (Column tools → *Sort by column*): `month_name` by `month`, `year_month` by `month_start` — or the axis reads April, August, December…
 
+> ⚠️ **Watch out.** If Power BI proposes many-to-many, the "one" side is not unique — a duplicate key, a trailing space, a type mismatch. Fix the data; never accept many-to-many, and never switch a relationship to Both to make a slicer "work".
+
+```game
+{"type": "flash", "id": "w07d3-g1", "title": "Power BI words of the day", "cards": [["Star schema", "facts in the centre, dimensions around them, each fact related to each dimension one-to-many"], ["Fact table", "events or states at a stated grain, with numbers to add up and keys pointing out (v_loan_status, v_payments_clean)"], ["Dimension table", "one row per thing you slice by (products, branches, dim_date)"], ["Cardinality 1 : *", "the dimension's key is unique, the fact repeats it"], ["Cross-filter direction: single", "filters flow from the dimension to the fact, not back"], ["Inactive relationship", "a dashed line, used only when a measure asks with USERELATIONSHIP"], ["Measure", "computed at query time for every cell, in its filter context; stores nothing"], ["Calculated column", "computed once per row at refresh and stored; sees the current row"], ["Import", "the data are copied into the .pbix: fast, all DAX, refreshed on a schedule"], ["DirectQuery", "the data stay in the database; every visual sends a query"], ["Applied Steps", "Power Query's recorded clicks, replayed by every Refresh"], ["M", "Power Query's language: shapes tables before they are loaded"]]}
+```
+
 ### Calculated columns vs measures — a first look
 
 | | Calculated column (*вычисляемый столбец*) | Measure (*мера*) |
@@ -112,6 +122,12 @@ Dimensions: `dim_date` (1 461 days), `products` (5), `branches` (10), `customers
 | example | `par30_outstanding = IF(v_loan_status[dpd] > 30, v_loan_status[outstanding], 0)` | `PAR30 % = DIVIDE(SUM(v_loan_status[par30_outstanding]), SUM(v_loan_status[outstanding]))` |
 
 The rule that saves most mistakes: **ratios are measures** — a ratio of sums, computed after the filters, never an average of row-level ratios (P9). A column costs memory for every row; a measure costs nothing until a visual asks.
+
+> 💡 **Key idea.** Ratios are measures: a ratio of sums, computed after the filters — never an average of row-level ratios or flags.
+
+```game
+{"type": "sort", "id": "w07d3-g2", "title": "Calculated column or measure?", "q": "Put each item where it belongs.", "groups": {"Calculated column": ["An age band per customer", "\"Is this loan 90+\" flag", "A key used in a relationship", "par30_outstanding per loan"], "Measure": ["PAR30 %", "Collection rate", "Outstanding on a card", "Average ticket"]}, "why": "Columns are values you slice or filter by, one per row; every number a visual aggregates — and every ratio — is a measure."}
+```
 
 ### From Bekzod's one-pager to Power BI — the translation table
 
@@ -135,6 +151,12 @@ Week 4's one-pager already had every idea; Power BI gives each one a home that s
 
 **Check the model before any visual** (two minutes, every time): (1) row counts in Table view against the README; (2) the card `Outstanding` = 208 723 504 430; (3) every relationship 1 : *, single, and no dashed line you did not intend; (4) `dim_date` marked; (5) a table by product shows different numbers in different rows and no (Blank) row.
 
+> 💡 **Key idea.** The first test of any BI model is that it reproduces the SQL: the card says 208 723 504 430, like the week-3 tile. Check the model before you draw a single visual.
+
+```game
+{"type": "match", "id": "w07d3-g3", "title": "Excel one-pager → Power BI", "pairs": [["VLOOKUP between sheets", "a relationship in the Model view"], ["Sum of outstanding in a pivot", "a measure Outstanding = SUM(...)"], ["CSV pasted under last month's rows", "Get data + Refresh"], ["Report Connections on slicers", "Sync slicers across pages"], ["A timeline on disbursed_at", "dim_date + a date slicer"], ["\"Data as of\" typed by hand", "a measure or the refresh time"]]}
+```
+
 ### Depth (optional)
 
 **Videos (free, YouTube; each link opens at the right minute):**
@@ -154,6 +176,30 @@ Week 4's one-pager already had every idea; Power BI gives each one a home that s
 - DAX guide `Подробное руководство по DAX.pdf` (Russo & Ferrari; PDF page = book page): chapter 1, the data model and relationship direction, pp. 27–42 (direction pp. 29–35); chapter 15, relationships in depth, pp. 514–566 (one-to-many p. 538, many-to-many pp. 540–553, ambiguity pp. 559–566).
 - *Russian terms:* бизнес-аналитика (BI) = business intelligence, отчёт = report, дашборд = dashboard, источник данных = data source, импорт / DirectQuery = import / DirectQuery, обновление по расписанию = scheduled refresh, редактор Power Query = Power Query editor, применённые шаги = applied steps, слияние / добавление запросов = merge / append queries, модель данных = data model, схема «звезда» = star schema, таблица фактов / измерений = fact / dimension table, связь = relationship, кардинальность = cardinality, направление кросс-фильтрации = cross-filter direction, таблица дат = date table, вычисляемый столбец = calculated column, мера = measure.
 
+```videoquiz
+{"video": "OmW9YvxSl1E", "stops": [{"at": 340, "q": "You connect to a CSV. Why click Transform data rather than Load?", "options": ["Load is slower", "To check and set the column types before the data enter the model", "Transform deletes empty rows automatically", "Load does not work for CSV"], "answer": 1, "explain": "Wrong types are the most common reason a total is wrong or a relationship refuses to be created."}, {"at": 420, "q": "What happens to the steps you click in Power Query?", "options": ["They are lost on save", "They change the source file", "They are recorded as Applied Steps and replayed on every Refresh", "They run once"], "answer": 2, "explain": "That is why the report refreshes instead of being rebuilt.", "back": 40}]}
+```
+
+```videoquiz
+{"video": "I0vQ_VLZTWg", "stops": [{"at": 900, "q": "Power Query in Power BI is…", "options": ["the same editor you used in Excel in week 4", "a DAX editor", "a chart designer", "only for SQL Server"], "answer": 0, "explain": "Same editor, same Applied Steps; its output feeds every visual."}, {"at": 1250, "q": "A numeric-looking code such as bucket '1-30' should be typed as…", "options": ["Whole number", "Date", "Text", "Decimal"], "answer": 2, "explain": "It is a label that only looks like a range; as a number it breaks.", "back": 60}, {"at": 1600, "q": "You create a relationship. Which side must be unique?", "options": ["The fact side", "Both sides", "Neither", "The dimension side — the 'one' of one-to-many"], "answer": 3, "explain": "If Power BI proposes many-to-many, the 'one' side is not unique: fix the data."}, {"at": 1850, "q": "Which cross-filter direction is the safe default?", "options": ["Both", "Single — from the dimension to the fact", "None", "Whatever Power BI suggests"], "answer": 1, "explain": "Both makes slicers filter other dimensions and facts: plausible-looking wrong numbers.", "back": 60}]}
+```
+
+```videoquiz
+{"video": "gP-AxNi6uxo", "stops": [{"at": 125, "q": "What does Power Query do with your data?", "options": ["Draws the charts", "Cleans and shapes it before it is loaded", "Writes DAX measures", "Publishes the report"], "answer": 1, "explain": "M shapes tables before loading; DAX calculates numbers after."}, {"at": 148, "q": "Where do you see what each click did?", "options": ["In Applied Steps", "In the Report view", "In the Service", "Nowhere"], "answer": 0, "explain": "Every step is listed and can be edited or deleted.", "back": 30}]}
+```
+
+```videoquiz
+{"video": "4ePNrdxWtY0", "stops": [{"at": 220, "q": "What does a fact table hold?", "options": ["One row per product", "Events or states at a stated grain, with numbers and keys", "Only dates", "Report settings"], "answer": 1, "explain": "v_loan_status: one loan; v_payments_clean: one payment."}, {"at": 380, "q": "What does a dimension table hold?", "options": ["One row per thing you slice by", "Every transaction", "Measures", "Only numbers"], "answer": 0, "explain": "products (5 rows), branches (10), dim_date (1 461)."}, {"at": 540, "q": "Why one flat table is a bad model for several facts", "options": ["It cannot be loaded", "Facts with different grains multiply each other's numbers when joined", "Flat tables have no columns", "DAX needs exactly two tables"], "answer": 1, "explain": "Each fact at its grain, related through shared dimensions.", "back": 60}]}
+```
+
+```videoquiz
+{"video": "sW5LoDA1ssM", "stops": [{"at": 240, "q": "Where do you create or edit relationships?", "options": ["In the Report view's format pane", "In the Model view (or Manage relationships)", "In Power Query only", "In the Service"], "answer": 1, "explain": "Drag a dimension key onto the fact column, then check cardinality and direction."}, {"at": 265, "q": "A relationship line is dashed. What does that mean?", "options": ["It is broken", "It is inactive — used only when a measure asks with USERELATIONSHIP", "It is bidirectional", "It is many-to-many"], "answer": 1, "explain": "Only one active path may connect two tables.", "back": 25}]}
+```
+
+```videoquiz
+{"video": "pAn4FLC5nEU", "stops": [{"at": 320, "q": "What is Power Query for, in Excel and Power BI alike?", "options": ["Repeatable loading and cleaning of data", "Drawing charts", "Writing VBA", "Sharing reports"], "answer": 0, "explain": "The same steps every month — that is what makes a report refresh."}, {"at": 352, "q": "After loading, what turns separate tables into a model?", "options": ["Copying them onto one sheet", "Relationships between their keys", "Formatting", "Pivot tables"], "answer": 1, "explain": "Relationships replace VLOOKUP: one definition used by every visual.", "back": 30}]}
+```
+
 ---
 
 ## 2. Worked example — the first card that refreshes (15 min)
@@ -169,95 +215,73 @@ Week 4's one-pager already had every idea; Power BI gives each one a home that s
 
 ## 3. Practice (60 min)
 
-Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a short log of what you clicked — it becomes your HW 7.2 notes.
+Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a short log of what you clicked — it becomes your HW 7.2 notes. Under each question, type the number (or word) your visual shows: the box checks it and then shows the model answer.
 
 **P1.** Load `v_loan_status`, `v_portfolio_monthly`, `v_payments_clean` through *Transform data*. Report the row count of each in Table view and the totals of `outstanding`, `disbursed_amount` and `amount`.
 
-<details><summary>Answer</summary>
-
-**7 828 · 1 700 · 52 850** rows. Σ `outstanding` **208 723 504 430**; Σ `disbursed_amount` (all 34 months) **404 783 280 000** (2024 86 522 990 000 · 2025 155 927 230 000 · 2026 162 333 060 000); Σ `amount` **255 114 772 176** — the week-3 checks, unchanged. If a count is short, Power Query probably dropped a header or split a row; if a total is off, look for a column typed as Text (it will not sum) or Decimal with rounding.
-
-</details>
+```task
+{"id": "w07d3-p1", "kind": "number", "answer": 404783280000, "dp": 0, "unit": "soum", "hint": "Enter Σ disbursed_amount of v_portfolio_monthly (all 34 months).", "model": "7 828 · 1 700 · 52 850 rows. Σ outstanding 208 723 504 430; Σ disbursed_amount (all 34 months) 404 783 280 000 (2024 86 522 990 000 · 2025 155 927 230 000 · 2026 162 333 060 000); Σ amount 255 114 772 176 — the week-3 checks, unchanged. If a count is short, Power Query probably dropped a header or split a row; if a total is off, look for a column typed as Text (it will not sum) or Decimal with rounding."}
+```
 
 **P2.** Profile `v_loan_status` in Power Query (Column quality / distribution / profile, on the entire data set). How many distinct buckets, how many loans with zero outstanding, the largest outstanding and its loan? What changes if the profile stays on the first 1 000 rows?
 
-<details><summary>Answer</summary>
-
-5 buckets (0 · 1-30 · 31-60 · 61-90 · 90+); **4 419** loans with `outstanding` = 0 (closed, written off, or fully due — 7 828 − 3 409); maximum **586 068 714**, loan 4597 (SME, Bukhara Central). On the first 1 000 rows the profile shows only what those loans have (947 in bucket 0, 32 in 90+) — a profile is a sample until you tell it not to be.
-
-</details>
+```task
+{"id": "w07d3-p2", "kind": "number", "answer": 4419, "dp": 0, "unit": "loans", "hint": "Enter the number of loans with outstanding = 0.", "model": "5 buckets (0 · 1-30 · 31-60 · 61-90 · 90+); 4 419 loans with outstanding = 0 (closed, written off, or fully due — 7 828 − 3 409); maximum 586 068 714, loan 4597 (SME, Bukhara Central). On the first 1 000 rows the profile shows only what those loans have (947 in bucket 0, 32 in 90+) — a profile is a sample until you tell it not to be."}
+```
 
 **P3.** Load the four other facts and the five dimensions (`data/powerbi/README.md`). Which file needs a type you would not guess, and which column of `dim_date` must be sorted by another?
 
-<details><summary>Answer</summary>
-
-Row counts: `fct_installments` 92 193, `fct_first_instalment` 7 099, `fct_applications` 14 000, `fct_collections_actions` 9 361, `dim_date` 1 461, `products` 5, `branches` 10, `customers_clean` 6 000, `staff_collectors` 30. Watch `fct_applications`: `applied_at` has a time, the relationship uses `applied_date` (Date); `fct_first_instalment[vintage]` ("2026-07") should stay Text. Sort `month_name` by `month` and `year_month` by `month_start`.
-
-</details>
+```task
+{"id": "w07d3-p3", "kind": "text", "answer": ["month", "dim_date[month]", "the month column", "month number"], "hint": "Type the column you sort month_name by.", "model": "Row counts: fct_installments 92 193, fct_first_instalment 7 099, fct_applications 14 000, fct_collections_actions 9 361, dim_date 1 461, products 5, branches 10, customers_clean 6 000, staff_collectors 30. Watch fct_applications: applied_at has a time, the relationship uses applied_date (Date); fct_first_instalment[vintage] (\"2026-07\") should stay Text. Sort month_name by month and year_month by month_start."}
+```
 
 **P4.** Merge `v_payments_clean` with `v_loan_status` on `loan_id` (Left Outer), expanding only `product` and `branch_name`. Check the row count, then relate payments to `products` and show **collected in September 2026 by product**.
 
-<details><summary>Answer</summary>
-
-Still **52 850** rows, no blanks (every payment's loan exists). Collected (paid_at in September 2026, `Collected Amount = SUM(v_payments_clean[amount])`): SME **9 865 366 314** · AUTO 2 988 980 257 · CONS 2 872 046 580 · MICRO 344 950 525 · BNPL 267 479 531 — total **16 338 823 207**. A row count above 52 850 would mean the right-hand table had duplicate `loan_id`s: a merge is only a lookup when the other side is unique.
-
-</details>
+```task
+{"id": "w07d3-p4", "kind": "number", "answer": 9865366314, "dp": 0, "unit": "soum", "hint": "Enter SME's collected amount, paid_at in September 2026.", "model": "Still 52 850 rows, no blanks (every payment's loan exists). Collected (paid_at in September 2026, Collected Amount = SUM(v_payments_clean[amount])): SME 9 865 366 314 · AUTO 2 988 980 257 · CONS 2 872 046 580 · MICRO 344 950 525 · BNPL 267 479 531 — total 16 338 823 207. A row count above 52 850 would mean the right-hand table had duplicate loan_ids: a merge is only a lookup when the other side is unique."}
+```
 
 **P5.** Build every relationship in the README. Then a table visual by `products[code]` with `Outstanding` and `Disbursed Count = COUNTROWS(v_loan_status)`. What does the Model view's diagram look like, and what does each line's "1" and "*" mean?
 
-<details><summary>Answer</summary>
-
-SME 125 892 942 411 / 781 · AUTO 57 684 271 333 / 391 · CONS 23 054 933 316 / 2 418 · BNPL 1 135 251 000 / 1 569 · MICRO 956 106 370 / 2 669 (total 7 828). The diagram: five dimensions around seven facts, every line with **1** at the dimension and **\*** at the fact, a single arrow pointing to the fact; no line between two facts. "1" = each key appears once there; "*" = many rows per key.
-
-</details>
+```task
+{"id": "w07d3-p5", "kind": "number", "answer": 2669, "dp": 0, "unit": "loans", "hint": "Enter Disbursed Count for MICRO.", "model": "SME 125 892 942 411 / 781 · AUTO 57 684 271 333 / 391 · CONS 23 054 933 316 / 2 418 · BNPL 1 135 251 000 / 1 569 · MICRO 956 106 370 / 2 669 (total 7 828). The diagram: five dimensions around seven facts, every line with 1 at the dimension and * at the fact, a single arrow pointing to the fact; no line between two facts. \"1\" = each key appears once there; \"\" = many rows per key."}
+```
 
 **P6.** The missing-relationship symptom. Before relating `v_payments_clean` to `products`, put `products[code]` and `Collected Amount` in a table. What do you see, and what does it tell you?
 
-<details><summary>Answer</summary>
-
-Every product shows the same number — **255 114 772 176**, the grand total — because no filter can travel from `products` to the payments. "The same value in every row" is the signature of a missing (or inactive) relationship; "a total bigger than it should be" is the signature of a wrong grain (Company corner); "(Blank)" as a category is the signature of keys that do not match (P8).
-
-</details>
+```task
+{"id": "w07d3-p6", "kind": "choice", "options": ["A missing (or inactive) relationship: no filter can travel from products to the payments", "A wrong grain: a merge duplicated the payments", "Keys that do not match", "The measure lacks DIVIDE"], "answer": 0, "explain": "Every product shows the same number — 255 114 772 176, the grand total — because no filter can travel from products to the payments. \"The same value in every row\" is the signature of a missing (or inactive) relationship; \"a total bigger than it should be\" is the signature of a wrong grain (Company corner); \"(Blank)\" as a category is the signature of keys that do not match (P8)."}
+```
 
 **P7.** Mark `dim_date` as the date table and set the sort orders. Then `Disbursed Amount = SUM(v_loan_status[principal])` by `dim_date[year_month]` for 2026. Report January, August and September.
 
-<details><summary>Answer</summary>
-
-January **17 452 370 000** (287 loans) · August **22 290 210 000** (358) · September **17 015 490 000** (361); October shows 852 760 000 (21 loans, one day). If you see the months in the order 2026-01, 2026-02… you sorted right; if a visual by `month_name` starts with April, the sort-by column is missing.
-
-</details>
+```task
+{"id": "w07d3-p7", "kind": "number", "answer": 22290210000, "dp": 0, "unit": "soum", "hint": "Enter Disbursed Amount for August 2026.", "model": "January 17 452 370 000 (287 loans) · August 22 290 210 000 (358) · September 17 015 490 000 (361); October shows 852 760 000 (21 loans, one day). If you see the months in the order 2026-01, 2026-02… you sorted right; if a visual by month_name starts with April, the sort-by column is missing."}
+```
 
 **P8.** Relate `customers_clean` to `v_loan_status` and show `Outstanding` by `customers_clean[segment]`. Explain the extra row, then fix it with `customer_id_map.csv` in Power Query.
 
-<details><summary>Answer</summary>
-
-A **(Blank)** row with **1 563 976 162** — 48 loans (week 4's 40 removed duplicates) whose `customer_id` is no longer in the dimension. Fix: merge `v_loan_status` with `customer_id_map` on `customer_id` (Left Outer), add a column `customer_id_master ?? customer_id` (M's "if null, use"), relate that column instead. After: affluent **44 253 773 349** · mass **118 769 279 493** · sme **45 700 451 588**, no blank, total still 208 723 504 430. The blank row is a data-quality finding — report it, do not hide it with a visual-level filter.
-
-</details>
+```task
+{"id": "w07d3-p8", "kind": "number", "answer": 1563976162, "dp": 0, "unit": "soum", "hint": "Enter the outstanding of the (Blank) row, before the fix.", "model": "A (Blank) row with 1 563 976 162 — 48 loans (week 4's 40 removed duplicates) whose customer_id is no longer in the dimension. Fix: merge v_loan_status with customer_id_map on customer_id (Left Outer), add a column customer_id_master ?? customer_id (M's \"if null, use\"), relate that column instead. After: affluent 44 253 773 349 · mass 118 769 279 493 · sme 45 700 451 588, no blank, total still 208 723 504 430. The blank row is a data-quality finding — report it, do not hide it with a visual-level filter."}
+```
 
 **P9.** Calculated column vs measure. Create the column `par30_outstanding = IF(v_loan_status[dpd] > 30, v_loan_status[outstanding], 0)` and the measure `PAR30 % = DIVIDE(SUM(v_loan_status[par30_outstanding]), SUM(v_loan_status[outstanding]))`. Then try two wrong versions: the **average** of a column `is_par30 = IF(v_loan_status[dpd] > 30, 1, 0)` on all loans, and on loans with outstanding > 0. Which number is PAR30?
 
-<details><summary>Answer</summary>
-
-Measure: **3.12 %** (6 507 526 953 / 208 723 504 430). Average of the flag on all loans: **3.51 %** (275 / 7 828 — a *count* share, and it includes closed loans); on loans with outstanding: **2.85 %** (97 / 3 409). PAR30 is a share of **money**, so only the ratio of sums is right; the averages answer other questions ("what share of loans is 30+ late?"). Ratios are measures.
-
-</details>
+```task
+{"id": "w07d3-p9", "kind": "choice", "options": ["3.12 % — the measure: a ratio of sums of money", "3.51 % — the average of is_par30 on all loans", "2.85 % — the average of is_par30 on loans with outstanding", "All three: they are the same idea"], "answer": 0, "explain": "Measure: 3.12 % (6 507 526 953 / 208 723 504 430). Average of the flag on all loans: 3.51 % (275 / 7 828 — a count share, and it includes closed loans); on loans with outstanding: 2.85 % (97 / 3 409). PAR30 is a share of money, so only the ratio of sums is right; the averages answer other questions (\"what share of loans is 30+ late?\"). Ratios are measures."}
+```
 
 **P10.** Grain detective. In Power Query, merge `fct_installments` with `v_loan_status` and expand `outstanding` onto the instalments. Load it as a test table and sum `outstanding`. What happened?
 
-<details><summary>Answer</summary>
+```task
+{"id": "w07d3-p10", "kind": "number", "answer": 6186108589284, "dp": 0, "unit": "soum", "hint": "Enter Σ outstanding of the test table.", "model": "6 186 108 589 284 — 29.6 times the book. Each loan's outstanding was copied onto each of its instalments (11.8 per loan on average) and then summed. The model's answer is never to bring a loan-level number down to a finer grain; both facts relate to the same dimensions instead (Company corner). Delete the test table."}
+```
 
-**6 186 108 589 284** — 29.6 times the book. Each loan's outstanding was copied onto each of its instalments (11.8 per loan on average) and then summed. The model's answer is never to bring a loan-level number down to a finer grain; both facts relate to the same dimensions instead (Company corner). Delete the test table.
+> 🚀 **Stretch (optional, +5 XP).** **P11.** The Folder connector. With pandas, split `v_portfolio_monthly.csv` into three files by year in a new folder (`pm_2024.csv`, `pm_2025.csv`, `pm_2026.csv`). In Power BI: Get data → Folder → *Combine & Transform*. Check rows and the disbursed total, then add a fourth file and refresh. (Or, instead: connect to your SQL Server `nur` database and load the three views by SQL statement.)
 
-</details>
-
-<span class="badge stretch">Stretch</span> **P11.** The Folder connector. With pandas, split `v_portfolio_monthly.csv` into three files by year in a new folder (`pm_2024.csv`, `pm_2025.csv`, `pm_2026.csv`). In Power BI: Get data → Folder → *Combine & Transform*. Check rows and the disbursed total, then add a fourth file and refresh. (Or, instead: connect to your SQL Server `nur` database and load the three views by SQL statement.)
-
-<details><summary>Answer</summary>
-
-Rows **600 + 600 + 500 = 1 700**, Σ `disbursed_amount` **404 783 280 000** — the same as the single file; Power BI adds a `Source.Name` column with the file name. A fourth file dropped into the folder appears after Refresh with no change to the report — that is exactly what Bekzod's monthly paste should have been. (SQL Server: the same totals; `SELECT … FROM v_loan_status` in *Advanced options* puts the query text in the M step `Sql.Database(…, [Query = "…"])`.)
-
-</details>
+```task
+{"id": "w07d3-p11", "kind": "number", "answer": 1700, "dp": 0, "unit": "rows", "hint": "Enter the rows after Combine & Transform (three files).", "xp": 2, "model": "Rows 600 + 600 + 500 = 1 700, Σ disbursed_amount 404 783 280 000 — the same as the single file; Power BI adds a Source.Name column with the file name. A fourth file dropped into the folder appears after Refresh with no change to the report — that is exactly what Bekzod's monthly paste should have been. (SQL Server: the same totals; SELECT … FROM v_loan_status in Advanced options puts the query text in the M step Sql.Database(…, [Query = \"…\"]).)"}
+```
 
 ### Mistakes people make
 
@@ -275,7 +299,7 @@ Rows **600 + 600 + 500 = 1 700**, Σ `disbursed_amount` **404 783 280 000** — 
 
 ---
 
-## 4. Homework <span class="badge hw">HW 7.2 — due Day 5</span>
+## 4. Homework <span class="badge hw">HW 7.2 — Due Day 5</span>
 
 **HW 7.1** is due today in Day 1's hand-in box. **HW 7.2 — the model and six base measures.** Hand in with the 📎 box below:
 
@@ -292,21 +316,45 @@ Rows **600 + 600 + 500 = 1 700**, Σ `disbursed_amount` **404 783 280 000** — 
 | PAR30 % | **3.12 %** | 2.55 % | 0.72 % |
 | NPL90 % | **2.55 %** | 2.47 % | 0.00 % |
 
-The formulas are in `data/powerbi/measures.dax` (section 1). Graded on: (a) the six totals and the two product columns match; (b) the model is a clean star — no fact-to-fact relationship, no Both, no many-to-many, date table marked; (c) the 48-loan blank is fixed in Power Query (not hidden), and a short note in `notes.md` says how.
+The formulas are in `data/powerbi/measures.dax` (⬇ Download it; Day 4 explains every one). The table above gives the totals; the boxes below check four cells it does not show — read them off your `measures.png` table.
+
+**H1.** Disbursed Amount for AUTO.
+
+```task
+{"id": "w07d3-h1", "kind": "number", "answer": 84791530000, "dp": 0, "unit": "soum", "model": "AUTO 84 791 530 000 (391 loans). If yours is larger, look for a Both relationship or a merge that copied rows; if it is blank, the products relationship is missing."}
+```
+
+**H2.** PAR30 % for CONS (two decimals).
+
+```task
+{"id": "w07d3-h2", "kind": "number", "answer": 3.09, "dp": 2, "unit": "%", "model": "CONS 3.09 % — DIVIDE(SUM(par30_outstanding), SUM(outstanding)) in the CONS row. An average of a row-level flag would give a share of loans, not of money."}
+```
+
+**H3.** NPL90 % for BNPL (two decimals).
+
+```task
+{"id": "w07d3-h3", "kind": "number", "answer": 0.48, "dp": 2, "unit": "%", "model": "BNPL 0.48 % (PAR30 1.28 %)."}
+```
+
+**H4.** Avg Ticket for AUTO (whole soum).
+
+```task
+{"id": "w07d3-h4", "kind": "number", "answer": 216858133, "dp": 0, "unit": "soum", "model": "AUTO 216 858 133 = 84 791 530 000 / 391 — DIVIDE([Disbursed Amount], [Disbursed Count])."}
+```
 
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W7D3", "lesson": "W7D3", "title": "HW 7.2", "tasks": [{"id": "nur_week7.pbix", "file": "nur_week7.pbix", "names": ["nur_week7.pbix"], "upload": true, "accept": ".pbix", "q": "Attach `nur_week7.pbix` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W7D3", "lesson": "W7D3", "title": "HW 7.2", "tasks": [{"id": "nur_week7.pbix", "file": "nur_week7.pbix", "names": ["nur_week7.pbix"], "upload": true, "accept": ".pbix", "q": "Attach `nur_week7.pbix` — what the page above asks for."}, {"id": "model.png", "file": "model.png", "names": ["model.png"], "upload": true, "accept": ".png", "q": "Attach `model.png` — the Model view with every relationship line visible."}, {"id": "measures.png", "file": "measures.png", "names": ["measures.png"], "upload": true, "accept": ".png", "q": "Attach `measures.png` — the table by products[code] with the six measures and the total row."}, {"id": "notes.md", "file": "notes.md", "text": true, "minLines": 2, "q": "Write `notes.md` here — how you fixed the 48 loans whose customer is missing (which merge, which column, which relationship)."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}], "why": "A model that reproduces the SQL is the foundation of every page tomorrow: if the star is wrong, no measure on it can be right.", "graded": ["The six totals and the SME / MICRO columns match the table (and the checks above)", "A clean star: no fact-to-fact relationship, no Both, no many-to-many, dim_date marked, sort orders set", "The 48-loan (Blank) fixed in Power Query, not hidden, with a short note on how", "model.png shows every relationship line"]}
 ```
 
 ---
 
 ## 5. Self-check
 
-1. A table by product shows the same number in every row. What is wrong, and where do you look? *(→ P6, "The model")*
-2. Why is `bucket` a Text column, and what goes wrong if Power BI types it as a number? *(→ "Power Query in Power BI", P2)*
-3. Calculated column or measure: (a) an age band per customer, (b) the collection rate, (c) "is this loan 90+". *(→ "Calculated columns vs measures", P9)*
+```check
+{"id": "w07d3-sc", "questions": [{"type": "single", "q": "A table by product shows the same number in every row. Where do you look first?", "options": ["The measure's format string", "The Model view: is there an active relationship from products to that fact?", "The number of rows in the visual", "The colour theme"], "answer": 1, "explain": "Same value everywhere = no filter reaches the fact (→ P6, 'The model')."}, {"type": "single", "q": "Why must bucket be a Text column?", "options": ["Text sorts faster", "'1-30' is a label that only looks like a range; typed as a number it errors or turns into a date, and slicing breaks", "Numbers cannot be sliced", "Power BI requires text keys"], "answer": 1, "explain": "Wrong types are the most common reason a total is wrong or a relationship fails (→ 'Power Query in Power BI', P2)."}, {"type": "multi", "q": "Which of these should be calculated columns (not measures)?", "options": ["An age band per customer", "The collection rate", "\"Is this loan 90+\"", "PAR30 %"], "answer": [0, 2], "explain": "Values you slice by are columns; ratios are measures (→ 'Calculated columns vs measures', P9)."}]}
+```
 
 ---
 
@@ -335,7 +383,17 @@ The wrong totals are not even "wrong by a constant": loans with many payments (l
 
 Both columns are right, because each measure aggregates its own table and the slicer reaches both through `products`. The same holds for the **date**: `v_loan_status` is dated by disbursement, payments by payment day, instalments by due day — a September filter means three different things in three facts, and each is correct for its question (tomorrow's measures say which). The one thing the star cannot answer by itself is a question that truly needs both grains at once ("collected per loan of each DPD bucket"): then the answer is an aggregate at the coarser grain (payments summed **per loan** in SQL or Power Query, then related as a loan-level column), never the raw merge.
 
-> Interview version: *"Why not just join all tables into one big flat table for Power BI?"* — Because facts with different grains multiply each other's numbers when joined: a loan's balance repeated on every payment summed to 1.5 trillion instead of 209 billion. A star schema keeps each fact at its grain, relates every fact to shared dimensions (one-to-many, single direction), and lets measures aggregate each fact separately; a filter on a dimension reaches all facts consistently.
+```game
+{"type": "sort", "id": "w07d3-g4", "title": "Keeps the grain, or breaks it?", "q": "Loans (one row per loan) and payments (one row per payment). Sort each way of bringing them together.", "groups": {"Keeps each fact at its grain": ["Relate loans and payments to the same products table", "Sum payments per loan first, then relate the result as a loan-level column", "Merge payments with loans, expanding only product and branch_name"], "Breaks the grain": ["Merge payments with loans and expand outstanding", "Relate v_loan_status directly to v_payments_clean", "One flat table of every instalment with its loan's outstanding"]}, "why": "A loan-level number copied onto finer rows is summed once per row: 1.5 trillion instead of 209 billion."}
+```
+
+> 🎯 **Interview version.** *"Why not just join all tables into one big flat table for Power BI?"* — Because facts with different grains multiply each other's numbers when joined: a loan's balance repeated on every payment summed to 1.5 trillion instead of 209 billion. A star schema keeps each fact at its grain, relates every fact to shared dimensions (one-to-many, single direction), and lets measures aggregate each fact separately; a filter on a dimension reaches all facts consistently.
+
+**Say it like in an interview.** *"Why not just join all the tables into one big flat table for Power BI?"* Answer in three to five sentences, with one number from today.
+
+```task
+{"id": "w07d3-ci", "kind": "free", "min": 30, "model": "Because facts with different grains multiply each other's numbers when they are joined: a loan's outstanding repeated on each of its payments summed to 1.5 trillion instead of 209 billion, and loans with no payment yet disappear from an inner join. A star schema keeps each fact at its own grain — one row per loan, one per payment — and relates every fact to shared dimensions such as products, branches and dates, one-to-many and single direction. Each measure aggregates its own table, and a slicer on a dimension reaches all facts consistently. When a question really needs both grains, I aggregate to the coarser grain first, never merge raw rows.", "rubric": ["says that different grains multiply numbers when joined", "gives a number (1.5 trillion vs 209 billion, ×7.3)", "describes the star: facts at their grain, shared dimensions, one-to-many, single direction", "explains how a slicer reaches every fact through the dimensions"]}
+```
 
 Tomorrow: DAX — `CALCULATE`, filter context, time intelligence — and the three pages Bekzod will show the board.
 

@@ -25,14 +25,19 @@ The t-test compares **means** and leans on the CLT. It is fragile when (1) the d
 
 **Welch: t = −2.34, p = 0.0195. Mann–Whitney: p = 0.32.** Both are right — they answer different questions. Welch: "are the **average** days late different?" — yes, because SME has a slightly heavier late tail. Mann–Whitney: "does a randomly chosen SME payment tend to be later than a randomly chosen Auto payment?" — no, the probability is 0.505 (U / n₁n₂ = 0.495 for Auto over SME), a coin toss. Decide which question the business is asking **before** choosing the test; never run both and report the one you like.
 
+> 💡 **Key idea.** A t-test asks about the **average**; a rank test asks about the **typical** value ("is a random SME payment later than a random Auto one?"). Both can be right on the same data — pick the question first, then the test.
+
 ### Mann–Whitney U — comparing two groups by ranks
 
 The **Mann–Whitney U test** (*U-критерий Манна–Уитни*, also Wilcoxon rank-sum) pools both groups, ranks every value (ties get the average rank), and asks whether one group's ranks are systematically higher. H₀: the two distributions are the same — formally, P(X > Y) = P(Y > X). It is **not** a test of medians unless the two shapes are identical (Auto and SME have the same median and still differ in the tail). It is robust to outliers (a 60-day payment is just "the highest rank"), needs no normality, and loses little power when the data *are* normal.
 
 ```python
-stats.mannwhitneyu(a, b, alternative="two-sided")       # statistic U, p-value
+# (shape only — not meant to run)
+u = stats.mannwhitneyu(a, b, alternative="two-sided")   # statistic U, p-value
 u.statistic / (len(a) * len(b))                          # effect size: P(a random A > a random B) + ½ P(tie)
 ```
+
+> ⚠️ **Watch out.** Mann–Whitney is not "a test of medians". Auto and SME have the same median (−1 day) and could still differ in the tail. Report it as "a random X tends to be larger / not larger than a random Y", with U / (n₁n₂).
 
 ### Wilcoxon signed-rank — the paired version
 
@@ -46,15 +51,30 @@ The **Kruskal–Wallis test** (*критерий Краскела–Уоллис
 
 If H₀ is true, the channel label is irrelevant: shuffling it should produce gaps as large as the real one often. A **permutation test** (*перестановочный тест*) does exactly that: shuffle the labels 10 000 times, recompute the statistic each time, p = share of shuffles at least as extreme as the observed value.
 
+Press ▶ Run: this first runnable block of the page loads the tools and the FPD frame, then shuffles the channel label 10 000 times.
+
 ```python
+import math
+import numpy as np
+import pandas as pd
+from statistics import NormalDist
+Phi, zq = NormalDist().cdf, NormalDist().inv_cdf          # the normal CDF and its inverse (z for a probability)
+def pmf(k, n, p):                                          # binomial P(X = k), from Day 1
+    return math.comb(n, k) * p**k * (1 - p)**(n - k)
+def cdf(k, n, p):                                          # binomial P(X <= k)
+    return sum(pmf(i, n, p) for i in range(k + 1))
+
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
+ab = f[f["channel"].isin(["app", "branch"])]
 y, is_app = ab["fpd30"].to_numpy(), (ab["channel"] == "app").to_numpy()
 obs = y[is_app].mean() - y[~is_app].mean()                       # +0.6586 points
 g = np.random.default_rng(2026)
-diffs = [ (lambda s: y[s].mean() - y[~s].mean())(g.permutation(is_app)) for _ in range(10_000) ]
-np.mean(np.abs(diffs) >= abs(obs))                                # p = 0.0326 (z-test 0.0318, Fisher 0.0344)
+diffs = np.array([(lambda s: y[s].mean() - y[~s].mean())(g.permutation(is_app)) for _ in range(10_000)])
+print(round(100 * obs, 4), np.mean(np.abs(diffs) >= abs(obs)))   # 0.6586 and p ≈ 0.033 (notebook 0.0326; z-test 0.0318, Fisher 0.0344)
 ```
 
-Three methods, one answer for app vs branch. The permutation test's strength is that **any statistic** works — a difference in medians, in collection rates (Σ paid / Σ due), in the 90th percentile — with no formula and no normality, only the assumption that the units are exchangeable under H₀. It is the honest default for small, odd-shaped samples, and it is what tomorrow's A/B-test week builds on.
+Three methods, one answer for app vs branch. The permutation test's strength is that **any statistic** works — a difference in medians, in collection rates (Σ paid / Σ due), in the 90th percentile — with no formula and no normality, only the assumption that the units are exchangeable under H₀. It is the honest default for small, odd-shaped samples, and it is what next week's A/B tests build on.
 
 ### The bootstrap as a test — "is zero in the interval?"
 
@@ -64,7 +84,7 @@ The RU deck's recipe (pp. 20–21): resample each group with replacement, comput
 g = np.random.default_rng(2026)
 a, b = f.loc[f.channel == "app", "fpd30"].to_numpy(), f.loc[f.channel == "branch", "fpd30"].to_numpy()
 d = [g.choice(a, len(a)).mean() - g.choice(b, len(b)).mean() for _ in range(10_000)]
-np.quantile(d, [0.025, 0.975])          # +0.05 to +1.30 points — zero is outside; Newcombe gave +0.05 to +1.33
+print(np.quantile(d, [0.025, 0.975]))   # ≈ +0.05 to +1.30 points — zero is outside; Newcombe gave +0.05 to +1.33
 ```
 
 Use it for differences that have no formula — medians, percentiles, ratios of sums. The permutation test answers "could the labels be irrelevant?"; the bootstrap interval answers "how big is the difference, give or take?". Report both when the stakes justify it.
@@ -74,13 +94,25 @@ Use it for differences that have no formula — medians, percentiles, ratios of 
 The χ² test is an approximation that needs **expected counts ≥ 5**. Thin cells are everywhere in lending — a vintage × channel, a branch-month. The 2026-05 vintage, partner vs branch: 4 FPDs in 67 vs 2 in 179.
 
 ```python
-t = [[4, 63], [2, 177]]
-stats.chi2_contingency(t)[3]                 # expected [[1.63, 65.37], [4.37, 174.63]] — two cells below 5
-stats.chi2_contingency(t)[1]                 # 0.083  (Yates);   correction=False → 0.028
-stats.fisher_exact(t)                        # odds ratio 5.62, p = 0.0485
+t = np.array([[4, 63], [2, 177]])                                 # partner vs branch: FPD / no FPD
+expected = np.outer(t.sum(axis=1), t.sum(axis=0)) / t.sum()
+print(expected.round(2))                     # [[1.63, 65.37], [4.37, 174.63]] — two cells below 5
+# Fisher by hand: every table with the same margins, each with its hypergeometric probability
+r1, c1, n = t[0].sum(), t[:, 0].sum(), t.sum()                    # 67 partner loans, 6 FPDs, 246 loans
+def table_p(a):                                                   # P(a FPDs among the 67 partner loans)
+    return math.comb(c1, a) * math.comb(n - c1, r1 - a) / math.comb(n, r1)
+p_obs = table_p(t[0, 0])
+print(round(sum(table_p(a) for a in range(min(r1, c1) + 1) if table_p(a) <= p_obs * (1 + 1e-7)), 4))   # 0.0485
+# scipy (the notebook): scipy.stats.chi2_contingency(t)[1] → 0.083 (Yates), correction=False → 0.028; scipy.stats.fisher_exact(t) → OR 5.62, p 0.0485
 ```
 
 **Fisher's exact test** (*точный критерий Фишера*) computes the probability of every table with the same margins — exact at any n. Here the two χ² versions disagree with each other (0.028 vs 0.083) and Fisher sits between them. Use Fisher whenever an expected count is below 5; with modern computers you can simply use it for every 2 × 2.
+
+Four new tests in one section — sort the situations before you meet a fifth:
+
+```game
+{"type": "sort", "id": "w06d4-g1", "title": "Which test?", "q": "Put each Nur question under the test that answers it.", "groups": {"Mann–Whitney": ["Does a typical Micro payment arrive later than a typical BNPL payment?", "Are days late different for two small, skewed groups?"], "Wilcoxon signed-rank": ["The same ten branches, FPD in 2025 vs 2026, skewed differences"], "Kruskal–Wallis": ["Days late across the five products"], "Fisher's exact": ["4 FPDs in 67 vs 2 in 179 — expected counts below 5"], "Permutation test": ["Collection rate Σ paid / Σ due, two strategies", "Difference in 90th percentiles of days late"]}}
+```
 
 ### Multiple comparisons — ten tests, one false alarm
 
@@ -95,9 +127,20 @@ Corrections (*поправки на множественные сравнени�
 Bukhara vs the other branches (Fisher): **p = 0.020** — "significant". Holm across the ten branches: **0.199**. The omnibus χ² of FPD × branch: χ² = 9.97, df 9, **p = 0.35**. Bukhara is the branch to watch, not the branch to punish.
 
 ```python
-from statsmodels.stats.multitest import multipletests
-multipletests(pvals, alpha=0.05, method="holm")      # [reject flags, adjusted p-values, ...]; "bonferroni", "fdr_bh"
+print(round(1 - 0.95 ** 10, 3))                      # 0.401 — the chance of at least one false alarm in 10 tests
+
+def holm(pvals):
+    pvals = np.asarray(pvals, dtype=float)
+    m, adj, run = len(pvals), np.empty(len(pvals)), 0.0
+    for rank, i in enumerate(np.argsort(pvals)):     # smallest p first
+        run = max(run, min(1.0, (m - rank) * pvals[i]))   # × m, × (m − 1), … keeping the running maximum
+        adj[i] = run
+    return adj
+print(holm([0.0318, 0.153, 0.804]))                  # [0.0954 0.306 0.804]
+# statsmodels (the notebook): statsmodels.stats.multitest.multipletests(pvals, alpha=0.05, method="holm") → [reject flags, adjusted p-values, ...]; "bonferroni", "fdr_bh"
 ```
+
+> ⚠️ **Watch out.** Ten branches, twenty segments, twenty-five KPIs: the more you test, the surer you are to find a "significant" one. Count the tests you ran (including the ones you looked at and dropped) and correct with Holm before anyone acts on a single hit.
 
 ### Power and sample size
 
@@ -107,12 +150,26 @@ multipletests(pvals, alpha=0.05, method="holm")      # [reject flags, adjusted p
 n = 2 · ( (z₁₋α/₂ + z₁₋β) / h )²       FPD 1.28 % → 1.00 %:  h = 0.02642;   n = 2 · ((1.960 + 0.842) / 0.02642)² = 22 481
 ```
 
+Fill in the formula before you run it:
+
+```game
+{"type": "cloze", "id": "w06d4-g2", "title": "Loans per arm", "text": "n per arm = 2 · ( ( {{0}} + {{1}} ) / {{2}} )²", "blanks": [["z₁₋α/₂ (1.960)"], ["z₁₋β (0.842)"], ["Cohen's h"]], "distractors": ["the p-value", "σ / √n"], "why": "α and power set the two z values; the effect size h sits in the denominator, so halving the effect quadruples n."}
+```
+
 ```python
-from statsmodels.stats.proportion import proportion_effectsize
-from statsmodels.stats.power import NormalIndPower, zt_ind_solve_power
-h = proportion_effectsize(0.0128, 0.010)                                   # 0.02642
-zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80)                  # 22 480.8 → 22 481 per arm
-NormalIndPower().power(h, nobs1=1000, alpha=0.05)                          # 0.091 — power with 1 000 per arm
+def cohens_h(p1, p2):
+    return 2 * math.asin(math.sqrt(p1)) - 2 * math.asin(math.sqrt(p2))
+def n_per_arm(p1, p2, alpha=0.05, power=0.80):
+    return 2 * ((zq(1 - alpha / 2) + zq(power)) / cohens_h(p1, p2)) ** 2
+def power_at(p1, p2, n, alpha=0.05):                 # two-sided, n loans per arm
+    h, za = abs(cohens_h(p1, p2)), zq(1 - alpha / 2)
+    return Phi(h * math.sqrt(n / 2) - za) + Phi(-h * math.sqrt(n / 2) - za)
+
+print(round(cohens_h(0.0128, 0.010), 5))             # 0.02642
+print(math.ceil(n_per_arm(0.0128, 0.010)))           # 22481 per arm
+print(round(power_at(0.0128, 0.010, 1000), 3))       # 0.091 — power with 1 000 per arm
+# statsmodels (the notebook, sm = statsmodels.stats): sm.proportion.proportion_effectsize(0.0128, 0.010);
+#   sm.power.zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80); sm.power.NormalIndPower().power(h, nobs1=1000, alpha=0.05)
 ```
 
 Excel: `=2*((NORM.S.INV(0.975)+NORM.S.INV(0.8))/(2*ASIN(SQRT(0.0128))-2*ASIN(SQRT(0.01))))^2` → 22 481. Rare outcomes are expensive to test: a 20 % relative cut on a 13 % metric needs about ten times fewer loans (P10).
@@ -120,6 +177,15 @@ Excel: `=2*((NORM.S.INV(0.975)+NORM.S.INV(0.8))/(2*ASIN(SQRT(0.0128))-2*ASIN(SQR
 ### MDE — what can this test see?
 
 Turn it round: with n fixed, the **minimum detectable effect** (*минимальный детектируемый эффект*, MDE) is the smallest true change that the test detects with 80 % power. From 1.28 % FPD: 1 000 per arm → **0.26 %** (an 80 % cut); 2 000 per arm → **0.48 %** (a 63 % cut); 10 000 per arm → 0.87 % (a 32 % cut); 22 481 per arm → exactly 1.00 %. If the MDE is larger than any effect the intervention could plausibly have, the test cannot succeed — and a "no significant difference" from it means nothing.
+
+```python
+def mde_rate(p1, n, alpha=0.05, power=0.80):         # the lowest rate the treated arm must reach to be seen
+    h = (zq(1 - alpha / 2) + zq(power)) * math.sqrt(2 / n)
+    return math.sin(math.asin(math.sqrt(p1)) - h / 2) ** 2
+print([round(100 * mde_rate(0.0128, n), 2) for n in (1000, 2000, 10000, 22481)])   # [0.26, 0.48, 0.87, 1.0]
+```
+
+> 💡 **Key idea.** Power is decided before the data exist — by α, the effect you care about, n and how rare the outcome is. Compute it first: a test with 9 % power is not a cheap test, it is a test whose "no effect" answer is already written.
 
 ### The power curve — read it before you promise anything
 
@@ -136,9 +202,15 @@ Power by loans per arm (α 5 %, two-sided), for the FPD effect and for a 20 % cu
 
 An experiment that runs for months invites a look every month, stopping "when it is significant". Each look is another test. Simulate an SMS that does **nothing** (both arms 13.34 % late, 150 loans per arm per month, 12 months, 20 000 runs, `default_rng(2026)`): testing once at the end gives a **5.05 %** false-positive rate; looking every month and stopping at the first p < 0.05 gives **20.9 %** — a "winning" SMS one time in five, typically declared in month 3. Fix the sample size and the end date in advance (or use a sequential design built for peeking — week 7).
 
+> ⚠️ **Watch out.** "Let's check the dashboard every Monday and stop when it turns green" is peeking. Write the end date and the sample size into the plan before the first loan is sent, and read the result once.
+
 ### The A/A test
 
 An **A/A test** (*A/A-тест*) splits units into two groups that receive the **same** treatment and runs the planned analysis. It should be "significant" about α of the time. Split Nur's real FPD loans into random halves of 2 000 two thousand times: **4.9 %** false positives — the splitting and the test behave. In practice an A/A run checks the **experiment system** (randomisation, logging, the metric pipeline) before a real A/B test trusts it; a 15 % A/A false-positive rate means a broken split, not a lucky one. That is week 7's starting point.
+
+```game
+{"type": "flash", "id": "w06d4-g3", "title": "Words of the day", "cards": [["Rank", "a value's position after sorting both groups together; ties share the average rank"], ["Family-wise error rate", "the chance of at least one false alarm among many tests: 1 − 0.95^m"], ["Bonferroni", "test each at α / m (or multiply each p by m)"], ["Holm", "sort the p-values, multiply by m, m − 1, …, keep the running maximum — same guarantee, more power"], ["Benjamini–Hochberg", "controls the share of false discoveries, for screening hundreds of segments"], ["Power", "P(reject H₀ | the effect is real) = 1 − β; plan for 80 %"], ["MDE", "the smallest true effect the test detects with 80 % power"], ["Peeking", "testing again and again as data arrive and stopping at the first p < 0.05"], ["A/A test", "two groups with the same treatment: checks the split, the logging and the test"]]}
+```
 
 ### Depth (optional)
 
@@ -157,6 +229,62 @@ An **A/A test** (*A/A-тест*) splits units into two groups that receive the *
 - RU deck (TBC Data Analytics 2.0, if you have it) `Непараметрические тесты_latest.pdf` (lesson 5.5): normality checks and log-transform pp. 9–12, which test to choose pp. 13–14, ranks and Mann–Whitney pp. 15–16, Wilcoxon for paired samples pp. 17–18, Kruskal–Wallis p. 19, bootstrap pp. 20–21, power p. 22, MDE p. 23, A/A tests p. 24. Multiple comparisons: `Параметрические тесты (2).pdf` pp. 47–49 (Bonferroni, Tukey HSD).
 - Notebooks: `non-parametric.ipynb` (sample-mean normality, Mann–Whitney on exponential data, Wilcoxon, Kruskal–Wallis, bootstrap), `power.ipynb` (power by simulation: 1 000 t-tests on a 1 % shift — the same idea as our simulation cell). `стат_критерии.docx` is a reading list (Habr / YouTube articles on test choice, Mann–Whitney pitfalls, sample size); the card in section 2 is our own.
 - *Russian terms:* непараметрический критерий = non-parametric test, ранг = rank, U-критерий Манна–Уитни = Mann–Whitney U, критерий Вилкоксона = Wilcoxon signed-rank, критерий Краскела–Уоллиса = Kruskal–Wallis, перестановочный тест = permutation test, точный критерий Фишера = Fisher's exact test, множественные сравнения = multiple comparisons, поправка Бонферрони / Холма = Bonferroni / Holm correction, мощность = power, объём выборки = sample size, MDE (минимальный детектируемый эффект) = minimum detectable effect, A/A-тест = A/A test.
+
+**Questions inside the videos.** Open a video from the panel: it stops at these points and asks one question about the bit you just watched.
+
+```videoquiz
+{"video": "LcxB56PzylA", "stops": [
+  {"at": 150, "q": "What does the Mann–Whitney U test work with?", "options": ["The raw values", "The ranks of the values, both groups pooled", "The means and the variances", "Only the medians"], "answer": 1, "explain": "A 60-day payment is simply 'the highest rank' — that is why outliers do not dominate."},
+  {"at": 400, "q": "When is Mann–Whitney the natural choice over a t-test?", "options": ["Large, normal samples", "Paired data", "Three or more groups", "Small or skewed samples, or a question about the typical value"], "answer": 3, "explain": "Days late: skew ≈ 5, the same median — and the question 'is a typical payment later?'."}]}
+```
+
+```videoquiz
+{"video": "IcLSKko2tsg", "stops": [
+  {"at": 850, "q": "The Wilcoxon signed-rank test is for…", "options": ["paired data — it ranks the absolute differences and compares positive with negative ranks", "two independent groups", "three or more groups", "counts in a table"], "answer": 0, "explain": "The ten branches, 2025 vs 2026: W = 7, p = 0.037."},
+  {"at": 1100, "q": "Compared with the sign test, Wilcoxon uses…", "options": ["only the signs of the differences", "the signs and the sizes (ranks) of the differences", "the means", "nothing extra"], "answer": 1, "explain": "More information from the same differences — so more power."}]}
+```
+
+```videoquiz
+{"video": "HLzS5wPqWR0", "stops": [
+  {"at": 200, "q": "Why is a correction needed when you run many tests?", "options": ["Each test becomes less accurate", "The chance of at least one false positive grows with the number of tests", "p-values get larger", "The data run out"], "answer": 1, "explain": "10 tests at 5 %: 40 % chance of at least one false alarm."},
+  {"at": 400, "q": "Bonferroni for m tests:", "options": ["divide each p by m", "add m to each p", "compare each p with α / m (or multiply p by m)", "use α × m"], "answer": 2, "explain": "Bukhara among ten: 0.020 × 10 = 0.20 (Holm gives 0.199)."}]}
+```
+
+```videoquiz
+{"video": "K8LQSvtjcEo", "stops": [
+  {"at": 900, "q": "The false discovery rate controls…", "options": ["the chance of any false positive", "the type II error", "the power", "the expected share of false positives among the results you call significant"], "answer": 3, "explain": "BH: for screening hundreds of segments, where a few false leads are acceptable."},
+  {"at": 1200, "q": "Compared with Bonferroni, Benjamini–Hochberg is…", "options": ["stricter", "less strict — it flags more results", "the same", "only for paired data"], "answer": 1, "explain": "It accepts some false discoveries in exchange for power."}]}
+```
+
+```videoquiz
+{"video": "qbbY7ubzDoE", "stops": [
+  {"at": 2790, "q": "In the simulation, many tests on data with no real effect give…", "options": ["no significant results", "some 'significant' results by chance alone", "only p-values above 0.5", "exactly α significant results every time"], "answer": 1, "explain": "Nur's ten branches with equal true rates: 31 % of books flag at least one."},
+  {"at": 2880, "q": "What does a correction for multiple comparisons do?", "options": ["Keeps the overall chance of a false alarm near α", "Makes the data larger", "Removes the outliers", "Raises the power"], "answer": 0, "explain": "Holm and Bonferroni control the family-wise error rate."}]}
+```
+
+```videoquiz
+{"video": "Rsc5znwR5FA", "stops": [
+  {"at": 240, "q": "Statistical power is the probability of…", "options": ["rejecting H₀ when it is true", "getting p < 0.001", "correctly rejecting H₀ when the effect is real", "a type I error"], "answer": 2, "explain": "1 − β. Jasur's 2 000-loan SMS test: 9 %."},
+  {"at": 290, "q": "Which change raises power?", "options": ["A smaller sample", "A larger sample", "A smaller effect", "A stricter α"], "answer": 1, "explain": "More n, a bigger effect or a looser α raise power."}]}
+```
+
+```videoquiz
+{"video": "VX_M3tIyiYk", "stops": [
+  {"at": 780, "q": "A power analysis tells you…", "options": ["the p-value you will get", "how many observations you need to detect an effect of a given size", "whether H₀ is true", "the effect size"], "answer": 1, "explain": "FPD 1.28 → 1.00 %: 22 481 per arm at 80 % power."},
+  {"at": 890, "q": "When should the power analysis be done?", "options": ["Before collecting the data", "After the test, to explain a null result", "Only if p > 0.05", "Never for rates"], "answer": 0, "explain": "Before: it decides whether the test can answer at all."}]}
+```
+
+```videoquiz
+{"video": "UFhJefdVCjE", "stops": [
+  {"at": 1000, "q": "Adding observations to a test until p < 0.05 is…", "options": ["good practice", "p-hacking — it inflates the false-positive rate", "a power analysis", "a sequential design"], "answer": 1, "explain": "Peeking: monthly looks turned a 5 % test into a 21 % one."},
+  {"at": 1300, "q": "How do you avoid it?", "options": ["Look more often", "Use a one-sided test", "Lower the sample size", "Fix the sample size with a power calculation before the test"], "answer": 3, "explain": "Fix n, the metric and the end date in advance."}]}
+```
+
+```videoquiz
+{"video": "FEI1OA-zgb8", "stops": [
+  {"at": 1200, "q": "The sample size an A/B test needs grows when…", "options": ["the effect you want to detect is smaller", "the baseline rate is close to 50 %", "α is looser", "you test once"], "answer": 0, "explain": "n ∝ 1 / h²: halve the effect, quadruple n."},
+  {"at": 1450, "q": "What is the MDE of a test?", "options": ["The largest effect it can find", "The smallest true effect it detects with the planned power", "The observed difference", "The p-value threshold"], "answer": 1, "explain": "1 000 per arm can only see FPD fall from 1.28 % to 0.26 %."}]}
+```
 
 ---
 
@@ -189,7 +317,7 @@ Three questions pick the row: **what kind of outcome** (rate or number), **how m
 
 **3. But it was chosen because it was the highest of ten.** Test all ten the same way (notebook section 4) and correct: Holm-adjusted p for Bukhara **0.199**; no other branch below 0.27 before correction. The omnibus χ² across the ten branches: **p = 0.35**.
 
-**4. What chance does.** In books where all ten branches share the same true rate, 31 % have at least one branch flagged at 5 % (the notebook's simulation); yesterday's Company corner showed the top branch averaging 2.00 % by luck alone.
+**4. What chance does.** In books where all ten branches share the same true rate, 31 % have at least one branch flagged at 5 % (the notebook's simulation); Tuesday's Company corner showed the top branch averaging 2.00 % by luck alone.
 
 **5. The sentence.** *"Bukhara's 2.39 % is the highest of ten branches, but once we account for testing ten branches it is within what chance produces (Holm-adjusted p = 0.20); we will watch its Q4 vintages and its product mix rather than act now."*
 
@@ -197,9 +325,13 @@ Three questions pick the row: **what kind of outcome** (rate or number), **how m
 
 ## 4. Practice (50 min)
 
-Open `data/python/week6/day4_starter.ipynb`; the loader builds `f` (FPD loans) and `x` (payments with `days_late`). Add a cell per task.
+Every task has its own answer box. The Python boxes share the session of section 1's blocks: `f`, `pmf`, `cdf`, `holm`, `cohens_h`, `n_per_arm`, `power_at`, `mde_rate`, `Phi` and `zq` are ready once you have pressed ▶ Run on them. The days-late tasks (P1–P4) need `x`, the 52 850 payments with `days_late`: run them in `data/python/week6/day4_starter.ipynb`, whose loader builds `f` and `x`, and answer here.
 
 **P1.** Auto vs SME days late: describe both (n, mean, median, share late, 99th percentile), then Welch and Mann–Whitney. Marketing asks "do SME borrowers pay later than Auto borrowers?" — which test answers that, and what is your answer?
+
+```task
+{"id": "w06d4-p1", "kind": "choice", "options": ["Welch (p = 0.02): yes, SME borrowers pay later", "Mann–Whitney (p = 0.32): no — a random SME payment is no more likely to be later than a random Auto one (0.505); what differs is the late tail, a proportions question", "Both, and quote the smaller p", "Neither — the medians are equal, so there is nothing to test"], "answer": 1, "explain": "'Do they pay later' is about the typical payment → a rank test. The means differ (Welch) because SME has a slightly heavier late tail: 12.4 % vs 10.1 % paid late at all."}
+```
 
 <details><summary>Answer</summary>
 
@@ -209,6 +341,10 @@ Auto 4 688 payments, mean −0.21, median −1, 10.1 % late, 99th pct 28; SME 8 
 
 **P2.** Wilcoxon signed-rank on the ten branches' FPD30, 2025 vs 2026, next to the paired t-test. Why might you prefer Wilcoxon here?
 
+```task
+{"id": "w06d4-p2", "kind": "choice", "options": ["Wilcoxon always gives a smaller p", "With only ten differences (one of them +0.99) you cannot show they are near normal; Wilcoxon needs only symmetry and loses little power", "The paired t-test cannot be used on rates", "Wilcoxon uses the medians of the two years"], "answer": 1, "explain": "W = 7, p = 0.037 against the paired t-test's 0.031 — both agree that 2026 vintages are better."}
+```
+
 <details><summary>Answer</summary>
 
 `stats.wilcoxon(w[2026], w[2025])` → W = 7, **p = 0.037** (exact); paired t p = 0.031. With n = 10, the paired t leans on the differences being roughly normal, which ten branch-level differences (one of them +0.99, Tashkent North) cannot show; Wilcoxon needs only symmetry of the differences and is barely less powerful. Both agree: 2026 vintages are better.
@@ -216,6 +352,10 @@ Auto 4 688 payments, mean −0.21, median −1, 10.1 % late, 99th pct 28; SME 8 
 </details>
 
 **P3.** Kruskal–Wallis on days late across the five products, then one-way ANOVA (`stats.f_oneway`). Which product drives the result?
+
+```task
+{"id": "w06d4-p3", "kind": "choice", "options": ["SME — the biggest loans", "Micro — mean days late +0.56 and 16.3 % of payments late against 10–12 % elsewhere", "Auto — the lowest mean", "None: Kruskal–Wallis only says that at least one product differs"], "answer": 1, "explain": "H = 61.0, p = 1.8 × 10⁻¹². The omnibus test says 'some differ'; the descriptive table shows Micro; pairwise Mann–Whitney with Holm would confirm which."}
+```
 
 <details><summary>Answer</summary>
 
@@ -225,6 +365,10 @@ Kruskal–Wallis H = 61.0, **p = 1.8 × 10⁻¹²**; ANOVA F = 19.3, p = 7.5 × 
 
 **P4.** Permutation test for the difference in **mean** days late, Auto − SME (10 000 shuffles, `default_rng(2026)`). Compare with Welch.
 
+```task
+{"id": "w06d4-p4", "kind": "choice", "options": ["The permutation p (≈ 0.02) contradicts Welch", "It agrees with Welch (≈ 0.02 vs 0.0195): the MEANS differ because of the tail, while Mann–Whitney says the TYPICAL payment does not — same data, two questions", "It agrees with Mann–Whitney, so Welch was wrong", "A permutation test cannot use the mean"], "answer": 1, "explain": "Observed −0.248 days, permutation p = 0.023. Any statistic works in a permutation test — here the mean, with no normality assumption."}
+```
+
 <details><summary>Answer</summary>
 
 Observed −0.248 days; permutation **p = 0.023**; Welch 0.0195. The permutation test makes no normality assumption about the mean and agrees: the *means* differ (the tail), while Mann–Whitney (P1) says the *typical* payment does not. Same data, three tests, two questions.
@@ -232,6 +376,10 @@ Observed −0.248 days; permutation **p = 0.023**; Welch 0.0195. The permutation
 </details>
 
 **P5.** The 2026-05 vintage, partner vs branch (4 / 67 vs 2 / 179). Expected counts, χ² with and without Yates, Fisher. Which do you report, and what do you conclude?
+
+```task
+{"id": "w06d4-p5", "kind": "choice", "options": ["χ² without correction, p = 0.028 — partner's May vintage is worse", "Fisher, p = 0.0485 — borderline, and one vintage of 32 and one channel pair of three: after any correction it is noise", "χ² with Yates, p = 0.083 — no difference", "No test: six FPDs are too few for any test"], "answer": 1, "explain": "Expected FPDs 1.63 and 4.37: two cells below 5, so χ² is unreliable and its two versions disagree. Fisher is exact; six FPDs still cannot carry a decision."}
+```
 
 <details><summary>Answer</summary>
 
@@ -241,6 +389,10 @@ Expected FPDs 1.63 and 4.37 — two cells below 5, χ² unreliable. Yates **0.08
 
 **P6.** Holm by hand (your TODO) on the three channel-pair p-values from yesterday: app–branch 0.0318, app–partner 0.153, partner–branch 0.804. Then Bonferroni.
 
+```task
+{"id": "w06d4-p6", "kind": "python", "starter": "pv = np.array([0.0318, 0.153, 0.804])     # app–branch, app–partner, partner–branch\nprint(holm(pv))\n# add Bonferroni: each p × 3, capped at 1 — print the three values\n", "answer": 0.459, "dp": 3, "model": "print(np.minimum(1, pv * 3))     # [0.0954 0.459 1.   ] — Holm [0.0954 0.306 0.804]: app vs branch is no longer below 0.05"}
+```
+
 <details><summary>Answer</summary>
 
 Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → running max unchanged → Holm **0.095 / 0.306 / 0.804**; Bonferroni 0.095 / 0.459 / 1.000. Corrected for three comparisons, app vs branch is no longer significant at 5 %. That is why the committee note says "moderate": the answer depends on whether app vs branch was *the* question (it was Bekzod's, asked from the dashboard) or one of three.
@@ -248,6 +400,10 @@ Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → runn
 </details>
 
 **P7.** The vintage screen: test each of the 31 monthly vintages with ≥ 50 loans against the book rate 1.28 % (exact two-sided binomial). How many are "significant" at 5 %, how many would chance produce, and what survives Holm?
+
+```task
+{"id": "w06d4-p7", "kind": "python", "starter": "p0 = 91 / 7099\nv = f.groupby(\"vintage\")[\"fpd30\"].agg([\"sum\", \"size\"])\nv = v[v[\"size\"] >= 50]                     # 31 vintages\nv[\"p\"] = [min(1, 2 * min(cdf(k, n, p0), 1 - cdf(k - 1, n, p0) if k > 0 else 1)) for k, n in zip(v[\"sum\"], v[\"size\"])]\nprint(v.sort_values(\"p\").head(3))\n# add the Holm-adjusted p-values (holm from section 1) and print the smallest one, 2 decimals\n", "answer": 0.88, "dp": 2, "model": "v[\"holm\"] = holm(v[\"p\"])\nprint(round(v[\"holm\"].min(), 2))      # 0.88 — 2026-03 (0 FPDs in 330, raw p = 0.028) does not survive; chance alone gives ~1.6 'hits' in 31"}
+```
 
 <details><summary>Answer</summary>
 
@@ -257,6 +413,10 @@ Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → runn
 
 **P8.** Sample size for the SMS test with other settings: 90 % power; one-sided 80 %. And the achieved power of 1 000 vs 1 000.
 
+```task
+{"id": "w06d4-p8", "kind": "python", "starter": "print(math.ceil(n_per_arm(0.0128, 0.010)))              # 80 % power, two-sided: 22481\n# add: 90 % power (two-sided), loans per arm, rounded up\n", "answer": 30096, "dp": 0, "model": "print(math.ceil(n_per_arm(0.0128, 0.010, power=0.90)))       # 30096\nprint(math.ceil(n_per_arm(0.0128, 0.010, alpha=0.10)))       # 17709 — one-sided at 5 % = two-sided at 10 %\nprint(round(power_at(0.0128, 0.010, 1000), 3))               # 0.091"}
+```
+
 <details><summary>Answer</summary>
 
 90 % power: **30 096** per arm; one-sided 80 %: **17 709** per arm (one-sided is cheaper — and only legitimate if "SMS makes it worse" and "no change" lead to the same decision, which for a cheap SMS they arguably do); 1 000 per arm: **9.1 %** power. Every setting is far beyond Nur's ~337 new loans a month (January–September 2026).
@@ -265,13 +425,21 @@ Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → runn
 
 **P9.** MDE: with 1 000, 2 000 and 10 000 loans per arm (α 5 %, power 80 %), what FPD rate must the SMS reach to be detectable from 1.28 %? Use your `mde_rate`.
 
+```task
+{"id": "w06d4-p9", "kind": "python", "starter": "print(round(100 * mde_rate(0.0128, 1000), 2))     # 1 000 per arm, in %\n# add 2 000 and 10 000 per arm\n", "answer": 0.48, "dp": 2, "model": "print([round(100 * mde_rate(0.0128, n), 2) for n in (1000, 2000, 10000)])   # [0.26, 0.48, 0.87] — cuts of 80 %, 63 %, 32 %"}
+```
+
 <details><summary>Answer</summary>
 
 1 000 → **0.26 %** (an 80 % cut); 2 000 → **0.48 %** (63 %); 10 000 → **0.87 %** (32 %). No reminder SMS cuts first-payment defaults by two thirds — the people who default on the first instalment are mostly not people who forgot. So a 2 000-loan FPD test is designed to fail: its most likely outcome is "not significant", which marketing will then read as "the SMS does not work".
 
 </details>
 
-<span class="badge stretch">Stretch</span> **P10.** Change the metric. "First instalment paid late at all" (any day after the due date, or not in full) is far more common than FPD30. Compute its rate on the 7 099 loans, the n per arm to detect a 20 % relative cut, the power of 1 000 vs 1 000, and confirm that power by simulation (20 000 runs, `default_rng(2026)`).
+> 🚀 **Stretch (optional, +5 XP).** **P10.** Change the metric. "First instalment paid late at all" (any day after the due date, or not in full) is far more common than FPD30. Compute its rate on the 7 099 loans, the n per arm to detect a 20 % relative cut, the power of 1 000 vs 1 000, and confirm that power by simulation (20 000 runs, `default_rng(2026)`).
+
+```task
+{"id": "w06d4-p10", "kind": "python", "starter": "p1 = 947 / 7099                       # 13.34 % of first instalments paid late at all\np2 = p1 * 0.8                         # a 20 % relative cut\n# loans per arm (rounded up), then the power of 1 000 vs 1 000\n", "answer": 2324, "dp": 0, "model": "print(math.ceil(n_per_arm(p1, p2)), round(power_at(p1, p2, 1000), 3))   # 2324 0.452\ng = np.random.default_rng(2026)\na, b = g.binomial(1000, p1, 20_000) / 1000, g.binomial(1000, p2, 20_000) / 1000\npool = (a + b) / 2\nzs = (a - b) / np.sqrt(pool * (1 - pool) * 2 / 1000)\nprint(np.mean(np.abs(zs) > 1.96))     # ≈ 0.45 by simulation", "xp": 2}
+```
 
 <details><summary>Answer</summary>
 
@@ -295,15 +463,33 @@ Sorted 0.0318, 0.153, 0.804 → × 3, × 2, × 1 = 0.0954, 0.306, 0.804 → runn
 
 ## 5. Homework
 
-None today: **Checkpoint 6 is tomorrow** (intervals on Nur data, the test-choice quiz, interview questions). Finish the five TODO functions in `day4_starter.ipynb`; the checkpoint's power task uses them. **HW 6.2** is due tomorrow in Day 2's hand-in box.
+None today: **Checkpoint 6 is tomorrow** (intervals on Nur data, the test-choice quiz, interview questions). Finish the five TODO functions in `day4_starter.ipynb`; the checkpoint's power task uses them. **HW 6.2** is due tomorrow in Day 2's hand-in box. Check two of your functions here:
+
+**H1.** Your `n_per_arm(0.0128, 0.010)` — loans per arm for 80 % power at α = 5 %, two-sided (rounded up)?
+
+```task
+{"id": "w06d4-hw1", "kind": "number", "answer": 22481, "dp": 0, "unit": "loans per arm", "hint": "h = 2·asin√0.0128 − 2·asin√0.010 = 0.02642; n = 2 · ((1.960 + 0.842) / h)².", "model": "2 · (2.802 / 0.02642)² = 22 480.8 → 22 481 per arm, 44 962 in total — 11 years of Nur's new loans."}
+```
+
+**H2.** And the power of 1 000 vs 1 000 for the same effect, in %?
+
+```task
+{"id": "w06d4-hw2", "kind": "number", "answer": 9.1, "dp": 1, "unit": "%", "hint": "Φ(h·√(n/2) − 1.96) + Φ(−h·√(n/2) − 1.96) with n = 1 000.", "model": "h·√500 = 0.591 → Φ(−1.369) ≈ 0.091: the test misses a real 1.28 → 1.00 % effect 91 times in 100."}
+```
 
 ---
 
 ## 6. Self-check
 
-1. Welch says p = 0.02, Mann–Whitney says p = 0.32 on the same data. Which is wrong? *(→ section 1, "When t-tests break", P1)*
-2. You test 20 segments at α = 5 % and find one significant. What is the chance of at least one false alarm if nothing is real, and what do you do? *(→ section 1, "Multiple comparisons", P7)*
-3. Name the four things power depends on, and say why an FPD test needs so many loans. *(→ section 1, "Power and sample size", Company corner)*
+Three questions, one at a time. Wrong? The explanation points to the part of section 1 to reread.
+
+```check
+{"id": "w06d4-sc", "questions": [
+  {"type": "single", "q": "Welch says p = 0.02, Mann–Whitney says p = 0.32 on the same days-late data. Which is wrong?", "options": ["Welch", "Mann–Whitney", "Neither — Welch asks about the average, Mann–Whitney about the typical payment", "Both"], "answer": 2, "explain": "Pick the business question first, then the test (→ section 1, 'When t-tests break', P1)."},
+  {"type": "number", "q": "You test 20 segments at α = 5 % and nothing is real. What is the chance of at least one false alarm, in %?", "answer": 64.2, "tol": 0.3, "explain": "1 − 0.95²⁰ = 64.2 %. Correct with Holm before acting on the one hit (→ section 1, 'Multiple comparisons', P7)."},
+  {"type": "multi", "q": "Which of these does power depend on?", "options": ["α", "the effect size", "the p-value you observed", "n", "how rare the outcome is"], "answer": [0, 1, 3, 4], "explain": "Power is fixed before the data; an outcome near 0 % (FPD) needs far more loans (→ section 1, 'Power and sample size', Company corner)."}
+]}
+```
 
 ---
 
@@ -331,7 +517,19 @@ Jasur's question, answered before anyone sends an SMS.
 
 What goes back to Jasur, in two sentences: *"2 000 loans give 9 % power for a 1.28 → 1.00 % FPD effect; you would need 22 481 per arm. Test 'first instalment paid late' instead (2 324 per arm for a 20 % cut) with FPD30 as a guardrail — or just send the SMS if it costs less than the analysis."*
 
-> Interview version: *"How would you size an experiment on default rates?"* — Fix α, power and the smallest effect worth acting on; compute Cohen's h and n per arm; translate n into calendar time at the real volume; if it is years, change the metric (a frequent leading indicator), the design (all traffic, longer) or the question — and never read a null result from an underpowered test as "no effect".
+Marketing's test plan has one fatal line — tap it:
+
+```game
+{"type": "bug", "id": "w06d4-g4", "title": "The SMS test plan", "q": "One line of the plan breaks the experiment.", "code": "Randomly split 2 000 new loans: 1 000 get the SMS, 1 000 do not.\nPrimary outcome: FPD30; hoped-for effect 1.28 % → 1.00 %.\nα = 5 %, two-sided; the end date is fixed before the first SMS.\nIf the result is not significant, we conclude that the SMS does not work.\nFPD30 and lateness are reported with their n and 95 % intervals.", "answer": [3], "why": "With 9 % power the test misses a real effect 91 times in 100 — a null result from it says almost nothing. Size the test first, or change the metric."}
+```
+
+> 🎯 **Interview version.** *"How would you size an experiment on default rates?"* — Fix α, power and the smallest effect worth acting on; compute Cohen's h and n per arm; translate n into calendar time at the real volume; if it is years, change the metric (a frequent leading indicator), the design (all traffic, longer) or the question — and never read a null result from an underpowered test as "no effect".
+
+**Say it like in an interview.** *"Marketing wants to test an SMS reminder on 2 000 loans to cut first-payment defaults from 1.28 % to 1 %. Is that enough?"* — answer in 3–5 sentences, as you would to an interviewer.
+
+```task
+{"id": "w06d4-cc", "kind": "free", "min": 30, "model": "No. For 1.28 % → 1.00 % at α = 5 % and 80 % power, Cohen's h is 0.026 and you need about 22 500 loans per arm — 11 years of our volume; with 1 000 per arm the power is only 9 %, so a 'not significant' result would mean almost nothing. I would change the primary metric to something frequent that the SMS acts on directly, such as 'first instalment paid late at all' (13 %), where a 20 % cut needs about 2 300 per arm, and keep FPD30 as a guardrail — or, since an SMS is cheap, roll it out and monitor.", "rubric": ["says it is not enough and gives n per arm (≈ 22 500) or the power (≈ 9 %)", "translates n into time at the real volume", "warns that a null result from an underpowered test is not 'no effect'", "proposes a fix: a frequent metric, longer/all traffic, or decide on cost"]}
+```
 
 Tomorrow: Checkpoint 6 — five analyses on Nur data, twelve test-choice scenarios, eight interview questions.
 
@@ -363,7 +561,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w06d4", "q": "Jasur takes option 1 — primary metric 'first instalment paid late at all' (947 / 7 099 = 13.34 % today) — but he can only wait six months: 337 new loans a month (January–September 2026), split evenly, so 1 011 loans per arm. With Cohen's h, two-sided α = 5 % and 80 % power, what is the LOWEST late rate the SMS arm must reach for this test to detect it (the MDE as a rate)? Give a percentage to 3 decimals.", "type": "number", "dp": 3, "h": ["2c3dbc0bb304d536c1cf4748"], "hint": "Let the power solver give you the effect size for that n, then turn h back into a rate — h is a difference of 2·arcsin√p.", "sol": "aW1wb3J0IG51bXB5IGFzIG5wCmZyb20gc3RhdHNtb2RlbHMuc3RhdHMucG93ZXIgaW1wb3J0IHp0X2luZF9zb2x2ZV9wb3dlcgpwMSA9IDk0NyAvIDcwOTkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDAuMTMzNDAKaCA9IHp0X2luZF9zb2x2ZV9wb3dlcihub2JzMT0xMDExLCBhbHBoYT0wLjA1LCBwb3dlcj0wLjgwKSAgICAgICAgIyAwLjEyNDYKcDIgPSBucC5zaW4obnAuYXJjc2luKG5wLnNxcnQocDEpKSAtIGggLyAyKSAqKiAyICAgICAgICAgICAgICAgICAjIDAuMDkzOTgKIyBjaGVjazogTm9ybWFsSW5kUG93ZXIoKS5wb3dlcihwcm9wb3J0aW9uX2VmZmVjdHNpemUocDEsIHAyKSwgbm9iczE9MTAxMSwgYWxwaGE9MC4wNSkg4oaSIDAuODAKCk1ERSA5LjM5OCAlOiBpbiBzaXggbW9udGhzIHRoZSB0ZXN0IGNhbiBvbmx5IHNlZSB0aGUgbGF0ZSByYXRlIGZhbGxpbmcgZnJvbSAxMy4zNCAlIHRvIGFib3V0IDkuNCAlIOKAlCBhIDMwICUgcmVsYXRpdmUgY3V0LCBoYWxmIGFzIGxhcmdlIGFnYWluIGFzIHRoZSAyMCAlIHRoYXQgbWFya2V0aW5nIGhvcGVzIGZvci4KU28gZXZlbiBvbiB0aGUgZnJlcXVlbnQgbWV0cmljLCBhIHNpeC1tb250aCB0ZXN0IGlzIHVuZGVycG93ZXJlZCBmb3IgYSByZWFsaXN0aWMgZWZmZWN0ICh0aGUgMjAgJSBjdXQgbmVlZHMgMiAzMjQgcGVyIGFybSwgYWJvdXQgMTQgbW9udGhzKS4KVGhlIGhvbmVzdCBvcHRpb25zIHN0YXkgdGhlIHNhbWU6IHJ1biBsb25nZXIgb24gYWxsIG5ldyBsb2FucyB3aXRoIGEgZml4ZWQgZW5kIGRhdGUsIHVzZSBkYXlzIGxhdGUgYXMgYSBjb250aW51b3VzIG91dGNvbWUsIG9yIGRlY2lkZSBvbiBjb3N0Lg=="}
+{"id": "w06d4", "q": "Jasur takes option 1 — primary metric 'first instalment paid late at all' (947 / 7 099 = 13.34 % today) — but he can only wait six months: 337 new loans a month (January–September 2026), split evenly, so 1 011 loans per arm. With Cohen's h, two-sided α = 5 % and 80 % power, what is the LOWEST late rate the SMS arm must reach for this test to detect it (the MDE as a rate)? Give a percentage to 3 decimals.", "type": "number", "dp": 3, "python": true, "h": ["2c3dbc0bb304d536c1cf4748"], "hint": "Let the power solver give you the effect size for that n, then turn h back into a rate — h is a difference of 2·arcsin√p.", "sol": "aW1wb3J0IG51bXB5IGFzIG5wCmZyb20gc3RhdHNtb2RlbHMuc3RhdHMucG93ZXIgaW1wb3J0IHp0X2luZF9zb2x2ZV9wb3dlcgpwMSA9IDk0NyAvIDcwOTkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDAuMTMzNDAKaCA9IHp0X2luZF9zb2x2ZV9wb3dlcihub2JzMT0xMDExLCBhbHBoYT0wLjA1LCBwb3dlcj0wLjgwKSAgICAgICAgIyAwLjEyNDYKcDIgPSBucC5zaW4obnAuYXJjc2luKG5wLnNxcnQocDEpKSAtIGggLyAyKSAqKiAyICAgICAgICAgICAgICAgICAjIDAuMDkzOTgKIyBjaGVjazogTm9ybWFsSW5kUG93ZXIoKS5wb3dlcihwcm9wb3J0aW9uX2VmZmVjdHNpemUocDEsIHAyKSwgbm9iczE9MTAxMSwgYWxwaGE9MC4wNSkg4oaSIDAuODAKCk1ERSA5LjM5OCAlOiBpbiBzaXggbW9udGhzIHRoZSB0ZXN0IGNhbiBvbmx5IHNlZSB0aGUgbGF0ZSByYXRlIGZhbGxpbmcgZnJvbSAxMy4zNCAlIHRvIGFib3V0IDkuNCAlIOKAlCBhIDMwICUgcmVsYXRpdmUgY3V0LCBoYWxmIGFzIGxhcmdlIGFnYWluIGFzIHRoZSAyMCAlIHRoYXQgbWFya2V0aW5nIGhvcGVzIGZvci4KU28gZXZlbiBvbiB0aGUgZnJlcXVlbnQgbWV0cmljLCBhIHNpeC1tb250aCB0ZXN0IGlzIHVuZGVycG93ZXJlZCBmb3IgYSByZWFsaXN0aWMgZWZmZWN0ICh0aGUgMjAgJSBjdXQgbmVlZHMgMiAzMjQgcGVyIGFybSwgYWJvdXQgMTQgbW9udGhzKS4KVGhlIGhvbmVzdCBvcHRpb25zIHN0YXkgdGhlIHNhbWU6IHJ1biBsb25nZXIgb24gYWxsIG5ldyBsb2FucyB3aXRoIGEgZml4ZWQgZW5kIGRhdGUsIHVzZSBkYXlzIGxhdGUgYXMgYSBjb250aW51b3VzIG91dGNvbWUsIG9yIGRlY2lkZSBvbiBjb3N0Lg=="}
 ```
 
 <!-- challenge:end -->

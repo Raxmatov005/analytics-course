@@ -29,6 +29,8 @@ FROM loans LIMIT 3;
 
 Read `OVER ()` as *"over all rows of the result"*. Empty brackets = one window containing everything. The two engines agree on every window keyword today — SQL Server and SQLite differ only in the functions you put in front (`julianday` vs `DATEDIFF`, as before).
 
+> 💡 **Key idea.** `GROUP BY` collapses rows into one per group. A window keeps every row and writes the aggregate *next to* it. Same `SUM`, `AVG`, `COUNT` — the word `OVER` is what changes their behaviour.
+
 ### PARTITION BY — one window per group
 
 `PARTITION BY` splits the rows into groups, exactly like `GROUP BY` — but each row stays, and gets its group's aggregate:
@@ -43,7 +45,13 @@ FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.loan_id <= 5;
 ```
 
-Careful reading: `WHERE loan_id <= 5` runs **before** the window, so `product_avg` here is the average of the 2 Consumer loans among loans 1–5 (35 605 000), not of all 2 418. **Windows are computed after `WHERE`, `GROUP BY` and `HAVING`, and before `ORDER BY`/`LIMIT`.** That order is the single most useful fact of the day: it is why you can filter first and why you cannot put a window in `WHERE` (you need a derived table or CTE — Day 3; today use the shape in P6).
+Careful reading: `WHERE loan_id <= 5` runs **before** the window, so `product_avg` here is the average of the 2 Consumer loans among loans 1–5 (35 605 000), not of all 2 418. **Windows are computed after `WHERE`, `GROUP BY` and `HAVING`, and before `ORDER BY`/`LIMIT`.** That order is the single most useful fact of the day: it is why you can filter first and why you cannot put a window in `WHERE` — you compute the window inside a query in brackets (a *derived table*) and filter outside it. You will write that shape in P6; Day 3 explains it in full.
+
+> ⚠️ **Watch out.** `PARTITION BY` is not `GROUP BY`. `GROUP BY p.code` returns 5 rows; `OVER (PARTITION BY p.code)` returns every loan, each with its product's number beside it. If you expected five rows and got 7 828, you wrote a partition where you meant a group.
+
+```game
+{"type": "bug", "id": "w03d1-g1", "title": "Find the broken line", "q": "Bekzod wants the loans above their product's average principal. One line breaks this query.", "code": "SELECT l.loan_id, p.code, l.principal\nFROM loans l\nJOIN products p ON p.product_id = l.product_id\nWHERE l.principal > AVG(l.principal) OVER (PARTITION BY p.code);", "answer": [3], "why": "Windows are computed after WHERE, so a window cannot sit in WHERE. Compute it in a derived table, then filter outside (P6)."}
+```
 
 ### Share of total — the column Bekzod asked for
 
@@ -57,6 +65,8 @@ GROUP BY p.code ORDER BY outstanding DESC;
 ```
 
 `SUM(SUM(x)) OVER ()` looks odd and is the key pattern of the week: the inner `SUM` is the GROUP BY aggregate (one value per product); the outer `SUM(...) OVER ()` adds those five values up and writes the total on each of the five rows. **GROUP BY and a window in the same query** — the window runs on the *grouped* result. `100.0 *` at the front, as always.
+
+> 💡 **Key idea.** Share of total = `100.0 * SUM(x) / SUM(SUM(x)) OVER ()`. Inner `SUM`: one value per group. Outer `SUM … OVER ()`: those group values added up and written on every group's row. Learn this one line by heart — you will use it all week.
 
 ### ORDER BY inside OVER — running totals
 
@@ -88,6 +98,14 @@ FROM loans WHERE disbursed_at >= '2026-09-28' ORDER BY disbursed_at, loan_id;
 
 Both are "right" — `RANGE` says *total through this date*, `ROWS` says *total through this row*. Rule: when `ORDER BY` has ties, decide which one you mean; when you order by a unique key (one row per month) they agree. The explicit frame syntax is `ROWS BETWEEN <start> AND <end>` with `UNBOUNDED PRECEDING`, `n PRECEDING`, `CURRENT ROW`, `n FOLLOWING`, `UNBOUNDED FOLLOWING`.
 
+> ⚠️ **Watch out.** The moment you write `ORDER BY` inside `OVER`, a frame appears even if you did not ask for one — and its default is `RANGE … CURRENT ROW`, which lumps ties together. On a column with repeated values (dates, grades, rounded amounts) say `ROWS` explicitly.
+
+The clauses inside `OVER` always come in the same order: partition, then order, then frame. Put them together once by hand:
+
+```game
+{"type": "build", "id": "w03d1-g2", "title": "Build the window", "q": "Bekzod's year-to-date per product: a running sum of monthly disbursement that restarts for every product, row by row.", "tokens": ["SUM(disbursed)", "OVER (", "PARTITION BY code", "ORDER BY month", "ROWS UNBOUNDED PRECEDING", ")"], "distractors": ["GROUP BY code", "WHERE month >= '2026-01'", "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW"]}
+```
+
 ### Moving averages — a frame of fixed length
 
 A **moving average** (*скользящее среднее*) smooths a monthly series: each month is replaced by the average of itself and the two before it.
@@ -114,10 +132,22 @@ Two honest readings: the first two months average fewer than three values (show 
 
 Windows never reduce rows; `GROUP BY` always does; the pattern `SUM(SUM())` is the handshake between them.
 
+```game
+{"type": "sort", "id": "w03d1-g3", "title": "GROUP BY, window, or both?", "q": "Tap each of Bekzod's asks, then the tool that answers it.", "groups": {"GROUP BY alone": ["Outstanding per product, five rows", "Number of loans per branch"], "Window (PARTITION BY), every row kept": ["Every loan with its product's average beside it", "Each payment of loan 1 with the loan's total collected"], "GROUP BY + a window on top": ["Outstanding per product with its share of the total", "Monthly disbursement with a running YTD"]}}
+```
+
 ### Depth (optional)
 
 - ▶ Baraa, *Window functions basics* [8:50:11](https://youtu.be/SSKVgrwhzus?t=31811&end=35220), *Window aggregate* [9:47:00](https://youtu.be/SSKVgrwhzus?t=35220&end=39189) — ~2 h; SQL Server, every keyword identical here.
 - RU deck (TBC Data Analytics 2.0, if you have it) `2.3 SQL.pdf` — window pages. *Russian terms:* оконные функции = window functions, секция = partition, рамка окна = frame, накопительный итог = running total, скользящее среднее = moving average.
+
+```videoquiz
+{"video": "SSKVgrwhzus", "stops": [
+  {"at": 32700, "q": "What does a window function do that GROUP BY does not?", "options": ["Keeps every row and writes the aggregate next to it", "Removes duplicate rows", "Sorts the table permanently", "Works only on numeric columns"], "answer": 0, "explain": "GROUP BY collapses rows to one per group; a window keeps the detail and adds the group's number beside each row."},
+  {"at": 34200, "q": "PARTITION BY inside OVER is closest to which clause you already know?", "options": ["WHERE", "GROUP BY — except that the rows stay", "ORDER BY", "JOIN"], "answer": 1, "explain": "It splits the rows into groups like GROUP BY, but every row survives and gets its group's aggregate."},
+  {"at": 36600, "q": "You add ORDER BY inside OVER to SUM(sales). What do you get?", "options": ["The same grand total on every row", "A running (cumulative) total", "An error", "A rank"], "answer": 1, "explain": "With ORDER BY the frame becomes 'from the start of the partition to the current row', so the sum accumulates."},
+  {"at": 38400, "q": "A rolling average of the current row and the two before it needs which frame?", "options": ["ROWS BETWEEN 2 PRECEDING AND CURRENT ROW", "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW", "PARTITION BY 3", "ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING"], "answer": 0, "explain": "Two rows back plus the current one = three rows; UNBOUNDED PRECEDING would be a running average.", "back": 60}]}
+```
 
 ---
 
@@ -155,7 +185,18 @@ Check: the shares add to 100.0 and the outstanding to 208 723 504 430 — Friday
 
 ## 3. Practice (60 min)
 
-Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
+Start with the lab: four steps on your own copy of the database, so the running total becomes a table you made. Then the questions: write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer.
+
+```sqllab
+{"id": "w03d1-lab", "title": "Your own monthly table with a running total", "intro": "You build Bekzod's 2026 table yourself: monthly disbursement stored with CREATE TABLE … AS, then a running total computed by a window and stored next to it. Everything happens in your practice copy; the real tables are not touched.", "steps": [
+  {"say": "Create my_monthly(month, loans, disbursed) with CREATE TABLE … AS SELECT: one row per month of 2026, January to September (half-open filter on disbursed_at).", "hint": "CREATE TABLE my_monthly AS SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed FROM loans WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01' GROUP BY strftime('%Y-%m', disbursed_at);", "expect": "SELECT COUNT(*) FROM my_monthly", "want": 9},
+  {"say": "October has one day of data. Add it anyway with INSERT INTO my_monthly SELECT … for disbursed_at >= '2026-10-01' — you will see what a partial month does to a running total.", "hint": "INSERT INTO my_monthly SELECT strftime('%Y-%m', disbursed_at), COUNT(*), SUM(principal) FROM loans WHERE disbursed_at >= '2026-10-01' GROUP BY 1;", "expect": "SELECT COUNT(*) FROM my_monthly", "want": 10},
+  {"say": "Create my_ytd(month, loans, disbursed, ytd) from my_monthly, where ytd is SUM(disbursed) OVER (ORDER BY month). Look at it with SELECT * FROM my_ytd.", "hint": "CREATE TABLE my_ytd AS SELECT month, loans, disbursed, SUM(disbursed) OVER (ORDER BY month) AS ytd FROM my_monthly;", "expect": "SELECT ytd FROM my_ytd WHERE month = '2026-10'", "want": 162333060000},
+  {"say": "Bekzod's pack stops at September. Delete the October row from my_ytd; the largest ytd left is then the September figure.", "hint": "DELETE FROM my_ytd WHERE month = '2026-10';", "expect": "SELECT MAX(ytd) FROM my_ytd", "want": 161480300000}],
+ "cleanup": "DROP TABLE IF EXISTS my_ytd; DROP TABLE IF EXISTS my_monthly"}
+```
+
+> 💡 **Key idea.** A table you make with `CREATE TABLE … AS SELECT` is frozen: add a new loan to `loans` tomorrow and `my_ytd` will not change. That is useful for a pack sent on Wednesday, and dangerous if someone reads the table next month. Day 4 is about this choice.
 
 **P1.** Every loan with the company total, the company average and how many loans there are — on each row. Then the same for loans of customer 3208 only; explain why the total changed.
 
@@ -169,6 +210,12 @@ FROM loans WHERE customer_id = 3208;
 Without the `WHERE`: total 404 783 280 000, average 51 709 668, n 7 828 on every row. `WHERE` runs first, so the window only sees the customer's two loans.
 
 </details>
+
+**P1 — why?** With `WHERE customer_id = 3208` the "company total" column drops from 404 783 280 000 to 1 023 170 000. Why?
+
+```task
+{"id": "w03d1-p1b", "kind": "choice", "options": ["OVER () ignores WHERE and adds the whole table, so the number must be a bug", "WHERE runs before the window, so the window only sees the customer's two loans", "SUM inside a window always returns one row's value", "LIMIT cut the result"], "answer": 1, "explain": "Order of work: FROM → WHERE → GROUP BY → HAVING → window → ORDER BY → LIMIT. The window adds up whatever survived the filter.", "xp": 1}
+```
 
 **P2.** Outstanding by **risk grade** with share of total, one decimal. Which grade carries the most money, and is that what the grade *counts* would suggest?
 
@@ -184,6 +231,12 @@ GROUP BY l.risk_grade ORDER BY outstanding DESC;
 B holds 45 % of the money on 43 % of the owing loans; D is 5 % of the book — small, as a cut-off should make it.
 
 </details>
+
+**P2 — read it.** What share of outstanding does grade D carry, in %, one decimal?
+
+```task
+{"id": "w03d1-p2b", "kind": "number", "answer": 5.1, "dp": 1, "unit": "%", "hint": "The share_pct column of your P2 result, on the D row.", "model": "D: 10 665 423 138 of 208 723 504 430 = 5.1 % of outstanding, on 158 of the 3 409 owing loans (4.6 %). The risky grade is small in money as well as in count.", "xp": 1}
+```
 
 **P3.** Outstanding by **product × grade** with the grade's share *inside its product*. In which product is grade C the largest share?
 
@@ -314,7 +367,15 @@ Collected includes interest and repays loans from 2024–2025; disbursed is prin
 
 </details>
 
-<span class="badge stretch">Stretch</span> **P11.** Concentration curve of customers: rank borrowers by outstanding, and show the cumulative share of outstanding held by the top 10, top 25 and top 25 % of borrowers. Then the same idea for branches: how much of the book do the top three hold?
+**P10 — why not comparable?** Pick every reason that is true.
+
+```task
+{"id": "w03d1-p10b", "kind": "multi", "options": ["Collected includes interest; disbursed is principal only", "Collected in 2026 repays loans lent in 2024 and 2025 as well", "The two sums come from different tables, and that alone makes them incomparable", "Disbursed counts new 2026 loans; most of their repayments fall due later"], "answer": [0, 1, 3], "explain": "Different content (interest vs principal) and different populations (old loans repaying vs new loans going out). Two tables are fine to compare when they measure the same thing; these do not. The real collection rate (due vs paid on the same instalments) is on Day 4.", "xp": 1}
+```
+
+> 🚀 **Stretch (optional, +5 XP).** Concentration — the question a board asks right after the portfolio mix: *how much of the book hangs on a few names or a few branches?*
+
+**P11.** Concentration curve of customers: rank borrowers by outstanding, and show the cumulative share of outstanding held by the top 10, top 25 and top 25 % of borrowers. Then the same idea for branches: how much of the book do the top three hold?
 
 <details><summary>Answer</summary>
 
@@ -327,35 +388,44 @@ SELECT customer_id, outstanding,
 FROM c ORDER BY outstanding DESC;
 -- 2 535 borrowers; row 1: customer 3208, 977 697 006, 0.47 % ; row 10 cumulative 3.60 %; row 25 cumulative 7.80 %
 ```
-A running sum divided by a grand total — two windows with different frames in one expression. The top quarter of borrowers (634 people, via `NTILE(4)` tomorrow) holds 82.7 % of outstanding; the bottom quarter 0.5 %. For branches the same query on T5's table gives cumulative 13.8 → 26.6 → **39.1 %** after three rows — the Company corner reads it.
+A running sum divided by a grand total — two windows with different frames in one expression. The top quarter of borrowers (634 people, via `NTILE(4)` tomorrow) holds 82.7 % of outstanding; the bottom quarter 0.5 %. For branches the same query on the worked example's branch table gives cumulative 13.8 → 26.6 → **39.1 %** after three rows — the Company corner reads it.
 
 </details>
+
+**P11 — the number.** What share of outstanding do the top three branches hold together, in %, one decimal?
+
+```task
+{"id": "w03d1-p11", "kind": "number", "answer": 39.1, "dp": 1, "unit": "%", "hint": "Branch outstanding, ordered DESC; a running SUM(...) OVER (ORDER BY outstanding DESC) divided by SUM(...) OVER (); read row 3.", "model": "Tashkent Central 13.8 + Tashkent South 12.8 + Tashkent North 12.5 = 39.1 % of 208 723 504 430. One city, three branches, two fifths of the book.", "xp": 2}
+```
 
 ---
 
 ## 4. Homework <span class="badge hw">HW 3.1 — Due Day 3</span>
 
-**Bekzod's share-and-trend pack.** Hand in with the 📎 box below:
+**Bekzod's share-and-trend pack.** Six queries and six sentences, all in the 📎 box below. The page checks every query itself: **▶ Run** shows your result, **✔ Check** compares it with ours (without showing ours). No screenshots, no `-- result:` lines to copy — when all six are ✅ and the sentences are written, **📤 Submit** sends the pack to your mentor.
 
-1. `shares.sql` — three queries, each with `GROUP BY` + a window: outstanding and share of total by product, by branch (with share in region), by grade. `-- result:` under each with the top row and a check line that the shares add to 100.
-2. `trend.sql` — (a) 2026 monthly disbursement with running YTD and share of the nine months (P4); (b) the same per product with the running sum restarting per product (P5); (c) 3-month moving average of monthly disbursement 2025-01..2026-09 with the window count column (P7), and one line naming the month furthest above its average.
-3. `pack.md` — six sentences for Bekzod: the biggest product and its share; the biggest branch and whether Tashkent as a region is concentrated; the YTD figure through September; the strongest and weakest months of 2026 and the moving-average trend since spring.
+- **Q1–Q3 — shares** (`GROUP BY` + a window each), outstanding = `principal_due` of instalments due after 2026-10-01: Q1 by product with share of total; Q2 by branch with share of total **and** share in region; Q3 by grade with share of total. Shares to 1 decimal.
+- **Q4–Q6 — trend:** Q4 2026 monthly disbursement (January–September) with running YTD and share of the nine months (P4); Q5 the same per product, the running sum restarting per product (P5); Q6 the 3-month moving average of monthly disbursement 2025-01..2026-09 with the window-count column (P7) — the window runs on the whole series, the display filter sits outside.
+- **pack.md** — six sentences for Bekzod: the biggest product and its share; the biggest branch and whether Tashkent as a region is concentrated; the YTD figure through September; the strongest and weakest months of 2026; the moving-average trend since spring; the month of 2025–2026 furthest above its moving average.
 
-Graded on: (a) numbers match ours within rounding, (b) every window has the right `PARTITION BY`/`ORDER BY`/frame for the sentence next to it (a YTD that does not restart per product loses the point), (c) the six sentences say *share of what* and *period* every time.
+> ⚠️ **Watch out.** The checker runs your query on an untouched copy of the data, as one self-contained query: put the `WITH m AS (…)` part inside the same box, and do not rely on tables you created in the lab.
 
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W3D1", "lesson": "W3D1", "title": "HW 3.1", "tasks": [{"id": "shares.sql", "file": "shares.sql", "text": true, "minLines": 3, "q": "Write `shares.sql` here — what the page above asks for."}, {"id": "trend.sql", "file": "trend.sql", "text": true, "minLines": 3, "q": "Write `trend.sql` here — what the page above asks for."}, {"id": "pack.md", "file": "pack.md", "text": true, "minLines": 3, "q": "Write `pack.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W3D1", "lesson": "W3D1", "title": "HW 3.1", "file": "pack.sql", "why": "Bekzod builds Wednesday's pack from these six tables. Shares and running totals are the two window patterns you will write in every job after this one.", "graded": ["Q1–Q6: ✔ Check passes — the numbers and row counts match ours", "Every window has the PARTITION BY / ORDER BY / frame the sentence needs (a YTD that does not restart per product fails Q5)", "pack.md: six sentences, each saying share of what and which period"], "tasks": [{"id": "Q1", "q": "Outstanding by product with its share of total outstanding (%, 1 decimal) — five rows."}, {"id": "Q2", "q": "Outstanding by branch with share of total and share inside its region (%, 1 decimal) — ten rows."}, {"id": "Q3", "q": "Outstanding by risk grade with share of total (%, 1 decimal) — four rows."}, {"id": "Q4", "q": "2026 monthly disbursement, January–September: loans, amount, share of the nine months, running YTD — nine rows."}, {"id": "Q5", "q": "The same per product: monthly 2026 disbursement with a running YTD that restarts for every product — 45 rows."}, {"id": "Q6", "q": "3-month moving average of monthly disbursement with the number of months in each window, shown for 2025-01..2026-09 — 21 rows."}, {"id": "pack.md", "file": "pack.md", "text": true, "minLines": 6, "q": "Six sentences for Bekzod, one per line — each with share of what and the period."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else you want your mentor to see (one more file, or a .zip of several)."}]}
 ```
 
 ---
 
 ## 5. Self-check
 
-1. `SUM(SUM(principal_due)) OVER ()` — which `SUM` runs first, and what does each one add up? *(→ section 1, "Share of total")*
-2. Two queries compute a running total by `disbursed_at`; one uses the default frame, one `ROWS UNBOUNDED PRECEDING`. On a day with seven loans, how do their outputs differ? *(→ section 1, "The default frame")*
-3. You want only the loans above their product's average. Why can the window not go in `WHERE`, and where does it go? *(→ P6)*
+```check
+{"id": "w03d1-sc", "questions": [
+  {"type": "single", "q": "SUM(SUM(principal_due)) OVER () — which SUM runs first, and what does each add up?", "options": ["The outer one first: every instalment of the company", "The inner one first: one total per group (GROUP BY); then the outer window adds those group totals", "Both at once, over all instalments", "Neither — nested aggregates are an error"], "answer": 1, "explain": "The window runs on the grouped result: five product totals in, the grand total written on each of the five rows (→ section 1, Share of total)."},
+  {"type": "single", "q": "Seven loans were disbursed on 28 September. A running total ORDER BY disbursed_at with the default frame, and one with ROWS UNBOUNDED PRECEDING — what do the seven rows show?", "options": ["Both climb row by row", "The default (RANGE) shows the whole day's total on all seven rows; ROWS climbs row by row", "ROWS shows the day's total; RANGE climbs", "Both show NULL on ties"], "answer": 1, "explain": "RANGE includes every row with the same ORDER BY value; ROWS stops at the current row (→ section 1, The default frame)."},
+  {"type": "single", "q": "You want only the loans above their product's average principal. Where does the window go?", "options": ["In WHERE", "In HAVING", "In a derived table (or CTE); the filter goes in the outer query", "In GROUP BY"], "answer": 2, "explain": "Windows are computed after WHERE, GROUP BY and HAVING — wrap, then filter (→ P6)."}]}
+```
 
 ---
 
@@ -376,7 +446,17 @@ Graded on: (a) numbers match ours within rounding, (b) every window has the righ
 
 **How to present the mix.** One table, three cuts stacked, each with count share *and* money share side by side (count tells you about operations, money about risk); below it the two concentration lines. The sentence under the table: *"The book is 60 % SME by money and 41 % Consumer by count of owing loans; Tashkent's three branches hold 39 %; the largest borrower is 0.5 %, the top 25 under 8 %."*
 
-> Interview version: *"How would you describe a loan portfolio's composition in SQL?"* — Outstanding = sum of `principal_due` over instalments not yet due; group by the dimension, add `100.0 * SUM(x) / SUM(SUM(x)) OVER ()` for the share; for concentration, order by the share and take a running `SUM(...) OVER (ORDER BY ...)` divided by the total to read top-N shares; always show count share next to money share.
+```game
+{"type": "flash", "id": "w03d1-g4", "title": "Portfolio-mix words", "cards": [["Portfolio mix", "what the outstanding is made of: shares by product, branch, grade"], ["Outstanding", "principal of instalments not yet due, as of a date (208.7 bn on 2026-10-01)"], ["Money share vs count share", "money speaks about risk, count about operations — show both"], ["Concentration", "how much of the book depends on a few names, branches or regions"], ["Top-3 share", "running sum of the three largest ÷ total — Tashkent's branches: 39.1 %"], ["Single-name concentration", "the largest borrower's share of the book — 0.47 % here, low"], ["Large-exposure limit", "a bank's cap on one borrower, usually 25 % of capital"]]}
+```
+
+> 🎯 **Interview version.** *"How would you describe a loan portfolio's composition in SQL?"* The interviewer listens for three things: how you define outstanding, the one-line share pattern, and how you would measure concentration. Say it in your own words below, then compare.
+
+**Say it like in an interview.** Answer the question above as you would aloud, in 3–5 sentences, with one Nur Finance number.
+
+```task
+{"id": "w03d1-int", "kind": "free", "min": 30, "model": "Outstanding is the sum of principal_due over instalments not yet due at the as-of date — 208.7 bn UZS at Nur Finance on 1 October 2026. I group by the dimension (product, branch, grade) and add 100.0 * SUM(x) / SUM(SUM(x)) OVER () for the share: SME is 60.3 % of the money. For concentration I order by outstanding and divide a running SUM(...) OVER (ORDER BY ... DESC) by the total, so I can read top-N shares — the three Tashkent branches hold 39.1 %, the largest borrower 0.47 %. I always show count share next to money share, because by count the same book is mostly Consumer and Micro.", "rubric": ["Defines outstanding: principal of instalments not yet due, as of a date", "Gives the share pattern SUM(x) / SUM(SUM(x)) OVER ()", "Explains concentration with a running sum over the ordered list", "Shows count share next to money share", "Quotes at least one real number"], "xp": 2}
+```
 
 Tomorrow: ranking (who is first, who is in the top 3 of each group), looking at the *previous* row with `LAG`, and the payments collections say they received twice.
 
@@ -408,7 +488,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w03d1", "q": "Nilufar worries that one branch leans too hard on Auto loans. For each branch, compute Auto's share of that branch's own outstanding principal (instalments due after 2026-10-01, all loan statuses). What is the highest such share among the ten branches? Percentage to 1 decimal.", "type": "number", "dp": 1, "h": ["f3480b47fbe805fc66dfcea9"], "hint": "One GROUP BY by branch and product, then a window whose partition is the branch rather than the whole company.", "sol": "U0VMRUNUIGIuYnJhbmNoX25hbWUsIHAuY29kZSwKICAgICAgIFNVTShpLnByaW5jaXBhbF9kdWUpIEFTIG91dHN0YW5kaW5nLAogICAgICAgUk9VTkQoMTAwLjAgKiBTVU0oaS5wcmluY2lwYWxfZHVlKQogICAgICAgICAgICAgLyBTVU0oU1VNKGkucHJpbmNpcGFsX2R1ZSkpIE9WRVIgKFBBUlRJVElPTiBCWSBiLmJyYW5jaF9uYW1lKSwgMSkgQVMgc2hhcmVfaW5fYnJhbmNoCkZST00gaW5zdGFsbG1lbnRzIGkKSk9JTiBsb2FucyBsICAgIE9OIGwubG9hbl9pZCA9IGkubG9hbl9pZApKT0lOIGJyYW5jaGVzIGIgT04gYi5icmFuY2hfaWQgPSBsLmJyYW5jaF9pZApKT0lOIHByb2R1Y3RzIHAgT04gcC5wcm9kdWN0X2lkID0gbC5wcm9kdWN0X2lkCldIRVJFIGkuZHVlX2RhdGUgPiAnMjAyNi0xMC0wMScKR1JPVVAgQlkgYi5icmFuY2hfbmFtZSwgcC5jb2RlCk9SREVSIEJZIENBU0UgV0hFTiBwLmNvZGUgPSAnQVVUTycgVEhFTiAwIEVMU0UgMSBFTkQsIHNoYXJlX2luX2JyYW5jaCBERVNDOwotLSB0aGUgc2FtZSB0ZXh0IG9uIFNRTCBTZXJ2ZXIKLS0gQVVUTyByb3dzOiBUYXNoa2VudCBDZW50cmFsIDkgODMwIDczMCA1NjEgPSAzNC4yICUgb2YgaXRzIGJvb2s7IE51a3VzIENlbnRyYWwsIEZlcmdhbmEgQ2VudHJhbCBhbmQgVGFzaGtlbnQgTm9ydGggYWJvdXQgMzAgJTsgQnVraGFyYSBDZW50cmFsIGxvd2VzdCBhdCAxNy42ICUKV2l0aCBPVkVSICgpIHlvdSB3b3VsZCBnZXQgQXV0bydzIHNoYXJlIG9mIHRoZSB3aG9sZSBjb21wYW55IChUYXNoa2VudCBDZW50cmFsJ3MgQXV0byBpcyA0LjcgJSBvZiB0aGUgYm9vaykg4oCUIGEgZGlmZmVyZW50IHF1ZXN0aW9uLiBDb21wYW55LXdpZGUsIEF1dG8gaXMgMjcuNiAlIG9mIG91dHN0YW5kaW5nOyBUYXNoa2VudCBDZW50cmFsIHJ1bnMgNi42IHBvaW50cyBhYm92ZSB0aGF0LCBCdWtoYXJhIDEwIHBvaW50cyBiZWxvdy4gQSB0aGlyZCBvZiBvbmUgYnJhbmNoJ3MgYm9vayBpbiBiaWctdGlja2V0IEF1dG8gaXMgd29ydGggYSBsaW5lIGluIEJla3pvZCdzIHBhY2ssIG5vdCBhbiBhbGFybS4="}
+{"id": "w03d1", "sql": true, "q": "Nilufar worries that one branch leans too hard on Auto loans. For each branch, compute Auto's share of that branch's own outstanding principal (instalments due after 2026-10-01, all loan statuses). What is the highest such share among the ten branches? Percentage to 1 decimal.", "type": "number", "dp": 1, "h": ["f3480b47fbe805fc66dfcea9"], "hint": "One GROUP BY by branch and product, then a window whose partition is the branch rather than the whole company.", "sol": "U0VMRUNUIGIuYnJhbmNoX25hbWUsIHAuY29kZSwKICAgICAgIFNVTShpLnByaW5jaXBhbF9kdWUpIEFTIG91dHN0YW5kaW5nLAogICAgICAgUk9VTkQoMTAwLjAgKiBTVU0oaS5wcmluY2lwYWxfZHVlKQogICAgICAgICAgICAgLyBTVU0oU1VNKGkucHJpbmNpcGFsX2R1ZSkpIE9WRVIgKFBBUlRJVElPTiBCWSBiLmJyYW5jaF9uYW1lKSwgMSkgQVMgc2hhcmVfaW5fYnJhbmNoCkZST00gaW5zdGFsbG1lbnRzIGkKSk9JTiBsb2FucyBsICAgIE9OIGwubG9hbl9pZCA9IGkubG9hbl9pZApKT0lOIGJyYW5jaGVzIGIgT04gYi5icmFuY2hfaWQgPSBsLmJyYW5jaF9pZApKT0lOIHByb2R1Y3RzIHAgT04gcC5wcm9kdWN0X2lkID0gbC5wcm9kdWN0X2lkCldIRVJFIGkuZHVlX2RhdGUgPiAnMjAyNi0xMC0wMScKR1JPVVAgQlkgYi5icmFuY2hfbmFtZSwgcC5jb2RlCk9SREVSIEJZIENBU0UgV0hFTiBwLmNvZGUgPSAnQVVUTycgVEhFTiAwIEVMU0UgMSBFTkQsIHNoYXJlX2luX2JyYW5jaCBERVNDOwotLSB0aGUgc2FtZSB0ZXh0IG9uIFNRTCBTZXJ2ZXIKLS0gQVVUTyByb3dzOiBUYXNoa2VudCBDZW50cmFsIDkgODMwIDczMCA1NjEgPSAzNC4yICUgb2YgaXRzIGJvb2s7IE51a3VzIENlbnRyYWwsIEZlcmdhbmEgQ2VudHJhbCBhbmQgVGFzaGtlbnQgTm9ydGggYWJvdXQgMzAgJTsgQnVraGFyYSBDZW50cmFsIGxvd2VzdCBhdCAxNy42ICUKV2l0aCBPVkVSICgpIHlvdSB3b3VsZCBnZXQgQXV0bydzIHNoYXJlIG9mIHRoZSB3aG9sZSBjb21wYW55IChUYXNoa2VudCBDZW50cmFsJ3MgQXV0byBpcyA0LjcgJSBvZiB0aGUgYm9vaykg4oCUIGEgZGlmZmVyZW50IHF1ZXN0aW9uLiBDb21wYW55LXdpZGUsIEF1dG8gaXMgMjcuNiAlIG9mIG91dHN0YW5kaW5nOyBUYXNoa2VudCBDZW50cmFsIHJ1bnMgNi42IHBvaW50cyBhYm92ZSB0aGF0LCBCdWtoYXJhIDEwIHBvaW50cyBiZWxvdy4gQSB0aGlyZCBvZiBvbmUgYnJhbmNoJ3MgYm9vayBpbiBiaWctdGlja2V0IEF1dG8gaXMgd29ydGggYSBsaW5lIGluIEJla3pvZCdzIHBhY2ssIG5vdCBhbiBhbGFybS4="}
 ```
 
 <!-- challenge:end -->

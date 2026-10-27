@@ -2,18 +2,62 @@
 
 > STORY You have just been hired as the first data analyst of **Nur Finance**, a lending company with branches in eight regions, a mobile app and five loan products. Every week a different team comes to you with a real request. By week 8 you run the company's numbers — and you can walk into any analyst interview and talk like someone who has done the job.
 
+> 🧭 **What this page is for.** Your front door: what the course is, how one day works, what counts, and where to click first.
+
+## Start here
+
+1. **[Practice day](practice.md)** — 30 minutes, nothing counts. You run a query, answer in a box, let the site check it, hand it in and try the quiz once.
+2. **[Day 0 — where do you stand?](weeks/week-00/day-0.md)** — five short self-tests and your plan. Score 80 %+ on a module and you skip that week (you still do its Friday checkpoint).
+3. **[Week 1 · Day 1](weeks/week-01/day-1.md)** — the real work starts: how a company keeps its data.
+
+> 💡 **Key idea.** You learn by doing. Every section of a day gives you something to do — a box to answer in, a query to run, a game, a video that stops to ask — and the site tells you at once whether you are right.
+
 ## How this course works
 
-- **First, the [Practice day](practice.md).** It walks you through the routine once (run SQL on the page, answer, check, send, read the feedback) on three warm-up questions that do not count. Nothing to install.
-- **One page per day.** Read it top to bottom; the day is done when you pass its quiz at the end. ~3 hours. The [course map](map.md) shows where you are.
-- **Mon–Thu: learn and practise. Fri: checkpoint or a bigger homework.** Weekends are free (or catch-up).
-- **Practice answers are folded** on the page — try first, then open. **Homework** goes in the **📎 box** at the end of each homework section (see [How to submit](homework/how-to-submit.md)); you get written feedback within a day and points on the [progress board](progress.md).
-- **Every day ends with a short quiz.** Pass it with **80 %** and the day is done: it gets a tick in the sidebar, counts toward your streak and earns XP.
-- **Levels, badges and real rewards.** Points, quiz days and daily challenges add up to XP; XP takes you from Intern to Lead Analyst. Every checkpoint you pass (70 %+) wins a voucher you can spend, each one bigger than the last; big results unlock big rewards. See your [progress & rewards](progress.md) board.
-- **Check your homework yourself first:** the **✔ Check** button in each SQL workspace tells you task by task whether your numbers are right — without showing the answers. Then **📤 Submit** in the same box ([how](homework/how-to-submit.md)).
-- **Skip what you know.** Start with [Day 0](weeks/week-00/day-0.md): five short tests. Score 80 %+ on a module → skip that week, do only its Friday checkpoint.
+- **Eight weeks, one page per day, about 3 hours.** Mon–Thu: learn and practise. Fri: a checkpoint or a bigger homework. Weekends are free (or catch-up).
 - **One dataset for everything:** the Nur Finance database (11 tables, 6,040 customers, 7,828 loans). You will know it like your own flat by week 3.
+- **Skip what you know.** [Day 0](weeks/week-00/day-0.md) decides which weeks you take in full.
+- **The [course map](map.md)** shows where you are; the [progress board](progress.md) shows your XP, level and rewards.
 - **Depth is optional.** Every day links to the exact video minute or deck page if you want more; nothing depends on it. The full map is in [Sources](sources.md).
+
+## How a day works
+
+Every day page has the same route. Under its title, **Today's route** shows the sections as chips that tick ✓ as you finish them.
+
+| Section | What you do | Done when |
+|---|---|---|
+| **Learn** | read short explanations; run every SQL box with ▶ Run | you have read it |
+| **Worked example** | follow one real Nur Finance request from question to answer | you have run it |
+| **Practice** | answer every question in its box — a choice, a number, a word, a query or a short text — and see ✓ or ✗ at once | every box is answered |
+| **Homework** | the box at the end: SQL tasks the site checks itself, the rest written or attached; **📤 Submit** ([how](homework/how-to-submit.md)) | it is submitted |
+| **Quick check** | three questions, one at a time, with explanations | all three answered |
+| **Company corner** | how a lending company works: a game and an interview question | the game and the box |
+| **Day quiz** | pass with **80 %** — retry as often as you like | passed: the day is done |
+| **Daily challenge** | one harder bonus question, with its own editor on SQL days | solved |
+
+Fridays (Day 5) are checkpoints: the checkpoint's parts (A, B, C) and one 📎 hand-in box take the place of Learn → Homework; the Day quiz and the Daily challenge stay. Week 8 · Days 3–5 are the capstone, with a route of their own. On a day with no new homework, its Homework section says which earlier homework is due.
+
+> ⚠️ **Watch out.** Answer before you look. A ❌ never shows the answer — it means *look again*. On written answers you see the model only after you write yours and tap **Compare**.
+
+## The tools on the page
+
+- **SQL in the page.** Every SQL box has **▶ Run** and works on the full Nur Finance database. Nothing to install.
+- **The Database panel.** **Database** at the bottom right: every table, its columns and keys; **Show rows** shows its first 10 rows. Tap a name to put it in your query.
+- **The [SQL playground](playground.md).** Your own copy of the database: create tables, change rows, delete them — with a guided lab that checks each step. **↺ Reset** brings the original back.
+- **Python in the page (from Week 5).** Python boxes get **▶ Run**, with pandas and the course data already loaded. The first run on a page downloads the engine once (about 15 MB).
+- **Games.** Flashcards, matching, sorting, fill-the-gaps, build-the-query and find-the-bug — for the things best learned by hand.
+- **Videos with questions.** A video plays only the minutes you need and stops to ask; a wrong answer offers *↺ watch that bit again*.
+- **Excel and Power BI** run on your computer (weeks 4 and 7). The page checks the numbers you type and takes the file as an upload.
+
+## What counts toward progress
+
+- **A day is done** when you pass its quiz with 80 % or more: a tick in the sidebar, a day of your streak, XP.
+- **Your answers in the boxes** are saved in this browser and tick off the day's sections. A Quick check is for you — it shows what stuck, and earns no XP.
+- **Homework and checkpoints** earn the points your mentor gives, with written feedback within a day. **✔ Check** each SQL task first — it tells you task by task whether your numbers are right, without showing the answers.
+- **Daily challenges** earn XP that grows with your challenge streak; a hidden *lucky day* in every week pays double.
+- **Checkpoints** passed with 70 %+ win a voucher, each bigger than the last; XP takes you from Intern to Lead Analyst. All the rules: [progress & rewards](progress.md).
+
+> ⚠️ **Watch out.** Progress lives in this browser. Use the same browser on the same device, and do not clear its data — or your ticks and saved answers stay behind.
 
 ## The 8 weeks
 
@@ -123,6 +167,6 @@ Before any interview: the [interview bank](company/interview.md) — 30 question
 
 ## Tools (free)
 
-Weeks 1–3 need only this website (SQL runs on the pages). Later: Excel or Google Sheets · Python via Anaconda or Google Colab · Power BI Desktop · a GitHub account.
+Weeks 1–3 need only this website (SQL runs on the pages), and from week 5 the Python boxes run on the pages too. Later you also need Excel or Google Sheets (week 4) and Power BI Desktop (week 7, Windows). Optional, for the job: Jupyter via Anaconda or Google Colab, and a GitHub account — see [Tools at work](tools-at-work.md).
 
 

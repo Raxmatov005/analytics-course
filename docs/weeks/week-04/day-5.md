@@ -10,9 +10,13 @@
 - **Part B (40 pts):** the **one-page board report** on the clean data — pivots, three charts, six tiles, a five-sentence findings note.
 - **Part C (20 pts):** **eight interview questions** on the week, answered in writing as you would say them aloud.
 
-**Rules.** Open book: your pages, your files, the workbook. Closed: the model-answer folds until you submit. Hand in with the **📎 box at the end of this page**: `checkpoint.xlsx` (sheets `Raw_Customers`, `Raw_Payments` untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data` with the pivots; `OnePager`; `Checks`), `change_log.md`, `findings.md` (the five sentences), `interview.md`. Also due today: **HW 4.2** in `day-3/`. Sheets users: one spreadsheet with the same tabs, exported to `.xlsx` **and** the share link in `README.md`; formulas stay visible in the export. As of **2026-10-01** everywhere; a cell on `OnePager` says so.
+**Today's files:** `data/excel/customers_dirty.csv`, `data/excel/payments_dirty.csv`, `data/excel/installments.csv` and `data/excel/monthly_disbursements.csv` (press **⬇ Download** next to each and put them in one fresh folder — Power Query reads them from there), plus `tblLoans` from `data/excel/nur_week4_start.xlsx`. Build everything in one new workbook, `checkpoint.xlsx`. **Done today** = the `Checks` sheet is all TRUE after Refresh All, the key-number boxes above the hand-in are ✓, the eight Part C boxes are written, `checkpoint.xlsx` + `change_log.md` + `findings.md` + `interview.md` are handed in, and the day quiz is passed.
+
+**Rules.** Open book: your pages, your files, the workbook. Closed: the model-answer folds until you submit (the Part C boxes show their model only after you have written your own answer). Hand in with the **📎 box at the end of this page**: `checkpoint.xlsx` (sheets `Raw_Customers`, `Raw_Payments` untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data` with the pivots; `OnePager`; `Checks`), `change_log.md`, `findings.md` (the five sentences), `interview.md`. Also due today: **HW 4.2** — hand it in through the 📎 box on the Day 3 page. Sheets users: one spreadsheet with the same tabs, exported to `.xlsx` **and** the share link in `README.md`; formulas stay visible in the export. As of **2026-10-01** everywhere; a cell on `OnePager` says so.
 
 **Working method.** Raw stays raw. Every clean table ends in a check cell against a number you know. Every tile has a one-line definition under it. Every chart title is a finding. Count rows after every merge. Refresh All before you save — if a number changes, something was pasted.
+
+> 💡 **Key idea.** The checkpoint is graded on whether the numbers **survive a refresh**, not on whether they are right once. A typed number that matches today still loses its point, because the reviewer presses Refresh All on a changed file.
 
 **Time plan** (the reviewer's, as a suggestion):
 
@@ -75,6 +79,12 @@ Twenty points per file: 8 for the row and value counts, 6 for the pipeline being
 | `SUMIFS` per instalment over payments | Group By (Sum, Min) + Merge Queries (Left Outer) |
 | a second file pasted under the first | Append Queries |
 | "I did it again on Monday" | Refresh All |
+
+```game
+{"type": "match", "id": "w04d5-g1", "title": "From hand tool to recorded step", "pairs": [["TRIM / PROPER in a helper column", "Transform → Format → Trim, Capitalize Each Word"], ["Ctrl+H bank transfer → transfer", "Replace Values (match entire cell)"], ["key + COUNTIFS > 1", "Sort, then Remove Duplicates on the key columns"], ["SUMIFS per instalment over payments", "Group By + Merge Queries (Left Outer)"], ["a second file pasted under the first", "Append Queries"], ["doing it all again on Monday", "Refresh All"]]}
+```
+
+> ⚠️ **Watch out.** Remove Duplicates keeps the **first** row it meets. Sort `customers` by `registered_at` ascending (and `payments` by `payment_id`) *before* the step, or the original is deleted and the later copy survives — the model checks catch it as ids above 6 000.
 
 ### A1. `customers_clean` (20 pts)
 
@@ -154,6 +164,8 @@ Build on **`customers_clean` / `payments_clean` / `installments_paid` / `tblLoan
 
 **Sheets route:** pivots from Insert → Pivot table on the clean tabs (`Show as % of grand total` where needed; a `due_month` column added to `installments_paid` by formula since Sheets pivots do not group dates); `QUERY` for the top-5 (`order by sum(K) desc limit 5`); charts from the pivot ranges; Data → Add a slicer on `region`; tiles with `GETPIVOTDATA` or `SUMIFS`; `=SPARKLINE()` under the tiles. Set the sheet to landscape in File → Print, and export the one page to PDF as a second deliverable.
 
+> 💡 **Key idea.** Every tile needs two things to score: the right number **from a formula**, and a one-line definition under it. A tile that says *n/a* with a correct definition keeps half its points; a right number with no definition keeps none.
+
 **Building order** (so a half-finished page is still a page):
 
 1. `Data` sheet: the product pivot and the bucket pivot (both on `tblLoans`) — ten minutes, and tiles 1, 3, 4 already have their numbers.
@@ -221,7 +233,7 @@ If you are stuck:
 
 ## Part C — Eight interview questions (30 min, 20 pts)
 
-Answer in writing, 3–5 sentences each, as you would say them aloud: 2 points per question (1 correct and complete, 1 with a Nur Finance example and number) plus 4 for the "definitions I used" note at the top of `interview.md` (as-of, DPD, the dedup rule, collection rate basis, FPD30).
+Answer in writing, 3–5 sentences each, as you would say them aloud: 2 points per question (1 correct and complete, 1 with a Nur Finance example and number) plus 4 for the "definitions I used" note at the top of `interview.md` (as-of, DPD, the dedup rule, collection rate basis, FPD30). Write each answer in its box below — it is saved as you go, and **Compare** shows the model answer once you have written at least 30 words. Then paste the definitions note and all eight answers into `interview.md` in the 📎 box.
 
 <details><summary>The definitions note — model</summary>
 
@@ -229,27 +241,53 @@ Answer in writing, 3–5 sentences each, as you would say them aloud: 2 points p
 
 </details>
 
-1. VLOOKUP vs INDEX/MATCH vs XLOOKUP — when do you use which, and what are VLOOKUP's traps?
-2. When is an **approximate-match** lookup the right tool? Give the example you built.
-3. Why can **Remove Duplicates** lie, in both directions? How do you de-duplicate safely in Excel?
-4. **Power Query vs formulas** — when do you clean with each?
-5. In a pivot, what does **% of Parent Row Total** do, and how is it different from % of Grand Total?
-6. **Line vs bar chart** — how do you choose, and name two ways a chart can lie.
-7. What do **absolute references** do, and where did you need them this week?
-8. How do you make an Excel report **refreshable**, and what do you check after a refresh?
+**Q1.** VLOOKUP vs INDEX/MATCH vs XLOOKUP — when do you use which, and what are VLOOKUP's traps?
 
-<details><summary>Model answers (open after submitting)</summary>
+```task
+{"id": "w04d5-c1", "kind": "free", "min": 30, "model": "XLOOKUP when the file lives in Excel 365/2021 or Sheets: exact by default, a named return column, if_not_found, approximate modes, search from the end. INDEX/MATCH when older Excel must open the file — same power, two functions. VLOOKUP only to read other people's files. Its traps: approximate match is the default (a wrong rate with no error), the column is a count that breaks when a column is inserted, it looks right only, and an unpinned range walks when copied. Example: product → annual_rate from the Lookup sheet, 4 491 202 901 of monthly interest run-rate — one wrong default and the figure is silently wrong.", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "names at least three of VLOOKUP's four traps"]}
+```
 
-1. `XLOOKUP` when the file lives in Excel 365/2021 or Sheets: exact by default, named return column, `if_not_found`, approximate modes, search from the end. `INDEX/MATCH` when older Excel must open the file — same power, two functions. `VLOOKUP` only to read other people's files. Its traps: approximate match is the **default** (a wrong rate with no error), the column is a **count** that breaks when a column is inserted, it looks **right only**, and an unpinned range walks when copied. Example: product → annual_rate from the `Lookup` sheet, 4 491 202 901 of monthly interest run-rate — one wrong default and the figure is silently wrong.
-2. When the key is a *range*, not a value: DPD → bucket, income → band, score → grade. A sorted table of lower edges (0 / 1 / 31 / 61 / 91) and `XLOOKUP(dpd, edges, labels, , -1)` (or `VLOOKUP … TRUE`, `MATCH … 1`) returns the band; it reproduced the shipped buckets with 0 mismatches — 7 429 / 124 / 25 / 16 / 234 — and a boundary change is one cell on `Lookup`, not 7 828 `IFS` edits. The key column must be sorted ascending or the result is wrong without an error.
-3. It compares the ticked columns exactly as displayed (case-insensitive, space-sensitive) and keeps the first row: on raw names it **under-removes** (24 of 40 — the 18 trailing-space rows survive), on trimmed names it **over-removes** (42 — two real namesakes, 823/1197 and 2460/5562, deleted), and it records nothing. Safely: define sameness on identifying fields (phone + birth date → exactly 40), *count* the groups with `COUNTIFS` on a key and look at them, sort so the right row is kept, then remove as a recorded Power Query step on a copy, raw untouched, counts in the change log (6 040 → 6 000; payments 52 875 → 52 850, Σ 58 397 800).
-4. Power Query when the same cleaning must run again (Monday's export), when there are joins, groupings or type changes, or when the data is too big for row formulas (92 193 instalments × 52 850 payments) — steps are recorded, refreshable, and the pane *is* the change log. Formulas when the result must react cell by cell (a dropdown-driven sheet), when the reader must see the logic, or in Sheets where Power Query does not exist; keep them on a clean tab fed from the raw tab. Never the mouse on the raw data.
-5. Both are shares; the denominator differs. % of Grand Total divides by the whole table (Tashkent 39.1 % of the book). % of Parent Row Total divides by the row's *parent group* — Tashkent Central 35.2 % of Tashkent, and on the region row itself the parent is the grand total, so the one column shows two levels at once. It is `SUM(x) OVER (PARTITION BY region)` against `OVER ()`.
-6. A line for a measure over **time** (34 monthly points; the eye reads slope), a bar/column for **categories** (five products; the eye compares lengths; sort them). Lies: a bar axis not starting at zero (7 % growth looks like doubling), a partial period plotted as a full one (October's one day as a −95 % month), 3D, a dual axis that makes two lines cross meaninglessly, and a pie with many slices. Title the finding, from zero, one highlight colour.
-7. `$` pins a row, a column or both so a formula can be filled without the reference moving: `$A3` reads the region from column A on every row, `B$2` reads the bucket from row 2 in every column — the region × bucket matrix is one `SUMIFS` with three `$`. Also conditional-formatting rules (`=$M2="90+"`: column pinned, row free) and lookup ranges (`Lookup!$A$3:$F$7`). Tables remove most of the need — `tblLoans[outstanding]` is already absolute.
-8. Data arrives through Power Query (or into a Table) so Refresh All re-reads the files; pivots sit on the Table or the query output, never a fixed range; tiles read pivots by `GETPIVOTDATA` or the Table by `SUMIFS`, nothing is typed; number formats live in Value Field Settings; slicers are connected; the as-of date is a cell. After refresh: row counts against the known totals (7 828 · 52 850 · 6 000 · 92 193), the grand total against the Table's `SUM`, the slicers cleared, and the six tiles against the warehouse views — a difference means a definition changed, not a formula.
+**Q2.** When is an **approximate-match** lookup the right tool? Give the example you built.
 
-</details>
+```task
+{"id": "w04d5-c2", "kind": "free", "min": 30, "model": "When the key is a range, not a value: DPD → bucket, income → band, score → grade. A sorted table of lower edges (0 / 1 / 31 / 61 / 91) and XLOOKUP(dpd, edges, labels, , -1) — or VLOOKUP … TRUE, MATCH … 1 — returns the band; it reproduced the shipped buckets with 0 mismatches, 7 429 / 124 / 25 / 16 / 234, and a boundary change is one cell on Lookup, not 7 828 IFS edits. The key column must be sorted ascending or the result is wrong without an error.", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "says the edge column must be sorted (lower edges with −1)"]}
+```
+
+**Q3.** Why can **Remove Duplicates** lie, in both directions? How do you de-duplicate safely in Excel?
+
+```task
+{"id": "w04d5-c3", "kind": "free", "min": 30, "model": "It compares the ticked columns exactly as displayed — case-insensitive, space-sensitive — and keeps the first row. On raw names it under-removes (24 of 40: the 18 trailing-space rows survive); on trimmed names it over-removes (42: two real namesakes, 823/1197 and 2460/5562, deleted); and it records nothing. Safely: define sameness on identifying fields (phone + birth date → exactly 40), count the groups with COUNTIFS on a key and look at them, sort so the right row is kept, then remove as a recorded Power Query step on a copy, raw untouched, counts in the change log (6 040 → 6 000; payments 52 875 → 52 850, Σ 58 397 800).", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "explains both directions: too few (spaces) and too many (namesakes)"]}
+```
+
+**Q4.** **Power Query vs formulas** — when do you clean with each?
+
+```task
+{"id": "w04d5-c4", "kind": "free", "min": 30, "model": "Power Query when the same cleaning must run again (Monday's export), when there are joins, groupings or type changes, or when the data is too big for row formulas (92 193 instalments × 52 850 payments): the steps are recorded and refreshable, and the pane is the change log. Formulas when the result must react cell by cell (a dropdown-driven sheet), when the reader must see the logic, or in Sheets where there is no Power Query — kept on a clean tab fed from the raw tab. Never the mouse on the raw data.", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "names a case for each tool, and 'never the mouse on raw data'"]}
+```
+
+**Q5.** In a pivot, what does **% of Parent Row Total** do, and how is it different from % of Grand Total?
+
+```task
+{"id": "w04d5-c5", "kind": "free", "min": 30, "model": "Both are shares; the denominator differs. % of Grand Total divides by the whole table (Tashkent 39.1 % of the book). % of Parent Row Total divides by the row's parent group — Tashkent Central is 35.2 % of Tashkent — and on the region row itself the parent is the grand total, so one column shows two levels at once. It is SUM(x) OVER (PARTITION BY region) against OVER ().", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "names the different denominators (parent group vs whole table)"]}
+```
+
+**Q6.** **Line vs bar chart** — how do you choose, and name two ways a chart can lie.
+
+```task
+{"id": "w04d5-c6", "kind": "free", "min": 30, "model": "A line for a measure over time (34 monthly points — the eye reads slope); a bar or column for categories (five products — the eye compares lengths; sort them). Lies: a bar axis not starting at zero (7 % growth looks like doubling), a partial period plotted as a full one (October's one day as a −95 % month), 3D, a dual axis that makes two lines cross meaninglessly, a pie with many slices. Title the finding, start at zero, one highlight colour.", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "names two concrete ways a chart lies"]}
+```
+
+**Q7.** What do **absolute references** do, and where did you need them this week?
+
+```task
+{"id": "w04d5-c7", "kind": "free", "min": 30, "model": "$ pins a row, a column or both so a formula can be filled without the reference moving: $A3 reads the region from column A on every row, B$2 reads the bucket from row 2 in every column — the region × bucket matrix is one SUMIFS with three $. Also conditional-formatting rules (=$M2=\"90+\": column pinned, row free) and lookup ranges (Lookup!$A$3:$F$7). Tables remove most of the need — tblLoans[outstanding] is already absolute.", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "explains mixed references ($A3 / B$2) with a place they were needed"]}
+```
+
+**Q8.** How do you make an Excel report **refreshable**, and what do you check after a refresh?
+
+```task
+{"id": "w04d5-c8", "kind": "free", "min": 30, "model": "Data arrives through Power Query (or into a Table) so Refresh All re-reads the files; pivots sit on the Table or the query output, never a fixed range; tiles read pivots by GETPIVOTDATA or the Table by SUMIFS, nothing typed; number formats live in Value Field Settings; slicers are connected; the as-of date is a cell. After refresh: row counts against the known totals (7 828 · 52 850 · 6 000 · 92 193), the grand total against the Table's SUM, slicers cleared, and the six tiles against the warehouse views — a difference means a definition changed, not a formula.", "rubric": ["answers the question correctly and completely", "gives a Nur Finance example with a number", "lists at least two post-refresh checks (row counts, grand total vs Table)"]}
+```
 
 ---
 
@@ -298,20 +336,46 @@ Partial credit rules, so you know what to drop when time runs out:
 
 Below 70: feedback names the parts to redo (most often A1's duplicate rule and B's FPD30 tile); re-submit Monday morning before Week 5. Points go to the [Progress page](progress.md).
 
-**Hand-in checklist** (the 📎 box below): `checkpoint.xlsx` (raw sheets untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data`; `OnePager`; `Checks`), `change_log.md` (ten lines with counts), `findings.md` (five sentences), `interview.md` (definitions note + 8 answers); Sheets users add `README.md` with the link. Also due today: **HW 4.2** in `day-3/`.
+**Hand-in checklist** (the 📎 box below): `checkpoint.xlsx` (raw sheets untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data`; `OnePager`; `Checks`), `change_log.md` (ten lines with counts), `findings.md` (five sentences), `interview.md` (definitions note + 8 answers); Sheets users add `README.md` with the link. Also due today: **HW 4.2**, on the Day 3 page.
 
-<span class="badge stretch">Stretch</span> Add week 3's **month-end outstanding** series to the page: on `installments_paid`, a column `disbursed` (the loan's date via `XLOOKUP`), then for each month-end `SUMIFS(principal_due, due_date >= next month, disbursed < next month)` — a `SEQUENCE` of 2026 month-starts drives it; September 208 243 879 623, June 184 617 414 010. Plot it as the sparkline under the Outstanding tile, and explain in the footnote why 208.2 bn (month-end) and 208.7 bn (as-of) are both right.
+> 🚀 **Stretch (optional, +5 XP).** Add week 3's **month-end outstanding** series to the page: on `installments_paid`, a column `disbursed` (the loan's date via `XLOOKUP`), then for each month-end `SUMIFS(principal_due, due_date >= next month, disbursed < next month)` — a `SEQUENCE` of 2026 month-starts drives it; September 208 243 879 623, June 184 617 414 010. Plot it as the sparkline under the Outstanding tile, and explain in the footnote why 208.2 bn (month-end) and 208.7 bn (as-of) are both right. *In the box: your August 2026 month-end value.*
 
-**What Week 5 takes from today.** Monday's pandas labs reload exactly these files — `customers_dirty.csv`, `payments_dirty.csv`, `installments.csv`, `loans_status.csv` — and redo A1, A2 and the six tiles in a notebook: `str.strip().str.title()`, `drop_duplicates(subset=["phone", "birth_date"])`, `merge(how="left")`, `groupby`, `pivot_table`. Keep your `change_log.md`: the notebook's first markdown cell is the same ten lines, and the comparison "which tool was faster to redo" is the week's closing question. The numbers must not move — 6 000 · 52 850 · 208 723 504 430 · 94.1 % — only the tool does.
+```task
+{"id": "w04d5-p1", "kind": "number", "answer": 203830205928, "dp": 0, "unit": "UZS", "xp": 2, "hint": "Month-end August = principal_due with due_date ≥ 2026-09-01 on loans disbursed before 2026-09-01.", "explain": "=SUMIFS(installments_paid[principal_due], installments_paid[due_date], \">=\"&DATE(2026,9,1), installments_paid[disbursed], \"<\"&DATE(2026,9,1)) → 203 830 205 928. The 2026 series: June 184 617 414 010 · July 193 664 170 150 · August 203 830 205 928 · September 208 243 879 623. Month-end (208.2 bn) and as-of (208.7 bn) differ by the 21 loans of 1 October and the instalments due on 1 October — both right, different moments."}
+```
+
+**What Week 5 takes from today.** Next week's pandas labs reload exactly these files — `customers_dirty.csv`, `payments_dirty.csv`, `installments.csv`, `loans_status.csv` — and redo A1, A2 and the six tiles in a notebook: `str.strip().str.title()`, `drop_duplicates(subset=["phone", "birth_date"])`, `merge(how="left")`, `groupby`, `pivot_table`. Keep your `change_log.md`: the notebook's first markdown cell is the same ten lines, and the comparison "which tool was faster to redo" is the week's closing question. The numbers must not move — 6 000 · 52 850 · 208 723 504 430 · 94.1 % — only the tool does.
 
 Madina, 17:30: *"Bekzod has his page and refreshed it himself. Nilufar's age bands no longer have a five-year-old. Timur pointed his dashboard and your workbook at the same definitions and the six numbers agree to the soum. Monday is Python — the same book, in pandas, and we will see whether the notebook or the workbook is faster to redo."*
 
 ---
 
+### Check your key numbers before you hand in
+
+Three numbers that are not on the known-numbers card — read them off your own `checkpoint.xlsx`. All three ✓ means the pipeline and the page agree with each other.
+
+**K1.** On `Data`, the *Others* bar beside the top-5 branches: `SUM(tblLoans[outstanding])` minus the Top-5 pivot's total.
+
+```task
+{"id": "w04d5-k1", "kind": "number", "answer": 77590542486, "dp": 0, "unit": "UZS", "explain": "208 723 504 430 − 131 132 961 944 = 77 590 542 486. If you get 0, you subtracted the filtered pivot's Grand Total from itself."}
+```
+
+**K2.** In `customers_clean`: the average `age` of the rows with a valid birth date, 1 decimal.
+
+```task
+{"id": "w04d5-k2", "kind": "number", "answer": 45.2, "dp": 1, "unit": "years", "hint": "AVERAGE skips the blanks you left for the 7 invalid dates — that is the point of blanking them.", "explain": "5 993 valid rows, average completed age 45.2. With the 7 bad dates left in, the −5 and 126 pull it off; with blanks typed as 0 they pull it down hard."}
+```
+
+**K3.** In `installments_paid`: matured instalments (`due_date` ≤ 2026-10-01) that are **partly** paid — `paid` above 0 but below `total_due`.
+
+```task
+{"id": "w04d5-k3", "kind": "number", "answer": 403, "dp": 0, "explain": "Of the 1 784 matured instalments not fully paid, 403 have a partial payment and 1 381 none at all. 427 means payments were not cut at the as-of date."}
+```
+
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W4D5", "lesson": "W4D5", "title": "Checkpoint 4", "tasks": [{"id": "checkpoint.xlsx", "file": "checkpoint.xlsx", "names": ["checkpoint.xlsx"], "upload": true, "accept": ".xlsx", "q": "Attach `checkpoint.xlsx` — what the page above asks for."}, {"id": "findings.md", "file": "findings.md", "text": true, "minLines": 3, "q": "Write `findings.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W4D5", "lesson": "W4D5", "title": "Checkpoint 4", "why": "This is the week in one file: a refreshable cleaning pipeline and a board page built on it — the artefact you will rebuild in pandas next week and show in interviews.", "graded": ["Part A, 40 pts: counts match, nothing destroyed, Refresh All reproduces, change log with counts", "Part B, 40 pts: six tiles with definitions, three honest charts with finding titles, refreshable pivots, five findings", "Part C, 20 pts: definitions note + eight answers, each with a Nur Finance number", "pass: 70 of 100"], "tasks": [{"id": "checkpoint.xlsx", "file": "checkpoint.xlsx", "names": ["checkpoint.xlsx"], "upload": true, "accept": ".xlsx", "q": "Attach `checkpoint.xlsx` — what the page above asks for."}, {"id": "findings.md", "file": "findings.md", "text": true, "minLines": 3, "q": "Write `findings.md` here — what the page above asks for."}, {"id": "change_log.md", "file": "change_log.md", "text": true, "minLines": 5, "q": "Write `change_log.md` here — ten lines, one per change: what, on which columns, how many rows, the money if any, why."}, {"id": "interview.md", "file": "interview.md", "text": true, "minLines": 9, "q": "Paste `interview.md` here — the definitions note first, then your eight Part C answers."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
 
 ---

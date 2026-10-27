@@ -2,6 +2,8 @@
 
 <span class="badge">Free practice</span> <span class="badge company">Nothing to install</span>
 
+> 🧭 **What this page is for.** A sandbox you cannot break: try any SQL, including the commands that create, change and delete data — and practise them once, with checks, in the lab below the editor.
+
 This is your own copy of the **Nur Finance** database — the same 11 tables the bank's analysts use in this course, with every row. Do anything here:
 
 - **Ask questions** with `SELECT`, `WHERE`, `GROUP BY`, `JOIN`.
@@ -14,6 +16,16 @@ Everything you change is **kept on this device** — close the page, come back t
 
 ```sqlplay
 ```
+
+## Your first table — a lab with checks
+
+Four steps, one editor. Each **▶ Run** works on your practice copy, then the lab checks the step and opens the next one. Open **Database** while you work: your table appears under *Your tables* as soon as it exists.
+
+```sqllab
+{"id": "playground-lab", "title": "Your first table", "intro": "Nur Finance is opening new offices and Madina wants a scratch list before they go into the real branches table. You build it, fill it, fix it and clean it up — create, insert, update, delete.", "steps": [{"say": "Create a table my_branches(branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT).", "hint": "CREATE TABLE my_branches (branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT);", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='my_branches'", "want": 1}, {"say": "Insert exactly three branches — any names, regions such as 'Tashkent' or 'Samarkand'.", "hint": "INSERT INTO my_branches (name, region) VALUES ('Chilonzor', 'Tashkent'), ('Registan', 'Samarkand'), ('Old City', 'Bukhara');", "expect": "SELECT COUNT(*) FROM my_branches", "want": 3}, {"say": "Change the region of one of them to 'Fergana' with UPDATE … WHERE.", "hint": "UPDATE my_branches SET region = 'Fergana' WHERE branch_id = 1;", "expect": "SELECT COUNT(*) FROM my_branches WHERE region='Fergana'", "want": 1}, {"say": "Delete the one in Fergana. Then SELECT * FROM my_branches to see the two that are left.", "hint": "DELETE FROM my_branches WHERE region = 'Fergana';", "expect": "SELECT COUNT(*) FROM my_branches WHERE region='Fergana'", "want": 0}], "cleanup": "DROP TABLE IF EXISTS my_branches"}
+```
+
+> ⚠️ **Watch out.** An `UPDATE` or `DELETE` without `WHERE` changes every row of the table. Here it costs you a **↺ Reset**; at work it costs a restore from backup. Write the `WHERE` first.
 
 ## Ideas to try
 

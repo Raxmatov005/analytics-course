@@ -10,6 +10,8 @@
 - **Dynamic arrays** — `FILTER`, `UNIQUE`, `SORT`, `SORTBY`, `SEQUENCE` — return many cells from one formula (a *spill*); with a **data-validation dropdown** they make a report the reader drives.
 - **Conditional formatting** turns a bucket column into colour; you have built Sevara's sheet and reproduced the bucket counts 7 429 / 124 / 25 / 16 / 234 with an approximate lookup against the `Lookup` table.
 
+**Today's file:** `data/excel/nur_week4_start.xlsx` again — press **⬇ Download** if you need a fresh copy and save it as `week-04/day-2/practice.xlsx` (yesterday's copy works too). `FILTER`, `UNIQUE`, `SORT` and `XLOOKUP` need Excel 365 / 2021 or Google Sheets; in Excel 2016/2019 use `INDEX/MATCH` and leave the spills for Thursday's pivots. **Done today** = Sevara's `Collections` sheet answers to its dropdown (Tashkent South → 59 late loans), every Practice box is ✓, the Quick check is answered and the day quiz is passed. No new homework — HW 4.1 is due tomorrow.
+
 ---
 
 ## 1. Learn — a lookup is a join with one row
@@ -29,6 +31,12 @@ It is the most used and most mis-used function in finance. The four traps, each 
 3. **It looks only to the right.** The key must be in the first column of `where`; you cannot return `product` from a `code` unless the table is arranged that way.
 4. **A relative range walks.** `Lookup!A3:F7` copied down becomes `A4:F8` and the last row stops matching — yesterday's `$`. Use `$A$3:$F$7`, or better, a Table name.
 
+> ⚠️ **Watch out.** VLOOKUP's default is **approximate** match. Leave out the fourth argument and a key that is not in a sorted list comes back as a *neighbour's* value — a wrong rate, no `#N/A`, nothing red. For keys, always write `FALSE`.
+
+```game
+{"type": "bug", "id": "w04d2-g1", "title": "Spot the trap", "q": "This rate column is filled down all 7 828 loans. The range is pinned, yet some products get another product's rate. Tap the line that causes it.", "code": "=VLOOKUP(\n    [@product],\n    Lookup!$A$3:$F$7,\n    3)", "answer": [3], "why": "The fourth argument is missing, so VLOOKUP runs an approximate match that assumes the product column is sorted. It is not — write 3, FALSE)."}
+```
+
 `HLOOKUP` is the same thing sideways (keys in the first *row*); you will meet it in old files and never need to write it.
 
 ### INDEX / MATCH (*ИНДЕКС / ПОИСКПОЗ*) — two functions, no traps 2–3
@@ -42,6 +50,8 @@ It is the most used and most mis-used function in finance. The four traps, each 
 
 `MATCH`'s third argument is the **match type**: `0` exact (any order); `1` largest value ≤ `what` (column sorted **ascending**) — the bucket case; `−1` smallest value ≥ `what` (sorted descending). A two-way lookup is `INDEX(matrix, MATCH(row_key, row_labels, 0), MATCH(col_key, col_labels, 0))` — picking one cell out of yesterday's region × bucket table.
 
+> 💡 **Key idea.** A lookup is a `LEFT JOIN` that brings **one** column across: a key goes in, one value comes out. If the key can match many rows and you want their total, you do not want a lookup — you want `SUMIFS`.
+
 ### XLOOKUP (*ПРОСМОТРX*) — the one to use when you have it
 
 Excel 2021 / Microsoft 365 and Google Sheets: `XLOOKUP(what, lookup_column, return_column, [if_not_found], [match_mode], [search_mode])`.
@@ -54,6 +64,10 @@ Excel 2021 / Microsoft 365 and Google Sheets: `XLOOKUP(what, lookup_column, retu
 
 Exact match is the **default** (trap 1 gone); columns are named, not counted (trap 2 gone); the return column can be anywhere (trap 3 gone); `if_not_found` replaces `IFERROR` wrapping. **match_mode** `0` exact · `−1` exact or next *smaller* · `1` exact or next *larger* · `2` wildcard. For a bucket table with the *lower* edge in the key column (`dpd_from` = 0, 1, 31, 61, 91), `−1` is the rule: dpd 45 → the largest `dpd_from` ≤ 45 is 31 → `31-60`. **search_mode** `−1` searches from the bottom — "last payment of this loan" in one formula. In Excel 2016/2019 there is no XLOOKUP; write `INDEX/MATCH` and say so in the header.
 
+```game
+{"type": "cloze", "id": "w04d2-g2", "title": "Build Sevara's loan finder: type a loan_id in B1, get the customer", "text": "=XLOOKUP({{0}}, {{1}}, {{2}}, {{3}})", "blanks": [["$B$1"], ["tblLoans[loan_id]"], ["tblLoans[customer]"], ["\"not found\""]], "distractors": ["FALSE", "-1", "tblLoans[branch]", "3"]}
+```
+
 ### Two-key lookups
 
 A join on two columns. Three ways, best first: (1) **a helper key** — a column `key` = `[@region]&"|"&[@product]` in both tables and an exact lookup on it; (2) `XLOOKUP(key1&"|"&key2, col1&"|"&col2, return)` — concatenate inside the formula (it is an array operation; fine on 7 828 rows, slow on 92 193); (3) `INDEX(return, MATCH(1, (col1=key1)*(col2=key2), 0))` — the classic, which older Excel needs as an array formula (Ctrl+Shift+Enter). When the two keys define a *group* and you want a *sum*, it is not a lookup at all — it is `SUMIFS` with two pairs (yesterday).
@@ -65,6 +79,8 @@ A join on two columns. Three ways, best first: (1) **a helper key** — a column
 ### Dynamic arrays (*динамические массивы*) — formulas that return a table
 
 Excel 365 / 2021 and Sheets: a formula can return many values; they **spill** into the cells below and to the right, outlined in blue. Refer to the whole spill with `#`: if `A3` spills, `A3#` is all of it. `#SPILL!` means something is in the way — clear the cells.
+
+> 💡 **Key idea.** One formula, many cells: a spill is a small query result living in the sheet. Point at all of it with `#` (`A6#`) — then a count, a sum or a chart follows the list as it grows and shrinks.
 
 | Function | Returns | Example |
 |---|---|---|
@@ -92,6 +108,8 @@ Home → Conditional Formatting (Sheets: Format → Conditional formatting). Fou
 - **Data bars** — an in-cell bar proportional to the value, the chart you get for free in a table.
 - **Use a formula to determine which cells to format** — the rule you will write most: select `A2:M7829`, formula `=$M2="90+"`, red fill. The `$` on the column and not on the row is the whole trick: every cell in a row looks at *that row's* bucket. Add rules for `"61-90"` (orange), `"31-60"` (yellow), `"1-30"` (light yellow); order them and tick *Stop if true*.
 
+> ⚠️ **Watch out.** In a formula rule, pin the **column** and free the **row**: `=$M2="90+"`. With `$M$2` every row is painted by row 2's bucket; with `M2` the rule drifts one column to the right in every cell. And write the rule for the **first row of the selection** (row 2 for `A2:M7829`).
+
 Rules apply to the range you selected when you created them — a Table extends them to new rows, a plain range does not. Manage Rules → *This Worksheet* shows every rule; a sheet with forty overlapping rules is slow and unreadable, so one rule per meaning.
 
 ### Which lookup, when
@@ -108,6 +126,10 @@ Rules apply to the range you selected when you created them — a Table extends 
 | Distinct values of a column | `UNIQUE` | Remove Duplicates on a copy (Wednesday: it lies) |
 | Last occurrence (latest payment of a loan) | `XLOOKUP … , , , -1` (search from the end) or `MAXIFS` on the date | `VLOOKUP` (first match only) |
 
+```game
+{"type": "sort", "id": "w04d2-g3", "title": "Which tool for which question?", "q": "Drop each of Sevara's and Bekzod's questions into the tool that answers it.", "groups": {"Exact lookup (XLOOKUP / INDEX-MATCH)": ["loan 2167 → its customer", "product → annual rate"], "Approximate lookup on a sorted band table": ["dpd 45 → bucket", "credit score → grade"], "SUMIFS — a group, not a row": ["Fergana + SME → total outstanding"], "FILTER (+ SORT)": ["all late loans of Tashkent South, worst first"]}}
+```
+
 ### Reading the errors
 
 | Error | Means | First check |
@@ -118,6 +140,10 @@ Rules apply to the range you selected when you created them — a Table extends 
 | `#NAME?` | Excel does not know the function (XLOOKUP in Excel 2016) or a name is misspelt | the Excel version; quotes around text |
 | `#SPILL!` | a dynamic array has no room | clear the cells below / right of the formula |
 | `#DIV/0!` | a share with an empty denominator | an empty group; `IF(den=0, "", num/den)` |
+
+```game
+{"type": "match", "id": "w04d2-g4", "title": "Read the error", "pairs": [["#N/A", "the lookup found nothing (a space, or a number stored as text)"], ["#REF!", "points at deleted cells, or a column number past the range"], ["#VALUE!", "wrong argument type, or ranges of different sizes"], ["#NAME?", "Excel does not know the function (XLOOKUP in Excel 2016)"], ["#SPILL!", "a dynamic array has no room"], ["#DIV/0!", "a share with an empty denominator"]]}
+```
 
 `IFERROR` hides every one of these alike; that is why it is for *expected* misses only.
 
@@ -151,6 +177,38 @@ Rules apply to the range you selected when you created them — a Table extends 
 
 - RU workbook `3.2 Lookups.xlsx` — sheets *VLOOKUP – Exact Match*, *VLOOKUP – Approx Match* (the grade table, the "lookup table should be sorted" note), *MATCH* (the three match types), *INDEX*, *Xlookup*; and *Cell Referrence* for the `$` multiplication table.
 - *Russian terms:* ВПР = VLOOKUP, ПОИСКПОЗ = MATCH, ИНДЕКС = INDEX, ПРОСМОТРX = XLOOKUP, точное / приближённое совпадение = exact / approximate match, проверка данных = data validation, условное форматирование = conditional formatting, выпадающий список = dropdown.
+
+```videoquiz
+{"video": "TDphx23AtqM", "stops": [{"at": 250, "q": "What should VLOOKUP's last argument be when you look up a key such as a product name?", "options": ["TRUE", "FALSE (or 0)", "Leave it out", "1"], "answer": 1, "explain": "FALSE = exact match. Leaving it out means TRUE, approximate — trap 1.", "back": 30}, {"at": 280, "q": "Why lock the table range with $ before filling the formula down?", "options": ["So the range does not slide down one row per row", "So it calculates faster", "So it can look left", "So it becomes case-sensitive"], "answer": 0, "explain": "An unpinned range walks — trap 4; A3:F7 becomes A4:F8 and the last product stops matching.", "back": 30}]}
+```
+
+```videoquiz
+{"video": "F264FpBDX28", "stops": [{"at": 430, "q": "What does MATCH return?", "options": ["The value it found", "The position of the value in the range", "TRUE or FALSE", "The sheet's row number"], "answer": 1, "explain": "A position; INDEX then turns the position into a value from any column."}, {"at": 480, "q": "What can INDEX/MATCH do that VLOOKUP cannot?", "options": ["Return a value from a column to the left of the key", "Add up a group", "Sort the result", "Hide errors"], "answer": 0, "explain": "The return column is separate from the key column — trap 3 gone.", "back": 40}]}
+```
+
+```videoquiz
+{"video": "6JhbY8Mku1A", "stops": [{"at": 400, "q": "Which match type tells MATCH to find an exact match?", "options": ["1", "0", "-1", "2"], "answer": 1, "explain": "0 = exact, in any order; 1 and −1 need a sorted column."}, {"at": 500, "q": "The reader picks another item in the dropdown. What changes in an INDEX/MATCH report?", "options": ["The formula text", "The MATCH key, so INDEX returns another row", "The lookup range", "Nothing until you press Refresh"], "answer": 1, "explain": "Every formula reads the dropdown cell — Excel's version of a query parameter.", "back": 50}]}
+```
+
+```videoquiz
+{"video": "4c0CLUER6nw", "stops": [{"at": 110, "q": "XLOOKUP's default match mode is…", "options": ["approximate", "exact", "wildcard", "next larger"], "answer": 1, "explain": "Exact by default — the opposite of VLOOKUP."}, {"at": 170, "q": "What does the if_not_found argument replace?", "options": ["Wrapping the lookup in IFERROR / IFNA", "The return column", "The sort order", "The $ signs"], "answer": 0, "explain": "\"not found\" for an expected miss — and it does not hide #REF! or #VALUE!.", "back": 40}]}
+```
+
+```videoquiz
+{"video": "HXU7lsd0ftA", "stops": [{"at": 120, "q": "Which three arguments does XLOOKUP need at minimum?", "options": ["lookup value, lookup array, return array", "table, column number, TRUE", "sum range, criteria range, criterion", "value, row, column"], "answer": 0, "explain": "What, where to look, what to bring back."}, {"at": 190, "q": "Can XLOOKUP return a column that sits to the left of the lookup column?", "options": ["No", "Yes — the return array can be anywhere", "Only with match mode −1", "Only in Google Sheets"], "answer": 1, "explain": "Look-left is free in XLOOKUP and INDEX/MATCH."}, {"at": 250, "q": "What is search_mode −1 good for?", "options": ["Searching from the bottom up — the latest payment of a loan", "Sorting descending", "Returning the next smaller value", "Skipping blank cells"], "answer": 0, "explain": "Last occurrence in one formula; match_mode −1 is a different argument (next smaller).", "back": 50}]}
+```
+
+```videoquiz
+{"video": "2USJsIyIzvo", "stops": [{"at": 175, "q": "What does UNIQUE return?", "options": ["The distinct values, spilled down", "Only the values that appear once", "A count of values", "The first value"], "answer": 0, "explain": "The DISTINCT of Excel — and on a name column it is not a count of people.", "back": 25}, {"at": 270, "q": "A FILTER formula shows #SPILL!. What does that mean?", "options": ["No rows matched", "Something is in the way of the cells it needs", "FILTER does not exist in this Excel", "The condition has the wrong type"], "answer": 1, "explain": "Clear the cells below and to the right; no match shows the if_empty text instead."}, {"at": 295, "q": "How do you combine two FILTER conditions with AND?", "options": ["(a)*(b)", "(a)+(b)", "a AND b", "a; b"], "answer": 0, "explain": "Multiply for AND, add for OR — each condition is a column of 1s and 0s.", "back": 40}]}
+```
+
+```videoquiz
+{"video": "XHT4paRaY4g", "stops": [{"at": 80, "q": "To colour a whole row by one column's value, the rule's formula is written as…", "options": ["=$M2=\"90+\"", "=$M$2=\"90+\"", "=M2=\"90+\"", "=M$2=\"90+\""], "answer": 0, "explain": "Column pinned, row free: every cell of the row looks at that row's bucket.", "back": 25}, {"at": 103, "q": "Which row should the rule's formula refer to?", "options": ["The first row of the selected range", "The last row", "Any row", "The header row"], "answer": 0, "explain": "Excel writes the rule for the top-left cell and shifts it for the rest.", "back": 25}]}
+```
+
+```videoquiz
+{"video": "zXnQNytHCPM", "stops": [{"at": 300, "q": "Which conditional format draws a bar inside each cell?", "options": ["Data bars", "Colour scale", "Icon set", "Highlight cell rule"], "answer": 0, "explain": "Data bars: the chart you get for free in a table."}, {"at": 700, "q": "For a quantity like outstanding, which colour scale is safe?", "options": ["Red–green", "Two colours, white → blue", "Rainbow", "Random colours"], "answer": 1, "explain": "Red means bad in a lending file, and red–green fails colour-blind readers."}, {"at": 1100, "q": "Where do you see every rule on the sheet and fix their order?", "options": ["Conditional Formatting → Manage Rules", "Name Manager", "Data Validation", "Format Painter"], "answer": 0, "explain": "One rule per meaning; forty overlapping rules make a slow, unreadable sheet.", "back": 60}]}
+```
 
 ---
 
@@ -190,95 +248,73 @@ Format → Conditional formatting → Custom formula is  =$M6="90+"  on A6:N
 
 ## 3. Practice (50 min)
 
-Copy `nur_week4_start.xlsx` to `week-04/day-2/practice.xlsx`. Add columns to `tblLoans` where the task says; otherwise work on a sheet `Practice`, one block per task with the formula as text beside the value.
+Copy `nur_week4_start.xlsx` to `week-04/day-2/practice.xlsx`. Add columns to `tblLoans` where the task says; otherwise work on a sheet `Practice`, one block per task with the formula as text beside the value. Each question says what goes **in the box**; the box checks it and then shows the formula.
 
-**P1.** Add `rate` to `tblLoans` with `VLOOKUP` (exact), then the portfolio's **monthly interest run-rate**: Σ outstanding × rate ÷ 12, one `SUMPRODUCT`.
+**P1.** Add `rate` to `tblLoans` with `VLOOKUP` (exact), then the portfolio's **monthly interest run-rate**: Σ outstanding × rate ÷ 12, one `SUMPRODUCT`. *In the box: the monthly run-rate, in soum.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d2-p1", "kind": "number", "answer": 4491202901, "dp": 0, "unit": "UZS a month", "hint": "SUMPRODUCT takes two columns and multiplies them row by row; divide by 12 at the end.", "explain": "=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE); =SUMPRODUCT(tblLoans[outstanding], tblLoans[rate])/12 → 4 491 202 901 a month (~4.5 bn). BNPL adds 0 (rate 0); SME's 125.9 bn × 26 % / 12 is 2.7 bn of it."}
+```
 
-`=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)`; `=SUMPRODUCT(tblLoans[outstanding], tblLoans[rate])/12` → **4 491 202 901** a month (~4.5 bn). BNPL contributes 0 (rate 0); SME 125.9 bn × 26 % / 12 is 2.7 bn of it.
+**P2.** Show trap 1: the same `VLOOKUP` without `FALSE` for a Micro loan and for a Small business loan. What comes back, and why is one of them *correct by accident*? *In the box: pick the explanation.*
 
-</details>
+```task
+{"id": "w04d2-p2", "kind": "choice", "options": ["VLOOKUP without FALSE always returns #N/A, so the error is easy to spot", "Without FALSE it binary-searches a column it assumes is sorted; ours is in product_id order, so some products get another product's rate or #N/A — and a correct one is correct only because the search happened to stop on its row", "Without FALSE VLOOKUP becomes case-sensitive", "Without FALSE VLOOKUP returns the first row of the table"], "answer": 1, "explain": "Write down what your Excel returned for each of the five products — the exact wrong values depend on where the binary search lands. The point is that there is no error message: a wrong rate flows into the run-rate silently. Put \"VLOOKUP exact only\" in your header, and sort the lookup table anyway."}
+```
 
-**P2.** Show trap 1: the same `VLOOKUP` without `FALSE` for a Micro loan and for a Small business loan. What comes back, and why is one of them *correct by accident*?
+**P3.** A lookup cell: type a `loan_id` in B1 and show customer, branch, status, dpd, outstanding with `XLOOKUP` (or `INDEX/MATCH`), `not found` for a missing id. Test with 2167, 1 and 99999. *In the box: the customer of loan 2167, as the sheet shows it.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d2-p3", "kind": "text", "answer": ["Dilnoza Abdullaeva"], "model": "=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], \"not found\") and four more with other return columns (or one XLOOKUP returning tblLoans[[customer]:[outstanding]] that spills across). 2167 → Dilnoza Abdullaeva · Tashkent North · written_off · 919 · 0; 1 → Gulbahor Sobirova · Termez Central · active · 0 · 9 593 064; 99999 → not found ×5. INDEX/MATCH: =IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[loan_id], 0)), \"not found\")."}
+```
 
-Approximate match assumes the key column is sorted ascending and does a binary search for the last row ≤ the key. Our product column is in `product_id` order (Micro, Consumer, BNPL, Auto, SME), not alphabetical, so the search jumps to the wrong half of the list: some products return another product's rate, some return `#N/A`, and which is which depends on where the binary search lands — write down what *your* Excel returned for each of the five. The one that comes back right is right by accident (the search happened to stop on its row). The point is not the particular wrong value; it is that **there is no error message** — a wrong rate flows into the interest run-rate silently. Add the sentence to your header: "VLOOKUP exact only"; sort the lookup table anyway.
+**P4.** Add `lk_bucket` to `tblLoans` by **approximate** lookup against `Lookup!A11:B15` (`XLOOKUP … -1`, or `VLOOKUP … TRUE`, or `INDEX/MATCH(…,1)`); count mismatches against `bucket`, then the five bucket counts. *In the box: the mismatch count.*
 
-</details>
+```task
+{"id": "w04d2-p4", "kind": "number", "answer": 0, "dp": 0, "hint": "Lower edges in the key column → match mode −1 (next smaller).", "explain": "=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1) ≡ =VLOOKUP([@dpd], Lookup!$A$11:$B$15, 2, TRUE) ≡ =INDEX(Lookup!$B$11:$B$15, MATCH([@dpd], Lookup!$A$11:$A$15, 1)). Mismatches =SUMPRODUCT(--(tblLoans[lk_bucket]<>tblLoans[bucket])) → 0; counts 7 429 / 124 / 25 / 16 / 234. The approximate match needs dpd_from sorted ascending and the lower edge as the key; an upper-edge table (30, 60, 90) needs match mode 1. A boundary change is now one cell on Lookup, not 7 828 IFS edits."}
+```
 
-**P3.** A lookup cell: type a `loan_id` in B1 and show customer, branch, status, dpd, outstanding with `XLOOKUP` (or `INDEX/MATCH`), `not found` for a missing id. Test with 2167, 1 and 99999.
+**P5.** A region × product outstanding matrix (`SUMIFS`, yesterday), then a two-way `INDEX/MATCH/MATCH` that returns one cell for a region and a product typed in two input cells. Fergana × Small business loan? *In the box: Fergana × Small business loan, in soum.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d2-p5", "kind": "number", "answer": 14734245108, "dp": 0, "unit": "UZS", "explain": "=INDEX($B$3:$F$10, MATCH($I$1, $A$3:$A$10, 0), MATCH($I$2, $B$2:$F$2, 0)) → 14 734 245 108 (95 loans). Same as =SUMIFS(tblLoans[outstanding], tblLoans[region], $I$1, tblLoans[product], $I$2) directly — the matrix + INDEX/MATCH way is for when the matrix is the report and you need one number from it for a title or a tile."}
+```
 
-`=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], "not found")` and four more with other return columns (or one `XLOOKUP` returning `tblLoans[[customer]:[outstanding]]` that spills across). 2167 → Dilnoza Abdullaeva · Tashkent North · written_off · 919 · 0; 1 → Gulbahor Sobirova · Termez Central · active · 0 · 9 593 064; 99999 → not found ×5. `INDEX/MATCH` version: `=IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[loan_id], 0)), "not found")`.
+**P6.** `UNIQUE` counts: branches, regions, statuses, products — and `customer`. Which of the five is not a count of anything real, and what would you need to count borrowers? *In the box: pick the one that counts nothing real.*
 
-</details>
+```task
+{"id": "w04d2-p6", "kind": "choice", "options": ["branch", "region", "status", "product", "customer"], "answer": 4, "explain": "=ROWS(UNIQUE(tblLoans[branch])) → 10 · regions 8 · statuses 4 · products 5 · customers 747. The book has 4 335 borrowers but only 747 distinct names; loans_status carries the name, not the id, so you need customer_id (it is in Applications). A lookup or UNIQUE on names is never a people count."}
+```
 
-**P4.** Add `lk_bucket` to `tblLoans` by **approximate** lookup against `Lookup!A11:B15` (`XLOOKUP … -1`, or `VLOOKUP … TRUE`, or `INDEX/MATCH(…,1)`); count mismatches against `bucket`, then the five bucket counts.
+**P7.** `FILTER` the active loans in bucket 61-90, sorted by outstanding descending (`SORTBY`): how many, how much, and which one should Sevara visit first? *In the box: the loan_id Sevara visits first.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d2-p7", "kind": "number", "answer": 4567, "dp": 0, "explain": "=SORTBY(FILTER(tblLoans, (tblLoans[status]=\"active\")*(tblLoans[bucket]=\"61-90\")), FILTER(tblLoans[outstanding], (tblLoans[status]=\"active\")*(tblLoans[bucket]=\"61-90\")), -1) → 16 rows, Σ outstanding 439 441 377. First row: loan 4567, Auto loan, Tashkent Central, 84 DPD, 301 482 053 — 69 % of the bucket's money in one car loan. Then 2147 (Auto, Tashkent South, 46.6 m) and 4984 (Consumer, Tashkent North, 36.9 m)."}
+```
 
-`=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` ≡ `=VLOOKUP([@dpd], Lookup!$A$11:$B$15, 2, TRUE)` ≡ `=INDEX(Lookup!$B$11:$B$15, MATCH([@dpd], Lookup!$A$11:$A$15, 1))`. Mismatches `=SUMPRODUCT(--(tblLoans[lk_bucket]<>tblLoans[bucket]))` → **0**; `COUNTIFS(tblLoans[lk_bucket], "0")` … → **7 429 / 124 / 25 / 16 / 234**. The approximate match needs `dpd_from` sorted ascending (it is) and the *lower* edge as the key; a table keyed on the upper edge (30, 60, 90) needs `match_mode 1` instead. Changing a bucket boundary is now a one-cell edit on `Lookup`, not 7 828 `IFS` edits — the reason bands live in a table.
+**P8.** Top-5 branches by outstanding with `UNIQUE` + `SUMIFS` on the spill + `SORTBY`, and their combined share of the book. *In the box: the top-5 share, % with 1 decimal.*
 
-</details>
+```task
+{"id": "w04d2-p8", "kind": "number", "answer": 62.8, "dp": 1, "unit": "%", "explain": "A3 =UNIQUE(tblLoans[branch]), B3 =SUMIFS(tblLoans[outstanding], tblLoans[branch], A3#), D3 =SORTBY(A3#, B3#, -1), E3 =SORTBY(B3#, B3#, -1). Tashkent Central 28 716 674 373 · Tashkent South 26 787 392 136 · Tashkent North 26 175 671 562 · Fergana Central 24 797 334 197 · Samarkand Central 24 655 889 676; =SUM(E3:E7)/SUM(B3#) → 62.8 %."}
+```
 
-**P5.** A region × product outstanding matrix (`SUMIFS`, yesterday), then a two-way `INDEX/MATCH/MATCH` that returns one cell for a region and a product typed in two input cells. Fergana × Small business loan?
+**P9.** `SEQUENCE`: the ten first-of-month dates of 2026 in one formula, then `COUNTIFS`/`SUMIFS` per month with the half-open filter using `EDATE`. *In the box: the loan count in the August 2026 row.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d2-p9", "kind": "number", "answer": 358, "dp": 0, "unit": "loans", "explain": "A3 =DATE(2026, SEQUENCE(10), 1); B3 =COUNTIFS(tblLoans[disbursed_at], \">=\"&A3, tblLoans[disbursed_at], \"<\"&EDATE(A3, 1)) filled down; C3 the SUMIFS. Jan 287 / 17 452 370 000 … Aug 358 / 22 290 210 000 · Sep 361 / 17 015 490 000 · Oct 21 / 852 760 000; SUM(C3#) = 162 333 060 000. EDATE(d, 1) is DATEADD(month, 1, d)."}
+```
 
-`=INDEX($B$3:$F$10, MATCH($I$1, $A$3:$A$10, 0), MATCH($I$2, $B$2:$F$2, 0))` → **14 734 245 108** (95 loans). Same as `=SUMIFS(tblLoans[outstanding], tblLoans[region], $I$1, tblLoans[product], $I$2)` directly — the matrix + `INDEX/MATCH` way is for when the matrix *is* the report and you need one number pulled from it for a title or a tile.
+**P10.** Conditional formatting on `Loans`: a formula rule red for 90+, orange 61-90, yellow 31-60; a colour scale on `outstanding`; data bars on `dpd`. Then one cell that says how many rows are red. *In the box: how many rows are red.*
 
-</details>
+```task
+{"id": "w04d2-p10", "kind": "number", "answer": 234, "dp": 0, "unit": "rows", "explain": "Rules on A2:M7829 with =$M2=\"90+\" etc. Red rows: =COUNTIFS(tblLoans[bucket], \"90+\") → 234 — conditional formatting has no count of its own, so the rule and the COUNTIFS share one condition. Colour scale: the largest outstanding glows (586 068 714 — loan 4597, Bukhara, disbursed 2026-09-08). Data bars make 919 the full bar and every active loan a sliver — a scale problem Thursday names."}
+```
 
-**P6.** `UNIQUE` counts: branches, regions, statuses, products — and `customer`. Which of the five is not a count of anything real, and what would you need to count borrowers?
+> 🚀 **Stretch (optional, +5 XP).** **P11.** A dropdown for `grade` (A–D) and a spilled table under it: product → loans, loans in 90+, share in 90+ (`0.0%`), all driven by the chosen grade. What is the 90+ share by grade over all products? *In the box: the 90+ share of grade D, % with 1 decimal.*
 
-<details><summary>Answer</summary>
-
-`=ROWS(UNIQUE(tblLoans[branch]))` → 10 · regions 8 · statuses 4 · products 5 · customers **747**. The data has 4 335 borrowers (week 3 S4) but only 747 distinct *names*; `loans_status.csv` carries the name, not the id, so you cannot count borrowers from it — you would need `customer_id` (it is in `Applications`). A lookup or a `UNIQUE` on names is never a people count.
-
-</details>
-
-**P7.** `FILTER` the active loans in bucket 61-90, sorted by outstanding descending (`SORTBY`): how many, how much, and which one should Sevara visit first?
-
-<details><summary>Answer</summary>
-
-`=SORTBY(FILTER(tblLoans, (tblLoans[status]="active")*(tblLoans[bucket]="61-90")), FILTER(tblLoans[outstanding], (tblLoans[status]="active")*(tblLoans[bucket]="61-90")), -1)` → **16** rows, Σ outstanding **439 441 377**. First row: loan **4567**, Auto loan, Tashkent Central, 84 DPD, 301 482 053 outstanding — 69 % of the bucket's money in one car loan. Then 2147 (Auto, Tashkent South, 46.6 m) and 4984 (Consumer, Tashkent North, 36.9 m). `(tblLoans[status]="active")` changes nothing here (all 16 are active) but is the honest filter.
-
-</details>
-
-**P8.** Top-5 branches by outstanding with `UNIQUE` + `SUMIFS` on the spill + `SORTBY`, and their combined share of the book.
-
-<details><summary>Answer</summary>
-
-`A3 =UNIQUE(tblLoans[branch])`, `B3 =SUMIFS(tblLoans[outstanding], tblLoans[branch], A3#)` (spills alongside), `D3 =SORTBY(A3#, B3#, -1)`, `E3 =SORTBY(B3#, B3#, -1)`. Tashkent Central 28 716 674 373 · Tashkent South 26 787 392 136 · Tashkent North 26 175 671 562 · Fergana Central 24 797 334 197 · Samarkand Central 24 655 889 676; `=SUM(E3:E7)/SUM(B3#)` → **62.8 %**. Older Excel / no spill: a pivot sorted descending with a Top 10 filter (Thursday).
-
-</details>
-
-**P9.** `SEQUENCE`: the ten first-of-month dates of 2026 in one formula, then `COUNTIFS`/`SUMIFS` per month with the half-open filter using `EDATE`.
-
-<details><summary>Answer</summary>
-
-`A3 =DATE(2026, SEQUENCE(10), 1)`; `B3 =COUNTIFS(tblLoans[disbursed_at], ">="&A3, tblLoans[disbursed_at], "<"&EDATE(A3, 1))` filled down (or `A3#` inside for a spilling version); `C3` the `SUMIFS`. Jan 287 / 17 452 370 000 … Aug 358 / 22 290 210 000 · Sep 361 / 17 015 490 000 · Oct 21 / 852 760 000; `SUM(C3#)` = 162 333 060 000. `EDATE(d, 1)` is `DATEADD(month, 1, d)`; the half-open pair works for 28- and 31-day months alike.
-
-</details>
-
-**P10.** Conditional formatting on `Loans`: a formula rule red for 90+, orange 61-90, yellow 31-60; a colour scale on `outstanding`; data bars on `dpd`. Then one cell that says how many rows are red.
-
-<details><summary>Answer</summary>
-
-Rules on `A2:M7829` with `=$M2="90+"` etc. (Table rows extend them). Red rows `=COUNTIFS(tblLoans[bucket], "90+")` → **234** — conditional formatting has no count of its own; the rule and the `COUNTIFS` share the condition, so write the condition once in a cell and point both at it when you can. Colour scale: the 2026 SME loans glow (586 068 714 is the largest outstanding — loan 4597, Bukhara, disbursed 2026-09-08). Data bars make 919 the full bar and everything active a sliver — a scale problem Thursday's chart chapter names.
-
-</details>
-
-<span class="badge stretch">Stretch</span> **P11.** A dropdown for `grade` (A–D) and a spilled table under it: product → loans, loans in 90+, share in 90+ (`0.0%`), all driven by the chosen grade. What is the 90+ share by grade over all products?
-
-<details><summary>Answer</summary>
-
-`UNIQUE(tblLoans[product])` down, `COUNTIFS(tblLoans[product], A3#, tblLoans[grade], $B$1)`, same with `tblLoans[bucket], "90+"`, and the ratio. Over all products: A **0.9 %** (17 of 1 821) · B 1.9 % (64 of 3 404) · C 5.1 % (116 of 2 264) · D 10.9 % (37 of 339). Monotonic in the grade — week 2's scorecard check, now a dropdown Nilufar can click. Sheets: the same with `ARRAYFORMULA(COUNTIFS(…))`.
-
-</details>
+```task
+{"id": "w04d2-p11", "kind": "number", "answer": 10.9, "dp": 1, "unit": "%", "xp": 2, "explain": "UNIQUE(tblLoans[product]) down, COUNTIFS(tblLoans[product], A3#, tblLoans[grade], $B$1), the same with tblLoans[bucket], \"90+\", and the ratio. Over all products: A 0.9 % (17 of 1 821) · B 1.9 % (64 of 3 404) · C 5.1 % (116 of 2 264) · D 10.9 % (37 of 339). Monotonic in the grade — week 2's scorecard check, now a dropdown Nilufar can click."}
+```
 
 ### Mistakes that cost a point this week
 
@@ -301,9 +337,14 @@ No new homework. **HW 4.1** (yesterday's functions pack) is due tomorrow — add
 
 ## 5. Self-check
 
-1. Name the four VLOOKUP traps and say which of them XLOOKUP removes. *(→ section 1, "VLOOKUP", "XLOOKUP")*
-2. A bucket table with `dpd_from` 0 / 1 / 31 / 61 / 91: which XLOOKUP match mode, and what must be true of the key column? *(→ section 1, "XLOOKUP", P4)*
-3. Why is `IFERROR(…, "")` around a lookup dangerous, and when is it right? *(→ section 1, "IFERROR")*
+```check
+{"id": "w04d2-sc", "questions": [
+  {"type": "single", "q": "Someone inserts a new column B on the Lookup sheet. Which rate formula now silently returns the wrong column?", "options": ["=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)", "=INDEX(Lookup!$C$3:$C$7, MATCH([@product], Lookup!$A$3:$A$7, 0))", "=XLOOKUP([@product], Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)", "All three"], "answer": 0, "explain": "VLOOKUP's 3 is a count — trap 2. INDEX/MATCH and XLOOKUP point at the column itself, which moves with the insert (→ section 1, VLOOKUP's traps)."},
+  {"type": "single", "q": "The bucket table has dpd_from 0 / 1 / 31 / 61 / 91. What must be true of that column for XLOOKUP(…, -1) to work?", "options": ["Sorted ascending, lower edges", "Sorted descending", "Any order — XLOOKUP sorts it", "Stored as text"], "answer": 0, "explain": "Match mode −1 takes the largest edge ≤ dpd; with unsorted or text edges it returns a wrong band without an error (→ P4)."},
+  {"type": "text", "q": "Which bucket label does this return for dpd = 61?", "code": "=XLOOKUP(61, Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)", "answer": ["61-90"], "explain": "61 is itself an edge, so the exact match wins: 61-90 (→ section 1, XLOOKUP)."},
+  {"type": "single", "q": "Every loan gets =IFERROR(XLOOKUP(…), 0) and a SUM sits under the column. Three keys have a trailing space. What does the total show?", "options": ["#N/A, so you notice", "A total that looks complete but is short by three loans' values", "The right total — IFERROR fixes the key", "An empty cell"], "answer": 1, "explain": "The misses become zeros; count them in a check cell or let #N/A show (→ section 1, IFERROR)."}
+]}
+```
 
 ---
 
@@ -328,13 +369,23 @@ Summary sheet       A3:A7      0 · 1-30 · 31-60 · 61-90 · 90+  (text — '0)
 | 61-90 | **16** | 439 441 377 | 0.21 % |
 | 90+ | **234** | 5 319 475 527 | **2.55 %** |
 
+```game
+{"type": "build", "id": "w04d2-g5", "title": "Build the lk_bucket formula", "q": "Put the pieces in order: this loan's dpd → its bucket label, from the lower-edge table on Lookup.", "tokens": ["=XLOOKUP(", "[@dpd],", "Lookup!$A$11:$A$15,", "Lookup!$B$11:$B$15,", ", -1)"], "distractors": [", 1)", "[@bucket],", "FALSE)"]}
+```
+
 Then two tiles under it: **PAR30** `=SUMIFS(tblLoans[outstanding], tblLoans[dpd], ">30")/C8` → **3.12 %** and **NPL90** `=C7/C8` → **2.55 %** — the same 6 507 526 953 and 5 319 475 527 as week 3's view. Conditional formatting on `Loans`: `=$O2="90+"` (the new `lk_bucket` column — O if P1's `rate` sits in N; use the letter your column has) red — **234** rows light up, and they are exactly the 44 `default` + 190 `written_off` loans (`=COUNTIFS(tblLoans[lk_bucket], "90+", tblLoans[status], "active")` → 0, the status check from week 2, in one cell).
 
-Why the table and not the `IFS`: when Risk moves to 1–7 / 8–30 buckets (the glossary's **[varies]**), you add a row to `Lookup` and every formula, colour and count follows. The `IFS` version is the pasted-DPD-logic problem Timur had last Thursday, one sheet at a time. And why approximate match and not exact: dpd takes 900 different values; a band is a *range*, and `match_mode −1` against the lower edges is the Excel spelling of `CASE WHEN dpd <= 30`.
+Why the table and not the `IFS`: when Risk moves to 1–7 / 8–30 buckets (the glossary's **[varies]**), you add a row to `Lookup` and every formula, colour and count follows. The `IFS` version is the pasted-DPD-logic problem Timur had last Thursday, one sheet at a time. And why approximate match and not exact: dpd takes 258 different values, from 0 to 919; a band is a *range*, and `match_mode −1` against the lower edges is the Excel spelling of `CASE WHEN dpd <= 30`.
 
 One more check Sevara will ask for: bucket **0** carries 53 m of "overdue" in SQL (the 14 instalments due on the as-of morning) but shows dpd 0 here, as it should — DPD counts *days*, and a payment due today is 0 days late. Put the as-of date (`Lookup!B17`) on the summary sheet; every bucket number is wrong without it.
 
-> Interview version: *"How would you bucket DPD in Excel?"* — A sorted band table (lower edge, label) on a lookup sheet; `XLOOKUP` with match mode −1 (or `VLOOKUP … TRUE`, `MATCH … 1`) per loan; `COUNTIFS`/`SUMIFS` per bucket with a total that ties to the loan count and the book; conditional formatting from the same column; the as-of date on the sheet. Change a boundary in one cell, never in a formula.
+> 🎯 **Interview version.** *"How would you bucket DPD in Excel?"* — A sorted band table (lower edge, label) on a lookup sheet; `XLOOKUP` with match mode −1 (or `VLOOKUP … TRUE`, `MATCH … 1`) per loan; `COUNTIFS`/`SUMIFS` per bucket with a total that ties to the loan count and the book; conditional formatting from the same column; the as-of date on the sheet. Change a boundary in one cell, never in a formula.
+
+**Say it like in an interview.** Sevara: *"Why build a table on another sheet? Just write the buckets into one IFS formula and be done."* Convince her in 30 words or more.
+
+```task
+{"id": "w04d2-cc", "kind": "free", "min": 30, "model": "Because the definition changes and the data does not. With a band table on Lookup and one XLOOKUP with match mode −1, moving to 1–7 / 8–30 buckets is one new row: every formula, colour and count follows. An IFS has the edges typed into it, copied onto every sheet that needs buckets — the pasted-logic problem. And the table can be checked: the counts tie to 7 828 loans and the book to 208.7 bn, with the as-of date on the sheet.", "rubric": ["a boundary change is one cell / one row, not an edit to every formula", "names approximate match on sorted lower edges (match mode −1, VLOOKUP TRUE or MATCH 1)", "mentions a check that ties to a known total (7 828 loans or 208.7 bn)", "mentions the as-of date belonging on the sheet"]}
+```
 
 Tomorrow: the detective day — `customers_dirty` and `payments_dirty`, from Find & Replace and Remove Duplicates to a Power Query pipeline that cleans them every time you press Refresh.
 

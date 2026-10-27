@@ -30,6 +30,8 @@ SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;     
 
 A view stores the **text** of the query, not its result. Every `SELECT … FROM v_payments_clean` runs the inner query at that moment, on the current data — so it is always fresh and costs the same as the query it wraps. What you gain: **one definition** (the duplicate rule and the method cleaning live in one place; fix them once, every report changes), **a simpler surface** (Timur sees six clean columns, not a `ROW_NUMBER`), and **security** (a view can expose some columns and hide `phone`). Views can be built on views: `v_loan_status` below reads `v_payments_clean`, so the dedup is inherited. `DROP VIEW name` removes it; SQL Server has `CREATE OR ALTER VIEW` for edits, SQLite `DROP` then `CREATE`.
 
+> 💡 **Key idea.** A view saves the **query**, not the data. Reading it runs the query again on today's rows — always fresh, never faster than the query inside. What you buy is one definition in one place.
+
 **Why Power BI gets views, not tables.** Week 7's dashboard will refresh from the database. If it reads raw `payments`, every measure must repeat the dedup and the DPD CTE in DAX — three people, three versions, Timur's problem. If it reads `v_loan_status`, the measure is `SUM(outstanding)`. The views *are* the data model: one row per loan, one row per month × product × branch, one row per payment. A view's **grain** — the noun that is one row — is the first line of its documentation.
 
 ### Materialising: CTAS, SELECT INTO, temp tables
@@ -49,6 +51,12 @@ CREATE TABLE t_loan_status AS SELECT * FROM v_loan_status;      -- SQL Server: S
 
 Measured on our 9.6 MB SQLite file: `SELECT bucket, COUNT(*) FROM v_loan_status GROUP BY bucket` — **0.49 s** through the view, **0.00 s** from the materialised table; `v_portfolio_monthly` for one month — **12.8 s** through the view (it recomputes month-end outstanding for 34 months), instant from a table. **When to materialise:** when the view is slow *and* the data changes rarely (a nightly table is the standard warehouse answer — bronze/silver/gold from week 1's video); when the number must not change after it is published; when a script needs the same intermediate result five times (temp table, not five CTE copies). **When not to:** when freshness matters more than speed, or when the "table" will quietly go stale and disagree with the view — Timur's three tiles were exactly that: stale copies.
 
+> ⚠️ **Watch out.** A view and a table built from it look identical on the day you make them. A week later the view has the new payments and the table does not — and nobody can tell which tile reads which. Name them so the difference shows (`v_…` for views, `t_…` or `_asof_20261001` for frozen tables).
+
+```game
+{"type": "sort", "id": "w03d4-g1", "title": "View, table or temp table?", "q": "Tap each situation, then what you would build for it.", "groups": {"View": ["Power BI's loan-status tile, which must show today's DPD", "One de-duplication rule that every report must share"], "Materialised table (CTAS / SELECT INTO)": ["The September month-end pack, frozen once it is sent to the board", "A 12-second query that 40 people open every morning, refreshed nightly"], "Temp table": ["An intermediate result reused five times in one long script, gone when you disconnect"]}}
+```
+
 ### Indexes (*индексы*) — the phone book
 
 Without an index the engine reads **every row** to answer `WHERE loan_id = 2242` — a **scan**. An index is a sorted copy of one or more columns with pointers to the rows; with it the engine jumps to the right place — a **seek** (SQLite says `SEARCH`). Like finding a name in a phone book instead of reading it cover to cover.
@@ -61,6 +69,10 @@ CREATE INDEX ix_installments_due     ON installments (due_date);
 **SQL Server has two kinds.** A **clustered index** *is* the table: the rows themselves are stored in that order (one per table, usually the primary key — `loan_id`). **Non-clustered** indexes are separate sorted structures pointing into it (many per table). SQLite's `rowid` plays the clustered role; our course tables were loaded without declared primary keys, so `WHERE loan_id = 2242` scans until you add `CREATE UNIQUE INDEX ix_loans_id ON loans (loan_id)`.
 
 **When a WHERE or JOIN benefits:** equality or range on the indexed column (`installment_id = ?`, `due_date >= ? AND due_date < ?`), a join on it (every `payments.installment_id = installments.installment_id`), an `ORDER BY` it. **When it does not:** a function wrapped around the column (`strftime('%Y-%m', due_date) = '2026-09'`, `LOWER(method) = 'card'`) — the engine cannot look up a value it has to compute per row; `LIKE '%x'`; a column with two values (`is_weekend`). Indexes cost space and slow every `INSERT`/`UPDATE` slightly — on an analytics copy that is almost always worth it; on the transactional system it is the DBA's call, not yours.
+
+```game
+{"type": "sort", "id": "w03d4-g2", "title": "Can the index help?", "q": "Each column in these filters has an index. Tap a filter, then where it belongs.", "groups": {"Index helps (SEARCH)": ["WHERE installment_id = 59838", "WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01'", "JOIN payments p ON p.installment_id = i.installment_id"], "Index cannot help (SCAN)": ["WHERE strftime('%Y-%m', due_date) = '2026-09'", "WHERE LOWER(method) = 'card'", "WHERE method LIKE '%card'"]}}
+```
 
 ### Reading an execution plan (*план выполнения*) — scan or seek
 
@@ -79,6 +91,12 @@ EXPLAIN QUERY PLAN SELECT COUNT(*) FROM installments WHERE due_date >= '2026-09-
 
 Week 2's DPD join: before indexing, `SCAN i` plus an `AUTOMATIC COVERING INDEX` on payments (SQLite built a throw-away index for the join — a hint that a real one is missing); after, `SEARCH i USING INDEX ix_installments_due` and `SEARCH p USING INDEX ix_payments_installment`. That is the whole skill at analyst level: *does my filter/join column have an index, and does the plan say SCAN or SEARCH?*
 
+> ⚠️ **Watch out.** A function around an indexed column hides it from the index: `strftime('%Y-%m', due_date) = '2026-09'` and `YEAR(disbursed_at) = 2026` both scan. Move the work to the other side — a half-open range on the bare column.
+
+```game
+{"type": "bug", "id": "w03d4-g3", "title": "Find the slow line", "q": "due_date has an index, yet the plan says SCAN. Which line turns the SEARCH into a SCAN?", "code": "CREATE INDEX ix_installments_due ON installments (due_date);\nSELECT COUNT(*)\nFROM installments\nWHERE strftime('%Y-%m', due_date) = '2026-09';", "answer": [3], "why": "The engine cannot look up a value it must compute for every row. WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01' gives the same count with a SEARCH."}
+```
+
 ### The 10 performance habits that matter for analysts
 
 1. **Select only the columns you need** — `SELECT *` into Power BI drags `phone` and `app_version` through the network for nothing.
@@ -92,10 +110,20 @@ Week 2's DPD join: before indexing, `SCAN i` plus an `AUTOMATIC COVERING INDEX` 
 9. **Avoid correlated subqueries over big tables** when a window or a join does the same (P5 yesterday: 4 335 subqueries vs one `ROW_NUMBER`).
 10. **Look at the plan before you blame the server** — `EXPLAIN QUERY PLAN` / Ctrl+L; if it says SCAN on a table of 92 193 rows, you know what to do.
 
+> 💡 **Key idea.** Eight of the ten habits are about *doing less work*: fewer columns, fewer rows earlier, no repeated rows, no per-row subqueries. Only habit 7 (indexes) and habit 8 (materialise) add something.
+
 ### Depth (optional)
 
 - ▶ Baraa, *Views* [15:35:02](https://youtu.be/SSKVgrwhzus?t=56102&end=59800), *CTAS and temp tables* [16:36:40](https://youtu.be/SSKVgrwhzus?t=59800&end=62251), *Indexes* [18:23:42](https://youtu.be/SSKVgrwhzus?t=66222&end=73231), *Execution plan* [20:20:31](https://youtu.be/SSKVgrwhzus?t=73231&end=76263), *30 performance tips* [21:43:39](https://youtu.be/SSKVgrwhzus?t=78219&end=80665) — long; watch Views + Indexes + the tips (≈2 h), the plan chapter if SQL Server is your target. Stored procedures and triggers (17:27:04, 18:12:58) are optional for an analyst.
 - *Russian terms:* представление = view, временная таблица = temp table, материализация = materialisation, индекс = index, кластерный / некластерный = clustered / non-clustered, план выполнения = execution plan, полное сканирование = full scan, поиск по индексу = index seek.
+
+```videoquiz
+{"video": "SSKVgrwhzus", "stops": [
+  {"at": 57900, "q": "What does a view store in the database?", "options": ["A copy of the result rows", "The query text — it runs again every time you read the view", "An index", "Nothing; it disappears after the session"], "answer": 1, "explain": "A view is a saved query: always fresh, and as slow as the query it wraps."},
+  {"at": 61000, "q": "CREATE TABLE … AS SELECT (SELECT INTO in SQL Server) gives you…", "options": ["A view with a new name", "A new physical table holding the result as of now", "A temporary index", "A stored procedure"], "answer": 1, "explain": "CTAS materialises the result: fast to read, frozen until you rebuild it."},
+  {"at": 69500, "q": "A table has a clustered index on its id. What does that mean?", "options": ["There is a separate sorted copy of the id column", "The rows themselves are stored in id order — only one per table", "The table is split across servers", "The id cannot repeat"], "answer": 1, "explain": "The clustered index is the table's storage order; non-clustered indexes are separate structures pointing into it."},
+  {"at": 79500, "q": "Which of these is a performance tip you will hear for analysts?", "options": ["Use SELECT * so nothing is missing", "Filter early and select only the columns you need", "Wrap filter columns in functions", "Use DISTINCT to fix duplicates after joins"], "answer": 1, "explain": "Less data through every step; the other three are the classic slow (or wrong) habits.", "back": 60}]}
+```
 
 ---
 
@@ -154,7 +182,17 @@ The as-of date appears four times. In SQL Server, make it a parameter with an in
 
 ## 3. Practice (50 min)
 
-Write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer. Indexes and new tables change only your practice copy of the database — **Database → ↺ Reset** brings the original back.
+Start with the lab: a view of your own, on a table of your own, so you can watch what a view does when the data changes. Then the questions: write each query in the box under its question — it is saved in this browser. **✔ Check** tells you whether your result matches the answer. Indexes and new tables change only your practice copy of the database — **Database → ↺ Reset** brings the original back. Several questions use Timur's views: run the `CREATE VIEW` boxes in sections 1, 2 and 6 once first (`v_portfolio_monthly` is in section 6 — the Company corner).
+
+```sqllab
+{"id": "w03d4-lab", "title": "A view that moves, a table that does not", "intro": "You copy the SME loans into a table of your own, put a view on top, change the table, and watch the view follow. Then you freeze the view into a table and see the two drift apart. Everything happens in your practice copy.", "steps": [
+  {"say": "Create my_loans with CREATE TABLE … AS: loan_id, product_id, principal, status of every SME loan (product_id = 5).", "hint": "CREATE TABLE my_loans AS SELECT loan_id, product_id, principal, status FROM loans WHERE product_id = 5;", "expect": "SELECT COUNT(*) FROM my_loans", "want": 781},
+  {"say": "Create the view my_v_active_sme: loan_id and principal of the active loans in my_loans. Then query it: SELECT COUNT(*) FROM my_v_active_sme.", "hint": "CREATE VIEW my_v_active_sme AS SELECT loan_id, principal FROM my_loans WHERE status = 'active';", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'view' AND name = 'my_v_active_sme'", "want": 1},
+  {"say": "Close the biggest SME loan in your table: UPDATE my_loans SET status = 'closed' WHERE loan_id = 2861. Query the view again — you did not touch it, yet it changed.", "hint": "UPDATE my_loans SET status = 'closed' WHERE loan_id = 2861;", "expect": "SELECT COUNT(*) FROM my_v_active_sme", "want": 589},
+  {"say": "Freeze it: CREATE TABLE my_t_active_sme AS SELECT * FROM my_v_active_sme. Then close loan 4601 in my_loans as well.", "hint": "CREATE TABLE my_t_active_sme AS SELECT * FROM my_v_active_sme; UPDATE my_loans SET status = 'closed' WHERE loan_id = 4601;", "expect": "SELECT (SELECT COUNT(*) FROM my_v_active_sme) - (SELECT COUNT(*) FROM my_t_active_sme)", "want": -1},
+  {"say": "The view has 588 rows, the frozen table still 589 — that is the whole difference between them. Now remove the view with DROP VIEW.", "hint": "DROP VIEW my_v_active_sme;", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'view' AND name = 'my_v_active_sme'", "want": 0}],
+ "cleanup": "DROP VIEW IF EXISTS my_v_active_sme; DROP TABLE IF EXISTS my_t_active_sme; DROP TABLE IF EXISTS my_loans"}
+```
 
 **P1.** Create `v_payments_clean` and prove it: rows, total, distinct methods, and that no instalment has two rows left.
 
@@ -164,13 +202,25 @@ Section 1's view. `SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_p
 
 </details>
 
-**P2.** Create `v_loan_status` (worked example) and run the four checks. Then: outstanding by `region` and `bucket` from the view only — how long is that query compared with Monday's version from raw tables?
+**P1 — the number.** How many rows does `v_payments_clean` have?
+
+```task
+{"id": "w03d4-p1b", "kind": "number", "answer": 52850, "dp": 0, "unit": "payments", "hint": "SELECT COUNT(*) FROM v_payments_clean — after running section 1's CREATE VIEW box.", "model": "52 850 = 52 875 raw rows minus the 25 duplicates; 255 114 772 176 UZS, 5 methods, and MAX rows per (instalment, date, amount) = 1.", "xp": 1}
+```
+
+**P2.** Create `v_loan_status` (worked example) and run the four checks. Then: outstanding by `region` and `bucket` from the view only — how long is that query compared with writing it from the raw tables (week 2's DPD chain plus the joins)?
 
 <details><summary>Answer</summary>
 
 Checks as above. `SELECT region, bucket, SUM(outstanding) FROM v_loan_status GROUP BY 1, 2` — two lines instead of three joins and a CTE; Tashkent 90+ carries the largest dead outstanding. The point of the layer: the *question* is two lines, the *definition* is somewhere else, once.
 
 </details>
+
+**P2 — the grain check.** `SELECT COUNT(*), COUNT(DISTINCT loan_id) FROM v_loan_status` returns 92 193 and 7 828. What happened?
+
+```task
+{"id": "w03d4-p2b", "kind": "choice", "options": ["Nothing — a loan has many rows in a status view", "A join multiplied the rows: the view joins instalments (or payments) at the wrong grain", "DISTINCT is broken", "The as-of date is wrong"], "answer": 1, "explain": "The grain of v_loan_status is one row per loan; 92 193 is the number of instalments. Aggregate instalments per loan in a CTE, then join once — the two numbers must be equal.", "xp": 1}
+```
 
 **P3.** `EXPLAIN QUERY PLAN` for `SELECT * FROM payments WHERE loan_id = 2242` before and after `CREATE INDEX ix_payments_loan ON payments (loan_id)`. Copy both lines.
 
@@ -180,6 +230,12 @@ Checks as above. `SELECT region, bucket, SUM(outstanding) FROM v_loan_status GRO
 
 </details>
 
+**P3 — read the plan.** Which line does the plan show *after* the index exists?
+
+```task
+{"id": "w03d4-p3b", "kind": "choice", "options": ["SCAN payments", "SEARCH payments USING INDEX ix_payments_loan (loan_id=?)", "SCAN payments USING COVERING INDEX ix_payments_loan", "USE TEMP B-TREE FOR ORDER BY"], "answer": 1, "explain": "SEARCH = the engine jumps to the matching rows through the index (SQL Server: Index Seek). SCAN = reads every row.", "xp": 1}
+```
+
 **P4.** Two filters for September instalments — `strftime('%Y-%m', due_date) = '2026-09'` and the half-open range — with `ix_installments_due` in place. Plans? Same count?
 
 <details><summary>Answer</summary>
@@ -187,6 +243,12 @@ Checks as above. `SELECT region, bucket, SUM(outstanding) FROM v_loan_status GRO
 Same count (the September instalments). Plans: `SCAN installments USING COVERING INDEX` for the function version — it still reads every entry; `SEARCH … (due_date>? AND due_date<?)` for the range. Habit 3.
 
 </details>
+
+**P4 — read the plan.** Which statement is true?
+
+```task
+{"id": "w03d4-p4b", "kind": "choice", "options": ["Different counts, same plan", "Same count; the function version SCANs, the half-open range SEARCHes", "Same count; both SEARCH", "The function version is faster because it reads fewer columns"], "answer": 1, "explain": "The answer does not change; the work does. Habit 3: no functions on indexed columns in WHERE.", "xp": 1}
+```
 
 **P5.** The clustered question: `EXPLAIN QUERY PLAN SELECT * FROM loans WHERE loan_id = 2242` vs `WHERE rowid = 2242`. Why do they differ, and what fixes the first?
 
@@ -196,13 +258,29 @@ Same count (the September instalments). Plans: `SCAN installments USING COVERING
 
 </details>
 
+**P5 — why?** Why does `WHERE rowid = 2242` SEARCH while `WHERE loan_id = 2242` SCANs?
+
+```task
+{"id": "w03d4-p5b", "kind": "choice", "options": ["rowid is a number and loan_id is text", "rowid is the table's storage order (its clustered key); loan_id was loaded as an ordinary column with no index", "SQLite cannot index loan_id", "loan_id has duplicates"], "answer": 1, "explain": "Add CREATE UNIQUE INDEX ix_loans_id ON loans (loan_id) and the plan becomes SEARCH … USING INDEX ix_loans_id. In SQL Server you would make loan_id the clustered primary key.", "xp": 1}
+```
+
 **P6.** Habit 4: `SELECT COUNT(*), COUNT(DISTINCT l.loan_id) FROM loans l JOIN installments i ON i.loan_id = l.loan_id`. Someone "fixes" a multiplied report with `SELECT DISTINCT l.loan_id, l.principal …` and then sums. What is still wrong?
 
 <details><summary>Answer</summary>
 
+```sql
+SELECT COUNT(*), COUNT(DISTINCT l.loan_id) FROM loans l JOIN installments i ON i.loan_id = l.loan_id;
+-- 92193 · 7828
+```
 92 193 vs 7 828. `DISTINCT` on (loan_id, principal) does collapse to 7 828 rows — but only because those two columns are the same on every repeat; add any instalment column and it multiplies again, and `SUM(principal)` *before* the `DISTINCT` (the common mistake) is 24× too big. The fix is the grain: sum instalments per loan in a CTE, then join once.
 
 </details>
+
+**P6 — what is still wrong?** Pick every true statement.
+
+```task
+{"id": "w03d4-p6b", "kind": "multi", "options": ["Add any instalment column to the DISTINCT list and the rows multiply again", "SUM(principal) taken before the DISTINCT is still about 24× too big", "DISTINCT also hides real duplicate loans that should be investigated", "The fix is to aggregate instalments per loan first, then join once"], "answer": [0, 1, 3], "explain": "DISTINCT collapses rows only by accident of the column list; the grain is still wrong underneath. (There are no duplicate loans here — the multiplication comes from the join.)", "xp": 1}
+```
 
 **P7.** Create `t_loan_status` as a materialised copy (CTAS / `SELECT INTO`). Time the bucket count from the view and from the table. When would you ship the table instead of the view?
 
@@ -212,7 +290,13 @@ Same count (the September instalments). Plans: `SCAN installments USING COVERING
 
 </details>
 
-**P8.** `v_portfolio_monthly`: build it (Company corner shows the query), check 1 700 rows = 34 months × 5 × 10, and reconcile September 2026 month-end outstanding with the as-of figure. Why do they differ by about 480 m?
+**P7 — table or view?** Answer Timur in two or three sentences: when would you ship `t_loan_status` instead of `v_loan_status`?
+
+```task
+{"id": "w03d4-p7b", "kind": "free", "min": 20, "model": "I would ship the table when the number must not move after it is published — the month-end pack for the board — or when the view is slow and the data changes rarely, so a nightly rebuild is enough. Where Timur needs today's DPD, the view stays. I would name the table so nobody mistakes it for the live one, e.g. t_loan_status_asof_20261001.", "rubric": ["Table for frozen / published numbers", "Table when slow and rarely changing (nightly refresh)", "View where freshness matters", "Naming that shows which is which"], "xp": 1}
+```
+
+**P8.** `v_portfolio_monthly`: build it (run the `CREATE VIEW v_portfolio_monthly` box in section 6 — the Company corner — once), check 1 700 rows = 34 months × 5 × 10, and reconcile September 2026 month-end outstanding with the as-of figure. Why do they differ by about 480 m?
 
 <details><summary>Answer</summary>
 
@@ -220,7 +304,17 @@ Same count (the September instalments). Plans: `SCAN installments USING COVERING
 
 </details>
 
+**P8 — why the gap?** Pick every reason that is part of the difference.
+
+```task
+{"id": "w03d4-p8b", "kind": "multi", "options": ["The month-end view leaves out the 21 loans disbursed on 1 October", "Instalments due on 1 October still count as outstanding at the end of 30 September", "One of the two queries is wrong", "Payments made on 1 October"], "answer": [0, 1], "explain": "Two definitions, both correct: month end (30 Sep) and as-of (1 Oct). The new loans add 852.8 m; the instalments falling due on 1 October take some of it back — net about 480 m. Write both in the dictionary.", "xp": 1}
+```
+
 **P9.** Pick five of the ten habits and show, with one query each on our data, the slow form and the fast form (plans or row counts as evidence).
+
+```task
+{"id": "w03d4-p9", "kind": "free", "min": 60, "model": "Habit 1: SELECT * FROM v_loan_status returns 16 columns, SELECT loan_id, bucket, outstanding three — same 7 828 rows, a fifth of the width. Habit 3: strftime('%Y-%m', due_date) = '2026-09' → SCAN installments USING COVERING INDEX; due_date >= '2026-09-01' AND due_date < '2026-10-01' → SEARCH, same count. Habit 4: loans JOIN installments → 92 193 rows for 7 828 loans; aggregate per loan first → 7 828. Habit 5: Wednesday's P6 chain joins customers to 10 rows instead of 92 193. Habit 9: latest loan per customer with ROW_NUMBER and with the correlated = MAX subquery — both 4 335 rows, the window in one pass.", "rubric": ["Five habits named", "A slow and a fast query for each", "Evidence for each: a plan line, a row count or a timing", "Same answer from both forms where it should be"], "xp": 2}
+```
 
 <details><summary>Answer</summary>
 
@@ -236,7 +330,19 @@ Any five with evidence — e.g. habit 1 (`SELECT *` vs three columns: compare th
 
 </details>
 
-<span class="badge stretch">Stretch</span> **P11.** Tuesday's P3 found 101 customers lent to again after a written-off loan. Using `v_loan_status` and `applications`, list the officers (`officer_id`) who approved the most such repeat loans, and the FPD30 of those repeat loans versus the book.
+**P10 — the count.** How many rows does `tmp_dpd` have?
+
+```task
+{"id": "w03d4-p10b", "kind": "number", "answer": 399, "dp": 0, "unit": "loans", "hint": "SELECT COUNT(*) FROM tmp_dpd after the CREATE TEMP TABLE.", "model": "399 loans with DPD above 0: 124 + 25 + 16 + 234. Active delinquent loans average 22.7 days.", "xp": 1}
+```
+
+> 🚀 **Stretch (optional, +5 XP).** The whole week in one query — and a question Nilufar will want answered before the next credit committee.
+
+**P11.** Tuesday's P3 found 101 customers lent to again after a written-off loan. Using `v_loan_status` and `applications`, list the officers (`officer_id`) who approved the most such repeat loans, and the FPD30 of those repeat loans versus the book.
+
+```task
+{"id": "w03d4-p11", "kind": "free", "min": 40, "model": "Repeat loans: a CTE that self-joins loans on customer_id where the later loan's disbursed_at is after a written-off loan's. Join applications on application_id for officer_id, COUNT per officer and RANK() OVER (ORDER BY COUNT(*) DESC). For FPD30, join week 2's flags block (on v_payments_clean) to the repeat loans and compare their rate with the book's 1.28 %, quoting the count beside the rate — with about a hundred loans, one loan moves the rate by about a point. Finding for Nilufar: which officers re-lend after write-offs, and whether those loans start worse.", "rubric": ["Repeat loans defined with a self-join and a date condition", "Officer from applications, counted and ranked with a window", "FPD30 of the repeat loans next to the book's 1.28 %", "Counts quoted beside rates (small group)"], "xp": 2}
+```
 
 <details><summary>Answer</summary>
 
@@ -248,27 +354,30 @@ Self-join `loans` to find the repeat loans (same customer, `disbursed_at` later 
 
 ## 4. Homework <span class="badge hw">HW 3.2 — Due Day 5</span>
 
-**Timur's clean layer.** Hand in with the 📎 box below:
+**Timur's clean layer.** Everything goes into the 📎 box below; the four reconciliation queries are checked by the page itself (**▶ Run**, **✔ Check**).
 
-1. `views.sql` — `CREATE VIEW` for `v_payments_clean`, `v_loan_status`, `v_portfolio_monthly`, in that order (the second reads the first), each preceded by a header comment: grain, as-of date, source tables. Both dialects where they differ (`julianday` vs `DATEDIFF`, `WITH RECURSIVE` vs `WITH`, `CREATE TABLE AS` vs `SELECT INTO`), or a clear dialect header.
-2. `dictionary.md` — one paragraph per view: **grain** (what is one row), **row count**, each **column** with its definition in one line (e.g. *outstanding — sum of `principal_due` over instalments with `due_date > as-of`*), the **as-of** rule, and known caveats (closed loans in 1–30; month-end vs as-of outstanding; the 25 removed duplicates).
-3. `checks.sql` — the grain check (`COUNT(*)` = `COUNT(DISTINCT key)`) and the reconciliation totals for each view (7 828 loans / 208 723 504 430; 1 700 rows / 7 828 loans / 404 783 280 000 disbursed; 52 850 payments / 255 114 772 176).
+1. **views.sql** — `CREATE VIEW` for `v_payments_clean`, `v_loan_status`, `v_portfolio_monthly`, in that order (the second reads the first), each preceded by a header comment: grain, as-of date, source tables. Both dialects where they differ (`julianday` vs `DATEDIFF`, `WITH RECURSIVE` vs `WITH`, `CREATE TABLE AS` vs `SELECT INTO`), or a clear dialect header.
+2. **dictionary.md** — one paragraph per view: **grain** (what is one row), **row count**, each **column** with its definition in one line (e.g. *outstanding — sum of `principal_due` over instalments with `due_date > as-of`*), the **as-of** rule, and known caveats (closed loans in 1–30; month-end vs as-of outstanding; the 25 removed duplicates).
+3. **R1–R4 — the reconciliation, recomputed from the raw tables.** Every view ships with a check: an independent query that gets the view's key totals straight from `payments`, `installments` and `loans`, with the view's definition written inline as a CTE. If the view and the raw recomputation agree, the view is right. R1: rows and total of the de-duplicated payments (52 850 / 255 114 772 176). R2: outstanding as of 2026-10-01 and the number of loans that still owe (208 723 504 430 / 3 409). R3: loans per DPD bucket for all 7 828 loans, payments de-duplicated and counted through the as-of date (7 429 / 124 / 25 / 16 / 234). R4: outstanding at the end of September 2026, the month-end definition (208 243 879 623).
 
-Graded on: (a) the three views create and the checks pass, (b) the dictionary lets Timur use a column without reading the SQL, (c) one definition for DPD/outstanding across all three views — a `v_portfolio_monthly` outstanding that cannot be reconciled with `v_loan_status` loses the point.
+> ⚠️ **Watch out.** The checker runs R1–R4 on an untouched copy of the data, where your views do not exist. That is on purpose: a check that reads the view cannot catch a bug in the view. Write the definition inline (`WITH pc AS (… ROW_NUMBER() …)`) and run against the raw tables. In your own `checks.sql` at work you would add the same totals read from the view, side by side.
 
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W3D4", "lesson": "W3D4", "title": "HW 3.2", "tasks": [{"id": "views.sql", "file": "views.sql", "text": true, "minLines": 3, "q": "Write `views.sql` here — what the page above asks for."}, {"id": "dictionary.md", "file": "dictionary.md", "text": true, "minLines": 3, "q": "Write `dictionary.md` here — what the page above asks for."}, {"id": "checks.sql", "file": "checks.sql", "text": true, "minLines": 3, "q": "Write `checks.sql` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W3D4", "lesson": "W3D4", "title": "HW 3.2", "file": "checks.sql", "why": "Timur points Power BI at these three views and deletes every pasted copy of the DPD logic. A view nobody can reconcile is worse than no view — the checks are what make the layer trustworthy.", "graded": ["R1–R4: ✔ Check passes — your raw recomputation matches the view's totals", "views.sql: the three views create in order, each with a header (grain, as-of, sources)", "dictionary.md lets Timur use every column without reading the SQL", "One definition of DPD and outstanding across all three views"], "tasks": [{"id": "views.sql", "file": "views.sql", "text": true, "minLines": 20, "q": "The three CREATE VIEW statements, in order, each with its header comment."}, {"id": "dictionary.md", "file": "dictionary.md", "text": true, "minLines": 12, "q": "One paragraph per view: grain, row count, every column in one line, the as-of rule, caveats."}, {"id": "R1", "q": "De-duplicated payments from the raw table (ROW_NUMBER inline): number of rows and total amount."}, {"id": "R2", "q": "Outstanding as of 2026-10-01 from installments, and how many loans still owe."}, {"id": "R3", "q": "Loans per DPD bucket (0 / 1-30 / 31-60 / 61-90 / 90+) for all 7 828 loans, payments de-duplicated and through the as-of date — five rows."}, {"id": "R4", "q": "Outstanding at the end of September 2026: principal_due of instalments due on or after 2026-10-01, for loans disbursed before 2026-10-01."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else you want your mentor to see (one more file, or a .zip of several)."}]}
 ```
 
 ---
 
 ## 5. Self-check
 
-1. A view and a materialised table of the same query — which one changes when a payment is added tonight, and which is faster to read? *(→ section 1, "Views", "Materialising")*
-2. `WHERE YEAR(disbursed_at) = 2026` on an indexed column — scan or seek, and how do you rewrite it? *(→ section 1, "Indexes", "Execution plan")*
-3. Why is `SELECT DISTINCT` after a one-to-many join a trap rather than a fix? *(→ habit 4, P6)*
+```check
+{"id": "w03d4-sc", "questions": [
+  {"type": "single", "q": "A view and a materialised table of the same query. A payment is added tonight. Which is true tomorrow?", "options": ["Both show it; the view is faster", "The view shows it, the table does not; the table is faster to read", "The table shows it, the view does not", "Neither shows it"], "answer": 1, "explain": "The view re-runs its query on every read; the table holds the result as of the moment it was built (→ section 1, Views; Materialising)."},
+  {"type": "single", "q": "WHERE YEAR(disbursed_at) = 2026 on an indexed disbursed_at — scan or seek, and the rewrite?", "options": ["Seek; nothing to rewrite", "Scan; WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2027-01-01'", "Scan; drop the index", "Seek, but only in SQL Server"], "answer": 1, "explain": "A function around the column hides it from the index; the half-open range on the bare column can SEARCH (→ section 1, Indexes; Execution plan)."},
+  {"type": "single", "q": "Why is SELECT DISTINCT after a one-to-many join a trap rather than a fix?", "options": ["DISTINCT is not allowed after JOIN", "It hides the multiplied rows only for some column lists; sums taken on the joined rows are still wrong, and it is slow", "It removes real loans", "It changes the join type"], "answer": 1, "explain": "Fix the grain instead: aggregate per loan first, then join once (→ habit 4; P6)."}]}
+```
 
 ---
 
@@ -285,23 +394,7 @@ The first page of a lending company's dashboard has **six numbers** on it. Every
 | 5 | **FPD30, last mature vintage** | FPD30 of the newest vintage whose first due dates are all ≥ 30 days old | week 2's `flags` on `v_payments_clean` | July 2026: 4 of 367 = **1.09 %** (August: only 11 of 358 loans in scope — not yet readable) |
 | 6 | **Collection rate** | paid by month end ÷ due in the month, on instalments due that month | `v_payments_clean` + `installments` | September: 15 982 118 926 / 16 987 977 718 = **94.1 %** |
 
-```sql
--- 1, 3, 4 in one query
-SELECT SUM(outstanding) AS outstanding,
-       ROUND(100.0 * SUM(CASE WHEN dpd > 30 THEN outstanding ELSE 0 END) / SUM(outstanding), 2) AS par30_pct,
-       ROUND(100.0 * SUM(CASE WHEN dpd > 90 THEN outstanding ELSE 0 END) / SUM(outstanding), 2) AS npl90_pct
-FROM v_loan_status;
--- 2
-SELECT SUM(disbursed_count), SUM(disbursed_amount) FROM v_portfolio_monthly WHERE month = '2026-10-01';
--- 6
-SELECT ROUND(100.0 * SUM(COALESCE(p.paid, 0)) / SUM(i.total_due), 1) AS collection_rate_pct
-FROM installments i
-LEFT JOIN (SELECT installment_id, SUM(amount) AS paid FROM v_payments_clean WHERE paid_at <= '2026-10-01' GROUP BY installment_id) p
-       ON p.installment_id = i.installment_id
-WHERE i.due_date >= '2026-09-01' AND i.due_date < '2026-10-01';
-```
-
-**`v_portfolio_monthly`** is the trend behind tiles 1 and 2 — one row per month × product × branch, built on a recursive calendar so that empty cells exist as zeros:
+Two of the views you built in sections 1 and 2. The third, **`v_portfolio_monthly`**, is the trend behind tiles 1 and 2 — one row per month × product × branch, built on a recursive calendar so that empty cells exist as zeros. Run this box once; P8 and the tile queries below need it:
 
 ```sql
 CREATE VIEW v_portfolio_monthly AS
@@ -325,11 +418,41 @@ LEFT JOIN outst o ON o.month_start = c.month_start AND o.product_id = c.product_
 -- 1 700 rows; 2026 month-end outstanding: Jan 151.8 bn · Mar 164.0 · Jun 184.6 · Aug 203.8 · Sep 208.2 bn
 ```
 
-The first version of this view joined `cells` (50 rows per month) to `loans` without matching product and branch — and reported 10 trillion of outstanding. The reconciliation check (`SUM(outstanding_month_end)` for September against `v_loan_status`) caught it in one line. **Every view ships with its check query**; that is what `checks.sql` in HW 3.2 is for.
+The first version of this view joined `cells` (50 rows per month) to `loans` without matching product and branch — and reported 10 trillion of outstanding. The reconciliation check (`SUM(outstanding_month_end)` for September against `v_loan_status`) caught it in one line. **Every view ships with its check query**; that is what R1–R4 in HW 3.2 are for.
 
-**Reading the six together.** Outstanding grows ~7 bn a month (151.8 bn in January to 208.2 bn in September) while disbursements run 12–22 bn: most of what is lent is repaid within the year (short Micro/BNPL/Consumer terms). PAR30 3.1 % and NPL90 2.6 % are close — the delinquent book is mostly *old*: 5.3 of the 6.5 bn at risk is already 90+. FPD30 at 1.1 % for July is in line with the 1.28 % history. A 94 % collection rate on September's dues means 6 % of what fell due is unpaid a month later — the inflow to Sevara's 1–30 bucket (117 loans on Tuesday). One page, six numbers, and every one of them traceable to a view and a definition — that is what "a clean layer" buys.
+With the three views in place, the six tiles are short queries:
 
-> Interview version: *"What goes on the first page of a lending dashboard, and where do the numbers come from?"* — Outstanding, disbursements MTD, PAR30, NPL90, FPD30 of the last mature vintage, collection rate; each from a view with a stated grain and as-of rule (loan-level status view, monthly portfolio view, clean payments view); name the definition under each tile and reconcile the views to each other.
+```sql
+-- 1, 3, 4 in one query
+SELECT SUM(outstanding) AS outstanding,
+       ROUND(100.0 * SUM(CASE WHEN dpd > 30 THEN outstanding ELSE 0 END) / SUM(outstanding), 2) AS par30_pct,
+       ROUND(100.0 * SUM(CASE WHEN dpd > 90 THEN outstanding ELSE 0 END) / SUM(outstanding), 2) AS npl90_pct
+FROM v_loan_status;
+-- 2
+SELECT SUM(disbursed_count), SUM(disbursed_amount) FROM v_portfolio_monthly WHERE month = '2026-10-01';
+-- 6
+SELECT ROUND(100.0 * SUM(COALESCE(p.paid, 0)) / SUM(i.total_due), 1) AS collection_rate_pct
+FROM installments i
+LEFT JOIN (SELECT installment_id, SUM(amount) AS paid FROM v_payments_clean WHERE paid_at <= '2026-10-01' GROUP BY installment_id) p
+       ON p.installment_id = i.installment_id
+WHERE i.due_date >= '2026-09-01' AND i.due_date < '2026-10-01';
+```
+
+> 💡 **Key idea.** If a tile needs a raw table, the layer is incomplete. Six tiles, three views, one definition of DPD and outstanding — that is the test Timur's dashboard has to pass.
+
+```game
+{"type": "match", "id": "w03d4-g4", "title": "Tile and definition", "pairs": [["Outstanding", "sum of principal of instalments not yet due, as of the date"], ["Disbursements MTD", "loans and principal disbursed this month so far"], ["PAR30", "outstanding of loans with DPD > 30 ÷ total outstanding"], ["NPL90", "outstanding of loans with DPD > 90 ÷ total outstanding"], ["FPD30, last mature vintage", "first payment 30+ late, newest cohort whose first due dates are all 30 days old"], ["Collection rate", "paid by month end ÷ due in the month, same instalments"]]}
+```
+
+**Reading the six together.** Outstanding grows ~7 bn a month (151.8 bn in January to 208.2 bn in September) while disbursements run 12–22 bn: most of what is lent is repaid within the year (short Micro/BNPL/Consumer terms). PAR30 3.1 % and NPL90 2.6 % are close — the delinquent book is mostly *old*: 5.3 of the 6.5 bn at risk is already 90+. FPD30 at 1.1 % for July is in line with the 1.28 % history. A 94 % collection rate on September's dues means 6 % of what fell due is unpaid a month later — the inflow to Sevara's 1–30 bucket (117 loans entered it from current between 1 September and 1 October — Tuesday's roll-rate matrix; the bucket itself holds 124). One page, six numbers, and every one of them traceable to a view and a definition — that is what "a clean layer" buys.
+
+> 🎯 **Interview version.** *"What goes on the first page of a lending dashboard, and where do the numbers come from?"* The interviewer listens for the six tiles, for where each number is computed (a view, not the dashboard), and for how you know the views agree. Say it in the box below, then compare.
+
+**Say it like in an interview.** Answer the question above in 3–5 sentences, as you would aloud, with one Nur Finance number.
+
+```task
+{"id": "w03d4-int", "kind": "free", "min": 30, "model": "Six numbers: outstanding, disbursements month to date, PAR30, NPL90, FPD30 of the last mature vintage and the collection rate. Each comes from a view with a stated grain and as-of rule — a loan-level status view with DPD, bucket and outstanding, a monthly portfolio view per month, product and branch, and a de-duplicated payments view — so the dashboard only sums and divides and one DPD definition serves every tile. At Nur Finance on 1 October 2026 that page reads 208.7 bn outstanding, PAR30 3.12 %, NPL90 2.55 %, collection rate 94.1 % for September. I write the definition under each tile and ship every view with a reconciliation query, for example month-end versus as-of outstanding.", "rubric": ["Names the six tiles (or most of them)", "Numbers computed in views with a grain and an as-of rule, not in the dashboard", "One definition shared by all tiles", "Reconciliation / check queries between views", "Quotes at least one real number"], "xp": 2}
+```
 
 Tomorrow: the checkpoint — the whole week as one written EDA report on the loan book, and eight interview questions.
 
@@ -361,7 +484,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w03d4", "q": "Timur wants an NPL90 tile per region. Build v_loan_status as on this page (clean payments, as of 2026-10-01) and answer from the view only: what is NPL90 for the Tashkent region — the outstanding of loans with DPD over 90 divided by the region's total outstanding? Percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["84584e0f0405652352b4fafa"], "hint": "A conditional sum over the view's outstanding column; the region is already a column of the view.", "sol": "U0VMRUNUIHJlZ2lvbiwKICAgICAgIFNVTShDQVNFIFdIRU4gZHBkID4gOTAgVEhFTiBvdXRzdGFuZGluZyBFTFNFIDAgRU5EKSBBUyBucGw5MF9vdXRzdGFuZGluZywKICAgICAgIFNVTShvdXRzdGFuZGluZykgQVMgb3V0c3RhbmRpbmcsCiAgICAgICBST1VORCgxMDAuMCAqIFNVTShDQVNFIFdIRU4gZHBkID4gOTAgVEhFTiBvdXRzdGFuZGluZyBFTFNFIDAgRU5EKSAvIFNVTShvdXRzdGFuZGluZyksIDIpIEFTIG5wbDkwX3BjdApGUk9NIHZfbG9hbl9zdGF0dXMKR1JPVVAgQlkgcmVnaW9uCk9SREVSIEJZIG5wbDkwX3BjdCBERVNDOwotLSB0aGUgc2FtZSB0ZXh0IG9uIFNRTCBTZXJ2ZXIKLS0gVGFzaGtlbnQ6IDEgOTIwIDk0MyA5NzAgLyA4MSA2NzkgNzM4IDA3MSA9IDIuMzUgJSAoOTEgbG9hbnMgb3ZlciA5MCBEUEQpClRoZSBjb21wYW55J3MgTlBMOTAgaXMgMi41NSAlOyBUYXNoa2VudCwgd2l0aCAzOSAlIG9mIHRoZSBib29rLCBzaXRzIHNsaWdodGx5IGJlbG93IGl0LCBhbmQgTnVrdXMgaXMgdGhlIG91dGxpZXIgYXQgNi43NCAlLiBPdmVyIDkwIG1lYW5zIGJ1Y2tldCA5MCssIHNvIGRwZCA+IDkwLCBub3QgPj0gOTAuIE9uY2UgdGhlIHZpZXcgaXMgcmlnaHQgdGhlIHRpbGUgaXMgb25lIEdST1VQIEJZIOKAlCB0aGUgZGVmaW5pdGlvbiBvZiBEUEQgYW5kIG91dHN0YW5kaW5nIGxpdmVzIGluIG9uZSBwbGFjZSwgd2hpY2ggaXMgd2hhdCBUaW11ciBhc2tlZCBmb3Iu"}
+{"id": "w03d4", "sql": true, "q": "Timur wants an NPL90 tile per region. Build v_loan_status as on this page (clean payments, as of 2026-10-01) and answer from the view only: what is NPL90 for the Tashkent region — the outstanding of loans with DPD over 90 divided by the region's total outstanding? Percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["84584e0f0405652352b4fafa"], "hint": "A conditional sum over the view's outstanding column; the region is already a column of the view.", "sol": "U0VMRUNUIHJlZ2lvbiwKICAgICAgIFNVTShDQVNFIFdIRU4gZHBkID4gOTAgVEhFTiBvdXRzdGFuZGluZyBFTFNFIDAgRU5EKSBBUyBucGw5MF9vdXRzdGFuZGluZywKICAgICAgIFNVTShvdXRzdGFuZGluZykgQVMgb3V0c3RhbmRpbmcsCiAgICAgICBST1VORCgxMDAuMCAqIFNVTShDQVNFIFdIRU4gZHBkID4gOTAgVEhFTiBvdXRzdGFuZGluZyBFTFNFIDAgRU5EKSAvIFNVTShvdXRzdGFuZGluZyksIDIpIEFTIG5wbDkwX3BjdApGUk9NIHZfbG9hbl9zdGF0dXMKR1JPVVAgQlkgcmVnaW9uCk9SREVSIEJZIG5wbDkwX3BjdCBERVNDOwotLSB0aGUgc2FtZSB0ZXh0IG9uIFNRTCBTZXJ2ZXIKLS0gVGFzaGtlbnQ6IDEgOTIwIDk0MyA5NzAgLyA4MSA2NzkgNzM4IDA3MSA9IDIuMzUgJSAoOTEgbG9hbnMgb3ZlciA5MCBEUEQpClRoZSBjb21wYW55J3MgTlBMOTAgaXMgMi41NSAlOyBUYXNoa2VudCwgd2l0aCAzOSAlIG9mIHRoZSBib29rLCBzaXRzIHNsaWdodGx5IGJlbG93IGl0LCBhbmQgTnVrdXMgaXMgdGhlIG91dGxpZXIgYXQgNi43NCAlLiBPdmVyIDkwIG1lYW5zIGJ1Y2tldCA5MCssIHNvIGRwZCA+IDkwLCBub3QgPj0gOTAuIE9uY2UgdGhlIHZpZXcgaXMgcmlnaHQgdGhlIHRpbGUgaXMgb25lIEdST1VQIEJZIOKAlCB0aGUgZGVmaW5pdGlvbiBvZiBEUEQgYW5kIG91dHN0YW5kaW5nIGxpdmVzIGluIG9uZSBwbGFjZSwgd2hpY2ggaXMgd2hhdCBUaW11ciBhc2tlZCBmb3Iu"}
 ```
 
 <!-- challenge:end -->

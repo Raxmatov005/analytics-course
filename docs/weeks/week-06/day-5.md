@@ -10,9 +10,11 @@
 - **Part B (30 pts):** the test-choice quiz — twelve short scenarios; for each, the test and one line of why.
 - **Part C (20 pts):** eight interview questions, 3–5 sentences each. Parts B and C go into `quiz.md`.
 
-**Rules.** Open book: this week's pages, your notebooks, the reference card (Day 4, section 2). Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save) and `quiz.md`. Also due today: **HW 6.2** in `day-2/`. Data as of **2026-10-01**; the template's loader builds `loans`, `f` (FPD30 loans), `x` (52 850 clean payments with `days_late` and `late`) and `apps`. Closed: the model answers until you submit.
+**Rules.** Open book: this week's pages, your notebooks, the reference card (Day 4, section 2). Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save) and `quiz.md`. Also due today: **HW 6.2**, in [Day 2's hand-in box](weeks/week-06/day-2.md). Data as of **2026-10-01**; the template's loader builds `loans`, `f` (FPD30 loans), `x` (52 850 clean payments with `days_late` and `late`) and `apps`. Closed: the model answers until you submit.
 
 **What every Part A answer contains** (graded): the grain in a comment; the code; the output (numbers visible in the saved notebook); the method named (t, Wilson, z, Mann–Whitney, Cohen's h); and **two sentences**: what the number says, and what someone should do or not do with it. A correct number with no interpretation earns 6 of 10.
+
+> 💡 **Key idea.** An answer this week has three parts: the number, how sure you are of it (interval or p-value, with the method named), and what someone should do with it. Drop any one and the reader cannot act.
 
 **Plan for the day.**
 
@@ -20,7 +22,7 @@
 |---|---|---|
 | 9:00–9:15 | Read all three parts; open the template; Restart & Run All (the loader asserts 7 828 / 7 099 / 91 / 52 850) | a green first cell |
 | 9:15–11:15 | Part A, A1 → A5, 20–25 min each | five result cells, five interpretations |
-| 11:15–11:30 | Break; Restart & Run All; save | `checkpoint.ipynb` with outputs |
+| 11:15–11:30 | Break; Restart & Run All; save; then the warm-up below Part A (six quick checks, not graded) | `checkpoint.ipynb` with outputs |
 | 11:30–12:15 | Part B in `quiz.md` — name the test before you look anything up, then check the Day 4 card | twelve lines |
 | 12:15–12:45 | Part C in `quiz.md` | eight short answers |
 | 12:45–13:00 | The checklist at the end; hand in (box below) | done |
@@ -28,6 +30,7 @@
 **The shape of one Part A answer** (Day 3's committee habit, shortened):
 
 ```python
+# (shape only — not meant to run)
 # A0 (example). FPD30, app vs branch — grain: one loan in FPD scope (f, 7 099 rows)
 k = f.groupby("channel")["fpd30"].agg(["sum", "size"]).loc[["app", "branch"]]
 print(proportions_ztest(k["sum"], k["size"]))                       # (2.147, 0.0318)
@@ -38,6 +41,18 @@ print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))   # (+0.
 
 Two sentences: the number with its uncertainty and test, then what it means for a decision. Nothing about "the null hypothesis is rejected" without saying which hypothesis, in business words.
 
+Put the parts of one answer cell in the order a reviewer reads them:
+
+```game
+{"type": "order", "id": "w06d5-g1", "title": "One Part A answer", "items": ["A comment with the grain (one row = one loan / one payment)", "The code", "The printed output — numbers visible in the saved notebook", "The method named (t, Wilson, z, Mann–Whitney, Cohen's h)", "Sentence 1: the number with its uncertainty", "Sentence 2: what someone should do — or not do — with it"], "why": "The grain first, because every number depends on it; the decision last, because that is what the reader came for."}
+```
+
+One sentence of this A0 write-up would lose points — tap it:
+
+```game
+{"type": "bug", "id": "w06d5-g2", "title": "Spot the deduction", "q": "One line would cost points.", "code": "# A0. FPD30, app vs branch — grain: one loan in FPD scope (7 099 rows)\nApp FPD30 is 1.70 % vs 1.04 % for branch (+0.66 points, 95 % CI +0.05 to +1.33).\nTwo-sided two-proportion z-test: z = 2.15, p = 0.032.\nSo the probability that app is no worse than branch is only 3.2 %.\nAbout 7 extra FPDs per 1 000 loans: a cheap fix and a re-test, not closing the channel.", "answer": [3], "why": "The p-value is computed assuming H₀; it is not the probability that H₀ is true."}
+```
+
 ---
 
 ## Part A — Five analyses on Nur data (120 min, 50 pts)
@@ -46,9 +61,14 @@ Two sentences: the number with its uncertainty and test, then what it means for 
 
 For each of the five products: n, mean, sd, the 95 % t interval, the half-width as % of the mean. Which product's average do you know least precisely, and why (n or sd)?
 
+```task
+{"id": "w06d5-a1", "kind": "number", "answer": 4.46, "dp": 2, "unit": "% of the mean (AUTO half-width)", "hint": "Half-width = t(0.975, n − 1) × s / √n, with s from ddof = 1; divide by the mean. Day 2, 'z or t'."}
+```
+
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run)
 # grain: one row per loan (7 828)
 rows = []
 for code_, g in loans.groupby("code"):
@@ -75,9 +95,14 @@ a1 = pd.DataFrame(rows, columns=["product", "n", "mean", "sd", "ci_lo", "ci_hi",
 
 Approved = status starting with `approved`; denominator = **decided** applications (cancelled out). Wilson 95 % per channel. Do the app and branch intervals overlap?
 
+```task
+{"id": "w06d5-a2", "kind": "number", "answer": 66.79, "dp": 2, "unit": "% (lower Wilson limit, app)", "hint": "Denominator: decided applications only (status ≠ cancelled); numerator: status starting with 'approved'. Day 2, worked example."}
+```
+
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run)
 # grain: one row per application (14 000); decided = not cancelled (12 183)
 d = apps[apps["status"] != "cancelled"].assign(approved=lambda t: t["status"].str.startswith("approved").astype(int))
 a2 = d.groupby("channel")["approved"].agg(approved="sum", decided="size")
@@ -101,9 +126,14 @@ a2[["wilson_lo", "wilson_hi"]] = [proportion_confint(k, n, method="wilson") for 
 
 Late = paid after the due date, on the 52 850 clean payments; the segment is the customer's (`customers.segment`, reached through `loans.customer_id`). Two-proportion z-test or χ² on the 2 × 2. Report p, the difference in points and the relative risk; one sentence on what the grain (payments, not loans) does to the test, and the loan-level check.
 
+```task
+{"id": "w06d5-a3", "kind": "number", "answer": 1.26, "dp": 2, "unit": "z (payments, sme − mass)", "hint": "52 850 clean payments; late = paid after the due date; the segment comes through loans.customer_id. The order is sme first. Day 3, P9."}
+```
+
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run)
 # grain: one row per clean payment; sme 11 413, mass 30 601 payments
 seg = pd.read_sql("SELECT l.loan_id, c.segment FROM loans l JOIN customers c ON c.customer_id = l.customer_id", con)
 xs = x.merge(seg, on="loan_id")
@@ -125,9 +155,14 @@ stats.chi2_contingency(t, correction=False)[:2]                        # chi2 = 
 
 Mann–Whitney U, two-sided. Before the test: the shape (median, mean, skew, share paid late) and one sentence on why not a t-test. After: the p-value and the probability of superiority U / (n₁·n₂).
 
+```task
+{"id": "w06d5-a4", "kind": "number", "answer": 0.45, "dp": 3, "unit": "U / (n₁·n₂), grade B first", "hint": "Consumer payments only; stats.mannwhitneyu(grade_B, grade_C, alternative=\"two-sided\"); the order of the samples decides whether you get the number or one minus it. Day 4, P1."}
+```
+
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run)
 # grain: one row per clean payment; Consumer grade B 9 495, grade C 6 155
 cb = x.loc[(x.code == "CONS") & (x.risk_grade == "B"), "days_late"]
 cc = x.loc[(x.code == "CONS") & (x.risk_grade == "C"), "days_late"]
@@ -152,9 +187,14 @@ Why not a t-test: days late is heavily right-skewed (skew 4–6) with the same m
 
 Baseline = the app's decided approval rate (A2). Cohen's h, α 0.05 two-sided, power 0.80. Then: how many months of app applications is that, at the 2026 monthly volume of decided app applications?
 
+```task
+{"id": "w06d5-a5", "kind": "number", "answer": 8362, "dp": 0, "unit": "decided applications per arm", "hint": "p1 = the app's decided approval rate from A2; Cohen's h for p1 + 0.02 vs p1; round up. Day 4, 'Power and sample size'."}
+```
+
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run)
 p1 = 2915 / 4274                                                  # 68.20 %
 h = proportion_effectsize(p1 + 0.02, p1)                          # 0.0433
 n_arm = int(np.ceil(zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80)))     # 8 362 per arm, 16 724 total
@@ -181,14 +221,18 @@ dec.groupby(dec.applied_at.dt.to_period("M")).size().mean()      # 183.0 a month
 
 ## Warm-up (not graded, 10 min) — six quick checks
 
-The original course closed its statistics module with short quizzes; here are their best ideas, on our data. Answer in your head, then open the fold.
+A break between Part A and Part B: the statistics lessons of the RU decks end with short quizzes, and here are their best ideas, on our data. Six questions, one at a time; the fold below has the longer answers.
 
-1. The average Micro ticket is 2.71 m soum. One Micro loan is 4.99 m. Is it an outlier?
-2. Applicants' credit scores are close to normal, mean 659.6, sd 59.5. Roughly what share score 780 or more?
-3. Shapiro–Wilk on 5 000 applicants' scores gives p = 0.09; on 500 app loan principals p ≈ 10⁻¹². What does each say, and does the second forbid a t-test on the 2 669 app principals?
-4. If you take bigger samples, what happens to the spread of the sample means?
-5. What does a Mann–Whitney test work with, and what is its null hypothesis?
-6. What does an A/A test check?
+```check
+{"id": "w06d5-sc", "questions": [
+  {"type": "single", "q": "The average Micro ticket is 2.71 m soum (sd 1.32 m). One Micro loan is 4.99 m. Is it an outlier?", "options": ["Yes — it is far above the mean", "Not from the mean alone: z = 1.73 is ordinary, and 4.99 m is just under the 5 m product limit — find out what it is before removing anything", "Yes, because Micro tickets are skewed", "Only if Shapiro–Wilk rejects"], "answer": 1, "explain": "Never delete by a z-score alone; a limit, a data error and a real large loan need different treatment."},
+  {"type": "number", "q": "Applicants' scores are close to normal, mean 659.6, sd 59.5. Roughly what share score 780 or more, in %?", "answer": 2.2, "tol": 0.2, "explain": "z = (780 − 659.6) / 59.5 = 2.02 → 1 − Φ(2.02) = 2.2 %; the data say 2.0 %."},
+  {"type": "single", "q": "Shapiro–Wilk on 500 app principals gives p ≈ 10⁻¹². Does that forbid a t-test on the mean of all 2 669 app principals?", "options": ["Yes — the data are not normal", "No — the t-test needs the sample MEAN to be near normal, which the CLT gives at n = 2 669", "Only if the variances differ", "Yes, unless you drop the outliers"], "answer": 1, "explain": "Normality of the statistic, not of the data (Day 3, 'Checking assumptions')."},
+  {"type": "single", "q": "If you take bigger samples, the spread of the sample means…", "options": ["grows like √n", "stays the same", "shrinks like σ / √n", "shrinks like σ / n"], "answer": 2, "explain": "Day 2's table: 49 m at n = 5, 3.3 m at n = 1 000."},
+  {"type": "single", "q": "What does a Mann–Whitney test work with, and what is its H₀?", "options": ["Means; H₀: equal means", "Ranks; H₀: both samples come from the same distribution (P(X > Y) = ½)", "Medians; H₀: equal medians", "Counts; H₀: independence"], "answer": 1, "explain": "Ranks, not values — and it is not a test of medians unless the shapes are identical."},
+  {"type": "single", "q": "What does an A/A test check?", "options": ["Whether variant A beats variant B", "The experiment system — the split, the logging, the metric pipeline and the test itself", "The power of the test", "Whether the metric is normal"], "answer": 1, "explain": "Two groups with the same treatment should differ 'significantly' about 5 % of the time (our split: 4.9 %)."}
+]}
+```
 
 <details><summary>Answers</summary>
 
@@ -206,6 +250,8 @@ The original course closed its statistics module with short quizzes; here are th
 ## Part B — The test-choice quiz (45 min, 30 pts)
 
 For each scenario: **the test** (and the correction or the follow-up, if one is needed) and **one line of why** — outcome type, number of groups, paired or not, what breaks the default. 2.5 points each.
+
+> ⚠️ **Watch out.** Name the test *before* you open the Day 4 card — the card is for checking your choice, not for making it. And watch for the two traps the scenarios hide: the same units measured twice (paired), and many tests at once (a correction).
 
 1. Compare the average ticket across the five products.
 2. Is FPD30 independent of the customer's region (eight regions)?
@@ -242,6 +288,8 @@ For each scenario: **the test** (and the correction or the follow-up, if one is 
 ## Part C — Eight interview questions (30 min, 20 pts)
 
 Answer in `quiz.md`, 3–5 sentences each, with a Nur number where it helps. 2.5 points each.
+
+> 🎯 **Interview version.** Every answer has the same skeleton: the definition in one sentence, a Nur number that shows you have used it, and the trap people fall into. "p = 0.03 means… — for app vs branch FPD that was… — it is *not* the probability that…".
 
 1. What does a p-value of 0.03 mean? Give the definition and two common misreadings.
 2. What does a 95 % confidence interval mean — and what does it not mean?
@@ -313,14 +361,20 @@ Answer in `quiz.md`, 3–5 sentences each, with a Nur number where it helps. 2.5
 4. "Bukhara's p = 0.02 is one of ten tests; after Holm it is 0.20" — multiple comparisons before blame.
 5. "2 000 loans give 9 % power for that SMS; measure lateness instead" — power before the experiment, not after.
 
-<span class="badge stretch">Stretch</span> Write `nur_stats.py` with `wilson_table(df, by, outcome)`, `two_rates_note(k1, n1, k2, n2)` (prints the six-line committee note: rates with Wilson CIs, difference with Newcombe CI, z and Fisher p, RR, extra per 1 000) and `power_note(p1, p2, n_per_arm)` (power, n needed, MDE). Run `two_rates_note` on grade C vs D FPD30 (44 / 2 034 vs 7 / 314) and `power_note(0.0128, 0.010, 1000)`. One module, three functions, every committee question of this week answered in one line each.
+> 💡 **Key idea.** All five sentences have the same shape: a number, its uncertainty, and the decision it supports. That shape is what next week's A/B tests and every Power BI tile will ask of you.
+
+> 🚀 **Stretch (optional, +5 XP).** Write `nur_stats.py` with `wilson_table(df, by, outcome)`, `two_rates_note(k1, n1, k2, n2)` (prints the six-line committee note: rates with Wilson CIs, difference with Newcombe CI, z and Fisher p, RR, extra per 1 000) and `power_note(p1, p2, n_per_arm)` (power, n needed, MDE). Run `two_rates_note` on grade C vs D FPD30 (44 / 2 034 vs 7 / 314) and `power_note(0.0128, 0.010, 1000)`. One module, three functions, every committee question of this week answered in one line each.
+
+```task
+{"id": "w06d5-st", "kind": "number", "answer": 0.94, "dp": 2, "unit": "two-sided z-test p, grade C vs D", "hint": "Pooled rate 51 / 2 348; z = (44/2034 − 7/314) / SE.", "model": "z = −0.07, p = 0.94: grade C (2.16 %) and grade D (2.23 %) show no evidence of a difference in FPD30 — and with only 7 FPDs in grade D the interval of the difference is wide, so the note says 'no evidence of a difference', never 'the same'.", "xp": 2}
+```
 
 ---
 
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W6D5", "lesson": "W6D5", "title": "Checkpoint 6", "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — what the page above asks for."}, {"id": "quiz.md", "file": "quiz.md", "text": true, "minLines": 3, "q": "Write `quiz.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W6D5", "lesson": "W6D5", "title": "Checkpoint 6", "why": "This is the week's proof: every number on Nur's data with its uncertainty and a decision, the test named before the data, and the interview answers you will give for real.", "graded": ["Part A, 50: per task the right method and numbers (6) and a two-sentence interpretation that says what to do (4)", "Part B, 30: per scenario the right test (1.5) and a reason naming outcome type, groups, pairing or the broken assumption (1)", "Part C, 20: per answer correct, in your words, with a number or example (2.5)", "70 points to move on"], "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — what the page above asks for."}, {"id": "quiz.md", "file": "quiz.md", "text": true, "minLines": 3, "q": "Write `quiz.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
 
 ---
@@ -351,7 +405,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w06d5", "q": "Jasur asks how well the credit score at the door separates the loans that later had an FPD from those that did not. In the FPD frame f, keep the loans with a credit score (6 907) and run a two-sided Mann–Whitney U test of score, non-FPD loans as the first sample and FPD loans as the second. Report the probability of superiority U / (n₁·n₂) — the chance that a random non-FPD loan has a higher score than a random FPD loan (ties counted half). Give it to 3 decimals.", "type": "number", "dp": 3, "h": ["ee9eaa07100cfe8068c07199"], "hint": "The order of the two samples decides whether you get the number or one minus it — the question fixes it.", "sol": "ZyA9IGYuZHJvcG5hKHN1YnNldD1bImNyZWRpdF9zY29yZSJdKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDYgOTA3IGxvYW5zOiA2IDgxOCB3aXRob3V0IEZQRCwgODkgd2l0aAphID0gZy5sb2NbZ1siZnBkMzAiXSA9PSAwLCAiY3JlZGl0X3Njb3JlIl0KYiA9IGcubG9jW2dbImZwZDMwIl0gPT0gMSwgImNyZWRpdF9zY29yZSJdCnUgPSBzdGF0cy5tYW5ud2hpdG5leXUoYSwgYiwgYWx0ZXJuYXRpdmU9InR3by1zaWRlZCIpICAgICAgICAgICAgICMgVSA9IDM4MSA2MjEuNSwgcCA9IDIuOGUtMDUKdS5zdGF0aXN0aWMgLyAobGVuKGEpICogbGVuKGIpKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIyAwLjYyOQoKMC42Mjk6IHBpY2sgb25lIHBheWluZyBhbmQgb25lIEZQRCBsb2FuIGF0IHJhbmRvbSBhbmQgdGhlIHBheWluZyBvbmUgaGFzIHRoZSBoaWdoZXIgc2NvcmUgNjMgJSBvZiB0aGUgdGltZSDigJQgY2xlYXJseSBiZXR0ZXIgdGhhbiBhIGNvaW4gKHAg4omIIDMgw5cgMTDigbvigbUsIG1lZGlhbnMgNjgxIHZzIDY1NCksIGJ1dCBmYXIgZnJvbSBhIGNsZWFuIHNwbGl0LgpUaGlzIG51bWJlciBpcyB0aGUgc2NvcmVjYXJkJ3MgQVVDIG9uIEZQRDMwOyBhIGNyZWRpdCB0ZWFtIHdvdWxkIHF1b3RlIGl0IGFzIEdpbmkgPSAyIMOXIDAuNjI5IOKIkiAxIOKJiCAwLjI2LCBhIHdlYWsgc2NvcmUgZm9yIHRoaXMgb3V0Y29tZS4KSXQgYWdyZWVzIHdpdGggRGF5IDEncyBCYXllcyBleGVyY2lzZTogYSBsb3cgc2NvcmUgbGlmdHMgRlBEIHJpc2sgYnV0IGFsbW9zdCBldmVyeSBsb3ctc2NvcmUgbG9hbiBzdGlsbCBwYXlzLCBzbyB0aGUgc2NvcmUgYWxvbmUgY2Fubm90IHN0b3AgZmlyc3QtcGF5bWVudCBkZWZhdWx0cy4="}
+{"id": "w06d5", "q": "Jasur asks how well the credit score at the door separates the loans that later had an FPD from those that did not. In the FPD frame f, keep the loans with a credit score (6 907) and run a two-sided Mann–Whitney U test of score, non-FPD loans as the first sample and FPD loans as the second. Report the probability of superiority U / (n₁·n₂) — the chance that a random non-FPD loan has a higher score than a random FPD loan (ties counted half). Give it to 3 decimals.", "type": "number", "dp": 3, "python": true, "h": ["ee9eaa07100cfe8068c07199"], "hint": "The order of the two samples decides whether you get the number or one minus it — the question fixes it.", "sol": "ZyA9IGYuZHJvcG5hKHN1YnNldD1bImNyZWRpdF9zY29yZSJdKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDYgOTA3IGxvYW5zOiA2IDgxOCB3aXRob3V0IEZQRCwgODkgd2l0aAphID0gZy5sb2NbZ1siZnBkMzAiXSA9PSAwLCAiY3JlZGl0X3Njb3JlIl0KYiA9IGcubG9jW2dbImZwZDMwIl0gPT0gMSwgImNyZWRpdF9zY29yZSJdCnUgPSBzdGF0cy5tYW5ud2hpdG5leXUoYSwgYiwgYWx0ZXJuYXRpdmU9InR3by1zaWRlZCIpICAgICAgICAgICAgICMgVSA9IDM4MSA2MjEuNSwgcCA9IDIuOGUtMDUKdS5zdGF0aXN0aWMgLyAobGVuKGEpICogbGVuKGIpKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIyAwLjYyOQoKMC42Mjk6IHBpY2sgb25lIHBheWluZyBhbmQgb25lIEZQRCBsb2FuIGF0IHJhbmRvbSBhbmQgdGhlIHBheWluZyBvbmUgaGFzIHRoZSBoaWdoZXIgc2NvcmUgNjMgJSBvZiB0aGUgdGltZSDigJQgY2xlYXJseSBiZXR0ZXIgdGhhbiBhIGNvaW4gKHAg4omIIDMgw5cgMTDigbvigbUsIG1lZGlhbnMgNjgxIHZzIDY1NCksIGJ1dCBmYXIgZnJvbSBhIGNsZWFuIHNwbGl0LgpUaGlzIG51bWJlciBpcyB0aGUgc2NvcmVjYXJkJ3MgQVVDIG9uIEZQRDMwOyBhIGNyZWRpdCB0ZWFtIHdvdWxkIHF1b3RlIGl0IGFzIEdpbmkgPSAyIMOXIDAuNjI5IOKIkiAxIOKJiCAwLjI2LCBhIHdlYWsgc2NvcmUgZm9yIHRoaXMgb3V0Y29tZS4KSXQgYWdyZWVzIHdpdGggRGF5IDEncyBCYXllcyBleGVyY2lzZTogYSBsb3cgc2NvcmUgbGlmdHMgRlBEIHJpc2sgYnV0IGFsbW9zdCBldmVyeSBsb3ctc2NvcmUgbG9hbiBzdGlsbCBwYXlzLCBzbyB0aGUgc2NvcmUgYWxvbmUgY2Fubm90IHN0b3AgZmlyc3QtcGF5bWVudCBkZWZhdWx0cy4="}
 ```
 
 <!-- challenge:end -->

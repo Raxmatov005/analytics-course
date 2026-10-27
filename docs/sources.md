@@ -1,5 +1,7 @@
 # Source map
 
+> 🧭 **What this page is for.** Depth, not duty: every video minute and deck page the days point to, in one list. Nothing in the course depends on it.
+
 Everything the course links to lives here, with the exact place to open. The daily
 pages are complete without these; they are the depth reading.
 

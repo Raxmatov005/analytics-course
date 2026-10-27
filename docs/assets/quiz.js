@@ -11,6 +11,10 @@ A quiz is written in a day page as a fenced block with the language "quiz" holdi
   ]}
 
 Results are kept in this browser only (localStorage, key "al.v1"). Everything works without it.
+
+A Self-check is a ```check block with the same question objects ({"id": "w01d1-sc", "questions": [...]}): a compact
+"Quick check", one question at a time with instant feedback and no pass mark; its score goes to al.v1 → checks[id].
+Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" once passed, a check once finished.
 */
 (function () {
   var KEY = 'al.v1';
@@ -148,8 +152,9 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
     var pass = quiz.pass || 0.8, n = quiz.questions.length, need = Math.round(pass * 100), mins = Math.max(2, Math.round(n * 0.6));
     var title = isPractice(quiz.id) ? T('Practice quiz', 'Пробный тест') : T('Day quiz', 'Тест дня');
     var box = document.createElement('div');
-    box.className = 'qz';
     var prev = load().quizzes[quiz.id];
+    box.className = 'qz al-block' + (prev && prev.passedOn ? ' al-done' : '');   // the done-state contract of sections.js
+    box.setAttribute('data-quiz', quiz.id);
     box.innerHTML =
       '<div class="qz-start">' +
         '<div class="qz-icon">✓</div>' +
@@ -251,7 +256,101 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
       res.querySelector('.qz-retry').addEventListener('click', function () { mount(rebuild(quiz, box)); });
       top();
       markSidebar();
+      if (r.passedOn) box.classList.add('al-done');
+      document.dispatchEvent(new CustomEvent('al:change'));
     }
+  }
+
+  /* ---------- Quick check (```check): the same question objects, one at a time, instant feedback, no pass mark ----------
+  {"id": "w01d1-sc", "questions": [ …as in a quiz… ]}. The score is kept under "checks" in al.v1 and never touches the
+  streak or the finished days. */
+  function mountCheck(pre) {
+    var chk;
+    try { chk = JSON.parse((pre.querySelector('code') || pre).textContent); }
+    catch (e) {
+      pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This check could not be read', 'Не удалось прочитать проверку') + ' (' + esc(e.message) + ').</p>');
+      return;
+    }
+    var qsList = chk.questions || [], n = qsList.length, id = chk.id || 'check';
+    var box = document.createElement('div');
+    box.className = 'qc al-block';
+    box.setAttribute('data-check', id);
+    pre.parentNode.replaceChild(box, pre);
+    var ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M22 11.1V12a10 10 0 11-5.9-9.1"/><path d="M22 4L12 14l-3-3"/></svg>';
+    function head(right) {
+      return '<div class="qc-head"><span class="qc-ico">' + ICON + '</span><div class="qc-hd"><div class="qc-title">' +
+        T('Quick check · ' + n + ' question' + (n === 1 ? '' : 's'), 'Быстрая проверка · ' + n + ' ' + plural(n, 'вопрос', 'вопроса', 'вопросов')) + '</div>' +
+        '<div class="qc-sub">' + T('One at a time · instant feedback · no pass mark', 'По одному · ответ сразу · без проходного балла') + '</div></div>' +
+        '<span class="qc-count">' + (right || '') + '</span></div>';
+    }
+    function saved() { var s = load(); return (s.checks || {})[id]; }
+    function store(rec) { var s = load(); s.checks = s.checks || {}; s.checks[id] = rec; save(s); }
+    function mark() {
+      box.classList.toggle('al-done', !!saved());
+      document.dispatchEvent(new CustomEvent('al:change'));
+    }
+
+    function results(rec) {
+      var rows = qsList.map(function (q, i) {
+        var ok = rec.marks[i];
+        return '<details class="qz-rv ' + (ok ? 'ok' : 'bad') + '"' + (ok ? '' : ' open') + '><summary><span class="qz-mark">' + (ok ? '✓' : '✕') + '</span>' +
+          '<span class="qz-rv-q"><b>' + (i + 1) + '.</b> ' + esc(q.q) + '</span></summary><div class="qz-rv-body">' +
+          '<div><span class="qz-k">' + T('Your answer', 'Ваш ответ') + '</span> ' + esc((rec.given || [])[i] || '—') + '</div>' +
+          (ok ? '' : '<div><span class="qz-k">' + T('Right answer', 'Верный ответ') + '</span> ' + esc(rightAnswerText(q)) + '</div>') +
+          (q.explain ? '<div class="qz-why">' + esc(q.explain) + '</div>' : '') + '</div></details>';
+      }).join('');
+      box.innerHTML = head(rec.score + ' / ' + n) +
+        '<div class="qc-res"><div class="qc-score"><b>' + rec.score + ' / ' + n + '</b> ' +
+        (rec.score === n ? T('— all right. It stuck.', '— всё верно. Запомнилось.') : T('— read the explanations below; they point to the part of today to look at again.',
+          '— прочитайте пояснения ниже: они подскажут, что из сегодняшнего стоит повторить.')) + '</div>' + rows +
+        '<div class="qc-foot"><button type="button" class="qz-btn qz-ghost qc-again">' + T('Try again', 'Пройти ещё раз') + '</button></div></div>';
+      box.querySelector('.qc-again').onclick = function () { run(); };
+    }
+
+    function run() {
+      var cur = 0, marks = [], given = [];
+      function show() {
+        var q = qsList[cur];
+        box.innerHTML = head((cur + 1) + ' / ' + n) +
+          '<div class="qz-segs qc-segs">' + qsList.map(function (x, i) { return '<span class="' + (i < cur ? (marks[i] ? 'ok' : 'bad') : i === cur ? 'now' : '') + '"></span>'; }).join('') + '</div>' +
+          questionHtml(q, cur, id, n) + '<div class="qc-fb"></div>' +
+          '<div class="qc-foot"><button type="button" class="qz-btn qc-go" disabled>' + T('Check', 'Проверить') + '</button></div>';
+        var el = box.querySelector('.qz-q'), go = box.querySelector('.qc-go'), fb = box.querySelector('.qc-fb'), checked = false;
+        function answered() { return !!el.querySelector('input:checked') || Array.prototype.some.call(el.querySelectorAll('.qz-input'), function (x) { return x.value.trim(); }); }
+        el.addEventListener('input', function () { if (!checked) go.disabled = !answered(); });
+        el.addEventListener('change', function () { if (!checked) go.disabled = !answered(); });
+        el.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.classList.contains('qz-input')) { e.preventDefault(); go.click(); } });
+        go.onclick = function () {
+          if (!checked) {
+            if (!answered()) return;
+            var ok = isRight(q, el);
+            checked = true; marks[cur] = ok; given[cur] = givenText(q, el);
+            el.classList.add(ok ? 'qc-ok' : 'qc-bad');
+            Array.prototype.forEach.call(el.querySelectorAll('input'), function (x) { x.disabled = true; });
+            fb.className = 'qc-fb ' + (ok ? 'ok' : 'bad');
+            fb.innerHTML = '<b>' + (ok ? T('✓ Right', '✓ Верно') : T('✕ Not quite', '✕ Не совсем')) + '</b>' +
+              (ok ? '' : ' ' + T('Right answer: ', 'Верный ответ: ') + esc(rightAnswerText(q))) + (q.explain ? '<div class="qz-why">' + esc(q.explain) + '</div>' : '');
+            go.textContent = cur === n - 1 ? T('See my score', 'Мой результат') : T('Next', 'Далее');
+            go.focus();
+            return;
+          }
+          cur++;
+          if (cur < n) { show(); var f = box.querySelector('.qz-input'); if (f) f.focus(); return; }
+          var rec = { score: marks.filter(Boolean).length, n: n, marks: marks, given: given, at: today() };
+          store(rec); results(rec); mark();
+        };
+      }
+      show();
+    }
+
+    var rec = saved();
+    if (rec && rec.marks && rec.marks.length === n) results(rec);
+    else {
+      box.innerHTML = head('') + '<div class="qc-foot qc-start"><button type="button" class="qz-btn qc-begin">' + T('Start', 'Начать') + '</button></div>';
+      box.querySelector('.qc-begin').onclick = function () { run(); var f = box.querySelector('.qz-input'); if (f) f.focus(); };
+    }
+    box.classList.toggle('al-done', !!rec);
   }
 
   function rebuild(quiz, box) {
@@ -282,6 +381,7 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.doneEach(function () {
       Array.prototype.forEach.call(document.querySelectorAll('.markdown-section pre[data-lang="quiz"]'), mount);
+      Array.prototype.forEach.call(document.querySelectorAll('.markdown-section pre[data-lang="check"]'), mountCheck);
       markSidebar();
       if (window.ALBoard) window.ALBoard.render();
     });

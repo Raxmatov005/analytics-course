@@ -1,0 +1,219 @@
+{
+ "_note": "Week 3 additions (content agent C3): per-task checks for the three Week 3 hand-in workspaces. The sqltask blocks keep their existing check ids (handin-W3D1, handin-W3D4, handin-W3D5); hw3.1 (scripts/check.py, GitHub submissions) is untouched. All tasks are single self-contained queries on the untouched data (no views).",
+ "checks": {
+  "handin-W3D1": {
+   "title": "HW 3.1 — share-and-trend pack (Week 3 Day 1 workspace)",
+   "kind": "sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "763a52256c5432ff981d7d32",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "37f142edd721c266e2900fa7",
+       "dp": 1
+      },
+      {
+       "h": "ac007236971398924a4d9078",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "f702d5518a42d1e63d6fa6c0",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "c2766803f340ffa97074f292",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "5ed11dd9bd72633a27942522",
+      "dp": 0
+     }
+    },
+    "Q4": {
+     "values": [
+      {
+       "h": "91f922208c622e02cc2e806f",
+       "dp": 0
+      },
+      {
+       "h": "37f142edd721c266e2900fa7",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "7d5851b4bd118d226a4ee79a",
+      "dp": 0
+     }
+    },
+    "Q5": {
+     "values": [
+      {
+       "h": "be94f0a14cf7537dc4adda83",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "213cd7d0f08d73aef6c14dc3",
+      "dp": 0
+     }
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "20176a610ae8339c6c1a2716",
+       "dp": 0
+      },
+      {
+       "h": "27ba5841e7b5fea664b09183",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "5665c2c309ee1593da031a82",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "handin-W3D4": {
+   "title": "HW 3.2 — Timur's clean layer (Week 3 Day 4 workspace)",
+   "kind": "sql",
+   "tasks": {
+    "R1": {
+     "values": [
+      {
+       "h": "6492613d453d5e0a23dfe5b8",
+       "dp": 0
+      },
+      {
+       "h": "346ce1ce4cfa2cfade3d9c29",
+       "dp": 0
+      }
+     ]
+    },
+    "R2": {
+     "values": [
+      {
+       "h": "7ce8735a21e87e335a21da04",
+       "dp": 0
+      },
+      {
+       "h": "288be1d8132d5f6c77217e12",
+       "dp": 0
+      }
+     ]
+    },
+    "R3": {
+     "values": [
+      {
+       "h": "caaaacf6c659a1bd8c3f301f",
+       "dp": 0
+      },
+      {
+       "h": "3d1eeab52c8f8f92d8a3306e",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    },
+    "R4": {
+     "values": [
+      {
+       "h": "524ecc971f535b1562d1afa2",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "handin-W3D5": {
+   "title": "Checkpoint 3 — loan-book EDA (Week 3 Day 5 workspace)",
+   "kind": "sql",
+   "tasks": {
+    "N1": {
+     "values": [
+      {
+       "h": "4a64a4926348da95ec7765e9",
+       "dp": 0
+      }
+     ]
+    },
+    "N2": {
+     "values": [
+      {
+       "h": "38c62cb4b1d3c7d7bbd42d73",
+       "dp": 0
+      }
+     ]
+    },
+    "N3": {
+     "values": [
+      {
+       "h": "ab523e385add9b7561055142",
+       "dp": 1
+      }
+     ]
+    },
+    "N4": {
+     "values": [
+      {
+       "h": "ec8e88e41338a73c451b0d1f",
+       "dp": 0
+      }
+     ]
+    },
+    "N5": {
+     "values": [
+      {
+       "h": "0a9674f30744605c22888793",
+       "dp": 1
+      }
+     ]
+    },
+    "N6": {
+     "values": [
+      {
+       "h": "186e2cfe511507fa1ae2e124",
+       "dp": 0
+      }
+     ]
+    },
+    "N7": {
+     "values": [
+      {
+       "h": "7e7da4a5c7babb0de8153322",
+       "dp": 2
+      }
+     ]
+    },
+    "N8": {
+     "values": [
+      {
+       "h": "0faaaacad37e264d57573a4e",
+       "dp": 1
+      }
+     ]
+    }
+   }
+  }
+ }
+}

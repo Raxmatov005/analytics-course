@@ -10,6 +10,8 @@
 - **Charts**: column for categories, bar for rankings, line for time, combo for two measures, stacked for composition; no pie beyond three slices, no 3D, bars from zero; **the title states the finding**; sparklines for a trend in a cell.
 - You have built Madina's page: four pivots, four charts, six tiles, one slicer — refreshable, with every number tied to week 3.
 
+**Today's files:** `data/excel/nur_week4_start.xlsx` (press **⬇ Download** for a fresh copy, save as `week-04/day-4/practice.xlsx`) and `data/excel/monthly_disbursements.csv` for the 34-month line; P11 reuses yesterday's `installments_paid` query. **Done today** = the product pivot's Grand Total equals 208 723 504 430, its bar chart has a finding title, every Practice box is ✓, the Quick check and the day quiz are done. No new homework: HW 4.2 is due tomorrow, and today's page is the draft of tomorrow's checkpoint Part B — keep the file.
+
 ---
 
 ## 1. Learn — the pivot is GROUP BY you can drag
@@ -17,6 +19,8 @@
 ### PivotTables (*сводные таблицы*)
 
 Click inside `tblLoans` → Insert → **PivotTable** → New Worksheet. The field list appears: drag `product` to **Rows**, `outstanding` to **Values** (it becomes *Sum of outstanding*), `loan_id` to **Values** (it becomes *Count of loan_id*). That is `SELECT product, SUM(outstanding), COUNT(*) FROM loans GROUP BY product`. Drag `bucket` to **Columns** for a cross-tab; `status` to **Filters** for a page-level `WHERE`. Four areas, one rule: a field in Rows or Columns is a `GROUP BY` key; a field in Values is an aggregate; a field in Filters is a `WHERE` the reader can change.
+
+> 💡 **Key idea.** Rows and Columns are your `GROUP BY` keys, Values are the aggregates, Filters are the `WHERE`. If you can say the query, you can drag the pivot — and the Grand Total is its check.
 
 Google Sheets: select the data → Insert → **Pivot table**; the editor on the right has the same Rows / Columns / Values / Filters. Sheets' pivots cannot group dates by right-click — add a `month` column (`=EOMONTH(G2, -1)+1` or `TEXT`) to the data first, or use `QUERY` with `month(G)`.
 
@@ -33,6 +37,10 @@ Google Sheets: select the data → Insert → **Pivot table**; the editor on the
 
 These are week 3's window functions as a dropdown — `SUM(SUM(x)) OVER ()`, `OVER (PARTITION BY region)`, `OVER (ORDER BY month ROWS UNBOUNDED PRECEDING)`, `LAG`. Put the same field in Values twice to show the number and its share side by side.
 
+```game
+{"type": "match", "id": "w04d4-g1", "title": "Show Values As ↔ the SQL you wrote in week 3", "pairs": [["% of Grand Total", "SUM(x) / SUM(SUM(x)) OVER ()"], ["% of Parent Row Total", "SUM(x) / SUM(SUM(x)) OVER (PARTITION BY region)"], ["Running Total In", "SUM(SUM(x)) OVER (ORDER BY month)"], ["Difference From (previous)", "SUM(x) − LAG(SUM(x)) OVER (ORDER BY month)"], ["Rank Largest to Smallest", "RANK() OVER (ORDER BY SUM(x) DESC)"]]}
+```
+
 **Grouping dates** (*группировка*): put `disbursed_at` in Rows → Excel 365 groups it into Years / Quarters / Months automatically; right-click → **Group** to choose (Months + Years, or Quarters). Ungroup to get back to days. Grouping works only if every value in the column is a real date — one text date and the Group command greys out, which is yesterday's `DATEVALUE` lesson arriving as a symptom.
 
 **Calculated fields** (PivotTable Analyze → Fields, Items & Sets → **Calculated Field**; Sheets: Values → Add → *Calculated field*): a new value computed from *sums* of other fields — `= outstanding * rate / 12` gives the interest run-rate per product (4 491 202 901 in total), `= paid / total_due` gives a collection rate per month that is a **ratio of sums**, correct. The trap: a calculated field is evaluated on the *aggregated* numbers, so `= principal / loans` works only if `loans` is a column of 1s you added to the data — there is no `COUNT` inside a calculated field. And never put an *Average* of a per-row *rate* in Values when you mean a ratio of totals: the average of 7 828 individual rates weights a 500 000 Micro loan like a 599 m SME loan.
@@ -42,6 +50,8 @@ These are week 3's window functions as a dropdown — `SUM(SUM(x)) OVER ()`, `OV
 **GETPIVOTDATA** (*ПОЛУЧИТЬ.ДАННЫЕ.СВОДНОЙ.ТАБЛИЦЫ*): click a pivot cell from a formula and Excel writes `=GETPIVOTDATA("outstanding", $A$3, "product", "Small business loan")` — a lookup into the pivot by field names that survives re-sorting and re-filtering. Use it for **tiles** that must read what the pivot shows; turn it off (PivotTable Analyze → Options → *Generate GetPivotData*) when you want a plain `=B5` reference instead.
 
 **Refresh and the cache.** A pivot reads a snapshot (the *pivot cache*) taken when it was created; new rows in `tblLoans` or a Power Query refresh do **not** appear until right-click → **Refresh** (or Data → Refresh All, which also refreshes queries). Build on a Table or a query output, never on a fixed range `A1:M7829` — the range does not grow. Preserve number formats: Value Field Settings → **Number Format** (`#,##0`, `0.0%`), not the cells, or the format vanishes on refresh. Design → Report Layout → **Tabular Form** and *Repeat All Item Labels* if the pivot feeds a chart or another formula.
+
+> ⚠️ **Watch out.** A pivot sums every row you give it. Build one on a table at **instalment** grain that carries the loan's `principal` (a merge of `installments_paid` with `tblLoans`) and *Sum of principal* counts each loan once per instalment — twelve times for a 12-month loan. Know the grain before you drag, and tie the Grand Total to a number you know (7 828 loans, 208 723 504 430).
 
 **Formatting a pivot for a reader** (the eight clicks after the drag):
 
@@ -68,7 +78,15 @@ The chart type is decided by the *question*, and most wrong charts are a wrong t
 | A ranking (top-5 branches) | horizontal **bar**, largest at the top | a column chart with rotated labels |
 | A trend inside a table row | **sparkline** | a chart per row |
 
+```game
+{"type": "sort", "id": "w04d4-g2", "title": "Which chart for which question?", "q": "Madina's page asks five questions. Drop each into the chart that answers it.", "groups": {"Line": ["disbursements by month, 34 months", "collection rate by due month"], "Horizontal bar, sorted": ["outstanding by product (five long names)", "top-5 branches"], "Stacked column": ["late loans by product and bucket"], "Sparkline": ["a trend inside each product's row of a table"]}}
+```
+
 Rules that are not taste: **bars and columns start at zero** (a bar from 150 to 160 bn makes a 7 % growth look like doubling — truncating the axis is for lines, and even then say so); **no 3D** (depth adds nothing and distorts); **sort categories by value** unless they have a natural order (months, buckets); **one colour** for the series and **one highlight colour** for the point you talk about (90+ in red); **label the axis unit** (bn UZS, loans) or put it in the title; **the title states the finding** — *"SME is 60 % of the book on 10 % of the loans"*, not *"Outstanding by product"*; the data label is the number the board will quote, so format it (`0.0` bn). A legend is a failure of labelling when there is one series — delete it.
+
+```game
+{"type": "bug", "id": "w04d4-g3", "title": "Which setting makes this chart lie?", "q": "Five branches, outstanding in bn UZS. One setting turns a 7 % gap into 'twice as big'. Tap it.", "code": "Chart type: clustered column\nCategories: 5 branches, sorted by value\nVertical axis: minimum 140 bn\nTitle: Tashkent Central leads with 28.7 bn\nData labels: #,##0.0,,, (bn)", "answer": [2], "why": "Bars and columns start at zero: the eye compares lengths, so a truncated axis turns 150 vs 160 into 10 vs 20."}
+```
 
 **Building one**: select the pivot (a **PivotChart** stays linked and obeys slicers) or a plain summary range → Insert → Recommended Charts → pick → Chart Design → Add Chart Element (data labels, axis titles) → right-click the axis → Format Axis (bounds, number format `#,##0,,,` for billions). **Sparklines**: Insert → Sparklines → Line / Column / Win-Loss, data range = the row of 2026 months, location = one cell; tick *High point* and *Low point*; set the same vertical axis for all rows (Sparkline → Axis → *Same for All Sparklines*) or SME's 15 bn and Micro's 0.35 bn look alike. Sheets: Insert → Chart, with *Chart type*, *Customize → Chart & axis titles*; sparklines are a function, `=SPARKLINE(B2:K2, {"charttype","column"})`.
 
@@ -111,6 +129,8 @@ What a pivot cannot do that SQL can: a `JOIN` (merge first in Power Query, or ad
 9. **Partial periods** (October) excluded or marked.
 10. **Source line** under the chart: *tblLoans · 7 828 loans · Nur Finance.*
 
+> 💡 **Key idea.** The question picks the chart — time → line, categories → sorted bar, composition → stacked — and the title says the finding, with its number. Everything else on this list exists so the reader cannot misread it.
+
 ### Excel ↔ Google Sheets, today's tools
 
 | Excel | Sheets | Note |
@@ -140,6 +160,26 @@ What a pivot cannot do that SQL can: a `JOIN` (merge first in Power Query, or ad
 - RU workbook `3.3 Pivot.xlsx` — sheets *Introduction*, *Building a Pivot table*, *Filtering*, *Calculations in Pivot Table*; the employee/store data shows the same Rows–Values–Filters mechanics.
 - *Russian terms:* сводная таблица = PivotTable, срез = slicer, временная шкала = timeline, вычисляемое поле = calculated field, группировка по месяцам = group by months, % от родительской строки = % of parent row total, нарастающий итог = running total, гистограмма / линейчатая / график / комбинированная / с накоплением = column / bar / line / combo / stacked chart, спарклайн = sparkline, обновить = refresh.
 
+```videoquiz
+{"video": "dvbLrwD2SpA", "stops": [{"at": 75, "q": "What does a PivotTable do with 7 828 loan rows?", "options": ["Copies them to a new sheet", "Groups them by the fields you drag to Rows/Columns and aggregates the Values", "Sorts them", "Deletes duplicates"], "answer": 1, "explain": "GROUP BY with the mouse.", "back": 25}, {"at": 450, "q": "What does a slicer do?", "options": ["Filters the connected pivots with buttons", "Splits a column", "Adds a calculated field", "Refreshes the cache"], "answer": 0, "explain": "A WHERE the reader can click; Report Connections decides which pivots obey it."}, {"at": 480, "q": "Why use a PivotChart rather than a chart on a copied range?", "options": ["It is prettier", "It stays linked to the pivot, so it follows slicers and refreshes", "It cannot be filtered", "It needs no data"], "answer": 1, "explain": "Linked charts are what make a page a dashboard.", "back": 40}]}
+```
+
+```videoquiz
+{"video": "zXnQNytHCPM", "stops": [{"at": 2300, "q": "You want to show disbursements over 34 months. Which chart?", "options": ["Pie", "Line", "Stacked bar", "Doughnut"], "answer": 1, "explain": "Time on the x-axis is a line's job."}, {"at": 2600, "q": "Where do you add axis titles and data labels?", "options": ["Chart Design → Add Chart Element", "Data → Sort", "Home → Conditional Formatting", "File → Options"], "answer": 0, "explain": "Units on the axis, numbers the board will quote on the labels."}, {"at": 2900, "q": "A chart has one series. What do you do with its legend?", "options": ["Keep it, always", "Delete it — the title and axis say what the bars are", "Move it to the top", "Make it bigger"], "answer": 1, "explain": "A legend for one series is a failure of labelling.", "back": 60}]}
+```
+
+```videoquiz
+{"video": "MTlQvyNQ3PM", "stops": [{"at": 65, "q": "One slicer should filter all four pivots on the page. What connects them?", "options": ["Report Connections on the slicer", "Copying the slicer four times", "Grouping the pivots", "Protect Sheet"], "answer": 0, "explain": "Right-click the slicer → Report Connections → tick every pivot.", "back": 20}, {"at": 82, "q": "Where should the pivots live on a dashboard workbook?", "options": ["On the printed page, under the charts", "On a separate data sheet, read by charts and tiles", "In a different file", "Nowhere — paste values"], "answer": 1, "explain": "The page shows charts and tiles; the Data sheet holds the machinery.", "back": 20}]}
+```
+
+```videoquiz
+{"video": "4roVtL2mynA", "stops": [{"at": 120, "q": "You drag a numeric field into Values. What appears?", "options": ["The raw rows", "Its aggregate per group — Sum by default", "A chart", "An error"], "answer": 1, "explain": "Value Field Settings switches Sum to Count, Average, Max…"}, {"at": 300, "q": "Which area of the field list acts like a WHERE for the whole pivot?", "options": ["Rows", "Values", "Filters", "Columns"], "answer": 2, "explain": "Filters (or a slicer) narrow the rows before they are grouped."}, {"at": 540, "q": "You added rows to the source table. What must you do before the pivot shows them?", "options": ["Nothing", "Refresh the pivot", "Rebuild it from scratch", "Sort the source"], "answer": 1, "explain": "The pivot reads its cache until you refresh.", "back": 60}]}
+```
+
+```videoquiz
+{"video": "snqGcBdTgCU", "stops": [{"at": 370, "q": "Which summary is a pivot table built to give you in seconds?", "options": ["Totals per category without writing a formula", "A cleaned copy of the data", "A lookup of one value", "A forecast"], "answer": 0, "explain": "Category → aggregate: the analyst's most frequent question."}, {"at": 410, "q": "The source data changed. Will a pivot's numbers change by themselves in Excel?", "options": ["Yes, instantly", "No — refresh it", "Only after saving", "Only in Google Sheets"], "answer": 1, "explain": "Excel pivots read a cache; Sheets pivots follow their source range.", "back": 40}]}
+```
+
 ---
 
 ## 2. Worked example — outstanding by product, the first quarter of the page (15 min)
@@ -155,7 +195,7 @@ Grain: one row per product. Insert → PivotTable from `tblLoans` on a new sheet
 | Micro loan | 956 106 370 | 0.5 % | 2 669 | 34.1 % |
 | **Grand Total** | **208 723 504 430** | 100 % | 7 828 | 100 % |
 
-The Grand Total is the check — it must equal yesterday's `SUM(tblLoans[outstanding])`; if a pivot's total is 92 193 rows' worth, you built it on `Installments`. Now the chart: select the pivot → Insert → PivotChart → **Bar** (five long labels), sort order already descending so the largest is at the top (Format Axis → *Categories in reverse order* if Excel flips it). Delete the legend (one series), add data labels in billions (`#,##0.0,,,` → `125.9`), axis title *outstanding, bn UZS*, colour all bars grey and the SME bar the brand colour. Title: **"SME is 60 % of the book on 10 % of the loans."** Add the second series? No — the loan share belongs in the title, not on a second axis fighting for the same bars. Drag the chart to `A1:F18` later; for now it sits beside the pivot.
+The Grand Total is the check — it must equal Monday's `SUM(tblLoans[outstanding])`; if a pivot's total is 92 193 rows' worth, you built it on `Installments`. Now the chart: select the pivot → Insert → PivotChart → **Bar** (five long labels), sort order already descending so the largest is at the top (Format Axis → *Categories in reverse order* if Excel flips it). Delete the legend (one series), add data labels in billions (`#,##0.0,,,` → `125.9`), axis title *outstanding, bn UZS*, colour all bars grey and the SME bar the brand colour. Title: **"SME is 60 % of the book on 10 % of the loans."** Add the second series? No — the loan share belongs in the title, not on a second axis fighting for the same bars. Drag the chart to `A1:F18` later; for now it sits beside the pivot.
 
 Then Insert → Slicer on `region`, Report Connections → this pivot. Click **Fergana**: SME 14 734 245 108 (the P5 lookup from Tuesday), total 24 797 334 197, the chart and its labels follow, the title does not — titles are static text, so write titles that stay true under the slicer ("by product" is safe; "60 %" is not) or link the title to a cell (select the chart title, type `=Report!$H$1` in the formula bar, and compute the sentence in `H1` with `TEXT`). Clear the slicer before you read the totals again.
 
@@ -175,95 +215,73 @@ and a share column beside it, `=B2/SUM(B$2:B$6)`. `QUERY` output is a plain rang
 
 ## 3. Practice (50 min)
 
-File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P8, sheet `Charts` for P9–P10. Build every pivot on `tblLoans` (or the `monthly_disbursements.csv` table where said), so Refresh works.
+File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P8, sheet `Charts` for P9–P10. Build every pivot on `tblLoans` (or the `monthly_disbursements.csv` table where said), so Refresh works. Read the asked number off your pivot into the box under each question.
 
-**P1.** The worked-example pivot, plus **Average** of `principal` as a fifth value. Which product has the largest ticket, and why would "Average of outstanding" be the wrong number to show next to it?
+**P1.** The worked-example pivot, plus **Average** of `principal` as a fifth value. Which product has the largest ticket, and why would "Average of outstanding" be the wrong number to show next to it? *In the box: the largest average ticket, in soum.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d4-p1", "kind": "number", "answer": 308728745, "dp": 0, "unit": "UZS", "explain": "SME 308 728 745 · Auto 216 858 133 · Consumer 26 926 915 · BNPL 4 170 880 · Micro 2 705 586 — 100 : 1 between SME and Micro. Average of outstanding divides by all loans, including the 4 242 closed ones at 0 — a meaningless 26.7 m overall; filter status = active (60 681 393) or say 'per loan with a balance'. A pivot's average is over the rows in the group, so the rows must be the right population."}
+```
 
-SME 308 728 745 · Auto 216 858 133 · Consumer 26 926 915 · BNPL 4 170 880 · Micro 2 705 586 — 100 : 1 between SME and Micro. *Average of outstanding* divides by all loans including the 4 242 closed ones with 0 — a meaningless 26.7 m overall; filter `status = active` (60 681 393) or say "per loan with a balance". Averages in pivots are averages over the *rows in the group*, so the rows must be the right population.
+**P2.** Disbursements by month of 2026: Rows `disbursed_at` grouped by **Months**, Values Count of `loan_id`, Sum of `principal`, then the same sum as **Running Total In** disbursed_at and as **Difference From** (previous). Filter the year to 2026. *In the box: February's Difference From value (with its sign).*
 
-</details>
+```task
+{"id": "w04d4-p2", "kind": "number", "answer": -5558520000, "dp": 0, "unit": "UZS", "explain": "Jan 287 / 17 452 370 000 … Sep 361 / 17 015 490 000, Oct 21 / 852 760 000; the running total reaches 162 333 060 000 in October (161 480 300 000 at end-September). Differences: Feb −5 558 520 000 (−31.8 %), Mar +7 763 560 000, … Sep −5 274 720 000, Oct −16 162 730 000 — one day; never show a partial month in a difference column without saying so."}
+```
 
-**P2.** Disbursements by month of 2026: Rows `disbursed_at` grouped by **Months**, Values Count of `loan_id`, Sum of `principal`, then the same sum as **Running Total In** disbursed_at and as **Difference From** (previous). Filter the year to 2026.
+**P3.** The bucket × status cross-tab as a pivot (Rows `bucket`, Columns `status`, Values Count), then with `bucket` filtered to exclude `0`. Read off the 90+ column and the "closed" row. *In the box: how many default loans sit in 90+.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d4-p3", "kind": "number", "answer": 44, "dp": 0, "unit": "loans", "explain": "Row totals 7 429 / 124 / 25 / 16 / 234 = 7 828. 90+ = 44 default + 190 written_off; closed has 13 in 1-30 and 1 in 31-60. Buckets sort as text (0, 1-30, 31-60, 61-90, 90+), which happens to be the right order here; for labels that do not sort naturally, drag rows or add a sort-key column."}
+```
 
-Jan 287 / 17 452 370 000 … Sep 361 / 17 015 490 000, Oct 21 / 852 760 000; running total reaches **162 333 060 000** in October (161 480 300 000 at end-September). Differences: Feb **−5 558 520 000** (−31.8 %), Mar +7 763 560 000 (+65.3 %), Apr −1 762 440 000, May +636 860 000, Jun −2 481 530 000, Jul +4 643 570 000 (+28.9 %), Aug +1 596 340 000, Sep −5 274 720 000 (−23.7 %), Oct −16 162 730 000 (one day — never show a partial month in a difference column without saying so). Week 3 S7's `LAG`, as a dropdown.
+**P4.** Region → branch: Rows `region` then `branch`, Values Sum of `outstanding` twice, the second as **% of Parent Row Total**. What are Tashkent's three branches' shares of Tashkent, and what does the same column show on the region rows? *In the box: Tashkent Central's share of Tashkent, % with 1 decimal.*
 
-</details>
+```task
+{"id": "w04d4-p4", "kind": "number", "answer": 35.2, "dp": 1, "unit": "%", "explain": "Tashkent Central 35.2 %, South 32.8 %, North 32.0 % of Tashkent's 81 679 738 071; every single-branch region shows 100 % under its branch. On the region rows the column shows the share of the grand total — Tashkent 39.1 %, Fergana 11.9 % … Termez 5.1 % — because a region's parent is the whole table."}
+```
 
-**P3.** The bucket × status cross-tab as a pivot (Rows `bucket`, Columns `status`, Values Count), then with `bucket` filtered to exclude `0`. Read off the 90+ column and the "closed" row.
+**P5.** Top-5 branches by outstanding: Rows `branch`, Value Filter → **Top 10** → Top 5 by Sum of outstanding, sorted descending; and the share of the book they carry (a formula on the pivot's total vs `SUM(tblLoans[outstanding])`). *In the box: the pivot's Grand Total with the Top-5 filter on.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d4-p5", "kind": "number", "answer": 131132961944, "dp": 0, "unit": "UZS", "explain": "Tashkent Central 28 716 674 373 · Tashkent South 26 787 392 136 · Tashkent North 26 175 671 562 · Fergana Central 24 797 334 197 · Samarkand Central 24 655 889 676 = 131 132 961 944 = 62.8 % of 208 723 504 430. A Top-N pivot's Grand Total is the total of the shown rows, so the share needs the Table's SUM as its denominator."}
+```
 
-Row totals 7 429 / 124 / 25 / 16 / 234 = 7 828. 90+ = 44 default + 190 written_off; `closed` has 13 in 1-30 and 1 in 31-60 (14 of the 15 week-2 closed-but-owing loans; the fifteenth is in bucket 0). Buckets sort as text (`0`, `1-30`, `31-60`, `61-90`, `90+`) — which happens to be the right order here; for labels that do not sort naturally, drag rows by hand or add a sort-key column.
+**P6.** Add a slicer on `product` and a timeline on `disbursed_at`, connected to the P2 and P5 pivots. Set the timeline to **Q3 2026** and the slicer to **Small business loan**. Count and amount? Then clear both. *In the box: the number of SME loans in Q3 2026.*
 
-</details>
+```task
+{"id": "w04d4-p6", "kind": "number", "answer": 114, "dp": 0, "unit": "loans", "explain": "114 SME loans in July–September 2026, 37 677 910 000 (all products: 1 086 loans). The P5 pivot re-ranks under the filter — Fergana Central jumps to first (5.91 bn of SME outstanding). Clear both with the slicer's corner icon: a page left filtered is Monday's most common 'the numbers are wrong' call. Put the pivot's Grand Total next to the Table's SUM — equal means unfiltered."}
+```
 
-**P4.** Region → branch: Rows `region` then `branch`, Values Sum of `outstanding` twice, the second as **% of Parent Row Total**. What are Tashkent's three branches' shares of Tashkent, and what does the same column show on the region rows?
+**P7.** A calculated field: with Tuesday's `rate` column on `tblLoans`, add `run_rate = outstanding * rate / 12` and show it by product. Then try `avg_ticket = principal / loan_id` — what happens, and what is the fix? *In the box: SME's run_rate, in soum a month.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d4-p7", "kind": "number", "answer": 2727680419, "dp": 0, "unit": "UZS a month", "explain": "SME 2 727 680 419 · Auto 1 153 685 427 · Consumer 576 373 333 · Micro 33 463 723 · BNPL 0 — total 4 491 202 901, Tuesday's SUMPRODUCT. principal / loan_id divides the sum of principal by the sum of the ids — nonsense without an error. Fix: a column of 1s and principal / one, or just Average of principal in Values. Calculated fields see sums, never counts."}
+```
 
-Tashkent Central **35.2 %**, Tashkent South 32.8 %, Tashkent North 32.0 % (of Tashkent's 81 679 738 071); every single-branch region shows 100 % under its branch. On the region rows the column shows the share of the **grand total** — Tashkent 39.1 %, Fergana 11.9 %, Samarkand 11.8 % … Termez 5.1 % — because the region's parent is the whole table. One field, two levels of `PARTITION BY`.
+**P8.** Six `GETPIVOTDATA` cells above the pivots: total outstanding, SME outstanding, loans in 90+, Tashkent Central outstanding, September 2026 principal, 2026 running total. Then sort a pivot differently — do the cells survive? *In the box: pick what happens.*
 
-</details>
+```task
+{"id": "w04d4-p8", "kind": "choice", "options": ["They break — any re-sort moves the cells", "They survive sorting and filtering, because they address the pivot by field and item names; they show #REF! only if a slicer filters their item out", "They turn into typed values", "They survive only if the pivot is on the same sheet"], "answer": 1, "explain": "=GETPIVOTDATA(\"outstanding\", $A$20) → 208 723 504 430; with \"product\", \"Small business loan\" → 125 892 942 411; =GETPIVOTDATA(\"loan_id\", $A$40, \"bucket\", \"90+\") → 234. First argument = field name, second = any cell in the pivot. A =B22 reference does not survive a re-sort."}
+```
 
-**P5.** Top-5 branches by outstanding: Rows `branch`, Value Filter → **Top 10** → Top 5 by Sum of outstanding, sorted descending; and the share of the book they carry (a formula on the pivot's total vs `SUM(tblLoans[outstanding])`).
+**P9.** Four charts for Madina from P1–P5: a sorted bar (outstanding by product), a line of monthly disbursements over all 34 months from `monthly_disbursements.csv` (pivot: month → Sum of amount) with a **3-month moving average** (Chart Design → Add Chart Element → Trendline → Moving Average, period 3), a stacked column of delinquent loans by product and bucket (dpd > 0), and a top-5 bar. Give each a finding title. *In the box: your four titles, one per line.*
 
-<details><summary>Answer</summary>
+```task
+{"id": "w04d4-p9", "kind": "free", "min": 25, "model": "SME is 60 % of the book on 10 % of the loans · Disbursements climbed from 3.9 bn (Jan 2024) to a 20 bn run-rate — read the 3-month average, not the month · Consumer and Micro carry most late loans; SME carries the money (90+: Consumer 77 · Micro 76 · BNPL 42 · SME 29 · Auto 10) · Three Tashkent branches plus Fergana and Samarkand hold 63 % of outstanding. October's one-day point is dropped or marked; bars from zero; no legend on single-series charts; red only for 90+.", "rubric": ["each title states a finding, not the chart's name", "each title carries a number", "October's partial month is dropped or marked on the line chart", "bars start at zero and red is kept for 90+"]}
+```
 
-Tashkent Central 28 716 674 373 · Tashkent South 26 787 392 136 · Tashkent North 26 175 671 562 · Fergana Central 24 797 334 197 · Samarkand Central 24 655 889 676; pivot total 131 132 961 944 = **62.8 %** of 208 723 504 430. A Top-N filtered pivot's Grand Total is the total of the *shown* rows — the reason the share needs the Table's sum in the denominator, not the pivot's.
+**P10.** Sparklines: a pivot of `monthly_disbursements.csv` with products in Rows and 2026 months in Columns (Sum of amount), a sparkline per row with high and low points, same axis for all. Which product is most volatile, and which looks volatile only because its axis is its own? *In the box: the most volatile product.*
 
-</details>
+```task
+{"id": "w04d4-p10", "kind": "choice", "options": ["Micro loan", "Buy now pay later", "Consumer loan", "Auto loan", "Small business loan"], "answer": 4, "explain": "SME swings 6.0 → 15.4 bn (Feb → Jul) — the most volatile and the biggest. With Same for All Sparklines, Micro (0.20–0.35 bn) and BNPL (0.19–0.33) flatten to a line; each on its own axis they look as jagged as SME. Auto 1.8–6.2 bn is the second mover. State in the header whether the sparklines compare shape only or size too."}
+```
 
-**P6.** Add a slicer on `product` and a timeline on `disbursed_at`, connected to the P2 and P5 pivots. Set the timeline to **Q3 2026** and the slicer to **Small business loan**. Count and amount? Then clear both.
+> 🚀 **Stretch (optional, +5 XP).** **P11.** On yesterday's merged `installments_paid` query, a pivot with `due_month` in Rows, Sum of `total_due`, Sum of `paid`, and a **calculated field** `rate = paid / total_due` (as `0.0%`). Does it reproduce Wednesday's Company corner table? Add a slicer on `product` (merge it in from `Loans` first) — which product collects worst in September? *In the box: the product that collects worst in September.*
 
-<details><summary>Answer</summary>
-
-**114** SME loans in July–September 2026 (all products: 1 086); read the amount off your pivot. The P5 pivot re-ranks under the filter (Fergana Central climbs — SME-heavy, week 3 S6). Clear with the slicer's corner icon; a page left filtered is the most common "the numbers are wrong" call on a Monday morning. Slicers filter the pivot, not the Table, so a check on the Table cannot see them — put the pivot's grand total next to the Table's `SUM` as a visible pair: equal means unfiltered.
-
-</details>
-
-**P7.** A calculated field: with Tuesday's `rate` column on `tblLoans`, add `run_rate = outstanding * rate / 12` and show it by product. Then try `avg_ticket = principal / loan_id` — what happens, and what is the fix?
-
-<details><summary>Answer</summary>
-
-SME 2 727 680 419 · Auto 1 153 685 427 · Consumer 576 373 333 · Micro 33 463 723 · BNPL 0 — total **4 491 202 901** a month (Tuesday's `SUMPRODUCT`). `principal / loan_id` *divides the sum of principal by the sum of the ids* — nonsense without an error. Fix: a column `one` = 1 in the data and `= principal / one`, or just *Average of principal* in Values. Calculated fields see sums, never counts.
-
-</details>
-
-**P8.** Six `GETPIVOTDATA` cells above the pivots: total outstanding, SME outstanding, loans in 90+, Tashkent Central outstanding, September 2026 principal, 2026 running total. Then sort a pivot differently — do the cells survive?
-
-<details><summary>Answer</summary>
-
-`=GETPIVOTDATA("outstanding", $A$20)` → 208 723 504 430; `=GETPIVOTDATA("outstanding", $A$20, "product", "Small business loan")` → 125 892 942 411; `=GETPIVOTDATA("loan_id", $A$40, "bucket", "90+")` → 234; and so on — the first argument is the *field name*, the second any cell in the pivot. They survive sorting and filtering because they address by name, which a `=B22` reference does not. They break (`#REF!`) if the item is filtered out by a slicer — the honest result.
-
-</details>
-
-**P9.** Four charts for Madina from P1–P5: a sorted bar (outstanding by product), a line of monthly disbursements over all 34 months from `monthly_disbursements.csv` (pivot: month → Sum of amount) with a **3-month moving average** (Chart Design → Add Chart Element → Trendline → Moving Average, period 3), a stacked column of delinquent loans by product and bucket (dpd > 0), and a top-5 bar. Give each a finding title.
-
-<details><summary>Answer</summary>
-
-Titles, for example: *"SME is 60 % of the book on 10 % of the loans"*; *"Disbursements climbed from 3.9 bn (Jan 2024) to a 20 bn run-rate — read the 3-month average, not the month"*; *"Consumer and Micro carry most late loans; SME carries the money"* (90+: Consumer 77 · Micro 76 · BNPL 42 · SME 29 · Auto 10); *"Three Tashkent branches plus Fergana and Samarkand hold 63 % of outstanding"*. The line chart's **October** point must be dropped or marked (one day, 0.85 bn — it looks like a crash). Bars from zero; no legend on the single-series charts; red only for 90+.
-
-</details>
-
-**P10.** Sparklines: a pivot of `monthly_disbursements.csv` with products in Rows and 2026 months in Columns (Sum of amount), a sparkline per row with high and low points, same axis for all. Which product is most volatile, and which looks volatile only because its axis is its own?
-
-<details><summary>Answer</summary>
-
-SME swings 6.0 → 15.4 bn (Feb → Jul) — the most volatile and the biggest. With *Same for All Sparklines*, Micro (0.20–0.35 bn) and BNPL (0.19–0.33) flatten to a line; with each row on its own axis they look as jagged as SME. Auto 1.8–6.2 bn is the second mover. Sparklines compare *shape*; the axis setting decides whether they also compare *size* — state which in the column header.
-
-</details>
-
-<span class="badge stretch">Stretch</span> **P11.** On yesterday's merged `installments_paid` query, a pivot with `due_month` in Rows, Sum of `total_due`, Sum of `paid`, and a **calculated field** `rate = paid / total_due` (as `0.0%`). Does it reproduce the Company corner table? Add a slicer on `product` (merge it in from `Loans` first) — which product collects worst in September?
-
-<details><summary>Answer</summary>
-
-Yes: Jun 96.9 · Jul 96.7 · Aug 96.5 · **Sep 94.1 %** — a ratio of sums, so the calculated field is right here. By product in September, read your pivot: Micro and Consumer run below the book, SME above, BNPL (no interest) near the top — and quote the counts with the rates, because a product with 66 September instalments moves by a point when one is unpaid.
-
-</details>
+```task
+{"id": "w04d4-p11", "kind": "choice", "options": ["Small business loan", "Buy now pay later", "Consumer loan", "Auto loan", "Micro loan"], "answer": 4, "xp": 2, "explain": "Yes, it reproduces Jun 96.9 · Jul 96.7 · Aug 96.5 · Sep 94.1 % — a ratio of sums, so the calculated field is right here. September by product: Micro 91.5 % (548 instalments) · Auto 92.7 % (351) · Consumer 93.4 % (1 345) · BNPL 94.2 % (473) · SME 94.8 % (588), against 94.1 % for the book. Quote the counts with the rates: Auto's 351 instalments move by a point on a handful of large unpaid ones."}
+```
 
 ### Mistakes that cost a point this week
 
@@ -287,9 +305,14 @@ No new homework. **HW 4.2** (the cleaning pipeline) is due tomorrow with the che
 
 ## 5. Self-check
 
-1. Which Show Values As option gives a branch's share of its region, and what does it show on the region row itself? *(→ section 1, "Value Field Settings", P4)*
-2. Why can a calculated field not compute an average ticket as `principal / count`? *(→ section 1, "Calculated fields", P7)*
-3. Name three rules of chart honesty that are not matters of taste. *(→ section 1, "Charts")*
+```check
+{"id": "w04d4-sc", "questions": [
+  {"type": "number", "q": "Tashkent has 81.68 bn outstanding and Tashkent South 26.79 bn. What does % of Parent Row Total show on the Tashkent South row? (%, 1 decimal)", "answer": 32.8, "explain": "26 787 392 136 / 81 679 738 071 = 32.8 % — the share within its region, not of the book (→ P4)."},
+  {"type": "single", "q": "Which of these belongs in a calculated field?", "options": ["paid / total_due per month — a ratio of sums", "the number of loans per product", "the average of the per-loan interest rates", "a join to the Lookup sheet"], "answer": 0, "explain": "Calculated fields work on sums; counts belong in Values (Count), joins in Power Query (→ section 1, Calculated fields; P7)."},
+  {"type": "single", "q": "Your 34-month line ends with October 2026: one day, 0.85 bn. What do you do?", "options": ["Leave it — the data is the data", "Drop it from the series (or mark it) and say so in the footnote", "Multiply it by 31", "Switch to a pie"], "answer": 1, "explain": "A partial period plotted as a month looks like a crash (→ section 1, The anatomy of an honest chart)."},
+  {"type": "single", "q": "A pivot on a merge of installments_paid with tblLoans shows Sum of principal ≈ 10 trillion UZS. Why?", "options": ["Principal is stored in tiyin", "The grain is one row per instalment, so each loan's principal is counted once per instalment", "The pivot needs a refresh", "The slicer is on"], "answer": 1, "explain": "Know the grain; loan-level sums come from tblLoans, not from an instalment-level table (→ section 1, Refresh and the cache — Watch out)."}
+]}
+```
 
 ---
 
@@ -322,6 +345,10 @@ Sheet `OnePager`, landscape, fits on one printed page (Page Layout → Width 1 p
 | 5 | **FPD30, last mature vintage** | on `installments_paid` (Day 3 P8) + a `first_paid` column (`MINIFS` of `paid_at` per instalment, ≤ as-of) + the loan's disbursement month (`XLOOKUP` from tblLoans): flag = `paid < total_due` OR `first_paid > due_date + 30`, for `installment_no = 1`; pivot by vintage month: Sum of flag / Count | July 2026: **4 of 367 = 1.09 %** (June 3/373 = 0.80 %, May 7/377 = 1.86 %; August has only 11 of 358 first instalments mature — not readable) |
 | 6 | **Collection rate** | Day 3's Company corner pivot, September row | **94.1 %** (15 982 118 926 / 16 987 977 718) |
 
+```game
+{"type": "match", "id": "w04d4-g4", "title": "Match each tile to its definition", "pairs": [["Outstanding", "principal due after the as-of date, all loans"], ["PAR30", "outstanding of loans > 30 DPD ÷ total outstanding"], ["NPL90", "outstanding of loans > 90 DPD ÷ total outstanding"], ["FPD30", "first instalment unpaid or paid > 30 days late, per vintage"], ["Collection rate", "paid by the as-of on instalments due in the month ÷ due"], ["Disbursements MTD", "loans and principal since the 1st, with the last full month beside"]]}
+```
+
 Tile 5 is the only one that needs three tables (installments, payments, loans); it is also the one a board member will ask about, so its definition line is the longest: *first instalment not fully paid, or first payment more than 30 days late; payments through 2026-10-01; vintage = month of disbursement; shown for the newest vintage whose first due dates are all ≥ 30 days old.* The other five fit in half a line each.
 
 **Chart choice, with reasons** (the sentence you say if asked "why not a pie?"):
@@ -335,7 +362,13 @@ Tile 5 is the only one that needs three tables (installments, payments, loans); 
 
 Then the agreement check with Timur: six tiles, six view queries from week 3, six equal numbers. If one differs, the definition differs — find the word that is different (as-of, de-duplicated, due-in-month) before anyone touches a formula.
 
-> Interview version: *"Put a lending portfolio on one page."* — Six tiles (outstanding, disbursements MTD + last full month, PAR30, NPL90, FPD30 of the last mature vintage, collection rate), each with its definition and as-of; four charts chosen by question (bar for categories, line + moving average for time, stacked for composition, bar for ranking), titles that state the finding, bars from zero; pivots on a data sheet, slicers connected, everything refreshable; and the numbers reconciled to the warehouse views.
+> 🎯 **Interview version.** *"Put a lending portfolio on one page."* — Six tiles (outstanding, disbursements MTD + last full month, PAR30, NPL90, FPD30 of the last mature vintage, collection rate), each with its definition and as-of; four charts chosen by question (bar for categories, line + moving average for time, stacked for composition, bar for ranking), titles that state the finding, bars from zero; pivots on a data sheet, slicers connected, everything refreshable; and the numbers reconciled to the warehouse views.
+
+**Say it like in an interview.** A board member, on Monday: *"Why is the product mix a bar chart? Pies are clearer for shares."* Answer her in 30 words or more.
+
+```task
+{"id": "w04d4-cc", "kind": "free", "min": 30, "model": "Because two of the five products are 0.5 % each — on a pie they are invisible slivers, and the eye cannot tell 27.6 % from 11 % without labels. A sorted bar from zero lets you compare lengths at a glance: SME 125.9 bn on top, then Auto 57.7, Consumer 23.1, BNPL and Micro about 1 bn each. The title carries the point: SME is 60 % of the book on 10 % of the loans. A pie is fine for two or three parts, not five.", "rubric": ["names the problem with small slices (two products at 0.5 %)", "says bars compare lengths, sorted and from zero", "quotes a number from the page (60 %, 125.9 bn …)", "puts the finding in the title"]}
+```
 
 Tomorrow: the checkpoint — clean both dirty files, build the page on the clean data, write the five findings, answer eight questions.
 

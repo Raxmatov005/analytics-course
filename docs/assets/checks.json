@@ -1,0 +1,1229 @@
+{
+ "salt": "nur-finance-2026",
+ "checks": {
+  "practice": {
+   "title": "Practice day \u2014 3 warm-up queries",
+   "kind": "sql",
+   "file": "submissions/practice/answers.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "f702d5518a42d1e63d6fa6c0",
+       "dp": 0
+      }
+     ]
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "7531fede56f88e69cab03888",
+       "dp": 2
+      }
+     ]
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "00939945c142e4bb1c55d714",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "hw1.2": {
+   "title": "HW 1.2 \u2014 10 queries for Bekzod",
+   "kind": "sql",
+   "file": "submissions/week-01/day-2/bekzod.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "f05d3b297632b8adc67827cd",
+       "dp": 0
+      }
+     ]
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "5f77f1a03fd3618cbbc39b62",
+       "dp": 0
+      }
+     ]
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "939126eb9047329b58e15af2",
+       "dp": 0
+      }
+     ]
+    },
+    "Q4": {
+     "values": [
+      {
+       "h": "07dec19578478683ba983aab",
+       "dp": 0
+      }
+     ]
+    },
+    "Q5": {
+     "values": [
+      {
+       "h": "4df2d147d8c223a89a111200",
+       "dp": 0
+      }
+     ]
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "2c648c9db5944fb0543f124b",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "f702d5518a42d1e63d6fa6c0",
+      "dp": 0
+     }
+    },
+    "Q7": {
+     "values": [
+      {
+       "h": "28e14f486833c090fcbe6ef3",
+       "dp": 0
+      }
+     ]
+    },
+    "Q8": {
+     "values": [
+      {
+       "h": "ae04a7f77f3741632e17fea1",
+       "dp": 0
+      }
+     ]
+    },
+    "Q9": {
+     "values": [
+      {
+       "h": "7d5629ef0b60f88b37820b69",
+       "dp": 0
+      }
+     ]
+    },
+    "Q10": {
+     "values": [
+      {
+       "h": "a0b827e152fade636864c04d",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw2.1": {
+   "title": "HW 2.1 \u2014 loan book for Bekzod",
+   "kind": "sql",
+   "file": "submissions/week-02/day-1/loan_book.sql",
+   "tasks": {
+    "Q1": {
+     "rows": {
+      "h": "f05d3b297632b8adc67827cd",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "rows": {
+      "h": "f9c81faeb257838097947b90",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "rows": {
+      "h": "84f3305db4ad715ff6578445",
+      "dp": 0
+     },
+     "values": [
+      {
+       "h": "054f378b8ffa52ddfe0db8f0",
+       "dp": 0
+      }
+     ]
+    },
+    "Q4": {
+     "rows": {
+      "h": "b9a8f77c8746bd0bca311096",
+      "dp": 0
+     }
+    },
+    "Q5": {
+     "rows": {
+      "h": "f05d3b297632b8adc67827cd",
+      "dp": 0
+     }
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "e0a1c02683fee0caf9f6b065",
+       "dp": 0
+      }
+     ]
+    },
+    "Q7": {
+     "values": [
+      {
+       "h": "6e81d56a7207b408d4d1ea4a",
+       "dp": 0
+      }
+     ]
+    },
+    "Q8": {
+     "rows": {
+      "h": "2932c1cb630a55026744c540",
+      "dp": 0
+     }
+    },
+    "Q10": {
+     "values": [
+      {
+       "h": "b2c5c9ef7c738858266ee9e3",
+       "dp": 0
+      },
+      {
+       "h": "cd2d0129ab1987a985039c0f",
+       "dp": 0
+      }
+     ]
+    },
+    "Q9": {
+     "rows": {
+      "h": "151287bd9b318e1b4729d3b3",
+      "dp": 0
+     },
+     "values": [
+      {
+       "h": "cc04561adcb0b23f410e7a92",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "hw2.2": {
+   "title": "HW 2.2 \u2014 lateness report for Sevara",
+   "kind": "sql-files",
+   "files": {
+    "submissions/week-02/day-3/lateness.sql": {
+     "values": [
+      {
+       "h": "224d36ab75f61771d48dd3ce",
+       "dp": 0
+      },
+      {
+       "h": "7a9d8fe8db0aa7f0647eeb0e",
+       "dp": 1
+      },
+      {
+       "h": "2d6eaa29f0ec2e698947dac4",
+       "dp": 1
+      }
+     ]
+    },
+    "submissions/week-02/day-3/methods.sql": {
+     "values": [
+      {
+       "h": "dfcd81d7480dcc37fd4cd3e2",
+       "dp": 0
+      },
+      {
+       "h": "c3483dd988022423c0b030f3",
+       "dp": 0
+      }
+     ]
+    }
+   },
+   "notes": {
+    "detective.md": "the applications made before the applicant turned 18 \u2014 the reviewer reads this file",
+    "_minors": {
+     "h": "3217779f8781e8714dcd1641",
+     "dp": 0
+    }
+   },
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "224d36ab75f61771d48dd3ce",
+       "dp": 0
+      }
+     ]
+    },
+    "Q2": {
+     "rows": {
+      "h": "94ca0865469dfd01f4f0ad3d",
+      "dp": 0
+     },
+     "values": [
+      {
+       "h": "7a9d8fe8db0aa7f0647eeb0e",
+       "dp": 1
+      }
+     ]
+    },
+    "Q3": {
+     "rows": {
+      "h": "4ecdea592fa613a6b0b376dc",
+      "dp": 0
+     },
+     "values": [
+      {
+       "h": "2d6eaa29f0ec2e698947dac4",
+       "dp": 1
+      }
+     ]
+    },
+    "Q4": {
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     },
+     "values": [
+      {
+       "h": "dfcd81d7480dcc37fd4cd3e2",
+       "dp": 0
+      }
+     ]
+    },
+    "Q5": {
+     "values": [
+      {
+       "h": "c3483dd988022423c0b030f3",
+       "dp": 0
+      }
+     ]
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "3217779f8781e8714dcd1641",
+       "dp": 0
+      },
+      {
+       "h": "e81338237eb513e8e7bf45d6",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "hw3.1": {
+   "title": "HW 3.1 \u2014 share-and-trend pack",
+   "kind": "sql-files",
+   "files": {
+    "submissions/week-03/day-1/shares.sql": {
+     "values": [
+      {
+       "h": "763a52256c5432ff981d7d32",
+       "dp": 1
+      },
+      {
+       "h": "37f142edd721c266e2900fa7",
+       "dp": 1
+      },
+      {
+       "h": "c2766803f340ffa97074f292",
+       "dp": 1
+      }
+     ]
+    },
+    "submissions/week-03/day-1/trend.sql": {
+     "values": [
+      {
+       "h": "91f922208c622e02cc2e806f",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "hw4.1": {
+   "title": "HW 4.1 \u2014 functions pack",
+   "kind": "xlsx",
+   "file": "submissions/week-04/day-1/functions_pack.xlsx",
+   "values": {
+    "active loans": {
+     "h": "f9c81faeb257838097947b90",
+     "dp": 0
+    },
+    "outstanding": {
+     "h": "7ce8735a21e87e335a21da04",
+     "dp": 0
+    },
+    "loans disbursed in 2026": {
+     "h": "07dec19578478683ba983aab",
+     "dp": 0
+    },
+    "principal disbursed in 2026": {
+     "h": "0a9593da318ca22f9be86980",
+     "dp": 0
+    },
+    "September 2026 principal": {
+     "h": "d825d7b2beb907b15ff1b974",
+     "dp": 0
+    },
+    "loans with DPD above 0": {
+     "h": "00cbce24adf20fd3e250d26a",
+     "dp": 0
+    },
+    "SME share of outstanding": {
+     "h": "763a52256c5432ff981d7d32",
+     "dp": 1
+    },
+    "approval rate, app": {
+     "h": "d5804d32f718eeba51f09771",
+     "dp": 1
+    },
+    "approval rate, branch": {
+     "h": "3cab4c61eb344a1f19252644",
+     "dp": 1
+    },
+    "approval rate, partner": {
+     "h": "1c9eb924d5357618b8399a63",
+     "dp": 1
+    }
+   }
+  },
+  "hw4.2": {
+   "title": "HW 4.2 \u2014 cleaning pipeline",
+   "kind": "xlsx-tables",
+   "file": "submissions/week-04/day-3/cleaning.xlsx",
+   "tables": {
+    "customers_clean": {
+     "rows": {
+      "h": "4785a26231e04bda650a0146",
+      "dp": 0
+     }
+    },
+    "payments_clean": {
+     "rows": {
+      "h": "6492613d453d5e0a23dfe5b8",
+      "dp": 0
+     },
+     "sum": {
+      "h": "346ce1ce4cfa2cfade3d9c29",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw5.1": {
+   "title": "HW 5.1 \u2014 eight functions",
+   "kind": "notebook",
+   "file": "submissions/week-05/day-1/day1_starter.ipynb"
+  },
+  "hw5.2": {
+   "title": "HW 5.2 \u2014 pandas cleaning pipeline + DPD",
+   "kind": "csv",
+   "run": "submissions/week-05/day-3/clean_nur.py",
+   "files": {
+    "customers_clean.csv": {
+     "rows": {
+      "h": "4785a26231e04bda650a0146",
+      "dp": 0
+     }
+    },
+    "payments_clean.csv": {
+     "rows": {
+      "h": "6492613d453d5e0a23dfe5b8",
+      "dp": 0
+     },
+     "sum": {
+      "col": "amount",
+      "h": "346ce1ce4cfa2cfade3d9c29",
+      "dp": 0
+     }
+    },
+    "dpd_per_loan.csv": {
+     "rows": {
+      "h": "f05d3b297632b8adc67827cd",
+      "dp": 0
+     },
+     "positive": {
+      "col": "dpd",
+      "h": "00cbce24adf20fd3e250d26a",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw6.1": {
+   "title": "HW 6.1 \u2014 probability and expected loss",
+   "kind": "notebook",
+   "file": "submissions/week-06/day-1/day1_starter.ipynb"
+  },
+  "hw7.1": {
+   "title": "HW 7.1 \u2014 design doc + A/A check",
+   "kind": "notebook",
+   "file": "submissions/week-07/day-1/day1_starter.ipynb"
+  },
+  "hw1.1": {
+   "title": "HW 1.1 \u2014 Your workspace works",
+   "kind": "sql",
+   "file": "submissions/week-01/day-1/queries.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "f05d3b297632b8adc67827cd",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "896cbd019776da9f67adad30",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "8d5b395a3a28b021b2652a88",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw1.3": {
+   "title": "HW 1.3 \u2014 The case of the forty customers",
+   "kind": "sql",
+   "file": "submissions/week-01/day-4/case.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "896cbd019776da9f67adad30",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "5045af7a7c20da50db20778c",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "154905029988c052449eb0ad",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "1b0e5f57376cea4676153a8d",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "154905029988c052449eb0ad",
+      "dp": 0
+     }
+    },
+    "Q4": {
+     "values": [
+      {
+       "h": "ca819b338be0672191ad21ed",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "1d77defc9d08e5b3233d531e",
+      "dp": 0
+     }
+    },
+    "Q5": {
+     "values": [
+      {
+       "h": "b2c5c9ef7c738858266ee9e3",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "1dea8efb351e7a43e7d8adcf",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q7": {
+     "values": [
+      {
+       "h": "7d5851b4bd118d226a4ee79a",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "cp1": {
+   "title": "Checkpoint 1 \u2014 Part B, twenty queries",
+   "kind": "sql",
+   "file": "submissions/week-01/day-5/queries.sql",
+   "tasks": {
+    "B1": {
+     "values": [
+      {
+       "h": "896cbd019776da9f67adad30",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B2": {
+     "values": [
+      {
+       "h": "6a4a8c0e0b79ed678d0c62c5",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B3": {
+     "values": [
+      {
+       "h": "84175042bd802d787ed8f0fb",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B4": {
+     "rows": {
+      "h": "4ecdea592fa613a6b0b376dc",
+      "dp": 0
+     }
+    },
+    "B5": {
+     "values": [
+      {
+       "h": "c9650f66b9a291c977a12d33",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B6": {
+     "values": [
+      {
+       "h": "b817d136806de57a64609787",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B7": {
+     "values": [
+      {
+       "h": "73839181b0b220e1a430054b",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B8": {
+     "values": [
+      {
+       "h": "5911596124b78f673134e855",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B9": {
+     "values": [
+      {
+       "h": "f43599c39a9122fa27be95d2",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B10": {
+     "values": [
+      {
+       "h": "6839b8367e6a9c492c4bf4f4",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B11": {
+     "values": [
+      {
+       "h": "08a76dfee139bca58afc2306",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B12": {
+     "values": [
+      {
+       "h": "9c8646daa04cdf5962bb5e02",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B13": {
+     "values": [
+      {
+       "h": "4f74d63fcf920279ef2c2059",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B14": {
+     "values": [
+      {
+       "h": "3f4bf40bdb02a6d0c7e4baf8",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B15": {
+     "values": [
+      {
+       "h": "533b0c35be82a3f51081906a",
+       "dp": 0
+      },
+      {
+       "h": "2932c1cb630a55026744c540",
+       "dp": 0
+      }
+     ]
+    },
+    "B16": {
+     "values": [
+      {
+       "h": "8cd031a21524b5fb6e91d846",
+       "dp": 0
+      },
+      {
+       "h": "fcd396ee2df5b45ecf149d24",
+       "dp": 0
+      }
+     ]
+    },
+    "B17": {
+     "values": [
+      {
+       "h": "c186df7c2d03b56be6554dc5",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B18": {
+     "values": [
+      {
+       "h": "cc04561adcb0b23f410e7a92",
+       "dp": 0
+      },
+      {
+       "h": "51c83be1b5f2f41f6447ba02",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "94ca0865469dfd01f4f0ad3d",
+      "dp": 0
+     }
+    },
+    "B19": {
+     "values": [
+      {
+       "h": "f1eb09168cf111bf3aea5fce",
+       "dp": 0
+      },
+      {
+       "h": "70fee3f7822926b6646d222d",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B20": {
+     "values": [
+      {
+       "h": "21d7779a60329d85bf65249c",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "14b118e1f4fcd3cb68bed3db",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "handin-W3D1": {
+   "title": "HW 3.1 \u2014 share-and-trend pack (Week 3 Day 1 workspace)",
+   "kind": "sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "763a52256c5432ff981d7d32",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "37f142edd721c266e2900fa7",
+       "dp": 1
+      },
+      {
+       "h": "ac007236971398924a4d9078",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "f702d5518a42d1e63d6fa6c0",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "c2766803f340ffa97074f292",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "5ed11dd9bd72633a27942522",
+      "dp": 0
+     }
+    },
+    "Q4": {
+     "values": [
+      {
+       "h": "91f922208c622e02cc2e806f",
+       "dp": 0
+      },
+      {
+       "h": "37f142edd721c266e2900fa7",
+       "dp": 1
+      }
+     ],
+     "rows": {
+      "h": "7d5851b4bd118d226a4ee79a",
+      "dp": 0
+     }
+    },
+    "Q5": {
+     "values": [
+      {
+       "h": "be94f0a14cf7537dc4adda83",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "213cd7d0f08d73aef6c14dc3",
+      "dp": 0
+     }
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "20176a610ae8339c6c1a2716",
+       "dp": 0
+      },
+      {
+       "h": "27ba5841e7b5fea664b09183",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "5665c2c309ee1593da031a82",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "handin-W3D4": {
+   "title": "HW 3.2 \u2014 Timur's clean layer (Week 3 Day 4 workspace)",
+   "kind": "sql",
+   "tasks": {
+    "R1": {
+     "values": [
+      {
+       "h": "6492613d453d5e0a23dfe5b8",
+       "dp": 0
+      },
+      {
+       "h": "346ce1ce4cfa2cfade3d9c29",
+       "dp": 0
+      }
+     ]
+    },
+    "R2": {
+     "values": [
+      {
+       "h": "7ce8735a21e87e335a21da04",
+       "dp": 0
+      },
+      {
+       "h": "288be1d8132d5f6c77217e12",
+       "dp": 0
+      }
+     ]
+    },
+    "R3": {
+     "values": [
+      {
+       "h": "caaaacf6c659a1bd8c3f301f",
+       "dp": 0
+      },
+      {
+       "h": "3d1eeab52c8f8f92d8a3306e",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    },
+    "R4": {
+     "values": [
+      {
+       "h": "524ecc971f535b1562d1afa2",
+       "dp": 0
+      }
+     ]
+    }
+   }
+  },
+  "handin-W3D5": {
+   "title": "Checkpoint 3 \u2014 loan-book EDA (Week 3 Day 5 workspace)",
+   "kind": "sql",
+   "tasks": {
+    "N1": {
+     "values": [
+      {
+       "h": "4a64a4926348da95ec7765e9",
+       "dp": 0
+      }
+     ]
+    },
+    "N2": {
+     "values": [
+      {
+       "h": "38c62cb4b1d3c7d7bbd42d73",
+       "dp": 0
+      }
+     ]
+    },
+    "N3": {
+     "values": [
+      {
+       "h": "ab523e385add9b7561055142",
+       "dp": 1
+      }
+     ]
+    },
+    "N4": {
+     "values": [
+      {
+       "h": "ec8e88e41338a73c451b0d1f",
+       "dp": 0
+      }
+     ]
+    },
+    "N5": {
+     "values": [
+      {
+       "h": "0a9674f30744605c22888793",
+       "dp": 1
+      }
+     ]
+    },
+    "N6": {
+     "values": [
+      {
+       "h": "186e2cfe511507fa1ae2e124",
+       "dp": 0
+      }
+     ]
+    },
+    "N7": {
+     "values": [
+      {
+       "h": "7e7da4a5c7babb0de8153322",
+       "dp": 2
+      }
+     ]
+    },
+    "N8": {
+     "values": [
+      {
+       "h": "0faaaacad37e264d57573a4e",
+       "dp": 1
+      }
+     ]
+    }
+   }
+  },
+  "cap8": {
+   "title": "Capstone \u00b7 the sanity numbers",
+   "kind": "sql",
+   "file": "submissions/week-08/day-3/sanity.sql",
+   "tasks": {
+    "S1": {
+     "values": [
+      {
+       "h": "7ce8735a21e87e335a21da04",
+       "dp": 0
+      },
+      {
+       "h": "288be1d8132d5f6c77217e12",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "S2": {
+     "values": [
+      {
+       "h": "7e7da4a5c7babb0de8153322",
+       "dp": 2
+      },
+      {
+       "h": "2a0f700dca428994fc076dcb",
+       "dp": 2
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "S3": {
+     "values": [
+      {
+       "h": "caaaacf6c659a1bd8c3f301f",
+       "dp": 0
+      },
+      {
+       "h": "7221b970996bb2c25ade7fd9",
+       "dp": 0
+      },
+      {
+       "h": "56de769469e1ba7468f6f2ed",
+       "dp": 0
+      },
+      {
+       "h": "6d06297e2dfc0e5620cba3ed",
+       "dp": 0
+      },
+      {
+       "h": "3d1eeab52c8f8f92d8a3306e",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    },
+    "S4": {
+     "values": [
+      {
+       "h": "c555bea6de13d6aff271352d",
+       "dp": 2
+      },
+      {
+       "h": "4934a680a3487b825f5ffd78",
+       "dp": 2
+      },
+      {
+       "h": "bc17c01e750daae4afb5ff88",
+       "dp": 2
+      }
+     ],
+     "rows": {
+      "h": "94ca0865469dfd01f4f0ad3d",
+      "dp": 0
+     }
+    },
+    "S5": {
+     "values": [
+      {
+       "h": "e571828e1e9539bdecea552e",
+       "dp": 0
+      },
+      {
+       "h": "91f922208c622e02cc2e806f",
+       "dp": 0
+      },
+      {
+       "h": "cfd31000862016e5b07f0d19",
+       "dp": 0
+      },
+      {
+       "h": "931b74f965f59e037088c000",
+       "dp": 0
+      }
+     ]
+    },
+    "S7": {
+     "values": [
+      {
+       "h": "a9e114ce9ecd390a308c2e57",
+       "dp": 2
+      }
+     ]
+    },
+    "S8": {
+     "values": [
+      {
+       "h": "44c868f38195817420bb0870",
+       "dp": 1
+      }
+     ]
+    },
+    "S11": {
+     "values": [
+      {
+       "h": "56de769469e1ba7468f6f2ed",
+       "dp": 0
+      },
+      {
+       "h": "380ba18caae93d37e54956df",
+       "dp": 0
+      }
+     ]
+    },
+    "S12": {
+     "values": [
+      {
+       "h": "09ee4c6d4652532f9eee7b5f",
+       "dp": 0
+      },
+      {
+       "h": "d39d05110d68ddccb25288f0",
+       "dp": 0
+      }
+     ]
+    },
+    "S13": {
+     "values": [
+      {
+       "h": "c3c277b40b3c0014a4315a27",
+       "dp": 1
+      }
+     ]
+    }
+   }
+  }
+ }
+}

@@ -1,6 +1,6 @@
 # Week 8 · Day 2 — Product analytics II and the company day: unit economics, storytelling, the job
 
-<span class="badge">Unit economics 60 min</span> <span class="badge">Practice 45 min</span> <span class="badge">Storytelling 20 min</span> <span class="badge">The company day 60 min</span> <span class="badge">CV 20 min</span> <span class="badge hw">HW 8.1 due tomorrow</span> <span class="badge company">Company corner</span>
+<span class="badge">Unit economics 60 min</span> <span class="badge">Practice 45 min</span> <span class="badge">Storytelling 20 min</span> <span class="badge">The company day 60 min</span> <span class="badge">CV 20 min</span> <span class="badge hw">HW 8.1 due Day 3</span> <span class="badge company">Company corner</span>
 
 > STORY **Tuesday, 9:00.** Bekzod has the 2027 budget template open, a column per product, every cell empty. *"Finance wants a number per product: **what does one loan earn us after we pay for the money, for the losses and for selling it?** Kamola wants more Micro, Nilufar wants less BNPL, and I want to know which of them is right before I sign the plan."* Madina, putting a printed job advert on your desk: *"And this afternoon we do something else. Next week you will be in interviews, not in my team. I will walk you through this company from the board to the collections desk — what every desk asks, what every dashboard shows, who reports what to the central bank — and you will write your CV tonight."*
 
@@ -27,13 +27,23 @@
 
 Products sell through one channel each (`products.channel`): MICRO in the app, CONS, AUTO and SME at branches, BNPL through partners. The acquisition and servicing figures are **ours**: plausible orders of magnitude, not Nur's books. A unit-economics table without its assumptions printed underneath is a guess dressed as a fact; with them, Finance can replace each one with the real figure and rerun.
 
+> 💡 **Key idea.** Unit economics is five lines — interest, minus funding, minus expected loss, minus the cost of selling, minus the cost of servicing — and every line you did not measure is an **assumption printed under the table**. The table is only as honest as that footnote.
+
 **Cost of funds on a schedule.** For an annuity, the balance falls each month. The interest the *borrower* pays is computed on that balance; so is the interest *Nur* pays on the money it borrowed. Per loan: CoF = Σₖ (balance before instalment k) × 0.18 ÷ 12, where balance before k = principal − principal repaid in instalments 1 … k−1. The difference between the two rates (here 30 % vs 18 % on a Consumer loan) is the **net interest margin** the loan has to cover risk and costs from.
 
 **Per loan vs per soum.** Per loan says which product is worth a salesperson's afternoon; **per 1 000 soum lent** says where the next billion of funding earns most. They can rank products differently: a large loan can earn a lot per loan and little per soum.
 
+> 💡 **Key idea.** Per loan answers "which sale is worth an afternoon"; **per 1 000 soum lent** answers "where does the next billion of funding earn most". Say which question you are answering before you rank anything.
+
 **Sensitivity.** A result that depends on a guess is reported with the **break-even** of that guess: solve net = 0 for one input, holding the others. For risk: net(PD) = (1 − PD) × I − CoF − PD × LGD × EAD − acq − serv = 0 → **PD\* = (I − CoF − acq − serv) ÷ (I + LGD × EAD)**. To speak in FPD (the number risk watches weekly), translate with the product's observed PD ÷ FPD ratio, or with week 7's simplification (every FPD loan defaults, EAD ≈ principal) — and say which.
 
+```game
+{"type": "cloze", "id": "w08d2-g1", "title": "Net contribution of one loan", "text": "net = (1 − {{0}}) × interest − {{1}} − PD × {{2}} × EAD − {{3}} − servicing", "code": false, "blanks": [["PD"], ["cost of funds"], ["LGD"], ["acquisition"]], "distractors": ["FPD", "principal", "approval rate", "CAC ÷ LTV"]}
+```
+
 **LTV and CAC.** **CAC** (customer acquisition cost) = what it costs to win a *new* borrower. **LTV** (lifetime value) = the contribution that borrower brings over a horizon — the first loan *and* the repeats (Day 1: a large share come back), each repeat costing far less to sell because the customer is already known. **LTV ÷ CAC > 1** means acquisition pays for itself; product people like 3+. Fix the horizon (here 24 months, so the cohort must be at least 24 months old) and say whether cross-sold products count.
+
+> ⚠️ **Watch out.** Three LTV/CAC traps: an LTV built from **revenue** instead of contribution (funding and losses left out), a horizon longer than the cohort has lived (unobservable repeats counted as zero — or worse, extrapolated), and an **average** lifted by a few huge cross-sold loans presented as what a typical customer is worth. Show the median customer next to the average.
 
 ### Data storytelling — the answer first
 
@@ -43,6 +53,10 @@ The board will not read your notebook. Four rules:
 2. **So-what titles.** A slide title is a sentence that says what the reader should conclude: not *"Unit economics by product"* but *"SME and Auto earn 60–73 soum per 1 000 lent; BNPL loses 108"*. If you cannot write the sentence, the slide has no message yet.
 3. **One chart, one message.** One chart per slide, the message in the title, the definition and source in a footnote, the number that matters labelled (week 5's chart rules). A second message = a second slide.
 4. **Write for a busy executive:** short sentences, numbers rounded to what matters (60 m, not 60 281 093), units on every number, the decision you want in bold, the risks and assumptions in one line each at the end.
+
+```game
+{"type": "bug", "id": "w08d2-g2", "title": "Find the line that breaks the pyramid", "q": "Your executive summary for Bekzod. One line does not belong where it is.", "code": "Grow SME and Auto; renegotiate BNPL's merchant fee or slow it.\nSME and Auto earn 60–73 soum per 1 000 lent; BNPL loses 108.\nFirst we loaded seven tables, cleaned the payments and joined the schedules.\nMicro earns 7 per 1 000, but a new app customer pays back the acquisition on the first loan.\nAssumptions: funding 18 %, LGD 60 %, acquisition and servicing costs per channel (ours).", "answer": [2], "why": "The method is not a reason and does not belong in the summary: answer, reasons with numbers, assumptions — the 'how we did it' goes to the appendix."}
+```
 
 **The 10-slide analytical deck** (also the capstone's shape):
 
@@ -58,7 +72,11 @@ The board will not read your notebook. Four rules:
 
 A **memo** (2 pages) has the same order: answer, reasons with numbers, recommendation, assumptions.
 
----
+```game
+{"type": "order", "id": "w08d2-g3", "title": "The analytical deck, in order", "q": "Put the parts of the 10-slide deck in order.", "items": ["Title: the question, your name, as-of date, source", "Executive summary: the answer in 3 bullets + the decision", "Context: the 3–4 numbers everyone needs", "Findings: one so-what title and one chart each", "Recommendations: what, who, by when, worth", "Risks, assumptions, next steps", "Appendix: definitions and method — never presented"], "why": "The answer comes second, right after the title; the method comes last, in the appendix, for questions."}
+```
+
+> ⚠️ **Watch out.** The classic storytelling mistakes: topic titles ("Funnel", "Retention") that make the reader hunt for the message; the method before the answer; a chart with two messages; a number without a unit or a comparison; 25 slides "to be safe". Each one costs you the executive's attention before you reach the recommendation.
 
 ### Depth (optional)
 
@@ -69,17 +87,37 @@ A **memo** (2 pages) has the same order: answer, reasons with numbers, recommend
 - ▶ Presenting a story (from the data team's own webinar) — [How to turn data into stories (storytelling with data), 25:54](https://youtu.be/Hfx1X9WSGYQ?t=1554&end=2138)
 - ▶ Unit economics (CAC, LTV/CAC, payback; the page's loan unit-economics section) (RU) — [Все продуктовые метрики за 15 минут (Аналитика без воды), 08:45](https://youtu.be/X4asNCIMBRg?t=525&end=609)
 
+```videoquiz
+{"video": "jizZKNnx9wA", "stops": [{"at": 60, "q": "What should the first thing you say about your data be?", "options": ["How you collected it", "The answer — the conclusion you want the audience to take away", "A list of every chart", "The data sources"], "answer": 1, "explain": "Answer first: the reader stops when they believe you, so give them the conclusion at once."}, {"at": 90, "q": "Why never show a single number on its own?", "options": ["It looks too simple", "Without a comparison (last year, target, the book) nobody knows whether it is good or bad", "Charts are always better", "Executives dislike numbers"], "answer": 1, "explain": "'72.9 per 1 000 lent' means little; 'ten times Micro' means a decision.", "back": 30}]}
+```
+
+```videoquiz
+{"video": "8EMW7io4rSI", "stops": [{"at": 1400, "q": "What gives a data presentation its structure?", "options": ["The order in which the analysis was done", "A narrative: a beginning that sets the question, a middle with the evidence, an end with the call to action", "One chart per table in the notebook", "Alphabetical order of the topics"], "answer": 1, "explain": "The story runs from the question to the action — not from the first query to the last."}, {"at": 1510, "q": "What should every slide title do?", "options": ["Name the topic", "State the point the reader should take away", "Repeat the chart's axis labels", "Stay short at any cost, even without a message"], "answer": 1, "explain": "A so-what title: read the titles alone and you have the story.", "back": 60}]}
+```
+
+```videoquiz
+{"video": "Hfx1X9WSGYQ", "stops": [{"at": 1700, "q": "Before you build the story, what must you know?", "options": ["Which chart type is newest", "Who the audience is and what you want them to do", "How many slides the template has", "The colour palette"], "answer": 1, "explain": "Audience and action first: Bekzod needs a number per product for the budget, not your method."}, {"at": 1900, "q": "Your analysis produced forty tables. What goes into the story?", "options": ["All forty, in an appendix order", "Only what supports the message — the rest goes to the appendix or is cut", "The ten largest tables", "Whatever looks most impressive"], "answer": 1, "explain": "Exploratory work is for you; explanatory work is for them."}, {"at": 2100, "q": "How do you end a data story?", "options": ["With 'Questions?'", "With the method", "With the call to action: what to decide, who owns it, what it is worth", "With a summary of the data sources"], "answer": 2, "explain": "The deck's slide 9: recommendations with an owner, a date and a value.", "back": 60}]}
+```
+
+```videoquiz
+{"video": "X4asNCIMBRg", "stops": [{"at": 550, "q": "What is CAC?", "options": ["Revenue per customer", "What it costs to acquire one new customer", "The cost of funds", "Customer satisfaction"], "answer": 1, "explain": "For Nur: marketing, the officer's time, the bureau check, the partner's commission — app 60 000, branch 450 000 soum per loan (our assumption)."}, {"at": 595, "q": "LTV ÷ CAC above 1 means…", "options": ["Customers leave quickly", "Acquisition pays for itself over the horizon", "The product loses money on every loan", "Marketing spend should be cut"], "answer": 1, "explain": "A first Micro loan already pays back its 60 000 CAC; the repeats are the profit (P8).", "back": 40}]}
+```
+
 ---
 
 ## 2. Worked example — one Consumer loan (15 min)
 
-Loan 1 (week 1): Consumer, **31 150 000** soum, 24 months, 30 % a year, annuity 1 741 700 a month, branch channel.
+Loan 1 (week 1): Consumer, **31 150 000** soum, 24 months, 30 % a year, annuity 1 741 700 a month, branch channel. ▶ Run the block: it reads the loan's schedule from the course database.
 
 ```python
+import sqlite3
+import pandas as pd
+con = sqlite3.connect("data/raw/nur.db")
 inst = pd.read_sql("SELECT installment_no, principal_due, interest_due FROM installments WHERE loan_id = 1 ORDER BY installment_no", con)
 inst["bal_before"] = 31_150_000 - (inst["principal_due"].cumsum() - inst["principal_due"])
 I   = inst["interest_due"].sum()                 # 10 650 293  interest over the schedule
 cof = inst["bal_before"].sum() * 0.18 / 12       # 426 011 732 balance-months × 1.5 % = 6 390 176
+print(f"interest {I:,.0f} · balance-months {inst['bal_before'].sum():,.0f} · cost of funds {cof:,.0f}")
 ```
 
 | Line | Computation | Soum |
@@ -98,124 +136,118 @@ cof = inst["bal_before"].sum() * 0.18 / 12       # 426 011 732 balance-months ×
 
 ## 3. Practice (45 min)
 
-`data/python/week8/day2_starter.ipynb` has the schedule and loan tables loaded, the assumptions in one cell (`COF`, `LGD`, `ACQ`, `SERV`) and a stub `unit_economics(inst, ls)` with an assert. Averages are over **all 7 828 loans** of each product.
+The boxes run Python right here, in the page, and share one namespace in page order. ▶ Run the block below **first**: it puts the assumptions in one place and loads one row per loan — interest over the schedule, balance-months (for the cost of funds), today's DPD and the balance still owed at the first unpaid instalment (for EAD). Every box after it builds on `ue` and on the box before it. Averages are over **all 7 828 loans** of each product. Prefer Jupyter? `data/python/week8/day2_starter.ipynb` is the same work with a `unit_economics()` function to write.
 
-**P1.** Per product: average principal and term, interest over the schedule, cost of funds. Which product's interest does funding eat most of?
+```python
+import sqlite3
+import pandas as pd
+con = sqlite3.connect("data/raw/nur.db")
+COF, LGD = 0.18, 0.60                                           # funding rate per year · loss given default (ours)
+ACQ  = {"app": 60_000, "branch": 450_000, "partner": 100_000}   # acquisition cost per loan, soum (ours)
+SERV = {"app": 8_000, "branch": 25_000, "partner": 8_000}       # servicing cost per month of the schedule (ours)
+ue = pd.read_sql("""
+WITH pay AS (                                -- v_payments_clean: exact duplicate payments dropped
+  SELECT installment_id, paid_at, amount FROM (
+    SELECT installment_id, paid_at, amount,
+           ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
+    FROM payments) WHERE rn = 1),
+sched AS (                                   -- each instalment with the balance owed before it
+  SELECT i.loan_id, i.installment_no, i.installment_id, i.due_date, i.total_due, i.interest_due,
+         l.principal - COALESCE(SUM(i.principal_due) OVER (PARTITION BY i.loan_id ORDER BY i.installment_no
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0) AS bal_before
+  FROM installments i JOIN loans l ON l.loan_id = i.loan_id),
+unpaid AS (                                  -- instalments due by the as-of date and not paid in full
+  SELECT s.installment_id, s.loan_id, s.installment_no, s.due_date
+  FROM sched s LEFT JOIN pay p ON p.installment_id = s.installment_id AND p.paid_at <= '2026-10-01'
+  WHERE s.due_date <= '2026-10-01'
+  GROUP BY s.installment_id, s.loan_id, s.installment_no, s.due_date, s.total_due
+  HAVING COALESCE(SUM(p.amount), 0) < s.total_due),
+first_unpaid AS (SELECT loan_id, MIN(installment_no) AS k, MIN(due_date) AS due FROM unpaid GROUP BY loan_id)
+SELECT l.loan_id, pr.code AS product, pr.channel, l.risk_grade, l.principal, l.term_months AS term, l.disbursed_at,
+       SUM(s.interest_due) AS interest, SUM(s.bal_before) AS bal_months,
+       COALESCE(CAST(julianday('2026-10-01') - julianday(f.due) AS INTEGER), 0) AS dpd,
+       MAX(CASE WHEN s.installment_no = f.k THEN s.bal_before END) AS ead,
+       MAX(s.due_date) AS last_due
+FROM loans l JOIN products pr ON pr.product_id = l.product_id
+JOIN sched s ON s.loan_id = l.loan_id
+LEFT JOIN first_unpaid f ON f.loan_id = l.loan_id
+GROUP BY l.loan_id, pr.code, pr.channel, l.risk_grade, l.principal, l.term_months, l.disbursed_at, f.due
+""", con)
+print(len(ue), "loans")                      # 7828
+ue.head()
+```
 
-<details><summary>Answer</summary>
+**P1.** Per product: loans, average principal and term, interest over the schedule, cost of funds — and the cost of funds as a **share of the interest**. Which product's interest does funding eat most of? Finish the code and print that share in %.
 
-| product | loans | avg principal | avg term | rate | interest I | cost of funds | CoF ÷ I |
-|---|---|---|---|---|---|---|---|
-| AUTO | 391 | 216 858 133 | 36.2 | 24 % | 90 816 842 | 68 112 632 | 75 % |
-| BNPL | 1 569 | 4 170 880 | 7.0 | 0 % | 0 | 249 053 | — |
-| CONS | 2 418 | 26 926 915 | 14.9 | 30 % | 5 695 580 | 3 417 348 | 60 % |
-| MICRO | 2 669 | 2 705 586 | 4.5 | 42 % | 266 662 | 114 284 | 43 % |
-| SME | 781 | 308 728 745 | 24.3 | 26 % | 92 835 258 | 64 270 563 | 69 % |
+```task
+{"id": "w08d2-p1", "kind": "python", "starter": "g = ue.groupby(\"product\")\np1 = pd.DataFrame({\"loans\": g.size(),\n                   \"principal\": g[\"principal\"].mean(),\n                   \"term\": g[\"term\"].mean(),\n                   \"interest\": g[\"interest\"].mean(),\n                   \"cof\": g[\"bal_months\"].mean() * COF / 12})   # balance-months x 1.5 % a month\n# TODO: p1[\"cof_share_pct\"] = 100 x cost of funds / interest\n#       then print(p1.round(1))\n", "answer": 75.0, "dp": 1, "model": "AUTO 391 loans · 216 858 133 · 36.2 months · I 90 816 842 · CoF 68 112 632 · 75 %. BNPL 1 569 · 4 170 880 · 7.0 · 0 · 249 053 · — (no interest). CONS 2 418 · 26 926 915 · 14.9 · 5 695 580 · 3 417 348 · 60 %. MICRO 2 669 · 2 705 586 · 4.5 · 266 662 · 114 284 · 43 %. SME 781 · 308 728 745 · 24.3 · 92 835 258 · 64 270 563 · 69 %. AUTO's 24 % leaves only 6 points over the 18 % funding rate: three quarters of its interest goes to funding. BNPL charges the customer nothing — Nur pays for the money from the first day."}
+```
 
-AUTO's 24 % leaves only 6 points over the 18 % funding rate: three quarters of its interest goes to funding. BNPL charges the customer nothing — Nur pays for the money from the first day.
+**P2.** Expected loss per loan: PD = the product's share of loans now 90+, the EAD ratio measured on each product's 90+ loans, EL = PD × 60 % × EAD ratio × average principal. Print AUTO's EL per loan in whole soum.
 
-</details>
+```task
+{"id": "w08d2-p2", "kind": "python", "starter": "bad = ue[ue[\"dpd\"] > 90].copy()                       # loans now 90+ (week 6's crude PD)\nbad[\"ead_ratio\"] = bad[\"ead\"] / bad[\"principal\"]      # share of principal still owed at the first unpaid instalment\np2 = pd.DataFrame({\"bad\": bad.groupby(\"product\").size(),\n                   \"pd\": (ue[\"dpd\"] > 90).groupby(ue[\"product\"]).mean(),\n                   \"ead_ratio\": bad.groupby(\"product\")[\"ead_ratio\"].mean()})\nprint(p2.round(4))\n# TODO: p2[\"el\"] = p2[\"pd\"] x LGD x p2[\"ead_ratio\"] x p1[\"principal\"]\n#       then print(round(p2.loc[\"AUTO\", \"el\"]))\n", "answer": 3213904, "dp": 0, "model": "AUTO 10 / 391 = 2.56 % · EAD ratio 0.966 · EL 3 213 904. BNPL 42 / 1 569 = 2.68 % · 0.661 · 44 260. CONS 77 / 2 418 = 3.18 % · 0.803 · 413 293. MICRO 76 / 2 669 = 2.85 % · 0.657 · 30 360. SME 29 / 781 = 3.71 % · 0.792 · 5 447 028. AUTO borrowers who default stop almost at once (they still owe 97 % of the principal); short products default with a third already repaid. AUTO's ratio rests on 10 loans — a fragile number; say so."}
+```
 
-**P2.** Expected loss per loan: PD (share now 90+), the EAD ratio measured on each product's 90+ loans, EL = PD × 60 % × EAD.
+**P3.** The full table: income, minus cost of funds, expected loss, acquisition and servicing = **net contribution per loan**, and **per 1 000 soum lent**. Print the net per 1 000 for every product.
 
-<details><summary>Answer</summary>
+```task
+{"id": "w08d2-p3", "kind": "python", "starter": "p3 = p1[[\"principal\", \"term\", \"interest\", \"cof\"]].join(p2[[\"pd\", \"ead_ratio\"]])\nchannel = ue.groupby(\"product\")[\"channel\"].first()          # one channel per product\np3[\"income\"] = (1 - p3[\"pd\"]) * p3[\"interest\"]                # a defaulting loan pays no interest\np3[\"el\"] = p3[\"pd\"] * LGD * p3[\"ead_ratio\"] * p3[\"principal\"]\np3[\"acq\"] = channel.map(ACQ)\np3[\"serv\"] = channel.map(SERV) * p3[\"term\"]\n# TODO: p3[\"net\"] = income - cof - el - acq - serv\n#       p3[\"per_1000\"] = net / principal x 1 000\n#       then print(p3[[\"net\", \"per_1000\"]].round(1))\n", "answer": -107.7, "dp": 1, "model": "net per loan · per 1 000 lent: AUTO 15 813 021 · 72.9; BNPL −449 053 · −107.7; CONS 860 241 · 31.9; MICRO 18 430 · 6.8; SME 18 612 452 · 60.3. (Income AUTO 88 494 161, CONS 5 514 207, MICRO 259 069, SME 89 388 110; servicing AUTO 904 604, BNPL 55 740, CONS 373 325, MICRO 35 996, SME 608 067.) 2026 loans × net: AUTO 165 → 2.61 bn, BNPL 595 → −0.27 bn, CONS 941 → 0.81 bn, MICRO 1 045 → 0.02 bn, SME 305 → 5.68 bn."}
+```
 
-| product | 90+ / loans | PD | EAD ÷ principal (90+ loans) | EAD | EL per loan |
-|---|---|---|---|---|---|
-| AUTO | 10 / 391 | 2.56 % | 0.966 | 209 439 417 | 3 213 904 |
-| BNPL | 42 / 1 569 | 2.68 % | 0.661 | 2 755 742 | 44 260 |
-| CONS | 77 / 2 418 | 3.18 % | 0.803 | 21 630 783 | 413 293 |
-| MICRO | 76 / 2 669 | 2.85 % | 0.657 | 1 776 994 | 30 360 |
-| SME | 29 / 781 | 3.71 % | 0.792 | 244 490 187 | 5 447 028 |
+**P3 — read it.** Which product makes the most money **per loan**, and which **per soum lent**?
 
-The EAD ratio: AUTO borrowers who default stop almost at once (they still owe 97 % of the principal); short products default with a third already repaid. AUTO's ratio rests on 10 loans — a fragile number; say so.
+```task
+{"id": "w08d2-p3b", "kind": "choice", "options": ["SME per loan and per soum", "SME per loan (18.6 m), AUTO per soum (72.9 per 1 000)", "AUTO per loan, CONS per soum", "MICRO per soum — it has the highest rate"], "answer": 1, "explain": "Per loan: SME (18.6 m) and AUTO (15.8 m). Per soum: AUTO (72.9), then SME (60.3), CONS (31.9); MICRO barely positive (6.8); BNPL loses 108 soum per 1 000 lent. SME alone is about 64 % of the five products' 2026 contribution (5.68 of 8.85 bn). The ranking of SME/AUTO/CONS above MICRO/BNPL survives any reasonable change of the cost figures; the exact numbers do not."}
+```
 
-</details>
+**P4.** BNPL charges the customer 0 %. Partners (shops) usually pay the lender a **merchant fee** for each sale financed; it is not in our data. What fee, as a percentage of principal, makes an average BNPL loan break even? (From P3: net −449 053 on an average principal of 4 170 880.)
 
-**P3.** The full table: net contribution per loan and per 1 000 soum lent. Then the 2026 contribution of each product (loans disbursed in 2026 × net per loan). Which product makes money per loan, which per soum?
+```task
+{"id": "w08d2-p4", "kind": "number", "answer": 10.8, "dp": 1, "unit": "% of principal", "hint": "The fee has to cover the loss: −net ÷ principal.", "model": "Fee* = 449 053 ÷ 4 170 880 = 10.8 % of principal. Below it, BNPL loses money on every loan; above it, it earns. The question goes to Finance / the partnerships team: \"What do our partner agreements pay per financed sale, and are they the same for 3, 6 and 12 months?\" (a 12-month BNPL costs four times the funding of a 3-month one). Until that answer exists, \"Nilufar wants less BNPL\" has no money behind it either way — say exactly that."}
+```
 
-<details><summary>Answer</summary>
+**P5.** Micro's sensitivity. Net per loan at PD 0, 1, 5, 8 %; then the **break-even PD** for a **first** Micro loan (acquisition 60 000) and for a **repeat** loan (acquisition 20 000: the bureau check and an SMS) with section 1's formula. Print the first-loan break-even PD in %.
 
-| product | income (1 − PD) × I | − CoF | − EL | − acquisition | − servicing | **net per loan** | **per 1 000 lent** | 2026 loans | 2026 contribution |
-|---|---|---|---|---|---|---|---|---|---|
-| AUTO | 88 494 161 | 68 112 632 | 3 213 904 | 450 000 | 904 604 | **15 813 021** | **72.9** | 165 | 2.61 bn |
-| BNPL | 0 | 249 053 | 44 260 | 100 000 | 55 740 | **−449 053** | **−107.7** | 595 | −0.27 bn |
-| CONS | 5 514 207 | 3 417 348 | 413 293 | 450 000 | 373 325 | **860 241** | **31.9** | 941 | 0.81 bn |
-| MICRO | 259 069 | 114 284 | 30 360 | 60 000 | 35 996 | **18 430** | **6.8** | 1 045 | 0.02 bn |
-| SME | 89 388 110 | 64 270 563 | 5 447 028 | 450 000 | 608 067 | **18 612 452** | **60.3** | 305 | 5.68 bn |
+```task
+{"id": "w08d2-p5", "kind": "python", "starter": "m = p3.loc[\"MICRO\"]\nead_m = m[\"ead_ratio\"] * m[\"principal\"]            # EAD of an average Micro loan\n\ndef net_at(pd_, acq=ACQ[\"app\"]):                  # pd_, not pd: pd is pandas\n    return (1 - pd_) * m[\"interest\"] - m[\"cof\"] - pd_ * LGD * ead_m - acq - m[\"serv\"]\n\nfor x in (0, 0.01, m[\"pd\"], 0.05, 0.08):\n    print(f\"PD {x:.2%}: net per first loan {net_at(x):,.0f}\")\n# TODO: break-even PD = (I - CoF - acq - serv) / (I + LGD x EAD)\n#       for acq = 60 000 (first loan) and acq = 20 000 (repeat loan); print both in % to two decimals\n", "answer": 4.23, "dp": 2, "model": "Net per first loan: PD 0 % → 56 383; 1 % → 43 054; 2.85 % (today) → 18 430; 5 % → −10 260; 8 % → −50 246. A repeat loan earns 40 000 more at every PD. Break-even PD: first loan 4.23 %, repeat 7.23 %."}
+```
 
-Per loan: **SME** (18.6 m) and AUTO (15.8 m). Per soum: **AUTO** (72.9) then SME (60.3), CONS (31.9); MICRO barely positive (6.8); **BNPL loses 108 soum per 1 000 lent**. SME alone is about 64 % of the five products' 2026 contribution (5.68 of 8.85 bn). Assumptions as in section 1 — the ranking of SME/AUTO/CONS above MICRO/BNPL survives any reasonable change of the cost figures; the exact numbers do not.
+**P5 — read it.** Risk watches FPD30 weekly, not PD. Today's Micro FPD30 is 41 of 2 411 = 1.70 %, and Micro's PD ÷ FPD = 2.85 ÷ 1.70 = 1.67. At what **FPD30** does a new Micro customer stop paying for itself? (%, one decimal)
 
-</details>
+```task
+{"id": "w08d2-p5b", "kind": "number", "answer": 2.5, "dp": 1, "unit": "% FPD30", "hint": "Divide the first-loan break-even PD by Micro's PD ÷ FPD ratio.", "model": "4.23 % ÷ 1.67 = 2.53 % (repeat loan: 7.23 % → 4.32 %); with week 7's simplification (PD = FPD, EAD = principal) 2.98 % and 5.10 % — say which translation you used. Micro stops paying on a new customer if its FPD30 rises from 1.7 % to about 2.5 % — less than a point of headroom. That is the guardrail number for Kamola's next app experiment, and it is tighter than week 7's +1.25 points because funding and acquisition are now in."}
+```
 
-**P4.** BNPL charges the customer 0 %. Partners (shops) usually pay the lender a **merchant fee** for each sale financed; it is not in our data. What fee, as a percentage of principal, makes an average BNPL loan break even? Who do you ask?
+**P6.** The funding rate is our guess. Net per 1 000 soum lent at 14 %, 18 % and 22 %. Which product is most exposed to the cost of money? Print AUTO's per 1 000 at 22 %.
 
-<details><summary>Answer</summary>
+```task
+{"id": "w08d2-p6", "kind": "python", "starter": "for rate in (0.14, 0.18, 0.22):\n    cof_r = p3[\"cof\"] / COF * rate               # cost of funds is a straight line in the rate\n    # TODO: net at this rate = income - cof_r - el - acq - serv   (the columns of p3)\n    #       per 1 000 = net / principal x 1 000;  print(rate, per_1000.round(1).to_dict())\n", "answer": 3.1, "dp": 1, "model": "per 1 000 at 14 / 18 / 22 %: AUTO 142.7 / 72.9 / 3.1 · SME 106.5 / 60.3 / 14.0 · CONS 60.1 / 31.9 / 3.7 · MICRO 16.2 / 6.8 / −2.6 · BNPL −94.4 / −107.7 / −120.9. AUTO swings most: it is long (36 months) and priced closest to the funding rate. Per soum it is the best product at 18 % and nearly worthless at 22 %. A lender's product ranking is a statement about its funding cost — put the rate on the slide."}
+```
 
-Fee\* = −net ÷ principal = 449 053 ÷ 4 170 880 = **10.8 %** of principal. Below it, BNPL loses money on every loan; above it, it earns. The question goes to Finance / the partnerships team: *"What do our partner agreements pay per financed sale, and are they the same for 3, 6 and 12 months?"* (a 12-month BNPL costs four times the funding of a 3-month one). Until that answer exists, "Nilufar wants less BNPL" has no money behind it either way — say exactly that.
+**P7.** The crude PD mixes young and old loans. Recompute PD on **matured** loans only (the last instalment due on or before 2026-10-01) and rerun net per 1 000. Keep AUTO's crude PD — 0 of 23 matured loans is too few to use. Print SME's new per 1 000.
 
-</details>
+```task
+{"id": "w08d2-p7", "kind": "python", "starter": "matured = ue[ue[\"last_due\"] <= \"2026-10-01\"]\nbad_m = (matured[\"dpd\"] > 90).groupby(matured[\"product\"])\nprint(pd.DataFrame({\"bad\": bad_m.sum(), \"matured\": bad_m.size(), \"pd_pct\": (100 * bad_m.mean()).round(2)}))\npd7 = bad_m.mean()\npd7[\"AUTO\"] = p3.loc[\"AUTO\", \"pd\"]                 # too few matured AUTO loans\n# TODO: with pd7 instead of p3[\"pd\"], recompute income = (1 - pd7) x interest and el = pd7 x LGD x ead_ratio x principal,\n#       then net and per 1 000 (cof, acq, serv do not change); print the per 1 000 rounded to 1 decimal\n", "answer": 19.4, "dp": 1, "model": "Matured PD: SME 16 / 178 = 8.99 % (vs 3.71 %), CONS 38 / 1 020 = 3.73 %, MICRO 76 / 2 103 = 3.61 %, BNPL 36 / 1 095 = 3.29 %; AUTO 0 / 23. Net per 1 000: SME 19.4 (from 60.3), CONS 28.2, MICRO 3.0, BNPL −110.1, AUTO 72.9 (unchanged). Long products look safer than they are while most of their loans are young — a two-year SME loan disbursed in 2026 has not had time to default. SME's per-soum lead over CONS disappears at its matured PD; with ~180 matured loans the 9 % itself is uncertain (week 6: an interval, please). Slide line: \"SME's margin depends on a default rate we have not yet observed; read its 2024 vintage before growing it.\""}
+```
 
-**P5.** Micro's sensitivity. Net per loan at PD 0, 1, 5, 8 %; the break-even PD for a **first** Micro loan (acquisition 60 000) and for a **repeat** loan (acquisition 20 000: the bureau check and an SMS); then translate both into FPD30 — with Micro's own PD ÷ FPD ratio, and with week 7's simplification. Today's Micro FPD30 is 41 of 2 411 = 1.70 %.
+**P8.** LTV/CAC for an app customer. Take customers whose **first** loan was Micro and was disbursed before October 2024 (so 24 months are observable) and their loans within 24 months, by product. LTV = Σ contribution **before acquisition** of those loans, minus 20 000 per repeat loan, ÷ customers; CAC = 60 000. Print the Micro-only LTV/CAC.
 
-<details><summary>Answer</summary>
-
-Net per first loan: PD 0 % → 56 383; 1 % → 43 054; 2.85 % (today) → 18 430; 5 % → −10 260; 8 % → −50 246. A repeat loan earns 40 000 more at every PD.
-
-Break-even PD = (I − CoF − acq − serv) ÷ (I + 0.6 × EAD): first loan **4.23 %**, repeat **7.23 %**. Micro's PD ÷ FPD = 2.85 ÷ 1.70 = 1.67, so in FPD: first loan **2.53 %**, repeat **4.32 %**; with week 7's simplification (PD = FPD, EAD = principal): 2.98 % and 5.10 %. **Micro stops paying on a new customer if its FPD30 rises from 1.7 % to about 2.5 %** — less than a point of headroom. That is the guardrail number for Kamola's next app experiment, and it is tighter than week 7's +1.25 points because funding and acquisition are now in.
-
-</details>
-
-**P6.** The funding rate is our guess. Net per 1 000 soum lent at 14 %, 18 % and 22 %. Which product is most exposed to the cost of money?
-
-<details><summary>Answer</summary>
-
-| per 1 000 lent | 14 % | 18 % | 22 % |
-|---|---|---|---|
-| AUTO | 142.7 | 72.9 | **3.1** |
-| SME | 106.5 | 60.3 | 14.0 |
-| CONS | 60.1 | 31.9 | 3.7 |
-| MICRO | 16.2 | 6.8 | −2.6 |
-| BNPL | −94.4 | −107.7 | −120.9 |
-
-AUTO swings most: it is long (36 months) and priced closest to the funding rate. Per soum it is the best product at 18 % and nearly worthless at 22 %. A lender's product ranking is a statement about its funding cost — put the rate on the slide.
-
-</details>
-
-**P7.** The crude PD mixes young and old loans. Recompute PD on **matured** loans only (the last instalment due on or before 2026-10-01) and rerun net per 1 000 for SME, CONS, MICRO and BNPL. Which conclusion changes?
-
-<details><summary>Answer</summary>
-
-Matured PD: SME **16 / 178 = 8.99 %** (vs 3.71 %), CONS 38 / 1 020 = 3.73 %, MICRO 76 / 2 103 = 3.61 %, BNPL 36 / 1 095 = 3.29 %; AUTO 0 / 23 (too few to use). Net per 1 000: **SME 19.3** (from 60.3), CONS 28.2, MICRO 3.1, BNPL −110.1. Long products look safer than they are while most of their loans are young — a two-year SME loan disbursed in 2026 has not had time to default. SME's per-soum lead over CONS **disappears** at its matured PD; with ~180 matured loans the 9 % itself is uncertain (week 6: an interval, please). Slide line: *"SME's margin depends on a default rate we have not yet observed; read its 2024 vintage before growing it."*
-
-</details>
-
-**P8.** LTV/CAC for an app customer. Take customers whose **first** loan was Micro and was disbursed before October 2024 (so 24 months are observable). Count their loans within 24 months by product. LTV = Σ contribution before acquisition of those loans, minus 20 000 per repeat loan, ÷ customers; CAC = 60 000. Micro-only and all products.
-
-<details><summary>Answer</summary>
-
-**344** customers, **665** loans in 24 months (1.93 each): 447 MICRO (1.30 each), 96 CONS, 74 BNPL, 32 SME, 16 AUTO. Contribution before acquisition: MICRO 78 430 per loan (net 18 430 + 60 000), CONS 1 310 241, BNPL −349 053, AUTO 16 263 021, SME 19 062 452.
-
-- Micro only: LTV **95 925** soum, **LTV/CAC = 1.6**. A first Micro loan already pays back its CAC (78 430 > 60 000); the repeats are the profit.
-- All products: LTV **2 903 483**, **LTV/CAC ≈ 48** — but about **87 %** of it comes from 48 SME and AUTO loans among 344 customers. Report it as "Micro customers who later take a branch loan are very valuable", not as an average every app customer delivers; the median customer's LTV is the Micro one.
-
-</details>
+```task
+{"id": "w08d2-p8", "kind": "python", "starter": "q = \"\"\"\nWITH ranked AS (\n  SELECT l.customer_id, l.disbursed_at, p.code,\n         ROW_NUMBER() OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at, l.loan_id) AS n\n  FROM loans l JOIN products p ON p.product_id = l.product_id),\nfirsts AS (SELECT customer_id, disbursed_at AS first_at FROM ranked\n           WHERE n = 1 AND code = 'MICRO' AND disbursed_at < '2024-10-01')\nSELECT r.code AS product, COUNT(*) AS loans, COUNT(DISTINCT r.customer_id) AS customers\nFROM firsts f JOIN ranked r ON r.customer_id = f.customer_id AND r.disbursed_at <= date(f.first_at, '+24 months')\nGROUP BY r.code\"\"\"\nltv = pd.read_sql(q, con).set_index(\"product\")\ncustomers = ltv.loc[\"MICRO\", \"customers\"]           # every one of them has a first Micro loan\nltv[\"contrib\"] = p3[\"income\"] - p3[\"cof\"] - p3[\"el\"] - p3[\"serv\"]   # before acquisition\nprint(customers, \"customers\"); print(ltv)\n# TODO: Micro only: LTV = (Micro loans x Micro contrib - 20 000 x (Micro loans - customers)) / customers\n#       print LTV and LTV / 60 000 (two decimals)\n", "answer": 1.6, "dp": 1, "model": "344 customers, 665 loans in 24 months (1.93 each): 447 MICRO (1.30 each), 96 CONS, 74 BNPL, 32 SME, 16 AUTO. Contribution before acquisition: MICRO 78 430 per loan (net 18 430 + 60 000), CONS 1 310 241, BNPL −349 053, AUTO 16 263 021, SME 19 062 452. Micro only: LTV 95 925 soum, LTV/CAC = 1.6 — a first Micro loan already pays back its CAC (78 430 > 60 000); the repeats are the profit. All products: LTV 2 903 483, LTV/CAC ≈ 48 — but about 87 % of it comes from 48 SME and AUTO loans among 344 customers. Report it as \"Micro customers who later take a branch loan are very valuable\", not as an average every app customer delivers; the median customer's LTV is the Micro one."}
+```
 
 **P9.** Storytelling. Rewrite these three titles as so-what titles, using your numbers: (a) "Unit economics by product", (b) "Micro sensitivity", (c) "App customers over 24 months".
 
-<details><summary>Answer</summary>
+```task
+{"id": "w08d2-p9", "kind": "free", "min": 30, "rubric": ["each title is a full sentence, not a topic", "each has a number and a comparison", "(a) ranks the products per 1 000 lent and names BNPL's loss", "(b) gives the FPD30 at which a new Micro customer stops paying (about 2.5 % vs 1.7 % today)", "(c) separates the typical app customer (LTV/CAC 1.6) from the few cross-sold ones"], "model": "(a) \"SME and Auto earn 60–73 soum per 1 000 lent; Consumer 32; Micro 7; BNPL loses 108 unless partners pay ~11 %.\" (b) \"A new Micro customer stops paying for itself if FPD30 rises from 1.7 % to 2.5 %.\" (c) \"An app borrower takes 1.3 Micro loans in two years — LTV/CAC 1.6 — and the few who later take branch loans lift the average LTV thirtyfold.\" Each is a sentence, has a number and a comparison, and could stand alone in an e-mail."}
+```
 
-(a) *"SME and Auto earn 60–73 soum per 1 000 lent; Consumer 32; Micro 7; BNPL loses 108 unless partners pay ~11 %."* (b) *"A new Micro customer stops paying for itself if FPD30 rises from 1.7 % to 2.5 %."* (c) *"An app borrower takes 1.3 Micro loans in two years — LTV/CAC 1.6 — and the few who later take branch loans lift the average LTV thirtyfold."* Each is a sentence, has a number and a comparison, and could stand alone in an e-mail.
+> 🚀 **Stretch (optional, +5 XP).** **P10.** Unit economics by **risk grade** inside Consumer loans: PD and EAD ratio per grade, everything else as CONS (branch: acquisition 450 000, servicing 25 000 a month). Which grade does not pay? Print its net per 1 000, then write the one-line pricing recommendation in a comment.
 
-</details>
-
-<span class="badge stretch">Stretch</span> **P10.** Unit economics by **risk grade** inside Consumer loans (PD and EAD ratio per grade, the rest as CONS). Which grade does not pay at 450 000 acquisition? Write the one-line pricing recommendation.
-
-<details><summary>Answer</summary>
-
-Same function with `groupby(["code", "risk_grade"])` on the CONS rows. Check your result against week 6's ordering (PD rises from A to D, D's write-off share 8.85 % on the whole book); write the recommendation as "grade X needs a rate of Y % or a lower limit to earn Z per 1 000". There is no single key — the mentor checks that PD is per grade, EAD per grade where there are enough 90+ loans (otherwise the product's), and that the break-even rate follows from your own net.
-
-</details>
+```task
+{"id": "w08d2-p10", "kind": "python", "xp": 2, "starter": "c = ue[ue[\"product\"] == \"CONS\"]\nbad_c = c[c[\"dpd\"] > 90]\ng = c.groupby(\"risk_grade\")\ngr = pd.DataFrame({\"loans\": g.size(),\n                   \"principal\": g[\"principal\"].mean(),\n                   \"term\": g[\"term\"].mean(),\n                   \"interest\": g[\"interest\"].mean(),\n                   \"cof\": g[\"bal_months\"].mean() * COF / 12,\n                   \"pd\": (c[\"dpd\"] > 90).groupby(c[\"risk_grade\"]).mean(),\n                   \"ead_ratio\": (bad_c[\"ead\"] / bad_c[\"principal\"]).groupby(bad_c[\"risk_grade\"]).mean()})\nprint(gr.round(3))\n# TODO: income, el, acquisition 450 000, servicing 25 000 x term, net and net per 1 000 by grade\n", "answer": -5.7, "dp": 1, "model": "Grade A: 548 loans, PD 1.46 %, net 1 161 093, 43.0 per 1 000. B: 1 043, 1.63 %, 1 129 509, 41.7. C: 718, 5.85 %, 386 160, 14.7. D: 109, PD 9.17 % (10 loans in 90+), net −164 941, −5.7 per 1 000. Grade D does not pay at 450 000 acquisition: it needs a higher rate or a lower limit — or a cut-off that stops lending to it. One line: \"Consumer grade D loses 6 soum per 1 000 lent at its 9 % PD; price it up or stop approving it.\" EAD per grade is fine here (8–42 loans in 90+ per grade); with fewer, use the product's."}
+```
 
 ### Mistakes people make
 
@@ -257,7 +289,7 @@ Read it as a tour with Madina. Every desk below is a person you will meet in an 
 **Product analyst.** *Monday:* the weekly funnel and experiment monitor (SRM check first). *Tuesday:* design the next A/B test with Kamola — metric, guardrail, sample size. *Wednesday:* a cohort question — do customers who came through a campaign come back? *Thursday:* event-tracking spec for a new screen with the engineers. *Friday:* the experiment readout, one slide.
 **Collections analyst.** *Monday:* the early-bucket list — who to call first today (score × amount). *Tuesday:* collector performance with the caseload difficulty adjusted. *Wednesday:* strategy test — SMS on day 1 vs a call on day 3. *Thursday:* restructuring offers: who accepted, who cured. *Friday:* recoveries on written-off loans for Finance.
 
-The pattern is the same everywhere: a **recurring** pack that must be right every time, **ad-hoc** questions that must be fast, and **documentation** nobody asks for until something breaks.
+> 💡 **Key idea.** Every analyst desk has the same three jobs: a **recurring** pack that must be right every time, **ad-hoc** questions that must be fast, and **documentation** nobody asks for until something breaks. In an interview, have one story for each.
 
 ### Regulators and reporting, in plain words
 
@@ -285,6 +317,12 @@ What turns a list into a CV is **achievements with numbers**: the action, the to
 | "Did an A/B test" | "Analysed a 28 000-user A/B test: found an assignment leak and a client bug, cut the reported lift from +13 % to +11 % and recommended a staged rollout with an FPD guardrail" |
 | "Data cleaning" | "Found and removed 25 duplicate payments (58 m soum double-counted) and published a de-duplicated SQL view for reporting" |
 
+**C1.** Your turn, before the homework: rewrite *"Did product analytics"* as one CV line about **today's or yesterday's** work — action, tool, result, size.
+
+```task
+{"id": "w08d2-c1", "kind": "free", "min": 15, "rubric": ["starts with an action verb (built, found, computed…)", "names the tool (SQL, pandas)", "has a result with a number", "has the size of the data (sessions, loans, products)"], "model": "\"Built the app funnel for 5 006 loan applications in SQL and found that 7.6 % of signed contracts were never paid out — a loss invisible in the event dashboard\" — or — \"Computed per-product unit economics for 7 828 loans in pandas (funding, expected loss, acquisition) and showed BNPL loses 108 soum per 1 000 lent unless partners pay an ~11 % fee.\""}
+```
+
 **Your portfolio is this course.** It runs on a synthetic dataset of a fictional company — say so on the index page and in the interview; what you show is the method, and the method is real. Candidates, best first:
 
 | Deliverable | Week | Shows |
@@ -299,115 +337,49 @@ What turns a list into a CV is **achievements with numbers**: the action, the to
 
 ---
 
-## 5. Homework <span class="badge hw">HW 8.1 — due tomorrow</span>
+## 5. Homework <span class="badge hw">HW 8.1 — Due Day 3</span>
 
 **HW 8.1 — CV draft + portfolio index.** Hand in with the 📎 box below:
 
 1. `cv.pdf` (and the source, `.docx` or `.md`) — one page (two at most), for **one** target role (say which in the file name: `cv_risk_analyst.pdf`). Contacts at the top; a two-line profile; **projects** from this course with at least **three achievements with numbers**; skills grouped (SQL, Python, Excel, Power BI, statistics); education; languages.
-2. `portfolio.md` — one page: a line saying the data are synthetic (fictional lender, 2024–2026); then your **4 best deliverables**, each with the link to the file in your repository, one sentence on the question it answers, one on the method, one result.
+2. `portfolio.md` — one page: a line saying the data are synthetic (fictional lender, 2024–2026); then your **4 best deliverables**, each with the link to the file in your repository (or its file name, if you hand in only through the 📎 boxes), one sentence on the question it answers, one on the method, one result.
 3. `job_ad.md` — one real job advert you would apply to (copy the text or link), and next to each requirement the course deliverable or story that answers it.
-
-Graded on: (a) achievements are specific and true — tool + action + result + size, every number traceable to your own submissions; (b) focus: the CV fits the chosen role and `job_ad.md` maps every requirement; (c) form — one page, no typos, consistent formatting, links that open.
 
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W8D2", "lesson": "W8D2", "title": "HW 8.1", "tasks": [{"id": "cv.pdf", "file": "cv.pdf", "names": ["cv.pdf"], "upload": true, "accept": ".pdf", "q": "Attach `cv.pdf` — what the page above asks for."}, {"id": "portfolio.md", "file": "portfolio.md", "text": true, "minLines": 3, "q": "Write `portfolio.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W8D2", "lesson": "W8D2", "title": "HW 8.1", "why": "Next week you are in interviews. A recruiter spends about thirty seconds on a CV; what makes them stop is a result with a number from real work — and this course is your real work, if you say what you found, with what, and how big it was.", "graded": ["Achievements are specific and true — tool + action + result + size, every number traceable to your own submissions", "Focus: the CV fits the one chosen role, and job_ad.md maps every requirement to a deliverable or a story", "Form: one page (two at most), no typos, consistent formatting, links that open", "portfolio.md says the data are synthetic and gives four deliverables with link, question, method and result"], "tasks": [{"id": "cv.pdf", "file": "cv.pdf", "names": ["cv.pdf"], "upload": true, "accept": ".pdf", "q": "Attach your CV as a PDF (name it for the role, e.g. `cv_risk_analyst.pdf`; the source `.docx` / `.md` can go in Extra)."}, {"id": "portfolio.md", "file": "portfolio.md", "text": true, "minLines": 3, "q": "Write `portfolio.md` here: the line that the data are synthetic, then your four best deliverables — link, question, method, result."}, {"id": "job_ad.md", "file": "job_ad.md", "text": true, "minLines": 3, "q": "Write `job_ad.md` here: the job advert (text or link), and next to each requirement the deliverable or story that answers it."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "The CV's source file, or anything else (one more file, or a .zip of several)."}]}
 ```
 
 ---
 
 ## 6. Self-check
 
-1. A product earns the most per loan and the least per soum. Which number do you show Finance planning next year's funding, and which the head of sales? *(→ "Per loan vs per soum", P3)*
-2. Your unit economics uses PD = share of loans now 90+. For which products does that understate the risk, and how do you check? *(→ P7)*
-3. Write the IFRS 9 stages in one sentence each, without the words "stage" or "IFRS". *(→ "Regulators and reporting")*
+```check
+{"id": "w08d2-sc", "questions": [
+  {"type": "single", "q": "A product earns the most per loan and the least per soum. Finance is planning next year's funding. Which number do you show?", "options": ["Net per loan", "Net per 1 000 soum lent — where the next billion earns most", "Interest income per loan", "The number of loans"], "answer": 1, "explain": "Per soum for funding decisions; per loan for the head of sales deciding where an afternoon goes (→ 'Per loan vs per soum', P3)."},
+  {"type": "single", "q": "Your PD is the share of loans now 90+. For which products does that understate the risk, and how do you check?", "options": ["Short products; drop their young loans", "Long, young products such as SME; recompute PD on matured loans only", "BNPL; add the merchant fee", "None — the crude PD is unbiased"], "answer": 1, "explain": "Most SME loans have not had time to default: matured PD 9.0 % against 3.7 % crude, and its margin per soum falls from 60 to 19 (→ P7)."},
+  {"type": "multi", "q": "Which describe how IFRS 9 provisions loans?", "options": ["Healthy loans carry 12 months of expected loss", "Loans whose risk has grown significantly carry lifetime expected loss", "Defaulted loans carry lifetime loss on a defaulted exposure", "A provision is booked only after a loss has happened"], "answer": [0, 1, 2], "explain": "IFRS 9 provisions for the loss we expect, so a rise in 1–30 DPD costs money this month (→ 'Regulators and reporting')."}
+]}
+```
 
 ---
 
 ## 7. Company corner <span class="badge company">Ten questions on lending metrics</span>
 
-The whole Company & metrics track, as a self-test. Answer each in two or three sentences, out loud, before you open the fold — tomorrow's interview bank (`docs/company/interview.md`) has thirty more.
+The whole Company & metrics track, as a self-test. Say each answer out loud in two or three sentences **before** you flip the card — the [interview bank](company/interview.md) has thirty more.
 
-**1.** What is DPD, and how do you compute it for a loan with three instalments, the second unpaid?
+```game
+{"type": "flash", "id": "w08d2-g4", "title": "Ten questions on lending metrics", "cards": [["What is DPD, and how do you compute it for a loan with three instalments, the second unpaid?", "As-of date − due date of the OLDEST unpaid instalment (0 if nothing is overdue): here as-of − the second's due date, whatever happened to the third. Nur on 2026-10-01: 399 loans with DPD > 0; 1–30 / 31–60 / 61–90 / 90+ = 124 / 25 / 16 / 234."], ["FPD30 vs PAR30: what does each measure, and which moves first?", "FPD30 = share of NEW loans whose first instalment was not paid within 30 days — a cohort property, known two months after disbursement (Nur 91 / 7 099 = 1.28 %). PAR30 = outstanding with DPD > 30 ÷ all outstanding — the whole book today (3.12 %). FPD moves first."], ["PAR90 and NPL — the same thing?", "Often the same 90-day threshold, but NPL is a classification that can include restructured or 'unlikely to pay' loans (and 60 days under some regulators); PAR90 is pure DPD. Nur NPL90 = 2.55 % (234 loans, 5.32 bn). Say which you use."], ["What is a roll rate, and what does a 1–30 → 31–60 roll of 19.5 % tell collections?", "The share of loans in one bucket at month-end that are in the next bucket a month later. 19.5 % of September's 1–30 loans were 31–60 on 1 October; 75.8 % cured. One in five early-late loans keeps sliding — the early bucket is where contact pays most."], ["Why vintages, and why must some cells be blank?", "A vintage follows loans disbursed in the same month by age (MOB), so cohorts are compared at the same age. A cell is blank until every loan of the cohort has reached that age (+30 days): a 0 there is 'not measured'. Nur's worst: 2025-10, 6.91 % ever-30+ at MOB 3."], ["Two teams report 68 % and 58 % approval for the app. Who is right?", "Probably both: 68.2 % = approved ÷ decided (risk convention); 58.2 % = approved ÷ app sessions (funnel from the top); 84.5 % = approved ÷ submitted forms. Ask for the denominator, then write it under every number."], ["Expected loss for a book: the formula, and one reason the crude version understates it.", "EL = Σ PD × LGD × EAD. Nur's crude version (PD = share now 90+, LGD 60 %) = 3.60 bn, 1.77 % of performing exposure. It understates young, long loans: they have not had time to default (SME matured PD ≈ 9 % vs 3.7 % crude)."], ["Cost of risk vs expected loss.", "EL is a stock — the provision you should hold now. Cost of risk is a flow — the period's P&L charge: change in provisions + write-offs − recoveries, usually ÷ average portfolio, annualised. A jump in 1–30 entries costs money this month, before any default."], ["Collection rate: definition and Nur's number.", "Paid ÷ due, on instalments due in the period, payments counted to a cut-off. Nur, September 2026: 15 982 118 926 ÷ 16 987 977 718 = 94.1 % by 1 October, on de-duplicated payments (raw payments overstate it)."], ["What does a portfolio manager want on one page?", "Size and growth (outstanding 208.7 bn, disbursements per month), mix (product, branch, grade), quality (PAR30 3.12 %, NPL 2.55 %, FPD of the newest mature vintage), and the movers since last month — each tile with its definition and as-of date."]]}
+```
 
-<details><summary>Answer</summary>
+> 🎯 **Interview version.** *"What is the difference between FPD and PAR30, and which would you watch after a policy change?"* — FPD30 is a property of a cohort of new loans: the share whose first instalment was not paid within 30 days, known about two months after disbursement. PAR30 is the state of the whole book today: outstanding of loans more than 30 days late over all outstanding. After a policy change I watch FPD of the new vintages, because PAR30 moves months later and is diluted by the old book — at Nur, FPD30 is 1.28 % and PAR30 3.12 %.
 
-Days past due = as-of date − due date of the <b>oldest</b> unpaid instalment; 0 if nothing is overdue. Here: as-of − the second instalment's due date, whatever happened to the third. At Nur: 399 loans with DPD > 0 on 2026-10-01, buckets 1–30 / 31–60 / 61–90 / 90+ = 124 / 25 / 16 / 234.
+**Say it like in an interview.** *"A loan earns 30 % a year. Is it profitable?"* Answer in four or five sentences, with Day 2's numbers.
 
-</details>
-
-**2.** FPD30 vs PAR30: what does each measure, and which moves first?
-
-<details><summary>Answer</summary>
-
-FPD30 = share of loans whose first instalment was not paid within 30 days — a property of a <b>cohort of new loans</b>, known two months after disbursement (Nur: 91 of 7 099 = 1.28 %). PAR30 = outstanding of loans with DPD > 30 ÷ total outstanding — the state of the <b>whole book</b> today (3.12 %). FPD moves first; PAR30 moves months later, diluted by the old book.
-
-</details>
-
-**3.** PAR90 and NPL — the same thing?
-
-<details><summary>Answer</summary>
-
-Often the same threshold (90+ DPD), but NPL is a <b>classification</b> that may also include restructured or "unlikely to pay" loans and may use 60 days under some regulators; PAR90 is purely DPD. Nur: NPL90 = 2.55 % (234 loans, 5.32 bn). Say which definition you use.
-
-</details>
-
-**4.** What is a roll rate and what does a 1–30 → 31–60 roll of 19.5 % tell collections?
-
-<details><summary>Answer</summary>
-
-The share of loans in one bucket at month-end that are in the next bucket a month later. 19.5 % of September's 1–30 loans were 31–60 on 1 October; 75.8 % cured. One in five early-late loans keeps sliding — the early bucket is where contact pays most.
-
-</details>
-
-**5.** Why vintages, and why must some cells be blank?
-
-<details><summary>Answer</summary>
-
-A vintage curve follows loans disbursed in the same month by age (MOB), so cohorts are compared at the same age; a calendar view mixes ages. Blank when not every loan of the cohort has reached that age (plus the 30 days of the definition) — a 0 there is "not measured", not "nobody late". Nur's worst: 2025-10, 6.91 % ever-30+ at MOB 3.
-
-</details>
-
-**6.** Approval rate: two teams report 68 % and 58 % for the app. Who is right?
-
-<details><summary>Answer</summary>
-
-Probably both. 68.2 % = approved ÷ decided (cancelled excluded, the risk convention); 58.2 % = approved ÷ app sessions (the funnel from the top); 84.5 % = approved ÷ submitted forms. Ask for the denominator, then put the definition under every number.
-
-</details>
-
-**7.** Expected loss for a book: formula, and one reason the crude version understates it.
-
-<details><summary>Answer</summary>
-
-EL = Σ PD × LGD × EAD. Nur's crude version (PD = share now 90+, LGD 60 %) = 3.60 bn, 1.77 % of the performing exposure. It understates for young, long loans: they have not had time to default (SME's matured PD is about 9 % against 3.7 % crude).
-
-</details>
-
-**8.** Cost of risk vs expected loss.
-
-<details><summary>Answer</summary>
-
-EL is a stock (the provision you should hold now). Cost of risk is a flow: the P&L charge for the period — the change in provisions plus write-offs minus recoveries — usually shown ÷ average portfolio, annualised. A book whose 1–30 entries jump has a cost of risk this month even if no loan has defaulted yet.
-
-</details>
-
-**9.** Collection rate: definition and Nur's number.
-
-<details><summary>Answer</summary>
-
-Paid ÷ due, on instalments due in the period, payments counted up to a cut-off. Nur, September 2026: 15 982 118 926 ÷ 16 987 977 718 = 94.1 % by 1 October, on de-duplicated payments (raw payments would overstate it).
-
-</details>
-
-**10.** What does a portfolio manager want on one page?
-
-<details><summary>Answer</summary>
-
-Size and growth (outstanding 208.7 bn, disbursements per month), mix (by product, branch, grade), quality (PAR30 3.12 %, NPL 2.55 %, FPD of the newest mature vintage), and the movers: which product/branch changed most since last month and why. Each tile with its definition and as-of date.
-
-</details>
+```task
+{"id": "w08d2-ci", "kind": "free", "min": 40, "rubric": ["says the rate alone does not decide it: funding, expected loss, acquisition and servicing come off", "computes funding on the falling balance, not on the original principal", "names expected loss as PD × LGD × EAD and says PD for young long loans is understated", "gives Nur numbers (e.g. loan 1: 2.4 m net, 77 per 1 000; funding takes 60 % of the interest)", "reports per loan and per 1 000 soum lent, with the assumptions printed"], "model": "Not by the rate alone. From the interest over the schedule I take off the cost of funds — computed on the falling balance before each instalment, not on the original principal — the expected loss, PD × LGD × EAD, and the cost of selling and servicing the loan. For Nur's loan 1, a 31 m Consumer loan at 30 %, interest is 10.65 m; funding at 18 % takes 6.39 m — 60 % of it — expected loss 0.48 m, and selling and servicing 1.05 m, which leaves about 2.4 m, or 77 soum per 1 000 lent. I would report it per loan and per 1 000 soum, print the assumptions underneath, and show the break-even — for example the PD or the funding rate at which it stops paying — because the funding rate and the costs are our guesses."}
+```
 
 Tomorrow: the capstone. Madina's brief for the board — three days, four deliverables, your recommendations.
 
@@ -439,7 +411,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w08d2", "q": "Treasury warns that funding may get dearer. Keep every other assumption of today's table (crude PD, LGD 60 %, EAD ratio from the 90+ loans, app acquisition 60 000 and servicing 8 000 a month) and find the annual funding rate at which an average MICRO loan's net contribution is exactly zero. Give the rate as a percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["0c485fe5d1058605c1dcacd9"], "hint": "Only one line of the table depends on the rate, and it depends on it in a straight line — so net(rate) has one root you can solve for directly.", "sol": "Q29zdCBvZiBmdW5kcyBpcyBsaW5lYXIgaW4gdGhlIHJhdGU6IENvRihyKSA9IGJhbGFuY2UtbW9udGhzIMOXIHIgLyAxMiwgc28gbmV0KHIpID0gbmV0KDApIOKIkiBiYWxhbmNlLW1vbnRocyDDlyByIC8gMTIuCk1JQ1JPIGF2ZXJhZ2VzOiBpbnRlcmVzdCAyNjYgNjYyIMK3IGJhbGFuY2UtbW9udGhzIDcgNjE4IDkyNiDCtyBQRCAyLjg1ICUgwrcgRUwgMzAgMzYwIMK3IGFjcXVpc2l0aW9uIDYwIDAwMCDCtyBzZXJ2aWNpbmcgOCAwMDAgw5cgNC41MCA9IDM1IDk5NgpuZXQoMCkgPSAoMSDiiJIgMC4wMjg0OCkgw5cgMjY2IDY2MiDiiJIgMzAgMzYwIOKIkiA2MCAwMDAg4oiSIDM1IDk5NiA9IDEzMiA3MTMgICAoPSB0b2RheSdzIG5ldCAxOCA0MzAgKyBDb0YgMTE0IDI4NCkKciogPSAxMiDDlyAxMzIgNzEzIC8gNyA2MTggOTI2ID0gMC4yMDkwICAg4oaSIDIwLjkwICUKCnVlID0gdW5pdF9lY29ub21pY3MoaW5zdCwgbHMpOyBtID0gdWUubG9jWyJNSUNSTyJdCnJfc3RhciA9IDEyICogKG1bIm5ldCJdICsgbVsiY29mIl0pIC8gYmFsYW5jZV9tb250aHNfbWljcm8gICAgICAjIGJhbGFuY2UtbW9udGhzID0gY29mIC8gQ09GICogMTIKCjIwLjkwICU6IE1pY3JvIHN0b3BzIGVhcm5pbmcgb24gYSBuZXcgY3VzdG9tZXIgaWYgZnVuZGluZyByaXNlcyBieSBsZXNzIHRoYW4gMyBwb2ludHMg4oCUIHRoZSBmaXJzdCBwcm9kdWN0IHRvIGJyZWFrIGV2ZW4gKENPTlMgMjIuNTMgJSwgQVVUTyAyMi4xOCAlLCBTTUUgMjMuMjEgJTsgQk5QTCBuZXZlciBlYXJucykuCkl0IGlzIHNob3J0LCBzbyBmdW5kaW5nIGlzIGEgc21hbGwgc2hhcmUgb2YgaXRzIGNvc3Qg4oCUIGJ1dCBpdHMgbWFyZ2luIGlzIHNvIHRoaW4gdGhhdCBldmVuIHRoYXQgc2hhcmUgZGVjaWRlcyBpdC4KVGhlIHNsaWRlIGxpbmU6ICdBdCAyMSAlIGZ1bmRpbmcgdGhlIGFwcCdzIE1pY3JvIGJvb2sgZWFybnMgbm90aGluZyBvbiBmaXJzdCBsb2FuczsgcmVwZWF0IGxvYW5zICgyMCAwMDAgYWNxdWlzaXRpb24pIGtlZXAgaXQgcG9zaXRpdmUgdXAgdG8gYWJvdXQgMjcgJScg4oCUIGFuZCBzYXkgdGhhdCB0aGUgcmF0ZSBpcyBvdXIgYXNzdW1wdGlvbi4="}
+{"id": "w08d2", "python": true, "q": "Treasury warns that funding may get dearer. Keep every other assumption of today's table (crude PD, LGD 60 %, EAD ratio from the 90+ loans, app acquisition 60 000 and servicing 8 000 a month) and find the annual funding rate at which an average MICRO loan's net contribution is exactly zero. Give the rate as a percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["0c485fe5d1058605c1dcacd9"], "hint": "Only one line of the table depends on the rate, and it depends on it in a straight line — so net(rate) has one root you can solve for directly.", "sol": "Q29zdCBvZiBmdW5kcyBpcyBsaW5lYXIgaW4gdGhlIHJhdGU6IENvRihyKSA9IGJhbGFuY2UtbW9udGhzIMOXIHIgLyAxMiwgc28gbmV0KHIpID0gbmV0KDApIOKIkiBiYWxhbmNlLW1vbnRocyDDlyByIC8gMTIuCk1JQ1JPIGF2ZXJhZ2VzOiBpbnRlcmVzdCAyNjYgNjYyIMK3IGJhbGFuY2UtbW9udGhzIDcgNjE4IDkyNiDCtyBQRCAyLjg1ICUgwrcgRUwgMzAgMzYwIMK3IGFjcXVpc2l0aW9uIDYwIDAwMCDCtyBzZXJ2aWNpbmcgOCAwMDAgw5cgNC41MCA9IDM1IDk5NgpuZXQoMCkgPSAoMSDiiJIgMC4wMjg0OCkgw5cgMjY2IDY2MiDiiJIgMzAgMzYwIOKIkiA2MCAwMDAg4oiSIDM1IDk5NiA9IDEzMiA3MTMgICAoPSB0b2RheSdzIG5ldCAxOCA0MzAgKyBDb0YgMTE0IDI4NCkKciogPSAxMiDDlyAxMzIgNzEzIC8gNyA2MTggOTI2ID0gMC4yMDkwICAg4oaSIDIwLjkwICUKCnVlID0gdW5pdF9lY29ub21pY3MoaW5zdCwgbHMpOyBtID0gdWUubG9jWyJNSUNSTyJdCnJfc3RhciA9IDEyICogKG1bIm5ldCJdICsgbVsiY29mIl0pIC8gYmFsYW5jZV9tb250aHNfbWljcm8gICAgICAjIGJhbGFuY2UtbW9udGhzID0gY29mIC8gQ09GICogMTIKCjIwLjkwICU6IE1pY3JvIHN0b3BzIGVhcm5pbmcgb24gYSBuZXcgY3VzdG9tZXIgaWYgZnVuZGluZyByaXNlcyBieSBsZXNzIHRoYW4gMyBwb2ludHMg4oCUIHRoZSBmaXJzdCBwcm9kdWN0IHRvIGJyZWFrIGV2ZW4gKENPTlMgMjIuNTMgJSwgQVVUTyAyMi4xOCAlLCBTTUUgMjMuMjEgJTsgQk5QTCBuZXZlciBlYXJucykuCkl0IGlzIHNob3J0LCBzbyBmdW5kaW5nIGlzIGEgc21hbGwgc2hhcmUgb2YgaXRzIGNvc3Qg4oCUIGJ1dCBpdHMgbWFyZ2luIGlzIHNvIHRoaW4gdGhhdCBldmVuIHRoYXQgc2hhcmUgZGVjaWRlcyBpdC4KVGhlIHNsaWRlIGxpbmU6ICdBdCAyMSAlIGZ1bmRpbmcgdGhlIGFwcCdzIE1pY3JvIGJvb2sgZWFybnMgbm90aGluZyBvbiBmaXJzdCBsb2FuczsgcmVwZWF0IGxvYW5zICgyMCAwMDAgYWNxdWlzaXRpb24pIGtlZXAgaXQgcG9zaXRpdmUgdXAgdG8gYWJvdXQgMjcgJScg4oCUIGFuZCBzYXkgdGhhdCB0aGUgcmF0ZSBpcyBvdXIgYXNzdW1wdGlvbi4="}
 ```
 
 <!-- challenge:end -->

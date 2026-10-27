@@ -1,0 +1,387 @@
+{
+ "checks": {
+  "hw1.1": {
+   "title": "HW 1.1 — Your workspace works",
+   "kind": "sql",
+   "file": "submissions/week-01/day-1/queries.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "f05d3b297632b8adc67827cd",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "896cbd019776da9f67adad30",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "8d5b395a3a28b021b2652a88",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "hw1.3": {
+   "title": "HW 1.3 — The case of the forty customers",
+   "kind": "sql",
+   "file": "submissions/week-01/day-4/case.sql",
+   "tasks": {
+    "Q1": {
+     "values": [
+      {
+       "h": "896cbd019776da9f67adad30",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q2": {
+     "values": [
+      {
+       "h": "5045af7a7c20da50db20778c",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "154905029988c052449eb0ad",
+      "dp": 0
+     }
+    },
+    "Q3": {
+     "values": [
+      {
+       "h": "1b0e5f57376cea4676153a8d",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "154905029988c052449eb0ad",
+      "dp": 0
+     }
+    },
+    "Q4": {
+     "values": [
+      {
+       "h": "ca819b338be0672191ad21ed",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "1d77defc9d08e5b3233d531e",
+      "dp": 0
+     }
+    },
+    "Q5": {
+     "values": [
+      {
+       "h": "b2c5c9ef7c738858266ee9e3",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q6": {
+     "values": [
+      {
+       "h": "1dea8efb351e7a43e7d8adcf",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "Q7": {
+     "values": [
+      {
+       "h": "7d5851b4bd118d226a4ee79a",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    }
+   }
+  },
+  "cp1": {
+   "title": "Checkpoint 1 — Part B, twenty queries",
+   "kind": "sql",
+   "file": "submissions/week-01/day-5/queries.sql",
+   "tasks": {
+    "B1": {
+     "values": [
+      {
+       "h": "896cbd019776da9f67adad30",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B2": {
+     "values": [
+      {
+       "h": "6a4a8c0e0b79ed678d0c62c5",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B3": {
+     "values": [
+      {
+       "h": "84175042bd802d787ed8f0fb",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B4": {
+     "rows": {
+      "h": "4ecdea592fa613a6b0b376dc",
+      "dp": 0
+     }
+    },
+    "B5": {
+     "values": [
+      {
+       "h": "c9650f66b9a291c977a12d33",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B6": {
+     "values": [
+      {
+       "h": "b817d136806de57a64609787",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B7": {
+     "values": [
+      {
+       "h": "73839181b0b220e1a430054b",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B8": {
+     "values": [
+      {
+       "h": "5911596124b78f673134e855",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B9": {
+     "values": [
+      {
+       "h": "f43599c39a9122fa27be95d2",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B10": {
+     "values": [
+      {
+       "h": "6839b8367e6a9c492c4bf4f4",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B11": {
+     "values": [
+      {
+       "h": "08a76dfee139bca58afc2306",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B12": {
+     "values": [
+      {
+       "h": "9c8646daa04cdf5962bb5e02",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B13": {
+     "values": [
+      {
+       "h": "4f74d63fcf920279ef2c2059",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B14": {
+     "values": [
+      {
+       "h": "3f4bf40bdb02a6d0c7e4baf8",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B15": {
+     "values": [
+      {
+       "h": "533b0c35be82a3f51081906a",
+       "dp": 0
+      },
+      {
+       "h": "2932c1cb630a55026744c540",
+       "dp": 0
+      }
+     ]
+    },
+    "B16": {
+     "values": [
+      {
+       "h": "8cd031a21524b5fb6e91d846",
+       "dp": 0
+      },
+      {
+       "h": "fcd396ee2df5b45ecf149d24",
+       "dp": 0
+      }
+     ]
+    },
+    "B17": {
+     "values": [
+      {
+       "h": "c186df7c2d03b56be6554dc5",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B18": {
+     "values": [
+      {
+       "h": "cc04561adcb0b23f410e7a92",
+       "dp": 0
+      },
+      {
+       "h": "51c83be1b5f2f41f6447ba02",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "94ca0865469dfd01f4f0ad3d",
+      "dp": 0
+     }
+    },
+    "B19": {
+     "values": [
+      {
+       "h": "f1eb09168cf111bf3aea5fce",
+       "dp": 0
+      },
+      {
+       "h": "70fee3f7822926b6646d222d",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "B20": {
+     "values": [
+      {
+       "h": "21d7779a60329d85bf65249c",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "14b118e1f4fcd3cb68bed3db",
+      "dp": 0
+     }
+    }
+   }
+  }
+ }
+}

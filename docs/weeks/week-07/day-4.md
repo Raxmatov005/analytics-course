@@ -14,6 +14,8 @@
 
 ## 1. Learn — one function to understand
 
+> 🧭 **Before you start.** Open yesterday's `nur_week7.pbix` in Power BI Desktop — today builds on that model (if HW 7.2 is not finished, do Day 3's worked example first). Download `data/powerbi/measures.dax` (all 32 measures, to paste from) and, if they are not in your model yet, `data/powerbi/fct_collections_actions.csv`, `data/powerbi/staff_collectors.csv` and `data/powerbi/roll_rates.csv`. The DAX on this page goes into Power BI's formula bar (Home → New measure) — it does not run in the page, and the boxes check the numbers your visuals show. **End state today:** the measures of P1–P10 in the model, the risk matrix with conditional formatting, a drill-through page, a role tested with View as — the raw material for tomorrow's three pages.
+
 ### Measures, columns and the two contexts
 
 Yesterday: a **calculated column** is computed once per row and stored; a **measure** is computed for every cell of every visual. They live in two different worlds:
@@ -22,6 +24,12 @@ Yesterday: a **calculated column** is computed once per row and stored; a **meas
 - **Filter context** (*контекст фильтра*) — "which rows are visible". It is made by everything around a measure: slicers, the visual's rows and columns, page and report filters, relationships carrying those filters from dimensions to facts. In a table by product, the SME row's filter context is `products[code] = "SME"` (plus any slicer), and `SUM(v_loan_status[outstanding])` adds up only SME loans: 125 892 942 411.
 
 The famous trap: in a **column**, `SUM(v_loan_status[outstanding])` ignores the row — a column has no filter context, so the sum is the whole table. `share = v_loan_status[outstanding] / SUM(v_loan_status[outstanding])` gives loan 1 **0.0046 %** of the book: correct, but only because "the whole table" is what we wanted. Wrap the same sum in `CALCULATE` inside the column and it returns **the row's own value** (9 593 064 for loan 1): `CALCULATE` turns the row context into a filter context — **context transition** (*преобразование контекста*). That one sentence explains half of all DAX surprises.
+
+> 💡 **Key idea.** A measure has no value of its own — only a value in a filter context. CALCULATE changes that context, and inside a column it also turns the row into a filter (context transition).
+
+```game
+{"type": "flash", "id": "w07d4-g1", "title": "DAX words of the day", "cards": [["Row context", "the current row: exists in calculated columns and inside iterators (SUMX, FILTER, RANKX)"], ["Filter context", "which rows a measure sees: slicers, the visual's row and column, page filters, carried by relationships"], ["Context transition", "CALCULATE turns the current row into a filter"], ["CALCULATE", "evaluates an expression in a modified filter context; a filter argument replaces the filters on the same column"], ["KEEPFILTERS", "makes a CALCULATE filter intersect with the existing one instead of replacing it"], ["ALL ( products )", "removes the filters on products only"], ["ALL ( v_loan_status )", "removes every filter reaching the fact, including those coming from its dimensions"], ["ALLSELECTED", "removes the row's own filter but keeps the user's slicer selections"], ["DIVIDE", "a / b that returns blank when b is 0 or blank"], ["Semi-additive measure", "a balance: take the last period's value, never sum it over time"]]}
+```
 
 ### CALCULATE — evaluate an expression in a modified filter context
 
@@ -42,6 +50,12 @@ In a table by product, the SME row computes PAR30 with *both* filters — `produ
 
 **"Replaces" in practice.** A matrix by `bucket` with `CALCULATE([Outstanding], v_loan_status[bucket] = "90+")` shows **5 319 475 527 in every row** — the measure's own filter on `bucket` overrides the row's. Wrap the filter in `KEEPFILTERS(...)` and it intersects instead: 90+ shows 5 319 475 527, the other rows are blank. When a `CALCULATE` measure shows the same number everywhere, ask *which column does my filter replace?*
 
+> ⚠️ **Watch out.** A CALCULATE filter on a column replaces the visual's filter on the same column — the same number in every row. When that happens, ask which column your filter replaces, or wrap it in KEEPFILTERS.
+
+```game
+{"type": "cloze", "id": "w07d4-g2", "title": "Fill in PAR30", "text": "PAR30 % = {{0}} ( {{1}} ( [Outstanding], v_loan_status[dpd] {{2}} 30 ), [Outstanding] )", "blanks": [["DIVIDE"], ["CALCULATE"], [">"]], "distractors": ["SUM", "FILTER", ">=", "AVERAGE"]}
+```
+
 ### FILTER — when the condition is not a simple column test
 
 A boolean filter (`v_loan_status[dpd] > 30`) is shorthand for `FILTER(ALL(v_loan_status[dpd]), v_loan_status[dpd] > 30)`. Use an explicit **`FILTER`** when the condition involves a measure or several columns: `CALCULATE([Outstanding], FILTER(v_loan_status, v_loan_status[dpd] > 30 && v_loan_status[product] <> "MICRO"))`. `FILTER` iterates a table row by row (row context) and returns the rows that pass — powerful and slower; filter a column, not the whole fact table, when you can.
@@ -61,6 +75,10 @@ Outstanding Share of Total = DIVIDE ( [Outstanding], CALCULATE ( [Outstanding], 
 ```
 
 `REMOVEFILTERS` is the readable synonym of `ALL` inside `CALCULATE`. And `CROSSFILTER(…, BOTH)` inside one measure is how you get yesterday's bidirectional filtering for one calculation without making the model ambiguous.
+
+```game
+{"type": "build", "id": "w07d4-g3", "title": "Build the share of the whole product mix", "q": "Write the measure that gives each product's share of outstanding, whatever the product row says.", "tokens": ["Outstanding Share of Total =", "DIVIDE (", "[Outstanding],", "CALCULATE ( [Outstanding],", "ALL ( products ) ) )"], "distractors": ["ALLSELECTED ( v_loan_status ) ) )", "SUM ("]}
+```
 
 ### DIVIDE and VAR … RETURN
 
@@ -100,6 +118,8 @@ RETURN CALCULATE ( SUM ( v_portfolio_monthly[outstanding_month_end] ), v_portfol
 ```
 
 And remember yesterday's dating: `v_loan_status` is dated by **disbursement**. A month slicer on the card `Outstanding` shows the outstanding of loans disbursed that month (September 2026: 16 965 990 458), not the book at the end of September. Put the Month-End measure on the trend line, the as-of `Outstanding` on the card, and label both.
+
+> ⚠️ **Watch out.** Outstanding is a balance: never SUM it over months. The trend line takes the Month-End measure; the as-of card `Outstanding` is dated by disbursement, so a month slicer on it shows the loans disbursed that month.
 
 ### RANKX and SWITCH
 
@@ -147,6 +167,8 @@ No selection: *"Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"*;
 
 **Row-level security** (*безопасность на уровне строк*, RLS). In Desktop, Modeling → **Manage roles** → a role *Branch manager — Bukhara* with the DAX filter `branches[branch_name] = "Bukhara Central"` on the `branches` table; the filter flows through the relationships to every fact. Test it with **View as** → the role: Outstanding **15 116 046 338**, PAR30 **4.81 %**, NPL90 4.48 %, FPD30 2.39 % (14 / 586), September collection rate 92.31 %. One role per branch does not scale; the dynamic version uses one role and a mapping table of e-mail → branch: `branches[branch_name] = LOOKUPVALUE ( map[branch_name], map[email], USERPRINCIPALNAME () )`. Roles are assigned to people in the Service (dataset → Security); in Desktop you can only test them. Two consequences to remember: a measure with `ALL(branches)` under RLS still sees only the allowed branch (**Branch Rank shows 1**), and RLS restricts **rows**, not pages — a page a manager should not see is a separate report.
 
+> 💡 **Key idea.** RLS removes rows before any measure runs: ALL cannot escape it, and a rank under RLS is always 1. Test every role with View as before you share.
+
 ### Depth (optional)
 
 **Videos (free, YouTube; each link opens at the right minute):**
@@ -165,6 +187,34 @@ No selection: *"Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"*;
 - DAX guide `Подробное руководство по DAX.pdf` (PDF page = book page): calculated columns vs measures pp. 51–56, variables p. 56; `ALL` / `ALLEXCEPT` pp. 90–104; **evaluation contexts** pp. 105–141 (filter context p. 106, row context p. 112); **`CALCULATE`** pp. 142–205 (context transition pp. 177–193, modifiers pp. 194–203); variables pp. 206–218; iterators and **`RANKX`** pp. 219–248 (`RANKX` p. 235); **time intelligence** pp. 249–312; working with the filter context pp. 348–380. Read chapters 4 and 5 once; come back to 8 when a YTD looks wrong.
 - *Russian terms:* мера = measure, вычисляемый столбец = calculated column, контекст строки / фильтра = row / filter context, преобразование контекста = context transition, итератор = iterator, переменная = variable, логика операций со временем = time intelligence, нарастающий итог с начала года = year-to-date, аналогичный период прошлого года = same period last year, полуаддитивная мера = semi-additive measure, ранжирование = ranking, условное форматирование = conditional formatting, срез = slicer, детализация = drill-through, всплывающая подсказка = tooltip, закладка = bookmark, публикация = publish, шлюз данных = data gateway, безопасность на уровне строк = row-level security.
 
+```videoquiz
+{"video": "lD7TvkoQ6rY", "stops": [{"at": 850, "q": "What is the difference between a measure and a calculated column?", "options": ["A column is computed per row and stored; a measure is computed for each cell of a visual at query time", "A measure is stored, a column is not", "Columns cannot use DAX", "None"], "answer": 0, "explain": "Ratios and totals are measures; values you slice by are columns."}, {"at": 2200, "q": "What does CALCULATE do?", "options": ["Sums a column", "Evaluates an expression in a modified filter context", "Creates a table", "Formats a number"], "answer": 1, "explain": "Its filter arguments replace the filters on the same columns and add the rest.", "back": 60}, {"at": 2450, "q": "A CALCULATE filter on bucket shows the same number in every bucket row. Why?", "options": ["The visual is not refreshed", "DIVIDE is missing", "A bug in Power BI", "The filter argument replaces the row's filter on the same column"], "answer": 3, "explain": "Use KEEPFILTERS to intersect instead of replace."}]}
+```
+
+```videoquiz
+{"video": "40xO1MD_CCs", "stops": [{"at": 100, "q": "CALCULATE ( [Outstanding], v_loan_status[dpd] > 30 ) in the SME row computes…", "options": ["An error", "All 30+ DPD outstanding in the book", "SME outstanding at more than 30 DPD", "SME outstanding"], "answer": 2, "explain": "The row's product filter stays; the dpd filter is added: both apply."}, {"at": 200, "q": "Which part of CALCULATE changes the context?", "options": ["The filter arguments", "The measure name", "The format", "The expression"], "answer": 0, "explain": "Expression first, then any number of filters.", "back": 50}]}
+```
+
+```videoquiz
+{"video": "WsWDjH-CgHg", "stops": [{"at": 850, "q": "SAMEPERIODLASTYEAR returns…", "options": ["A number", "A set of dates shifted back one year, used by CALCULATE as a filter", "Last year's total", "A table of products"], "answer": 1, "explain": "Time-intelligence functions return dates; CALCULATE evaluates the measure on them."}, {"at": 940, "q": "YoY % should be written as…", "options": ["SUM(this) − SUM(last)", "AVERAGE of monthly growth", "(this − last) / last with /", "DIVIDE ( this − last, last )"], "answer": 3, "explain": "DIVIDE returns blank when last year is empty instead of Infinity.", "back": 50}]}
+```
+
+```videoquiz
+{"video": "I8Y5fBGwqeQ", "stops": [{"at": 50, "q": "What does time intelligence need?", "options": ["DirectQuery", "Dates as text", "A contiguous date table, marked as the date table and related to the fact", "Auto date/time on every column"], "answer": 2, "explain": "Mark dim_date and use it everywhere: one calendar, one answer."}, {"at": 64, "q": "Why switch off Power BI's automatic date tables once dim_date is marked?", "options": ["Each date column gets its own hidden calendar — two calendars, two answers", "They break relationships", "They cannot be sorted", "They are slower but give the same answer"], "answer": 0, "explain": "Marking dim_date switches them off for the model's dates.", "back": 25}]}
+```
+
+```videoquiz
+{"video": "FwjaHCVNBWA", "stops": [{"at": 4700, "q": "Which visual answers \"one number now\"?", "options": ["A line chart", "A card", "A pie", "A scatter"], "answer": 1, "explain": "Cards on top, the most important one top-left."}, {"at": 5100, "q": "What is the right visual for a trend over months?", "options": ["Card", "Table sorted by name", "Pie", "Line chart on the date dimension"], "answer": 3, "explain": "For balances, use the Month-End measure on the line.", "back": 60}, {"at": 5450, "q": "How do you show two dimensions at once with a colour for 'bad'?", "options": ["Ten cards", "Two pies", "A matrix with conditional formatting", "A 3D column chart"], "answer": 2, "explain": "PAR30 by branch × product, red only for what is bad."}]}
+```
+
+```videoquiz
+{"video": "I0vQ_VLZTWg", "stops": [{"at": 4400, "q": "What makes a report page readable?", "options": ["A few visuals, the key number top-left, titles that say what the chart means", "Every colour of the theme", "3D effects", "As many visuals as fit"], "answer": 0, "explain": "≤ 7 visuals a page; one colour for bad."}, {"at": 4800, "q": "A slicer should affect several pages. What do you use?", "options": ["Copy it to every page and set each by hand", "Sync slicers", "Bookmarks only", "A measure"], "answer": 1, "explain": "View → Sync slicers keeps product, branch and month the same across pages.", "back": 60}]}
+```
+
+```videoquiz
+{"video": "A2r6or-Dm28", "stops": [{"at": 2700, "q": "Where do you create a measure?", "options": ["In the Service", "In the CSV", "In Power Query", "Home → New measure, in the formula bar"], "answer": 3, "explain": "Measures live in the model, not in a visual."}, {"at": 3300, "q": "Why prefer DIVIDE to the / operator?", "options": ["It is required for SUM", "It is faster", "It returns blank (or a chosen value) when the denominator is 0 or blank", "It rounds"], "answer": 2, "explain": "a / b shows Infinity on a card and breaks totals.", "back": 60}, {"at": 3900, "q": "A measure is evaluated…", "options": ["for every cell of every visual, in that cell's filter context", "only on cards", "once per table", "once at refresh"], "answer": 0, "explain": "That is filter context — today's one idea."}]}
+```
+
 ---
 
 ## 2. Worked example — the PAR30 card that answers the next question (15 min)
@@ -179,95 +229,73 @@ No selection: *"Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"*;
 
 ## 3. Practice (60 min)
 
-Continue in `nur_week7.pbix`. Paste the measures from `data/powerbi/measures.dax` as you need them, but **type** the ones named in each task — you learn DAX by writing it.
+Continue in `nur_week7.pbix`. Paste the measures from `data/powerbi/measures.dax` as you need them, but **type** the ones named in each task — you learn DAX by writing it. Type the number (or name) your visual shows into the box under each question; it checks it and then shows the model answer.
 
 **P1.** Row vs filter context. Add two calculated columns on `v_loan_status`: `share = v_loan_status[outstanding] / SUM(v_loan_status[outstanding])` and `own = CALCULATE(SUM(v_loan_status[outstanding]))`. What do they show for loan 1, and why are they different?
 
-<details><summary>Answer</summary>
-
-`share` = 9 593 064 / 208 723 504 430 = **0.0046 %** — `SUM` in a column sees the whole table (no filter context). `own` = **9 593 064** — `CALCULATE` performs context transition: the row (loan 1) becomes a filter, so the sum covers that row only. Delete both columns afterwards; a share of total belongs in a measure.
-
-</details>
+```task
+{"id": "w07d4-p1", "kind": "number", "answer": 9593064, "dp": 0, "unit": "soum", "hint": "Enter the value of the column own for loan 1.", "model": "share = 9 593 064 / 208 723 504 430 = 0.0046 % — SUM in a column sees the whole table (no filter context). own = 9 593 064 — CALCULATE performs context transition: the row (loan 1) becomes a filter, so the sum covers that row only. Delete both columns afterwards; a share of total belongs in a measure."}
+```
 
 **P2.** Type `Outstanding DPD30+`, `PAR30 %`, `NPL90 %`, `Loans 90+` and put them in a table by product. Check against week 3.
 
-<details><summary>Answer</summary>
-
-PAR30 / NPL90: AUTO **4.44 / 2.98 %**, BNPL 1.28 / 0.48 %, CONS 3.09 / 2.13 %, MICRO 0.72 / **0.00 %**, SME 2.55 / 2.47 %; total **3.12 / 2.55 %**. Loans 90+: CONS 77, MICRO 76, BNPL 42, SME 29, AUTO 10 — total 234. MICRO has 76 loans in 90+ but 0 % NPL90: their remaining principal is already *due*, and week 3's outstanding counts only principal due after the as-of date — a definition worth a footnote on the risk page.
-
-</details>
+```task
+{"id": "w07d4-p2", "kind": "number", "answer": 4.44, "dp": 2, "unit": "%", "hint": "Enter PAR30 % for AUTO.", "model": "PAR30 / NPL90: AUTO 4.44 / 2.98 %, BNPL 1.28 / 0.48 %, CONS 3.09 / 2.13 %, MICRO 0.72 / 0.00 %, SME 2.55 / 2.47 %; total 3.12 / 2.55 %. Loans 90+: CONS 77, MICRO 76, BNPL 42, SME 29, AUTO 10 — total 234. MICRO has 76 loans in 90+ but 0 % NPL90: their remaining principal is already due, and week 3's outstanding counts only principal due after the as-of date — a definition worth a footnote on the risk page."}
+```
 
 **P3.** A matrix by `v_loan_status[bucket]` with `Outstanding` and `M90 = CALCULATE([Outstanding], v_loan_status[bucket] = "90+")`. Then change it to `CALCULATE([Outstanding], KEEPFILTERS(v_loan_status[bucket] = "90+"))`. Explain both.
 
-<details><summary>Answer</summary>
-
-`Outstanding` by bucket: 0 197 486 207 578 · 1-30 4 729 769 899 · 31-60 748 610 049 · 61-90 439 441 377 · 90+ 5 319 475 527. `M90` shows **5 319 475 527 in every row** — the filter argument replaces the row's filter on the same column. With `KEEPFILTERS` the two filters intersect: 5 319 475 527 in the 90+ row, blank elsewhere.
-
-</details>
+```task
+{"id": "w07d4-p3", "kind": "choice", "options": ["M90 shows each bucket's own outstanding; KEEPFILTERS changes nothing", "M90 shows 5 319 475 527 in every row because its filter replaces the row's filter on bucket; with KEEPFILTERS the filters intersect, so only the 90+ row has a value", "M90 is blank everywhere except 90+; KEEPFILTERS fills every row", "Both versions give an error"], "answer": 1, "explain": "Outstanding by bucket: 0 197 486 207 578 · 1-30 4 729 769 899 · 31-60 748 610 049 · 61-90 439 441 377 · 90+ 5 319 475 527. M90 shows 5 319 475 527 in every row — the filter argument replaces the row's filter on the same column. With KEEPFILTERS the two filters intersect: 5 319 475 527 in the 90+ row, blank elsewhere."}
+```
 
 **P4.** `Outstanding Share of Total` with `ALL(products)`, then a version with `ALL(v_loan_status)`. Add a branch slicer on Tashkent Central. What does the SME row show in each, and which question does each answer?
 
-<details><summary>Answer</summary>
-
-No slicer: both give SME **60.32 %**. Tashkent Central selected: `ALL(products)` → **55.30 %** (SME's share of Tashkent Central's 28 716 674 373: AUTO 34.23 %, CONS 9.52 %, BNPL 0.49 %, MICRO 0.46 %); `ALL(v_loan_status)` → **7.61 %** (Tashkent Central's SME as a share of the whole book — `ALL` on the fact removes the filters arriving from its dimensions too). The first answers "what is this branch's mix?", the second "how much of the company sits here?" — name the denominator in the title.
-
-</details>
+```task
+{"id": "w07d4-p4", "kind": "number", "answer": 7.61, "dp": 2, "unit": "%", "hint": "Enter the SME row with ALL(v_loan_status), Tashkent Central selected.", "model": "No slicer: both give SME 60.32 %. Tashkent Central selected: ALL(products) → 55.30 % (SME's share of Tashkent Central's 28 716 674 373: AUTO 34.23 %, CONS 9.52 %, BNPL 0.49 %, MICRO 0.46 %); ALL(v_loan_status) → 7.61 % (Tashkent Central's SME as a share of the whole book — ALL on the fact removes the filters arriving from its dimensions too). The first answers \"what is this branch's mix?\", the second \"how much of the company sits here?\" — name the denominator in the title."}
+```
 
 **P5.** Time intelligence: `YTD Disbursed`, `Disbursed SPLY`, `Disbursed YoY %`, `Disbursed Prev Month`, `Disbursed MoM %` in a table by `dim_date[year_month]`. Report September 2026; then unmark the date table and say what breaks.
 
-<details><summary>Answer</summary>
-
-September 2026: Disbursed 17 015 490 000 · **YTD 161 480 300 000** · SPLY 14 644 540 000 · **YoY +16.19 %** · Prev Month 22 290 210 000 · **MoM −23.66 %**. YTD at September 2025: 110 929 400 000 (YTD growth +45.6 %). Unmarked, `TOTALYTD` still works if `dim_date[date]` is a true date column with no gaps — but Power BI keeps its auto-date tables, a visual using `disbursed_at`'s own hierarchy ignores `dim_date`, and time intelligence on a text "date" fails. Mark it and use `dim_date` everywhere.
-
-</details>
+```task
+{"id": "w07d4-p5", "kind": "number", "answer": 161480300000, "dp": 0, "unit": "soum", "hint": "Enter YTD Disbursed for September 2026.", "model": "September 2026: Disbursed 17 015 490 000 · YTD 161 480 300 000 · SPLY 14 644 540 000 · YoY +16.19 % · Prev Month 22 290 210 000 · MoM −23.66 %. YTD at September 2025: 110 929 400 000 (YTD growth +45.6 %). Unmarked, TOTALYTD still works if dim_date[date] is a true date column with no gaps — but Power BI keeps its auto-date tables, a visual using disbursed_at's own hierarchy ignores dim_date, and time intelligence on a text \"date\" fails. Mark it and use dim_date everywhere."}
+```
 
 **P6.** `Branch Rank` with `RANKX`. Show it for all products, then with a product slicer on SME. Then remove `ALL` from the formula and explain the result.
 
-<details><summary>Answer</summary>
-
-All products: Tashkent Central 1, Tashkent South 2, Tashkent North 3, Fergana Central 4, Samarkand Central 5, Andijan Central 6, Namangan Central 7, **Bukhara Central 8**, Nukus Central 9, Termez Central 10; total row blank. SME: **Tashkent South 1** (16 650 742 813), Tashkent Central 2, Samarkand Central 3. Without `ALL`, each row's table holds only its own branch, so **every branch ranks 1**.
-
-</details>
+```task
+{"id": "w07d4-p6", "kind": "text", "answer": ["Tashkent South", "Tashkent South branch"], "hint": "Type the branch that ranks 1 with the product slicer on SME.", "model": "All products: Tashkent Central 1, Tashkent South 2, Tashkent North 3, Fergana Central 4, Samarkand Central 5, Andijan Central 6, Namangan Central 7, Bukhara Central 8, Nukus Central 9, Termez Central 10; total row blank. SME: Tashkent South 1 (16 650 742 813), Tashkent Central 2, Samarkand Central 3. Without ALL, each row's table holds only its own branch, so every branch ranks 1."}
+```
 
 **P7.** Type `Running Outstanding` with `VAR … RETURN` and `Running Outstanding %`; show them by branch sorted by Outstanding. How many branches hold half the book? Then rewrite without the variable and compare.
 
-<details><summary>Answer</summary>
-
-Tashkent Central 13.76 % · Tashkent South 26.59 % · Tashkent North 39.13 % · **Fergana Central 51.01 %** · Samarkand Central 62.83 % · Andijan 72.31 % · Namangan **81.27 %** · Bukhara 88.51 % · Nukus 94.89 % · Termez 100 %. Four of ten branches hold half. Without the variable, `[Outstanding] >= [Outstanding]` inside `FILTER` compares each iterated branch with itself — always true — so every row shows 208 723 504 430 (100 %).
-
-</details>
+```task
+{"id": "w07d4-p7", "kind": "number", "answer": 4, "dp": 0, "unit": "branches", "hint": "Enter how many branches, largest first, hold at least half the book.", "model": "Tashkent Central 13.76 % · Tashkent South 26.59 % · Tashkent North 39.13 % · Fergana Central 51.01 % · Samarkand Central 62.83 % · Andijan 72.31 % · Namangan 81.27 % · Bukhara 88.51 % · Nukus 94.89 % · Termez 100 %. Four of ten branches hold half. Without the variable, [Outstanding] >= [Outstanding] inside FILTER compares each iterated branch with itself — always true — so every row shows 208 723 504 430 (100 %)."}
+```
 
 **P8.** Balances over time: `Outstanding Month-End` and a plain `SUM(v_portfolio_monthly[outstanding_month_end])` in a table by month, then by year. What do the totals show?
 
-<details><summary>Answer</summary>
-
-By month both agree: Jan 2026 151 807 386 149 … Aug 203 830 205 928 · **Sep 208 243 879 623**. The **2026 total**: plain `SUM` **1 808 092 257 935** (ten balances added — meaningless); Month-End **196 392 195 577** — the last month in the filter, October (instalments due from 1 November). Filter the visual to months ≤ September 2026 and the year shows 208 243 879 623. September's month-end differs from the as-of card (208 723 504 430) by about 480 m: week 3's P8 — one is "due after 30 Sep", the other "due after 1 Oct".
-
-</details>
+```task
+{"id": "w07d4-p8", "kind": "number", "answer": 1808092257935, "dp": 0, "unit": "soum", "hint": "Enter the plain SUM's total for the year 2026.", "model": "By month both agree: Jan 2026 151 807 386 149 … Aug 203 830 205 928 · Sep 208 243 879 623. The 2026 total: plain SUM 1 808 092 257 935 (ten balances added — meaningless); Month-End 196 392 195 577 — the last month in the filter, October (instalments due from 1 November). Filter the visual to months ≤ September 2026 and the year shows 208 243 879 623. September's month-end differs from the as-of card (208 723 504 430) by about 480 m: week 3's P8 — one is \"due after 30 Sep\", the other \"due after 1 Oct\"."}
+```
 
 **P9.** The risk matrix (worked example) plus a line of `FPD30 %` by `fct_first_instalment[vintage]` for 2025–2026, with `FPD30 Loans in Scope` in the tooltip. Which vintages should not be on the chart, and what are the highest points?
 
-<details><summary>Answer</summary>
-
-August 2026 has **11 loans in scope** (0 %) — not readable; hide vintages with fewer than 50 loans (a visual-level filter on `FPD30 Loans in Scope` ≥ 50). Highest: **April 2025 3.11 %** (7 / 225), March 2025 2.82 %, October 2025 2.43 %; lowest March 2026 0.00 % (0 / 330, week 6's suspicious month). 2025 vintages 1.55 % vs 2026 1.08 % overall. With 200–380 loans per vintage the intervals are wide — July 2026's 4 / 367 = 1.09 % has a Wilson interval of 0.42–2.77 %: the tooltip with n stops people reading noise as a trend.
-
-</details>
+```task
+{"id": "w07d4-p9", "kind": "text", "answer": ["2025-04", "April 2025", "Apr 2025", "2025-4"], "hint": "Type the vintage with the highest FPD30 % among vintages with at least 50 loans (YYYY-MM).", "model": "August 2026 has 11 loans in scope (0 %) — not readable; hide vintages with fewer than 50 loans (a visual-level filter on FPD30 Loans in Scope ≥ 50). Highest: April 2025 3.11 % (7 / 225), March 2025 2.82 %, October 2025 2.43 %; lowest March 2026 0.00 % (0 / 330, week 6's suspicious month). 2025 vintages 1.55 % vs 2026 1.08 % overall. With 200–380 loans per vintage the intervals are wide — July 2026's 4 / 367 = 1.09 % has a Wilson interval of 0.42–2.77 %: the tooltip with n stops people reading noise as a trend."}
+```
 
 **P10.** Row-level security: create the role *Branch manager — Bukhara* (`branches[branch_name] = "Bukhara Central"`), then Modeling → **View as** the role. Report the risk cards, then look at `Branch Rank` and `Outstanding Share of Total`.
 
-<details><summary>Answer</summary>
+```task
+{"id": "w07d4-p10", "kind": "number", "answer": 15116046338, "dp": 0, "unit": "soum", "hint": "Enter Outstanding as seen through the Bukhara role.", "model": "Outstanding 15 116 046 338 · PAR30 4.81 % · NPL90 4.48 % · FPD30 2.39 % (14 / 586) · collection rate (due in Sep 2026) 92.31 % · Loans 90+ 23. Branch Rank = 1 and the shares are of Bukhara only: RLS removes the other branches' rows before any measure runs, so ALL(branches) sees one branch. If the manager should see her rank among all branches, compute it upstream (a column in the view) — RLS cannot be bypassed by DAX, which is the point."}
+```
 
-Outstanding **15 116 046 338** · PAR30 **4.81 %** · NPL90 4.48 % · FPD30 **2.39 %** (14 / 586) · collection rate (due in Sep 2026) **92.31 %** · Loans 90+ 23. **Branch Rank = 1** and the shares are of Bukhara only: RLS removes the other branches' rows before any measure runs, so `ALL(branches)` sees one branch. If the manager should see her rank among all branches, compute it upstream (a column in the view) — RLS cannot be bypassed by DAX, which is the point.
+> 🚀 **Stretch (optional, +5 XP).** **P11.** The collections page measures: `Actions`, `Contact Rate`, `Promise-to-Pay Rate`, `Paid-on-Action Rate` for September 2026, by action type and by collector; put a **Top N** filter (Filters pane → Filter type *Top N*, by `Actions`) on the collector table to show the five busiest. What would you tell Sevara, and what would you not?
 
-</details>
-
-<span class="badge stretch">Stretch</span> **P11.** The collections page measures: `Actions`, `Contact Rate`, `Promise-to-Pay Rate`, `Paid-on-Action Rate` for September 2026, by action type and by collector; put a **Top N** filter (Filters pane → Filter type *Top N*, by `Actions`) on the collector table to show the five busiest. What would you tell Sevara, and what would you not?
-
-<details><summary>Answer</summary>
-
-September 2026: **651** actions, contact **72.81 %**, PTP **28.57 %**, paid **22.73 %**. By type: call 216 (contact 82.4 %, PTP 29.2 %, paid 28.7 %), SMS 216 (63.9 %, 38.0 %, **13.0 %**), visit 111 (68.5 %, 20.7 %, 26.1 %), restructure offer 108 (75.9 %, 16.7 %, 26.9 %). Top 5 by actions: Nilufar Jalilov 52 (paid 21.2 %), Bekzod Mirzaev 39 (17.9 %), Bobur Tashkentov 38 (31.6 %), Malika Jalilov 37 (27.0 %), Ilhom Qodirov 32 (28.1 %). Tell her: SMS promises the most and pays the least — promises from SMS need a follow-up call. Do not tell her collector X is better: 30–50 actions each, different loans and buckets — week 6's lesson (9 payments out of 40 actions = 22.5 %, Wilson 12.3–37.5 %) applies to people too.
-
-</details>
+```task
+{"id": "w07d4-p11", "kind": "number", "answer": 651, "dp": 0, "unit": "actions", "hint": "Enter Actions in September 2026.", "xp": 2, "model": "September 2026: 651 actions, contact 72.81 %, PTP 28.57 %, paid 22.73 %. By type: call 216 (contact 82.4 %, PTP 29.2 %, paid 28.7 %), SMS 216 (63.9 %, 38.0 %, 13.0 %), visit 111 (68.5 %, 20.7 %, 26.1 %), restructure offer 108 (75.9 %, 16.7 %, 26.9 %). Top 5 by actions: Nilufar Jalilov 52 (paid 21.2 %), Bekzod Mirzaev 39 (17.9 %), Bobur Tashkentov 38 (31.6 %), Malika Jalilov 37 (27.0 %), Ilhom Qodirov 32 (28.1 %). Tell her: SMS promises the most and pays the least — promises from SMS need a follow-up call. Do not tell her collector X is better: 30–50 actions each, different loans and buckets — week 6's lesson (9 payments out of 40 actions = 22.5 %, Wilson 12.3–37.5 %) applies to people too."}
+```
 
 ### Mistakes people make
 
@@ -291,9 +319,9 @@ September 2026: **651** actions, contact **72.81 %**, PTP **28.57 %**, paid **22
 
 ## 5. Self-check
 
-1. In one sentence each: what does `CALCULATE` do to the filter context, and what is context transition? *(→ "Measures, columns and the two contexts", "CALCULATE", P1)*
-2. Why does `SUM(outstanding_month_end)` over 2026 make no sense, and what does the Month-End measure do instead? *(→ "Time intelligence", P8)*
-3. A branch manager sees "Branch Rank = 1" under RLS. Bug or feature, and what would you do? *(→ "Publish, refresh, share", P10)*
+```check
+{"id": "w07d4-sc", "questions": [{"type": "single", "q": "Which pair of sentences is right?", "options": ["CALCULATE sums a column; context transition is a refresh", "CALCULATE evaluates an expression in a modified filter context; context transition turns the current row into a filter", "CALCULATE removes all filters; context transition sorts the rows", "CALCULATE works only in columns; context transition only in measures"], "answer": 1, "explain": "That is why own = CALCULATE(SUM(...)) in a column returns the row's own value (→ 'Measures, columns and the two contexts', P1)."}, {"type": "single", "q": "Why does SUM(outstanding_month_end) over 2026 make no sense?", "options": ["It double-counts products", "Balances are semi-additive: adding month-end balances gives ten balances, not one; the Month-End measure takes the last month in the period", "It ignores branches", "SUM does not work on months"], "answer": 1, "explain": "1 808 092 257 935 is meaningless; 208 243 879 623 at September is the book (→ 'Time intelligence', P8)."}, {"type": "single", "q": "A branch manager sees Branch Rank = 1 under RLS. Bug or feature?", "options": ["A bug in RANKX", "A feature: RLS removes the other branches before any measure runs, so ALL sees one branch; compute the rank upstream if she must see it", "A missing relationship", "A sync-slicers problem"], "answer": 1, "explain": "RLS cannot be bypassed by DAX — that is the point (→ 'Publish, refresh, share', P10)."}]}
+```
 
 ---
 
@@ -340,7 +368,17 @@ The board pack Bekzod asked for. Every page: the same top strip — title, "Data
 
 **The definitions line.** Under each page, one line of small text: *Outstanding = principal due after 1 Oct 2026 (week 3); PAR30 / NPL90 = share of outstanding with DPD > 30 / > 90; FPD30 = first instalment not fully paid within 30 days; Collection rate = paid by 1 Oct ÷ due, instalments due in the month.* A board member who asks "how is this calculated?" gets the answer without a meeting — and the numbers are the same as the week-3 tiles because they come from the same views.
 
-> Interview version: *"Design a dashboard for a lending portfolio."* — Three questions, three pages: how big and growing (outstanding, disbursements, ticket, mix), how risky (PAR30, NPL90, FPD by vintage, roll rates), how well collected (collection rate, effort and outcome). KPI cards top-left, trends in the middle, detail at the bottom, ≤ 7 visuals a page, one colour for bad, synced slicers, an as-of date and the definitions on the page; each number a measure that reconciles with the SQL source, and RLS so branch managers see their own branch.
+```game
+{"type": "sort", "id": "w07d4-g4", "title": "Which page?", "q": "Put each visual on the page whose question it answers.", "groups": {"Portfolio — how big, growing where?": ["Card: Outstanding 208 723 504 430", "Card: YTD Disbursed at Sep 2026", "Line: Outstanding Month-End by month"], "Risk — getting worse, where?": ["Matrix: PAR30 % by branch × product", "Line: FPD30 % by vintage (n ≥ 50)", "Card: Cure / Roll forward 1-30"], "Collections — is the money coming in?": ["Bar: Collection rate by branch", "Stacked bar: actions by type × outcome", "Table: top 5 collectors by actions"]}, "why": "Three questions, three pages; cards on top, trend in the middle, detail at the bottom."}
+```
+
+> 🎯 **Interview version.** *"Design a dashboard for a lending portfolio."* — Three questions, three pages: how big and growing (outstanding, disbursements, ticket, mix), how risky (PAR30, NPL90, FPD by vintage, roll rates), how well collected (collection rate, effort and outcome). KPI cards top-left, trends in the middle, detail at the bottom, ≤ 7 visuals a page, one colour for bad, synced slicers, an as-of date and the definitions on the page; each number a measure that reconciles with the SQL source, and RLS so branch managers see their own branch.
+
+**Say it like in an interview.** *"Design a dashboard for a lending portfolio."* Answer in four to six sentences, naming the pages, the layout rules and how you keep the numbers right.
+
+```task
+{"id": "w07d4-ci", "kind": "free", "min": 30, "model": "Three questions, three pages. Portfolio: how big and where is it growing — outstanding (208.7 bn), disbursements with YTD and year-on-year, average ticket, the product mix. Risk: is it getting worse — PAR30 and NPL90, FPD by vintage with n in the tooltip, roll rates, a branch × product matrix with one colour for bad. Collections: is the money coming in — collection rate, effort and outcome by action type and collector. On each page the KPI cards go top-left, the trend in the middle, the detail at the bottom, at most seven visuals, synced slicers, an as-of date and a definitions line. Every number is a measure that reconciles with the SQL views, and row-level security lets each branch manager see only her branch.", "rubric": ["three pages tied to three questions (size/growth, risk, collections)", "names concrete measures for each page", "layout rules: cards top-left, trend middle, detail bottom, ≤ 7 visuals, one colour for bad", "numbers reconcile with the SQL source; definitions and as-of date on the page", "row-level security for branch managers"]}
+```
 
 Tomorrow: Checkpoint 7 — the A/B notebook with its decision memo, these three pages as a `.pbix` and a PDF, and eight interview questions.
 

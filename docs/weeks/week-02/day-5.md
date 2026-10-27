@@ -10,9 +10,25 @@
 - **Part B (25 pts):** eight interview questions answered in writing, 3–5 sentences each.
 - Allowed SQL: weeks 1–2 only — `SELECT/WHERE/ORDER BY`, joins, `GROUP BY/HAVING`, functions, `CASE`, set operators. The two `WITH` blocks printed on Day 3 (DPD) and Day 4 (FPD30) may be copied as they stand; no other subqueries, no window functions.
 
-**Rules.** Open book: your notes, this week's pages, your tool. Closed: the answer folds until you submit. Hand in with the **📎 box at the end of this page**: `queries.sql` (each task with `-- Tn:` above and `-- result:` below; say which dialect) and `interview.md`. Also due today: **HW 2.2** in `day-3/`. Expected numbers are as of 2026-10-01.
+**Rules.** Open book: your notes, this week's pages, your tool. Closed: the answer folds until you submit. Every task has a query box with **▶ Run** — on an exam day there is no **✔ Check**: you decide when a result is right. Hand in with the **📎 box at the end of this page**: `queries.sql` (each task with `-- Tn:` above and `-- result:` below; say which dialect) and `interview.md` (Part B). Also due today: **HW 2.2** — hand it in in its workspace on the [Week 2 · Day 3](weeks/week-02/day-3.md) page. Expected numbers are as of 2026-10-01.
 
-**Working method** (the one the week taught): before each query write the noun that is "one row" of the table you aggregate; join dimensions many-to-one freely; when a join is one-to-many, run `COUNT(*)` next to `COUNT(DISTINCT key)` before you sum anything; filter periods half-open; put NULL tests first in a `CASE`; and report a count next to every average or rate.
+**Working method** — the one the week taught, in three habits:
+
+> 💡 **Key idea.** Before each query, write the noun that is "one row" of the table you aggregate. Join dimensions many-to-one freely; when a join is one-to-many, run `COUNT(*)` next to `COUNT(DISTINCT key)` before you sum anything.
+
+> ⚠️ **Watch out.** Filter periods half-open (`>= start AND < next start`) — `BETWEEN` with a last day loses the rows that carry a time — and put the NULL test first in a `CASE`, or the unknowns fall into `ELSE`.
+
+> 💡 **Key idea.** Report a count next to every average or rate. 1.70 % on 2 411 loans is a finding; 0 % on 11 loans is noise.
+
+Warm up for five minutes before the clock starts:
+
+```game
+{"id": "w02d5-g1", "type": "flash", "title": "The week in ten cards", "cards": [["Anti-join", "LEFT JOIN, then WHERE right.key IS NULL: rows on the left with no match on the right"], ["Grain of a join result", "the grain of its 'many' side: loans → installments gives one row per instalment"], ["HAVING vs WHERE", "WHERE filters rows before grouping; HAVING filters groups after the aggregates exist"], ["COUNT(*) vs COUNT(DISTINCT key)", "rows vs different keys; if they differ after a join, do not SUM a parent column"], ["Half-open period filter", "col >= '2026-09-01' AND col < '2026-10-01' — safe for dates, datetimes and any month length"], ["COALESCE(a, b)", "the first non-NULL argument: COALESCE(SUM(p.amount), 0) turns 'no payment' into 0"], ["NULLIF(y, 0)", "NULL instead of a zero divisor: safe division x / NULLIF(y, 0)"], ["DPD", "days since the due date of the oldest instalment not fully paid, on the as-of date"], ["FPD30", "first instalment not paid in full within 30 days of its due date; base = first due date ≤ as-of − 30 days"], ["Outstanding vs overdue", "principal not yet due (208.7 bn) vs matured instalments not paid (the money that should have come)"]]}
+```
+
+```game
+{"id": "w02d5-g2", "type": "sort", "title": "Which table is one row?", "groups": {"installments": ["Outstanding principal by product", "Overdue amount by loan"], "loans": ["Disbursements by month", "Average ticket by product", "Write-off share by risk grade"], "payments": ["Days late per payment", "Payments by method"], "applications": ["Approval rate by channel", "Share of approvals never disbursed"]}}
+```
 
 ---
 
@@ -116,7 +132,7 @@ WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY 
 --                Consumer 7 465 620 000 / 9 226 930 000 / 8 769 350 000 · Micro 782 600 000 / 988 770 000 / 1 019 870 000
 --                SME 26 342 380 000 / 30 754 010 000 / 37 677 910 000
 ```
-Day 4's version let 1 October (21 loans, 852 760 000) leak into Q3; the half-open upper bound fixes it. Note: SME and Micro grew every quarter; BNPL and Consumer dipped in Q2 or Q3; Auto fell after Q1 and has not recovered. Full marks need the half-open filters and the note.
+Day 4's worked example ran its last column to the end of the data on purpose (labelled "Q3 (+1 Oct)"); here Q3 must stop on 30 September, and the half-open upper bound keeps 1 October (21 loans, 852 760 000) out. Note: SME and Micro grew every quarter; BNPL and Consumer dipped in Q2 or Q3; Auto fell after Q1 and has not recovered. Full marks need the half-open filters and the note.
 
 </details>
 
@@ -328,7 +344,7 @@ Answer in writing, 3–5 sentences each, as you would say it: 3 points per quest
 5. Per instalment: LEFT JOIN payments, group per instalment, `COALESCE(SUM(amount), 0)` as paid, keep matured instalments with `HAVING paid < total_due`. Per loan: `MIN(due_date)` of those; DPD = as-of − that date; bucket with `CASE`. Check that 90+ equals default + written_off (234 = 44 + 190). Say how partial payments are treated — "not fully paid", otherwise 17 written-off loans fall out of 90+.
 6. DPD measures the current state of each loan and drives collections and provisions (buckets, PAR30, NPL). FPD flags loans whose first instalment was not paid within X days — it appears within two months of disbursement, so it is the early warning for a new channel, product or scoring rule, and the classic fraud signal. Nur Finance: 1.28 % FPD30 overall, 1.70 % on the app vs 1.04 % at branches — visible years before the 36-month Auto book shows its losses.
 7. `BETWEEN '2026-09-01' AND '2026-09-30'` drops rows with a time on the last day (598 instead of 621 September applications), and functions on the column (`strftime(…) = '2026-09'`) stop indexes working. Write half-open ranges: `col >= '2026-09-01' AND col < '2026-10-01'` — works for days, months, years, datetimes alike.
-8. A one-to-many join repeats each parent row once per child; summing a parent column over it multiplies it by the child count (`SUM(principal)` over loans × instalments → 9.98 trillion, 24× the SME figure). Detect it with `COUNT(*)` vs `COUNT(DISTINCT parent_key)` side by side; avoid it by aggregating each table at its own grain and joining the aggregates (week 3's subqueries/CTEs), or by using `COUNT(DISTINCT)` for counts.
+8. A one-to-many join repeats each parent row once per child; summing a parent column over it multiplies it by the child count (`SUM(principal)` over loans × instalments → 9.98 trillion, about 25× the true 404.8 bn). Detect it with `COUNT(*)` vs `COUNT(DISTINCT parent_key)` side by side; avoid it by aggregating each table at its own grain and joining the aggregates (week 3's subqueries/CTEs), or by using `COUNT(DISTINCT)` for counts.
 
 </details>
 
@@ -344,7 +360,7 @@ Answer in writing, 3–5 sentences each, as you would say it: 3 points per quest
 
 Below 70: feedback names the sections to redo (most often Day 2's HAVING/multiplication or Day 4's NULL rules); re-submit the failed tasks Monday morning before Week 3. Points go to the [Progress page](progress.md).
 
-**Hand-in checklist** (the 📎 box below): `queries.sql` (25 tasks, 25 `-- result:` lines, dialect stated), `interview.md` (definitions note + 8 answers). Also due today: **HW 2.2** in `day-3/` (`lateness.sql`, `lateness.md`, `methods.sql`, `detective.md`).
+**Hand-in checklist** (the 📎 box below): `queries.sql` (25 tasks, 25 `-- result:` lines, dialect stated), `interview.md` (definitions note + 8 answers). Also due today: **HW 2.2** in its workspace on the [Week 2 · Day 3](weeks/week-02/day-3.md) page.
 
 Madina, 17:40: *"Nilufar has her slide and the sentence under it. Sevara moved three collectors to the 1–30 queue. Timur found out about his fifteen closed loans from you, not from the board — he says thank you, in his way. Monday: window functions, and the twenty-five questions you could not answer this week because they needed 'the previous month'."*
 
@@ -353,7 +369,10 @@ Madina, 17:40: *"Nilufar has her slide and the sentence under it. Sevara moved t
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W2D5", "lesson": "W2D5", "title": "Checkpoint 2", "tasks": [{"id": "queries.sql", "file": "queries.sql", "text": true, "minLines": 3, "q": "Write `queries.sql` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W2D5", "lesson": "W2D5", "title": "Checkpoint 2",
+ "why": "Four teams act on these numbers on Monday; the checkpoint shows whether weeks 1–2 hold up without the answer folds — 70 points opens Week 3.",
+ "graded": ["Part A — 25 tasks × 3 points (75): a query that runs and expresses the question, the right result, the one-line -- note: where asked", "Part B — 8 interview answers × 3 points + 1 for the definitions note (25): correct, a Nur Finance example with a number, plain words", "Pass: 70 of 100"],
+ "tasks": [{"id": "queries.sql", "file": "queries.sql", "text": true, "minLines": 25, "q": "Paste `queries.sql` here: T1–T25, each with `-- Tn:` above, the query, and `-- result:` (plus `-- note:` where asked) below; say which dialect at the top."}, {"id": "interview.md", "file": "interview.md", "text": true, "minLines": 9, "q": "Paste `interview.md` here: the definitions note (as-of date, FPD30 rule, DPD rule), then your answers to Part B's eight questions, 3–5 sentences each."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
 
 ---
@@ -384,7 +403,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w02d5", "q": "Sevara's queue review, branch by branch. Take the loans with DPD > 0 as of 2026-10-01 (Day 3's unpaid / dpd block). For each branch, compute the share of those delinquent loans that have never had a collections action. Which branch has the highest share?", "type": "text", "dp": 0, "h": ["06f38c160b3b9b47e6ca2e38", "5acae2e91977a75e1e2c7e02", "a20f52c21beec9f12b143428"], "hint": "Get the denominator right first: a loan with nine collections actions must still count once.", "sol": "V0lUSCB1bnBhaWQgQVMgKCDigKZEYXkgMydzIGJsb2Nr4oCmICksIGRwZCBBUyAoIOKApkRheSAzJ3MgYmxvY2vigKYgKQpTRUxFQ1QgYi5icmFuY2hfbmFtZSwKICAgICAgIENPVU5UKERJU1RJTkNUIGQubG9hbl9pZCkgQVMgZGVsaW5xdWVudCwKICAgICAgIENPVU5UKERJU1RJTkNUIENBU0UgV0hFTiBjYS5hY3Rpb25faWQgSVMgTlVMTCBUSEVOIGQubG9hbl9pZCBFTkQpIEFTIG5ldmVyX2FjdGlvbmVkLAogICAgICAgUk9VTkQoMTAwLjAgKiBDT1VOVChESVNUSU5DVCBDQVNFIFdIRU4gY2EuYWN0aW9uX2lkIElTIE5VTEwgVEhFTiBkLmxvYW5faWQgRU5EKQogICAgICAgICAgICAgICAgICAgLyBDT1VOVChESVNUSU5DVCBkLmxvYW5faWQpLCAxKSBBUyBwY3QKRlJPTSBkcGQgZApKT0lOIGxvYW5zIGwgICAgT04gbC5sb2FuX2lkID0gZC5sb2FuX2lkCkpPSU4gYnJhbmNoZXMgYiBPTiBiLmJyYW5jaF9pZCA9IGwuYnJhbmNoX2lkCkxFRlQgSk9JTiBjb2xsZWN0aW9uc19hY3Rpb25zIGNhIE9OIGNhLmxvYW5faWQgPSBkLmxvYW5faWQKV0hFUkUgZC5kcGQgPiAwCkdST1VQIEJZIGIuYnJhbmNoX25hbWUKT1JERVIgQlkgcGN0IERFU0M7Ci0tIFRhc2hrZW50IE5vcnRoIDIwIG9mIDUyID0gMzguNSAlIMK3IFRlcm1leiBDZW50cmFsIDggb2YgMjIgPSAzNi40IMK3IFNhbWFya2FuZCBDZW50cmFsIDE0IG9mIDQxID0gMzQuMSDigKYgVGFzaGtlbnQgQ2VudHJhbCA4IG9mIDQ3ID0gMTcuMAotLSBTUUwgU2VydmVyOiB0aGUgRGF5IDMgREFURURJRkYgc3BlbGxpbmcgaW4gdGhlIGRwZCBibG9jaywgdGhlIHJlc3QgaWRlbnRpY2FsCkNPVU5UKCopIG92ZXIgdGhlIExFRlQgSk9JTiBjb3VudHMgYWN0aW9ucywgbm90IGxvYW5zOiB0aGUgOTArIGxvYW5zIGNhcnJ5IGFib3V0IDM5IGFjdGlvbnMgZWFjaCBhbmQgc3dhbXAgdGhlIGRlbm9taW5hdG9yLiBLZWVwIERQRCA+IDAg4oCUIHRoZSAxNCBsb2FucyBhdCBEUEQgMCBmYWxsIGR1ZSBvbiB0aGUgYXMtb2YgZGF5IGFuZCBhcmUgbm90IGxhdGUgeWV0ICh3aXRoIHRoZW0sIFRlcm1leiBDZW50cmFsLCA5IG9mIDIzLCBjb21lcyBmaXJzdDogc2F5IHlvdXIgc2NvcGUpLgpUYXNoa2VudCBOb3J0aCBsZWF2ZXMgNCBpbiAxMCBvZiBpdHMgbGF0ZSBsb2FucyB1bnRvdWNoZWQgd2hpbGUgVGFzaGtlbnQgQ2VudHJhbCwgaW4gdGhlIHNhbWUgY2l0eSB3aXRoIHRoZSBzYW1lIHByb2R1Y3RzLCBsZWF2ZXMgZmV3ZXIgdGhhbiAyIGluIDEwOiBhIHRlYW0tY2FwYWNpdHkgcXVlc3Rpb24gZm9yIFNldmFyYSwgbm90IGEgY3VzdG9tZXIgb25lLg=="}
+{"id": "w02d5", "sql": true, "q": "Sevara's queue review, branch by branch. Take the loans with DPD > 0 as of 2026-10-01 (Day 3's unpaid / dpd block). For each branch, compute the share of those delinquent loans that have never had a collections action. Which branch has the highest share?", "type": "text", "dp": 0, "h": ["06f38c160b3b9b47e6ca2e38", "5acae2e91977a75e1e2c7e02", "a20f52c21beec9f12b143428"], "hint": "Get the denominator right first: a loan with nine collections actions must still count once.", "sol": "V0lUSCB1bnBhaWQgQVMgKCDigKZEYXkgMydzIGJsb2Nr4oCmICksIGRwZCBBUyAoIOKApkRheSAzJ3MgYmxvY2vigKYgKQpTRUxFQ1QgYi5icmFuY2hfbmFtZSwKICAgICAgIENPVU5UKERJU1RJTkNUIGQubG9hbl9pZCkgQVMgZGVsaW5xdWVudCwKICAgICAgIENPVU5UKERJU1RJTkNUIENBU0UgV0hFTiBjYS5hY3Rpb25faWQgSVMgTlVMTCBUSEVOIGQubG9hbl9pZCBFTkQpIEFTIG5ldmVyX2FjdGlvbmVkLAogICAgICAgUk9VTkQoMTAwLjAgKiBDT1VOVChESVNUSU5DVCBDQVNFIFdIRU4gY2EuYWN0aW9uX2lkIElTIE5VTEwgVEhFTiBkLmxvYW5faWQgRU5EKQogICAgICAgICAgICAgICAgICAgLyBDT1VOVChESVNUSU5DVCBkLmxvYW5faWQpLCAxKSBBUyBwY3QKRlJPTSBkcGQgZApKT0lOIGxvYW5zIGwgICAgT04gbC5sb2FuX2lkID0gZC5sb2FuX2lkCkpPSU4gYnJhbmNoZXMgYiBPTiBiLmJyYW5jaF9pZCA9IGwuYnJhbmNoX2lkCkxFRlQgSk9JTiBjb2xsZWN0aW9uc19hY3Rpb25zIGNhIE9OIGNhLmxvYW5faWQgPSBkLmxvYW5faWQKV0hFUkUgZC5kcGQgPiAwCkdST1VQIEJZIGIuYnJhbmNoX25hbWUKT1JERVIgQlkgcGN0IERFU0M7Ci0tIFRhc2hrZW50IE5vcnRoIDIwIG9mIDUyID0gMzguNSAlIMK3IFRlcm1leiBDZW50cmFsIDggb2YgMjIgPSAzNi40IMK3IFNhbWFya2FuZCBDZW50cmFsIDE0IG9mIDQxID0gMzQuMSDigKYgVGFzaGtlbnQgQ2VudHJhbCA4IG9mIDQ3ID0gMTcuMAotLSBTUUwgU2VydmVyOiB0aGUgRGF5IDMgREFURURJRkYgc3BlbGxpbmcgaW4gdGhlIGRwZCBibG9jaywgdGhlIHJlc3QgaWRlbnRpY2FsCkNPVU5UKCopIG92ZXIgdGhlIExFRlQgSk9JTiBjb3VudHMgYWN0aW9ucywgbm90IGxvYW5zOiB0aGUgOTArIGxvYW5zIGNhcnJ5IGFib3V0IDM5IGFjdGlvbnMgZWFjaCBhbmQgc3dhbXAgdGhlIGRlbm9taW5hdG9yLiBLZWVwIERQRCA+IDAg4oCUIHRoZSAxNCBsb2FucyBhdCBEUEQgMCBmYWxsIGR1ZSBvbiB0aGUgYXMtb2YgZGF5IGFuZCBhcmUgbm90IGxhdGUgeWV0ICh3aXRoIHRoZW0sIFRlcm1leiBDZW50cmFsLCA5IG9mIDIzLCBjb21lcyBmaXJzdDogc2F5IHlvdXIgc2NvcGUpLgpUYXNoa2VudCBOb3J0aCBsZWF2ZXMgNCBpbiAxMCBvZiBpdHMgbGF0ZSBsb2FucyB1bnRvdWNoZWQgd2hpbGUgVGFzaGtlbnQgQ2VudHJhbCwgaW4gdGhlIHNhbWUgY2l0eSB3aXRoIHRoZSBzYW1lIHByb2R1Y3RzLCBsZWF2ZXMgZmV3ZXIgdGhhbiAyIGluIDEwOiBhIHRlYW0tY2FwYWNpdHkgcXVlc3Rpb24gZm9yIFNldmFyYSwgbm90IGEgY3VzdG9tZXIgb25lLg=="}
 ```
 
 <!-- challenge:end -->

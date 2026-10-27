@@ -1,14 +1,16 @@
 /* Daily challenges (Docsify plugin). One per day page, at the very end, written as a fenced block "challenge":
 
   {"id": "w02d3", "q": "...", "code": "optional", "type": "number" | "text", "dp": 0,
-   "h": ["sha-256 fingerprints of the accepted answers"], "hint": "...", "sol": "base64 of the solution text"}
+   "h": ["sha-256 fingerprints of the accepted answers"], "hint": "...", "sol": "base64 of the solution text",
+   "sql": true | "python": true}   ← optional: an editor on her practice copy above the answer box
 
 The page holds only fingerprints of the answer (built by the mentor), so the answer is not in the page source.
 The solution opens once she solves the challenge, or if she gives up (then no XP).
 XP grows with the challenge streak: 2, 3, 4, 6, 9, then 10 a day. Saturdays and Sundays never break a streak.
 Lucky days: one of Monday–Thursday in each week 1–8, picked by a hash of the week, pays double XP. It is a surprise:
 the page says so only when she opens that day, and the map shows a gift on the lucky days she has found.
-Results live in this browser (localStorage "al.v1"), next to the quiz results.
+Results live in this browser (localStorage "al.v1"), next to the quiz results. The box (.chal) is an "al-block", "al-done"
+once solved or given up; that change fires "al:change" on document.
 */
 (function () {
   var KEY = 'al.v1', SALT = 'nur-finance-2026', XP_STEPS = [2, 3, 4, 6, 9, 10];
@@ -103,9 +105,28 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
     try { ch = JSON.parse(src.textContent); }
     catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This challenge could not be read', 'Не удалось прочитать задачу') + ' (' + esc(e.message) + ').</p>'); return; }
     var box = document.createElement('div');
-    box.className = 'chal';
+    box.className = 'chal al-block';
     pre.parentNode.replaceChild(box, pre);
     draw(box, ch);
+  }
+  /* "sql": true / "python": true — an editor on her practice copy between the question and the answer row
+     (sqlrun.js → ALSql.editor, pyrun.js → ALPy.editor; nothing when that engine is not on the page). Her text is kept
+     under the id "chal-<id>", so it is still there after she solves it. */
+  function editorFor(box, ch) {
+    var slot = box.querySelector('.chal-ed');
+    if (!slot) return;
+    var opt = { id: 'chal-' + ch.id, run: 'play' };
+    try {
+      if (ch.sql && window.ALSql) window.ALSql.editor(slot, opt);
+      else if (ch.python && window.ALPy && window.ALPy.editor) window.ALPy.editor(slot, opt);
+    } catch (e) { console.error('challenge editor', e); }
+    if (!slot.firstChild) slot.remove();
+  }
+  function finished(box, rec) {
+    var was = box.classList.contains('al-done'), now = !!(rec && (rec.solvedOn || rec.gaveUp));
+    box.classList.toggle('al-done', now);
+    if (was !== now && box.dataset.drawn) document.dispatchEvent(new CustomEvent('al:change'));
+    box.dataset.drawn = '1';
   }
 
   function draw(box, ch) {
@@ -118,7 +139,9 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
           '<b>Счастливый день!</b> Вы нашли сюрприз этой недели: сегодняшняя задача приносит <b>двойной XP</b>.') + '</span></div>' : '') +
       '<div class="chal-head"><span class="chal-title">' + T('Daily challenge', 'Задача дня') + '</span>' +
       '<span class="chal-rule">' + T('10–15 min · bonus XP that grows with your challenge streak', '10–15 мин · бонусный XP, который растёт вместе с серией решённых задач') + '</span></div>' +
-      '<div class="chal-q">' + esc(ch.q) + '</div>' + (ch.code ? '<pre class="quiz-code"><code>' + esc(ch.code) + '</code></pre>' : '');
+      '<div class="chal-q">' + esc(ch.q) + '</div>' + (ch.code ? '<pre class="quiz-code"><code>' + esc(ch.code) + '</code></pre>' : '') +
+      (ch.sql || ch.python ? '<div class="chal-ed"></div>' : '');
+    finished(box, rec);
     if (rec && (rec.solvedOn || rec.gaveUp)) {
       html += '<div class="chal-result ' + (rec.solvedOn ? 'pass' : 'fail') + '">' +
         (rec.solvedOn ? '<b>' + T('Solved on ' + esc(rec.solvedOn) + ' — +' + rec.xp + ' XP' + (lucky ? ' (lucky day, doubled)' : ''),
@@ -126,6 +149,7 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
           : T('<b>You opened the solution</b> — no XP for this one; tomorrow\'s counts.', '<b>Вы открыли решение</b> — за эту задачу XP нет; завтрашняя засчитается.')) + '</div>' +
         '<details class="chal-sol" open><summary>' + T('Solution', 'Решение') + '</summary><div>' + esc(fromB64(ch.sol)).replace(/\n/g, '<br>') + '</div></details>';
       box.innerHTML = html;
+      editorFor(box, ch);
       return;
     }
     html += '<div class="chal-row"><input class="quiz-input chal-input" type="text" placeholder="' + (ch.type === 'number' ? T('a number', 'число') : T('your answer', 'ваш ответ')) + '" autocomplete="off">' +
@@ -135,6 +159,7 @@ Results live in this browser (localStorage "al.v1"), next to the quiz results.
       T('Give up and see the solution', 'Сдаться и посмотреть решение') + '</a></div>' +
       '<div class="chal-hinttext" hidden>' + esc(ch.hint || T('No hint for this one.', 'К этой задаче подсказки нет.')) + '</div>';
     box.innerHTML = html;
+    editorFor(box, ch);
 
     var input = box.querySelector('.chal-input'), msg = box.querySelector('.chal-msg');
     function check() {

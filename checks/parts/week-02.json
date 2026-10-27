@@ -1,0 +1,38 @@
+{
+ "_note": "Week 2 additions, to be merged deep into checks.json: only NEW task entries; every existing key and hash of hw2.1 / hw2.2 stays as it is. hw2.1 gains Q9 (the only task the HW 2.1 workspace had no check for). hw2.2 keeps its 'files' and 'notes' for scripts/check.py and gains 'tasks' so the HW 2.2 workspace on Week 2 Day 3 can check each query (same salted hashes, re-used where the number is the same).",
+ "checks": {
+  "hw2.1": {
+   "tasks": {
+    "Q9": {
+     "rows": {"h": "151287bd9b318e1b4729d3b3", "dp": 0},
+     "values": [{"h": "cc04561adcb0b23f410e7a92", "dp": 0}]
+    }
+   }
+  },
+  "hw2.2": {
+   "tasks": {
+    "Q1": {
+     "values": [{"h": "224d36ab75f61771d48dd3ce", "dp": 0}]
+    },
+    "Q2": {
+     "rows": {"h": "94ca0865469dfd01f4f0ad3d", "dp": 0},
+     "values": [{"h": "7a9d8fe8db0aa7f0647eeb0e", "dp": 1}]
+    },
+    "Q3": {
+     "rows": {"h": "4ecdea592fa613a6b0b376dc", "dp": 0},
+     "values": [{"h": "2d6eaa29f0ec2e698947dac4", "dp": 1}]
+    },
+    "Q4": {
+     "rows": {"h": "78ef1b3ba50ccebb1942b68b", "dp": 0},
+     "values": [{"h": "dfcd81d7480dcc37fd4cd3e2", "dp": 0}]
+    },
+    "Q5": {
+     "values": [{"h": "c3483dd988022423c0b030f3", "dp": 0}]
+    },
+    "Q6": {
+     "values": [{"h": "3217779f8781e8714dcd1641", "dp": 0}, {"h": "e81338237eb513e8e7bf45d6", "dp": 0}]
+    }
+   }
+  }
+ }
+}

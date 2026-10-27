@@ -16,6 +16,8 @@
 
 A **function** takes a value from a row and returns a changed value. Nothing in the table changes; the result does. Functions work in `SELECT`, `WHERE`, `GROUP BY`, `ORDER BY` and `HAVING`. This is the day the two dialects differ most, so every example shows both.
 
+> 💡 **Key idea.** A function changes a value on its way out of the query — `LOWER(method)` shows `card` for `Card`, but the table still holds `Card`. Whatever you group or filter on, group or filter on the *same* expression.
+
 ### Strings (*строковые функции*)
 
 | Does | SQL Server | SQLite | On our data |
@@ -27,6 +29,8 @@ A **function** takes a value from a row and returns a changed value. Nothing in 
 | part from position | `SUBSTRING(s, start, n)` | `SUBSTR(s, start, n)` | |
 | replace text | `REPLACE(s, 'old', 'new')` | same | `REPLACE(phone, '+998', '8')` |
 | join texts | `a + ' ' + b` or `CONCAT(a, ' ', b)` | `a \|\| ' ' \|\| b` | `first_name \|\| ' ' \|\| last_name` |
+
+> ⚠️ **Watch out.** SQL Server's `LEN` ignores trailing spaces: `LEN('Bobur ')` is 5, SQLite's `LENGTH('Bobur ')` is 6. A length test that finds dirty names on one engine finds nothing on the other — on SQL Server compare `DATALENGTH` instead.
 
 The one that fixes yesterday's P9:
 
@@ -42,6 +46,12 @@ Six rows, not ten — `Card`→`card`, `CASH `→`cash`, `PayMe`→`payme`, `Cli
 
 How many rows were dirty? `WHERE method <> LOWER(TRIM(method)) OR method LIKE 'bank%'` → **180** on SQLite. (SQL Server's default collation ignores case and trailing spaces, so there the same test finds only the 27 `bank transfer` rows; write `method <> LOWER(TRIM(method)) COLLATE Latin1_General_CS_AS` to get the same 180.) Small number, five phantom categories — Timur's tile moved because 0.3 % of the payments were spelt differently.
 
+Which spelling belongs to which engine? Sort them before you go on — you will translate between the two all day:
+
+```game
+{"id": "w02d3-g1", "type": "sort", "title": "SQL Server, SQLite, or both?", "groups": {"SQL Server": ["LEN(s)", "DATEDIFF(day, a, b)", "DATEADD(month, 1, d)", "a + ' ' + b"], "SQLite": ["LENGTH(s)", "julianday(b) - julianday(a)", "date(d, '+1 month')", "a || ' ' || b"], "Both": ["LOWER(TRIM(s))", "REPLACE(s, 'old', 'new')", "ROUND(x, 2)"]}}
+```
+
 ### Numbers (*числовые функции*)
 
 **Integer division.** Both engines divide two integers *as integers*: `7917 / 14000` → **0**. The approval rate becomes zero, silently. Make one side a decimal — multiply by `1.0` or `100.0`, or `CAST`:
@@ -54,7 +64,15 @@ SELECT 7917 / 14000,            -- 0
 -- SQL Server alternative: CAST(7917 AS FLOAT) / 14000
 ```
 
+> ⚠️ **Watch out.** Whole number ÷ whole number = whole number, on SQL Server and SQLite alike: `7917 / 14000` is 0 and `7917 * 100 / 14000` is 56, not 56.55. No error, no warning — just a wrong rate. Put `100.0 *` at the front of every percentage.
+
 Rule: put `100.0 *` at the *front* of every percentage. **`ROUND(x, n)`** rounds to n decimals; `ROUND(x)` to a whole number; `ROUND(x, -6)` to the nearest million (SQL Server; SQLite rounds to a whole number — divide first). **`CAST(x AS type)`** converts: `CAST(AVG(principal) AS INTEGER)` → 51 709 667 — CAST cuts the decimals off, it does not round (SQL Server: `AS BIGINT`); `CAST(julianday(...) AS INTEGER)` turns SQLite's fractional days into whole days. For money reports, divide by a billion and round once: `ROUND(SUM(principal) / 1000000000.0, 1)` → SME 241.1 bn, Auto 84.8, Consumer 65.1, Micro 7.2, BNPL 6.5.
+
+Timur's approval tile shows 0 % for every channel. Find the line:
+
+```game
+{"id": "w02d3-g2", "type": "bug", "title": "The approval rate that was always zero", "q": "Every channel shows approval_pct = 0. One line is wrong.", "code": "SELECT channel,\n       COUNT(*) AS applications,\n       SUM(status LIKE 'approved%') / COUNT(*) * 100 AS approval_pct\nFROM applications\nGROUP BY channel;", "answer": [2], "why": "Both SUM(…) and COUNT(*) are whole numbers, so 2915 / 5006 is 0 before it is ever multiplied by 100. Write 100.0 * SUM(…) / COUNT(*) — the decimal goes first."}
+```
 
 ### Dates (*функции дат*)
 
@@ -86,14 +104,32 @@ WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01'     -- half-open:
 
 It works for dates, datetimes, months of 28–31 days and year ends alike. Make it a habit today; week 3's performance chapter will thank you.
 
+> ⚠️ **Watch out.** `BETWEEN '2026-09-01' AND '2026-09-30'` reads as "all of September" but stops at 30 September **00:00:00** — every application made later that day is gone (23 of them here).
+
+> 💡 **Key idea.** One shape for every period: `col >= start AND col < start of the next period`. Start inclusive, next period exclusive — right for dates, datetimes, any month length and year ends.
+
+Fill the gaps of Sevara's September filter:
+
+```game
+{"id": "w02d3-g3", "type": "cloze", "title": "The half-open filter", "text": "SELECT COUNT(*) FROM applications\nWHERE applied_at {{0}} '2026-09-01'\n  AND applied_at {{1}} {{2}};", "blanks": [[">="], ["<"], ["'2026-10-01'"]], "distractors": ["<=", "'2026-09-30'", "BETWEEN"]}
+```
+
 ### Depth (optional)
 
 - ▶ Baraa, *String functions* [4:52:58](https://youtu.be/SSKVgrwhzus?t=17578&end=19124), *Numeric* [5:18:44](https://youtu.be/SSKVgrwhzus?t=19124&end=19368), *Date & time* [5:22:48](https://youtu.be/SSKVgrwhzus?t=19368&end=25146) — 1 h 20 total; SQL Server syntax throughout, use the table above to translate.
 - RU deck (TBC Data Analytics 2.0, if you have it) `2.2 SQL-1-38.pdf` — functions pages. *Russian terms:* строковые функции = string functions, преобразование типов = CAST, целочисленное деление = integer division, разница дат = date difference.
 
+```videoquiz
+{"video": "SSKVgrwhzus", "stops": [
+  {"at": 18050, "q": "A column holds 'CASH ' with a space at the end. Which function gives back 'CASH'?", "options": ["UPPER", "TRIM", "LEN", "SUBSTRING"], "answer": 1, "explain": "TRIM removes spaces at both ends (LTRIM / RTRIM one end only); UPPER and LOWER change case, not spaces.", "back": 60},
+  {"at": 18800, "q": "What does REPLACE(phone, '+998', '8') do?", "options": ["Deletes the whole phone number", "Swaps every '+998' inside the value for '8'", "Keeps only the first 8 characters", "Changes the column in the table permanently"], "answer": 1, "explain": "REPLACE swaps one piece of text for another in the value it returns; the table itself does not change.", "back": 60},
+  {"at": 19300, "q": "What does ROUND(3.516, 2) return?", "options": ["3.51", "3.52", "4", "3.5"], "answer": 1, "explain": "ROUND(x, n) rounds to n decimals: 3.516 → 3.52. CAST to an integer would cut the decimals off instead of rounding.", "back": 45},
+  {"at": 22000, "q": "DATEDIFF(day, '2026-09-01', '2026-10-01') — what is the result?", "options": ["-30", "30", "1", "0"], "answer": 1, "explain": "DATEDIFF(part, start, end) counts from the first date to the second: 30 days. SQLite writes it julianday(end) - julianday(start).", "back": 60}]}
+```
+
 ---
 
-## 2. Detective — loans paid out before they were requested (30 min)
+## 2. Worked example — loans paid out before they were requested (detective, 30 min)
 
 Madina's tip: *some loans were disbursed before the customer applied.* That is a date comparison across two tables.
 
@@ -122,13 +158,19 @@ WHERE l.disbursed_at < date(a.applied_at)
 ORDER BY days;
 ```
 
+How many loans were paid out before their application was submitted?
+
+```task
+{"id": "w02d3-d1", "kind": "number", "answer": 12, "dp": 0, "unit": "loans", "hint": "Run the Step 2 query and read the row count under the result.", "model": "12 loans — 0.15 % of the book. The same 12 come back with l.disbursed_at < a.decided_at."}
+```
+
 <details><summary>Result</summary>
 
 **12 loans.** The first row: loan 2244 (application 3969), applied 2026-09-27, disbursed 2026-08-29 — 29 days before the request. Eight are closed, four active; they were disbursed between 2024-12 and 2026-08, all Micro, Consumer or BNPL loans. Now look at their schedules: loan 1039's first instalment is due 2025-02-07 — one month after **2025-01-07**, not after the stored 2024-12-20. The schedule was built from the real disbursement date; only `disbursed_at` was overwritten later (a re-import, a manual correction gone wrong). Memo line for Timur: *12 loans (0.15 %) have `disbursed_at` 6–29 days earlier than `applications.applied_at`; the first due date minus one month gives the true date, 0–3 days after `decided_at`, consistent with every other loan; recommend restoring `disbursed_at` from the schedule.* Check also `l.disbursed_at < a.decided_at` — the same 12; nothing else was paid out before its decision.
 
 </details>
 
-**Step 3 — Sevara's tile.** Rebuild "share of payments by method" with the cleaned expression and compare with the raw one:
+**Step 3 — Timur's tile.** Rebuild "share of payments by method" with the cleaned expression and compare with the raw one. The share needs the total number of payments as its denominator; `(SELECT COUNT(*) FROM payments)` is a one-value subquery — week 3's tool; copy it as it stands today.
 
 <details><summary>Result</summary>
 
@@ -138,7 +180,7 @@ SELECT REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,
 FROM payments GROUP BY 1 ORDER BY payments DESC;
 -- card 17621 (33.3 %) · payme 8900 (16.8) · click 8790 (16.6) · cash 8790 (16.6) · transfer 8774 (16.6)
 ```
-(`(SELECT COUNT(*) FROM payments)` is a one-value subquery — week 3; copy it today.) Raw `card` was 17 564 = 33.2 % on SQLite (SQL Server's default collation already puts `Card` with `card`); the tile moved by the 57 `Card` rows. Nothing changed overnight except which rows the cashier's software capitalised.
+Raw `card` was 17 564 = 33.2 % on SQLite (SQL Server's default collation already puts `Card` with `card`); the tile moved by the 57 `Card` rows. Nothing changed overnight except which rows the cashier's software capitalised.
 
 </details>
 
@@ -146,7 +188,7 @@ FROM payments GROUP BY 1 ORDER BY payments DESC;
 
 ## 3. Practice (50 min)
 
-Write each query in the box under its question — it is saved in this browser; **✔ Check** compares your result with the answer. Show both dialects where they differ, or say which one you used.
+Questions whose answer is a query have a box under them — write, **▶ Run**, then **✔ Check** compares your result with the answer without showing it; your query is saved in this browser. Questions that ask for a number or a reason have an answer box of their own. Show both dialects where they differ, or say which one you used; the **Database** panel lists every table and column.
 
 **P1.** The 18 customers whose first name has a trailing space, found with a length comparison (not `LIKE`).
 
@@ -184,6 +226,12 @@ BNPL has `annual_rate = 0` — the merchant pays, not the borrower. Longer terms
 
 </details>
 
+Why is one product at 0.0 %?
+
+```task
+{"id": "w02d3-p3", "kind": "choice", "options": ["BNPL charges the borrower no interest — its annual_rate is 0, the merchant pays", "The query divides two integers, so BNPL rounds down to 0", "BNPL loans have no instalments", "Micro loans are too small to carry interest"], "answer": 0, "explain": "BNPL's annual_rate is 0, so its interest_due is 0 on every instalment. Integer division would have zeroed every product, not just one — that is what the 100.0 prevents.", "xp": 1}
+```
+
 **P4.** Loans disbursed in September 2026 — with the half-open filter — and the same for applications *submitted* in September, showing the BETWEEN mistake next to it.
 
 <details><summary>Answer</summary>
@@ -195,6 +243,12 @@ SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '202
 ```
 
 </details>
+
+How many September applications does the `BETWEEN` version lose?
+
+```task
+{"id": "w02d3-p4", "kind": "number", "answer": 23, "dp": 0, "unit": "applications", "hint": "Subtract the BETWEEN count from the half-open count.", "model": "621 − 598 = 23: every application made on 30 September after midnight. applied_at carries a time, and BETWEEN stops at '2026-09-30 00:00:00'."}
+```
 
 **P5.** Average age in days of active loans on the as-of date, as a whole number.
 
@@ -237,7 +291,7 @@ Negative days_late = paid early (34 649 payments); 11 557 on the day; 534 more t
 
 </details>
 
-**P8.** Sevara's second ask: average lateness by product — over *all* payments, and over *late* payments only. Which answers her question?
+**P8.** Sevara's second ask: average lateness by product — over *all* payments, and over *late* payments only.
 
 <details><summary>Answer</summary>
 
@@ -253,11 +307,25 @@ All payments: Micro **+0.56** days, SME +0.04, Consumer −0.01, BNPL −0.02, A
 
 </details>
 
-**P9.** By risk grade: share of late payments and average days. Does the scorecard order the grades?
+Which answer gives Sevara what she actually asked ("Micro feels worse than Auto")?
+
+```task
+{"id": "w02d3-p8", "kind": "choice", "options": ["Micro is late more often (16.3 % vs 10.1 % of payments), but a late Micro payment is no later than a late Auto one (about 11 days each)", "Micro payments are 0.56 days late on average, so Micro is worse in every way", "Auto is worse: its average is −0.21 days", "There is no difference: late payments average 11 days in every product"], "answer": 0, "explain": "Frequency (share late) and severity (days of the late payments) are two numbers. Micro differs on the first, not the second; the all-payments average blends them into one misleading figure.", "xp": 1}
+```
+
+**P9.** By risk grade: share of late payments and average days over all payments. Does the scorecard order the grades?
 
 <details><summary>Answer</summary>
 
-A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 % / +2.96. Monotonic — the grade predicts payment behaviour. Same query as P8 with `GROUP BY l.risk_grade`.
+```sql
+SELECT l.risk_grade, COUNT(*) AS payments,
+       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1) AS late_pct,
+       ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_all
+FROM payments p JOIN installments i ON i.installment_id = p.installment_id
+JOIN loans l ON l.loan_id = p.loan_id
+GROUP BY l.risk_grade ORDER BY l.risk_grade;
+```
+A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 % / +2.96. Monotonic — the grade predicts payment behaviour. Same shape as P8 with `GROUP BY l.risk_grade`.
 
 </details>
 
@@ -265,11 +333,28 @@ A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 %
 
 <details><summary>Answer</summary>
 
+```sql
+SELECT REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer') AS method, COUNT(*) AS payments,
+       ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_late
+FROM payments p JOIN installments i ON i.installment_id = p.installment_id
+GROUP BY REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer') ORDER BY payments DESC;
+SELECT COUNT(*) AS payments, ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_late
+FROM payments p JOIN installments i ON i.installment_id = p.installment_id
+WHERE p.method = 'bank transfer';
+```
 card −0.03 days, payme 0.14, click 0.20, cash 0.09, transfer 0.16 — and before merging, `bank transfer` alone averaged **2.11** days: the 27 mis-spelt rows are not a random sample; a different source system logs them, later. Cleaning the label is right; also tell Timur where those 27 come from.
 
 </details>
 
-<span class="badge stretch">Stretch</span> **P11.** Reconstruct the true disbursement date of the twelve detective loans from their schedule: first `due_date` minus one month. How many days after `decided_at` is it for each? Then test the same rule on *all* loans — how many disagree with `disbursed_at`, and why are most of them not errors?
+What do the 27 raw `bank transfer` rows average, in days late? (Two decimals.)
+
+```task
+{"id": "w02d3-p10", "kind": "number", "answer": 2.11, "dp": 2, "unit": "days", "hint": "Your second query: WHERE p.method = 'bank transfer', the raw spelling.", "model": "2.11 days, against 0.16 for the cleaned transfer group and −0.03 for card. The 27 rows come from a different source system that logs them later — clean the label, and tell Timur where they come from."}
+```
+
+> 🚀 **Stretch (optional, +5 XP).** One more date rule for the curious — not needed to finish the day.
+
+**P11.** Reconstruct the true disbursement date of the twelve detective loans from their schedule: first `due_date` minus one month. How many days after `decided_at` is it for each? Then test the same rule on *all* loans — how many disagree with `disbursed_at`?
 
 <details><summary>Answer</summary>
 
@@ -280,36 +365,72 @@ SELECT l.loan_id, a.decided_at, l.disbursed_at, i.due_date AS first_due,
 FROM loans l JOIN applications a ON a.application_id = l.application_id
 JOIN installments i ON i.loan_id = l.loan_id AND i.installment_no = 1
 WHERE l.disbursed_at < date(a.applied_at) ORDER BY l.loan_id;
+SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id AND i.installment_no = 1
+WHERE date(i.due_date, '-1 month') <> l.disbursed_at;                                 -- 166
 ```
 Lags of 0–3 days for all twelve (1039 → 2025-01-07, 2 days after the decision; 2244 → 2026-09-30, 3 days) — exactly the lag every normal loan shows. On all 7 828 loans the rule `date(first_due, '-1 month') <> disbursed_at` flags **166**: the 12 real ones plus 154 month-end artefacts (disbursed 2026-01-29 → due 2026-02-28, and February cannot give January 29 back). A date rule needs a tolerance; a "wrong" flag list always needs a look.
 
 </details>
 
+How many loans does the rule flag on the whole book — and how many of them are real errors? Enter the first number.
+
+```task
+{"id": "w02d3-p11", "kind": "number", "answer": 166, "dp": 0, "unit": "loans", "hint": "The second query in your box: first instalment's due date minus one month, compared with disbursed_at, over every loan.", "model": "166 flags: the 12 detective loans plus 154 month-end artefacts — a loan paid out on 29–31 January falls due on 28 February, and '28 February − 1 month' is 28 January, not the 29th. A date rule needs a tolerance before its flags are called errors.", "xp": 2}
+```
+
+### SQL lab — promises with dates
+
+Dates become numbers only through functions. This lab runs on **your practice copy** of the database (the **Database** panel shows your new table; **Database → Reset** brings the original back).
+
+```sqllab
+{"id": "w02d3-lab", "title": "Sevara's promise-to-pay log", "intro": "Sevara's collectors write down every promise to pay: which loan, the day of the call, the day the customer promised to pay by, the amount. Build the log, then let date functions do the counting.",
+ "steps": [
+  {"say": "Create a table my_promises: promise_id (INTEGER PRIMARY KEY), loan_id (INTEGER), promised_on (TEXT), pay_by (TEXT), amount (INTEGER). Dates are stored as text 'YYYY-MM-DD'.", "hint": "CREATE TABLE my_promises (promise_id INTEGER PRIMARY KEY, loan_id INTEGER, promised_on TEXT, pay_by TEXT, amount INTEGER);", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'my_promises'", "want": 1},
+  {"say": "Insert these four promises: (1, 2242, '2026-09-28', '2026-10-05', 968400), (2, 4567, '2026-09-29', '2026-10-15', 20000000), (3, 1039, '2026-09-30', '2026-11-02', 500000), (4, 2167, '2026-10-01', '2026-10-31', 1000000).", "hint": "INSERT INTO my_promises (promise_id, loan_id, promised_on, pay_by, amount) VALUES (1, 2242, '2026-09-28', '2026-10-05', 968400), (2, 4567, '2026-09-29', '2026-10-15', 20000000), (3, 1039, '2026-09-30', '2026-11-02', 500000), (4, 2167, '2026-10-01', '2026-10-31', 1000000);", "expect": "SELECT COUNT(*) FROM my_promises", "want": 4},
+  {"say": "How many days did each customer ask for? Add a column days_given (INTEGER) and fill it with the whole days from promised_on to pay_by.", "hint": "ALTER TABLE my_promises ADD COLUMN days_given INTEGER; UPDATE my_promises SET days_given = CAST(julianday(pay_by) - julianday(promised_on) AS INTEGER);", "expect": "SELECT SUM(days_given) FROM my_promises", "want": 86},
+  {"say": "Add a column pay_month (TEXT) and fill it with the year-month of pay_by, like '2026-10'.", "hint": "ALTER TABLE my_promises ADD COLUMN pay_month TEXT; UPDATE my_promises SET pay_month = strftime('%Y-%m', pay_by);", "expect": "SELECT COUNT(*) FROM my_promises WHERE pay_month = '2026-10'", "want": 3},
+  {"say": "Sevara only tracks October. Delete the promises due in November 2026 — with a half-open filter on pay_by, not with pay_month.", "hint": "DELETE FROM my_promises WHERE pay_by >= '2026-11-01' AND pay_by < '2026-12-01';", "expect": "SELECT COUNT(*) FROM my_promises", "want": 3}],
+ "cleanup": "DROP TABLE IF EXISTS my_promises"}
+```
+
+The 33 days customer 1039 asked for is the kind of number a function gives you in one line and a calendar in five minutes; the half-open delete is the same filter you will write in every period report.
+
 ---
 
 ## 4. Homework <span class="badge hw">HW 2.2 — Due Day 5</span>
 
-**Sevara's 2026 lateness report and the clean method table.** Use the payments received from 1 January to 30 September 2026 throughout (a half-open filter on `paid_at`). Hand in with the 📎 box below:
-
-1. `lateness.sql` + `lateness.md` — (a) days late per payment (the P7 shape, with a `-- result:` of the count of late payments in 2026), (b) by customer **segment**: payments, share late, average days over all payments, average days over late payments only — one query with all four columns, (c) by **region of the branch** the same, (d) three sentences for Sevara: which segment is late most often, how late a late payment typically is, and whether any region stands out.
-2. `methods.sql` — the cleaned payments-by-method table for 2026 (five rows) with count, total amount and share %, plus the count of 2026 rows that needed cleaning and a one-line proposal for where the fix belongs (the cashier software, the ETL, or a reference table of methods).
-3. `detective.md` — a new case with section 2's tools: **applications made by people who were not yet 18 on the day they applied** (join `applications` to `customers`; compare `date(c.birth_date, '+18 years')` with `date(a.applied_at)` — SQL Server `DATEADD(year, 18, c.birth_date)` and `CAST(a.applied_at AS DATE)`). How many applications, how many customers, how many became loans — split into "born after the day they applied" and "really under 18". A table of the cases and a memo line for Timur: what it says about the data, and about the approval process.
-
-Graded on: (a) numbers match ours within rounding, (b) both dialects or a clear "SQLite"/"SQL Server" header, (c) the three sentences answer Sevara's actual question — frequency vs severity.
+**Sevara's 2026 lateness report, the clean method table, and a new detective case.** Use the payments received from 1 January to 30 September 2026 throughout — a half-open filter on `paid_at` (`>= '2026-01-01' AND < '2026-10-01'`). Write each query in the workspace below; **✔ Check** compares the key numbers with ours without showing them; 📤 Submit sends `lateness.sql` and your notes to your mentor. Write in either dialect and put `-- SQLite` or `-- SQL Server` on the first line.
 
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W2D3", "lesson": "W2D3", "title": "HW 2.2", "tasks": [{"id": "lateness.sql", "file": "lateness.sql", "text": true, "minLines": 3, "q": "Write `lateness.sql` here — what the page above asks for."}, {"id": "methods.sql", "file": "methods.sql", "text": true, "minLines": 3, "q": "Write `methods.sql` here — what the page above asks for."}, {"id": "detective.md", "file": "detective.md", "text": true, "minLines": 3, "q": "Write `detective.md` here — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "hw2.2", "lesson": "W2D3", "title": "HW 2.2 — lateness, methods, under-18 applications", "file": "lateness.sql",
+ "why": "Sevara staffs her team on these numbers, Timur's method tile is wrong until the labels are clean, and an approval given to a minor is a compliance problem the board will ask about.",
+ "graded": ["Every query passes ✔ Check: the right period filter, the right join, the right numbers", "Frequency and severity kept apart: share late and days of late payments are separate columns", "The notes answer Sevara's and Timur's actual questions in plain words"],
+ "tasks": [
+  {"id": "Q1", "q": "Days late per payment (the P7 shape) for 2026 payments, and the count of late ones (`paid_at > due_date`)."},
+  {"id": "Q2", "q": "By customer segment: payments, share late %, average days over all payments, average days over late payments only — one query, four columns."},
+  {"id": "Q3", "q": "The same four columns by region of the branch (from `branches`, not the customer's region)."},
+  {"id": "lateness.md", "file": "lateness.md", "text": true, "minLines": 3, "q": "Three sentences for Sevara: which segment is late most often, how late a late payment typically is, and whether any region stands out."},
+  {"id": "Q4", "q": "The cleaned payments-by-method table for 2026: five rows (trim, lower-case, 'bank transfer' → 'transfer'), with count, total amount and share %."},
+  {"id": "Q5", "q": "How many 2026 payment rows needed cleaning? (One number; on SQL Server add the case-sensitive collation.)"},
+  {"id": "fix.md", "file": "fix.md", "text": true, "minLines": 1, "q": "One line for Timur: where does the fix belong — the cashier software, the ETL, or a reference table of methods — and why?"},
+  {"id": "Q6", "q": "Applications made by people who were not yet 18 on the day they applied (join to `customers`; compare `date(c.birth_date, '+18 years')` with `date(a.applied_at)`; SQL Server `DATEADD(year, 18, c.birth_date)`, `CAST(a.applied_at AS DATE)`): the number of applications and the number of customers in one result."},
+  {"id": "detective.md", "file": "detective.md", "text": true, "minLines": 3, "q": "The case: how many of those applications became loans, how many applicants were 'born after the day they applied' and how many really under 18 — and a memo line for Timur on what it says about the data and about the approval process."}]}
 ```
 
 ---
 
 ## 5. Self-check
 
-1. Why does `7917 / 14000` return 0, and what is the one-character fix? *(→ section 1, "Numbers")*
-2. Write the correct filter for "payments received in February 2026" without BETWEEN. *(→ section 1, "Filtering a period")*
-3. Sevara asks for "average lateness by product". Name the two different numbers that phrase can mean. *(→ P8)*
+```check
+{"id": "w02d3-sc", "questions": [
+  {"type": "single", "q": "Why does `SELECT 7917 / 14000` return 0, and what is the fix?", "options": ["Two whole numbers divide as whole numbers; write 7917 * 100.0 / 14000", "The result is too small to show; use ROUND", "Division needs CAST on the result: CAST(7917 / 14000 AS FLOAT)", "SQLite cannot divide; use SQL Server"], "answer": 0, "explain": "The decimal must be there before the division: CAST of the result is too late, the fraction is already gone (→ section 1, Numbers)."},
+  {"type": "single", "q": "Which filter selects the payments received in the first quarter of 2026?", "options": ["paid_at BETWEEN '2026-01-01' AND '2026-03-31'", "paid_at >= '2026-01-01' AND paid_at < '2026-04-01'", "strftime('%m', paid_at) <= '03'", "paid_at > '2026-01-01' AND paid_at < '2026-03-31'"], "answer": 1, "explain": "Half-open: the start inclusive, the next period's start exclusive. BETWEEN loses times on 31 March; the strftime version takes every year's first quarter (→ section 1, Filtering a period)."},
+  {"type": "number", "q": "On SQLite, what does `LENGTH('Bobur ')` return?", "answer": 6, "explain": "SQLite counts the trailing space; SQL Server's LEN would say 5 — compare DATALENGTH there (→ section 1, Strings; P1)."},
+  {"type": "multi", "q": "Sevara asks for 'average lateness by product'. Which two numbers should you report, named?", "options": ["Share of payments that are late (how often)", "Average days of the late payments (how late)", "Total principal by product", "Number of products"], "answer": [0, 1], "explain": "An average over all payments mixes how often with how late; Micro is late more often, not later (→ P8)."}
+]}
+```
 
 ---
 
@@ -323,7 +444,7 @@ Week 1 Day 3 gave you the definition and the numbers 413 and 14 / 124 / 25 / 16 
 2. **Per loan, the oldest such instalment:** `MIN(due_date)` grouped by loan.
 3. **Days:** as-of minus that date.
 
-Steps 1 and 2 are two groupings in a row, which needs week 3's CTE (`WITH … AS (…)`) to chain. Read it as two named results; next week you will write this shape yourself.
+Steps 1 and 2 are two groupings in a row, which needs week 3's CTE (`WITH … AS (…)`) to chain. **This is a read-and-run preview:** run it, read it as two named results; next week you write this shape yourself.
 
 ```sql
 WITH unpaid AS (                                   -- step 1: matured instalments not fully paid
@@ -370,12 +491,24 @@ FROM dpd GROUP BY bucket ORDER BY MIN(dpd);
 
 Same numbers the week-1 page printed: **14 / 124 / 25 / 16 / 234**; 399 loans with DPD > 0. The 90+ bucket equals the status column to the loan — the first check on any portfolio report, and it passes. Two things the computation shows that the status column does not:
 
-- **Partial payments matter.** 427 of the 1 784 unpaid instalments have *some* payment. Count only instalments with *no* payment (yesterday's simpler anti-join) and the buckets become 13 / 127 / 24 / 18 / **217**: seventeen defaulted or written-off loans whose unpaid instalments all got a token payment would vanish from 90+. "Not fully paid" is the definition; keep the `HAVING paid < due`.
-- **Fifteen "closed" loans have an unpaid matured instalment** (13 in 1–30, 1 in 31–60, 1 at DPD 0) — and they are exactly the 15 closed loans whose `closed_at` is NULL. The system closed them because the schedule ended, not because the money arrived. A finding for Timur; Friday asks about it.
+- **Partial payments matter.** 427 of the 1 784 unpaid instalments have *some* payment. Count only instalments with *no* payment (Monday's simpler anti-join) and the buckets become 13 / 127 / 24 / 18 / **217**: seventeen defaulted or written-off loans whose unpaid instalments all got a token payment would vanish from 90+. "Not fully paid" is the definition; keep the `HAVING paid < due`.
+- **Fifteen "closed" loans have an unpaid matured instalment** (13 in 1–30, 1 in 31–60, 1 at DPD 0) — and they are exactly the 15 closed loans whose `closed_at` is NULL. The system closed them because the schedule ended, not because the money arrived. A finding for Timur; Friday's checkpoint asks about it.
 
 Two more numbers fall out of the same `dpd` result. **PAR30** (portfolio at risk) = outstanding principal of loans with DPD > 30 ÷ total outstanding: 6.51 bn / 208.72 bn = **3.1 %**. And the average DPD of the 151 *active* delinquent loans is 22.7 days (max 89) — the collections team's live caseload is young; the old debt is already written off.
 
-> Interview version: *"How would you compute DPD in SQL?"* — Per instalment, paid vs due via LEFT JOIN payments with HAVING paid < due; per loan, MIN(due_date) of those; DPD = as-of − that date; bucket with CASE; check that 90+ matches default/written-off statuses; say how partial payments are treated.
+Put the computation in order:
+
+```game
+{"id": "w02d3-g4", "type": "order", "title": "DPD in six moves", "items": ["Join every instalment to its payments with a LEFT JOIN", "Sum what was paid per instalment (0 when nothing was paid)", "Keep matured instalments where paid < due (HAVING)", "Per loan, take the oldest such due date (MIN)", "DPD = as-of date − that date", "Bucket the DPD with CASE and check 90+ against the statuses"]}
+```
+
+> 🎯 **Interview version.** *"How would you compute DPD in SQL?"* — Per instalment, paid vs due via LEFT JOIN payments with HAVING paid < due; per loan, MIN(due_date) of those; DPD = as-of − that date; bucket with CASE; check that 90+ matches default/written-off statuses; say how partial payments are treated.
+
+**Say it like in an interview.** *"How would you compute DPD for every loan in SQL, and how would you check the result?"* Answer as you would out loud, with Nur Finance numbers.
+
+```task
+{"id": "w02d3-iv", "kind": "free", "min": 30, "model": "DPD is the number of days since the due date of a loan's oldest instalment that is not fully paid. Per instalment I LEFT JOIN payments, sum what was paid with COALESCE to 0, and keep matured instalments with HAVING paid < due. Per loan I take MIN(due_date) of those and subtract it from the as-of date, then bucket with CASE. At Nur Finance on 2026-10-01 that gives 413 loans, buckets 14 / 124 / 25 / 16 / 234, and the 234 in 90+ are exactly the 44 default plus 190 written-off loans — that match is my check. I would also say that a partly paid instalment still counts as unpaid; otherwise 17 dead loans fall out of 90+.", "rubric": ["Defines DPD: days since the oldest not-fully-paid instalment's due date", "Describes the steps: LEFT JOIN payments, HAVING paid < due, MIN(due_date) per loan, as-of minus that date", "Names a check: 90+ against default / written-off statuses", "States how partial payments are treated", "Gives a Nur Finance number"], "xp": 2}
+```
 
 Tomorrow: NULLs (the `COALESCE` above), CASE for real, and the joins that find what is *missing*.
 
@@ -407,7 +540,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w02d3", "q": "Sevara wants to know whether bank transfers arrive later than other methods. Take the payments received from 1 January to 30 September 2026, clean the method (trim, lower-case, 'bank transfer' → 'transfer'), keep the cleaned 'transfer' rows, and compute the share paid more than 7 days after the instalment's due date. Percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["e0b2149f10af3b0bcbee4f88"], "hint": "The due date lives in another table, and check what your engine does when it divides one whole number by another.", "sol": "LS0gU1FMaXRlClNFTEVDVCBDT1VOVCgqKSBBUyBwYXltZW50cywKICAgICAgIFNVTShqdWxpYW5kYXkocC5wYWlkX2F0KSAtIGp1bGlhbmRheShpLmR1ZV9kYXRlKSA+IDcpIEFTIGxhdGVfb3Zlcl83LAogICAgICAgUk9VTkQoMTAwLjAgKiBTVU0oanVsaWFuZGF5KHAucGFpZF9hdCkgLSBqdWxpYW5kYXkoaS5kdWVfZGF0ZSkgPiA3KSAvIENPVU5UKCopLCAyKSBBUyBwY3QKRlJPTSBwYXltZW50cyBwCkpPSU4gaW5zdGFsbG1lbnRzIGkgT04gaS5pbnN0YWxsbWVudF9pZCA9IHAuaW5zdGFsbG1lbnRfaWQKV0hFUkUgcC5wYWlkX2F0ID49ICcyMDI2LTAxLTAxJyBBTkQgcC5wYWlkX2F0IDwgJzIwMjYtMTAtMDEnCiAgQU5EIFJFUExBQ0UoTE9XRVIoVFJJTShwLm1ldGhvZCkpLCAnYmFuayB0cmFuc2ZlcicsICd0cmFuc2ZlcicpID0gJ3RyYW5zZmVyJzsKLS0gU1FMIFNlcnZlcjogU1VNKElJRihEQVRFRElGRihkYXksIGkuZHVlX2RhdGUsIHAucGFpZF9hdCkgPiA3LCAxLCAwKSkgZm9yIHRoZSBjb3VudCwgdGhlbiAxMDAuMCAqIHRoYXQgLyBDT1VOVCgqKQotLSA0IDE1NiBwYXltZW50cywgMTg3IG1vcmUgdGhhbiA3IGRheXMgbGF0ZSDihpIgNC41MCAlCk9uIHRoZSByYXcgc3BlbGxpbmcgKG1ldGhvZCA9ICd0cmFuc2Zlcicgb25seSkgeW91IGdldCAxODUgb2YgNCAxNDIgPSA0LjQ3ICU6IHRoZSAxNCAnYmFuayB0cmFuc2Zlcicgcm93cyBvZiAyMDI2IHBheSBsYXRlciB0aGFuIGF2ZXJhZ2UsIHNvIHRoZSBjbGVhbmluZyBtb3ZlcyB0aGUgbnVtYmVyLiBDYXJkIHNpdHMgYXQgNC4wMiAlIGFuZCBwYXltZSBhdCA0LjkwICUsIHNvIHRyYW5zZmVycyBhcmUgaW4gdGhlIG1pZGRsZSDigJQgdGhlIHBheW1lbnQgbWV0aG9kIGlzIG5vdCBTZXZhcmEncyBsYXRlbmVzcyBwcm9ibGVtLiAoVGhlIDI1IGR1cGxpY2F0ZSBwYXltZW50cyBhcmUgc3RpbGwgaW4gdGhlIHRhYmxlOyB3ZWVrIDMgcmVtb3ZlcyB0aGVtLik="}
+{"id": "w02d3", "sql": true, "q": "Sevara wants to know whether bank transfers arrive later than other methods. Take the payments received from 1 January to 30 September 2026, clean the method (trim, lower-case, 'bank transfer' → 'transfer'), keep the cleaned 'transfer' rows, and compute the share paid more than 7 days after the instalment's due date. Percentage to 2 decimals.", "type": "number", "dp": 2, "h": ["e0b2149f10af3b0bcbee4f88"], "hint": "The due date lives in another table, and check what your engine does when it divides one whole number by another.", "sol": "LS0gU1FMaXRlClNFTEVDVCBDT1VOVCgqKSBBUyBwYXltZW50cywKICAgICAgIFNVTShqdWxpYW5kYXkocC5wYWlkX2F0KSAtIGp1bGlhbmRheShpLmR1ZV9kYXRlKSA+IDcpIEFTIGxhdGVfb3Zlcl83LAogICAgICAgUk9VTkQoMTAwLjAgKiBTVU0oanVsaWFuZGF5KHAucGFpZF9hdCkgLSBqdWxpYW5kYXkoaS5kdWVfZGF0ZSkgPiA3KSAvIENPVU5UKCopLCAyKSBBUyBwY3QKRlJPTSBwYXltZW50cyBwCkpPSU4gaW5zdGFsbG1lbnRzIGkgT04gaS5pbnN0YWxsbWVudF9pZCA9IHAuaW5zdGFsbG1lbnRfaWQKV0hFUkUgcC5wYWlkX2F0ID49ICcyMDI2LTAxLTAxJyBBTkQgcC5wYWlkX2F0IDwgJzIwMjYtMTAtMDEnCiAgQU5EIFJFUExBQ0UoTE9XRVIoVFJJTShwLm1ldGhvZCkpLCAnYmFuayB0cmFuc2ZlcicsICd0cmFuc2ZlcicpID0gJ3RyYW5zZmVyJzsKLS0gU1FMIFNlcnZlcjogU1VNKElJRihEQVRFRElGRihkYXksIGkuZHVlX2RhdGUsIHAucGFpZF9hdCkgPiA3LCAxLCAwKSkgZm9yIHRoZSBjb3VudCwgdGhlbiAxMDAuMCAqIHRoYXQgLyBDT1VOVCgqKQotLSA0IDE1NiBwYXltZW50cywgMTg3IG1vcmUgdGhhbiA3IGRheXMgbGF0ZSDihpIgNC41MCAlCk9uIHRoZSByYXcgc3BlbGxpbmcgKG1ldGhvZCA9ICd0cmFuc2Zlcicgb25seSkgeW91IGdldCAxODUgb2YgNCAxNDIgPSA0LjQ3ICU6IHRoZSAxNCAnYmFuayB0cmFuc2Zlcicgcm93cyBvZiAyMDI2IHBheSBsYXRlciB0aGFuIGF2ZXJhZ2UsIHNvIHRoZSBjbGVhbmluZyBtb3ZlcyB0aGUgbnVtYmVyLiBDYXJkIHNpdHMgYXQgNC4wMiAlIGFuZCBwYXltZSBhdCA0LjkwICUsIHNvIHRyYW5zZmVycyBhcmUgaW4gdGhlIG1pZGRsZSDigJQgdGhlIHBheW1lbnQgbWV0aG9kIGlzIG5vdCBTZXZhcmEncyBsYXRlbmVzcyBwcm9ibGVtLiAoVGhlIDI1IGR1cGxpY2F0ZSBwYXltZW50cyBhcmUgc3RpbGwgaW4gdGhlIHRhYmxlOyB3ZWVrIDMgcmVtb3ZlcyB0aGVtLik="}
 ```
 
 <!-- challenge:end -->

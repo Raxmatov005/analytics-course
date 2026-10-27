@@ -6,7 +6,7 @@
 
 ## Today in 3 lines
 
-- **Clean before you test.** You run three sanity checks — users in more than one variant, the sample ratio overall *and by segment and week*, and the lift day by day — and find out whether Kamola's dashboard can be trusted. Section 2 walks you through the three checks on this very export — run each one yourself before reading what it finds.
+- **Clean before you test.** You run three sanity checks — users in more than one variant, the sample ratio overall *and by segment and week*, and the lift day by day — and find out whether Kamola's dashboard can be trusted. Section 1 walks you through the three checks on this very export — run each one yourself before reading what it finds.
 - You compute the **primary result** on the population you have decided is clean — difference in points with a 95 % CI, p-value, relative lift — and compare it with the dashboard's number: does the conclusion survive, and how much does the size change?
 - You finish the **readout**: the funnel by step, principal (Mann–Whitney, bootstrap), the **FPD guardrail** with its power, segments with a **Holm** correction — and a decision memo Kamola and Nilufar can both sign.
 
@@ -14,13 +14,70 @@
 
 ## 1. Learn — the order of an analysis
 
-The order is fixed, and it is the order of the readout: **(1) is the experiment sound? (2) the primary result, (3) secondary metrics and guardrails, (4) segments, (5) the decision.** A result read before step 1 is a number from a possibly broken machine. Everything below runs on `users`, `events` and `loans` from `day2_starter.ipynb`; conversion = signed within 7 days of `assigned_at`.
+The order is fixed, and it is the order of the readout: **(1) is the experiment sound? (2) the primary result, (3) secondary metrics and guardrails, (4) segments, (5) the decision.** A result read before step 1 is a number from a possibly broken machine. Everything below runs here, in the page: the first block loads `users`, `events` and `loans` from `data/ab/` and defines the helpers (the same code is in `day2_starter.ipynb`); run the blocks in order, or use ▶ Run all above. Conversion = signed within 7 days of the user's first `assigned_at`.
+
+> 💡 **Key idea.** Read the result last, not first: rows = users, the split by slice and the hash come before any p-value — and today two of those checks fail.
+
+```python
+import pandas as pd, numpy as np, hashlib
+from math import sqrt, exp
+from statistics import NormalDist
+N = NormalDist()
+
+users  = pd.read_csv("data/ab/users.csv", parse_dates=["assigned_at"])
+events = pd.read_csv("data/ab/events.csv", parse_dates=["event_time"])
+loans  = pd.read_csv("data/ab/loans_followup.csv", parse_dates=["signed_at"])
+print(len(users), len(events), len(loans))                 # 27974 67215 2583
+
+def hash_variant(user_id, salt="offer_screen_v2"):          # Day 1
+    h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)
+    return "A" if h % 2 == 0 else "B"
+
+def srm_p(n_a, n_b, share_b=0.5):                           # Day 1's srm_pvalue: chi-square, 1 df
+    n = n_a + n_b
+    chi2 = (n_a - n * (1 - share_b)) ** 2 / (n * (1 - share_b)) + (n_b - n * share_b) ** 2 / (n * share_b)
+    return 2 * (1 - N.cdf(sqrt(chi2)))
+
+def with_conversion(users, events, window_days=7):
+    """conv = 1 if the user signed within window_days of their first assignment."""
+    first = users.groupby("user_id")["assigned_at"].min().rename("first_at").reset_index()
+    s = events[events["event_name"] == "contract_signed"].merge(first, on="user_id")
+    ok = s[(s["event_time"] >= s["first_at"]) & (s["event_time"] <= s["first_at"] + pd.Timedelta(days=window_days))]
+    return users.assign(conv=users["user_id"].isin(ok["user_id"]).astype(int))
+
+def ab_test(kA, nA, kB, nB):
+    """B vs A: two-proportion z-test, the difference with a 95 % CI, the relative lift with a log-ratio CI."""
+    pA, pB = kA / nA, kB / nB
+    pool = (kA + kB) / (nA + nB)
+    z = (pB - pA) / sqrt(pool * (1 - pool) * (1 / nA + 1 / nB))
+    se = sqrt(pA * (1 - pA) / nA + pB * (1 - pB) / nB)
+    se_log = sqrt(1 / kB - 1 / nB + 1 / kA - 1 / nA)
+    r = pB / pA
+    return {"A %": 100 * pA, "B %": 100 * pB, "diff pt": 100 * (pB - pA),
+            "lo pt": 100 * (pB - pA - 1.96 * se), "hi pt": 100 * (pB - pA + 1.96 * se),
+            "z": z, "p": 2 * (1 - N.cdf(abs(z))),
+            "rel %": 100 * (r - 1), "rel lo %": 100 * (r * exp(-1.96 * se_log) - 1), "rel hi %": 100 * (r * exp(1.96 * se_log) - 1)}
+
+def ab_readout(df):
+    k = df.groupby("variant")["conv"].agg(["sum", "size"])
+    r = ab_test(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])
+    print(f"A {k.loc['A', 'sum']} / {k.loc['A', 'size']} = {r['A %']:.2f} %  ·  B {k.loc['B', 'sum']} / {k.loc['B', 'size']} = {r['B %']:.2f} %")
+    print(f"diff {r['diff pt']:+.2f} pt (95 % CI {r['lo pt']:+.2f} to {r['hi pt']:+.2f})  ·  z = {r['z']:.2f}, p = {r['p']:.4f}")
+    print(f"relative {r['rel %']:+.1f} % (95 % CI {r['rel lo %']:+.1f} to {r['rel hi %']:+.1f})")
+    return r
+```
+
+```game
+{"type": "order", "id": "w07d2-g1", "title": "The order of an analysis", "items": ["Is the experiment sound? Rows = users, SRM by slice, the hash, novelty", "The primary result with its confidence interval", "Secondary metrics and guardrails", "Pre-registered segments, with a correction", "The decision: ship, stage, don't, or extend"], "why": "A result read before the sanity checks is a number from a possibly broken machine."}
+```
 
 ### Step 1a — is one row one user?
 
 ```python
-len(users), users["user_id"].nunique()                    # 27 974 rows, 27 674 users
+print(len(users), users["user_id"].nunique())             # 27 974 rows, 27 674 users
 dup = users[users["user_id"].duplicated(keep=False)]      # 600 rows = 300 users, each in BOTH variants
+dup_ids = dup["user_id"].unique()
+print(len(dup), len(dup_ids), dup.groupby("user_id")["variant"].nunique().eq(2).all())   # 600 300 True
 ```
 
 The README says one row per assignment, intended one per user. **300 users were assigned twice** — 1 to 5 days apart (mean 3.0), first A for 182 of them, first B for 118: the app was reinstalled and the device asked again. They saw **both** screens, so they belong to neither arm; and because `events` has no variant column, a naive merge counts each of their events in A **and** in B. The rule: **drop every row of a user who is in both arms** (not "keep the first assignment" — after the second one, their behaviour is a mix). 600 rows go; 27 374 users remain.
@@ -28,11 +85,22 @@ The README says one row per assignment, intended one per user. **300 users were 
 ### Step 1b — the sample ratio, overall and by slice
 
 ```python
-stats.chisquare(users["variant"].value_counts().values)         # rows: 13 845 / 14 129, p = 0.090
-stats.chisquare(ud["variant"].value_counts().values)            # users after de-duplication: 13 545 / 13 829, p = 0.086
+ud = users[~users["user_id"].isin(dup_ids)].copy()                      # 27 374 users, one row each
+ud["week"] = (ud["assigned_at"] - pd.Timestamp("2026-08-01")).dt.days // 7 + 1
+for name, d in [("rows", users), ("users", ud)]:
+    n = d["variant"].value_counts()
+    print(name, n["A"], n["B"], round(srm_p(n["A"], n["B"]), 3))    # rows 13 845 / 14 129, p = 0.090 · users 13 545 / 13 829, p = 0.086
+
+def srm_by(df, cols):
+    t = df.groupby(cols + ["variant"]).size().unstack("variant", fill_value=0)
+    t["B share"] = (t["B"] / (t["A"] + t["B"])).round(3)
+    t["SRM p"] = [srm_p(a, b) for a, b in zip(t["A"], t["B"])]
+    return t
+
+srm_by(ud, ["device", "week"])                                          # iOS week 4: 537 / 822, p ≈ 1e-14
 ```
 
-Overall: unremarkable. Now by slice (the notebook's `srm_by`), on the de-duplicated users:
+Overall: unremarkable. Now by slice (`srm_by` above), on the de-duplicated users:
 
 | slice | A | B | B share | SRM p |
 |---|---|---|---|---|
@@ -47,15 +115,17 @@ Overall: unremarkable. Now by slice (the notebook's `srm_by`), on the de-duplica
 
 One cell is broken: **iOS users assigned 22–28 August went 60 / 40 to B**. The overall test could not see it — 1 359 users out of 27 374 — and a **daily** SRM check could not either (about 980 users a day: only 2 of 28 days have p < 0.05, the smallest 0.024 on 22 August). The slice that matches how the software is built (client × release week) found it. The two other "significant" slices (new p = 0.021, mass p = 0.047) are what eleven checks produce by chance — with the p < 0.001 rule they do not trigger, and after removing the iOS week-4 cell they vanish (new 0.29, mass 0.55): they were echoes of the same bug.
 
+> ⚠️ **Watch out.** An overall SRM check (p = 0.09 here) can hide a broken cell that holds 5 % of the users, and a daily check is too thin to see it. Slice the way the software ships: client × release week.
+
 ### Step 1c — the hash check
 
 The design says the variant **is** `sha256("offer_screen_v2" + user_id) mod 2`. Recompute it:
 
 ```python
 users["expected"] = users["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
-bad = users[users["variant"] != users["expected"]]          # 431 rows
-bad["user_id"].isin(dup["user_id"]).sum()                  # 300: the leak's second assignments
-bad[~bad["user_id"].isin(dup["user_id"])].groupby(["device", "variant"]).size()   # iOS / B: 131, all in Aug 22-28
+bad = users[users["variant"] != users["expected"]]
+print(len(bad), bad["user_id"].isin(dup_ids).sum())                     # 431, of which 300: the leak's second assignments
+print(bad[~bad["user_id"].isin(dup_ids)].groupby(["device", "variant"]).size())   # iOS / B: 131, all in Aug 22-28
 ```
 
 **131 iOS users in week 4 were logged as B although their hash says A** — the client defaulted to B when the assignment call timed out (that is what the engineers will find; the data already says *where*). A hash-based split gives you this check for free: the group is not a stored opinion, it is a function you can recompute.
@@ -64,17 +134,32 @@ bad[~bad["user_id"].isin(dup["user_id"])].groupby(["device", "variant"]).size() 
 
 ### Step 1d — novelty: the daily lift
 
-The chart is in `day2_starter.ipynb`, section 0b. De-duplicated users, conversion within 7 days, by assignment day: A on 1–3 August 7.85 / 7.94 / 8.19 %, B **11.90 / 10.33 / 12.09 %** — a lift of **+4.0, +2.4, +3.9** points on the first three days, then +1.2, −0.3, +0.4, +1.1, … (single days swing by ±3 points: about 490 users per arm per day). By week (iOS week 4 removed): A 8.38 / 8.56 / 7.20 / 7.59 %, B 10.12 / 9.75 / 8.02 / 8.44 %. Days 1–3 alone: 8.01 % vs **11.44 %**, +3.44 points, p = 0.0012; from 4 August: +0.88 points. One day at +5.2 (14 August) proves nothing; **three consecutive launch days**, all far above the rest, plus a known mechanism (returning users exploring a new screen), is the novelty pattern the design anticipated. The pre-registered plan (Day 1): report the **steady state from day 4** as primary, the full period as a sensitivity line.
+The block below draws the chart (also in `day2_starter.ipynb`, section 0b). De-duplicated users, conversion within 7 days, by assignment day: A on 1–3 August 7.85 / 7.94 / 8.19 %, B **11.90 / 10.33 / 12.09 %** — a lift of **+4.0, +2.4, +3.9** points on the first three days, then +1.2, −0.3, +0.4, +1.1, … (single days swing by ±3 points: about 490 users per arm per day). By week (iOS week 4 removed): A 8.38 / 8.56 / 7.20 / 7.59 %, B 10.12 / 9.75 / 8.02 / 8.44 %. Days 1–3 alone: 8.01 % vs **11.44 %**, +3.44 points, p = 0.0012; from 4 August: +0.88 points. One day at +5.2 (14 August) proves nothing; **three consecutive launch days**, all far above the rest, plus a known mechanism (returning users exploring a new screen), is the novelty pattern the design anticipated. The pre-registered plan (Day 1): report the **steady state from day 4** as primary, the full period as a sensitivity line.
+
+```python
+import matplotlib.pyplot as plt
+x = with_conversion(ud, events)
+daily = x.groupby([x["assigned_at"].dt.date, "variant"])["conv"].mean().unstack() * 100
+daily["lift"] = daily["B"] - daily["A"]
+print(daily.head(5).round(2))                                           # days 1-3: +4.0, +2.4, +3.9 points
+ax = daily["lift"].plot(marker="o", title="B - A by day of assignment, points")
+_ = ax.axhline(0, color="grey")
+```
+
+> ⚠️ **Watch out.** Exclude launch days because the pre-registration says so — never because they hurt (or help) the result. One high day (+5.2 points on 14 August) is noise, not novelty.
 
 ### Step 2 — the primary result on the clean population
 
 Clean = de-duplicated, iOS week 4 removed, assigned from 4 August: **22 906 users**, 11 472 / 11 434 (SRM p = 0.80).
 
 ```python
-k = clean.groupby("variant")["conv"].agg(["sum", "size"])                 # A 915 / 11 472 · B 1 013 / 11 434
-proportions_ztest([1013, 915], [11434, 11472])                            # z = 2.41, p = 0.0160
-confint_proportions_2indep(1013, 11434, 915, 11472, method="newcomb")      # +0.0016 to +0.0160   (difference B - A)
-confint_proportions_2indep(1013, 11434, 915, 11472, compare="ratio", method="log")   # 1.020 to 1.210   (ratio B / A)
+clean = with_conversion(users, events)
+clean = clean[~clean["user_id"].isin(dup_ids)]                                        # - the leak
+clean = clean[~((clean["device"] == "iOS") & (clean["assigned_at"] >= "2026-08-22"))]  # - the broken iOS cell
+clean = clean[clean["assigned_at"] >= "2026-08-04"]                                   # - novelty days: 22 906 users
+r = ab_readout(clean)
+# A 915 / 11 472 = 7.98 % · B 1 013 / 11 434 = 8.86 % · +0.88 pt (+0.16 to +1.60) · z = 2.41, p = 0.0160 · +11.1 % (+2.0 to +21.0)
+# In Jupyter: statsmodels' proportions_ztest and confint_proportions_2indep (method="newcomb"; compare="ratio", method="log") give the same numbers
 ```
 
 **7.98 % vs 8.86 %: +0.88 points (95 % CI +0.16 to +1.60), p = 0.016; relative lift +11.1 % (95 % CI +2.0 % to +21.0 %).** The relative interval comes from the ratio's CI (log method), minus 1 — not from dividing the difference's limits by 7.98 %. How each cleaning step moved the answer:
@@ -100,6 +185,8 @@ The same primary in Excel, one row per variant (week 6's four formula cells, plu
 | 8 | relative lift | `=(B3/C3)/(B2/C2)-1` → 11.08 % | |
 
 The leak and the SRM inflated B slightly (the leaked users counted twice; the flipped iOS users convert above average); the novelty days inflated it most. The verdict "B is better" survives every version; **the size Kamola can promise is +0.9 points, not +1.1**, and the interval's lower end (+0.16) is close to nothing.
+
+> 💡 **Key idea.** Cleaning is not a way to make the lift bigger or smaller; it is the condition for reading it. Here the verdict survived every step and the size Kamola can promise fell from +1.09 to +0.88 points.
 
 ### Step 3a — the funnel: where does the lift come from?
 
@@ -127,6 +214,8 @@ Principal per signed loan (clean users) is right-skewed and capped at the produc
 
 Two-proportion z-test **p = 0.23** (Fisher 0.26); difference **+0.72 points, 95 % CI −0.49 to +1.94**. "Not significant" here means almost nothing: the test's **power** to detect a true +0.72 points with ~1 000 loans per arm is **23 %**; detecting it with 80 % power needs **5 508 loans per arm** — about 62 000 users per arm at B's 7-day conversion of 8.86 %, some four months of traffic. The guardrail decision therefore rests on the **interval vs the break-even** (Company corner): the point estimate +0.72 is below Day 1's +1.25 (and below +0.94 recomputed with today's numbers), the upper bound +1.94 is above it. The data cannot rule out that B loses money.
 
+> 💡 **Key idea.** "Not significant" from a test with 23 % power means "unknown", not "safe". The guardrail decision compares the interval's upper end with the break-even.
+
 ### Step 4 — segments, with the correction
 
 Seven pre-registered cuts (device, new vs returning, customer segment), clean population:
@@ -143,6 +232,10 @@ Seven pre-registered cuts (device, new vs returning, customer segment), clean po
 
 Nothing survives Holm; every segment's lift is positive and close to the total. "Affluent +1.7, p = 0.047" is the sentence somebody will want to put on the slide — it is the most extreme of seven, before correction. Whether the lift **differs** between groups is a different test (an **interaction**): new +0.85 vs returning +0.96, difference z = −0.15, **p = 0.88**. "Significant in Android, not in iOS" does not mean the screen works only on Android: iOS has a fifth of the users. Regions (8 more tests): smallest Holm-adjusted p 0.59.
 
+```game
+{"type": "bug", "id": "w07d2-g2", "title": "Three lines that would not survive Jasur", "q": "The dashboard's readout of the offer-screen test. Tap every line that is wrong.", "code": "Design: user-level 50/50 hash split, 1–28 August, primary = signed within 7 days.\nSanity: 13 845 vs 14 129 rows, overall SRM p = 0.09 — the split is fine.\nPrimary: 9.37 % vs 8.28 %, two-proportion z-test, two-sided.\nGuardrail: FPD difference not significant (p = 0.23) — passed.\nSegments: affluent +1.7 points, p = 0.047 — target affluent users first.\nNext: decision memo for Kamola and Nilufar.", "answer": [1, 3, 4], "why": "Rows are not users and the SRM must be checked by slice (iOS week 4 was 60/40); a guardrail test with 23 % power is unresolved, not passed; affluent is the best of seven segments before Holm (0.28 after)."}
+```
+
 ### Step 5 — the decision
 
 | If | Then |
@@ -154,6 +247,10 @@ Nothing survives Holm; every segment's lift is positive and close to the total. 
 | SRM or leak you cannot explain | **do not read the result**; fix and re-run |
 
 Here: row two. A screen change is cheap to reverse; FPD is a two-month-late signal. Ship B to 100 % of new offer views **except a 10 % hold-out on A** for ten weeks, and read FPD on both when ~5 000 B loans have matured.
+
+```game
+{"type": "sort", "id": "w07d2-g3", "title": "Which decision?", "q": "Put each situation under the decision it leads to.", "groups": {"Ship": ["Sound test, primary significant, every guardrail interval inside the safe zone"], "Ship in stages, keep a hold-out": ["Primary significant, the FPD interval crosses the break-even"], "Do not ship": ["Primary not significant, MDE was realistic, the interval excludes the MDE"], "Extend to the planned n": ["Primary not significant, interval wide — the test is underpowered"], "Do not read: fix and re-run": ["An SRM or a leak you cannot explain"]}, "why": "Today's test is the second row: a screen change is cheap to reverse, FPD is a two-month-late signal."}
+```
 
 ### Depth (optional)
 
@@ -169,6 +266,18 @@ Here: row two. A screen change is cheap to reverse; FPD is a two-month-late sign
 - `Howework_AB.ipynb` — the original course's A/B homework: a "For you" page recommendation test in an online shop; hypothesis + metric + criterion, split, comparability, a synthetic dataset, a power-vs-sample-size plot at MDE 5 %; then the same for profitability. Today's analysis is the next step after that design.
 - *Russian terms:* очистка данных эксперимента = experiment data cleaning, утечка в назначении = assignment leak, пересечение групп = group overlap, воронка = funnel, конверсия = conversion, относительный прирост (лифт) = relative lift, бутстрап = bootstrap, барьерная метрика = guardrail, взаимодействие = interaction, поэтапный запуск = staged rollout, контрольная (отложенная) группа = hold-out.
 
+```videoquiz
+{"video": "FEI1OA-zgb8", "stops": [{"at": 1880, "q": "The p-value is 0.016. What does it say?", "options": ["B is better with 98.4 % probability", "If the screens did not differ, a gap this large would appear in about 1.6 % of such experiments", "1.6 % of users prefer B", "The effect is 1.6 %"], "answer": 1, "explain": "A p-value is computed assuming no difference; it is not the probability that B is better."}, {"at": 1950, "q": "Why report a confidence interval and not only p?", "options": ["It shows how big the effect plausibly is — +0.16 to +1.60 points here", "It is always narrower", "It replaces the sanity checks", "Only to decorate the slide"], "answer": 0, "explain": "The interval carries the size and its uncertainty; the decision needs both."}, {"at": 2180, "q": "Which is a common problem that breaks a test's result?", "options": ["Using a 7-day window", "Users who end up in both groups", "A pre-registered plan", "Hashing user ids"], "answer": 1, "explain": "Today's 300 leaked users saw both screens: they belong to neither arm.", "back": 60}, {"at": 2260, "q": "The groups' sizes differ more than chance allows. What do you do?", "options": ["Reweight", "Report the result with a footnote", "Find the broken cell and remove it from both arms, or re-run", "Ignore it if p < 0.05"], "answer": 2, "explain": "An SRM is a bug to find; here the iOS cell of week 4 was removed from both arms."}]}
+```
+
+```videoquiz
+{"video": "KZe0C0Qq4p0", "stops": [{"at": 2600, "q": "What do you compute first when the experiment's data arrive?", "options": ["Segment results", "The sanity checks: one row per user, the split", "The relative lift", "The decision"], "answer": 1, "explain": "Sanity before results — the order of today's analysis."}, {"at": 3100, "q": "Conversion is a 0/1 outcome per user. Which test fits two groups' conversion rates?", "options": ["A two-proportion z-test", "A paired t-test", "Correlation", "Chi-square on the means"], "answer": 0, "explain": "Two independent proportions: the two-proportion z-test (or chi-square on the 2 × 2 table).", "back": 60}, {"at": 3500, "q": "The result is significant. What else goes into the recommendation?", "options": ["Nothing", "Only the p-value", "The size with its interval, the guardrails and whether it is worth it", "The segment that won most"], "answer": 2, "explain": "Statistical significance is not the business decision: size, guardrails and cost decide."}]}
+```
+
+```videoquiz
+{"video": "DUNk4GPZ9bw", "stops": [{"at": 790, "q": "What does a validity check look at before the launch decision?", "options": ["Invariant metrics such as group sizes, and whether the setup worked", "Only the primary metric", "The best segment", "The dashboard colours"], "answer": 0, "explain": "If the invariants are off, the comparison is not trustworthy."}, {"at": 880, "q": "The primary metric improves but a guardrail gets worse. What is the launch decision?", "options": ["Launch — the primary won", "A trade-off: quantify both, and launch only if the gain outweighs the cost (or launch in stages)", "Never launch", "Re-run until the guardrail is fine"], "answer": 1, "explain": "Today's FPD: compare the interval's upper end with the break-even; stage the rollout when it crosses.", "back": 60}]}
+```
+
 ---
 
 ## 2. Worked example — the primary result, end to end (15 min)
@@ -176,13 +285,12 @@ Here: row two. A screen change is cheap to reverse; FPD is a two-month-late sign
 ```python
 x = with_conversion(users, events)                                         # one row per user row, conv = signed within 7 days
 dup_ids = users.loc[users["user_id"].duplicated(), "user_id"].unique()      # 300
-c = x[~x["user_id"].isin(dup_ids)]                                         # 27 374 users
+c = x[~x["user_id"].isin(dup_ids)]                                         # 27 374
 c = c[~((c["device"] == "iOS") & (c["assigned_at"] >= "2026-08-22"))]      # 26 015 — SRM p = 0.995
 c = c[c["assigned_at"] >= "2026-08-04"]                                    # 22 906 — the clean population
 k = c.groupby("variant")["conv"].agg(["sum", "size"])
-z, p = proportions_ztest(k["sum"][::-1], k["size"][::-1])                  # z = 2.408, p = 0.0160  (order: B first, so z > 0 means B higher)
-lo, hi = confint_proportions_2indep(1013, 11434, 915, 11472, method="newcomb")                      # +0.00164, +0.01603
-rlo, rhi = confint_proportions_2indep(1013, 11434, 915, 11472, compare="ratio", method="log")      # 1.0197, 1.2100
+r = ab_test(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])
+print({key: round(float(v), 4) for key, v in r.items()})    # z = 2.408, p = 0.0160 (B minus A: z > 0 means B is higher)
 ```
 
 **The sentence** (week 6's six parts): *"Users who saw the new screen signed within 7 days 8.86 % of the time against 7.98 % with the current screen (difference +0.88 points, 95 % CI +0.16 to +1.60; relative +11 %, CI +2 % to +21 %); a two-sided two-proportion z-test gives z = 2.41, p = 0.016 on 22 906 users after removing 300 users assigned to both screens, the mis-assigned iOS week and the three novelty days; at α = 5 % the new screen converts better — about 9 more contracts per 1 000 viewers."*
@@ -191,95 +299,73 @@ rlo, rhi = confint_proportions_2indep(1013, 11434, 915, 11472, compare="ratio", 
 
 ## 3. Practice (60 min)
 
-Open `data/python/week7/day2_starter.ipynb`: write `srm_by`, `clean_users`, `ab_readout` until their asserts pass, then one cell per task.
+Answer each question in its box. The Python boxes run here and see `users`, `events`, `loans`, `ud`, `clean`, `dup_ids` and the helpers from section 1 (`srm_p`, `srm_by`, `with_conversion`, `ab_test`, `ab_readout`, `hash_variant`) — run section 1's blocks first. In Jupyter, `day2_starter.ipynb` has the same data and asks you to write `srm_by`, `clean_users` and `ab_readout` yourself; the checkpoint on Day 5 is easier if you do.
 
 **P1.** The naive result: conversion per variant on every row, z, p, relative lift. Then two reasons why this cannot go to Kamola yet.
 
-<details><summary>Answer</summary>
-
-A 1 147 / 13 845 = **8.28 %**, B 1 324 / 14 129 = **9.37 %**, z = 3.20, **p = 0.0014**, +13.1 %. Not yet: nobody has checked that rows are users (they are not: 27 974 rows, 27 674 users) or that the split is the planned 50/50 in every part of the experiment — a broken split makes the comparison non-random, and then a p-value means nothing.
-
-</details>
+```task
+{"id": "w07d2-p1", "kind": "python", "starter": "raw = with_conversion(users, events)          # every row, as the dashboard counts them\nprint(raw.groupby(\"variant\")[\"conv\"].agg([\"sum\", \"size\"]))\n# TODO: ab_readout(raw) -- B's rate, z, p and the relative lift\n", "answer": 3.2, "dp": 2, "model": "A 1 147 / 13 845 = 8.28 %, B 1 324 / 14 129 = 9.37 %, z = 3.20, p = 0.0014, +13.1 %. Not yet: nobody has checked that rows are users (they are not: 27 974 rows, 27 674 users) or that the split is the planned 50/50 in every part of the experiment — a broken split makes the comparison non-random, and then a p-value means nothing."}
+```
 
 **P2.** Duplicates: how many users appear more than once, in which variants, how far apart? Why remove all their rows rather than keep the first assignment?
 
-<details><summary>Answer</summary>
-
-**300 users**, 600 rows, every one of them in **both** A and B; first assignment A for 182, B for 118; second assignment 1.0–5.0 days later (mean 3.0). After the second assignment they saw the other screen — their outcome is caused by a mix of A and B, and their events (no variant column) would be counted in both arms. Keeping the first row would still attribute a mixed outcome to one screen; dropping them costs 1 % of the sample and removes the doubt.
-
-</details>
+```task
+{"id": "w07d2-p2", "kind": "python", "starter": "c = users[\"user_id\"].value_counts()\nd = users[users[\"user_id\"].isin(c[c > 1].index)].sort_values([\"user_id\", \"assigned_at\"])\nprint(d.head(6))\n# TODO: how many users? in how many variants each? first variant A vs B?\n#       days between the two assignments (min, mean, max)?\n", "answer": 300, "dp": 0, "model": "300 users, 600 rows, every one of them in both A and B; first assignment A for 182, B for 118; second assignment 1.0–5.0 days later (mean 3.0). After the second assignment they saw the other screen — their outcome is caused by a mix of A and B, and their events (no variant column) would be counted in both arms. Keeping the first row would still attribute a mixed outcome to one screen; dropping them costs 1 % of the sample and removes the doubt."}
+```
 
 **P3.** SRM with your `srm_by`: overall (rows and de-duplicated users), by device, by week, by device × week, by day. Which cell is broken, and why did the overall and the daily checks miss it?
 
-<details><summary>Answer</summary>
-
-Overall rows 13 845 / 14 129, **p = 0.090**; users 13 545 / 13 829, **p = 0.086**. Device: iOS **p = 2.2 × 10⁻⁵**; week 4 p = 0.0019; **iOS × week 4: 537 / 822 = 60.5 % B, p = 1.1 × 10⁻¹⁴**. By day only 2 of 28 days below 0.05 (smallest 0.024, 22 August). The broken cell is 1 359 of 27 374 users — 5 % of the data, diluted overall; and a day has only ~980 users, so a 60/40 split of its ~50 iOS users is invisible. Slice by how the software ships: client × release period.
-
-</details>
+```task
+{"id": "w07d2-p3", "kind": "python", "starter": "# srm_by and ud come from section 1, Step 1b\n# TODO: srm_by(ud, [\"device\"]), then [\"week\"], then [\"device\", \"week\"]\n# TODO: by day -- ud[\"day\"] = ud[\"assigned_at\"].dt.date; how many of 28 days have SRM p < 0.05?\n", "answer": 822, "dp": 0, "model": "Overall rows 13 845 / 14 129, p = 0.090; users 13 545 / 13 829, p = 0.086. Device: iOS p = 2.2 × 10⁻⁵; week 4 p = 0.0019; iOS × week 4: 537 / 822 = 60.5 % B, p = 1.1 × 10⁻¹⁴. By day only 2 of 28 days below 0.05 (smallest 0.024, 22 August). The broken cell is 1 359 of 27 374 users — 5 % of the data, diluted overall; and a day has only ~980 users, so a 60/40 split of its ~50 iOS users is invisible. Slice by how the software ships: client × release period."}
+```
 
 **P4.** The hash check: recompute every row's variant from `sha256("offer_screen_v2" + user_id)`. How many rows disagree, and how do they split between the two problems?
 
-<details><summary>Answer</summary>
-
-**431 rows** disagree: **300** are the leaked users' re-assignments, **131** are non-duplicate iOS users assigned 22–28 August, **all logged B** although their hash says A. So the SRM is not "B got extra users from somewhere": specific A users were pushed into B — a bug in the iOS client (timeouts defaulting to B), not in the assignment service.
-
-</details>
+```task
+{"id": "w07d2-p4", "kind": "python", "starter": "expected = users[\"user_id\"].map(lambda u: hash_variant(u, \"offer_screen_v2\"))\nbad = users[users[\"variant\"] != expected]\n# TODO: how many rows disagree? how many of them belong to the leaked users (dup_ids)?\n#       the rest by device, variant and assignment week\n", "answer": 431, "dp": 0, "model": "431 rows disagree: 300 are the leaked users' re-assignments, 131 are non-duplicate iOS users assigned 22–28 August, all logged B although their hash says A. So the SRM is not \"B got extra users from somewhere\": specific A users were pushed into B — a bug in the iOS client (timeouts defaulting to B), not in the assignment service."}
+```
 
 **P5.** Novelty: daily conversion by variant (de-duplicated), the lift on 1–3 August, a test on days 1–3 alone, and the weekly table with iOS week 4 removed. What does the pre-registered plan say you do?
 
-<details><summary>Answer</summary>
-
-Days 1–3: A 7.85 / 7.94 / 8.19 %, B 11.90 / 10.33 / 12.09 % → lifts **+4.0, +2.4, +3.9**; pooled days 1–3: 8.01 % vs 11.44 %, **+3.44 points, p = 0.0012**. Weekly: A 8.38 / 8.56 / 7.20 / 7.59 %, B 10.12 / 9.75 / 8.02 / 8.44 % — week 1 carries the spike. Plan: steady state (from 4 August) is the primary, the full period a sensitivity line. Leaving the spike in would sell Kamola a lift that the screen will not keep.
-
-</details>
+```task
+{"id": "w07d2-p5", "kind": "python", "starter": "x = with_conversion(ud, events)\nearly = x[x[\"assigned_at\"] < \"2026-08-04\"]\n# TODO: ab_readout(early) -- the lift on days 1-3 alone\n# TODO: the weekly table without iOS week 4: groupby([\"week\", \"variant\"])[\"conv\"].mean().unstack()\n", "answer": 3.44, "dp": 2, "model": "Days 1–3: A 7.85 / 7.94 / 8.19 %, B 11.90 / 10.33 / 12.09 % → lifts +4.0, +2.4, +3.9; pooled days 1–3: 8.01 % vs 11.44 %, +3.44 points, p = 0.0012. Weekly: A 8.38 / 8.56 / 7.20 / 7.59 %, B 10.12 / 9.75 / 8.02 / 8.44 % — week 1 carries the spike. Plan: steady state (from 4 August) is the primary, the full period a sensitivity line. Leaving the spike in would sell Kamola a lift that the screen will not keep."}
+```
 
 **P6.** The clean primary result with your `ab_readout`, then the cleaning-ladder table (raw → − leak → − iOS week 4 → − days 1–3). Which step changes the answer most?
 
-<details><summary>Answer</summary>
-
-Clean: **7.98 % vs 8.86 %, +0.88 points (+0.16 to +1.60), p = 0.016, +11.1 % (+2.0 to +21.0)**. Ladder: +1.09 (p 0.0014) → +1.11 (0.0010) → +1.19 (0.00059) → **+0.88 (0.016)**. The novelty exclusion moves it most (−0.31 points); the leak and the SRM each push B up a little. The conclusion holds throughout; the size drops by a fifth and the p-value rises tenfold.
-
-</details>
+```task
+{"id": "w07d2-p6", "kind": "python", "starter": "steps = with_conversion(users, events)\n# TODO: ab_readout after each step and compare the difference in points:\n#   raw -> minus dup_ids -> minus iOS on/after 2026-08-22 -> minus days before 2026-08-04 (clean)\n", "answer": 0.88, "dp": 2, "model": "Clean: 7.98 % vs 8.86 %, +0.88 points (+0.16 to +1.60), p = 0.016, +11.1 % (+2.0 to +21.0). Ladder: +1.09 (p 0.0014) → +1.11 (0.0010) → +1.19 (0.00059) → +0.88 (0.016). The novelty exclusion moves it most (−0.31 points); the leak and the SRM each push B up a little. The conclusion holds throughout; the size drops by a fifth and the p-value rises tenfold."}
+```
 
 **P7.** The funnel by variant on the clean users: step rates and a two-proportion test per step. Where does the lift come from, and which step would worry a risk manager?
 
-<details><summary>Answer</summary>
-
-Start 33.6 vs 33.7 % (p 0.91); submit 73.4 vs 74.5 % of starters (0.27); approved 39.7 vs 41.6 % of submitted (0.14); signed 88.4 vs 90.1 % of approved (0.17). The lift is not at the door but in finishing — small gains at every later step. The **approval** step worries risk: a higher approval share in B could mean different applicants; here it is within noise, so it goes on the watch list, not into the conclusion.
-
-</details>
+```task
+{"id": "w07d2-p7", "kind": "choice", "options": ["More users start an application; the start step worries risk", "Starters finish a little more often at every later step; the approval step — the scorecard's decision — worries risk", "Only the signing step moves; nothing worries risk", "More users view the offer; the signing step worries risk"], "answer": 1, "explain": "Start 33.6 vs 33.7 % (p 0.91); submit 73.4 vs 74.5 % of starters (0.27); approved 39.7 vs 41.6 % of submitted (0.14); signed 88.4 vs 90.1 % of approved (0.17). The lift is not at the door but in finishing — small gains at every later step. The approval step worries risk: a higher approval share in B could mean different applicants; here it is within noise, so it goes on the watch list, not into the conclusion."}
+```
 
 **P8.** Principal per loan: describe both arms, Mann–Whitney, a bootstrap CI of the mean difference (10 000 resamples, `default_rng(2026)`). Then disbursed principal per viewer with its bootstrap CI.
 
-<details><summary>Answer</summary>
-
-A 993 loans, mean **2 563 847**, median 2 270 000, sd 1 248 912; B 1 076, **2 494 675**, 2 245 000, 1 197 935. Mann–Whitney **p = 0.32** (P(B > A) = 0.487); mean difference **−69 172 (95 % CI −174 910 to +35 635)**, −2.7 %. Per viewer: A 203 824, B 220 024 (**+7.9 %**), CI of the difference −4 423 to +36 856 — 203.8 m vs 220.0 m per 1 000 viewers, not distinguishable from zero. More contracts, possibly smaller ones.
-
-</details>
+```task
+{"id": "w07d2-p8", "kind": "python", "starter": "lc = loans.merge(clean[[\"user_id\", \"variant\", \"conv\"]], on=\"user_id\")      # loans of clean users: 993 / 1 076\nprint(lc.groupby(\"variant\")[\"principal\"].describe())\n# TODO: mean difference B - A (soum)\n# TODO: bootstrap 95 % CI of it: rng = np.random.default_rng(2026), 10 000 resamples of each arm\n# (Mann-Whitney needs scipy: in Jupyter, scipy.stats.mannwhitneyu)\n", "answer": -69172, "dp": 0, "model": "A 993 loans, mean 2 563 847, median 2 270 000, sd 1 248 912; B 1 076, 2 494 675, 2 245 000, 1 197 935. Mann–Whitney p = 0.32 (P(B > A) = 0.487); mean difference −69 172 (95 % CI −174 910 to +35 635), −2.7 %. Per viewer: A 203 824, B 220 024 (+7.9 %), CI of the difference −4 423 to +36 856 — 203.8 m vs 220.0 m per 1 000 viewers, not distinguishable from zero. More contracts, possibly smaller ones."}
+```
 
 **P9.** The FPD guardrail: rates with Wilson intervals, z-test and Fisher, the CI of the difference, the power this test had, and the loans per arm needed. What sentence goes to Nilufar?
 
-<details><summary>Answer</summary>
-
-A 15 / 993 = **1.51 %** (0.92–2.48), B 24 / 1 076 = **2.23 %** (1.50–3.30); z-test **p = 0.23**, Fisher 0.26; difference **+0.72 points (−0.49 to +1.94)**. Power for a true +0.72 points: **23 %**; 80 % needs **5 508 loans per arm**. *"FPD is 0.7 points higher in B, which is within chance, but this test could not have detected a difference of that size; the interval runs up to +1.9 points, beyond the +0.9 to +1.25 points at which B stops paying for itself — so the guardrail is not cleared, it is unknown."*
-
-</details>
+```task
+{"id": "w07d2-p9", "kind": "python", "starter": "lc = loans.merge(clean[[\"user_id\", \"variant\"]], on=\"user_id\")\nlc[\"fpd\"] = 1 - lc[\"first_instalment_paid_within_30d\"]\nf = lc.groupby(\"variant\")[\"fpd\"].agg([\"sum\", \"size\"])\nprint(f)\n# TODO: ab_test(kA, nA, kB, nB) on the FPD counts -- print the p-value and the difference's CI\n# (ab_test gives a Wald interval, -0.44 to +1.88; Newcombe, used on the page, gives -0.49 to +1.94)\n", "answer": 0.23, "dp": 2, "model": "A 15 / 993 = 1.51 % (0.92–2.48), B 24 / 1 076 = 2.23 % (1.50–3.30); z-test p = 0.23, Fisher 0.26; difference +0.72 points (−0.49 to +1.94). Power for a true +0.72 points: 23 %; 80 % needs 5 508 loans per arm. \"FPD is 0.7 points higher in B, which is within chance, but this test could not have detected a difference of that size; the interval runs up to +1.9 points, beyond the +0.9 to +1.25 points at which B stops paying for itself — so the guardrail is not cleared, it is unknown.\""}
+```
 
 **P10.** Segments: lift by device, new vs returning and segment, raw and Holm-adjusted p-values; then the interaction test new vs returning. Which sentence about segments is allowed on the slide?
 
-<details><summary>Answer</summary>
+```task
+{"id": "w07d2-p10", "kind": "python", "starter": "rows = []\nfor col in [\"device\", \"new_vs_returning\", \"segment\"]:\n    for val, g in clean.groupby(col):\n        k = g.groupby(\"variant\")[\"conv\"].agg([\"sum\", \"size\"])\n        r = ab_test(k.loc[\"A\", \"sum\"], k.loc[\"A\", \"size\"], k.loc[\"B\", \"sum\"], k.loc[\"B\", \"size\"])\n        rows.append((val, round(r[\"diff pt\"], 2), r[\"p\"]))\nseg = pd.DataFrame(rows, columns=[\"segment\", \"lift pt\", \"p\"]).sort_values(\"p\").reset_index(drop=True)\n# TODO: Holm -- multiply the i-th smallest p (i = 0, 1, ...) by (7 - i), keep the running maximum, cap at 1\nseg\n", "answer": 0.21, "dp": 2, "model": "Lifts +0.87 (Android, p 0.030), +0.94 (iOS, 0.31), +0.85 (new, 0.093), +0.96 (returning, 0.068), +1.71 (affluent, 0.047), +0.63 (mass, 0.17), +0.87 (sme, 0.30); Holm: smallest 0.21 — none significant. Interaction new vs returning: z = −0.15, p = 0.88. Allowed: \"The lift is positive in every pre-registered segment and we find no evidence that it differs between segments.\" Not allowed: \"it works for affluent users\" or \"it works on Android only\"."}
+```
 
-Lifts +0.87 (Android, p 0.030), +0.94 (iOS, 0.31), +0.85 (new, 0.093), +0.96 (returning, 0.068), +1.71 (affluent, 0.047), +0.63 (mass, 0.17), +0.87 (sme, 0.30); **Holm: smallest 0.21** — none significant. Interaction new vs returning: z = −0.15, **p = 0.88**. Allowed: *"The lift is positive in every pre-registered segment and we find no evidence that it differs between segments."* Not allowed: "it works for affluent users" or "it works on Android only".
+> 🚀 **Stretch (optional, +5 XP).** **P11.** Redo Day 1's unit economics with today's numbers (conversion, average principal per arm, FPD per arm; interest = 9.856 % of principal, i.e. 266 662 ÷ 2 705 586 as on Nur's Micro book; LGD 60 %). Profit per 1 000 viewers per arm; B's break-even FPD; B's profit if its FPD were at the upper end of the CI.
 
-</details>
-
-<span class="badge stretch">Stretch</span> **P11.** Redo Day 1's unit economics with today's numbers (conversion, average principal per arm, FPD per arm; interest = 9.856 % of principal, i.e. 266 662 ÷ 2 705 586 as on Nur's Micro book; LGD 60 %). Profit per 1 000 viewers per arm; B's break-even FPD; B's profit if its FPD were at the upper end of the CI.
-
-<details><summary>Answer</summary>
-
-A: conversion 7.98 %, principal 2 563 847 → I = 252 692, L = 1 538 308, FPD 1.51 % → 225 638 per loan → **17 996 742** per 1 000 viewers. B: 8.86 %, 2 494 675 → I = 245 875, L = 1 496 805, FPD 2.23 % → 207 004 per loan → **18 339 646** (+1.9 %). Break-even FPD for B: **2.45 %**, i.e. **+0.94 points** over A (smaller than Day 1's +1.25 because B's loans are slightly smaller). At the CI's upper end (A + 1.94 = 3.45 %): **16 454 966**, 8.6 % below A. Expected gain small and positive; the bad case is bigger than the good one — exactly why the rollout is staged.
-
-</details>
+```task
+{"id": "w07d2-p11", "kind": "number", "answer": 2.45, "dp": 2, "unit": "%", "hint": "Enter B's break-even FPD in % (A's profit per 1 000 viewers = B's, solved for B's FPD).", "xp": 2, "model": "A: conversion 7.98 %, principal 2 563 847 → I = 252 692, L = 1 538 308, FPD 1.51 % → 225 638 per loan → 17 996 742 per 1 000 viewers. B: 8.86 %, 2 494 675 → I = 245 875, L = 1 496 805, FPD 2.23 % → 207 004 per loan → 18 339 646 (+1.9 %). Break-even FPD for B: 2.45 %, i.e. +0.94 points over A (smaller than Day 1's +1.25 because B's loans are slightly smaller). At the CI's upper end (A + 1.94 = 3.45 %): 16 454 966, 8.6 % below A. Expected gain small and positive; the bad case is bigger than the good one — exactly why the rollout is staged."}
+```
 
 ### Mistakes people make
 
@@ -304,9 +390,9 @@ A: conversion 7.98 %, principal 2 563 847 → I = 252 692, L = 1 538 308, FPD 1.
 
 ## 5. Self-check
 
-1. The overall SRM p-value is 0.09. Is the split fine? What would you check next, and why that? *(→ section 1, "Step 1b", P3)*
-2. The FPD difference is "not significant" (p = 0.23). Can Nilufar sign off the guardrail? *(→ "Step 3c", P9)*
-3. Why exclude the first three days — and what would make that exclusion illegitimate? *(→ "Step 1d", P5, Mistakes)*
+```check
+{"id": "w07d2-sc", "questions": [{"type": "single", "q": "The overall SRM p-value is 0.09. Is the split fine?", "options": ["Yes — p is above 0.05", "Not shown: a broken cell with a few per cent of users is diluted overall; check by device × release week", "No — p must be above 0.5", "Only if every single day passes too"], "answer": 1, "explain": "Overall 0.09 hid iOS week 4 at 60/40 (p ≈ 10⁻¹⁴); a day is too thin to show it (→ Step 1b, P3)."}, {"type": "single", "q": "The FPD difference has p = 0.23, and the test had 23 % power. Can Nilufar sign off the guardrail?", "options": ["Yes — not significant means no harm", "No: it is unresolved; the interval's upper end (+1.94) is above the break-even (+0.94), so ship in stages with a hold-out", "No: FPD is proven worse", "Yes, after Holm"], "answer": 1, "explain": "'Not significant' from a weak test means 'unknown' (→ Step 3c, P9)."}, {"type": "multi", "q": "Which make excluding days 1–3 legitimate?", "options": ["The exclusion rule was in the pre-registration", "A known mechanism: returning users exploring a new screen", "The days make the result look worse", "Three consecutive launch days far above the rest", "One day showed +5.2 points"], "answer": [0, 1, 3], "explain": "The plan decides exclusions, not the data; one high day is noise (→ Step 1d, P5, Mistakes)."}]}
+```
 
 ---
 
@@ -327,9 +413,19 @@ Every experiment ends on **one slide** with eight lines in this order. Kamola re
 
 **How the conclusion changes.** The direction does not: B is better on conversion in every version. Three things change: the **size** (+1.09 → +0.88 points; +13 % → +11 %, and the lower end of the interval from +0.42 to +0.16), the **guardrail story** (raw: FPD p = 0.094, which would have started an argument about a "nearly significant" risk increase; clean: an honest "we cannot tell, so we keep a hold-out"), and the **credibility**: a slide that says *what was removed and why* survives the first question from the CFO; the dashboard's version does not survive Jasur.
 
-> Interview version: *"Walk me through how you analyse an A/B test."* — Sanity first: one row per unit, the sample ratio overall and by the slices the software ships in, units in both arms, the assignment rule recomputed; then the primary metric with a CI and a test, as decided before the start; then guardrails (with their power) and the money; then pre-registered segments with a correction; then a decision — ship, don't, extend, or ship in stages — and what we learned for the next test.
+```game
+{"type": "order", "id": "w07d2-g4", "title": "The readout slide, top to bottom", "items": ["Hypothesis", "Design", "Sanity checks", "Primary result", "Guardrails", "Segments", "Decision", "What we learned"], "why": "Kamola reads the first and the last line, Nilufar the guardrails, Jasur the sanity checks — each finds hers in the same place every time."}
+```
 
-Tomorrow: the numbers move to Power BI. Timur's Excel one-pager breaks every month; the dashboard should refresh itself.
+> 🎯 **Interview version.** *"Walk me through how you analyse an A/B test."* — Sanity first: one row per unit, the sample ratio overall and by the slices the software ships in, units in both arms, the assignment rule recomputed; then the primary metric with a CI and a test, as decided before the start; then guardrails (with their power) and the money; then pre-registered segments with a correction; then a decision — ship, don't, extend, or ship in stages — and what we learned for the next test.
+
+**Say it like in an interview.** *"Walk me through how you analyse an A/B test."* Answer in four to six sentences, with one number from today for each step.
+
+```task
+{"id": "w07d2-ci", "kind": "free", "min": 30, "model": "Sanity first: one row per user (we found 300 users in both arms and removed them), the sample ratio overall and by the slices the software ships in (iOS in the last week was 60/40, so that cell went from both arms), and the assignment recomputed from the hash. Then the primary metric as pre-registered, with a confidence interval: +0.88 points, 95 % CI +0.16 to +1.60, p = 0.016. Then the guardrails with their power: FPD +0.72 points with 23 % power, unresolved against a +0.94-point break-even. Then the pre-registered segments with Holm — none significant. Then one decision — here, ship in stages with a hold-out — and what we learned for the next test.", "rubric": ["starts with sanity checks: rows = users, SRM by slice, the hash", "the primary metric with a CI and a test, as pre-registered", "guardrails with their power or interval, translated into a decision", "segments with a multiple-comparison correction", "ends with one decision (ship / stage / don't / extend)"]}
+```
+
+Tomorrow: the numbers move to Power BI. Bekzod's Excel one-pager from week 4 breaks every month; the dashboard should refresh itself.
 
 ---
 
@@ -359,7 +455,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w07d2", "q": "Someone wants 'the new screen works best for affluent customers' on Kamola's slide. On the clean population (22 906 users, as in today's worked example), test whether the lift differs between the affluent and the mass segment: lift = B rate − A rate in each segment, z = (lift_affluent − lift_mass) / √(sum of the four p(1−p)/n terms), two-sided normal p-value. What is the p-value? Give it to 3 decimals.", "type": "number", "dp": 3, "h": ["3856b54f1bed84556d3b839e"], "hint": "Each segment's lift has its own unpooled variance; the variance of a difference of two independent lifts is the sum of the two.", "sol": "ZGVmIGxpZnQoZCk6CiAgICBnID0gZC5ncm91cGJ5KCJ2YXJpYW50IilbImNvbnYiXS5hZ2coWyJtZWFuIiwgInNpemUiXSkKICAgIHBhLCBuYSwgcGIsIG5iID0gZy5sb2NbIkEiLCAibWVhbiJdLCBnLmxvY1siQSIsICJzaXplIl0sIGcubG9jWyJCIiwgIm1lYW4iXSwgZy5sb2NbIkIiLCAic2l6ZSJdCiAgICByZXR1cm4gcGIgLSBwYSwgcGEgKiAoMSAtIHBhKSAvIG5hICsgcGIgKiAoMSAtIHBiKSAvIG5iCmQxLCB2MSA9IGxpZnQoY1tjWyJzZWdtZW50Il0gPT0gImFmZmx1ZW50Il0pICAgICAjICsxLjcxIHB0CmQyLCB2MiA9IGxpZnQoY1tjWyJzZWdtZW50Il0gPT0gIm1hc3MiXSkgICAgICAgICAjICswLjYzIHB0CnogPSAoZDEgLSBkMikgLyBucC5zcXJ0KHYxICsgdjIpICAgICAgICAgICAgICAgICAgIyAxLjExCjIgKiBzdGF0cy5ub3JtLnNmKGFicyh6KSkgICAgICAgICAgICAgICAgICAgICAgICAgIyAwLjI2NwoKcCA9IDAuMjY3OiB0aGUgYWZmbHVlbnQgbGlmdCAoKzEuNzEgcG9pbnRzKSBpcyBsYXJnZXIgdGhhbiB0aGUgbWFzcyBsaWZ0ICgrMC42MyksIGJ1dCBhIGdhcCBvZiB0aGF0IHNpemUgYmV0d2VlbiB0d28gc2VnbWVudHMgd291bGQgYXBwZWFyIGJ5IGNoYW5jZSBhYm91dCBvbmUgdGltZSBpbiBmb3VyLgonU2lnbmlmaWNhbnQgaW4gYWZmbHVlbnQgKHAgPSAwLjA0NyksIG5vdCBpbiBtYXNzIChwID0gMC4xNyknIGlzIG5vdCBldmlkZW5jZSB0aGF0IHRoZSBlZmZlY3QgZGlmZmVycyDigJQgb25seSB0aGUgaW50ZXJhY3Rpb24gdGVzdCBhbnN3ZXJzIHRoYXQsIGFuZCBpdCBzYXlzIG5vLgpUaGUgc2xpZGUga2VlcHMgdGhlIGFsbG93ZWQgc2VudGVuY2U6IHRoZSBsaWZ0IGlzIHBvc2l0aXZlIGluIGV2ZXJ5IHNlZ21lbnQgYW5kIHdlIGZpbmQgbm8gZXZpZGVuY2UgdGhhdCBpdCBkaWZmZXJzIGJldHdlZW4gdGhlbS4gKFRoZSBzYW1lIGZvcm11bGEgZ2l2ZXMgcCA9IDAuODggZm9yIG5ldyB2cyByZXR1cm5pbmcsIGFzIG9uIHRoZSBwYWdlLik="}
+{"id": "w07d2", "q": "Someone wants 'the new screen works best for affluent customers' on Kamola's slide. On the clean population (22 906 users, as in today's worked example), test whether the lift differs between the affluent and the mass segment: lift = B rate − A rate in each segment, z = (lift_affluent − lift_mass) / √(sum of the four p(1−p)/n terms), two-sided normal p-value. What is the p-value? Give it to 3 decimals.", "type": "number", "dp": 3, "h": ["3856b54f1bed84556d3b839e"], "hint": "Each segment's lift has its own unpooled variance; the variance of a difference of two independent lifts is the sum of the two.", "sol": "ZGVmIGxpZnQoZCk6CiAgICBnID0gZC5ncm91cGJ5KCJ2YXJpYW50IilbImNvbnYiXS5hZ2coWyJtZWFuIiwgInNpemUiXSkKICAgIHBhLCBuYSwgcGIsIG5iID0gZy5sb2NbIkEiLCAibWVhbiJdLCBnLmxvY1siQSIsICJzaXplIl0sIGcubG9jWyJCIiwgIm1lYW4iXSwgZy5sb2NbIkIiLCAic2l6ZSJdCiAgICByZXR1cm4gcGIgLSBwYSwgcGEgKiAoMSAtIHBhKSAvIG5hICsgcGIgKiAoMSAtIHBiKSAvIG5iCmQxLCB2MSA9IGxpZnQoY1tjWyJzZWdtZW50Il0gPT0gImFmZmx1ZW50Il0pICAgICAjICsxLjcxIHB0CmQyLCB2MiA9IGxpZnQoY1tjWyJzZWdtZW50Il0gPT0gIm1hc3MiXSkgICAgICAgICAjICswLjYzIHB0CnogPSAoZDEgLSBkMikgLyBucC5zcXJ0KHYxICsgdjIpICAgICAgICAgICAgICAgICAgIyAxLjExCjIgKiBzdGF0cy5ub3JtLnNmKGFicyh6KSkgICAgICAgICAgICAgICAgICAgICAgICAgIyAwLjI2NwoKcCA9IDAuMjY3OiB0aGUgYWZmbHVlbnQgbGlmdCAoKzEuNzEgcG9pbnRzKSBpcyBsYXJnZXIgdGhhbiB0aGUgbWFzcyBsaWZ0ICgrMC42MyksIGJ1dCBhIGdhcCBvZiB0aGF0IHNpemUgYmV0d2VlbiB0d28gc2VnbWVudHMgd291bGQgYXBwZWFyIGJ5IGNoYW5jZSBhYm91dCBvbmUgdGltZSBpbiBmb3VyLgonU2lnbmlmaWNhbnQgaW4gYWZmbHVlbnQgKHAgPSAwLjA0NyksIG5vdCBpbiBtYXNzIChwID0gMC4xNyknIGlzIG5vdCBldmlkZW5jZSB0aGF0IHRoZSBlZmZlY3QgZGlmZmVycyDigJQgb25seSB0aGUgaW50ZXJhY3Rpb24gdGVzdCBhbnN3ZXJzIHRoYXQsIGFuZCBpdCBzYXlzIG5vLgpUaGUgc2xpZGUga2VlcHMgdGhlIGFsbG93ZWQgc2VudGVuY2U6IHRoZSBsaWZ0IGlzIHBvc2l0aXZlIGluIGV2ZXJ5IHNlZ21lbnQgYW5kIHdlIGZpbmQgbm8gZXZpZGVuY2UgdGhhdCBpdCBkaWZmZXJzIGJldHdlZW4gdGhlbS4gKFRoZSBzYW1lIGZvcm11bGEgZ2l2ZXMgcCA9IDAuODggZm9yIG5ldyB2cyByZXR1cm5pbmcsIGFzIG9uIHRoZSBwYWdlLik=", "python": true}
 ```
 
 <!-- challenge:end -->

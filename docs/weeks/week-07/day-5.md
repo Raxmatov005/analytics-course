@@ -16,7 +16,7 @@
 
 | Time | What | Output |
 |---|---|---|
-| 9:00–9:15 | Read all three parts; open the template; Restart & Run All (the loader asserts 27 974 / 67 215 / 2 583) | a green first cell |
+| 9:00–9:15 | The warm-up below (six quick checks); read all three parts; open the template; Restart & Run All (the loader asserts 27 974 / 67 215 / 2 583) | a green first cell |
 | 9:15–11:15 | Part A, A1 → A6, then the memo | six result cells, six interpretations, one memo |
 | 11:15–11:30 | Break; Restart & Run All; save | `checkpoint_ab.ipynb` with outputs |
 | 11:30–13:30 | Part B: the three pages on yesterday's model; check every card against the checklist | `.pbix`, PDF, three PNGs |
@@ -25,7 +25,51 @@
 
 ---
 
+## Warm-up (not graded, 10 min) — six quick checks
+
+Ten minutes before the notebook: six quick checks that wake up Days 1–4. Answer each in its box — nothing here is graded.
+
+**W1.** An experiment ends with 14 050 users in A and 13 950 in B (planned 50/50). What is the SRM p-value?
+
+```task
+{"id": "w07d5-p1", "kind": "number", "answer": 0.55, "dp": 2, "model": "srm_pvalue(14050, 13950) = 0.55 (scipy: stats.chisquare([14050, 13950])): no evidence of a mismatch — and still check by slice."}
+```
+
+**W2.** Kamola wants to detect +0.5 points on a baseline of 8 % (α 5 % two-sided, power 80 %, Cohen's h). How many users per arm?
+
+```task
+{"id": "w07d5-p2", "kind": "number", "answer": 47519, "dp": 0, "unit": "users per arm", "hint": "Round up. Then: how many days at 1 000 viewers a day?", "model": "47 519 users per arm — 95 days at 1 000 a day, over three months. Tell her the test can see +0.9 points in a month, or that a +0.5 effect needs a bigger audience or a more sensitive metric."}
+```
+
+**W3.** Your A/A test gives p = 0.03 once. Is the system broken?
+
+```task
+{"id": "w07d5-p3", "kind": "choice", "options": ["Yes — an A/A test must never be significant", "Not by itself: one A/A in twenty is 'significant' by chance; re-split many times (ours: 4.0 % below 0.05, uniform p-values) and check the SRM", "Yes, if it happens on a weekday", "No — A/A tests cannot fail"], "answer": 1, "explain": "A broken system fails repeatedly: an SRM, far more than 5 % false positives over re-splits, or missing events in one group."}
+```
+
+**W4.** A card shows Outstanding = 1 527 946 681 726. What happened in Power Query?
+
+```task
+{"id": "w07d5-p4", "kind": "choice", "options": ["Payments were merged onto loans with outstanding expanded: each loan's balance repeated once per payment (×7.3)", "The date table is not marked", "A measure uses / instead of DIVIDE", "The relationship is single-direction"], "answer": 0, "explain": "Remove the merge and relate both facts to the dimensions (Day 3, Company corner)."}
+```
+
+**W5.** `YTD Disbursed` at September 2026 is 161 480 300 000. What does it show at October 2026?
+
+```task
+{"id": "w07d5-p5", "kind": "number", "answer": 162333060000, "dp": 0, "unit": "soum", "model": "162 333 060 000 — October has only one day of data (21 loans, 852 760 000) because the as-of date is 1 October."}
+```
+
+**W6.** Conversion goes from 8.0 % to 8.9 %. What is the relative lift, in %?
+
+```task
+{"id": "w07d5-p6", "kind": "number", "answer": 11.25, "dp": 2, "unit": "%", "model": "+0.9 points absolute, +11.25 % relative (0.9 / 8.0). Always say which: \"+11 %\" and \"+0.9 %\" are different claims."}
+```
+
+---
+
 ## Part A — The offer-screen A/B analysis, the regional readout (120 min, 40 pts)
+
+> 💡 **Key idea.** The plan, not the data, decides: the same pre-registered checks, exclusions and segments as Tuesday, on a new population. Filter the regions first, then run every Day-2 check on what is left.
 
 **The population is new.** Tuesday's readout was for every app user. The rollout will start in the regions, and the regional sales head wants a readout of his own: **users in the seven regions outside Tashkent** (`users["region"] != "Tashkent"` — 16 738 of the 27 974 rows). Same experiment, same pre-registered plan (7-day conversion, novelty days excluded, the same seven segments), new numbers: none of them is on Tuesday's page. A user's region never changes, so you can filter first and then run every check of Day 2 on what is left.
 
@@ -38,6 +82,8 @@ Rows vs users; SRM overall (rows and users) and by device, week, device × week,
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run: the template's helpers live in the notebook)
+...
 reg = users[users["region"] != "Tashkent"]                                # 16 738 rows
 reg["user_id"].nunique(), len(reg)                                       # 16 558 users, 16 738 rows
 dup_ids = reg.loc[reg["user_id"].duplicated(), "user_id"].unique()        # 180 users, each in A and B
@@ -76,6 +122,8 @@ Clean population: conversion per variant, the difference with a 95 % CI, the p-v
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run: the template's helpers live in the notebook)
+...
 clean = with_conversion(clean_users(reg), events)                       # 13 725 users: A 6 883, B 6 842 (SRM p = 0.73)
 ab_readout(clean)
 # A 530 / 6 883 = 7.70 % · B 599 / 6 842 = 8.75 % · diff +1.05 pt (Newcombe +0.14 to +1.98) · z = 2.25, p = 0.025
@@ -114,6 +162,8 @@ Funnel (clean): start 33.3 vs 33.3 % (p 0.95); submit 73.5 vs 74.6 % of starters
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
+# (shape only — not meant to run: the template's helpers live in the notebook)
+...
 lc = loans.merge(clean[["user_id", "variant"]], on="user_id").assign(fpd=lambda t: 1 - t.first_instalment_paid_within_30d)
 # A 6 / 575 = 1.04 % (Wilson 0.48-2.26) · B 14 / 636 = 2.20 % (1.32-3.66)
 # z-test p = 0.11 · Fisher p = 0.17 · difference +1.16 pt (Newcombe -0.35 to +2.72)
@@ -178,27 +228,41 @@ Interaction new vs returning: z = −0.82, **p = 0.41**.
 - A5: `proportion_confint(..., method="wilson")`, `NormalIndPower().power(...)`, `zt_ind_solve_power(...)`; the break-even formula from Day 1's Company corner with the regional principal and FPD — Day 2, P9 and P11.
 - A6: a loop over three columns, then `multipletests(p, method="holm")`; the interaction as a z on the difference of two differences — Day 2, P10.
 
----
+```game
+{"type": "bug", "id": "w07d5-g1", "title": "Two lines of a regional memo that fail review", "q": "A draft memo for the regional sales head. Tap the lines that would lose marks.", "code": "Decision: extend — do not roll B out to the regions yet.\nSanity: 180 users in both variants removed; iOS 22–28 Aug removed from both arms.\nGuardrail: FPD p = 0.11, not significant — guardrail passed.\nBreak-even: +1.25 points, from Day 1's Company corner.\nPrimary: 7.70 % → 8.75 %, +1.05 pt (95 % CI +0.14 to +1.98), p = 0.025.\nSegments: all seven positive, none after Holm (min 0.13).", "answer": [2, 3], "why": "A test with 37 % power cannot pass a guardrail — it is unresolved; and the break-even must be recomputed on the regional principal and FPD (+0.99 points), not copied from Day 1."}
+```
 
-## Warm-up (not graded, 10 min) — six quick checks
+**Check your key numbers before you hand in.** The site checks these five; the model answers above stay closed until you submit.
 
-1. An experiment ends with 14 050 users in A and 13 950 in B. SRM?
-2. Kamola wants to detect +0.5 points on 8 % with 1 000 users a day. How long, and what do you tell her?
-3. Your A/A test gives p = 0.03 once. Is the system broken?
-4. A card shows Outstanding = 1 527 946 681 726. What happened in Power Query?
-5. `YTD Disbursed` at September 2026 is 161 480 300 000. What does it show at October 2026, and why so little more?
-6. 8.0 % → 8.9 %: the absolute and the relative lift.
+**K1.** Regional users assigned to both variants.
 
-<details><summary>Answers</summary>
+```task
+{"id": "w07d5-k1", "kind": "number", "answer": 180, "dp": 0, "unit": "users", "model": "180 regional users in both variants (360 rows) — removed entirely."}
+```
 
-1. `stats.chisquare([14050, 13950])` → p = **0.55**: no evidence of a mismatch (and still check by slice).
-2. **47 519 users per arm**, 95 days at 1 000 a day — over three months; tell her the test can see +0.9 points in a month, or that a +0.5 effect needs a bigger audience or a more sensitive metric.
-3. Not by itself — one A/A in twenty is "significant" by chance. Re-run the analysis on many random re-splits (ours: 4.0 % below 0.05, uniform p-values) and check the SRM; a broken system fails repeatedly.
-4. Payments (or instalments) were merged onto loans with `outstanding` expanded: each loan's balance was repeated once per payment (×7.3). Remove the merge; relate both facts to the dimensions.
-5. **162 333 060 000** — October has only one day of data (21 loans, 852 760 000) because the as-of date is 1 October.
-6. **+0.9 points** absolute, **+11.25 %** relative (0.9 / 8.0). Always say which; "+11 %" and "+0.9 %" are different claims.
+**K2.** Users in the clean regional population (leak out, iOS 22–28 August out, assigned from 4 August).
 
-</details>
+```task
+{"id": "w07d5-k2", "kind": "number", "answer": 13725, "dp": 0, "unit": "users", "model": "13 725 clean regional users: A 6 883, B 6 842, SRM p = 0.73."}
+```
+
+**K3.** The clean primary difference B − A, in points (two decimals).
+
+```task
+{"id": "w07d5-k3", "kind": "number", "answer": 1.05, "dp": 2, "unit": "points", "model": "+1.05 points (7.70 % → 8.75 %), p = 0.025."}
+```
+
+**K4.** B's FPD on the loans of clean regional users, in %.
+
+```task
+{"id": "w07d5-k4", "kind": "number", "answer": 2.2, "dp": 2, "unit": "%", "model": "B 14 / 636 = 2.20 % (A 6 / 575 = 1.04 %)."}
+```
+
+**K5.** The smallest Holm-adjusted p-value of the seven segments.
+
+```task
+{"id": "w07d5-k5", "kind": "number", "answer": 0.13, "dp": 2, "unit": "", "model": "iOS, raw p = 0.018 × 7 = 0.13 — the smallest after Holm; nothing significant."}
+```
 
 ---
 
@@ -248,9 +312,17 @@ Build on yesterday's model (`nur_week7.pbix` → save as `nur_dashboard.pbix`). 
 
 **No work account?** Then the `.pbix` and the PDF *are* the publication — say so in a one-line `README.md` in the folder. If you do have one: publish to a workspace, set a scheduled refresh (it needs a gateway for files on your PC) and add the link to the README — a bonus mention, no points.
 
+> ⚠️ **Watch out.** The as-of `Outstanding` is dated by disbursement — it never goes on a monthly trend line, and Month-End balances are never summed over a year. Check every card against the checklist with no slicer selected, then once more after Refresh.
+
+```game
+{"type": "sort", "id": "w07d5-g2", "title": "Earns the point, or costs it?", "q": "Part B. Sort each dashboard choice.", "groups": {"Earns the point": ["The source folder is a parameter, so Refresh works on Timur's PC", "\"Data as of 1 Oct 2026\" and a definitions line on every page", "FPD vintages with fewer than 50 loans hidden", "Outstanding Month-End on the trend line"], "Costs the point": ["The as-of Outstanding on the monthly trend line", "Month-End balances summed over the year", "A pie chart of the five products", "Red used as a series colour"]}, "why": "Every deduction in the list is a number that looks right and is wrong, or a page that cannot be refreshed or read."}
+```
+
 ---
 
 ## Part C — Eight interview questions (30 min, 20 pts)
+
+> 💡 **Key idea.** A strong interview answer has three parts: the definition, one number from this week, and what you do about it.
 
 Answer in `quiz.md`, 3–5 sentences each, with a number from this week where it helps. 2.5 points each.
 
@@ -278,12 +350,16 @@ Answer in `quiz.md`, 3–5 sentences each, with a number from this week where it
 
 **Follow-ups an interviewer adds** (one sentence each): *"Why randomise by user and not session?"* (consistency, independence; Day 1) · *"What is a novelty effect and how do you see it?"* (daily lift chart; Day 2) · *"How would you test a change whose effect on defaults takes months to see?"* (a leading metric + a hold-out; Day 2) · *"Import or DirectQuery?"* (Day 3) · *"What does `ALL` do inside `CALCULATE`?"* (Day 4) · *"How do branch managers see only their branch?"* (RLS; Day 4).
 
+```game
+{"type": "flash", "id": "w07d5-g3", "title": "The eight answers in one line each", "cards": [["SRM", "group sizes off the plan by more than chance: chi-square, by slice, p < 0.001; find the bug, do not reweight"], ["Peeking", "every extra look is another chance to cross 0.05: daily looks gave 27 % false wins; fix the end date or go sequential"], ["MDE", "the smallest effect worth acting on; n grows with 1 / MDE² — 14 983 per arm for +0.9 points"], ["Guardrail", "must not get worse; in lending FPD; passed only when its interval excludes the break-even"], ["A/A test", "same screen in both arms: tests the split, logging, metric and the test's 5 %"], ["Filter context + CALCULATE", "the cell's filters; CALCULATE replaces filters on the same column and adds the rest"], ["Measure vs column", "column per row, stored, for slicing; measure per cell, for every number and every ratio"], ["Star schema", "facts at their grain, shared dimensions, one-to-many, single direction; never join facts"]]}
+```
+
 ---
 
 ## Before you submit
 
 - [ ] `checkpoint_ab.ipynb`: Restart & Run All finishes with no red cell; saved after the run; every task prints its numbers.
-- [ ] A1 names all three problems with their sizes; A3 shows clean and raw side by side; A5 states the power and the break-even; A6 has Holm.
+- [ ] A1 names every problem with its size (users in both variants, the iOS week-4 cell and its hash mismatches); A3 shows clean and raw side by side; A5 states the power and the break-even; A6 has Holm.
 - [ ] The memo starts with one decision word and states its conditions as numbers.
 - [ ] `nur_dashboard.pbix` refreshes from a folder path someone else can change (a parameter or a relative location noted in the README); the three pages match the checklist with no slicer selected.
 - [ ] `nur_dashboard.pdf` and three PNGs; every page shows "Data as of 1 Oct 2026" and a definitions line.
@@ -311,14 +387,18 @@ Answer in `quiz.md`, 3–5 sentences each, with a number from this week where it
 4. "FPD +0.7 points with 23 % power is unknown, not safe — ship with a hold-out."
 5. "One model, one definition per measure, refreshed from the views: PAR30 is 3.12 % on the card, in the SQL and in the PDF."
 
-<span class="badge stretch">Stretch</span> Write `nur_ab.py` with `readout(users, events, window_days=7, exclude=None)` (sanity checks + primary + relative lift, returning a one-row DataFrame) and `guardrail(loans, users, break_even_pt)` (rates, test, CI, power, verdict "pass / fail / unresolved"). Run both on the clean population and on the raw data and paste the two rows into your memo. Then add a fourth page to the dashboard: **Experiments**, with `users.csv` and `loans_followup.csv` loaded, a measure `Conversion 7d` and a line of daily conversion by variant — the novelty spike, visible to Kamola without Python.
+> 🚀 **Stretch (optional, +5 XP).** **S1.** Write `nur_ab.py` with `readout(users, events, window_days=7, exclude=None)` (sanity checks + primary + relative lift, returning a one-row DataFrame) and `guardrail(loans, users, break_even_pt)` (rates, test, CI, power, verdict "pass / fail / unresolved"). Run both on the clean population and on the raw data and paste the two rows into your memo. Then add a fourth page to the dashboard: **Experiments**, with `users.csv` and `loans_followup.csv` loaded, a measure `Conversion 7d` and a line of daily conversion by variant — the novelty spike, visible to Kamola without Python.
+
+```task
+{"id": "w07d5-s1", "kind": "free", "min": 20, "xp": 2, "model": "readout, clean (13 725 users): 7.70 % → 8.75 %, +1.05 pt (95 % CI +0.14 to +1.98), z = 2.25, p = 0.025, +13.7 %. readout, raw (16 738 rows): 8.12 % → 9.10 %, +0.98 pt (+0.13 to +1.83), p = 0.024, +12.1 %. guardrail(loans, clean, 0.99): A 1.04 %, B 2.20 %, +1.16 pt (−0.35 to +2.72), p = 0.11, power 37 % → unresolved (the point estimate is already beyond the break-even). Page 4 shows B's daily conversion far above A's on 1–3 August.", "rubric": ["the clean row matches A3 (+1.05 pt, p = 0.025)", "the raw row is shown next to it (+0.98 pt)", "guardrail() returns 'unresolved' with the power and the break-even", "the Experiments page shows the novelty spike"]}
+```
 
 ---
 
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W7D5", "lesson": "W7D5", "title": "Checkpoint 7", "tasks": [{"id": "checkpoint_ab.ipynb", "file": "checkpoint_ab.ipynb", "names": ["checkpoint_ab.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint_ab.ipynb` — what the page above asks for."}, {"id": "nur_dashboard.pbix", "file": "nur_dashboard.pbix", "names": ["nur_dashboard.pbix"], "upload": true, "accept": ".pbix", "q": "Attach `nur_dashboard.pbix` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W7D5", "lesson": "W7D5", "title": "Checkpoint 7", "tasks": [{"id": "checkpoint_ab.ipynb", "file": "checkpoint_ab.ipynb", "names": ["checkpoint_ab.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint_ab.ipynb` — what the page above asks for."}, {"id": "nur_dashboard.pbix", "file": "nur_dashboard.pbix", "names": ["nur_dashboard.pbix"], "upload": true, "accept": ".pbix", "q": "Attach `nur_dashboard.pbix` — what the page above asks for."}, {"id": "nur_dashboard.pdf", "file": "nur_dashboard.pdf", "names": ["nur_dashboard.pdf"], "upload": true, "accept": ".pdf", "q": "Attach `nur_dashboard.pdf` — all three pages, no slicer selected."}, {"id": "page1_portfolio.png", "file": "page1_portfolio.png", "names": ["page1_portfolio.png"], "upload": true, "accept": ".png", "q": "Attach `page1_portfolio.png`."}, {"id": "page2_risk.png", "file": "page2_risk.png", "names": ["page2_risk.png"], "upload": true, "accept": ".png", "q": "Attach `page2_risk.png`."}, {"id": "page3_collections.png", "file": "page3_collections.png", "names": ["page3_collections.png"], "upload": true, "accept": ".png", "q": "Attach `page3_collections.png`."}, {"id": "quiz.md", "file": "quiz.md", "text": true, "minLines": 8, "q": "Write `quiz.md` here — Part C, eight answers of 3–5 sentences, at least four numbers from this week."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}], "why": "Two deliverables a team would actually use: a notebook anyone can re-run with a decision at the end, and a board pack that refreshes instead of being rebuilt.", "graded": ["Part A (40): per task, correct method and numbers (60 %) and a two-sentence interpretation that says what to do (40 %); the memo is part of A3–A6", "Part B (40): the card-by-card checklist, the layout rules and a .pbix that refreshes on someone else's PC", "Part C (20): 2.5 per answer — correct, in your words, with a number or an example", "70 points to move on"]}
 ```
 
 ---
@@ -348,8 +428,27 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
+The editor below runs Python in this page. This block loads the data and Day 2's `with_conversion` — run it first, then clean and test in the editor:
+
+```python
+import pandas as pd
+from math import sqrt
+from statistics import NormalDist
+users  = pd.read_csv("data/ab/users.csv", parse_dates=["assigned_at"])
+events = pd.read_csv("data/ab/events.csv", parse_dates=["event_time"])
+
+def with_conversion(users, events, window_days=7):
+    first = users.groupby("user_id")["assigned_at"].min().rename("first_at").reset_index()
+    s = events[events["event_name"] == "contract_signed"].merge(first, on="user_id")
+    ok = s[(s["event_time"] >= s["first_at"]) & (s["event_time"] <= s["first_at"] + pd.Timedelta(days=window_days))]
+    return users.assign(conv=users["user_id"].isin(ok["user_id"]).astype(int))
+
+dup_ids = users.loc[users["user_id"].duplicated(), "user_id"].unique()
+print(len(users), len(events), len(dup_ids))      # 27974 67215 300
+```
+
 ```challenge
-{"id": "w07d5", "q": "Kamola asks whether the verdict depends on the 7-day window. Re-run your clean primary analysis (300 leaked users out, iOS 22–28 Aug out, assigned from 4 Aug) with conversion = contract_signed within 24 hours of assigned_at (with_conversion(users, events, window_days=1)). What is the two-proportion z statistic, B first so that a positive z means B is higher? Give it to 3 decimals.", "type": "number", "dp": 3, "h": ["0d08426d9e74e040b9c26d04"], "hint": "Only the window changes; the cleaning removes the same users as before, so the denominators stay 11 472 and 11 434.", "sol": "eDEgPSB3aXRoX2NvbnZlcnNpb24odXNlcnMsIGV2ZW50cywgd2luZG93X2RheXM9MSkKYzEgPSB4MVt+eDFbInVzZXJfaWQiXS5pc2luKGR1cF9pZHMpXQpjMSA9IGMxW34oKGMxWyJkZXZpY2UiXSA9PSAiaU9TIikgJiAoYzFbImFzc2lnbmVkX2F0Il0gPj0gIjIwMjYtMDgtMjIiKSldCmMxID0gYzFbYzFbImFzc2lnbmVkX2F0Il0gPj0gIjIwMjYtMDgtMDQiXSAgICAgICAgICAgICAgICAgICAgICAgICMgMjIgOTA2IHVzZXJzCmsgPSBjMS5ncm91cGJ5KCJ2YXJpYW50IilbImNvbnYiXS5hZ2coWyJzdW0iLCAic2l6ZSJdKSAgICAgICAgICAgICAjIEEgNjE4IC8gMTEgNDcyIMK3IEIgNjg1IC8gMTEgNDM0CnByb3BvcnRpb25zX3p0ZXN0KGtbInN1bSJdWzo6LTFdLCBrWyJzaXplIl1bOjotMV0pICAgICAgICAgICAgICAgICAgIyB6ID0gMS45NzMsIHAgPSAwLjA0ODUKCnogPSAxLjk3MyAocCA9IDAuMDQ5KTogd2l0aGluIDI0IGhvdXJzIEIgY29udmVydHMgNS45OSAlIGFnYWluc3QgNS4zOSAlIGZvciBBIOKAlCB0aGUgc2FtZSArMTEgJSByZWxhdGl2ZSBsaWZ0IGFzIHRoZSA3LWRheSB3aW5kb3csIGJ1dCBvbiBmZXdlciBjb252ZXJzaW9ucywgc28gaXQgaXMgb25seSBqdXN0IHNpZ25pZmljYW50LgpXaXRoIDIsIDMgYW5kIDcgZGF5cyB0aGUgcC12YWx1ZXMgYXJlIDAuMDMzLCAwLjAxOCBhbmQgMC4wMTY6IHRoZSBkaXJlY3Rpb24gYW5kIHRoZSByZWxhdGl2ZSBzaXplIGRvIG5vdCBkZXBlbmQgb24gdGhlIHdpbmRvdywgdGhlIGNlcnRhaW50eSBkb2VzLgpGb3IgdGhlIG1lbW86IHRoZSBwcmUtcmVnaXN0ZXJlZCA3LWRheSB3aW5kb3cgc3RheXMgdGhlIHByaW1hcnk7IHRoZSAyNC1ob3VyIHZlcnNpb24gaXMgYSBzZW5zaXRpdml0eSBsaW5lIHNob3dpbmcgdGhlIGxpZnQgaXMgYWxyZWFkeSB0aGVyZSBvbiB0aGUgZmlyc3QgZGF5IOKAlCBhbmQgYSByZWFzb24gbmV2ZXIgdG8gc3dhcCB3aW5kb3dzIGFmdGVyIHNlZWluZyB3aGljaCBvbmUgJ3dpbnMnLg=="}
+{"id": "w07d5", "q": "Kamola asks whether the verdict depends on the 7-day window. Re-run your clean primary analysis (300 leaked users out, iOS 22–28 Aug out, assigned from 4 Aug) with conversion = contract_signed within 24 hours of assigned_at (with_conversion(users, events, window_days=1)). What is the two-proportion z statistic, B first so that a positive z means B is higher? Give it to 3 decimals.", "type": "number", "dp": 3, "h": ["0d08426d9e74e040b9c26d04"], "hint": "Only the window changes; the cleaning removes the same users as before, so the denominators stay 11 472 and 11 434.", "sol": "eDEgPSB3aXRoX2NvbnZlcnNpb24odXNlcnMsIGV2ZW50cywgd2luZG93X2RheXM9MSkKYzEgPSB4MVt+eDFbInVzZXJfaWQiXS5pc2luKGR1cF9pZHMpXQpjMSA9IGMxW34oKGMxWyJkZXZpY2UiXSA9PSAiaU9TIikgJiAoYzFbImFzc2lnbmVkX2F0Il0gPj0gIjIwMjYtMDgtMjIiKSldCmMxID0gYzFbYzFbImFzc2lnbmVkX2F0Il0gPj0gIjIwMjYtMDgtMDQiXSAgICAgICAgICAgICAgICAgICAgICAgICMgMjIgOTA2IHVzZXJzCmsgPSBjMS5ncm91cGJ5KCJ2YXJpYW50IilbImNvbnYiXS5hZ2coWyJzdW0iLCAic2l6ZSJdKSAgICAgICAgICAgICAjIEEgNjE4IC8gMTEgNDcyIMK3IEIgNjg1IC8gMTEgNDM0CnByb3BvcnRpb25zX3p0ZXN0KGtbInN1bSJdWzo6LTFdLCBrWyJzaXplIl1bOjotMV0pICAgICAgICAgICAgICAgICAgIyB6ID0gMS45NzMsIHAgPSAwLjA0ODUKCnogPSAxLjk3MyAocCA9IDAuMDQ5KTogd2l0aGluIDI0IGhvdXJzIEIgY29udmVydHMgNS45OSAlIGFnYWluc3QgNS4zOSAlIGZvciBBIOKAlCB0aGUgc2FtZSArMTEgJSByZWxhdGl2ZSBsaWZ0IGFzIHRoZSA3LWRheSB3aW5kb3csIGJ1dCBvbiBmZXdlciBjb252ZXJzaW9ucywgc28gaXQgaXMgb25seSBqdXN0IHNpZ25pZmljYW50LgpXaXRoIDIsIDMgYW5kIDcgZGF5cyB0aGUgcC12YWx1ZXMgYXJlIDAuMDMzLCAwLjAxOCBhbmQgMC4wMTY6IHRoZSBkaXJlY3Rpb24gYW5kIHRoZSByZWxhdGl2ZSBzaXplIGRvIG5vdCBkZXBlbmQgb24gdGhlIHdpbmRvdywgdGhlIGNlcnRhaW50eSBkb2VzLgpGb3IgdGhlIG1lbW86IHRoZSBwcmUtcmVnaXN0ZXJlZCA3LWRheSB3aW5kb3cgc3RheXMgdGhlIHByaW1hcnk7IHRoZSAyNC1ob3VyIHZlcnNpb24gaXMgYSBzZW5zaXRpdml0eSBsaW5lIHNob3dpbmcgdGhlIGxpZnQgaXMgYWxyZWFkeSB0aGVyZSBvbiB0aGUgZmlyc3QgZGF5IOKAlCBhbmQgYSByZWFzb24gbmV2ZXIgdG8gc3dhcCB3aW5kb3dzIGFmdGVyIHNlZWluZyB3aGljaCBvbmUgJ3dpbnMnLg==", "python": true}
 ```
 
 <!-- challenge:end -->

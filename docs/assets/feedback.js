@@ -1,15 +1,28 @@
 /* "How was today?" (Docsify plugin): the lesson's feedback right on the page, at the end of every day page and the
-practice day. The same seven questions as the course bot, one at a time with buttons (the bot's GET /feedback hands
-them over, so there is one list), saved like the bot's answers (POST /feedback) and changeable later, here or in the
-bot. It needs the website connected to her (the key from sqlrun.js, localStorage "al.wk"), and the lesson's homework
-handed in first, as in the bot. "Or in Telegram" opens the bot on this lesson (t.me/<bot>?start=fb_W1D2). */
+practice day. Local-first: it always works, and it is saved on this device the moment she answers.
+
+- Without the website key (localStorage "al.wk", from sqlrun.js), or when the course bot cannot be reached, the card
+  asks its own seven questions, one at a time with buttons, and keeps the answers in localStorage "al.fb" →
+  {lesson: {answers, at, sent}}. The card then shows them with "Saved on this device".
+- "Send to your mentor" posts the saved answers to the bot (POST /feedback, as the bot's own answers). Without a key
+  that is when the one-time Connect step appears; a refusal (4xx) keeps them on this device and says so.
+- With a key the card does what it did before: the bot's seven questions (GET /feedback hands them over, so there is
+  one list), the homework handed in first, saved with POST /feedback and changeable later, here or in the bot. */
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev';
   var BOT = 'https://t.me/Nur_Analytics_Course_bot?start=';
+  var LOCAL = 'al.fb';
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function key() { try { return localStorage.getItem('al.wk'); } catch (e) { return null; } }
   function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
+  function allLocal() { try { return JSON.parse(localStorage.getItem(LOCAL)) || {}; } catch (e) { return {}; } }
+  function getLocal(lesson) { return allLocal()[lesson] || null; }
+  function putLocal(lesson, rec) {
+    var all = allLocal();
+    all[lesson] = rec;
+    try { localStorage.setItem(LOCAL, JSON.stringify(all)); } catch (e) { /* private window: the answers live until the page closes */ }
+  }
   /* the same lesson id on the English page and its Russian copy (ru/weeks/… → W1D2) */
   function lessonOf(path) {
     path = path.replace(/^ru(\/|$)/, '');
@@ -21,25 +34,96 @@ handed in first, as in the bot. "Or in Telegram" opens the bot on this lesson (t
   var ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
     'stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
 
+  /* the card's own seven questions (used without the bot) */
+  function localSteps() {
+    return [
+      { key: 'difficulty', label: T('Difficulty', 'Сложность'), q: T('How hard was today?', 'Насколько сложным был день?'),
+        choices: [T('Too easy', 'Слишком легко'), T('Just right', 'В самый раз'), T('Hard', 'Сложно'), T('Too hard', 'Слишком сложно')] },
+      { key: 'time', label: T('Time', 'Время'), q: T('How long did it take?', 'Сколько времени это заняло?'),
+        choices: [T('Under 2 h', 'Меньше 2 ч'), T('2–3 h', '2–3 ч'), T('3–4 h', '3–4 ч'), T('Over 4 h', 'Больше 4 ч')] },
+      { key: 'useful', label: T('Most useful', 'Самое полезное'), q: T('What was the most useful part?', 'Что было самым полезным?'),
+        choices: [T('Learn', 'Теория'), T('Worked example', 'Разбор'), T('Practice', 'Практика'), T('Homework', 'Домашнее задание'),
+          T('Company corner', 'Уголок компании'), T('Games', 'Игры')] },
+      { key: 'unclear', label: T('Unclear', 'Непонятно'), q: T('What was unclear?', 'Что было непонятно?') },
+      { key: 'tools', label: T('Tools on the page', 'Инструменты'), q: T('Did the tools on the page work?', 'Работали ли инструменты на странице?'),
+        choices: [T('Yes', 'Да'), T('Mostly', 'В основном'), T('No', 'Нет')] },
+      { key: 'mood', label: T('Feeling', 'Самочувствие'), q: T('How do you feel?', 'Как вы себя чувствуете?'),
+        choices: [T('😀 Great', '😀 Отлично'), T('🙂 Fine', '🙂 Нормально'), T('😐 Tired', '😐 Устала'), T('😣 Frustrated', '😣 Расстроена')] },
+      { key: 'mentor', label: T('For your mentor', 'Для ментора'), q: T('Anything for your mentor?', 'Что-нибудь для ментора?') }
+    ];
+  }
+
   function mount(card, lesson) {
     var data = null, answers = {}, cur = 0;
     function head(sub) {
       return '<div class="fb-top"><span class="fb-icon">' + ICON + '</span><div><div class="fb-title">' + T('How was today?', 'Как прошёл день?') + '</div>' +
         '<div class="fb-sub">' + sub + '</div></div></div>';
     }
-    function tg() { return '<a class="fb-tg" target="_blank" rel="noopener" href="' + BOT + 'fb_' + lesson + '">' + T('or answer in Telegram', 'или ответьте в Telegram') + '</a>'; }
-    function intro() {
-      card.innerHTML = head(T('7 quick questions · 2 minutes · only your mentor reads it', '7 коротких вопросов · 2 минуты · читает только ваш ментор')) +
-        '<div class="fb-foot"><button type="button" class="qz-btn fb-open">' + T('Leave feedback', 'Оставить отзыв') + '</button>' + tg() + '</div>';
-      card.querySelector('.fb-open').onclick = load;
-    }
     function note(sub, html) { card.innerHTML = head(sub) + '<div class="fb-foot">' + html + '</div>'; }
-    function connect() {
-      note(T('First connect this website to the course bot — once per browser.', 'Сначала подключите этот сайт к боту курса — один раз в каждом браузере.'),
-        '<a class="qz-btn fb-link" target="_blank" rel="noopener" href="' + BOT + 'connect">' + T('🔑 Connect', '🔑 Подключить') + '</a>' + tg());
+    function intro() {
+      var loc = getLocal(lesson);
+      if (loc && loc.answers) return localSummary(loc.sent ? T('✅ Sent to your mentor · also saved on this device', '✅ Отправлено ментору · сохранено и на этом устройстве')
+        : T('Saved on this device', 'Сохранено на этом устройстве'));
+      card.innerHTML = head(T('7 quick questions · 2 minutes · saved as you answer · only your mentor reads it', '7 коротких вопросов · 2 минуты · сохраняется сразу · читает только ваш ментор')) +
+        '<div class="fb-foot"><button type="button" class="qz-btn fb-open">' + T('Leave feedback', 'Оставить отзыв') + '</button></div>';
+      card.querySelector('.fb-open').onclick = function () { if (key()) load(); else local(); };
     }
-    function load() {
+
+    /* ---------- on this device ---------- */
+    function local() {
+      var loc = getLocal(lesson);
+      data = { local: true, steps: localSteps() };
+      answers = loc && loc.answers ? Object.assign({}, loc.answers) : {};
+      cur = 0;
+      step();
+    }
+    function keepLocal() { putLocal(lesson, { answers: answers, at: new Date().toISOString(), sent: false }); }
+    function localSummary(sub) {
+      var loc = getLocal(lesson) || { answers: {} };
+      card.innerHTML = head(sub) + '<dl class="fb-sum">' + localSteps().map(function (s) {
+        var v = loc.answers[s.key];
+        return '<dt>' + esc(s.label) + '</dt><dd>' + (v == null || v === '' ? '—' : esc(v)) + '</dd>';
+      }).join('') + '</dl><div class="fb-foot">' +
+        (loc.sent ? '' : '<button type="button" class="qz-btn fb-send">' + T('Send to your mentor', 'Отправить ментору') + '</button>') +
+        '<button type="button" class="qz-btn qz-ghost fb-change">' + T('Change my answers', 'Изменить ответы') + '</button></div>';
+      card.querySelector('.fb-change').onclick = local;
+      var s = card.querySelector('.fb-send');
+      if (s) s.onclick = sendLocal;
+    }
+    function connect() {
+      note(T('To send your answers to your mentor, connect this website to the course bot. It is a one-time step for this browser — your answers stay saved here meanwhile.',
+        'Чтобы ответы дошли до ментора, подключите этот сайт к боту курса. Это делается один раз для этого браузера — ответы пока сохранены здесь.'),
+        '<a class="qz-btn fb-link" target="_blank" rel="noopener" href="' + BOT + 'connect">' + T('🔑 Connect once', '🔑 Подключить один раз') + '</a>' +
+        '<button type="button" class="qz-btn qz-ghost fb-retry">' + T('I have connected — send', 'Я подключилась — отправить') + '</button>' +
+        '<button type="button" class="qz-btn qz-ghost fb-back">' + T('Back', 'Назад') + '</button>');
+      card.querySelector('.fb-retry').onclick = sendLocal;
+      card.querySelector('.fb-back').onclick = intro;
+    }
+    function sendLocal() {
+      var loc = getLocal(lesson);
+      if (!loc || !loc.answers) return intro();
       if (!key()) return connect();
+      note(T('Sending…', 'Отправка…'), '');
+      fetch(WORKER + '/feedback', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ key: key(), lesson: lesson, answers: loc.answers, source: 'site' }) })
+        .then(function (r) { if (!r.ok) throw r.status; return r.json(); })
+        .then(function () {
+          loc.sent = true; loc.sentAt = new Date().toISOString(); putLocal(lesson, loc);
+          localSummary(T('✅ Sent — thank you! Your mentor reads every answer.', '✅ Отправлено — спасибо! Ментор читает каждый ответ.'));
+        })
+        .catch(function (e) {
+          if (e === 401) return connect();
+          localSummary(typeof e === 'number' && e >= 400 && e < 500
+            ? T('The course bot did not accept these answers, so they stay saved on this device. Tell your mentor, or try again later.',
+              'Бот курса не принял эти ответы, поэтому они остаются сохранёнными на этом устройстве. Сообщите ментору или попробуйте позже.')
+            : T('Not sent — no connection to the course bot. Your answers stay saved on this device; try again later.',
+              'Не отправлено — нет связи с ботом курса. Ответы сохранены на этом устройстве; попробуйте позже.'));
+        });
+    }
+
+    /* ---------- through the course bot (a key exists) ---------- */
+    function load() {
+      if (!key()) return local();
       note(T('Loading…', 'Загрузка…'), '');
       fetch(WORKER + '/feedback?key=' + encodeURIComponent(key()) + '&lesson=' + lesson)
         .then(function (r) { if (r.status === 401) throw 'key'; if (!r.ok) throw 'net'; return r.json(); })
@@ -48,12 +132,14 @@ handed in first, as in the bot. "Or in Telegram" opens the bot on this lesson (t
           if (!d.handedIn) {
             note(T('First hand in ' + esc(d.hw) + ' — then tell us how the lesson was.', 'Сначала сдайте ' + esc(d.hw) + ' — потом расскажите, как прошёл урок.'),
               '<button type="button" class="qz-btn fb-jump">' + T('Go to the hand-in box', 'Перейти к сдаче работы') + '</button>' +
-              '<button type="button" class="qz-btn qz-ghost fb-again">' + T('Check again', 'Проверить снова') + '</button>');
+              '<button type="button" class="qz-btn qz-ghost fb-again">' + T('Check again', 'Проверить снова') + '</button>' +
+              '<button type="button" class="qz-btn qz-ghost fb-here">' + T('Answer now, send later', 'Ответить сейчас, отправить позже') + '</button>');
             card.querySelector('.fb-jump').onclick = function () {
               var box = document.querySelector('.markdown-section .sq-ws');
               if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
             };
             card.querySelector('.fb-again').onclick = load;
+            card.querySelector('.fb-here').onclick = local;
             return;
           }
           answers = d.answers ? Object.assign({}, d.answers) : {};
@@ -62,9 +148,7 @@ handed in first, as in the bot. "Or in Telegram" opens the bot on this lesson (t
         })
         .catch(function (e) {
           if (e === 'key') return connect();
-          note(T('Could not reach the course bot. Check the connection and try again.', 'Не удалось связаться с ботом курса. Проверьте подключение и попробуйте снова.'),
-            '<button type="button" class="qz-btn fb-open">' + T('Try again', 'Попробовать снова') + '</button>' + tg());
-          card.querySelector('.fb-open').onclick = load;
+          local();   // the bot is out of reach: her answers are kept here and can be sent later
         });
     }
     function summary(sub) {
@@ -74,33 +158,41 @@ handed in first, as in the bot. "Or in Telegram" opens the bot on this lesson (t
       }).join('') + '</dl><div class="fb-foot"><button type="button" class="qz-btn qz-ghost fb-change">' + T('Change my answers', 'Изменить ответы') + '</button></div>';
       card.querySelector('.fb-change').onclick = function () { cur = 0; step(); };
     }
+
+    /* ---------- one question at a time (both ways) ---------- */
     function step() {
-      var s = data.steps[cur], n = data.steps.length, v = answers[s.key];
+      var s = data.steps[cur], n = data.steps.length, v = answers[s.key], last = cur === n - 1;
       var body = s.choices
         ? '<div class="fb-chips">' + s.choices.map(function (c, i) {
             return '<button type="button" class="fb-chip' + (v === c ? ' on' : '') + '" data-i="' + i + '">' + esc(c) + '</button>';
           }).join('') + '</div>'
         : '<textarea class="fb-text" rows="3" placeholder="' + T('Type here, or skip', 'Напишите здесь или пропустите') + '">' + esc(v || '') + '</textarea>';
-      card.innerHTML = head(T('Question ' + (cur + 1) + ' of ' + n, 'Вопрос ' + (cur + 1) + ' из ' + n)) +
+      card.innerHTML = head(T('Question ' + (cur + 1) + ' of ' + n, 'Вопрос ' + (cur + 1) + ' из ' + n) + (data.local ? T(' · saved on this device as you answer', ' · сохраняется на этом устройстве сразу') : '')) +
         '<div class="qz-segs">' + data.steps.map(function (x, i) { return '<span class="' + (i === cur ? 'now' : i < cur ? 'did' : '') + '"></span>'; }).join('') + '</div>' +
         '<div class="fb-q">' + esc(s.q) + '</div>' + body +
         '<div class="fb-foot"><button type="button" class="qz-btn qz-ghost fb-back"' + (cur ? '' : ' style="visibility:hidden"') + '>' + T('Back', 'Назад') + '</button>' +
         '<button type="button" class="qz-btn qz-ghost fb-skip">' + T('Skip', 'Пропустить') + '</button>' +
-        '<button type="button" class="qz-btn fb-next' + (cur === n - 1 ? ' qz-submit' : '') + '">' + (cur === n - 1 ? T('Send feedback', 'Отправить отзыв') : T('Next', 'Далее')) + '</button></div>';
+        '<button type="button" class="qz-btn fb-next' + (last ? ' qz-submit' : '') + '">' +
+          (!last ? T('Next', 'Далее') : data.local ? T('Save', 'Сохранить') : T('Send feedback', 'Отправить отзыв')) + '</button></div>';
       var ta = card.querySelector('.fb-text');
-      function keep() { if (ta) answers[s.key] = ta.value.trim() || null; }
+      function keep() { if (ta) answers[s.key] = ta.value.trim() || null; if (data.local) keepLocal(); }
+      if (ta && data.local) ta.addEventListener('input', keep);
       Array.prototype.forEach.call(card.querySelectorAll('.fb-chip'), function (b) {
-        b.onclick = function () { answers[s.key] = s.choices[Number(b.dataset.i)]; go(1); };
+        b.onclick = function () { answers[s.key] = s.choices[Number(b.dataset.i)]; if (data.local) keepLocal(); go(1); };
       });
       card.querySelector('.fb-back').onclick = function () { keep(); go(-1); };
-      card.querySelector('.fb-skip').onclick = function () { answers[s.key] = null; go(1); };
+      card.querySelector('.fb-skip').onclick = function () { answers[s.key] = null; if (data.local) keepLocal(); go(1); };
       card.querySelector('.fb-next').onclick = function () { keep(); go(1); };
       if (ta) ta.focus();
     }
     function go(d) {
       cur += d;
       if (cur < 0) cur = 0;
-      if (cur >= data.steps.length) return send();
+      if (cur >= data.steps.length) {
+        if (!data.local) return send();
+        keepLocal();
+        return localSummary(T('Saved on this device — thank you!', 'Сохранено на этом устройстве — спасибо!'));
+      }
       step();
     }
     function send() {

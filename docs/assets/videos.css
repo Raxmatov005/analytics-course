@@ -1,0 +1,81 @@
+/* videos.css — the part player's settings menu (quality), the questions inside a video and their marks on the track.
+Linked after theme.css, so the few rules here that touch .yp / .yt override the ones there. */
+
+/* the player keeps its round corners on its two halves, so the menu may open above a small player */
+.yp { overflow: visible; }
+.yp-screen { overflow: hidden; border-radius: 12px 12px 0 0; }
+.yp-bar { border-radius: 0 0 12px 12px; }
+.yp.yp-max .yp-screen, .yp.yp-max .yp-bar { border-radius: 0; }
+.yp:fullscreen .yp-screen, .yp:fullscreen .yp-bar { border-radius: 0; }
+.yp:-webkit-full-screen .yp-screen, .yp:-webkit-full-screen .yp-bar { border-radius: 0; }
+body.yp-lock .lang-switch { display: none; }   /* the player fills the window: nothing of the page on top */
+
+/* the gear (⚙) on the bar, with YouTube's little HD badge when the stream is 720p or more */
+.yp-bar .yp-gear { position: relative; width: 34px; height: 30px; font-size: 1.05em; }
+.yp-gear-i { display: inline-block; transition: transform .2s; }
+.yp-gear.on .yp-gear-i { transform: rotate(30deg); }
+.yp-hd { position: absolute; top: 2px; right: 1px; padding: 1px 2px; border-radius: 2px; background: #dc2626; color: #fff; font: 800 7px/1 var(--sans); font-style: normal; letter-spacing: .02em; }
+
+/* the menu: dark, small, bottom-right over the video, two panes that slide */
+.yp-set { position: absolute; right: 10px; bottom: 48px; z-index: 6; min-width: 236px; max-width: calc(100% - 20px); max-height: 85vh; overflow-x: hidden; overflow-y: auto; box-sizing: border-box; padding: 8px 0; border-radius: 12px; background: rgba(28, 28, 28, .94); color: #fff; font: 500 14px/1.25 var(--sans); box-shadow: 0 8px 28px rgba(0, 0, 0, .45); }
+.yp-set button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; box-sizing: border-box; padding: 0 16px; border: 0; border-radius: 0; background: transparent; color: #fff; font: inherit; text-align: left; cursor: pointer; }
+.yp-set button:hover, .yp-set button:focus-visible { background: rgba(255, 255, 255, .12); outline: none; }
+.yp-set-k { flex: 1; }
+.yp-set-v { color: rgba(255, 255, 255, .78); white-space: nowrap; }
+.yp-set-go { font-size: 20px; line-height: 1; color: rgba(255, 255, 255, .85); }
+.yp-set button.yp-set-back { font-weight: 700; border-bottom: 1px solid rgba(255, 255, 255, .2); margin-bottom: 6px; padding-left: 10px; }
+.yp-set-tick { width: 16px; flex: none; visibility: hidden; }
+.yp-set-opt.on .yp-set-tick { visibility: visible; }
+.yp-set-opt small { margin-left: auto; padding-left: 12px; color: rgba(255, 255, 255, .62); font-size: 12px; white-space: nowrap; }
+.yp-set-in { animation: yp-slide-in .18s ease-out; }
+.yp-set-back-in { animation: yp-slide-back .18s ease-out; }
+@keyframes yp-slide-in { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes yp-slide-back { from { transform: translateX(-32px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* the questions' marks on the track: open · ✓ right · answered wrong */
+.yp-marks { position: absolute; inset: 0; pointer-events: none; }
+.yp-mark { position: absolute; top: 5px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #facc15; box-shadow: 0 0 0 2px #0f172a; color: #fff; font: 800 8px/12px var(--sans); font-style: normal; text-align: center; }
+.yp-mark.ok { background: #16a34a; }
+.yp-mark.bad { background: #f97316; }
+
+/* the question over the video. In the page it is a 16:9 box that grows when the question needs more room (a phone);
+   full screen it covers the screen and scrolls if it has to */
+.yp-quiz { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 16px; overflow-y: auto; background: rgba(15, 23, 42, .97); color: #fff; font-family: var(--sans); }
+.yp.yp-ask .yp-screen { aspect-ratio: auto; }
+.yp:not(.yp-max) .yp-quiz { position: relative; inset: auto; aspect-ratio: 16 / 9; overflow: visible; }
+.yp:fullscreen .yp-quiz { position: absolute; inset: 0; aspect-ratio: auto; overflow-y: auto; }
+.yp:-webkit-full-screen .yp-quiz { position: absolute; inset: 0; aspect-ratio: auto; overflow-y: auto; }
+.yp-quiz-in { width: 100%; max-width: 580px; margin: auto; }
+.yp-quiz-k { margin-bottom: .4em; color: #fca5a5; font: 800 .72em var(--sans); letter-spacing: .08em; text-transform: uppercase; }
+.yp-quiz-q { margin-bottom: .75em; font-weight: 700; font-size: 1.02em; line-height: 1.4; }
+.yp-quiz-opts { display: grid; gap: .45em; }
+.yp-quiz .yp-quiz-o { display: flex; align-items: center; gap: .65em; width: 100%; min-height: 44px; box-sizing: border-box; padding: .45em .75em; border: 1px solid rgba(255, 255, 255, .24); border-radius: 10px; background: rgba(255, 255, 255, .07); color: #fff; font: 600 .9em/1.35 var(--sans); text-align: left; cursor: pointer; }
+.yp-quiz-o b { flex: none; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: rgba(255, 255, 255, .16); font-size: .8em; }
+.yp-quiz .yp-quiz-o:hover:not(:disabled), .yp-quiz .yp-quiz-o:focus-visible { background: rgba(255, 255, 255, .15); border-color: rgba(255, 255, 255, .5); outline: none; }
+.yp-quiz .yp-quiz-o:disabled { cursor: default; opacity: .5; }
+.yp-quiz .yp-quiz-o.ok { opacity: 1; background: rgba(22, 163, 74, .32); border-color: #22c55e; }
+.yp-quiz .yp-quiz-o.bad { opacity: 1; background: rgba(220, 38, 38, .3); border-color: #ef4444; }
+.yp-quiz-res { margin-top: .75em; color: #e2e8f0; font-size: .9em; line-height: 1.5; }
+.yp-quiz-res b.ok { color: #4ade80; }
+.yp-quiz-res b.bad { color: #fca5a5; }
+.yp-quiz-acts { display: flex; flex-wrap: wrap; gap: .5em; margin-top: .75em; }
+.yp-quiz-acts button { min-height: 44px; padding: .5em 1.05em; border: 1px solid #fff; border-radius: 10px; background: #fff; color: #0f172a; font: 700 .88em var(--sans); cursor: pointer; }
+.yp-quiz-acts button + button { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .4); }
+.yp-quiz-acts button:focus-visible { outline: 3px solid rgba(239, 68, 68, .6); outline-offset: 2px; }
+
+/* the end of the part: the score under "✓ End of this part" */
+.yp-done-q { color: #e2e8f0; font: 700 .95em var(--sans); text-align: center; padding: 0 1em; }
+
+/* a part watched to the end with every question answered */
+.yt.yt-done .yt-title::before { content: "✓ "; color: var(--ok, #16a34a); }
+
+/* phones: bigger targets on the bar and in the menu, a smaller question */
+@media (pointer: coarse) {
+  .yp-bar button { min-height: 40px; min-width: 36px; }
+  .yp-bar .yp-gear { height: 40px; }
+  .yp-set button { min-height: 44px; }
+}
+@media (max-width: 600px) {
+  .yp-quiz { padding: 12px; font-size: .92em; }
+  .yp-set { right: 6px; min-width: 210px; }
+}

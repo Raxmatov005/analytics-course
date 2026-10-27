@@ -37,7 +37,7 @@ SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loan
 SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans WHERE closed_at IS NOT NULL); -- 649
 ```
 
-Правило: никогда не используйте `NOT IN` по столбцу, в котором может быть NULL, без `IS NOT NULL` внутри — или берите `NOT EXISTS`, у которого такой проблемы нет. (Первичные и внешние ключи в наших таблицах никогда не NULL, поэтому `customer_id NOT IN (SELECT customer_id FROM loans)` здесь безопасно — но привычка важнее случая.)
+> ⚠️ **Осторожно.** Никогда не используйте `NOT IN` по столбцу, в котором может быть NULL, без `IS NOT NULL` внутри — или берите `NOT EXISTS`, у которого такой проблемы нет. Запрос не падает: он тихо возвращает 0, а 0 выглядит как ответ. (Первичные и внешние ключи в наших таблицах никогда не NULL, поэтому `customer_id NOT IN (SELECT customer_id FROM loans)` здесь безопасно — но привычка важнее случая.)
 
 ### EXISTS / NOT EXISTS — проверка :id=exists-not-exists-a-test
 
@@ -68,6 +68,10 @@ SELECT COUNT(*) FROM customers c WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l
 | агрегат дважды | производная таблица / CTE | кредитов на клиента → клиентов на каждое количество |
 | несколько именованных шагов, разные зернистости | цепочка CTE | поколение: платёж → флаг → «хоть раз» → когорта |
 | строки, которых нет ни в одной таблице | рекурсивный CTE (или `dim_date`) | календарь месяцев (21 строка) |
+
+```game
+{"type": "match", "id": "w03d3-g1", "title": "Какая форма и когда?", "pairs": [["Скалярный подзапрос", "одно число, с которым сравнить или на которое разделить"], ["IN / EXISTS", "есть ли значение в этом множестве?"], ["NOT EXISTS", "нет ни одного — безопасно при NULL"], ["Коррелированный подзапрос", "сравнить строку с её группой при другом фильтре"], ["Производная таблица / CTE", "агрегировать дважды: по клиенту, затем по количеству"], ["Рекурсивный CTE", "строки, которых нет ни в одной таблице: календарь месяцев"]]}
+```
 
 ### Коррелированные подзапросы — внутренний запрос смотрит на внешнюю строку :id=correlated-subqueries-the-inner-query-looks-at-the-outer-row
 
@@ -104,6 +108,20 @@ SELECT bucket, COUNT(*) FROM buckets GROUP BY bucket;                           
 
 Каждый CTE может использовать все CTE выше себя. Цепочка явно фиксирует зернистость на каждом шаге — лекарство от проблемы размножения строк из недели 2: *агрегируйте на каждой зернистости, затем соединяйте агрегаты*. **Когда CTE лучше подзапроса:** когда один и тот же результат нужен дважды (два среза, два агрегата из одной базы), когда вложенность превысила бы два уровня или когда читатель должен за ней следить — цепочка CTE читается сверху вниз, вложенный подзапрос — изнутри наружу. **Когда подзапрос подходит:** однострочный скаляр или одиночный `EXISTS`. Производительность на обоих движках сегодня одинакова (оба встраивают); представления четверга — это CTE, которые *сохраняются*.
 
+> 💡 **Главное.** Цепочка CTE — это рецепт, где у каждого шага одна зернистость: платёж → кредит → клиент → ответ. Если вы можете тремя словами сказать, что такое одна строка каждого шага, цепочка верна; если нет — именно на этом шаге числа размножатся.
+
+> ⚠️ **Осторожно.** CTE живёт **только в одном операторе** — в `SELECT` сразу после `WITH`. Поставьте после него `;` — и следующий запрос это имя не увидит (*no such table*). Чтобы использовать результат в нескольких запросах, нужно представление или таблица — четверг.
+
+Соберите части цепочки — на плитках есть всё, что нужно:
+
+```game
+{"type": "cloze", "id": "w03d3-g2", "title": "Соберите цепочку", "text": "WITH {{0}} AS (SELECT customer_id, COUNT(*) AS n FROM loans {{1}})\nSELECT n AS loans_per_customer, COUNT(*) AS customers\nFROM per_customer\n{{2}}\nORDER BY n;", "blanks": [["per_customer"], ["GROUP BY customer_id"], ["GROUP BY n"]], "distractors": ["WHERE n > 1", "per_loan", "GROUP BY loan_id", "HAVING COUNT(*) > 1"]}
+```
+
+```game
+{"type": "bug", "id": "w03d3-g3", "title": "Найдите сломанную строку", "q": "Два вопроса к одному CTE. Первый выполняется; второй пишет no such table: per_loan. Какая строка падает?", "code": "WITH per_loan AS (SELECT loan_id, SUM(principal_due) AS outstanding\n                  FROM installments WHERE due_date > '2026-10-01' GROUP BY loan_id)\nSELECT COUNT(*) FROM per_loan;\nSELECT AVG(outstanding) FROM per_loan;", "answer": [3], "why": "CTE существует только для одного оператора, который за ним следует; после точки с запятой его нет. Повторите WITH, выведите оба числа одним SELECT или сохраните результат как представление или таблицу (День 4)."}
+```
+
 ### Рекурсивный CTE — порождаем строки, которых нет ни в одной таблице :id=recursive-cte-generating-rows-that-are-not-in-any-table
 
 `GROUP BY month` показывает только те месяцы, в которых **есть** строки. Месяц с нулевой выдачей продукта в филиале просто исчезает — а график с пропущенным месяцем лжёт. Вам нужен **календарь**, и рекурсивный CTE (*recursive CTE*) строит его из ничего:
@@ -123,6 +141,14 @@ SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;  -- 21 · 2025-
 
 - ▶ Baraa, *Subqueries* [12:58:04](https://youtu.be/SSKVgrwhzus?t=46684&end=51488), *CTE* [14:18:08](https://youtu.be/SSKVgrwhzus?t=51488&end=56102) — ~2 ч 30 мин; его рекурсивные примеры используют синтаксис SQL Server (без слова `RECURSIVE`, с параметром `MAXRECURSION`).
 - Русскоязычная презентация (TBC Data Analytics 2.0, если она у вас есть) `2.4 SQL Advanced.pdf` — страницы про подзапросы и рекурсивный CTE. *Английские термины:* подзапрос = subquery, обобщённое табличное выражение (ОТВ) = CTE, рекурсия = recursion, когорта/винтаж = cohort/vintage.
+
+```videoquiz
+{"video": "SSKVgrwhzus", "stops": [
+  {"at": 47900, "q": "Подзапрос в WHERE возвращает одно значение. Какой это вид?", "options": ["Скалярный подзапрос", "Производная таблица", "Рекурсивный CTE", "Соединение"], "answer": 0, "explain": "Одна строка, один столбец: движок использует его как константу — «principal > (SELECT AVG(principal) FROM loans)»."},
+  {"at": 50200, "q": "Что делает подзапрос «коррелированным»?", "options": ["Он возвращает много строк", "Он ссылается на столбец текущей строки внешнего запроса", "Он стоит во FROM", "В нём есть EXISTS"], "answer": 1, "explain": "Внутренний запрос упоминает внешнюю строку, поэтому концептуально выполняется один раз на каждую внешнюю строку."},
+  {"at": 52900, "q": "Зачем писать CTE вместо вложенного того же подзапроса?", "options": ["CTE всегда быстрее", "У него есть имя, он читается сверху вниз и его можно использовать в запросе больше одного раза", "Подзапросы не умеют GROUP BY", "CTE сохраняются в базе"], "answer": 1, "explain": "Читаемость и повторное использование внутри одного оператора; CTE не хранится — это делает представление."},
+  {"at": 55000, "q": "У рекурсивного CTE две части, соединённые UNION ALL. Какие?", "options": ["SELECT и WHERE", "Якорный запрос и рекурсивный запрос, который ссылается на сам CTE", "Две таблицы", "Представление и таблица"], "answer": 1, "explain": "Якорь даёт первые строки; рекурсивная часть порождает следующие из последних, пока её условие не остановит.", "back": 60}]}
+```
 
 ---
 
@@ -144,37 +170,86 @@ ever AS (                                        -- зернистость: пл
 SELECT * FROM ever WHERE loan_id = 1 ORDER BY installment_no;
 ```
 
-Кредит 1: платежи 1–6 все с `late30 = 0`, поэтому `ever30 = 0` на каждом MOB — мартовский платёж был просрочен на 45 дней, но это платёж 12, за пределами MOB 1..6. Кредит, у которого просрочен платёж 2, показывает `late30` 0, 1, 0, 0, 0, 0 и `ever30` 0, **1, 1, 1, 1, 1**: однажды опоздав, «хоть раз опаздывал» остаётся включённым. Этот бегущий `MAX` — вся хитрость: он превращает событие уровня платежа в накопленное состояние кредита. Проверьте базу: в `inst` 33 198 строк по 7 099 кредитам; 967 из этих платежей, по 457 кредитам, просрочены на 30+; на MOB 1 флаг совпадает с FPD30 из недели 2 с точностью до кредита (91 из 7 099 = 1.28 %) — два определения сходятся, это и есть проверка, что вы построили правильно.
+Кредит 1: платежи 1–6 все с `late30 = 0`, поэтому `ever30 = 0` на каждом MOB — мартовский платёж был просрочен на 45 дней, но это платёж 12, за пределами MOB 1..6. Кредит, у которого просрочен платёж 2, показывает `late30` 0, 1, 0, 0, 0, 0 и `ever30` 0, **1, 1, 1, 1, 1**: однажды опоздав, «хоть раз опаздывал» остаётся включённым. Этот бегущий `MAX` — вся хитрость: он превращает событие уровня платежа в накопленное состояние кредита.
+
+> 💡 **Главное.** «Хоть раз случилось к этому моменту» = бегущий `MAX` флага 0/1: `MAX(flag) OVER (PARTITION BY loan ORDER BY step)`. Он может только расти — и это же ваша проверка: кривая поколения, которая где-то падает, означает сломанный запрос.
+
+Проверьте базу: в `inst` 33 198 строк по 7 099 кредитам; 967 из этих платежей, по 457 кредитам, просрочены на 30+; на MOB 1 флаг совпадает с FPD30 из недели 2 с точностью до кредита (91 из 7 099 = 1.28 %) — два определения сходятся, это и есть проверка, что вы построили правильно.
 
 ---
 
 ## 3. Практика (50 мин) :id=3-practice-50-min
 
-Пишите каждый запрос в поле под вопросом — он сохраняется в этом браузере. Кнопка **✔ Проверить** сообщит, совпал ли ваш результат с ответом. Сегодня же срок сдачи **HW 3.1** (поле сдачи Дня 1).
+Начните с лаборатории — вы шаг за шагом строите небольшую таблицу поколений в своей копии с помощью цепочки CTE. Затем вопросы: пишите каждый запрос в поле под вопросом — он сохраняется в этом браузере. Кнопка **✔ Проверить** сообщит, совпал ли ваш результат с ответом. Сегодня же срок сдачи **HW 3.1** (поле сдачи Дня 1).
+
+```sqllab
+{"id": "w03d3-lab", "title": "Своя таблица поколений", "intro": "Матрица Нилуфар в виде двух таблиц в вашей учебной копии: размеры когорт, затем ячейки когорта × MOB из цепочки CTE разобранного примера. Потом вы добавляете долю и удаляете ячейки, которые ещё не наблюдаемы, — по тем же правилам, что и в Уголке компании.", "steps": [
+  {"say": "Создайте my_cohorts(cohort, loans): кредиты с term_months >= 6, выданные с 2025-01-01 по 2026-03-31, сгруппированные по strftime('%Y-%m', disbursed_at).", "hint": "CREATE TABLE my_cohorts AS SELECT strftime('%Y-%m', disbursed_at) AS cohort, COUNT(*) AS loans FROM loans WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01' GROUP BY 1;", "expect": "SELECT COUNT(*) FROM my_cohorts", "want": 15},
+  {"say": "Создайте my_vintage(cohort, mob, observed, ever30) через CREATE TABLE … AS WITH inst AS (…), flag AS (…), ever AS (…) SELECT … — три CTE разобранного примера, соединённые с теми же кредитами, сгруппированные по когорте и installment_no.", "hint": "CREATE TABLE my_vintage AS WITH inst AS (SELECT i.loan_id, i.installment_no, i.total_due, COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30 FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id WHERE i.installment_no <= 6 AND date(i.due_date, '+30 days') <= '2026-10-01' GROUP BY i.installment_id, i.loan_id, i.installment_no, i.total_due), flag AS (SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30 FROM inst), ever AS (SELECT loan_id, installment_no, MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30 FROM flag) SELECT strftime('%Y-%m', l.disbursed_at) AS cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever30 FROM loans l JOIN ever e ON e.loan_id = l.loan_id WHERE l.term_months >= 6 AND l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2026-04-01' GROUP BY 1, 2;", "expect": "SELECT ever30 FROM my_vintage WHERE cohort = '2025-10' AND mob = 3", "want": 15},
+  {"say": "Добавьте столбец rate (ALTER TABLE … ADD COLUMN rate REAL) и заполните его через UPDATE: 100.0 * ever30 / observed, округлив до 2 знаков.", "hint": "ALTER TABLE my_vintage ADD COLUMN rate REAL; UPDATE my_vintage SET rate = ROUND(100.0 * ever30 / observed, 2);", "expect": "SELECT CAST(ROUND(rate * 100) AS INTEGER) FROM my_vintage WHERE cohort = '2025-10' AND mob = 3", "want": 691},
+  {"say": "Удалите ячейки, которые наблюдаемы не полностью: где observed меньше размера когорты из my_cohorts (коррелированный подзапрос в WHERE).", "hint": "DELETE FROM my_vintage WHERE observed < (SELECT c.loans FROM my_cohorts c WHERE c.cohort = my_vintage.cohort);", "expect": "SELECT COUNT(*) FROM my_vintage", "want": 88}],
+ "cleanup": "DROP TABLE IF EXISTS my_vintage; DROP TABLE IF EXISTS my_cohorts"}
+```
 
 **P1.** Кредиты крупнее среднего кредита SME (скалярный подзапрос), по продуктам. Почему ответ не «только кредиты SME выше среднего»?
 
 <details><summary>Ответ</summary>
 
-`WHERE principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)` (308 728 745) → SME 400, AUTO 88 — крупнейшие кредиты Auto превышают средний кредит SME; ни у одного другого продукта такого нет. Скалярный подзапрос с собственным фильтром — окно этого не сделает.
+```sql
+SELECT p.code, COUNT(*) AS loans
+FROM loans l JOIN products p ON p.product_id = l.product_id
+WHERE l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)      -- 308 728 745, средний кредит SME
+GROUP BY p.code;
+-- AUTO 88 · SME 400
+```
+SME 400, AUTO 88 — крупнейшие кредиты Auto превышают средний кредит SME; ни у одного другого продукта такого нет. Скалярный подзапрос с собственным фильтром — окно этого не сделает.
 
 </details>
+
+**P1 — прочитайте.** Сколько кредитов Auto крупнее среднего кредита SME?
+
+```task
+{"id": "w03d3-p1b", "kind": "number", "answer": 88, "dp": 0, "unit": "кредитов", "hint": "Строка AUTO вашего результата P1.", "model": "88 из 391 кредита Auto больше 308 728 745 — среднего кредита SME. У скалярного подзапроса свой фильтр (product_id = 5), отличный от строк внешнего запроса, — именно тогда он выигрывает у окна.", "xp": 1}
+```
 
 **P2.** Клиенты со списанным кредитом: один раз через `IN`, один раз через `EXISTS`. То же количество? Что читается лучше, если нужно ещё исключить клиентов с *действующим* кредитом?
 
 <details><summary>Ответ</summary>
 
+```sql
+SELECT COUNT(*) FROM customers WHERE customer_id IN (SELECT customer_id FROM loans WHERE status = 'written_off');      -- 188
+SELECT COUNT(*) FROM customers c
+WHERE EXISTS     (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'written_off')
+  AND NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active');            -- 127
+```
 188 обоими способами. Второе условие — второй `NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active')` → 127 клиентов со списанием и без живого кредита — две проверки рядом читаются как предложение; с `IN` это становится `IN (…) AND customer_id NOT IN (…)`, что тоже работает, потому что `customer_id` никогда не NULL. Посчитайте оба и оставьте тот, который можете объяснить.
 
 </details>
+
+**P2 — число.** Сколько клиентов имеют списанный кредит и не имеют действующего?
+
+```task
+{"id": "w03d3-p2b", "kind": "number", "answer": 127, "dp": 0, "unit": "клиентов", "hint": "EXISTS для списания, NOT EXISTS для действующего кредита, оба коррелированы по customer_id.", "model": "127 из 188 клиентов со списанием не имеют живого кредита; остальные 61 всё ещё у нас занимают. Две проверки рядом читаются как предложение.", "xp": 1}
+```
 
 **P3.** Ловушка `NOT IN` в действии: кредиты, выданные в дату, когда ни один кредит не закрывался, тремя способами (NOT IN в лоб, NOT IN с `IS NOT NULL`, NOT EXISTS). Объясните 0.
 
 <details><summary>Ответ</summary>
 
+```sql
+SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans);                               -- 0
+SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans WHERE closed_at IS NOT NULL);    -- 649
+SELECT COUNT(*) FROM loans l WHERE NOT EXISTS (SELECT 1 FROM loans x WHERE x.closed_at = l.disbursed_at);         -- 649
+```
 0 · 649 · 649 (раздел 1). `closed_at` равно NULL у 3 601 кредита; один NULL в списке делает `NOT IN` неизвестным для каждой строки. `NOT EXISTS` сравнивает строка за строкой через `=`, и NULL просто никогда не совпадает.
 
 </details>
+
+**P3 — объясните 0.** Почему первая форма возвращает 0?
+
+```task
+{"id": "w03d3-p3b", "kind": "choice", "options": ["Ни один кредит не выдавался в день закрытия", "В closed_at есть NULL; x NOT IN (…, NULL) неизвестно для любого x, поэтому ни одна строка не проходит", "NOT IN не умеет сравнивать даты", "Подзапрос возвращает слишком много строк"], "answer": 1, "explain": "x <> NULL неизвестно, а NOT IN — это цепочка <>. Уберите NULL внутри или используйте NOT EXISTS.", "xp": 1}
+```
 
 **P4.** С помощью производной таблицы: распределение **платежей по графику на кредит** (срок) — у скольких кредитов 3, 6, 12 … платежей — и сверьте с `term_months`.
 
@@ -193,9 +268,19 @@ SELECT COUNT(*) FROM loans l WHERE term_months <> (SELECT COUNT(*) FROM installm
 
 <details><summary>Ответ</summary>
 
+```sql
+SELECT COUNT(*) FROM loans l
+WHERE l.principal = (SELECT MAX(x.principal) FROM loans x WHERE x.customer_id = l.customer_id);   -- 4335
+```
 4 335 = по одному на заёмщика. Было бы больше, если бы у клиента было два кредита с *одинаковым* максимальным основным долгом (оба совпадут с `= MAX`); `ROW_NUMBER() … ORDER BY principal DESC, loan_id` с `rn = 1` — версия, которая гарантирует одну строку. Знайте обе; скажите, какую использовали.
 
 </details>
+
+**P5 — когда больше?** Когда `= (SELECT MAX …)` мог бы вернуть больше одной строки на клиента?
+
+```task
+{"id": "w03d3-p5b", "kind": "choice", "options": ["Когда у клиента кредиты в двух продуктах", "Когда у клиента два кредита с одинаковым максимальным основным долгом", "Когда подзапрос не коррелирован", "Никогда"], "answer": 1, "explain": "Оба равных кредита совпадут с «= MAX». ROW_NUMBER с разрешающим признаком (ORDER BY principal DESC, loan_id) и rn = 1 гарантирует одну строку.", "xp": 1}
+```
 
 **P6.** Цепочка CTE из четырёх шагов: (1) остаток долга по кредиту, (2) остаток долга по клиенту, (3) ранг клиента, (4) топ-10 с именем и сегментом. Один `WITH`, четыре имени.
 
@@ -217,17 +302,58 @@ FROM ranked r JOIN customers c ON c.customer_id = r.customer_id WHERE r.rn <= 10
 
 <details><summary>Ответ</summary>
 
+```sql
+WITH RECURSIVE months(month_start) AS (
+  SELECT '2026-01-01' UNION ALL SELECT date(month_start, '+1 month') FROM months WHERE month_start < '2026-09-01'),
+grid AS (SELECT m.month_start, p.product_id, p.code, b.branch_id, b.branch_name
+         FROM months m CROSS JOIN products p CROSS JOIN branches b),
+d AS (SELECT strftime('%Y-%m-01', disbursed_at) AS month_start, product_id, branch_id, COUNT(*) AS loans
+      FROM loans WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01' GROUP BY 1, 2, 3)
+SELECT g.code, COUNT(*) AS cells, SUM(CASE WHEN d.loans IS NULL THEN 1 ELSE 0 END) AS empty_cells
+FROM grid g LEFT JOIN d ON d.month_start = g.month_start AND d.product_id = g.product_id AND d.branch_id = g.branch_id
+GROUP BY g.code;
+-- AUTO 90 / 13 · BNPL 90 / 0 · CONS 90 / 0 · MICRO 90 / 0 · SME 90 / 3
+```
 450 ячеек (9 × 5 × 10), **16 пустых**: Auto 13 (пять из них — Termez Central), SME 3 (Fergana, Nukus, Termez) — два продукта с крупным чеком пропускают месяцы, в основном в самом малом филиале. Тот же запрос без календаря возвращает 434 строки, и график молча интерполирует. Для месяцев можно взять `dim_date`, если хотите; часть, которая строит сетку, — это `CROSS JOIN products CROSS JOIN branches`.
 
 </details>
+
+**P7 — посчитайте.** Сколько из 450 ячеек филиал × продукт × месяц 2026 года пусты?
+
+```task
+{"id": "w03d3-p7b", "kind": "number", "answer": 16, "dp": 0, "unit": "ячеек", "hint": "LEFT JOIN количеств к сетке календаря; посчитайте ячейки, где присоединённое количество NULL.", "model": "16 пустых ячеек: Auto 13, SME 3. Обычный GROUP BY возвращает 434 строки и никогда их не покажет — график по нему соединяет точки через месяцы, в которых кредитов не было.", "xp": 1}
+```
 
 **P8.** Матрица Нилуфар в длинной форме: когорта × MOB → число наблюдаемых кредитов, число «хоть раз 30+», доля — для когорт 2025-01..2026-03, кредиты с `term_months >= 6`. Какая когорта хуже всех на MOB 3?
 
 <details><summary>Ответ</summary>
 
-Три CTE из разобранного примера плюс CTE `base` (`loans WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01'`), соединённые и сгруппированные по `cohort, installment_no`. Хуже всех на MOB 3: **2025-10 — 15 из 217 = 6.91 %**; затем 2025-09 5.70 %, 2025-03 5.59 %, 2025-05 5.41 %. Уголок компании разворачивает это в широкую матрицу.
+```sql
+WITH inst AS (
+  SELECT i.loan_id, i.installment_no, i.due_date, i.total_due,
+         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30
+  FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id
+  WHERE i.installment_no <= 6 AND date(i.due_date, '+30 days') <= '2026-10-01'
+  GROUP BY i.installment_id, i.loan_id, i.installment_no, i.due_date, i.total_due),
+flag AS (SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30 FROM inst),
+ever AS (SELECT loan_id, installment_no, late30, MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30 FROM flag),
+base AS (SELECT loan_id, strftime('%Y-%m', disbursed_at) AS cohort FROM loans
+         WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01')
+SELECT b.cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever30,
+       ROUND(100.0 * SUM(e.ever30) / COUNT(*), 2) AS rate_pct
+FROM base b JOIN ever e ON e.loan_id = b.loan_id
+GROUP BY b.cohort, e.installment_no ORDER BY b.cohort, mob;
+-- 90 строк; на MOB 3: 2025-10 217 / 15 / 6.91 · 2025-09 5.70 · 2025-03 5.59 · 2025-05 5.41
+```
+Три CTE из разобранного примера плюс CTE `base`, соединённые и сгруппированные по `cohort, installment_no`. Хуже всех на MOB 3: **2025-10 — 15 из 217 = 6.91 %**; затем 2025-09 5.70 %, 2025-03 5.59 %, 2025-05 5.41 %. Уголок компании разворачивает это в широкую матрицу.
 
 </details>
+
+**P8 — назовите.** Какая когорта хуже всех на MOB 3? Запишите как `YYYY-MM`.
+
+```task
+{"id": "w03d3-p8b", "kind": "text", "answer": ["2025-10", "2025-10 cohort", "october 2025", "oct 2025", "октябрь 2025", "когорта 2025-10"], "model": "2025-10: 15 из 217 кредитов хоть раз 30+ к MOB 3 = 6.91 %. Далее: 2025-09 (5.70 %), 2025-03 (5.59 %).", "xp": 1}
+```
 
 **P9.** Разверните P8 в широкую форму (MOB 1..6 столбцами, `SUM(CASE WHEN installment_no = k THEN ever30 END) / SUM(installment_no = k)`) и сделайте ячейку **NULL, когда не все кредиты когорты наблюдаемы** на этом MOB. Какие ячейки окажутся пустыми?
 
@@ -237,29 +363,84 @@ FROM ranked r JOIN customers c ON c.customer_id = r.customer_id WHERE r.rn <= 10
 
 </details>
 
+**P9 — какие ячейки?** Какие ячейки широкой матрицы окажутся пустыми?
+
+```task
+{"id": "w03d3-p9b", "kind": "choice", "options": ["Все ячейки 2026 года", "2026-03 на MOB 5 и MOB 6", "2025-01 на MOB 1 и MOB 2", "Никакие — все ячейки наблюдаемы"], "answer": 1, "explain": "У 2026-03 на MOB 5 наблюдаемо 250 из 251 кредита, на MOB 6 — только 5 из 251: их 30 дней к 1 октября не истекли. Пусто, а не 0.00.", "xp": 1}
+```
+
 **P10.** Кривая поколения, объединённая по **классу** вместо месяца (2025-01..2026-03, срок ≥ 6): доля на MOB 1, 3, 6. Упорядочивает ли скоринг эти кривые?
 
 <details><summary>Ответ</summary>
 
-A 0.43 / 1.86 / 3.13 % · B 0.93 / 2.49 / 5.18 · C 1.99 / 7.18 / 11.52 · D 2.16 / 11.51 / **19.08**. Строго упорядочены на каждом MOB, а разрыв растёт с возрастом: каждый пятый кредит класса D за шесть месяцев просрочил 30+ дней. Та же цепочка, `GROUP BY l.risk_grade` вместо когорты.
+```sql
+WITH inst AS (
+  SELECT i.loan_id, i.installment_no, i.due_date, i.total_due,
+         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30
+  FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id
+  WHERE i.installment_no <= 6 AND date(i.due_date, '+30 days') <= '2026-10-01'
+  GROUP BY i.installment_id, i.loan_id, i.installment_no, i.due_date, i.total_due),
+flag AS (SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30 FROM inst),
+ever AS (SELECT loan_id, installment_no, late30, MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30 FROM flag),
+base AS (SELECT loan_id, risk_grade FROM loans
+         WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01')
+SELECT b.risk_grade,
+       ROUND(100.0 * SUM(CASE WHEN e.installment_no = 1 THEN e.ever30 END) / SUM(CASE WHEN e.installment_no = 1 THEN 1 END), 2) AS mob1,
+       ROUND(100.0 * SUM(CASE WHEN e.installment_no = 3 THEN e.ever30 END) / SUM(CASE WHEN e.installment_no = 3 THEN 1 END), 2) AS mob3,
+       ROUND(100.0 * SUM(CASE WHEN e.installment_no = 6 THEN e.ever30 END) / SUM(CASE WHEN e.installment_no = 6 THEN 1 END), 2) AS mob6
+FROM base b JOIN ever e ON e.loan_id = b.loan_id GROUP BY b.risk_grade ORDER BY b.risk_grade;
+```
+A 0.43 / 1.86 / 3.13 % · B 0.93 / 2.49 / 5.18 · C 1.99 / 7.18 / 11.52 · D 2.16 / 11.51 / **19.08**. Строго упорядочены на каждом MOB, а разрыв растёт с возрастом: каждый пятый кредит класса D за шесть месяцев просрочил 30+ дней. Та же цепочка, `GROUP BY risk_grade` вместо когорты.
 
 </details>
 
-<span class="badge stretch">Со звёздочкой</span> **P11.** Постройте календарь через `dim_date` вместо рекурсии и расширьте цепочку поколения до MOB 1..12 для когорт 2025 года. На каком MOB объединённая кривая 2025 года проходит 10 %?
+**P10 — прочитайте.** Что таблица по классам говорит о скоринге?
+
+```task
+{"id": "w03d3-p10b", "kind": "choice", "options": ["Ничего — классы пересекаются", "Кривые упорядочены A < B < C < D на каждом MOB, и разрыв растёт с возрастом", "Отличается только класс D", "Класс A самый рискованный в начале"], "answer": 1, "explain": "A 3.13 % против D 19.08 % на MOB 6, и тот же порядок на MOB 1 и 3: скоринг ранжирует риск, а разница растёт по мере взросления кредитов.", "xp": 1}
+```
+
+> 🚀 **Со звёздочкой (по желанию, +5 XP).** Длинным кривым нужна более строгая база — здесь видно, что бывает, если смешать когорты разного возраста.
+
+**P11.** Постройте календарь через `dim_date` вместо рекурсии и расширьте цепочку поколения до MOB 1..12 для когорт 2025 года. На каком MOB объединённая кривая 2025 года проходит 10 %?
 
 <details><summary>Ответ</summary>
 
-`SELECT DISTINCT date(date_key, 'start of month') FROM dim_date WHERE date_key BETWEEN …` заменяет строку рекурсивного CTE один в один. Замените `installment_no <= 6` на `<= 12` и оставьте `term_months >= 12` для чистого знаменателя. Объединённая кривая 2025 года (срок ≥ 6, MOB 1..6) идёт 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 %; она вогнутая — больше всего проблем появляется в первые три месяца, поэтому FPD/SPD/TPD отслеживают отдельно. Прочитайте свои значения для MOB 7..12 и назовите месяц пересечения.
+```sql
+WITH inst AS (
+  SELECT i.loan_id, i.installment_no, i.total_due,
+         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30
+  FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id
+  WHERE i.installment_no <= 12 AND date(i.due_date, '+30 days') <= '2026-10-01'
+  GROUP BY i.installment_id, i.loan_id, i.installment_no, i.total_due),
+flag AS (SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30 FROM inst),
+ever AS (SELECT loan_id, installment_no, MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30 FROM flag)
+SELECT e.installment_no AS mob, COUNT(*) AS observed, ROUND(100.0 * SUM(e.ever30) / COUNT(*), 2) AS rate_pct
+FROM loans l JOIN ever e ON e.loan_id = l.loan_id
+WHERE l.term_months >= 12 AND l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-09-01'
+GROUP BY e.installment_no ORDER BY mob;
+-- 853 кредита на каждом MOB (852 на MOB 12): 1.29 → 2.58 → 3.87 → 5.39 → 5.98 → 6.80 → 7.62 → 8.44 → 8.56 → 9.03 → 9.50 → 10.21
+```
+`SELECT DISTINCT date(date_key, 'start of month') FROM dim_date WHERE date_key BETWEEN …` заменяет строку рекурсивного CTE один в один. Для MOB 1..12 оставьте `term_months >= 12` и только когорты, достаточно старые, чтобы быть наблюдаемыми на MOB 12, — с января по август 2025 года (853 кредита). Кривая пересекает 10 % на **MOB 12** (10.21 %). Если объединить все двенадцать когорт 2025 года, линия «пересекает» 10 % на MOB 10 (10.56 %), а затем *падает* до 10.36 на MOB 11 — для бегущего `MAX` это невозможно, значит, объединённая линия смешивает разные кредиты в разном возрасте. Первые шесть MOB базы со сроком ≥ 6 идут 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 %; кривая вогнутая — больше всего проблем появляется в первые три месяца, поэтому FPD/SPD/TPD отслеживают отдельно.
 
 </details>
+
+**P11 — число.** На когортах, наблюдаемых на MOB 12, на каком MOB кривая проходит 10 %?
+
+```task
+{"id": "w03d3-p11", "kind": "number", "answer": 12, "dp": 0, "unit": "MOB", "hint": "Срок >= 12, когорты 2025-01..2025-08, MOB 1..12; найдите первый MOB с долей выше 10.", "model": "MOB 12 (10.21 %, 852 кредита). Если вы объединили все когорты 2025 года, получилось MOB 10 — и кривая, падающая на MOB 11, чего бегущий MAX не может: знаменатель поменялся у вас под руками. Сначала исправьте базу, потом читайте кривую.", "xp": 2}
+```
 
 ---
 
 ## 4. Самопроверка :id=4-self-check
 
-1. `x NOT IN (подзапрос)` вернул ноль строк, хотя вы знаете, что совпадения есть. Что лежит в списке и какие два способа исправить? *(→ раздел 1, «IN — список — и ловушка NULL»)*
-2. Когда цепочка CTE лучше вложенных подзапросов и когда достаточно обычного скалярного подзапроса? *(→ раздел 1, «CTE»)*
-3. Что рекурсивный CTE добавляет к месячному графику такого, чего не может `GROUP BY month`, и какова альтернатива через `dim_date`? *(→ раздел 1, «Рекурсивный CTE»)*
+```check
+{"id": "w03d3-sc", "questions": [
+  {"type": "multi", "q": "x NOT IN (подзапрос) вернул ноль строк, хотя вы знаете, что совпадения есть. Какие исправления работают?", "options": ["Добавить WHERE column IS NOT NULL внутрь подзапроса", "Переписать через NOT EXISTS с коррелированным =", "Заменить NOT IN на IN", "Добавить DISTINCT в подзапрос"], "answer": [0, 1], "explain": "В списке есть NULL, и NOT IN становится неизвестным для каждой строки; уберите NULL или используйте NOT EXISTS (→ раздел 1, «IN — список — и ловушка NULL»)."},
+  {"type": "single", "q": "Когда достаточно обычного скалярного подзапроса, а цепочка CTE не нужна?", "options": ["Когда вы агрегируете на трёх зернистостях", "Для одного значения, с которым сравнивают или на которое делят, например > (SELECT AVG(principal) FROM loans)", "Когда тот же результат нужен дважды", "Когда читатель должен следить за несколькими шагами"], "answer": 1, "explain": "Однострочный скаляр или одиночный EXISTS — подзапрос. Повторное использование, глубокая вложенность или несколько зернистостей — цепочка (→ раздел 1, «CTE»)."},
+  {"type": "single", "q": "Что рекурсивный календарь месяцев добавляет к месячному графику такого, чего не может GROUP BY month?", "options": ["Более быстрые запросы", "Месяцы без строк появляются нулями, а не исчезают", "Он удаляет повторяющиеся месяцы", "Он сортирует месяцы"], "answer": 1, "explain": "GROUP BY показывает только месяцы, где есть строки; сделайте LEFT JOIN количеств к календарю (рекурсивный CTE или dim_date) — и пустые месяцы появятся (→ раздел 1, «Рекурсивный CTE»)."}]}
+```
 
 ---
 
@@ -318,7 +499,17 @@ FROM cells GROUP BY cohort ORDER BY cohort;
 
 **График, который рисует Нилуфар:** MOB по оси x (1..6), доля «хоть раз 30+» в % по оси y, по линии на когорту, худшая — цветом. Объединённая линия 2025 года — 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 % — это эталон, с которым в равном возрасте сравнивают каждую новую когорту. MOB 1 этого графика *и есть* FPD30 (1.28 % в целом), так два отчёта и сходятся.
 
-> Версия для собеседования: *«Как вы строите анализ поколений в SQL?»* — Когорта = месяц выдачи, возраст = номер платежа; по каждому платежу — оплачен ли в течение 30 дней после срока через LEFT JOIN payments с условием по дате; пометить просрочку; бегущий `MAX` по платежам кредита для «хоть раз»; ограничиться платежами, у которых 30 дней уже прошли, и когортами, полностью наблюдаемыми на каждом MOB; развернуть через `SUM(CASE)` в когорта × MOB; читать вниз по столбцам; проверить, что столбец MOB 1 равен FPD30.
+```game
+{"type": "flash", "id": "w03d3-g4", "title": "Слова поколений", "cards": [["Поколение (когорта)", "все кредиты, выданные в одном месяце"], ["MOB — месяц жизни", "возраст кредита в месяцах; здесь — номер платежа"], ["Хоть раз 30+ к MOB k", "хотя бы один из платежей 1..k не оплачен полностью через 30 дней после срока"], ["Кривая поколения", "доля «хоть раз 30+» одной когорты на MOB 1, 2, 3 … — может только расти"], ["Наблюдаемая ячейка", "у каждого кредита когорты на этом MOB истекли 30 дней; иначе — пусто"], ["Читать вниз по столбцу", "сравнивать когорты в одном возрасте, а не по календарю"], ["MOB 1 = FPD30", "первая точка кривой — это доля дефолта по первому платежу (1.28 %)"]]}
+```
+
+> 🎯 **Версия для собеседования.** *«Как вы строите анализ поколений в SQL?»* Интервьюер ждёт определений (когорта, возраст, «хоть раз»), правила наблюдаемости и того, как вы проверяете результат. Скажите в поле ниже, затем сравните.
+
+**Скажите, как на собеседовании.** Ответьте на вопрос выше в 3–5 предложениях, как сказали бы вслух, с одним числом Nur Finance.
+
+```task
+{"id": "w03d3-int", "kind": "free", "min": 30, "model": "Когорта — это месяц выдачи, а возраст — номер платежа, поэтому каждую когорту читаем в одном и том же месяце жизни. По каждому платежу проверяю, оплачен ли он в течение 30 дней после срока — LEFT JOIN к payments с условием по дате, — помечаю просроченные и беру бегущий MAX по платежам кредита, чтобы «хоть раз 30+» оставалось включённым. Оставляю только платежи, у которых 30 дней прошли, и показываю ячейку, только когда вся когорта наблюдаема на этом MOB, затем разворачиваю через SUM(CASE) в когорта × MOB и читаю вниз по столбцам. В Nur Finance худшая когорта — октябрь 2025: 6.91 % на MOB 3 против 1.99 % у января 2025, а моя проверка — столбец MOB 1 равен FPD30, 1.28 %.", "rubric": ["Когорта = месяц выдачи, возраст = номер платежа (MOB)", "Оплата в течение 30 дней через LEFT JOIN с условием по дате, затем флаг", "Бегущий MAX для «хоть раз»", "Наблюдаемость: только созревшие платежи, пустые ячейки для частично наблюдаемых когорт", "Проверка (кривые не падают, MOB 1 = FPD30) или реальное число"], "xp": 2}
+```
 
 Завтра: три блока `WITH`, которыми вы теперь владеете, становятся **представлениями** — чистым слоем, на который Тимур направит Power BI, — и мы сделаем их быстрыми.
 
@@ -350,7 +541,7 @@ FROM cells GROUP BY cohort ORDER BY cohort;
 Бонус для любознательных: один более трудный вопрос по теме дня. Решите его за XP, которые растут вместе с серией задач, — полная неделя из пяти ещё добавляет 10 % к пятничному ваучеру.
 
 ```challenge
-{"id": "w03d3", "q": "Нилуфар хочет одно объединённое число по поколениям для канала app. Возьмите кредиты, выданные в 2025 году (все двенадцать месячных когорт вместе), с term_months >= 6, заявка по которым пришла через канал app, и посчитайте долю тех, кто хоть раз просрочил 30+ дней к MOB 6 (определение из Уголка компании). Процент с 2 знаками после запятой.", "type": "number", "dp": 2, "h": ["bfb301d2841e84361652db14"], "hint": "Канала нет в loans — подзапрос может принести его, не меняя зернистость.", "sol": "V0lUSCBpbnN0IEFTICgg4oCmd29ya2VkIGV4YW1wbGXigKYgKSwgZmxhZyBBUyAoIOKApiApLCBldmVyIEFTICgg4oCmICksCmJhc2UgQVMgKFNFTEVDVCBsb2FuX2lkIEZST00gbG9hbnMKICAgICAgICAgV0hFUkUgdGVybV9tb250aHMgPj0gNgogICAgICAgICAgIEFORCBkaXNidXJzZWRfYXQgPj0gJzIwMjUtMDEtMDEnIEFORCBkaXNidXJzZWRfYXQgPCAnMjAyNi0wMS0wMScKICAgICAgICAgICBBTkQgYXBwbGljYXRpb25faWQgSU4gKFNFTEVDVCBhcHBsaWNhdGlvbl9pZCBGUk9NIGFwcGxpY2F0aW9ucyBXSEVSRSBjaGFubmVsID0gJ2FwcCcpKQpTRUxFQ1QgQ09VTlQoKikgQVMgbG9hbnMsIFNVTShlLmV2ZXIzMCkgQVMgZXZlcjMwLAogICAgICAgUk9VTkQoMTAwLjAgKiBTVU0oZS5ldmVyMzApIC8gQ09VTlQoKiksIDIpIEFTIHBjdApGUk9NIGJhc2UgYgpKT0lOIGV2ZXIgZSBPTiBlLmxvYW5faWQgPSBiLmxvYW5faWQgQU5EIGUuaW5zdGFsbG1lbnRfbm8gPSA2OwotLSA1MzkgbG9hbnMsIGFsbCBvYnNlcnZlZCBhdCBNT0IgNjsgNTAgZXZlciAzMCsg4oaSIDkuMjggJQotLSBTUUwgU2VydmVyOiBEQVRFQUREKGRheSwgMzAsIGkuZHVlX2RhdGUpIGluIGluc3QsIHRoZSByZXN0IGlkZW50aWNhbApUaGUgcG9vbGVkIDIwMjUgbGluZSBmb3IgYWxsIGNoYW5uZWxzIGVuZHMgYXQgNy40NiAlIGF0IE1PQiA2OyBicmFuY2ggNy4zOCAlLCBwYXJ0bmVyIDUuNDEgJSwgYXBwIDkuMjggJS4gRXZlcnkgbG9hbiBpbiB0aGlzIGJhc2UgaXMgYSA2LW1vbnRoIE1pY3JvIGxvYW4sIHNvICJhcHAiIGFuZCAiTWljcm8iIGFyZSB0aGUgc2FtZSBjdXQgaGVyZS4gVGhlIGFwcCdzIGZpcnN0LXBheW1lbnQgZ2FwIGZyb20gd2VlayAyIGRvZXMgbm90IGNsb3NlIHdpdGggYWdlOiBieSBtb250aCA2IHJvdWdobHkgb25lIGFwcCBsb2FuIGluIGVsZXZlbiBoYXMgYmVlbiBhIG1vbnRoIGxhdGUu"}
+{"id": "w03d3", "sql": true, "q": "Нилуфар хочет одно объединённое число по поколениям для канала app. Возьмите кредиты, выданные в 2025 году (все двенадцать месячных когорт вместе), с term_months >= 6, заявка по которым пришла через канал app, и посчитайте долю тех, кто хоть раз просрочил 30+ дней к MOB 6 (определение из Уголка компании). Процент с 2 знаками после запятой.", "type": "number", "dp": 2, "h": ["bfb301d2841e84361652db14"], "hint": "Канала нет в loans — подзапрос может принести его, не меняя зернистость.", "sol": "V0lUSCBpbnN0IEFTICgg4oCmd29ya2VkIGV4YW1wbGXigKYgKSwgZmxhZyBBUyAoIOKApiApLCBldmVyIEFTICgg4oCmICksCmJhc2UgQVMgKFNFTEVDVCBsb2FuX2lkIEZST00gbG9hbnMKICAgICAgICAgV0hFUkUgdGVybV9tb250aHMgPj0gNgogICAgICAgICAgIEFORCBkaXNidXJzZWRfYXQgPj0gJzIwMjUtMDEtMDEnIEFORCBkaXNidXJzZWRfYXQgPCAnMjAyNi0wMS0wMScKICAgICAgICAgICBBTkQgYXBwbGljYXRpb25faWQgSU4gKFNFTEVDVCBhcHBsaWNhdGlvbl9pZCBGUk9NIGFwcGxpY2F0aW9ucyBXSEVSRSBjaGFubmVsID0gJ2FwcCcpKQpTRUxFQ1QgQ09VTlQoKikgQVMgbG9hbnMsIFNVTShlLmV2ZXIzMCkgQVMgZXZlcjMwLAogICAgICAgUk9VTkQoMTAwLjAgKiBTVU0oZS5ldmVyMzApIC8gQ09VTlQoKiksIDIpIEFTIHBjdApGUk9NIGJhc2UgYgpKT0lOIGV2ZXIgZSBPTiBlLmxvYW5faWQgPSBiLmxvYW5faWQgQU5EIGUuaW5zdGFsbG1lbnRfbm8gPSA2OwotLSA1MzkgbG9hbnMsIGFsbCBvYnNlcnZlZCBhdCBNT0IgNjsgNTAgZXZlciAzMCsg4oaSIDkuMjggJQotLSBTUUwgU2VydmVyOiBEQVRFQUREKGRheSwgMzAsIGkuZHVlX2RhdGUpIGluIGluc3QsIHRoZSByZXN0IGlkZW50aWNhbApUaGUgcG9vbGVkIDIwMjUgbGluZSBmb3IgYWxsIGNoYW5uZWxzIGVuZHMgYXQgNy40NiAlIGF0IE1PQiA2OyBicmFuY2ggNy4zOCAlLCBwYXJ0bmVyIDUuNDEgJSwgYXBwIDkuMjggJS4gRXZlcnkgbG9hbiBpbiB0aGlzIGJhc2UgaXMgYSA2LW1vbnRoIE1pY3JvIGxvYW4sIHNvICJhcHAiIGFuZCAiTWljcm8iIGFyZSB0aGUgc2FtZSBjdXQgaGVyZS4gVGhlIGFwcCdzIGZpcnN0LXBheW1lbnQgZ2FwIGZyb20gd2VlayAyIGRvZXMgbm90IGNsb3NlIHdpdGggYWdlOiBieSBtb250aCA2IHJvdWdobHkgb25lIGFwcCBsb2FuIGluIGVsZXZlbiBoYXMgYmVlbiBhIG1vbnRoIGxhdGUu"}
 ```
 
 <!-- challenge:end -->

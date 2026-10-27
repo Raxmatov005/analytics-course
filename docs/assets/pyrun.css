@@ -1,0 +1,38 @@
+/* Python boxes (pyrun.js). The inner parts reuse the SQL box's classes from theme.css (sq-top, sq-lang, sq-edit, sq-bar,
+   sq-run, sq-out, sq-err, sq-note, sq-scroll, sq-table); the frame is its own class, so sqlrun.js does not take a Python
+   page for an SQL one (its Database button looks for .sq-box). */
+.py-box { margin: 1.3em 0; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); overflow: hidden; }
+.markdown-section .py-box { max-width: 100%; box-sizing: border-box; }
+.py-box .sq-lang { color: #3569a8; }
+.py-box .py-ok { display: none; font-weight: 800; color: var(--ok); }
+.py-box.al-done .py-ok { display: inline; }
+.py-box .py-ok + .sq-reset, .py-box .sq-reset { margin-left: auto; }
+.py-box.py-busy .sq-run { opacity: .7; }
+
+/* the bar: ▶ Run is the theme's button; the two links are quiet */
+.sq-bar .py-link { background: none; color: var(--brand); padding: .4em .5em; font-weight: 600; box-shadow: none; }
+.sq-bar .py-link:hover { background: var(--brand-xl); }
+.sq-bar .py-restart { margin-left: auto; color: var(--muted); }
+
+/* the output: printed text, values, tables, figures */
+.py-stdout, .py-value { margin: 0 0 .6em; padding: .6em .8em; background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  font: 12.5px/1.55 var(--mono); color: var(--ink); white-space: pre; overflow: auto; max-height: 360px; tab-size: 4; }
+.py-value { color: #1e3a8a; }
+.sq-out > :last-child { margin-bottom: 0; }
+.py-box .sq-scroll { margin-bottom: .6em; }
+.markdown-section table.py-df th { text-align: right; }
+.markdown-section table.py-df tbody th { position: static; background: #f8fafc; color: var(--muted); }
+.markdown-section table.py-df td { text-align: right; }
+.py-fig { display: block; max-width: 100%; height: auto; margin: .4em 0 .6em; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.py-box .sq-err { margin-bottom: .5em; white-space: pre-wrap; }
+.py-box .sq-hint-box { margin: 0 0 .5em; }
+.markdown-section .py-trace { margin: .3em 0 0; padding: .4em .8em; border-left-width: 1px; border-radius: 10px; font-size: .9em; }
+.py-trace summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+.py-trace .py-stdout { margin: .5em 0 0; color: #7f1d1d; }
+.py-loading { animation: py-pulse 1.4s ease-in-out infinite; }
+@keyframes py-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .py-loading { animation: none; } }
+
+/* an editor inside a task or challenge card */
+.py-box.py-ed { margin: .6em 0; }
+@media (max-width: 600px) { .sq-bar .py-restart { margin-left: 0; } }

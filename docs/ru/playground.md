@@ -2,6 +2,8 @@
 
 <span class="badge">Свободная практика</span> <span class="badge company">Ничего устанавливать не нужно</span>
 
+> 🧭 **Зачем эта страница.** Песочница, которую нельзя сломать: пробуйте любой SQL, включая команды, которые создают, меняют и удаляют данные, — и один раз отработайте их с проверками в лабораторной под редактором.
+
 Это ваша собственная копия базы данных **Nur Finance** — тех же 11 таблиц, которыми пользуются аналитики банка в этом курсе, со всеми строками. Делайте здесь что угодно:
 
 - **Задавайте вопросы** с помощью `SELECT`, `WHERE`, `GROUP BY`, `JOIN`.
@@ -14,6 +16,16 @@
 
 ```sqlplay
 ```
+
+## Ваша первая таблица — лабораторная с проверками :id=your-first-table-a-lab-with-checks
+
+Четыре шага, один редактор. Каждое **▶ Выполнить** работает на вашей учебной копии, затем лабораторная проверяет шаг и открывает следующий. Держите открытой панель «База данных»: ваша таблица появится в разделе *Your tables*, как только будет создана.
+
+```sqllab
+{"id": "playground-lab", "title": "Ваша первая таблица", "intro": "Nur Finance открывает новые офисы, и Мадина хочет черновой список, прежде чем они попадут в настоящую таблицу branches. Вы создаёте его, наполняете, исправляете и убираете за собой — create, insert, update, delete.", "steps": [{"say": "Создайте таблицу my_branches(branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT).", "hint": "CREATE TABLE my_branches (branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT);", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='my_branches'", "want": 1}, {"say": "Добавьте ровно три филиала — любые названия, регионы вроде 'Tashkent' или 'Samarkand'.", "hint": "INSERT INTO my_branches (name, region) VALUES ('Chilonzor', 'Tashkent'), ('Registan', 'Samarkand'), ('Old City', 'Bukhara');", "expect": "SELECT COUNT(*) FROM my_branches", "want": 3}, {"say": "Поменяйте регион одного из них на 'Fergana' через UPDATE … WHERE.", "hint": "UPDATE my_branches SET region = 'Fergana' WHERE branch_id = 1;", "expect": "SELECT COUNT(*) FROM my_branches WHERE region='Fergana'", "want": 1}, {"say": "Удалите филиал в Fergana. Затем SELECT * FROM my_branches — посмотрите на два оставшихся.", "hint": "DELETE FROM my_branches WHERE region = 'Fergana';", "expect": "SELECT COUNT(*) FROM my_branches WHERE region='Fergana'", "want": 0}], "cleanup": "DROP TABLE IF EXISTS my_branches"}
+```
+
+> ⚠️ **Осторожно.** `UPDATE` или `DELETE` без `WHERE` меняет все строки таблицы. Здесь это стоит вам одного **↺ Сбросить**; на работе — восстановления из резервной копии. Сначала пишите `WHERE`.
 
 ## Идеи, что попробовать :id=ideas-to-try
 

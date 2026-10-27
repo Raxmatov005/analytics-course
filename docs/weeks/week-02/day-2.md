@@ -29,6 +29,8 @@ FROM loans;
 
 One row out. `COUNT(*)` counts rows; `COUNT(column)` counts rows where that column is not NULL (Day 4 makes this matter). Add a `WHERE` and the aggregates run over the filtered rows only — `WHERE status = 'active'` → 3 352 loans, 296 980 040 000 disbursed.
 
+> 💡 **Key idea.** An aggregate turns many rows into one number. `COUNT(*)` counts rows, `COUNT(column)` counts the values that are not NULL, `COUNT(DISTINCT column)` counts different values — three different questions.
+
 ### GROUP BY — one number per group
 
 To get the same numbers *per product*, name the column you want one row for:
@@ -49,9 +51,11 @@ ORDER BY disbursed DESC;
 | Micro loan | 2 669 | 7 221 210 000 | 2 705 586 |
 | Buy now pay later | 1 569 | 6 544 110 000 | 4 170 880 |
 
-The rule that produces most beginner errors: **every column in `SELECT` is either inside an aggregate or listed in `GROUP BY`.** `SELECT p.name, l.loan_id, COUNT(*)` is an error on SQL Server ("not contained in an aggregate function or the GROUP BY clause") — which loan_id would it show for a group of 781? SQLite silently picks one; never rely on it.
+The rule that produces most beginner errors: **every column in `SELECT` is either inside an aggregate or listed in `GROUP BY`.**
 
-Group by **several columns** to get one row per combination: `GROUP BY b.region, p.name` → region × product. The month of a date is a function of the date — tomorrow's topic — but you need it today, so here it is in both dialects:
+> ⚠️ **Watch out.** `SELECT p.name, l.loan_id, COUNT(*) … GROUP BY p.name` is an error on SQL Server ("not contained in an aggregate function or the GROUP BY clause") — which loan_id would it show for a group of 781? SQLite silently picks one and runs; never rely on it.
+
+Group by **several columns** to get one row per combination: `GROUP BY b.region, p.name` → region × product. The month of a date is a function of the date — Wednesday's topic — but you need it today, so here it is in both dialects; copy it as it stands:
 
 ```sql
 -- SQL Server:  FORMAT(l.disbursed_at, 'yyyy-MM')      SQLite:  strftime('%Y-%m', l.disbursed_at)
@@ -79,6 +83,20 @@ ORDER BY active_loans DESC;          -- 6 branches: Tashkent Central 435 … And
 
 Execution order to keep in your head: `FROM → JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY`. That is why `WHERE` cannot see aliases or aggregates, and `HAVING` can.
 
+> 💡 **Key idea.** A condition on a column goes in `WHERE` (rows, before grouping); a condition on an aggregate goes in `HAVING` (groups, after grouping). "Active loans, branches with more than 300 of them" needs both.
+
+Put the three clauses into the gaps yourself:
+
+```game
+{"id": "w02d2-g1", "type": "cloze", "title": "WHERE, GROUP BY or HAVING?", "text": "SELECT b.branch_name, COUNT(*) AS active_loans FROM loans l JOIN branches b ON b.branch_id = l.branch_id {{0}} l.status = 'active' {{1}} b.branch_name {{2}} COUNT(*) > 300 ORDER BY active_loans DESC;", "blanks": [["WHERE"], ["GROUP BY"], ["HAVING"]], "distractors": ["ORDER BY", "SUM", "DISTINCT"]}
+```
+
+And the order in which the database actually runs a query:
+
+```game
+{"id": "w02d2-g2", "type": "order", "title": "The order a query runs in", "items": ["FROM", "JOIN", "WHERE", "GROUP BY", "HAVING", "SELECT", "ORDER BY"]}
+```
+
 ### COUNT(DISTINCT)
 
 `COUNT(*)` counts rows of the group; `COUNT(DISTINCT l.customer_id)` counts different customers in it:
@@ -103,7 +121,9 @@ JOIN products p ON p.product_id = l.product_id
 GROUP BY p.name;                     -- SME 5 862 295 560 000 — 24× too big, and nobody would blink
 ```
 
-The number is wrong by a factor of the average term, which differs by product, so even the *ranking* can change. The rule: **aggregate a column at the grain of its own table.** Loan amounts over `loans`; instalment amounts over `installments`; if you need both in one result, aggregate each table separately and join the results — week 3 gives you the tool (subqueries and CTEs). Until then, when a query joins a one-to-many table, run `COUNT(*)` and `COUNT(DISTINCT l.loan_id)` next to each other; if they differ, do not `SUM` a loan column.
+The number is wrong by a factor of the average term, which differs by product, so even the *ranking* can change. The rule: **aggregate a column at the grain of its own table.** Loan amounts over `loans`; instalment amounts over `installments`; if you need both in one result, aggregate each table separately and join the results — week 3 gives you the tool (subqueries and CTEs).
+
+> ⚠️ **Watch out.** When a query joins a one-to-many table, run `COUNT(*)` and `COUNT(DISTINCT l.loan_id)` next to each other first. If they differ, the join has multiplied the loans — do not `SUM` or `AVG` a loan column over it.
 
 ### Set operators — stacking results
 
@@ -116,12 +136,22 @@ Joins put tables side by side; **set operators** (*операции над мн�
 | `EXCEPT` | rows of the first query not in the second | `SELECT customer_id FROM applications EXCEPT SELECT customer_id FROM loans` → 1 118 people who applied and never got a loan |
 | `INTERSECT` | rows in both | applicants who are also borrowers → 4 335 |
 
-`UNION` is how you stack "this month" and "last month" blocks into one table for a chart; `EXCEPT` is an anti-join written as sets. Use `UNION ALL` unless you *want* de-duplication — `UNION` must sort to remove duplicates, and it quietly merges rows that are legitimately identical.
+`UNION` is how you stack "this month" and "last month" blocks into one table for a chart; `EXCEPT` is an anti-join written as sets.
+
+> 💡 **Key idea.** Default to `UNION ALL`. `UNION` must sort to remove duplicates, and it quietly merges rows that are legitimately identical — two months with the same count become one row.
 
 ### Depth (optional)
 
 - ▶ Baraa, *Aggregate functions* [8:43:36](https://youtu.be/SSKVgrwhzus?t=31416&end=31811) — 7 min; and *Set operators* [4:02:09](https://youtu.be/SSKVgrwhzus?t=14529&end=17261) — 40 min.
 - RU deck (TBC Data Analytics 2.0, if you have it) `2.2 SQL-1-38.pdf` — GROUP BY / HAVING pages. *Russian terms:* агрегатная функция = aggregate, группировка = GROUP BY, средний чек = average ticket, объединение = UNION.
+
+```videoquiz
+{"video": "SSKVgrwhzus", "stops": [
+  {"at": 15100, "q": "Two queries are stacked with UNION. Which rule must they follow?", "options": ["Same number of rows", "Same number of columns, of compatible types", "The same table in FROM", "An ORDER BY in each query"], "answer": 1, "explain": "Set operators stack results row under row, so the columns must line up; the row counts can be anything.", "back": 60},
+  {"at": 15900, "q": "What is the difference between UNION and UNION ALL?", "options": ["UNION ALL removes duplicates, UNION keeps them", "UNION removes duplicate rows, UNION ALL keeps every row", "UNION works only on two tables, UNION ALL on many", "There is none"], "answer": 1, "explain": "UNION de-duplicates (and must sort to do it); UNION ALL keeps everything and is faster — the default unless you want de-duplication.", "back": 60},
+  {"at": 16800, "q": "Which operator returns the rows of the first query that do not appear in the second?", "options": ["INTERSECT", "UNION", "EXCEPT", "UNION ALL"], "answer": 2, "explain": "EXCEPT is an anti-join written as sets: applicants EXCEPT borrowers = 1 118 people who never got a loan.", "back": 60},
+  {"at": 31600, "q": "What does an aggregate function like SUM or AVG return over a set of rows?", "options": ["One value for the whole set (or for each group)", "One value per row", "The rows sorted", "Only the rows that are not NULL"], "answer": 0, "explain": "Aggregates collapse many rows into one number; with GROUP BY they return one number per group.", "back": 60}]}
+```
 
 ---
 
@@ -144,7 +174,7 @@ Joins put tables side by side; **set operators** (*операции над мн�
 | 2026-02 | Small business loan | 21 | 6 035 880 000 |
 | … | | | |
 
-50 rows (10 months × 5 products; October has one day). This is the **long format** — one row per cell of Madina's slide. Her slide is the **wide** format (months across). Turning long into wide is Day 4's `SUM(CASE …)` or, in practice, a pivot table in Excel/Power BI on top of exactly this result. Deliver the long table; it is the one that is right.
+50 rows (10 months × 5 products; October has one day). This is the **long format** — one row per cell of Madina's slide. Her slide is the **wide** format (months across). Turning long into wide is Thursday's `SUM(CASE …)` or, in practice, a pivot table in Excel/Power BI on top of exactly this result. Deliver the long table; it is the one that is right.
 
 5. Sanity check against a single-column total: `SELECT COUNT(*), SUM(principal) FROM loans WHERE disbursed_at >= '2026-01-01'` → 3 051 loans, 162 333 060 000. The 50 rows must add up to that. They do.
 
@@ -152,7 +182,7 @@ Joins put tables side by side; **set operators** (*операции над мн�
 
 ## 3. Practice (60 min)
 
-Write each query in the box under its question — it is saved in this browser; **✔ Check** compares your result with the answer. Yesterday's joins plus today's aggregates; no `CASE` yet.
+Questions whose answer is a query have a box under them — write, **▶ Run**, then **✔ Check** compares your result with the answer without showing it; your query is saved in this browser. Questions that ask for a number or a reason have an answer box of their own. Yesterday's joins plus today's aggregates; no `CASE` yet. The **Database** panel (button at the bottom right) lists every table and column.
 
 **P1.** Loans and total principal by `status`, largest total first.
 
@@ -166,7 +196,7 @@ active 3 352 / 296.98 bn · closed 4 242 / 94.15 bn · written_off 190 / 10.02 b
 
 </details>
 
-**P2.** Loans disbursed per year, with the total and the average ticket, rounded to whole UZS.
+**P2.** Loans disbursed per year, with the total and the average ticket, rounded to whole UZS (`ROUND(x)` rounds to a whole number; Wednesday covers it properly).
 
 <details><summary>Answer</summary>
 
@@ -192,7 +222,7 @@ Tashkent Central 1 001 loans / 55.64 bn first, although Tashkent South has more 
 
 </details>
 
-**P4.** Branches with more than 900 loans. · **P5.** Products whose average ticket exceeds 50 000 000.
+**P4.** Branches with more than 900 loans, most first.
 
 <details><summary>Answer</summary>
 
@@ -200,25 +230,40 @@ Tashkent Central 1 001 loans / 55.64 bn first, although Tashkent South has more 
 SELECT b.branch_name, COUNT(*) FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 GROUP BY b.branch_name HAVING COUNT(*) > 900 ORDER BY 2 DESC;
 -- Tashkent South 1012, Tashkent North 1007, Tashkent Central 1001, Fergana Central 906
-SELECT p.name, AVG(l.principal) FROM loans l JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name HAVING AVG(l.principal) > 50000000;             -- Auto 216.9 m, SME 308.7 m
 ```
-Both are conditions on an aggregate → `HAVING`. Writing them in `WHERE` is a syntax error, which is the kind one.
+A condition on an aggregate → `HAVING`. Writing it in `WHERE` is a syntax error, which is the kind one.
 
 </details>
 
-**P6.** How many customers have more than one loan? Two steps: a grouped query per customer, then count its rows by eye — and note that counting *rows of a grouped result* needs a tool you get in week 3.
+**P5.** Products whose average ticket exceeds 50 000 000.
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT p.name, AVG(l.principal) FROM loans l JOIN products p ON p.product_id = l.product_id
+GROUP BY p.name HAVING AVG(l.principal) > 50000000;             -- Auto 216.9 m, SME 308.7 m
+```
+
+</details>
+
+**P6.** Customers with more than one loan: one row per such customer with their number of loans, most loans first.
 
 <details><summary>Answer</summary>
 
 ```sql
 SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) > 1 ORDER BY loans DESC;
 ```
-2 246 rows (your tool shows the row count). Four customers have 7 loans each (ids 1893, 3216, 4435, 5478). Wrapping it in `SELECT COUNT(*) FROM ( … )` is a subquery — Week 3 Day 3.
+2 246 rows — the line above the result table tells you the row count. Four customers have 7 loans each (ids 1893, 3216, 4435, 5478). Getting that 2 246 as a number *inside* SQL means counting the rows of a grouped result — `SELECT COUNT(*) FROM ( … )`, a subquery, Week 3 Day 3.
 
 </details>
 
-**P7.** Collections actions by type with the number of promises to pay. Which action type gets the highest *share* of promises? (A share is a division — compute it by hand today, in SQL tomorrow.)
+So how many customers have more than one loan? (Read it off the row count of your result.)
+
+```task
+{"id": "w02d2-p6", "kind": "number", "answer": 2246, "dp": 0, "unit": "customers", "hint": "Your grouped query returns one row per such customer; the box shows how many rows came back.", "model": "2 246 customers have two or more loans — about half of the 4 335 borrowers. Four of them have 7 loans each."}
+```
+
+**P7.** Collections actions by type, and the number of those actions that ended in a promise to pay, by type — two grouped queries.
 
 <details><summary>Answer</summary>
 
@@ -230,7 +275,13 @@ sms 1 254 / 3 265 = 38.4 % · visit 381 / 1 506 = 25.3 % · call 785 / 3 114 = 2
 
 </details>
 
-**P8.** The multiplication trap, measured. For active loans: `COUNT(*)` and `COUNT(DISTINCT l.loan_id)` over `loans JOIN payments`, and `SUM(l.principal)` over the same join vs over `loans` alone.
+Divide by hand: what is the highest share of actions ending in a promise to pay, in % to one decimal?
+
+```task
+{"id": "w02d2-p7", "kind": "number", "answer": 38.4, "dp": 1, "unit": "%", "hint": "promises ÷ actions × 100 for each type; the largest share wins.", "model": "SMS: 1 254 of 3 265 = 38.4 % (visit 25.3, call 25.2, restructure_offer 23.3). SMS is the first touch on every late loan, while borrowers still answer — the share says nothing about which action works."}
+```
+
+**P8.** The multiplication trap, measured. For active loans: `COUNT(*)` and `COUNT(DISTINCT l.loan_id)` over `loans JOIN payments`, and `SUM(principal)` over `loans` alone.
 
 <details><summary>Answer</summary>
 
@@ -239,11 +290,11 @@ SELECT COUNT(*), COUNT(DISTINCT l.loan_id) FROM loans l JOIN payments p ON p.loa
 -- 22511 rows, 2971 loans  → the join multiplied; 381 active loans have no payment yet and vanished (inner join)
 SELECT SUM(principal) FROM loans WHERE status = 'active';                                   -- 296 980 040 000 (right)
 ```
-The joined `SUM(l.principal)` is in the trillions — every principal counted once per payment. When the two counts differ, aggregate loan columns on `loans` alone.
+`SUM(l.principal)` over the join is in the trillions — every principal counted once per payment. When the two counts differ, aggregate loan columns on `loans` alone.
 
 </details>
 
-**P9.** Payments by `method`: count and total amount, most frequent first. Look at the result carefully and write one sentence about it.
+**P9.** Payments by `method`: count and total amount, most frequent first. Look at the result carefully.
 
 <details><summary>Answer</summary>
 
@@ -254,7 +305,15 @@ Ten rows where there should be five: `card` 17 564 **and** `Card` 57; `click` 8 
 
 </details>
 
-**P10.** Monthly payments received in 2026: count and sum per month. Anything odd at the end of the list?
+How many groups does your query return (on SQLite)? Then, in the answer's explanation, see why that is not five.
+
+```task
+{"id": "w02d2-p9", "kind": "number", "answer": 10, "dp": 0, "unit": "groups", "hint": "Count the rows of your result — then look at the spellings.", "model": "10 groups for 5 real methods: card/Card, click/Click, payme/PayMe, cash/'CASH ' (trailing space), transfer/bank transfer. GROUP BY groups exact values, so 180 differently spelt rows make five phantom categories."}
+```
+
+> ⚠️ **Watch out.** `GROUP BY` groups *exact* values. `'Card'`, `'card'` and `'card '` are three groups — look at the labels of every grouped result before you trust its counts.
+
+**P10.** Payments received in 2026, count and sum per month. Anything odd at the end of the list?
 
 <details><summary>Answer</summary>
 
@@ -266,7 +325,15 @@ January 2 466 / 11.76 bn rising to September 3 159 / 16.34 bn — then **2026-10
 
 </details>
 
-<span class="badge stretch">Stretch</span> **P11.** Using `UNION ALL`, build one result with two labelled rows: `'2025'` with its loan count and `'2026'` with its loan count. Then do the same with `UNION` and explain why the result is identical here but would not be if both years had the same count.
+How many payments are dated **after** the as-of date 2026-10-01? (One more query: `WHERE paid_at > '2026-10-01'`.)
+
+```task
+{"id": "w02d2-p10", "kind": "number", "answer": 24, "dp": 0, "unit": "payments", "hint": "COUNT(*) FROM payments with paid_at strictly greater than '2026-10-01'.", "model": "24 payments, the last on 2026-11-24 — money 'received' before the date it was received. Either the extract ran later than its label or these are forward-dated debits; a note for Timur."}
+```
+
+> 🚀 **Stretch (optional, +5 XP).** Set operators in practice — not needed to finish the day.
+
+**P11.** Using `UNION ALL`, build one result with two labelled rows: `'2025'` with its loan count and `'2026'` with its loan count. Then run the same with `UNION`.
 
 <details><summary>Answer</summary>
 
@@ -279,19 +346,47 @@ The label column makes the rows different, so `UNION` keeps both. Without the la
 
 </details>
 
+Why do `UNION` and `UNION ALL` give the same two rows here — and when would `UNION` lose one?
+
+```task
+{"id": "w02d2-p11", "kind": "free", "min": 20, "model": "UNION removes only rows that are identical in every column. Here the rows are ('2025', 3041) and ('2026', 3051): the label column alone makes them different, so nothing is removed. If I dropped the label and both years had the same count, the two rows would be identical and UNION would silently keep one — so I default to UNION ALL.", "rubric": ["Says UNION removes rows identical in every column", "Points to the label column (or the different counts) as what keeps the rows apart", "Names the case that loses a row: no label and equal counts", "Recommends UNION ALL as the default"], "xp": 2}
+```
+
+### SQL lab — summary tables
+
+An aggregate result can be saved as a table of its own — that is how a board pack is built: one summary table per slide. This lab runs on **your practice copy** of the database (the **Database** panel shows your new tables; **Database → Reset** brings the original back).
+
+```sqllab
+{"id": "w02d2-lab", "title": "Madina's product summary", "intro": "Save the loans-by-product summary as a table, add a column, correct one row and trim it to the products the volume slide needs — then build a second summary with HAVING.",
+ "steps": [
+  {"say": "Create my_product_summary from a grouped query: product name (as product), number of loans (as loans) and total principal (as disbursed), one row per product.", "hint": "CREATE TABLE my_product_summary AS SELECT p.name AS product, COUNT(*) AS loans, SUM(l.principal) AS disbursed FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.name;", "expect": "SELECT COUNT(*) FROM my_product_summary", "want": 5},
+  {"say": "Add a column avg_ticket INTEGER and fill it with disbursed / loans for every row.", "hint": "ALTER TABLE my_product_summary ADD COLUMN avg_ticket INTEGER; UPDATE my_product_summary SET avg_ticket = disbursed / loans;", "expect": "SELECT avg_ticket FROM my_product_summary WHERE product = 'Micro loan'", "want": 2705586},
+  {"say": "The slide says 'BNPL', not 'Buy now pay later'. UPDATE that one row's product name.", "hint": "UPDATE my_product_summary SET product = 'BNPL' WHERE product = 'Buy now pay later';", "expect": "SELECT COUNT(*) FROM my_product_summary WHERE product = 'BNPL'", "want": 1},
+  {"say": "The volume slide shows only products with at least 1 000 loans. DELETE the other rows.", "hint": "DELETE FROM my_product_summary WHERE loans < 1000;", "expect": "SELECT COUNT(*) FROM my_product_summary", "want": 3},
+  {"say": "Now the branch slide: create my_branch_summary (branch_name, loans) with only the branches that have more than 900 loans — filter the groups with HAVING.", "hint": "CREATE TABLE my_branch_summary AS SELECT b.branch_name, COUNT(*) AS loans FROM loans l JOIN branches b ON b.branch_id = l.branch_id GROUP BY b.branch_name HAVING COUNT(*) > 900;", "expect": "SELECT COUNT(*) FROM my_branch_summary", "want": 4}],
+ "cleanup": "DROP TABLE IF EXISTS my_product_summary; DROP TABLE IF EXISTS my_branch_summary"}
+```
+
+Step 2's average is a whole number because `disbursed / loans` divides two integers — the fraction is cut off, not rounded (2 705 586.36 became 2 705 586). Wednesday shows why, and the one-character fix.
+
 ---
 
 ## 4. Homework
 
-No new homework. **HW 2.1** (Bekzod's loan book) is due tomorrow — Q6 is a `GROUP BY` now.
+No new homework. **HW 2.1** (Bekzod's loan book) is due tomorrow — with today's tools you can now finish **Q6** (loans per officer is a `GROUP BY`) and **Q10** (a `COUNT(*)` and a `SUM` over the duplicate customers' loans).
 
 ---
 
 ## 5. Self-check
 
-1. Which clause filters groups, which filters rows, and in what order do they run? *(→ section 1, "HAVING vs WHERE")*
-2. `SELECT p.name, l.loan_id, COUNT(*) … GROUP BY p.name` — why is this wrong, and what would SQL Server say? *(→ section 1, "GROUP BY")*
-3. You sum `principal` over `loans JOIN installments`. What is the result wrong by, and what check would have caught it? *(→ section 1, "the multiplication trap"; P8)*
+```check
+{"id": "w02d2-sc", "questions": [
+  {"type": "single", "q": "'Active loans per branch, only branches with more than 300 of them.' Where does each condition go?", "options": ["status = 'active' in WHERE, COUNT(*) > 300 in HAVING", "Both in WHERE", "Both in HAVING", "status = 'active' in HAVING, COUNT(*) > 300 in WHERE"], "answer": 0, "explain": "WHERE filters rows before grouping; HAVING filters groups after the counts exist (→ section 1, HAVING vs WHERE)."},
+  {"type": "single", "q": "What is wrong with `SELECT p.name, l.loan_id, COUNT(*) … GROUP BY p.name`?", "options": ["Nothing", "loan_id is neither aggregated nor grouped: SQL Server refuses it, SQLite picks one loan_id at random", "COUNT(*) cannot be used with GROUP BY", "p.name must be inside an aggregate"], "answer": 1, "explain": "Every SELECT column is either inside an aggregate or in GROUP BY (→ section 1, GROUP BY)."},
+  {"type": "single", "q": "You sum `l.principal` over `loans JOIN installments`. Which quick check would have shown that the sum is wrong?", "options": ["COUNT(*) next to COUNT(DISTINCT l.loan_id) — they differ", "MAX(principal) next to MIN(principal)", "Running the query twice", "ORDER BY the sum"], "answer": 0, "explain": "More rows than loans means each principal is counted several times; aggregate loan columns over loans alone (→ section 1, the multiplication trap; P8)."},
+  {"type": "multi", "q": "Which of these are aggregate functions?", "options": ["COUNT", "SUM", "AVG", "ROUND", "MAX", "LOWER"], "answer": [0, 1, 2, 4], "explain": "Aggregates turn many rows into one value: COUNT, SUM, AVG, MIN, MAX. ROUND and LOWER change one value per row — Wednesday's functions (→ section 1, The five aggregates)."}
+]}
+```
 
 ---
 
@@ -340,9 +435,21 @@ FROM applications GROUP BY channel;
 
 Same three numbers. Thursday's `SUM(CASE WHEN … THEN 1 ELSE 0 END)` is the portable spelling of the same idea — read it there, use whichever your engine likes. With the *decided* denominator (cancelled out) the channels read 68.2 / 72.4 / 70.5 %; the app is 4–5 points below the branch under either convention, because the app has no officer to argue a borderline case.
 
-**One lesson from P9.** Payments by method showed `Card` and `card` as two rows. Madina's board pack has a "share of digital payments" tile; computed on raw `method`, card is understated by 57 payments and 327 m UZS, and the five stray spellings add five phantom categories. Real data always has this. Tomorrow's first job is to make `GROUP BY LOWER(TRIM(method))` return five rows.
+**One lesson from P9.** Payments by method showed `Card` and `card` as two rows. Madina's board pack has a "share of card payments" tile; computed on raw `method`, card is understated by 57 payments and 327 m UZS, and the five stray spellings add five phantom categories. Real data always has this. Tomorrow's first job is to make `GROUP BY LOWER(TRIM(method))` return five rows.
 
-> Interview version: *"How would you build a disbursements-by-month-by-product report, and what would you check?"* — `GROUP BY month, product` over `loans` (one row per loan, so sums are safe); period filter with `>=` and `<`; check that the rows add up to the ungrouped total; never join a one-to-many table before summing loan amounts.
+```game
+{"id": "w02d2-g3", "type": "match", "title": "Board-pack numbers", "pairs": [["Disbursements", "COUNT(*) and SUM(principal) of loans paid out in a period, by product"], ["Average ticket", "AVG(principal) per product"], ["Approval rate", "approved applications ÷ applications, per channel"], ["Long format", "one row per (month, product) — what the GROUP BY returns"], ["Wide format", "months across as columns — the slide, built later with SUM(CASE …) or a pivot"]]}
+```
+
+> 🎯 **Interview version.** *"How would you build a disbursements-by-month-by-product report, and what would you check?"* — `GROUP BY month, product` over `loans` (one row per loan, so sums are safe); period filter with `>=` and `<`; check that the rows add up to the ungrouped total; never join a one-to-many table before summing loan amounts.
+
+**Say it like in an interview.** *"How would you build a disbursements-by-month-by-product report, and what would you check before sending it?"* Answer as you would out loud, with Nur Finance numbers.
+
+```task
+{"id": "w02d2-iv", "kind": "free", "min": 30, "model": "I would aggregate the loans table itself, because one row is one loan and its principal: GROUP BY the month of disbursed_at and the product name from products, which is many-to-one, with COUNT(*) and SUM(principal). The period is a half-open filter, disbursed_at >= '2026-01-01'. Before sending it I check that the 50 rows add up to the ungrouped total — 3 051 loans and 162.3 bn UZS in 2026 — and I never join installments or payments before summing, because that multiplies every principal.", "rubric": ["Aggregates over loans (one row per loan) with GROUP BY month and product", "Uses COUNT(*) and SUM(principal) with a half-open period filter", "Checks the grouped rows against the ungrouped total", "Warns against joining a one-to-many table before summing", "Gives a Nur Finance number"], "xp": 2}
+```
+
+Tomorrow: Sevara's lateness question and Timur's moving tile — the functions that clean and compute values on the way out.
 
 ---
 
@@ -372,7 +479,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w02d2", "q": "Nilufar suspects some loan officers decide more strictly than others. For applications submitted in 2025, compute each officer's approval rate on the decided convention (cancelled left out; approved_not_disbursed counts as approved), keeping only officers with at least 80 decided applications. Which officer has the lowest rate? Answer with the officer's staff_id.", "type": "number", "dp": 0, "h": ["56de769469e1ba7468f6f2ed"], "hint": "One filter belongs before the grouping and one after — the cut-off of 80 is a condition on a count.", "sol": "LS0gU1FMaXRlClNFTEVDVCBvZmZpY2VyX2lkLCBDT1VOVCgqKSBBUyBkZWNpZGVkLAogICAgICAgUk9VTkQoMTAwLjAgKiBBVkcoc3RhdHVzIExJS0UgJ2FwcHJvdmVkJScpLCAxKSBBUyBhcHByb3ZhbF9wY3QKRlJPTSBhcHBsaWNhdGlvbnMKV0hFUkUgc3RhdHVzIDw+ICdjYW5jZWxsZWQnCiAgQU5EIGFwcGxpZWRfYXQgPj0gJzIwMjUtMDEtMDEnIEFORCBhcHBsaWVkX2F0IDwgJzIwMjYtMDEtMDEnCkdST1VQIEJZIG9mZmljZXJfaWQKSEFWSU5HIENPVU5UKCopID49IDgwCk9SREVSIEJZIGFwcHJvdmFsX3BjdDsKLS0gU1FMIFNlcnZlcjogQVZHKElJRihzdGF0dXMgTElLRSAnYXBwcm92ZWQlJywgMS4wLCAwLjApKSBpbnN0ZWFkIG9mIEFWRyhzdGF0dXMgTElLRSAnYXBwcm92ZWQlJykKLS0gZmlyc3Qgcm93OiBvZmZpY2VyIDI1IChOYXJnaXphIEtoYXNhbm92LCBUYXNoa2VudCBTb3V0aCkg4oCUIDU4IG9mIDk1ID0gNjEuMSAlOyB0aGVuIDE2IGF0IDYxLjYgJSwgNiBhdCA2My4xICUKV2l0aG91dCBIQVZJTkcgdGhlIGxvd2VzdCBpcyBvZmZpY2VyIDgxIGF0IDYwLjggJSBvbiBvbmx5IDUxIGRlY2lzaW9ucyDigJQgdG9vIGZldyB0byBjYWxsIGEgcGF0dGVybi4gV2l0aCBjYW5jZWxsZWQgYXBwbGljYXRpb25zIGluIHRoZSBkZW5vbWluYXRvciB0aGUgb3JkZXIgY2hhbmdlcyAob2ZmaWNlciA3MSBjb21lcyBmaXJzdCksIHNvIHRoZSBjb252ZW50aW9uIGRlY2lkZXMgd2hvIGdldHMgdGhlIHBob25lIGNhbGwuCjYxICUgYWdhaW5zdCBhIDIwMjUgY29tcGFueSByYXRlIG9mIGFib3V0IDcwICUgaXMgZmlyc3QgYSBxdWVzdGlvbiBhYm91dCB0aGUgb2ZmaWNlcidzIGFwcGxpY2FudHMgKHByb2R1Y3QsIHNjb3JlKSwgYW5kIG9ubHkgdGhlbiBhYm91dCB0aGUgb2ZmaWNlci4="}
+{"id": "w02d2", "sql": true, "q": "Nilufar suspects some loan officers decide more strictly than others. For applications submitted in 2025, compute each officer's approval rate on the decided convention (cancelled left out; approved_not_disbursed counts as approved), keeping only officers with at least 80 decided applications. Which officer has the lowest rate? Answer with the officer's staff_id.", "type": "number", "dp": 0, "h": ["56de769469e1ba7468f6f2ed"], "hint": "One filter belongs before the grouping and one after — the cut-off of 80 is a condition on a count.", "sol": "LS0gU1FMaXRlClNFTEVDVCBvZmZpY2VyX2lkLCBDT1VOVCgqKSBBUyBkZWNpZGVkLAogICAgICAgUk9VTkQoMTAwLjAgKiBBVkcoc3RhdHVzIExJS0UgJ2FwcHJvdmVkJScpLCAxKSBBUyBhcHByb3ZhbF9wY3QKRlJPTSBhcHBsaWNhdGlvbnMKV0hFUkUgc3RhdHVzIDw+ICdjYW5jZWxsZWQnCiAgQU5EIGFwcGxpZWRfYXQgPj0gJzIwMjUtMDEtMDEnIEFORCBhcHBsaWVkX2F0IDwgJzIwMjYtMDEtMDEnCkdST1VQIEJZIG9mZmljZXJfaWQKSEFWSU5HIENPVU5UKCopID49IDgwCk9SREVSIEJZIGFwcHJvdmFsX3BjdDsKLS0gU1FMIFNlcnZlcjogQVZHKElJRihzdGF0dXMgTElLRSAnYXBwcm92ZWQlJywgMS4wLCAwLjApKSBpbnN0ZWFkIG9mIEFWRyhzdGF0dXMgTElLRSAnYXBwcm92ZWQlJykKLS0gZmlyc3Qgcm93OiBvZmZpY2VyIDI1IChOYXJnaXphIEtoYXNhbm92LCBUYXNoa2VudCBTb3V0aCkg4oCUIDU4IG9mIDk1ID0gNjEuMSAlOyB0aGVuIDE2IGF0IDYxLjYgJSwgNiBhdCA2My4xICUKV2l0aG91dCBIQVZJTkcgdGhlIGxvd2VzdCBpcyBvZmZpY2VyIDgxIGF0IDYwLjggJSBvbiBvbmx5IDUxIGRlY2lzaW9ucyDigJQgdG9vIGZldyB0byBjYWxsIGEgcGF0dGVybi4gV2l0aCBjYW5jZWxsZWQgYXBwbGljYXRpb25zIGluIHRoZSBkZW5vbWluYXRvciB0aGUgb3JkZXIgY2hhbmdlcyAob2ZmaWNlciA3MSBjb21lcyBmaXJzdCksIHNvIHRoZSBjb252ZW50aW9uIGRlY2lkZXMgd2hvIGdldHMgdGhlIHBob25lIGNhbGwuCjYxICUgYWdhaW5zdCBhIDIwMjUgY29tcGFueSByYXRlIG9mIGFib3V0IDcwICUgaXMgZmlyc3QgYSBxdWVzdGlvbiBhYm91dCB0aGUgb2ZmaWNlcidzIGFwcGxpY2FudHMgKHByb2R1Y3QsIHNjb3JlKSwgYW5kIG9ubHkgdGhlbiBhYm91dCB0aGUgb2ZmaWNlci4="}
 ```
 
 <!-- challenge:end -->

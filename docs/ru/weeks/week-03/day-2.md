@@ -30,6 +30,12 @@ GROUP BY p.code, l.term_months ORDER BY loans DESC;
 
 Различаются они только на **равных значениях** (*ties*). Проранжируйте кредиты по основному долгу внутри BNPL: у четырёх кредитов одна и та же максимальная сумма 7 990 000. `ROW_NUMBER` даст им 1, 2, 3, 4 (в произвольном порядке — добавьте разрешающий равенство признак вроде `, loan_id`, чтобы результат повторялся); `RANK` даст 1, 1, 1, 1, а следующему кредиту — **5**; `DENSE_RANK` даст 1, 1, 1, 1, а следующему — **2**. Практическое правило: `ROW_NUMBER`, когда нужна ровно одна строка на группу (дедупликация, «последний кредит клиента»); `RANK` — для спортивных таблиц лидеров; `DENSE_RANK` — когда нужны «топ-3 *значения*», даже если их делят больше трёх строк.
 
+> 💡 **Главное.** Три ранжирующие функции совпадают, пока две строки не окажутся равными. Тогда `ROW_NUMBER` всё равно считает 1, 2, 3, 4 (и выбирает порядок равных строк произвольно, если не добавить разрешающий признак), `RANK` повторяет номер и пропускает, `DENSE_RANK` повторяет и не пропускает.
+
+```game
+{"type": "match", "id": "w03d2-g1", "title": "Четыре кредита BNPL на 7 990 000", "pairs": [["ROW_NUMBER()", "1, 2, 3, 4 — затем 5; всегда уникален"], ["RANK()", "1, 1, 1, 1 — затем 5; общий номер, потом пропуск"], ["DENSE_RANK()", "1, 1, 1, 1 — затем 2; общий номер, без пропуска"], ["NTILE(4)", "четыре группы (почти) равного количества"], ["PERCENT_RANK()", "позиция от 0 до 1"]]}
+```
+
 **`NTILE(n)`** режет упорядоченные строки на n групп (почти) равного **количества** — квартили, децили:
 
 ```sql
@@ -62,6 +68,8 @@ SELECT * FROM r WHERE rn <= 3 ORDER BY code, rn;
 
 Крупнейшие кредиты каждого продукта лежат чуть ниже его `max_amount` (Auto 400 млн, SME 600 млн, Consumer 50 млн): лимиты упираются в потолок. Замените `rn <= 3` на `rn = 1` — и получите **по одной строке на группу**: последний кредит клиента (`ORDER BY disbursed_at DESC`) даёт 4 335 строк: 2 266 активных, 1 950 закрытых, 30 в дефолте, 89 списанных.
 
+> ⚠️ **Осторожно.** Без разрешающего признака (`, l.loan_id` в конце `ORDER BY` окна) `ROW_NUMBER` выбирает *любую* из равных строк, и следующий запуск может выбрать другую. Список топ-3, который меняется между понедельником и вторником без новых данных, — это именно эта ошибка.
+
 ### LAG и LEAD — предыдущая и следующая строка :id=lag-and-lead-the-previous-and-the-next-row
 
 `LAG(col)` возвращает значение `col` из **предыдущей** строки окна (по `ORDER BY` окна); `LEAD(col)` — из следующей. `LAG(col, 12)` смотрит на двенадцать строк назад — тот же месяц прошлого года. У первой строки предыдущей нет → `NULL`; третий аргумент задаёт значение по умолчанию: `LAG(col, 1, 0)`.
@@ -78,7 +86,9 @@ FROM m ORDER BY month;
 -- 2026-03 19 657 410 000 · +65.3 % mom · 2026-08 22 290 210 000 · +7.7 % mom · +26.2 % yoy · 2026-09 17 015 490 000 · −23.7 % mom · +16.2 % yoy
 ```
 
-**Ловушка:** фильтруйте *вывод* во внешнем запросе, а не в `WHERE` CTE — `WHERE month >= '2026-01'` внутри `m` убирает 2025 год из окна, и каждый `yoy_pct` становится NULL. Февраль −32 % к предыдущему месяцу и +20 % к тому же месяцу прошлого года в одной строке — вот зачем нужны оба столбца: первый показывает сезонность, второй — рост.
+> ⚠️ **Осторожно.** Фильтруйте *вывод* во внешнем запросе, а не в `WHERE` CTE — `WHERE month >= '2026-01'` внутри `m` убирает 2025 год из окна, и каждый `yoy_pct` становится NULL. И `LAG` читает предыдущую строку **по собственному `ORDER BY` окна** — `ORDER BY` в конце запроса лишь сортирует то, что вы видите. `LAG` без `ORDER BY` внутри `OVER` читает случайного соседа.
+
+Февраль −32 % к предыдущему месяцу и +20 % к тому же месяцу прошлого года в одной строке — вот зачем нужны оба столбца: первый показывает сезонность, второй — рост.
 
 По каждому кредиту `LAG` превращает список платежей в **интервалы между платежами**:
 
@@ -88,6 +98,10 @@ SELECT payment_id, paid_at,
        CAST(julianday(paid_at) - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS INTEGER) AS gap_days   -- DATEDIFF(day, LAG(...), paid_at)
 FROM payments WHERE loan_id = 1 ORDER BY paid_at;
 -- интервалы 31, 29, 29, 31, 35, 26, 34, 29, 32, 29, затем 58 (2026-02-26 → 2026-04-25), 17, 14, 32 …
+```
+
+```game
+{"type": "bug", "id": "w03d2-g2", "title": "Найдите сломанную строку", "q": "Интервалы между платежами по кредиту 1. Результат отсортирован по дате, а prev_paid скачет. Какая строка неверна?", "code": "SELECT payment_id, paid_at,\n       LAG(paid_at) OVER (PARTITION BY loan_id) AS prev_paid\nFROM payments\nWHERE loan_id = 1\nORDER BY paid_at;", "answer": [1], "why": "LAG нужен собственный ORDER BY внутри OVER (ORDER BY paid_at, payment_id). ORDER BY в конце сортирует только вывод; он не говорит LAG, какая строка «предыдущая»."}
 ```
 
 58-дневный интервал — это пропущенный мартовский платёж, 17 и 14 — наверстывание: та же история, что и вчерашний накопительный итог, но теперь числом в каждой строке. По всем 45 439 парам подряд идущих платежей средний интервал — 30.9 дня, 1 435 интервалов превышают 45 дней, самый длинный — 408; **63 интервала равны 0 дней** — два платежа в один день по одному кредиту. Часть из них — сегодняшнее дело для расследования.
@@ -106,16 +120,30 @@ FROM payments WHERE loan_id = 1;
 -- first 2025-04-27 · last_wrong = собственная дата строки · last_payment 2026-09-26
 ```
 
-Исправление: явно задайте рамку или используйте `FIRST_VALUE` с обратным `ORDER BY … DESC`. `LEAD` по графику (`LEAD(due_date) OVER (PARTITION BY loan_id ORDER BY installment_no)`) проверяет, что каждый платёж приходится на месяц позже предыдущего — артефакты конца месяца из P11 недели 2 проявятся и здесь.
+Исправление: явно задайте рамку или используйте `FIRST_VALUE` с обратным `ORDER BY … DESC`. `LEAD` по графику (`LEAD(due_date) OVER (PARTITION BY loan_id ORDER BY installment_no)`) проверяет, что каждый платёж приходится на месяц позже предыдущего — артефакты конца месяца из P11 недели 2, дня 3 проявятся и здесь.
+
+> 💡 **Главное.** Ранжирующие функции отвечают на вопрос *«где эта строка в своей группе?»*; функции значений (`LAG`, `LEAD`, `FIRST_VALUE`, `LAST_VALUE`) — на вопрос *«что лежит в другой строке её группы?»*. И тем и другим нужен `ORDER BY` внутри `OVER`: без порядка нет ни «первого», ни «предыдущего».
+
+```game
+{"type": "sort", "id": "w03d2-g3", "title": "Какая оконная функция?", "q": "Нажмите на вопрос Бекзода, Севары или Нилуфар, затем на функцию, которая на него отвечает.", "groups": {"ROW_NUMBER": ["Последний кредит каждого клиента, ровно одна строка", "Какие строки платежей — повторы более ранних?"], "RANK / DENSE_RANK": ["Таблица лидеров взыскания, где равные делят место", "Каждый кредит с одной из трёх крупнейших сумм в своём продукте"], "LAG / LEAD": ["Каждый месяц в сравнении с предыдущим", "Дни с предыдущего платежа по тому же кредиту"], "NTILE": ["Заёмщики в четырёх равных по числу группах по остатку долга"]}}
+```
 
 ### Углубление (необязательно) :id=depth-optional
 
 - ▶ Baraa, *Window ranking* [10:53:09](https://youtu.be/SSKVgrwhzus?t=39189&end=42965), *Window value* [11:56:05](https://youtu.be/SSKVgrwhzus?t=42965&end=45634) — ~2 ч.
 - Русскоязычная презентация (TBC Data Analytics 2.0, если она у вас есть) `2.3 SQL.pdf` — ранжирующие функции и функции смещения. *Английские термины:* ранжирование = ranking, функции смещения = offset functions (LAG/LEAD), дубликаты = duplicates.
 
+```videoquiz
+{"video": "SSKVgrwhzus", "stops": [
+  {"at": 40300, "q": "Две строки делят первое место. Что даёт RANK() следующей за ними строке?", "options": ["2", "3", "1", "NULL"], "answer": 1, "explain": "RANK даёт обеим равным строкам 1 и затем пропускает: следующая строка — 3. DENSE_RANK дал бы 2."},
+  {"at": 42000, "q": "Какую ранжирующую функцию взять, чтобы оставить ровно одну строку на группу, даже при равных значениях?", "options": ["RANK", "DENSE_RANK", "ROW_NUMBER", "NTILE"], "answer": 2, "explain": "ROW_NUMBER никогда не повторяет номер, поэтому rn = 1 — всегда одна строка: основа дедупликации и «последнего у клиента»."},
+  {"at": 43900, "q": "LAG(sales) OVER (ORDER BY month) для первого месяца возвращает…", "options": ["0", "NULL, если не задать значение по умолчанию третьим аргументом", "Значение последнего месяца", "Ошибку"], "answer": 1, "explain": "Предыдущей строки нет, поэтому LAG возвращает NULL; LAG(sales, 1, 0) вернул бы 0."},
+  {"at": 45200, "q": "LAST_VALUE с ORDER BY возвращает собственное значение каждой строки. Почему?", "options": ["LAST_VALUE сломан", "Рамка по умолчанию заканчивается на текущей строке", "Не хватает PARTITION BY", "В данных есть равные значения"], "answer": 1, "explain": "При ORDER BY рамка идёт от начала до текущей строки; явно задайте ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING.", "back": 60}]}
+```
+
 ---
 
-## 2. Расследование — деньги, полученные дважды (30 мин) :id=2-detective-the-money-received-twice-30-min
+## 2. Разобранный пример — деньги, полученные дважды (расследование, 30 мин) :id=2-worked-example-the-money-received-twice-detective-30-min
 
 Утверждение Севары: *тот же платёж по графику, тот же день, та же сумма, две строки платежа.* Защита Финансов: *payment_id уникален.* Верно и то и другое — дубликат это не две одинаковые строки, а две строки, которые **совпадают во всём, что важно**. Пронумеруйте строки внутри каждой группы (платёж по графику, дата, сумма) — и всё, что получило номер 2, является повтором:
 
@@ -132,6 +160,8 @@ SELECT * FROM d WHERE rn > 1 ORDER BY payment_id;
 **25 строк**, 58 397 800 UZS посчитаны дважды. Их `payment_id` — **52851–52875, последние 25 строк таблицы**, тогда как их двойники разбросаны от id 110 до 52 120 (расстояние от 744 до 52 759). Даты от 2024-08-30 до 2026-09-17, все способы оплаты (card 9, transfer 7, click 4, payme 3, cash 2). Вывод: это не 25 ошибок кассиров за два года, а **пакет**, добавленный в конец, — повторный импорт 25 старых транзакций с новыми ID. Финансы правы, что ID уникальны, и неправы, что это что-то доказывает. Перекрёстные проверки из недели 2: 52 875 платежей против 52 850 различных `installment_id` (разница 25) и 25 платежей по графику оплачены *больше* своего `total_due` ровно на один платёж.
 
 </details>
+
+> 💡 **Главное.** Дубликат — это не две одинаковые строки, а две строки, которые совпадают **во всём, что определяет «одно и то же»**. Сначала запишите это определение (здесь: платёж по графику, дата, сумма) — оно и станет `PARTITION BY`.
 
 **Запрос без дубликатов.** Никогда не делайте `DELETE` из учебных таблиц (или из рабочей таблицы по собственному решению): результат — это *представление* без дубликатов, а сырая таблица остаётся как доказательство. Оставьте `rn = 1` — самый ранний `payment_id` в каждой группе:
 
@@ -153,6 +183,19 @@ SELECT payment_id, loan_id, installment_id, paid_at, amount, method FROM d WHERE
 
 Почему `ROW_NUMBER`, а не `GROUP BY … HAVING COUNT(*) > 1` (T21 из недели 2)? `HAVING` *находит* группы; он не скажет, *какую строку оставить*, и не вернёт недублирующиеся строки рядом. Окно делает и то и другое за один проход.
 
+**Теперь пройдите весь цикл сами — на собственной таблице.** Из учебных таблиц вы никогда не удаляете; в своей копии — можно, и так вы узнаете, что делает `DELETE` по списку из `ROW_NUMBER`, прежде чем кому-то это предлагать.
+
+```sqllab
+{"id": "w03d2-lab", "title": "Создайте дубликаты, найдите их, удалите", "intro": "Вы копируете платежи кредита 1 в собственную таблицу, подкладываете шесть дубликатов так, как это сделал повторный импорт (тот же платёж по графику, дата и сумма, новые id), находите их через ROW_NUMBER и удаляете ровно их. Учебная таблица payments не трогается.", "steps": [
+  {"say": "Создайте my_payments через CREATE TABLE … AS: payment_id, loan_id, installment_id, paid_at, amount каждого платежа по кредиту 1.", "hint": "CREATE TABLE my_payments AS SELECT payment_id, loan_id, installment_id, paid_at, amount FROM payments WHERE loan_id = 1;", "expect": "SELECT COUNT(*) FROM my_payments", "want": 18},
+  {"say": "Подложите дубликаты: вставьте ещё раз каждую строку my_payments, оплаченную 2026-05-01 или позже, с новым id payment_id + 100000.", "hint": "INSERT INTO my_payments SELECT payment_id + 100000, loan_id, installment_id, paid_at, amount FROM my_payments WHERE paid_at >= '2026-05-01';", "expect": "SELECT COUNT(*) FROM my_payments", "want": 24},
+  {"say": "Найдите их: создайте my_dupes(payment_id) со всеми строками, у которых ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) больше 1.", "hint": "CREATE TABLE my_dupes AS WITH d AS (SELECT payment_id, ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn FROM my_payments) SELECT payment_id FROM d WHERE rn > 1;", "expect": "SELECT COUNT(*) FROM my_dupes WHERE payment_id > 100000", "want": 6},
+  {"say": "Удалите из my_payments ровно строки из списка, затем проверьте, что ни одна тройка (платёж по графику, дата, сумма) не встречается дважды.", "hint": "DELETE FROM my_payments WHERE payment_id IN (SELECT payment_id FROM my_dupes);", "expect": "SELECT COUNT(*) FROM my_payments", "want": 18}],
+ "cleanup": "DROP TABLE IF EXISTS my_dupes; DROP TABLE IF EXISTS my_payments"}
+```
+
+> ⚠️ **Осторожно.** `ORDER BY payment_id` внутри окна решает, какой из двойников выживет: самый ранний id получает `rn = 1`. Поменяйте на `DESC` — и вы сохраните повторно импортированные копии и удалите оригиналы: то же количество, не те строки.
+
 ---
 
 ## 3. Практика (50 мин) :id=3-practice-50-min
@@ -163,17 +206,48 @@ SELECT payment_id, loan_id, installment_id, paid_at, amount, method FROM d WHERE
 
 <details><summary>Ответ</summary>
 
-Вчерашний CTE по филиалам плюс три функции с `ORDER BY outstanding DESC`: Tashkent Central 1/1/1 … Termez 10/10/10. У двух филиалов нет одинакового остатка долга с точностью до сума, поэтому равных значений нет. Проранжируйте вместо этого по *числу кредитов* внутри региона Ташкент — равных значений всё равно нет (1012 / 1007 / 1001): равные значения появляются на грубых величинах — класс, срок, округлённые суммы. 17 кредитов имеют основной долг 4 880 000.
+```sql
+WITH o AS (SELECT b.branch_name, SUM(i.principal_due) AS outstanding
+           FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN branches b ON b.branch_id = l.branch_id
+           WHERE i.due_date > '2026-10-01' GROUP BY b.branch_name)
+SELECT branch_name, outstanding,
+       ROW_NUMBER() OVER (ORDER BY outstanding DESC) AS rn,
+       RANK()       OVER (ORDER BY outstanding DESC) AS rk,
+       DENSE_RANK() OVER (ORDER BY outstanding DESC) AS drk
+FROM o ORDER BY rn;
+-- Tashkent Central 1/1/1 … Termez Central 10/10/10
+```
+Вчерашний остаток долга по филиалам плюс три функции с `ORDER BY outstanding DESC`. У двух филиалов нет одинакового остатка долга с точностью до сума, поэтому равных значений нет. Проранжируйте вместо этого по *числу кредитов* внутри региона Ташкент — равных значений всё равно нет (1012 / 1007 / 1001): равные значения появляются на грубых величинах — класс, срок, округлённые суммы. 17 кредитов имеют основной долг 4 880 000.
 
 </details>
+
+**P1 — почему?** Все три столбца совпадают для каждого филиала. Что сделало бы их различными?
+
+```task
+{"id": "w03d2-p1b", "kind": "choice", "options": ["PARTITION BY region", "Два филиала с абсолютно одинаковым остатком долга — равные значения", "Сортировка ASC вместо DESC", "Больше десяти филиалов"], "answer": 1, "explain": "Функции различаются только на равных значениях. Остаток долга с точностью до сума не совпадает; грубые величины совпадают — 17 кредитов имеют основной долг 4 880 000.", "xp": 1}
+```
 
 **P2.** Три крупнейших кредита по каждому продукту (кредит, основной долг, дата выдачи). Затем три крупнейших *по каждому филиалу* — сколько строк?
 
 <details><summary>Ответ</summary>
 
-Схема топ-N из раздела 1: 15 строк по продуктам. Для филиалов `PARTITION BY b.branch_name` → 30 строк; крупнейший кредит в каждом филиале — кредит SME от 570 до 599 млн. Добавьте `, l.loan_id` в `ORDER BY`, чтобы повторный запуск давал те же строки.
+```sql
+WITH r AS (
+  SELECT b.branch_name, l.loan_id, p.code, l.principal, l.disbursed_at,
+         ROW_NUMBER() OVER (PARTITION BY b.branch_name ORDER BY l.principal DESC, l.loan_id) AS rn
+  FROM loans l JOIN branches b ON b.branch_id = l.branch_id JOIN products p ON p.product_id = l.product_id)
+SELECT * FROM r WHERE rn <= 3 ORDER BY branch_name, rn;
+-- 30 строк; все — кредиты SME; крупнейший по филиалу от 573 480 000 (Samarkand Central) до 599 060 000 (Tashkent Central)
+```
+Схема топ-N из раздела 1 даёт 15 строк по продуктам; для филиалов `PARTITION BY b.branch_name` → 30 строк, все тридцать — SME. Добавьте `, l.loan_id` в `ORDER BY`, чтобы повторный запуск давал те же строки.
 
 </details>
+
+**P2 — посчитайте.** Сколько строк возвращает запрос «топ-3 по каждому филиалу»?
+
+```task
+{"id": "w03d2-p2b", "kind": "number", "answer": 30, "dp": 0, "unit": "строк", "hint": "Десять филиалов, по три строки — если в каждом филиале хотя бы три кредита.", "model": "30 строк: 10 филиалов × 3. Все тридцать — кредиты SME, так что «крупнейшие кредиты по филиалам» — это на деле «портфель SME по филиалам».", "xp": 1}
+```
 
 **P3.** **Последний кредит каждого клиента** и структура статусов этих последних кредитов. Что означает здесь «89 списанных», чего не говорил один лишь `loans.status`?
 
@@ -192,9 +266,24 @@ SELECT status, COUNT(*) FROM r WHERE rn = 1 GROUP BY status;
 
 <details><summary>Ответ</summary>
 
-Запрос с `LAG` из раздела 1, обёрнутый: `SELECT * FROM (...) WHERE month >= '2026-01'`. Февраль: −31.8 % к предыдущему месяцу, **+20.0 %** к прошлому году. Сентябрь: −23.7 % / +16.2 %. Оба столбца — на каждом слайде, где показан месячный ряд.
+```sql
+WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed FROM loans WHERE disbursed_at < '2026-10-01' GROUP BY 1),
+w AS (SELECT month, disbursed,
+             ROUND(100.0 * (disbursed - LAG(disbursed) OVER (ORDER BY month)) / LAG(disbursed) OVER (ORDER BY month), 1) AS mom_pct,
+             ROUND(100.0 * (disbursed - LAG(disbursed, 12) OVER (ORDER BY month)) / LAG(disbursed, 12) OVER (ORDER BY month), 1) AS yoy_pct
+      FROM m)
+SELECT * FROM w WHERE month >= '2026-01' ORDER BY month;
+-- 2026-02 −31.8 / +20.0 · 2026-09 −23.7 / +16.2 · 2026-05 +3.6 / +114.4
+```
+Запрос с `LAG` из раздела 1, обёрнутый, фильтр вывода снаружи. Февраль: −31.8 % к предыдущему месяцу, **+20.0 %** к прошлому году. Сентябрь: −23.7 % / +16.2 %. Оба столбца — на каждом слайде, где показан месячный ряд.
 
 </details>
+
+**P4 — прочитайте.** Какой месяц 2026 года сильнее всего упал к предыдущему и всё же вырос к прошлому году?
+
+```task
+{"id": "w03d2-p4b", "kind": "choice", "options": ["Январь 2026", "Февраль 2026", "Июнь 2026", "Сентябрь 2026"], "answer": 1, "explain": "Февраль: −31.8 % к предыдущему месяцу и +20.0 % к прошлому году — сезонный провал, а не спад. Сентябрь (−23.7 % / +16.2 %) — второй.", "xp": 1}
+```
 
 **P5.** По каждому платежу кредита 1 — срок предыдущего платежа и число дней между ними (`LAG` по графику). Затем по **всем** кредитам: сколько подряд идущих платежей разделяют больше 31 дня?
 
@@ -214,9 +303,25 @@ SELECT COUNT(*) FROM (
 
 <details><summary>Ответ</summary>
 
+```sql
+WITH g AS (
+  SELECT loan_id,
+         julianday(paid_at) - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS gap
+  FROM payments)
+SELECT ROUND(AVG(gap), 1) AS avg_gap, MAX(gap) AS max_gap,
+       SUM(CASE WHEN gap > 60 THEN 1 ELSE 0 END) AS over_60, SUM(CASE WHEN gap = 0 THEN 1 ELSE 0 END) AS same_day
+FROM g;
+-- 30.9 · 408 · 492 · 63
+```
 `AVG` 30.9 дня · `MAX` 408 · 492 интервала > 60 · **63 интервала = 0**. В 63 парах в один день содержатся 25 дубликатов плюс 38 законных пар (заёмщик платит два платежа в один день — разные `installment_id`). «Тот же день» — это подсказка, а не определение; определение — это разбиение по трём столбцам.
 
 </details>
+
+**P6 — число расследования.** Сколько пар подряд идущих платежей одного кредита разделяют ровно 0 дней?
+
+```task
+{"id": "w03d2-p6b", "kind": "number", "answer": 63, "dp": 0, "unit": "пар", "hint": "Столбец gap вашего запроса P6; посчитайте строки, где он равен 0.", "model": "63 пары в один день: 25 дубликатов плюс 38 законных пар, где заёмщик оплатил два разных платежа по графику в один день. Это подсказка, а не определение — определение даёт разбиение (платёж по графику, дата, сумма).", "xp": 1}
+```
 
 **P7.** Медиана основного долга по продуктам через `ROW_NUMBER` и `COUNT(*) OVER` (выберите среднюю строку или строки). Сравните со средним — где они различаются сильнее всего?
 
@@ -252,9 +357,24 @@ FROM collections_actions GROUP BY collector_id ORDER BY rk LIMIT 5;
 
 <details><summary>Ответ</summary>
 
+```sql
+WITH c AS (SELECT l.customer_id, SUM(i.principal_due) AS outstanding
+           FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01' GROUP BY l.customer_id),
+q AS (SELECT customer_id, outstanding, NTILE(10) OVER (ORDER BY outstanding DESC) AS decile FROM c)
+SELECT decile, COUNT(*) AS borrowers, SUM(outstanding) AS outstanding,
+       ROUND(100.0 * SUM(outstanding) / SUM(SUM(outstanding)) OVER (), 1) AS share_pct
+FROM q GROUP BY decile ORDER BY decile;
+-- 1 · 254 · 102 681 050 696 · 49.2 %   2 · 254 · 54 113 118 283 · 25.9 %   3 · 254 · 12.4 % …
+```
 Раздел 1 даёт квартили 82.7 / 13.6 / 3.2 / 0.5 %. `NTILE(10)`: первый дециль (254 заёмщика) держит **49.2 %** портфеля, второй — 25.9 %: три четверти остатка долга у пятой части заёмщиков. Таблица децилей — стандартный слайд «кто наши клиенты по риску на заёмщика»; с каждой долей указывайте число заёмщиков.
 
 </details>
+
+**P9 — прочитайте.** Какую долю остатка долга держит верхняя десятая часть заёмщиков, в %, один знак после запятой?
+
+```task
+{"id": "w03d2-p9b", "kind": "number", "answer": 49.2, "dp": 1, "unit": "%", "hint": "Дециль 1 из NTILE(10) OVER (ORDER BY outstanding DESC).", "model": "49.2 %: 254 заёмщика держат 102.7 млрд из 208.7 млрд. Вместе со вторым децилем (25.9 %) пятая часть заёмщиков несёт три четверти портфеля.", "xp": 1}
+```
 
 **P10.** Список Севары в нужном виде: по каждой паре дубликатов одна строка с обоими id платежей, кредитом, платежом по графику, датой, суммой, способом оплаты — `MIN` и `MAX` от `payment_id` по секции. Отсортировать по сумме, самые большие сверху.
 
@@ -273,21 +393,40 @@ SELECT DISTINCT first_id, second_id, loan_id, installment_id, paid_at, amount, m
 
 </details>
 
-<span class="badge stretch">Со звёздочкой</span> **P11.** Платежи по одному платежу графика в *разные* дни или на *разные* суммы — не дубликаты, а частичные платежи. Сколько платежей по графику имеют два и более различных платежа и какая их доля в итоге оплачена полностью? (`COUNT(*) OVER (PARTITION BY installment_id)` по набору без дубликатов.)
+> 🚀 **Со звёздочкой (по желанию, +5 XP).** Прежде чем доверять любому определению, построенному на платежах, узнайте, есть ли в данных разбитые платежи вообще.
+
+**P11.** Платежи по одному платежу графика в *разные* дни или на *разные* суммы — не дубликаты, а частичные платежи. Сколько платежей по графику имеют два и более различных платежа и какая их доля в итоге оплачена полностью? (`COUNT(*) OVER (PARTITION BY installment_id)` по набору без дубликатов.)
 
 <details><summary>Ответ</summary>
 
+```sql
+WITH d AS (SELECT installment_id,
+                  ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
+           FROM payments),
+k AS (SELECT installment_id, COUNT(*) OVER (PARTITION BY installment_id) AS n FROM d WHERE rn = 1)
+SELECT COUNT(DISTINCT installment_id) AS instalments_with_2plus FROM k WHERE n >= 2;
+-- 0
+```
 На наборе `rn = 1` значение `COUNT(*) OVER (PARTITION BY installment_id)` равно 1 в каждой строке: **ни у одного платежа по графику нет двух различных платежей** — каждый платёж оплачен целиком или не оплачен вовсе, а единственными платежами с несколькими оплатами были 25 дубликатов. Частичные платежи, найденные на неделе 2 (427 неоплаченных платежей с *каким-то* платежом), — это одиночные платежи меньше `total_due`. Знание, что в данных нет разбитых платежей, упрощает все последующие определения — запишите это в заметки.
 
 </details>
+
+**P11 — число.** Сколько платежей по графику после удаления 25 дубликатов имеют два и более различных платежа?
+
+```task
+{"id": "w03d2-p11", "kind": "number", "answer": 0, "dp": 0, "unit": "платежей", "hint": "COUNT(*) OVER (PARTITION BY installment_id) по строкам с rn = 1; посчитайте платежи по графику, где он 2 или больше.", "model": "0. Каждый платёж по графику оплачен целиком или не оплачен вовсе; единственными платежами с несколькими оплатами были 25 дубликатов. 427 частично оплаченных платежей недели 2 — одиночные оплаты меньше total_due. Значит, «оплачено» в этих данных никогда не требует суммы по нескольким оплатам одного платежа — запишите это в заметки.", "xp": 2}
+```
 
 ---
 
 ## 4. Самопроверка :id=4-self-check
 
-1. Три кредита делят максимальный основной долг. Что дают `ROW_NUMBER`, `RANK` и `DENSE_RANK` четвёртому кредиту? *(→ раздел 1, «Ранжирование»)*
-2. `LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)` возвращает дату текущей строки. Почему и как исправить? *(→ раздел 1, «FIRST_VALUE, LAST_VALUE»)*
-3. Финансы говорят, что дубликаты невозможны, потому что `payment_id` уникален. Напишите разбиение, которое всё равно их находит, и скажите, какую строку вы оставляете. *(→ раздел 2)*
+```check
+{"id": "w03d2-sc", "questions": [
+  {"type": "single", "q": "Три кредита делят максимальный основной долг. Что дают ROW_NUMBER, RANK и DENSE_RANK (ORDER BY principal DESC) четвёртому кредиту?", "options": ["4, 4, 2", "4, 2, 2", "2, 4, 4", "4, 4, 4"], "answer": 0, "explain": "ROW_NUMBER никогда не повторяется; RANK повторяет, затем прыгает на 4; DENSE_RANK повторяет и продолжает с 2 (→ раздел 1, «Ранжирование»)."},
+  {"type": "single", "q": "LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) возвращает собственную дату каждой строки. Как исправить?", "options": ["Убрать PARTITION BY", "Явно задать ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING (или взять FIRST_VALUE с ORDER BY … DESC)", "Использовать LAG", "Добавить ORDER BY paid_at в конце запроса"], "answer": 1, "explain": "При ORDER BY рамка по умолчанию заканчивается на текущей строке, поэтому «последняя» — это сама строка (→ раздел 1, «FIRST_VALUE, LAST_VALUE и ловушка рамки»)."},
+  {"type": "single", "q": "Финансы говорят, что дубликаты невозможны, потому что payment_id уникален. Какое окно всё равно их находит и какую строку вы оставляете?", "options": ["ROW_NUMBER() OVER (PARTITION BY payment_id ORDER BY paid_at), оставить rn = 2", "ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id), оставить rn = 1", "RANK() OVER (ORDER BY amount), оставить ранг 1", "COUNT(*) OVER (), оставить все"], "answer": 1, "explain": "Секция — по тому, что определяет «одно и то же», сортировка — по id, оставляем самый ранний (→ раздел 2)."}]}
+```
 
 ---
 
@@ -348,7 +487,17 @@ FROM k GROUP BY from_bucket ORDER BY MIN(dpd0);
 
 **Что сказать Севаре:** *«Из 128 кредитов в 1–30 на 1 сентября 97 вылечились (76 %), 25 перешли в 31–60 (20 %). Из 23 в 31–60 16 пошли дальше (70 %). Все 17 в 61–90 дошли до 90+. 117 новых кредитов вошли в 1–30 (3.8 % обслуживаемых кредитов). Усилия взыскания окупаются в 1–30 и почти не окупаются позже».* Один месяц — это одна точка данных; постройте ту же матрицу для августа → сентября, прежде чем называть 19.5 % «тем самым» roll rate.
 
-> Версия для собеседования: *«Как вы считаете roll rates?»* — Срез DPD по каждому кредиту на две даты (дата отчёта и в фильтре платежей по графику, *и* в фильтре оплат), разбить оба по корзинам через CASE, FULL OUTER JOIN по кредиту, отсутствие = 0, посчитать корзина-из × корзина-в, разделить на итог строки корзины-из через окно; прочитать переход вперёд и излечение по каждой корзине; приток из текущих сообщать отдельно.
+```game
+{"type": "order", "id": "w03d2-g4", "title": "Матрица roll rate, шаг за шагом", "items": ["Срез DPD на 1 сентября (дата отчёта в фильтре платежей по графику и в соединении с оплатами)", "Срез DPD на 1 октября, так же", "FULL OUTER JOIN двух срезов по loan_id, отсутствие = DPD 0", "Разбить обе стороны по корзинам через CASE", "Посчитать кредиты по корзина-из × корзина-в", "Разделить на итог корзины-из через SUM(COUNT(*)) OVER (PARTITION BY from_bucket)"], "why": "Каждый шаг — один CTE; окно в конце превращает количества в доли перехода и излечения."}
+```
+
+> 🎯 **Версия для собеседования.** *«Как вы считаете roll rates?»* Интервьюер ждёт два среза и где стоит дата отчёта, почему соединение должно сохранить обе стороны и как количества превращаются в доли. Скажите в поле ниже, затем сравните.
+
+**Скажите, как на собеседовании.** Ответьте на вопрос выше в 3–5 предложениях, как сказали бы вслух, с одним числом Nur Finance.
+
+```task
+{"id": "w03d2-int", "kind": "free", "min": 30, "model": "Я беру срез DPD по каждому кредиту на две даты — в Nur Finance это 1 сентября и 1 октября 2026 года — и ставлю дату отчёта и в фильтр платежей по графику, и в соединение с оплатами, чтобы оплата после среза не учитывалась. Разбиваю оба среза по корзинам через CASE и соединяю их FULL OUTER JOIN по кредиту, считая отсутствующую сторону DPD 0: вылечившиеся кредиты есть только в первом срезе, а новые просроченные — только во втором. Затем считаю корзина-из × корзина-в и делю на итог корзины-из окном SUM(COUNT(*)) OVER (PARTITION BY from_bucket). Читаю переход вперёд и излечение по корзинам — 19.5 % из 1–30 перешли в 31–60, 75.8 % вылечились — и отдельно сообщаю приток из текущих: 117 кредитов, 3.8 % обслуживаемых.", "rubric": ["Два среза DPD, дата отчёта и в условии по платежам графика, и в условии по оплатам", "FULL OUTER JOIN (или аналог) с отсутствием = 0, и почему", "Доли = количества, делённые на итог корзины-из (окно)", "Читает переход вперёд и излечение, а приток из текущих — отдельно", "Приводит хотя бы одно реальное число"], "xp": 2}
+```
 
 Завтра: подзапросы и цепочки CTE по-настоящему — блоки `WITH … AS`, которые вы копировали, станут вашими, — и кривые поколений (винтажи) Нилуфар.
 
@@ -380,7 +529,7 @@ FROM k GROUP BY from_bucket ORDER BY MIN(dpd0);
 Бонус для любознательных: один более трудный вопрос по теме дня. Решите его за XP, которые растут вместе с серией задач, — полная неделя из пяти ещё добавляет 10 % к пятничному ваучеру.
 
 ```challenge
-{"id": "w03d2", "q": "Бекзод хочет знать, как долго заёмщик ждёт перед вторым кредитом. Для каждого customer_id, у которого не менее двух кредитов, возьмите число дней между первой и второй выдачей (кредиты клиента упорядочьте по disbursed_at, при равенстве — по loan_id). Каково среднее, в днях с 1 знаком после запятой?", "type": "number", "dp": 1, "h": ["ad0c61c8480db949d5a40239"], "hint": "Пронумеруйте кредиты каждого клиента и прочитайте предыдущую строку — затем оставьте ровно одну строку на клиента.", "sol": "V0lUSCByIEFTICgKICBTRUxFQ1QgY3VzdG9tZXJfaWQsIGxvYW5faWQsIGRpc2J1cnNlZF9hdCwKICAgICAgICAgUk9XX05VTUJFUigpIE9WRVIgKFBBUlRJVElPTiBCWSBjdXN0b21lcl9pZCBPUkRFUiBCWSBkaXNidXJzZWRfYXQsIGxvYW5faWQpIEFTIHJuLAogICAgICAgICBMQUcoZGlzYnVyc2VkX2F0KSBPVkVSIChQQVJUSVRJT04gQlkgY3VzdG9tZXJfaWQgT1JERVIgQlkgZGlzYnVyc2VkX2F0LCBsb2FuX2lkKSBBUyBwcmV2X2Rpc2J1cnNlZAogIEZST00gbG9hbnMpClNFTEVDVCBDT1VOVCgqKSBBUyBjdXN0b21lcnMsCiAgICAgICBST1VORChBVkcoanVsaWFuZGF5KGRpc2J1cnNlZF9hdCkgLSBqdWxpYW5kYXkocHJldl9kaXNidXJzZWQpKSwgMSkgQVMgYXZnX2RheXMKRlJPTSByCldIRVJFIHJuID0gMjsKLS0gU1FMIFNlcnZlcjogQVZHKENBU1QoREFURURJRkYoZGF5LCBwcmV2X2Rpc2J1cnNlZCwgZGlzYnVyc2VkX2F0KSBBUyBGTE9BVCkpIOKAlCBEQVRFRElGRiByZXR1cm5zIGFuIGludGVnZXIgYW5kIEFWRyBvZiBpbnRlZ2VycyB0cnVuY2F0ZXMKLS0gMiAyNDYgY3VzdG9tZXJzLCAxOTguMyBkYXlzCktlZXBpbmcgZXZlcnkgcm4gPj0gMiAoYWxsIGdhcHMgYmV0d2VlbiBjb25zZWN1dGl2ZSBsb2FucykgZ2l2ZXMgMTg2Ljkg4oCUIGEgZGlmZmVyZW50IHF1ZXN0aW9uLiBBYm91dCBzaXggYW5kIGEgaGFsZiBtb250aHMgZnJvbSB0aGUgZmlyc3QgbG9hbiB0byB0aGUgc2Vjb25kOiBzaG9ydCBNaWNybyBhbmQgQk5QTCBsb2FucyBjbG9zZSBmYXN0IGFuZCB0aGUgYm9ycm93ZXIgY29tZXMgYmFjay4gV2VlayAxJ3MgZHVwbGljYXRlIHJvd3Mgc3BsaXQgYSBmZXcgcGVvcGxlJ3MgaGlzdG9yaWVzIGFjcm9zcyB0d28gaWRzLCBzbyBjYWxsIGl0ICJwZXIgY3VzdG9tZXIgaWQiLCBub3QgInBlciBwZXJzb24iLg=="}
+{"id": "w03d2", "sql": true, "q": "Бекзод хочет знать, как долго заёмщик ждёт перед вторым кредитом. Для каждого customer_id, у которого не менее двух кредитов, возьмите число дней между первой и второй выдачей (кредиты клиента упорядочьте по disbursed_at, при равенстве — по loan_id). Каково среднее, в днях с 1 знаком после запятой?", "type": "number", "dp": 1, "h": ["ad0c61c8480db949d5a40239"], "hint": "Пронумеруйте кредиты каждого клиента и прочитайте предыдущую строку — затем оставьте ровно одну строку на клиента.", "sol": "V0lUSCByIEFTICgKICBTRUxFQ1QgY3VzdG9tZXJfaWQsIGxvYW5faWQsIGRpc2J1cnNlZF9hdCwKICAgICAgICAgUk9XX05VTUJFUigpIE9WRVIgKFBBUlRJVElPTiBCWSBjdXN0b21lcl9pZCBPUkRFUiBCWSBkaXNidXJzZWRfYXQsIGxvYW5faWQpIEFTIHJuLAogICAgICAgICBMQUcoZGlzYnVyc2VkX2F0KSBPVkVSIChQQVJUSVRJT04gQlkgY3VzdG9tZXJfaWQgT1JERVIgQlkgZGlzYnVyc2VkX2F0LCBsb2FuX2lkKSBBUyBwcmV2X2Rpc2J1cnNlZAogIEZST00gbG9hbnMpClNFTEVDVCBDT1VOVCgqKSBBUyBjdXN0b21lcnMsCiAgICAgICBST1VORChBVkcoanVsaWFuZGF5KGRpc2J1cnNlZF9hdCkgLSBqdWxpYW5kYXkocHJldl9kaXNidXJzZWQpKSwgMSkgQVMgYXZnX2RheXMKRlJPTSByCldIRVJFIHJuID0gMjsKLS0gU1FMIFNlcnZlcjogQVZHKENBU1QoREFURURJRkYoZGF5LCBwcmV2X2Rpc2J1cnNlZCwgZGlzYnVyc2VkX2F0KSBBUyBGTE9BVCkpIOKAlCBEQVRFRElGRiByZXR1cm5zIGFuIGludGVnZXIgYW5kIEFWRyBvZiBpbnRlZ2VycyB0cnVuY2F0ZXMKLS0gMiAyNDYgY3VzdG9tZXJzLCAxOTguMyBkYXlzCktlZXBpbmcgZXZlcnkgcm4gPj0gMiAoYWxsIGdhcHMgYmV0d2VlbiBjb25zZWN1dGl2ZSBsb2FucykgZ2l2ZXMgMTg2Ljkg4oCUIGEgZGlmZmVyZW50IHF1ZXN0aW9uLiBBYm91dCBzaXggYW5kIGEgaGFsZiBtb250aHMgZnJvbSB0aGUgZmlyc3QgbG9hbiB0byB0aGUgc2Vjb25kOiBzaG9ydCBNaWNybyBhbmQgQk5QTCBsb2FucyBjbG9zZSBmYXN0IGFuZCB0aGUgYm9ycm93ZXIgY29tZXMgYmFjay4gV2VlayAxJ3MgZHVwbGljYXRlIHJvd3Mgc3BsaXQgYSBmZXcgcGVvcGxlJ3MgaGlzdG9yaWVzIGFjcm9zcyB0d28gaWRzLCBzbyBjYWxsIGl0ICJwZXIgY3VzdG9tZXIgaWQiLCBub3QgInBlciBwZXJzb24iLg=="}
 ```
 
 <!-- challenge:end -->

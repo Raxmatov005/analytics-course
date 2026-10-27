@@ -7,12 +7,14 @@
 ## Today in 3 lines
 
 - **Part A (80 pts):** `checkpoint.ipynb` from `data/python/checkpoint_template.ipynb` — the ten sections of week 3's EDA, each as code cell(s) + the week-3 SQL number (given in the template) + one Markdown line *match / mismatch and why* + a finding; at least four charts across the ten; a closing cell of five sentences on what pandas made easier and what SQL made easier.
-- **Part B (20 pts):** eight interview questions on this week's material, in writing, 3–5 sentences each.
+- **Part B (20 pts):** eight interview questions on this week's material, in writing, 3–5 sentences each — in the boxes on this page, then in `interview.md`.
 - Allowed: everything from weeks 1–5 — `pd.read_sql` on `nur.db` (the SQL *is* allowed; the section must still end in a DataFrame and a pandas step), the CSV extracts, your HW 5.2 functions. Closed: the model answers until you submit.
 
-**Rules.** Open book. Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save, so every output is inside the file), `interview.md`. Also due today: **HW 5.2** in `day-3/`. All numbers as of **2026-10-01**; payments de-duplicated (your `clean_payments`) and cut at the as-of wherever they are summed.
+**Rules.** Open book. The report is a notebook file, so do Part A in Jupyter or Colab (Day 1, "Where your code runs"); the page's editors are for checking your key numbers before you hand in. Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save, so every output is inside the file) and `interview.md`. Also due today: **HW 5.2**, in Day 3's hand-in box. All numbers as of **2026-10-01**; payments de-duplicated (your `clean_payments`) and cut at the as-of wherever they are summed.
 
-**Working method.** Per section: the grain in a comment; the code; the first rows (`head()` is an output — it counts); the week-3 number next to yours, as an `assert` where it must be exact (counts, sums) and as a printed pair where rounding may differ (rates); one finding Bekzod can read aloud. A *mismatch* is not a failure if the line under it says why (a half-open vs inclusive filter, dirty vs clean payments, a cohort cut) — an *unexplained* mismatch costs the number points.
+**Working method.** Per section: the grain in a comment; the code; the first rows (`head()` is an output — it counts); the week-3 number next to yours, as an `assert` where it must be exact (counts, sums) and as a printed pair where rounding may differ (rates); one finding Bekzod can read aloud.
+
+> 💡 **Key idea.** A *mismatch* is not a failure if the line under it says why — a half-open vs inclusive filter, dirty vs clean payments, a cohort cut. Only an *unexplained* mismatch costs the number points. Two tools that disagree, with a reason written down, is analysis; two tools that agree by luck is not.
 
 **The shape of one section** (the template has it ten times — two cells, then a Markdown cell):
 
@@ -22,6 +24,7 @@
 ~~~
 
 ```python
+# (shape only — not meant to run) … L is the loan frame read in S2
 # grain: one row per loan (L, 7 828); products joined m:1 in the read_sql above
 by_prod = L.groupby("code").agg(loans=("loan_id", "size"), disbursed=("principal", "sum"))
 by_prod["amount_share"] = (100 * by_prod["disbursed"] / by_prod["disbursed"].sum()).round(1)
@@ -49,22 +52,34 @@ Three cells per section, not thirty: the reviewer reads the finding, checks the 
 | S9 | `dpd_per_loan`, `pd.cut`, `pivot_table`, `merge(how="outer")` | the DPD CTE, `CASE`, `FULL OUTER JOIN` |
 | S10 | `pd.cut(right=False)` + `crosstab` | `CASE WHEN income < …` + `SUM(CASE)` |
 
-**Common mistakes from this week** (each costs the number point): the default `how="inner"` where a `LEFT JOIN` was meant; `fillna(0)` on a money column that should stay NaN; `between` on a datetime; `pd.cut` with the first edge at 0; summing `principal` after merging instalments onto loans (Σ principal ×24.7, the week-2 fan-out — `validate="m:1"` would have caught it); a chart whose title names the chart.
+> 💡 **Key idea.** Aggregate and join in SQL at the database's grain; shape, cut, check and chart in pandas. The closing cell asks you to argue exactly this split with your own sections as evidence — notice, section by section, which tool made the work shorter or safer.
+
+```game
+{"type": "match", "id": "w05d5-g1", "title": "SQL twin → pandas idiom", "pairs": [["COUNT(*) / SUM(COUNT(*)) OVER ()", "value_counts(normalize=True)"], ["AVG() OVER (ROWS 2 PRECEDING)", "rolling(3).mean()"], ["LAG(x, 12)", "pct_change(12)"], ["RANK()", "rank(method=\"min\")"], ["ORDER BY … LIMIT 3", "nlargest(3, col)"], ["CASE WHEN income < …", "pd.cut(..., right=False)"], ["FULL OUTER JOIN", "merge(how=\"outer\")"]]}
+```
+
+> ⚠️ **Watch out.** The common mistakes from this week each cost the number point: the default `how="inner"` where a `LEFT JOIN` was meant; `fillna(0)` on a money column that should stay NaN; `between` on a datetime; `pd.cut` with the first edge at 0; summing `principal` after merging instalments onto loans (Σ principal ×24.7, the week-2 fan-out — `validate="m:1"` would have caught it); a chart whose title names the chart.
 
 ---
 
 ## Part A — The report (150 min, 80 pts)
 
-Eight points per section: 3 for code that runs and answers the heading, 3 for the numbers (matching or explained), 2 for the finding and the match line. The model answers are *an* answer; a different cut with correct numbers and a real finding scores the same.
+Eight points per section: 3 for code that runs and answers the heading, 3 for the numbers (matching or explained), 2 for the finding and the match line. The model answers are *an* answer; a different cut with correct numbers and a real finding scores the same. They run top to bottom (S1 opens the connection) — after you submit.
 
 ### S1. Database exploration — tables, row counts, grain
 
 <details><summary>Model answer</summary>
 
 ```python
+import sqlite3
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+AS_OF = pd.Timestamp("2026-10-01")
 con = sqlite3.connect("../raw/nur.db")
 tables = pd.read_sql("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name", con)["name"]
 counts = pd.DataFrame({"table": tables, "rows": [pd.read_sql(f"SELECT COUNT(*) AS n FROM {t}", con)["n"][0] for t in tables]})
+counts
 ```
 
 | table | rows | grain (one row =) |
@@ -129,6 +144,7 @@ tiles = {"loans": len(L), "borrowers": L["customer_id"].nunique(), "disbursed": 
          "outstanding": outstanding, "collected": collected, "interest": inst["interest_due"].sum()}
 # 7828 · 4335 · 404 783 280 000 · 51 709 668 · 11.8 · 208 723 504 430 · 255 061 333 229 · 122 497 355 801
 assert tiles["outstanding"] == 208_723_504_430 and tiles["collected"] == 255_061_333_229
+tiles
 ```
 
 **Match:** all eight. **Finding.** Collected through the clean, as-of-cut payments is 255 061 333 229 (52 826 rows) against a raw 255 173 169 976: 58.4 m of duplicates and 53.4 m of forward-dated rows out — the two filters are one `sort_values().drop_duplicates()` and one mask. 73 % of loans go to repeat borrowers (`(L.groupby("customer_id").size() > 1)` weighted by loans); the book has lent 404.8 bn and still carries 208.7 bn.
@@ -143,9 +159,10 @@ assert tiles["outstanding"] == 208_723_504_430 and tiles["collected"] == 255_061
 by_prod = L.groupby("code").agg(loans=("loan_id", "size"), disbursed=("principal", "sum"), avg_ticket=("principal", "mean"))
 by_prod["loan_share"] = 100 * by_prod["loans"] / by_prod["loans"].sum()
 by_prod["amount_share"] = 100 * by_prod["disbursed"] / by_prod["disbursed"].sum()
-by_prod.sort_values("disbursed", ascending=False).round(1)
+print(by_prod.sort_values("disbursed", ascending=False).round(1))
 # SME 781 / 241 117 150 000 / 308 728 745 / 10.0 / 59.6 · AUTO 391 / 84 791 530 000 / 216 858 133 / 5.0 / 20.9 · CONS 2418 / 65 109 280 000 / 30.9 / 16.1 · MICRO 2669 / 7 221 210 000 / 34.1 / 1.8 · BNPL 1569 / 6 544 110 000 / 20.0 / 1.6
 by_region = L.groupby("region")["principal"].sum().pipe(lambda s: (100 * s / s.sum()).round(1)).sort_values(ascending=False)
+by_region
 # Tashkent 39.7 · Fergana 12.7 · Samarkand 11.2 · Andijan 9.5 · Namangan 8.6 · Bukhara 6.9 · Nukus 5.8 · Termez 5.7
 ```
 
@@ -163,10 +180,12 @@ br = pd.read_sql("SELECT branch_id, branch_name FROM branches", con)
 rank = (y26.merge(br, on="branch_id", validate="m:1").groupby("branch_name")
            .agg(loans=("loan_id", "size"), disbursed_2026=("principal", "sum")).sort_values("disbursed_2026", ascending=False))
 rank["rk"] = rank["disbursed_2026"].rank(method="min", ascending=False).astype(int)
+print(rank)
 # 1 Tashkent South 381 / 21 380 780 000 · 2 Fergana Central 315 / 19 742 090 000 · 3 Samarkand Central 344 / 19 440 640 000 … 10 Termez Central 184 / 8 120 400 000
 cust = pd.read_sql("SELECT customer_id, first_name || ' ' || last_name AS customer, segment FROM customers", con)
 top = (L.groupby("customer_id").agg(loans=("loan_id", "size"), total=("principal", "sum")).nlargest(3, "total")
         .merge(cust, on="customer_id"))
+print(top)
 # Murod Yusupov (sme) 5 / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000
 L.groupby("code")["principal"].max()     # AUTO 399 530 000 · BNPL 7 990 000 · CONS 49 990 000 · MICRO 4 990 000 · SME 599 060 000
 ```
@@ -213,6 +232,7 @@ for ms in pd.period_range("2026-01", "2026-09", freq="M"):
     rows.append((str(ms), bal["principal_due"].sum(), bal["loan_id"].nunique()))
 s8 = pd.DataFrame(rows, columns=["month", "outstanding", "loans_with_balance"])
 s8["net_growth"] = s8["outstanding"].diff()
+s8
 # 2026-01 151 807 386 149 (2 579) · 02 154 145 984 724 (+2.3 bn) · 03 163 974 316 812 (+9.8) · … · 08 203 830 205 928 (+10.2) · 09 208 243 879 623 (+4.4 bn, 3 392 loans)
 ```
 
@@ -225,13 +245,23 @@ s8["net_growth"] = s8["outstanding"].diff()
 <details><summary>Model answer</summary>
 
 ```python
-d = dpd_per_loan(inst, pc, AS_OF)                                               # HW 5.2: loan_id, dpd, bucket
+def dpd_per_loan(inst, pay, as_of):                                             # HW 5.2 — Day 3's Company corner as a function
+    paid = pay[pay["paid_at"] <= as_of].groupby("installment_id", as_index=False).agg(paid=("amount", "sum"))
+    mm = inst.merge(paid, on="installment_id", how="left", validate="1:1").fillna({"paid": 0})
+    late = mm[(mm["paid"] < mm["total_due"]) & (mm["due_date"] <= as_of)]
+    dpd = (as_of - late.groupby("loan_id")["due_date"].min()).dt.days.rename("dpd")
+    d = L[["loan_id"]].merge(dpd, on="loan_id", how="left").fillna({"dpd": 0}).astype({"dpd": int})
+    d["bucket"] = pd.cut(d["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
+    return d
+
+d = dpd_per_loan(inst, pc, AS_OF)                                               # loan_id, dpd, bucket
 st = d.merge(inst[inst["due_date"] > AS_OF].groupby("loan_id")["principal_due"].sum().rename("outstanding"), on="loan_id", how="left").fillna({"outstanding": 0})
 b = st.groupby("bucket", observed=True).agg(loans=("loan_id", "size"), outstanding=("outstanding", "sum"))
 b["share_pct"] = (100 * b["outstanding"] / b["outstanding"].sum()).round(2)
 # 0 7429 / 197 486 207 578 / 94.62 · 1-30 124 / 4 729 769 899 / 2.27 · 31-60 25 / 748 610 049 / 0.36 · 61-90 16 / 439 441 377 / 0.21 · 90+ 234 / 5 319 475 527 / 2.55
 par30 = st.loc[st["dpd"] > 30, "outstanding"].sum() / st["outstanding"].sum()   # 3.12 %
 npl90 = st.loc[st["dpd"] > 90, "outstanding"].sum() / st["outstanding"].sum()   # 2.55 %
+b, round(100 * par30, 2), round(100 * npl90, 2)
 ```
 
 FPD30: Day 3's pivot — 91 / 7 099 = **1.28 %**, app 1.70 · partner 1.12 · branch 1.04 %, grades A 0.60 · B 0.97 · C 2.16 · D 2.23. Roll rates: Day 4's `read_sql` matrix or two `dpd_per_loan` snapshots merged `how="outer"` — 1–30 → 31–60 **19.5 %** (25 of 128), cure 75.8 %, 31–60 → 61–90 69.6 %, 61–90 → 90+ 100 %, 117 new entries. Vintage: the Day-4 heatmap — 2025-10 at 6.91 % (MOB 3) / 11.52 % (MOB 6) vs pooled 2025 4.35 / 7.46. Charts: figures 3, 4, 5.
@@ -252,7 +282,8 @@ lc["band"] = (pd.cut(lc["monthly_income"], [0, 5e6, 10e6, 20e6, np.inf], labels=
 ct = pd.crosstab(lc["band"], lc["risk_grade"])
 ct["loans"] = ct.sum(axis=1); ct["cd_share_pct"] = (100 * (ct["C"] + ct["D"]) / ct["loans"]).round(1)
 ct["avg_ticket"] = lc.groupby("band")["principal"].mean().round()
-# unknown 466 / 116 201 132 17 / 32.0 % · <5m 1670 / 33.0 · 5-10m 2781 / 32.8 · 10-20m 774 / 34.8 · 20m+ 2137 / 33.7
+ct
+# unknown 466 loans / C+D 32.0 % · <5m 1670 / 33.0 · 5-10m 2781 / 32.8 · 10-20m 774 / 34.8 · 20m+ 2137 / 33.7
 ```
 
 Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borrowers 49.1 % (`sort_values().head(len // 10).sum()`). Chart: a heatmap of the crosstab or a stacked bar of grade shares per band.
@@ -260,6 +291,10 @@ Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borr
 **Match:** identical to week 3 S10 — because `right=False` makes `pd.cut` read `[5m, 10m)` exactly as `WHEN monthly_income < 10000000`; with the default right-closed intervals a customer earning exactly 5 000 000 moves bands and the counts drift by a few. **Finding.** Income does not predict grade: C+D is 32–35 % in every band including the 466 "unknown" loans, which pandas shows only because `.astype(str).replace("nan", "unknown")` turns the NaN band into a row — `pd.cut` alone would have dropped it silently from the crosstab, the week-2 NULL-band lesson one more time.
 
 </details>
+
+```game
+{"type": "bug", "id": "w05d5-g2", "title": "Every yoy is NaN", "q": "This S7 cell prints a yoy_pct column full of NaN. Tap the line that causes it.", "code": "m = L.groupby(L[\"disbursed_at\"].dt.to_period(\"M\")).agg(disbursed=(\"principal\", \"sum\"))\nm26 = m.loc[\"2026-01\":].copy()\nm26[\"yoy_pct\"] = m26[\"disbursed\"].pct_change(12) * 100\nm26", "answer": [1], "why": "The frame is cut to 2026 before pct_change(12), so no row has a month twelve rows up. Compute on the full 33-month frame, then filter for display — week 3's LAG trap in a new spelling."}
+```
 
 ### The closing cell — what each tool made easier
 
@@ -273,29 +308,59 @@ Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borr
 
 ## Part B — Eight interview questions (30 min, 20 pts)
 
-Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per question (1 correct and complete, 1 with a Nur Finance example and number) plus 4 for the "definitions I used" note at the top of `interview.md` (as-of, DPD, FPD30, the dedup rule, outstanding).
+Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per question (1 correct and complete, 1 with a Nur Finance example and number) plus 4 for the "definitions I used" note at the top of `interview.md` (as-of, DPD, FPD30, the dedup rule, outstanding). Write each answer in its box; **Compare** shows the model answer and the rubric — tick honestly. Then put the definitions note and your eight answers into `interview.md` in the 📎 box below: that file is what the mentor grades.
 
-1. `loc` vs `iloc` — what does each index by, and when does the difference bite?
-2. What does `validate=` do in `merge`, and which week-2 mistake does it prevent?
-3. `groupby().agg` vs `groupby().transform` — what shape comes back from each, and which SQL construct is each?
-4. How does pandas represent a missing value, how do aggregates treat it, and when is `fillna(0)` wrong?
-5. `pd.cut` vs a hand-written bucket function — when do you use which, and what are the two traps of `pd.cut`?
-6. When do you reach for pandas over SQL, and when the other way round?
-7. How do you choose a chart type, and name three rules that are not matters of taste.
-8. What makes a notebook reproducible, and how do you prove it before you submit?
+```game
+{"type": "flash", "id": "w05d5-g3", "title": "Definitions for interview.md", "cards": [["As-of", "the date every number is computed for — 2026-10-01; payments after it are excluded, instalments after it are not yet due"], ["DPD", "as-of − the due date of the oldest matured instalment not fully paid; 0 if none"], ["FPD30", "first instalment, in scope if due ≤ as-of − 30 days, late if not fully paid within 30 days"], ["Dedup rule", "payments: same installment_id + paid_at + amount, keep the lowest payment_id; customers: same phone + birth_date, keep the earliest registered_at"], ["Outstanding", "Σ principal_due of instalments due after the as-of — principal only, interest is revenue"], ["PAR30", "outstanding of loans with dpd > 30 ÷ total outstanding — whole-loan outstanding in the numerator"], ["NPL90", "the same with dpd > 90"], ["Vintage", "the month a loan was disbursed — the cohort its performance is compared within"]]}
+```
 
-<details><summary>Model answers (open after submitting)</summary>
+**B1.** `loc` vs `iloc` — what does each index by, and when does the difference bite?
 
-1. `loc` selects by **label** (index value, column name) and accepts boolean masks; `iloc` by **integer position**. They agree on a fresh `RangeIndex` and part ways after a filter or a sort: `late = loans[loans.dpd > 0]; late.loc[0]` raises `KeyError` (label 0 is not a late loan) while `late.iloc[0]` is the first late row. Rule: `loc` for conditions and names, `iloc` for "the first n", `reset_index(drop=True)` when you need them to agree again.
-2. `validate="1:1" / "m:1" / "1:m"` makes `merge` raise `MergeError` when a key is not unique on the side you promised. It prevents the silent fan-out: joining instalments onto loans and summing `principal` gave ×24.7 in week 2 (11.8 rows per loan, more on the big long loans); with `validate="1:1"` the merge of 92 193 instalments onto 52 826 per-instalment payment sums is proven one-to-one before any sum. Add `indicator=True` to see `left_only` rows — the anti-join.
-3. `agg` returns **one row per group** (`GROUP BY`): payments per region, 8 rows. `transform` returns **one value per original row**, aligned to the frame — the window function `SUM(amount) OVER (PARTITION BY loan_id)`: each payment's share of its loan's total, 52 850 rows. `cumcount()` after a sort is `ROW_NUMBER() OVER (PARTITION BY …)` — the dedup tool.
-4. `NaN` (`NaT` for dates); `sum`, `mean`, `count` skip it like SQL's NULL (`cust.monthly_income.mean()` = 15.2 m over 5 684 values), `==` never finds it (`isna()` does), and `len` ≠ `count`. `fillna(0)` is right for a count (no payment → 0 paid) and wrong for a measurement: it drops the mean income to 14.3 m and invents 356 zero earners; impute with a labelled estimate or keep the NaN and show the "unknown" band (466 loans in S10).
-5. `pd.cut` for numeric ranges that are a definition (DPD buckets, income bands): one line, ordered category, vectorised, `right=False` when the rule is `<`. A function + `apply` when the label depends on several columns or on text logic. Traps: the first edge must be *below* the smallest value (`-1`, or every `dpd = 0` becomes NaN — 7 429 rows), and the result is a category — compare with `.astype(str)` and use `observed=True` in `groupby`.
-6. SQL when the question is one aggregation or join over the database's big tables at its own grain (the vintage CTE, the DPD snapshots — `read_sql` and done), when the result must be shared by several tools (a view), or when the data does not fit in memory. pandas for the chain of reshapes after that — cut, merge of two results, rolling, pivot, charts — for anything iterative (S8's loop), for the asserts, and for the output (CSV, Excel, PNG). The notebook holds both: aggregate in SQL, shape and check in pandas.
-7. By the **question**: time → line (34 months), categories → bar / barh for rankings and long labels, a matrix → heatmap (vintage, roll), distribution per group → boxplot, two numbers per row → scatter. Not taste: bars start at zero (no log axis on bars), sort categories by value unless the order is natural, no pie beyond three slices and no 3D, one colour plus one highlight (90+ red), the title states the finding, no legend for one series, unit on the axis — and drop the one-day October point.
-8. Inputs by path, not by hand; the as-of as one variable; every number printed by code, never typed into Markdown; asserts on known counts (6 000 / 52 850 / 399 / 208 723 504 430) so a changed extract stops the run; no cell depends on being run twice. Proof: **Kernel → Restart & Run All** finishes top to bottom with every assert green — then save, so the outputs are inside the `.ipynb` the reviewer opens.
+```task
+{"id": "w05d5-b1", "kind": "free", "min": 30, "model": "loc selects by label (index value, column name) and accepts boolean masks; iloc by integer position. They agree on a fresh RangeIndex and part ways after a filter or a sort: late = loans[loans.dpd > 0]; late.loc[0] raises KeyError (label 0 is not a late loan) while late.iloc[0] is the first late row. Rule: loc for conditions and names, iloc for \"the first n\", reset_index(drop=True) when you need them to agree again.", "rubric": ["loc = label, iloc = integer position", "The difference appears after a filter or sort", "A concrete example (late.loc[0] → KeyError)", "Names the fix or the rule (reset_index / when to use which)"]}
+```
 
-</details>
+**B2.** What does `validate=` do in `merge`, and which week-2 mistake does it prevent?
+
+```task
+{"id": "w05d5-b2", "kind": "free", "min": 30, "model": "validate=\"1:1\" / \"m:1\" / \"1:m\" makes merge raise MergeError when a key is not unique on the side you promised. It prevents the silent fan-out: joining instalments onto loans and summing principal gave ×24.7 in week 2 (11.8 rows per loan, more on the big long loans); with validate=\"1:1\" the merge of 92 193 instalments onto 52 826 per-instalment payment sums is proven one-to-one before any sum. Add indicator=True to see left_only rows — the anti-join.", "rubric": ["Raises MergeError when the key is not unique where promised", "Prevents the fan-out / double counting after a join", "A Nur Finance number (×24.7, 92 193 instalments)", "Mentions stating the grain you believe, or indicator=True"]}
+```
+
+**B3.** `groupby().agg` vs `groupby().transform` — what shape comes back from each, and which SQL construct is each?
+
+```task
+{"id": "w05d5-b3", "kind": "free", "min": 30, "model": "agg returns one row per group (GROUP BY): payments per region, 8 rows. transform returns one value per original row, aligned to the frame — the window function SUM(amount) OVER (PARTITION BY loan_id): each payment's share of its loan's total, 52 850 rows. cumcount() after a sort is ROW_NUMBER() OVER (PARTITION BY …) — the dedup tool.", "rubric": ["agg: one row per group = GROUP BY", "transform: one value per original row = window function", "An example with a row count", "Mentions cumcount / ROW_NUMBER or a share-of-group use"]}
+```
+
+**B4.** How does pandas represent a missing value, how do aggregates treat it, and when is `fillna(0)` wrong?
+
+```task
+{"id": "w05d5-b4", "kind": "free", "min": 30, "model": "NaN (NaT for dates); sum, mean, count skip it like SQL's NULL (cust.monthly_income.mean() = 15.2 m over 5 684 values), == never finds it (isna() does), and len ≠ count. fillna(0) is right for a count (no payment → 0 paid) and wrong for a measurement: it drops the mean income to 14.3 m and invents 356 zero earners; impute with a labelled estimate or keep the NaN and show the \"unknown\" band (466 loans in S10).", "rubric": ["NaN / NaT, skipped by aggregates like NULL", "== does not find it; use isna()", "fillna(0) right for counts, wrong for measurements like income", "A Nur Finance number (15.2 m → 14.3 m, 356, 466)"]}
+```
+
+**B5.** `pd.cut` vs a hand-written bucket function — when do you use which, and what are the two traps of `pd.cut`?
+
+```task
+{"id": "w05d5-b5", "kind": "free", "min": 30, "model": "pd.cut for numeric ranges that are a definition (DPD buckets, income bands): one line, ordered category, vectorised, right=False when the rule is <. A function + apply when the label depends on several columns or on text logic. Traps: the first edge must be below the smallest value (-1, or every dpd = 0 becomes NaN — 7 429 rows), and the result is a category — compare with .astype(str) and use observed=True in groupby.", "rubric": ["pd.cut for numeric ranges; a function for multi-column or text logic", "Trap 1: the first edge below the smallest value (dpd = 0 → NaN)", "Trap 2: category dtype (astype(str), observed=True) or right-closed vs right=False", "A Nur Finance number (7 429)"]}
+```
+
+**B6.** When do you reach for pandas over SQL, and when the other way round?
+
+```task
+{"id": "w05d5-b6", "kind": "free", "min": 30, "model": "SQL when the question is one aggregation or join over the database's big tables at its own grain (the vintage CTE, the DPD snapshots — read_sql and done), when the result must be shared by several tools (a view), or when the data does not fit in memory. pandas for the chain of reshapes after that — cut, merge of two results, rolling, pivot, charts — for anything iterative (S8's loop), for the asserts, and for the output (CSV, Excel, PNG). The notebook holds both: aggregate in SQL, shape and check in pandas.", "rubric": ["SQL for big aggregations / joins at the database's grain", "SQL for shared definitions (a view) or data too big for memory", "pandas for reshaping, iteration, asserts, charts and files", "A concrete Nur Finance section as the example"]}
+```
+
+**B7.** How do you choose a chart type, and name three rules that are not matters of taste.
+
+```task
+{"id": "w05d5-b7", "kind": "free", "min": 30, "model": "By the question: time → line (34 months), categories → bar / barh for rankings and long labels, a matrix → heatmap (vintage, roll), distribution per group → boxplot, two numbers per row → scatter. Not taste: bars start at zero (no log axis on bars), sort categories by value unless the order is natural, no pie beyond three slices and no 3D, one colour plus one highlight (90+ red), the title states the finding, no legend for one series, unit on the axis — and drop the one-day October point.", "rubric": ["Chooses by the question (time, ranking, matrix, distribution)", "Names at least three hard rules (zero baseline, finding title, no legend for one series …)", "A Nur Finance chart as the example"]}
+```
+
+**B8.** What makes a notebook reproducible, and how do you prove it before you submit?
+
+```task
+{"id": "w05d5-b8", "kind": "free", "min": 30, "model": "Inputs by path, not by hand; the as-of as one variable; every number printed by code, never typed into Markdown; asserts on known counts (6 000 / 52 850 / 399 / 208 723 504 430) so a changed extract stops the run; no cell depends on being run twice. Proof: Kernel → Restart & Run All finishes top to bottom with every assert green — then save, so the outputs are inside the .ipynb the reviewer opens.", "rubric": ["Inputs by path and one as-of variable", "Numbers printed by code; asserts on known counts", "Proof = Kernel → Restart & Run All, then save", "A Nur Finance count as the example"]}
+```
 
 ---
 
@@ -309,19 +374,51 @@ Answer in writing, 3–5 sentences each, as you would say it aloud: 2 points per
 
 Below 70: feedback names the sections to redo (most often S8 — the month-end loop — and S9's FPD30 scope); re-submit Monday morning before Week 6. Points go to the [Progress page](progress.md).
 
-**Hand-in checklist** (the 📎 box below): `checkpoint.ipynb` (executed, 10 sections, ≥ 4 charts, the match line under each section, the five-sentence closing cell), `interview.md` (definitions note + 8 answers). Also due today: **HW 5.2** in `day-3/` (`clean_nur.py` or the executed `day3_starter.ipynb`, `customers_clean.csv`, `payments_clean.csv`, `dpd_per_loan.csv`).
+> 🚀 **Stretch (optional, +5 XP).** Package the week: a file `nur.py` with `clean_customers`, `clean_payments`, `dpd_per_loan`, `portfolio_summary`, `fpd30_table` and `figure_pack(con, as_of, out_dir)`, imported by a ten-line `monthly.py` that writes the tiles, the buckets and the five PNGs for any `AS_OF`. Run it for 2026-09-01 and 2026-10-01 and diff the two bucket tables — the roll-rate matrix, from the command line. Paste the two bucket rows and one sentence on what moved.
 
-<span class="badge stretch">Stretch</span> Package the week: a file `nur.py` with `clean_customers`, `clean_payments`, `dpd_per_loan`, `portfolio_summary`, `fpd30_table` and `figure_pack(con, as_of, out_dir)`, imported by a ten-line `monthly.py` that writes the tiles, the buckets and the five PNGs for any `AS_OF`. Run it for 2026-09-01 and 2026-10-01 and diff the two bucket tables — the roll-rate matrix, from the command line.
+```task
+{"id": "w05d5-st", "kind": "free", "min": 20, "xp": 2, "model": "2026-09-01: 1-30 128 · 31-60 23 · 61-90 17 · 90+ 217 (385 late). 2026-10-01: 1-30 124 · 31-60 25 · 61-90 16 · 90+ 234 (399 late). The 90+ bucket grew by 17 — exactly the 61–90 loans of September rolling on — while the early buckets barely moved: the risk is migrating into the oldest bucket, not arriving as a new wave.", "rubric": ["Both snapshots' bucket counts", "Names the movement into 90+ (17 loans)", "monthly.py runs for any AS_OF without editing nur.py"]}
+```
 
 Madina, 17:30: *"Jasur ran your notebook on his machine and got the same 399. Bekzod has his monthly file. Timur has five PNGs with titles he did not write. Monday is statistics — the week where you learn what 'the app channel is 0.66 points worse' is actually worth with 41 cases against 34."*
 
 ---
 
+### Check your key numbers before you hand in
+
+Paste the code of the section into its editor; the check compares what it prints with week 3's warehouse number.
+
+**S4 — collected.** Σ amount of the de-duplicated payments paid on or before the as-of.
+
+```task
+{"id": "w05d5-k1", "kind": "python", "starter": "import sqlite3\nimport pandas as pd\nimport numpy as np\nAS_OF = pd.Timestamp(\"2026-10-01\")\ncon = sqlite3.connect(\"../raw/nur.db\")\npay = pd.read_sql(\"SELECT * FROM payments\", con, parse_dates=[\"paid_at\"])\n\n# your S4 code — print collected\n", "answer": 255061333229, "dp": 0, "hint": "sort_values(\"payment_id\").drop_duplicates(subset=[\"installment_id\", \"paid_at\", \"amount\"]), then a mask paid_at <= AS_OF.", "model": "255 061 333 229 on 52 826 rows — the raw sum is 255 173 169 976: 58.4 m of duplicates and 53.4 m of forward-dated rows out."}
+```
+
+**S8 — month-end outstanding, September 2026.**
+
+```task
+{"id": "w05d5-k2", "kind": "python", "starter": "import sqlite3\nimport pandas as pd\nimport numpy as np\ncon = sqlite3.connect(\"../raw/nur.db\")\nL = pd.read_sql(\"SELECT * FROM loans\", con, parse_dates=[\"disbursed_at\"])\ninst = pd.read_sql(\"SELECT * FROM installments\", con, parse_dates=[\"due_date\"])\n\n# your S8 code — print the September 2026 month-end outstanding\n", "answer": 208243879623, "dp": 0, "hint": "Month end of September = principal_due of instalments due on or after 2026-10-01, for loans disbursed before 2026-10-01.", "model": "208 243 879 623 on 3 392 loans with a balance — +4.4 bn on August; +56 bn since January."}
+```
+
+**S9 — PAR30**, in % with two decimals.
+
+```task
+{"id": "w05d5-k3", "kind": "python", "starter": "import sqlite3\nimport pandas as pd\nimport numpy as np\nAS_OF = pd.Timestamp(\"2026-10-01\")\ncon = sqlite3.connect(\"../raw/nur.db\")\nL = pd.read_sql(\"SELECT * FROM loans\", con, parse_dates=[\"disbursed_at\"])\ninst = pd.read_sql(\"SELECT * FROM installments\", con, parse_dates=[\"due_date\"])\npay = pd.read_sql(\"SELECT * FROM payments\", con, parse_dates=[\"paid_at\"])\n\n# your S9 code (dpd_per_loan + outstanding) — print PAR30 in %\n", "answer": 3.12, "dp": 2, "hint": "Whole-loan outstanding of loans with dpd > 30 ÷ total outstanding; payments de-duplicated and cut at the as-of.", "model": "PAR30 3.12 %, NPL90 2.55 %; buckets 7 429 / 124 / 25 / 16 / 234."}
+```
+
+**S10 — loans in the "unknown" income band.**
+
+```task
+{"id": "w05d5-k4", "kind": "python", "starter": "import sqlite3\nimport pandas as pd\nimport numpy as np\ncon = sqlite3.connect(\"../raw/nur.db\")\nL = pd.read_sql(\"SELECT * FROM loans\", con, parse_dates=[\"disbursed_at\"])\ninc = pd.read_sql(\"SELECT customer_id, monthly_income FROM customers\", con)\n\n# your S10 code — print the number of loans in the unknown band\n", "answer": 466, "dp": 0, "hint": "pd.cut drops NaN silently; .astype(str).replace(\"nan\", \"unknown\") turns it into a band you can count.", "model": "466 loans whose customer has no income — C+D 32.0 %, the same as every other band: income does not predict grade."}
+```
+
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W5D5", "lesson": "W5D5", "title": "Checkpoint 5", "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W5D5", "lesson": "W5D5", "title": "Checkpoint 5", "why": "Two independent ways to every number: the week-3 report rebuilt in pandas proves you can reach any figure from SQL or from a DataFrame, explain any difference between them, and choose the right tool for the next question.", "graded": ["Part A — 10 sections × 8 points: code that runs (3), numbers matching or explained (3), finding and match line (2)", "At least four charts with finding titles, and the five-sentence closing cell", "Part B — 8 answers × 2 points (correct and complete; a Nur Finance example and number) + 4 for the definitions note", "Pass: 70 of 100 → Week 6 on Monday"], "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — executed (Restart & Run All, then save)."}, {"id": "interview.md", "file": "interview.md", "text": true, "minLines": 10, "q": "Write `interview.md` here: the definitions note (as-of, DPD, FPD30, the dedup rule, outstanding), then your eight answers."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
+
+**Hand-in checklist:** `checkpoint.ipynb` (executed, 10 sections, ≥ 4 charts, the match line under each section, the five-sentence closing cell), `interview.md` (definitions note + 8 answers). Also due today: **HW 5.2** in Day 3's hand-in box (`clean_nur.py` or the executed `day3_starter.ipynb`, `customers_clean.csv`, `payments_clean.csv`, `dpd_per_loan.csv`).
 
 ---
 
@@ -351,7 +448,7 @@ Pass with 80 % to finish the day. Retry as often as you like.
 A bonus for the curious: one harder question on today's topic. Solve it for XP that grows with your challenge streak — a full week of five also adds 10 % to Friday's voucher.
 
 ```challenge
-{"id": "w05d5", "q": "Nilufar's committee wants last month's NPL90 next to this month's 2.55 %. Recompute it as of 2026-09-01 with the week's pipeline: loans disbursed on or before 2026-09-01; DPD from the instalments and the de-duplicated payments paid on or before 2026-09-01; outstanding = principal_due of instalments due after 2026-09-01. NPL90 = outstanding of loans with dpd > 90 ÷ total outstanding. Give a percentage to 3 decimals.", "type": "number", "dp": 3, "h": ["6c06ef3fdea33478da9c0a73"], "hint": "Your dpd_per_loan already takes the as-of as an argument — the as-of must move in three places, not one.", "sol": "QVMgPSBwZC5UaW1lc3RhbXAoIjIwMjYtMDktMDEiKQpwYyA9IHBheS5zb3J0X3ZhbHVlcygicGF5bWVudF9pZCIpLmRyb3BfZHVwbGljYXRlcyhzdWJzZXQ9WyJpbnN0YWxsbWVudF9pZCIsICJwYWlkX2F0IiwgImFtb3VudCJdKQpwYWlkID0gcGNbcGNbInBhaWRfYXQiXSA8PSBBU10uZ3JvdXBieSgiaW5zdGFsbG1lbnRfaWQiLCBhc19pbmRleD1GYWxzZSkuYWdnKHBhaWQ9KCJhbW91bnQiLCAic3VtIikpCm0gPSBpbnN0Lm1lcmdlKHBhaWQsIG9uPSJpbnN0YWxsbWVudF9pZCIsIGhvdz0ibGVmdCIsIHZhbGlkYXRlPSIxOjEiKS5maWxsbmEoeyJwYWlkIjogMH0pCmxhdGUgPSBtWyhtWyJwYWlkIl0gPCBtWyJ0b3RhbF9kdWUiXSkgJiAobVsiZHVlX2RhdGUiXSA8PSBBUyldCmRwZCA9IChBUyAtIGxhdGUuZ3JvdXBieSgibG9hbl9pZCIpWyJkdWVfZGF0ZSJdLm1pbigpKS5kdC5kYXlzLnJlbmFtZSgiZHBkIikKb3V0ID0gaW5zdFtpbnN0WyJkdWVfZGF0ZSJdID4gQVNdLmdyb3VwYnkoImxvYW5faWQiKVsicHJpbmNpcGFsX2R1ZSJdLnN1bSgpLnJlbmFtZSgib3V0IikKcyA9IChMLmxvY1tMWyJkaXNidXJzZWRfYXQiXSA8PSBBUywgWyJsb2FuX2lkIl1dCiAgICAgICAubWVyZ2UoZHBkLCBvbj0ibG9hbl9pZCIsIGhvdz0ibGVmdCIpLm1lcmdlKG91dCwgb249ImxvYW5faWQiLCBob3c9ImxlZnQiKS5maWxsbmEoeyJkcGQiOiAwLCAib3V0IjogMH0pKQpsZW4ocyksIHNbIm91dCJdLnN1bSgpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDcgNDY0IGxvYW5zLCAyMDQgODM4IDk4NiA4NjMKMTAwICogcy5sb2Nbc1siZHBkIl0gPiA5MCwgIm91dCJdLnN1bSgpIC8gc1sib3V0Il0uc3VtKCkgICAgICMgNCA3MjggMDQ3IDcwNSAvIDIwNCA4MzggOTg2IDg2MyA9IDIuMzA4ICUKCk5QTDkwIHdhcyAyLjMwOCAlIG9uIDEgU2VwdGVtYmVyICgyMTcgbG9hbnMgaW4gOTArLCB0aGUgRGF5LTQgUDcgY291bnQpIGFuZCAyLjU1ICUgb24gMSBPY3RvYmVyOiArMC4yNCBwb2ludHMgaW4gb25lIG1vbnRoLCB3aGlsZSBQQVIzMCBiYXJlbHkgbW92ZWQgKDMuMTAg4oaSIDMuMTIgJSkuClRoZSAxNyBsb2FucyB0aGF0IHJvbGxlZCBmcm9tIDYx4oCTOTAgaW50byA5MCsgZXhwbGFpbiB0aGUganVtcCDigJQgdGhlIHJpc2sgaXMgbWlncmF0aW5nIGludG8gdGhlIG9sZGVzdCBidWNrZXQsIG5vdCBhcnJpdmluZyBhcyBhIG5ldyB3YXZlLgpUaGUgdHJhcHM6IGxlYXZpbmcgdGhlIHBheW1lbnRzIGN1dCBhdCAxIE9jdG9iZXIgKGV2ZXJ5IFNlcHRlbWJlciBwYXltZW50IHRoZW4gJ2N1cmVzJyBsb2FucyBlYXJseSksIG9yIGtlZXBpbmcgdGhlIGxvYW5zIGRpc2J1cnNlZCBhZnRlciAxIFNlcHRlbWJlciBpbiB0aGUgZGVub21pbmF0b3Iu"}
+{"id": "w05d5", "q": "Nilufar's committee wants last month's NPL90 next to this month's 2.55 %. Recompute it as of 2026-09-01 with the week's pipeline: loans disbursed on or before 2026-09-01; DPD from the instalments and the de-duplicated payments paid on or before 2026-09-01; outstanding = principal_due of instalments due after 2026-09-01. NPL90 = outstanding of loans with dpd > 90 ÷ total outstanding. Give a percentage to 3 decimals.", "type": "number", "dp": 3, "python": true, "h": ["6c06ef3fdea33478da9c0a73"], "hint": "Your dpd_per_loan already takes the as-of as an argument — the as-of must move in three places, not one.", "sol": "QVMgPSBwZC5UaW1lc3RhbXAoIjIwMjYtMDktMDEiKQpwYyA9IHBheS5zb3J0X3ZhbHVlcygicGF5bWVudF9pZCIpLmRyb3BfZHVwbGljYXRlcyhzdWJzZXQ9WyJpbnN0YWxsbWVudF9pZCIsICJwYWlkX2F0IiwgImFtb3VudCJdKQpwYWlkID0gcGNbcGNbInBhaWRfYXQiXSA8PSBBU10uZ3JvdXBieSgiaW5zdGFsbG1lbnRfaWQiLCBhc19pbmRleD1GYWxzZSkuYWdnKHBhaWQ9KCJhbW91bnQiLCAic3VtIikpCm0gPSBpbnN0Lm1lcmdlKHBhaWQsIG9uPSJpbnN0YWxsbWVudF9pZCIsIGhvdz0ibGVmdCIsIHZhbGlkYXRlPSIxOjEiKS5maWxsbmEoeyJwYWlkIjogMH0pCmxhdGUgPSBtWyhtWyJwYWlkIl0gPCBtWyJ0b3RhbF9kdWUiXSkgJiAobVsiZHVlX2RhdGUiXSA8PSBBUyldCmRwZCA9IChBUyAtIGxhdGUuZ3JvdXBieSgibG9hbl9pZCIpWyJkdWVfZGF0ZSJdLm1pbigpKS5kdC5kYXlzLnJlbmFtZSgiZHBkIikKb3V0ID0gaW5zdFtpbnN0WyJkdWVfZGF0ZSJdID4gQVNdLmdyb3VwYnkoImxvYW5faWQiKVsicHJpbmNpcGFsX2R1ZSJdLnN1bSgpLnJlbmFtZSgib3V0IikKcyA9IChMLmxvY1tMWyJkaXNidXJzZWRfYXQiXSA8PSBBUywgWyJsb2FuX2lkIl1dCiAgICAgICAubWVyZ2UoZHBkLCBvbj0ibG9hbl9pZCIsIGhvdz0ibGVmdCIpLm1lcmdlKG91dCwgb249ImxvYW5faWQiLCBob3c9ImxlZnQiKS5maWxsbmEoeyJkcGQiOiAwLCAib3V0IjogMH0pKQpsZW4ocyksIHNbIm91dCJdLnN1bSgpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAjIDcgNDY0IGxvYW5zLCAyMDQgODM4IDk4NiA4NjMKMTAwICogcy5sb2Nbc1siZHBkIl0gPiA5MCwgIm91dCJdLnN1bSgpIC8gc1sib3V0Il0uc3VtKCkgICAgICMgNCA3MjggMDQ3IDcwNSAvIDIwNCA4MzggOTg2IDg2MyA9IDIuMzA4ICUKCk5QTDkwIHdhcyAyLjMwOCAlIG9uIDEgU2VwdGVtYmVyICgyMTcgbG9hbnMgaW4gOTArLCB0aGUgRGF5LTQgUDcgY291bnQpIGFuZCAyLjU1ICUgb24gMSBPY3RvYmVyOiArMC4yNCBwb2ludHMgaW4gb25lIG1vbnRoLCB3aGlsZSBQQVIzMCBiYXJlbHkgbW92ZWQgKDMuMTAg4oaSIDMuMTIgJSkuClRoZSAxNyBsb2FucyB0aGF0IHJvbGxlZCBmcm9tIDYx4oCTOTAgaW50byA5MCsgZXhwbGFpbiB0aGUganVtcCDigJQgdGhlIHJpc2sgaXMgbWlncmF0aW5nIGludG8gdGhlIG9sZGVzdCBidWNrZXQsIG5vdCBhcnJpdmluZyBhcyBhIG5ldyB3YXZlLgpUaGUgdHJhcHM6IGxlYXZpbmcgdGhlIHBheW1lbnRzIGN1dCBhdCAxIE9jdG9iZXIgKGV2ZXJ5IFNlcHRlbWJlciBwYXltZW50IHRoZW4gJ2N1cmVzJyBsb2FucyBlYXJseSksIG9yIGtlZXBpbmcgdGhlIGxvYW5zIGRpc2J1cnNlZCBhZnRlciAxIFNlcHRlbWJlciBpbiB0aGUgZGVub21pbmF0b3Iu"}
 ```
 
 <!-- challenge:end -->

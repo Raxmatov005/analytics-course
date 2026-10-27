@@ -1,5 +1,7 @@
 # Progress & rewards
 
+> 🧭 **What this page is for.** Your scoreboard — level, XP, vouchers, badges — and the rules for how each one is earned. Check it on Friday before you hand in the checkpoint.
+
 Your level, your XP, the real rewards you are working towards, your badges and every point so far. The mentor updates the official numbers after each review; the days you finish and your streak are counted in this browser as you pass the day quizzes.
 
 <div id="al-board">Loading your board…</div>
@@ -12,7 +14,8 @@ Your level, your XP, the real rewards you are working towards, your badges and e
 | Each day finished (day quiz passed with 80 % or more) | 2 — counted by the mentor from the screenshot of this board you send every Friday |
 | Each daily challenge solved | 2, 3, 4, 6, 9, then 10 a day as your challenge streak grows (a day without one resets it to 2) |
 | A challenge on a **lucky day** (one hidden day in every week) | double |
-| Each stretch task | 5 |
+| Each stretch task (🚀 *Stretch* in Practice) | 5 — counted by the mentor |
+| Each game | no XP — 1 to 3 stars for how few slips you make; your best stars stay in this browser |
 | Finding a real mistake in the course | 10, and the Bug hunter badge |
 
 ## Rules

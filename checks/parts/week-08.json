@@ -1,0 +1,160 @@
+{
+ "_note": "Week 8 additions, to be merged deep into checks.json: one new check, cap8 — the capstone's sanity numbers (Week 8 Day 3, section 6), each task checked in the page's hand-in workspace. Fingerprints made with scripts/fingerprint.py on data/raw/nur.db (model queries in docs/weeks/week-08/day-3.md, section 6). The hand-in ids handin-W8D2 and handin-W8D5 need no entry.",
+ "checks": {
+  "cap8": {
+   "title": "Capstone · the sanity numbers",
+   "kind": "sql",
+   "file": "submissions/week-08/day-3/sanity.sql",
+   "tasks": {
+    "S1": {
+     "values": [
+      {
+       "h": "7ce8735a21e87e335a21da04",
+       "dp": 0
+      },
+      {
+       "h": "288be1d8132d5f6c77217e12",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "S2": {
+     "values": [
+      {
+       "h": "7e7da4a5c7babb0de8153322",
+       "dp": 2
+      },
+      {
+       "h": "2a0f700dca428994fc076dcb",
+       "dp": 2
+      }
+     ],
+     "rows": {
+      "h": "91c594268eb4c3f3f5dd342a",
+      "dp": 0
+     }
+    },
+    "S3": {
+     "values": [
+      {
+       "h": "caaaacf6c659a1bd8c3f301f",
+       "dp": 0
+      },
+      {
+       "h": "7221b970996bb2c25ade7fd9",
+       "dp": 0
+      },
+      {
+       "h": "56de769469e1ba7468f6f2ed",
+       "dp": 0
+      },
+      {
+       "h": "6d06297e2dfc0e5620cba3ed",
+       "dp": 0
+      },
+      {
+       "h": "3d1eeab52c8f8f92d8a3306e",
+       "dp": 0
+      }
+     ],
+     "rows": {
+      "h": "78ef1b3ba50ccebb1942b68b",
+      "dp": 0
+     }
+    },
+    "S4": {
+     "values": [
+      {
+       "h": "c555bea6de13d6aff271352d",
+       "dp": 2
+      },
+      {
+       "h": "4934a680a3487b825f5ffd78",
+       "dp": 2
+      },
+      {
+       "h": "bc17c01e750daae4afb5ff88",
+       "dp": 2
+      }
+     ],
+     "rows": {
+      "h": "94ca0865469dfd01f4f0ad3d",
+      "dp": 0
+     }
+    },
+    "S5": {
+     "values": [
+      {
+       "h": "e571828e1e9539bdecea552e",
+       "dp": 0
+      },
+      {
+       "h": "91f922208c622e02cc2e806f",
+       "dp": 0
+      },
+      {
+       "h": "cfd31000862016e5b07f0d19",
+       "dp": 0
+      },
+      {
+       "h": "931b74f965f59e037088c000",
+       "dp": 0
+      }
+     ]
+    },
+    "S7": {
+     "values": [
+      {
+       "h": "a9e114ce9ecd390a308c2e57",
+       "dp": 2
+      }
+     ]
+    },
+    "S8": {
+     "values": [
+      {
+       "h": "44c868f38195817420bb0870",
+       "dp": 1
+      }
+     ]
+    },
+    "S11": {
+     "values": [
+      {
+       "h": "56de769469e1ba7468f6f2ed",
+       "dp": 0
+      },
+      {
+       "h": "380ba18caae93d37e54956df",
+       "dp": 0
+      }
+     ]
+    },
+    "S12": {
+     "values": [
+      {
+       "h": "09ee4c6d4652532f9eee7b5f",
+       "dp": 0
+      },
+      {
+       "h": "d39d05110d68ddccb25288f0",
+       "dp": 0
+      }
+     ]
+    },
+    "S13": {
+     "values": [
+      {
+       "h": "c3c277b40b3c0014a4315a27",
+       "dp": 1
+      }
+     ]
+    }
+   }
+  }
+ }
+}

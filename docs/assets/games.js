@@ -8,10 +8,16 @@ games). Types:
   pick    {"type":"pick","title":"…","q":"…","columns":["a","b"],"rows":[[…]],"answer":["a"],"why":"…"}   tap the right column(s)
   connect {"type":"connect","title":"…","left":{"name":"loans","cols":[…]},"right":{"name":"customers","cols":[…]},
            "links":[["customer_id","customer_id"]],"why":"…"}                           tap a column on each side to join them
+  flash   {"type":"flash","title":"…","cards":[["front","back"],…]}                     flip a card, then "Knew it" or "Again" (missed cards come back)
+  cloze   {"type":"cloze","title":"…","text":"SELECT {{0}} FROM loans WHERE {{1}};","blanks":[["COUNT(*)"],["status = 'active'"]],
+           "distractors":["SUM(*)"]}                                                    tap a token: it fills the next gap; tap a filled gap to empty it
+  build   {"type":"build","title":"…","q":"…","tokens":["SELECT","COUNT(*)","FROM","loans"],"distractors":["GROUP BY"]}   tap the tokens in order
+  bug     {"type":"bug","title":"…","q":"…","code":"line 1\nline 2\n…","answer":[2],"why":"…"}   tap the wrong line(s) (0-based)
+Every game box (.gx) is an "al-block" and gets "al-done" once it has been won (best stars kept); a win fires "al:change".
 */
 (function () {
   var KEY = 'al.v1';
-  var ICON = { match: '⇄', order: '1·2·3', sort: '▦', pick: '◎', connect: '⟷' };
+  var ICON = { match: '⇄', order: '1·2·3', sort: '▦', pick: '◎', connect: '⟷', flash: '⧉', cloze: '[ _ ]', build: '+ +', bug: '✗' };
   /* words in the page's language (lang.js), looked up while a game is drawn */
   function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
   function plural(n, one, few, many) {
@@ -23,7 +29,11 @@ games). Types:
     order: ['Tap the steps in the order they happen.', 'Нажимайте на шаги в том порядке, в котором они происходят.'],
     sort: ['Tap an item, then the group it belongs to.', 'Нажмите на элемент, затем на группу, к которой он относится.'],
     pick: ['Tap the right column name in the table.', 'Нажмите на нужное название столбца в таблице.'],
-    connect: ['Tap a column on the left, then the column it joins on the right.', 'Нажмите на столбец слева, затем на столбец справа, с которым он соединяется.']
+    connect: ['Tap a column on the left, then the column it joins on the right.', 'Нажмите на столбец слева, затем на столбец справа, с которым он соединяется.'],
+    flash: ['Say the answer to yourself, tap the card to turn it, then be honest: Knew it or Again.', 'Ответьте про себя, нажмите на карточку, чтобы перевернуть её, и честно отметьте: «Знал(а)» или «Ещё раз».'],
+    cloze: ['Tap a piece: it goes into the next empty gap. Tap a filled gap to take the piece back.', 'Нажмите на фрагмент — он встанет в следующий пропуск. Нажмите на заполненный пропуск, чтобы вернуть фрагмент.'],
+    build: ['Tap the pieces in the order they are written. Some pieces do not belong at all.', 'Нажимайте на фрагменты в том порядке, в котором они пишутся. Некоторые фрагменты здесь лишние.'],
+    bug: ['Tap the line that is wrong.', 'Нажмите на строку с ошибкой.']
   };
   var GOOD = [['Yes!', 'Да!'], ['Right.', 'Верно.'], ['Correct.', 'Правильно.'], ['Nice.', 'Отлично.'], ['Exactly.', 'Точно.']];
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -80,7 +90,8 @@ games). Types:
       win: function () {
         var stars = slips === 0 ? 3 : slips <= 2 ? 2 : 1;
         record(g.id, stars);
-        box.classList.add('gx-won');
+        box.classList.add('gx-won', 'al-done');
+        document.dispatchEvent(new CustomEvent('al:change'));
         var w = document.createElement('div');
         w.className = 'gx-win';
         w.innerHTML = '<div class="gx-stars">' + starHtml(stars) + '</div>' +
@@ -224,15 +235,129 @@ games). Types:
     });
   }
 
-  var TYPES = { match: match, order: order, sort: sort, pick: pick, connect: connect };
-  function draw(box, g) { box.classList.remove('gx-won', 'gx-holding'); (TYPES[g.type] || function () { box.textContent = T('Unknown game type ', 'Неизвестный тип игры ') + g.type; })(box, g); }
+  /* flashcards: a missed card goes to the back of the pile and comes again; every "Again" is a slip */
+  function flash(box, g) {
+    var cards = g.cards || [], pile = shuffle(cards.map(function (c, i) { return i; }), seedOf(g.id)), missed = {};
+    var ui = frame(box, g, cards.length, '<div class="gx-flash"><button type="button" class="gx-card" aria-live="polite"><span class="gx-card-in">' +
+      '<span class="gx-face gx-front"></span><span class="gx-face gx-back"></span></span></button>' +
+      '<div class="gx-flash-info"></div><div class="gx-flash-acts"><button type="button" class="gx-it gx-again-c">' + T('↺ Again', '↺ Ещё раз') + '</button>' +
+      '<button type="button" class="gx-it gx-knew">' + T('✓ Knew it', '✓ Знал(а)') + '</button></div></div>');
+    var card = box.querySelector('.gx-card'), acts = box.querySelector('.gx-flash-acts'), info = box.querySelector('.gx-flash-info');
+    function show() {
+      var c = cards[pile[0]], back = Object.keys(missed).filter(function (k) { return pile.indexOf(Number(k)) >= 0; }).length;
+      card.classList.remove('gx-flipped');
+      box.querySelector('.gx-front').textContent = c[0];
+      setTimeout(function () { box.querySelector('.gx-back').textContent = c[1]; }, 200);   // after the turn back, so the next answer never flashes
+      acts.classList.remove('gx-open');
+      info.textContent = T(pile.length + ' left' + (back ? ' · ' + back + ' coming back' : '') + ' · tap the card to turn it',
+        'Осталось: ' + pile.length + (back ? ' · вернётся: ' + back : '') + ' · нажмите на карточку, чтобы перевернуть');
+    }
+    card.onclick = function () {
+      card.classList.toggle('gx-flipped');
+      box.querySelector('.gx-back').textContent = cards[pile[0]][1];
+      acts.classList.add('gx-open');
+    };
+    box.querySelector('.gx-knew').onclick = function () {
+      if (!acts.classList.contains('gx-open')) { ui.say(T('Turn the card first.', 'Сначала переверните карточку.'), 'bad'); return; }
+      pile.shift();
+      if (!pile.length) box.querySelector('.gx-flash').hidden = true;
+      ui.step();
+      if (pile.length) show();
+    };
+    box.querySelector('.gx-again-c').onclick = function () {
+      if (!acts.classList.contains('gx-open')) { ui.say(T('Turn the card first.', 'Сначала переверните карточку.'), 'bad'); return; }
+      var i = pile.shift(); missed[i] = 1; pile.push(i);
+      ui.slip([], T('No problem — it comes back later.', 'Ничего страшного — она вернётся позже.'));
+      show();
+    };
+    show();
+  }
+
+  /* fill the gaps: each {{n}} in the text is a gap; the pieces are every gap's first answer plus the distractors */
+  function norm(s) { return String(s).replace(/\s+/g, ' ').trim().toLowerCase(); }
+  function cloze(box, g) {
+    var bits = String(g.text || '').split(/\{\{(\d+)\}\}/), gaps = [], code = g.code === true || (g.code !== false && /\b(SELECT|FROM|WHERE|JOIN|GROUP BY|import|def|print)\b/.test(g.text || ''));
+    for (var k = 1; k < bits.length; k += 2) gaps.push(Number(bits[k]));
+    var pieces = shuffle(gaps.map(function (b) { return String((g.blanks[b] || [''])[0]); }).concat(g.distractors || []), seedOf(g.id));
+    var ui = frame(box, g, gaps.length, '<div class="gx-cloze' + (code ? ' gx-mono' : '') + '">' + bits.map(function (t, i) {
+      return i % 2 ? '<button type="button" class="gx-gap" data-b="' + t + '"></button>' : esc(t);
+    }).join('') + '</div><div class="gx-pool">' + pieces.map(function (t, i) { return '<button type="button" class="gx-it gx-tok" data-p="' + i + '">' + esc(t) + '</button>'; }).join('') + '</div>');
+    var holes = box.querySelectorAll('.gx-gap'), toks = box.querySelectorAll('.gx-pool .gx-tok');
+    function giveBack(h) { toks[Number(h.dataset.p)].hidden = false; h.textContent = ''; delete h.dataset.p; h.classList.remove('gx-full'); }
+    Array.prototype.forEach.call(toks, function (b) {
+      b.onclick = function () {
+        var h = Array.prototype.filter.call(holes, function (x) { return x.dataset.p == null; })[0];
+        if (!h) return;
+        h.textContent = pieces[Number(b.dataset.p)]; h.dataset.p = b.dataset.p; h.classList.add('gx-full'); b.hidden = true;
+        if (!Array.prototype.some.call(holes, function (x) { return x.dataset.p == null; })) check();
+      };
+    });
+    Array.prototype.forEach.call(holes, function (h) {
+      h.onclick = function () { if (h.dataset.p != null && !h.classList.contains('gx-done')) giveBack(h); };
+    });
+    function check() {
+      var wrong = [];
+      Array.prototype.forEach.call(holes, function (h) {
+        if (h.classList.contains('gx-done')) return;
+        var ok = (g.blanks[Number(h.dataset.b)] || []).some(function (a) { return norm(a) === norm(h.textContent); });
+        if (ok) { h.classList.add('gx-done', 'gx-p0'); ui.step(); } else wrong.push(h);
+      });
+      if (!wrong.length) return;
+      ui.slip(wrong, T(wrong.length + ' gap' + (wrong.length > 1 ? 's do' : ' does') + ' not fit — the pieces went back.',
+        'Не подходит: ' + wrong.length + ' ' + plural(wrong.length, 'пропуск', 'пропуска', 'пропусков') + ' — фрагменты вернулись.'));
+      setTimeout(function () { wrong.forEach(giveBack); }, 450);
+    }
+  }
+
+  /* build the query: tap the pieces in their written order; a piece out of turn shakes */
+  function joinCode(a) {
+    return a.reduce(function (s, t, i) { return s + (i && !/^[,);.]/.test(t) && !/[(.]$/.test(a[i - 1]) ? ' ' : '') + t; }, '');
+  }
+  function build(box, g) {
+    var want = g.tokens || [], pool = shuffle(want.concat(g.distractors || []), seedOf(g.id)), next = 0;
+    var ui = frame(box, g, want.length, '<div class="gx-codeline"><code class="gx-built"></code><span class="gx-caret"></span></div>' +
+      '<div class="gx-pool">' + pool.map(function (t) { return '<button type="button" class="gx-it gx-tok">' + esc(t) + '</button>'; }).join('') + '</div>');
+    var out = box.querySelector('.gx-built');
+    box.querySelectorAll('.gx-pool .gx-it').forEach(function (b) {
+      b.onclick = function () {
+        if (b.textContent === want[next]) {
+          next++; out.textContent = joinCode(want.slice(0, next)); b.remove();
+          ui.step();
+        } else ui.slip([b], next ? T('Not that one — what comes after “' + want[next - 1] + '”?', 'Не этот — что идёт после «' + want[next - 1] + '»?')
+          : T('Not that one — how does it start?', 'Не этот — с чего всё начинается?'));
+      };
+    });
+  }
+
+  /* find the bug: the code with line numbers; tap the wrong line(s) ("answer" holds 0-based line numbers) */
+  function bug(box, g) {
+    var lines = String(g.code || '').replace(/\n$/, '').split('\n'), ans = g.answer || [];
+    var ui = frame(box, g, ans.length, '<div class="gx-bug">' + lines.map(function (l, i) {
+      return '<button type="button" class="gx-line" data-i="' + i + '"><span class="gx-ln">' + (i + 1) + '</span><code>' + (esc(l) || ' ') + '</code></button>';
+    }).join('') + '</div>');
+    if (ans.length > 1) box.querySelector('.gx-how').textContent = T('Tap the ' + ans.length + ' lines that are wrong.', 'Нажмите на строки с ошибками (их ' + ans.length + ').');
+    box.querySelectorAll('.gx-line').forEach(function (b) {
+      b.onclick = function () {
+        if (b.classList.contains('gx-done')) return;
+        if (ans.indexOf(Number(b.dataset.i)) >= 0) { b.classList.add('gx-done'); ui.step(); }
+        else ui.slip([b], T('That line is fine — look again.', 'С этой строкой всё в порядке — посмотрите ещё.'));
+      };
+    });
+  }
+
+  var TYPES = { match: match, order: order, sort: sort, pick: pick, connect: connect, flash: flash, cloze: cloze, build: build, bug: bug };
+  function draw(box, g) {
+    box.classList.remove('gx-won', 'gx-holding');
+    box.classList.toggle('al-done', !!(best(g.id) || {}).stars);   // won once = finished, also after a reload
+    (TYPES[g.type] || function () { box.textContent = T('Unknown game type ', 'Неизвестный тип игры ') + g.type; })(box, g);
+  }
   function mount(pre) {
     var g;
     try { g = JSON.parse((pre.querySelector('code') || pre).textContent); }
     catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This game could not be read', 'Не удалось прочитать игру') + ' (' + esc(e.message) + ').</p>'); return; }
     g.id = g.id || (location.hash.replace(/^#\/ru(\/|$)/, '#/') + ':' + g.title);   // the same page in both languages (games normally carry their own id)
     var box = document.createElement('div');
-    box.className = 'gx gx-type-' + g.type;
+    box.className = 'gx al-block gx-type-' + g.type;
     pre.parentNode.replaceChild(box, pre);
     draw(box, g);
   }
