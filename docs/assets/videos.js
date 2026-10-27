@@ -165,7 +165,7 @@ quality picker that works (by player size, below) and asks the questions of the 
     var $ = function (c) { return stage.querySelector(c); };
     var start = v.t, end = v.end || 0, p = null, timer = null, sp = 0, cc = false, dragging = false;
     var stops = v.stops || [], rec = answers(v.id), fired = {}, asking = null, picked = false, lastT = null;
-    var qAt = 0, reload = false, hold = 0, fresh = false, ro = null;
+    var qAt = 0, reload = false, hold = 0, fresh = false, ro = null, atEnd = false;
     function len() { return Math.max(1, end - start); }
     function playing() { return p && p.getPlayerState && p.getPlayerState() === 1; }
     function rearm(t) {   // stops after t may ask again (a seek back, "watch that bit again", a new play-through)
@@ -347,14 +347,18 @@ quality picker that works (by player size, below) and asks the questions of the 
       var t = p.getCurrentTime();
       if (playing()) lastT = t;
       if (end && t >= end - 0.25) {   // the part is over: stop here, never run into the next topic — then its questions
-        if (playing()) {
-          p.pauseVideo(); watched();
+        if (playing()) p.pauseVideo();
+        if (!atEnd) {   // once per arrival — also when YouTube itself ended the video (a part that runs to the video's end)
+          atEnd = true; watched();
           if (stops.length && !asking && score(v).ok < stops.length) { doneLine(); startRound(); }   // all right already: the end screen offers them again
         }
         if (t > end + 1) p.seekTo(end - 0.5, true);
         if ($('.yp-done').hidden && !asking) { doneLine(); $('.yp-done').hidden = false; }
         t = end;
-      } else if (t < start - 1 && Date.now() > hold) p.seekTo(start, true);   // (a reload reports 0 for a moment)
+      } else {
+        if (t < end - 1.5) atEnd = false;
+        if (t < start - 1 && Date.now() > hold) p.seekTo(start, true);   // (a reload reports 0 for a moment)
+      }
       var rel = Math.max(0, t - start);
       if (!dragging) {
         var f = Math.min(1, rel / len());
