@@ -13,15 +13,17 @@ Every homework ends with a box. There are two kinds, sometimes both in one box:
 
 > 💡 **Key idea.** No screenshots of things the page can check. Your query and its result travel with the submission; the site has already compared the numbers. Upload only what the page cannot run: a workbook, a notebook, a dashboard.
 
-## Connect once
+## Sign in once
 
-The first time you tap Submit, the box shows **🔑 Connect this website to the course bot**:
+The first time you tap Submit, the box asks you to **🔑 sign in**:
 
-1. Tap it — Telegram opens the course bot.
-2. Press *Start*. The bot sends you a link back.
-3. Tap that link: the course site opens again, now connected. Tap **📤 Submit**.
+1. Write your **name** and the **PIN** your mentor gave you.
+2. Tap **Sign in**. The box now says *Signed in as …*.
+3. Tap **📤 Submit**.
 
-Once per browser. On another device, in another browser, or after clearing the browser's data, connect again. If the box says *"This browser is not connected any more"*, do the same three steps — your answers are still there.
+Once per device and browser. On another device, in another browser, or after clearing the browser's data, sign in again — your answers are still there. If the box says *"You were signed out"*, sign in again the same way. Forgot your PIN? Ask your mentor for a new one.
+
+The course bot's *🔗 Connect this website* link still works too — it signs this browser in the same way.
 
 > ⚠️ **Watch out.** A file over 5 MB will not go through the box. Send it as a zip to the course bot in **📤 Homework** instead.
 

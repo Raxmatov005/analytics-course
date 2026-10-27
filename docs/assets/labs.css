@@ -119,3 +119,20 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
 .gx-line.gx-done { background: #fef2f2; cursor: default; box-shadow: inset 4px 0 0 var(--bad, #dc2626); }
 .gx-line.gx-done .gx-ln { background: #fee2e2; color: #991b1b; font-weight: 800; }
 .gx-line.gx-no { background: #fef2f2 !important; }
+
+/* sign-in on the website (signin.js): the card in the hand-in box and the feedback card, and the "Signed in as" line */
+.si-card { margin: .8em 0 .2em; padding: .9em 1em; border-radius: 14px; background: #f0fdfa; border: 1px solid #99f6e4; font-family: var(--sans, system-ui); }
+.si-h { font-weight: 800; color: var(--ink, #0f172a); font-size: 1em; }
+.si-sub { font-size: .85em; color: var(--muted, #64748b); margin: .2em 0 .7em; line-height: 1.45; }
+.si-row { display: flex; flex-wrap: wrap; gap: .5em; margin: 0; }
+.si-row input { flex: 1 1 8em; min-width: 0; box-sizing: border-box; font: 15px var(--sans, system-ui); padding: .65em .8em; border: 2px solid #cbd5e1; border-radius: 10px; background: #fff; color: var(--ink, #0f172a); }
+.si-row input:focus { outline: none; border-color: var(--brand, #0f766e); }
+.si-row .si-pin { flex: 0 1 7em; letter-spacing: .15em; }
+.si-row .si-go { flex: 0 0 auto; }
+.si-msg { font-size: .85em; font-weight: 600; color: #b91c1c; margin-top: .45em; min-height: 1em; }
+.si-msg:empty { display: none; }
+.si-line { margin-top: .6em; font-size: .8em; color: var(--muted, #64748b); }
+.si-line b { color: var(--ink, #0f172a); }
+.si-out { border: 0; background: none; padding: 0; font: inherit; color: var(--brand, #0f766e); text-decoration: underline; cursor: pointer; }
+.sq-ws-foot .sq-ws-sign { flex-basis: 100%; }
+.fb-card .si-card { background: #fff; border-color: #c7d2fe; }

@@ -5,12 +5,11 @@ practice day. Local-first: it always works, and it is saved on this device the m
   asks its own seven questions, one at a time with buttons, and keeps the answers in localStorage "al.fb" →
   {lesson: {answers, at, sent}}. The card then shows them with "Saved on this device".
 - "Send to your mentor" posts the saved answers to the bot (POST /feedback, as the bot's own answers). Without a key
-  that is when the one-time Connect step appears; a refusal (4xx) keeps them on this device and says so.
+  that is when the sign-in card (signin.js: name + PIN from the mentor) appears; a refusal (4xx) keeps them on this device and says so.
 - With a key the card does what it did before: the bot's seven questions (GET /feedback hands them over, so there is
   one list), the homework handed in first, saved with POST /feedback and changeable later, here or in the bot. */
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev';
-  var BOT = 'https://t.me/Nur_Analytics_Course_bot?start=';
   var LOCAL = 'al.fb';
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -67,6 +66,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
       card.innerHTML = head(T('7 quick questions · 2 minutes · saved as you answer · only your mentor reads it', '7 коротких вопросов · 2 минуты · сохраняется сразу · читает только ваш ментор')) +
         '<div class="fb-foot"><button type="button" class="qz-btn fb-open">' + T('Leave feedback', 'Оставить отзыв') + '</button></div>';
       card.querySelector('.fb-open').onclick = function () { if (key()) load(); else local(); };
+      tail();
     }
 
     /* ---------- on this device ---------- */
@@ -89,15 +89,22 @@ practice day. Local-first: it always works, and it is saved on this device the m
       card.querySelector('.fb-change').onclick = local;
       var s = card.querySelector('.fb-send');
       if (s) s.onclick = sendLocal;
+      tail();
     }
-    function connect() {
-      note(T('To send your answers to your mentor, connect this website to the course bot. It is a one-time step for this browser — your answers stay saved here meanwhile.',
-        'Чтобы ответы дошли до ментора, подключите этот сайт к боту курса. Это делается один раз для этого браузера — ответы пока сохранены здесь.'),
-        '<a class="qz-btn fb-link" target="_blank" rel="noopener" href="' + BOT + 'connect">' + T('🔑 Connect once', '🔑 Подключить один раз') + '</a>' +
-        '<button type="button" class="qz-btn qz-ghost fb-retry">' + T('I have connected — send', 'Я подключилась — отправить') + '</button>' +
+    /* not signed in (or signed out): the sign-in card (signin.js); after it, the saved answers are sent */
+    function connect(signedOut) {
+      note(signedOut ? T('You were signed out — sign in again to send your answers. They stay saved on this device.',
+          'Вы вышли из аккаунта — войдите снова, чтобы отправить ответы. Они сохранены на этом устройстве.')
+        : T('To send your answers to your mentor, sign in once on this device. Your answers stay saved here meanwhile.',
+          'Чтобы ответы дошли до ментора, войдите один раз на этом устройстве. Ответы пока сохранены здесь.'),
         '<button type="button" class="qz-btn qz-ghost fb-back">' + T('Back', 'Назад') + '</button>');
-      card.querySelector('.fb-retry').onclick = sendLocal;
       card.querySelector('.fb-back').onclick = intro;
+      if (window.ALSignIn) card.querySelector('.fb-foot').insertAdjacentElement('beforebegin', ALSignIn.card({ done: sendLocal }));
+    }
+    /* "Signed in as … · sign out" at the bottom of the card */
+    function tail() {
+      var l = window.ALSignIn ? ALSignIn.line() : '';
+      if (l) card.insertAdjacentHTML('beforeend', l);
     }
     function sendLocal() {
       var loc = getLocal(lesson);
@@ -112,7 +119,9 @@ practice day. Local-first: it always works, and it is saved on this device the m
           localSummary(T('✅ Sent — thank you! Your mentor reads every answer.', '✅ Отправлено — спасибо! Ментор читает каждый ответ.'));
         })
         .catch(function (e) {
-          if (e === 401) return connect();
+          if (e === 401) { if (window.ALSignIn) ALSignIn.dropKey(); return connect(true); }
+          if (e === 409) return localSummary(T('First hand in this lesson’s homework (the 📎 box above) — then send these answers. They stay saved on this device.',
+            'Сначала сдайте домашнее задание этого урока (📎 окошко выше) — потом отправьте эти ответы. Они сохранены на этом устройстве.'));
           localSummary(typeof e === 'number' && e >= 400 && e < 500
             ? T('The course bot did not accept these answers, so they stay saved on this device. Tell your mentor, or try again later.',
               'Бот курса не принял эти ответы, поэтому они остаются сохранёнными на этом устройстве. Сообщите ментору или попробуйте позже.')
@@ -147,7 +156,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
           else { cur = 0; step(); }
         })
         .catch(function (e) {
-          if (e === 'key') return connect();
+          if (e === 'key') { if (window.ALSignIn) ALSignIn.dropKey(); return local(); }   // signed out: answer here, sign in when sending
           local();   // the bot is out of reach: her answers are kept here and can be sent later
         });
     }
@@ -157,6 +166,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
         return '<dt>' + esc(s.label) + '</dt><dd>' + (v == null || v === '' ? '—' : esc(v)) + '</dd>';
       }).join('') + '</dl><div class="fb-foot"><button type="button" class="qz-btn qz-ghost fb-change">' + T('Change my answers', 'Изменить ответы') + '</button></div>';
       card.querySelector('.fb-change').onclick = function () { cur = 0; step(); };
+      tail();
     }
 
     /* ---------- one question at a time (both ways) ---------- */

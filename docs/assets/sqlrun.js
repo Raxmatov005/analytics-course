@@ -14,13 +14,13 @@
    → {get(), set(sql), run() → Promise<{res, error, html}>, el}; ALSql.compare(mine, model) → Promise<{ok, msg, html}> (the
    practice boxes' ✔ Check); ALSql.exec(sql, {play: true}) → Promise<{columns, values, error}>; ALSql.ready().
 Blocks that can be finished carry the class "al-block" and get "al-done" when finished; every change fires "al:change" on document.
-The website is connected to her once from the bot (🔑 a link with ?wk=<key>); the key lives in this browser only.
+She signs in once per device with the name and PIN her mentor gave her (signin.js → the bot's /signin), or opens the bot's link
+with ?wk=<key>; either way the key lives in this browser only (localStorage "al.wk").
 Work in progress is kept in localStorage "al.sql". */
 (function () {
   var ENGINE = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/';
   var REPO_RAW = 'https://raw.githubusercontent.com/Raxmatov005/analytics-course/main/';
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev';
-  var BOT = 'https://t.me/Nur_Analytics_Course_bot?start=';
   var KEY = 'al.sql', WK = 'al.wk';   // its own key: quiz.js / challenge.js rewrite al.v1 wholesale
   var engine = null, play = null, clean = null, checks = null;
 
@@ -401,8 +401,18 @@ Work in progress is kept in localStorage "al.sql". */
       }).join('') +
       '<div class="sq-ws-foot">' + (hasSql ? '<button type="button" class="sq-all">' + T('✔ Check all', '✔ Проверить все') + '</button>' : '') +
       '<button type="button" class="sq-submit">' + T('📤 Submit', '📤 Сдать') + '</button>' +
-      '<div class="sq-ws-state"></div></div>';
+      '<div class="sq-ws-state"></div><div class="sq-ws-sign"></div></div>';
     var cards = box.querySelectorAll('.sq-task');
+    /* signing in (signin.js): the card sits under Submit when there is no key; "Signed in as … · sign out" when there is */
+    function sign(lead) {
+      var slot = box.querySelector('.sq-ws-sign');
+      if (!window.ALSignIn) { slot.innerHTML = ''; return; }
+      if (ALSignIn.key()) { slot.innerHTML = ALSignIn.line(); return; }
+      if (slot.querySelector('.si-card') && !lead) return;   // keep what she is typing
+      slot.innerHTML = '';
+      slot.appendChild(ALSignIn.card({ lead: lead }));
+    }
+    document.addEventListener('al-signin', function () { if (document.body.contains(box)) foot(); });
     spec.tasks.forEach(function (t, i) {
       var c = cards[i], ta = c.querySelector('textarea'), out = c.querySelector('.sq-out'), msg = c.querySelector('.sq-msg');
       if (t.upload) {
@@ -495,13 +505,17 @@ Work in progress is kept in localStorage "al.sql". */
       btn.disabled = tried < need;
       state.innerHTML = '<b>' + okN + ' / ' + need + '</b>' + T(' done', ' готово') + (m.submitted ? T(' · ✅ submitted ', ' · ✅ сдано ') + esc(m.submitted) : '') +
         (tried < need ? T(' · Submit opens once every task has an answer', ' · Кнопка «Сдать» откроется, когда у каждого задания будет ответ')
-          : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть') : '') +
-        (key ? '' : T('<br>First time? <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Connect this website to the course bot</a> (once).',
-          '<br>Впервые здесь? <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Подключите этот сайт к боту курса</a> (один раз).'));
+          : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть') : '');
+      sign();
     }
     box.querySelector('.sq-submit').onclick = function () {
       var key = wk(), btn = this, state = box.querySelector('.sq-ws-state');
-      if (!key) { window.open(BOT + 'connect', '_blank'); return; }
+      if (!key) {
+        sign(T('Sign in once on this device to send your work to your mentor — with the name and PIN your mentor gave you. Then tap 📤 Submit again.',
+          'Войдите один раз на этом устройстве, чтобы отправить работу ментору, — с именем и PIN-кодом от ментора. Затем снова нажмите «📤 Сдать».'));
+        var nm = box.querySelector('.si-name'); if (nm) nm.focus();
+        return;
+      }
       var m = store().sql[spec.check], files = {}, sqlFile = spec.file || 'answers.sql';
       var sqlText = spec.tasks.filter(function (t) { return !t.text && !t.upload; }).map(function (t) {
         var res = clean ? run(clean, m.code[t.id] || '', true) : { cells: [] };
@@ -527,9 +541,9 @@ Work in progress is kept in localStorage "al.sql". */
             foot(); btn.disabled = true;
             state.innerHTML = T('✅ Submitted! Your mentor is notified — feedback will appear in 📤 Homework.', '✅ Сдано! Ментор получил уведомление — отзыв появится в 📤 Homework.');
           } else if (x.status === 401) {
-            try { localStorage.removeItem(WK); } catch (e) { /* nothing */ }
-            state.innerHTML = T('This browser is not connected any more. <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Connect again</a>, then tap Submit.',
-              'Этот браузер больше не подключён. <a target="_blank" rel="noopener" href="' + BOT + 'connect">🔑 Подключите его снова</a>, затем нажмите «Сдать».');
+            if (window.ALSignIn) ALSignIn.dropKey(); else try { localStorage.removeItem(WK); } catch (e) { /* nothing */ }
+            sign(T('You were signed out — sign in again, then tap 📤 Submit. Your work is still saved here.',
+              'Вы вышли из аккаунта — войдите снова и нажмите «📤 Сдать». Ваша работа сохранена здесь.'));
             btn.disabled = false;
           } else {
             state.innerHTML = T('Could not submit', 'Не удалось сдать') + ' (' + esc(x.j.error || x.status) + '). ' + T('Try again in a minute.', 'Попробуйте снова через минуту.');

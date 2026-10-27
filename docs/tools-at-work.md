@@ -4,7 +4,7 @@
 
 > 🧭 **What this page is for.** The installed tools analysts use at work — database apps, Jupyter, GitHub — for the day an interviewer asks *"which tools have you used?"*. Nothing in the course needs them.
 
-Everything in this course runs on its website: the SQL boxes, the [SQL playground](playground.md), the Database panel, the hand-in boxes, and from Week 5 the Python boxes too. **You never have to install anything for SQL.**
+Everything in this course runs on its website: the SQL boxes, the [SQL playground](playground.md), the Database panel, the hand-in boxes, and from Week 5 the Python boxes too. **You never have to install anything for SQL.** To send your work to your mentor you sign in once on each device, with the name and PIN your mentor gave you.
 
 This page is for later — a job, or an interview where someone asks *"which tools have you used?"*. Banks run SQL Server or PostgreSQL and people write queries in SSMS, DBeaver or DataGrip; the SQL is the same as here. Do one of these on a free evening, if you like.
 

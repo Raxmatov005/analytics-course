@@ -1,5 +1,7 @@
 # Hand-off: replace the Telegram "Connect" step with a name + PIN sign-in on the site
 
+> ✅ **Done 2026-10-27.** Worker (bot repo `bot/worker.js`): `POST /signin`, `GET /me`, `/learner Name PIN` and `/learners` for group admins, PINs stored as salted SHA-256, 10 tries per IP per 10 min, site-only learners get the chat id `site:<name>`; `POST /feedback` with `source: "site"` keeps the page's own answer keys. Site: `docs/assets/signin.js` (card + "Signed in as … · sign out" + the `/me` check), used by `sqlrun.js` and `feedback.js`; CSS in `labs.css`; help pages and the Practice day EN + RU. The brief below is kept for reference. The "Also still open" items are still open.
+
 This file is a complete brief for a Claude (or a person) working on another computer. Everything else in the
 course redesign is finished and live; this is the one piece that could not be done from the course repository
 alone, because the server side lives elsewhere.

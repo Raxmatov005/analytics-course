@@ -54,10 +54,10 @@ Now answer Madina in the workspace: write each query, **▶ Run** it, **✔ Chec
 
 When all three are ✅, **📤 Submit** at the bottom of the workspace opens. Tap it.
 
-- **The first time** the box shows **🔑 Connect this website to the course bot**. Tap it: Telegram opens the course bot, press *Start*, then tap the link the bot sends back — the site opens again, connected. Tap **📤 Submit**. Once per browser.
+- **The first time** the box asks you to **🔑 sign in**: write your name and the PIN your mentor gave you, tap **Sign in**, then **📤 Submit**. Once per device and browser.
 - Submit sends your queries with the first rows of their results. Your mentor gets them in the group's **📤 Homework** topic, the bot confirms *"submitted from the website"*, and the box shows **✅ submitted** with the date.
 
-> ⚠️ **Watch out.** Connect belongs to this browser. On another phone or laptop — or after clearing the browser's data — the box asks you to connect again. Your answers are saved in this browser too.
+> ⚠️ **Watch out.** Signing in belongs to this browser. On another phone or laptop — or after clearing the browser's data — the box asks you to sign in again. Your answers are saved in this browser too.
 
 ## Step 4 — your feedback
 
@@ -73,7 +73,7 @@ Every day has three questions like these, one at a time. They are not a test: an
 {"id": "practice-sc", "questions": [
   {"type": "single", "q": "Your query runs and ✔ Check says ❌. What does the ❌ tell you?", "options": ["The right answer is hidden somewhere below — scroll down", "Your result differs from the expected one: look again at the column or the filter", "The site is broken — try tomorrow", "You must submit before you can check"], "answer": 1, "explain": "A ❌ means look again. SELECT DISTINCT or SELECT * on the table usually shows what went wrong (→ Step 2)."},
   {"type": "single", "q": "Where do you see every table, its columns and its first rows?", "options": ["Database, at the bottom right of every page", "The sidebar menu", "The Telegram group", "Only in an app you install"], "answer": 0, "explain": "The Database panel lists every table; tap a name to put it into your query (→ Step 1)."},
-  {"type": "single", "q": "What does 🔑 Connect do, and how often do you need it?", "options": ["Links this browser to the course bot so Submit reaches your mentor — once per browser", "Signs you in to GitHub — every day", "Downloads the database — on every page", "Nothing; it is optional"], "answer": 0, "explain": "Connect gives this browser the key Submit needs. Another browser or cleared data means connecting again (→ Step 3)."}
+  {"type": "single", "q": "What does 🔑 Sign in do, and how often do you need it?", "options": ["With your name and PIN it lets this browser send your work to your mentor — once per browser", "Signs you in to GitHub — every day", "Downloads the database — on every page", "Nothing; it is optional"], "answer": 0, "explain": "Signing in gives this browser the key Submit needs. Another browser or cleared data means signing in again (→ Step 3)."}
 ]}
 ```
 
