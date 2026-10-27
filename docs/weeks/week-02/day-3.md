@@ -1005,7 +1005,7 @@ FROM dpd GROUP BY bucket ORDER BY MIN(dpd);
 
 | bucket | loans | overdue (UZS) | who is in it |
 |---|---|---|---|
-| 0 | 14 | 53 018 776 | instalments due *today* (2026-10-01), unpaid as of this morning — not late yet |
+| 0 | 14 | 53 018 776 | instalments due *today* (2026-10-01), unpaid as of this morning — not late yet. Bucket 0 = DPD 0: the other 7 415 DPD-0 loans have nothing matured and unpaid, so they never enter this list (the whole book's bucket 0 is 7 429 — Week 8) |
 | 1–30 | 124 | 499 314 822 | 111 active loans, 13 "closed" (see below) |
 | 31–60 | 25 | 74 348 104 | 24 active, 1 closed |
 | 61–90 | 16 | 109 375 982 | all active — Sevara's visit list |
