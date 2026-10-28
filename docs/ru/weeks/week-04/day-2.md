@@ -49,12 +49,9 @@ return    the column to bring back            F2:F4
 
 Картинка — таблица кредитов с добавленной найденной ставкой:
 
-| `loan_id` | `product` | `outstanding` | `rate` (найдено) |
-|---|---|---|---|
-| 101 | Micro loan | 4 | 0.42 |
-| 102 | Auto loan | 200 | 0.24 |
-| 103 | Car lease | 90 | `#N/A` |
-| 104 | Micro loan | 2 | 0.42 |
+```pic
+{"id": "w04d2-pic1", "title": "Поиск приносит один столбец — как LEFT JOIN", "caption": "Один цвет — один продукт: ключ находится в `rates`, и его `rate` возвращается в строку кредита. Для `Car lease` строки в `rates` нет — посмотрите на обведённую ячейку.", "tables": [{"id": "loans", "name": "A1:D5", "label": "loans", "cols": ["loan_id", "product", "outstanding", "rate"], "rows": [[101, "Micro loan", 4, "0.42"], [102, "Auto loan", 200, "0.24"], [103, "Car lease", 90, "#N/A"], [104, "Micro loan", 2, "0.42"]], "new": ["rate"], "cells": [[2, "rate"]]}, {"id": "rates", "name": "E1:F4", "label": "rates", "cols": ["product", "rate"], "rows": [["Micro loan", "0.42"], ["Auto loan", "0.24"], ["Consumer loan", "0.30"]], "tags": {"product": "ключ"}}], "links": [{"from": ["loans", 0, "product"], "to": ["rates", 0, "product"]}, {"from": ["loans", 1, "product"], "to": ["rates", 1, "product"]}, {"from": ["loans", 3, "product"], "to": ["rates", 0, "product"]}]}
+```
 
 Четыре строки на входе, четыре на выходе. `Car lease` не находит пары и получает `#N/A`. `Consumer loan` нет ни в одном кредите, поэтому его ничто не приносит — как правую строку в LEFT JOIN.
 
@@ -224,19 +221,9 @@ match_mode   0 exact (default) · -1 exact or next smaller · 1 exact or next la
 
 Таблица диапазонов на `Lookup` и что получают три значения dpd:
 
-| `dpd_from` (A11:A15) | `bucket` (B11:B15) |
-|---|---|
-| 0 | 0 |
-| 1 | 1-30 |
-| 31 | 31-60 |
-| 61 | 61-90 |
-| 91 | 90+ |
-
-| dpd | наибольший `dpd_from` ≤ dpd | корзина |
-|---|---|---|
-| 0 | 0 | 0 |
-| 45 | 31 | 31-60 |
-| 919 | 91 | 90+ |
+```pic
+{"id": "w04d2-pic2", "title": "match_mode -1: наибольшая граница, не больше значения", "caption": "Каждый dpd попадает в диапазон с наибольшим `dpd_from` ≤ dpd (тот же цвет): 45 → 31 → **31-60**, 919 → 91 → **90+**.", "tables": [{"id": "dpd", "name": "tblLoans", "cols": ["dpd", "bucket"], "rows": [[0, "0"], [45, "31-60"], [919, "90+"]], "new": ["bucket"]}, {"id": "band", "name": "Lookup!A11:B15", "cols": ["dpd_from", "bucket"], "rows": [[0, "0"], [1, "1-30"], [31, "31-60"], [61, "61-90"], [91, "90+"]], "tags": {"dpd_from": "нижняя гр."}}], "links": [{"from": ["dpd", 0, "dpd"], "to": ["band", 0, "dpd_from"]}, {"from": ["dpd", 1, "dpd"], "to": ["band", 2, "dpd_from"]}, {"from": ["dpd", 2, "dpd"], "to": ["band", 4, "dpd_from"]}]}
+```
 
 dpd принимает 258 разных значений, от 0 до 919; пять строк границ покрывают их все. На `tblLoans` эта формула в точности воспроизводит поставляемый столбец `bucket`. То же правило в старых написаниях: `=VLOOKUP([@dpd], Lookup!$A$11:$B$15, 2, TRUE)` или `=INDEX(Lookup!$B$11:$B$15, MATCH([@dpd], Lookup!$A$11:$A$15, 1))`.
 
@@ -416,6 +403,10 @@ B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, howev
 ### FILTER — строки, которые подходят под условие :id=filter-the-rows-that-meet-a-condition
 
 **Что это.** **FILTER** (*ФИЛЬТР*) возвращает строки диапазона, для которых условие TRUE. Это `SELECT … WHERE …` в ячейке.
+
+```pic
+{"id": "w04d2-pic3", "title": "FILTER выдаёт разливом строки, где условие TRUE", "caption": "Условие — это столбец из TRUE/FALSE, по одному на строку. Строки 101 и 104 дают TRUE (зелёные) и разливаются в результат; формула живёт только в его левой верхней ячейке.", "tables": [{"id": "src", "name": "A1:C5", "label": "loans", "cols": ["loan_id", "product", "outstanding"], "rows": [[101, "Micro loan", 4], [102, "Auto loan", 200], [103, "Car lease", 90], [104, "Micro loan", 2]], "tags": {"product": "условие"}, "keep": [0, 3], "drop": [1, 2]}, {"id": "res", "name": "FILTER(…)", "label": "разлив", "cols": ["loan_id", "product", "outstanding"], "rows": [[101, "Micro loan", 4], [104, "Micro loan", 2]], "via": "B2:B5=\"Micro loan\""}]}
+```
 
 **Как пишется.**
 

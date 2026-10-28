@@ -18,6 +18,10 @@
 
 **What it is.** `ROW_NUMBER()` is a **ranking window function** (*функция ранжирования*). It gives the rows of each window the numbers 1, 2, 3 … in the order of the `ORDER BY` inside `OVER`. No two rows get the same number. With `PARTITION BY` the numbering restarts in every group.
 
+```pic
+{"id": "w03d2-pic1", "title": "ROW_NUMBER numbers each customer's loans, starting again at 1", "caption": "One colour per customer. Customer 9 took three loans on the same day, so `loan_id` breaks the tie; customer 1893's numbering restarts at 1 with loan 458.", "tables": [{"name": "result", "cols": ["customer_id", "loan_id", "disbursed_at", "loan_no"], "rows": [[9, 1632, "2025-07-27", 1], [9, 4962, "2025-07-27", 2], [9, 7693, "2025-07-27", 3], [1893, 458, "2025-03-02", 1], [1893, 4687, "2025-03-03", 2], [1893, 5050, "2025-06-10", 3]], "tone": ["a", "a", "a", "b", "b", "b"], "new": ["loan_no"], "more": "… 1893 has 4 more loans (4–7)"}]}
+```
+
 **How to write it.**
 
 ```sql
@@ -55,6 +59,10 @@ Seven rows: customer 1893 has seven loans, numbered in the order they were paid 
 ### RANK and DENSE_RANK — what happens on a tie
 
 **What it is.** `RANK()` and `DENSE_RANK()` number rows like `ROW_NUMBER`, but rows with the **same value** (a tie, *равные значения*) get the **same number**. After a tie `RANK` skips numbers; `DENSE_RANK` does not.
+
+```pic
+{"id": "w03d2-pic2", "title": "On a tie, RANK leaves a gap and DENSE_RANK does not", "caption": "Loans 102 and 103 tie at 700 and share 2. Look at loan 104: `RANK` says 4 (three rows ahead), `DENSE_RANK` says 3 (two values ahead).", "tables": [{"name": "t", "cols": ["loan", "principal", "RANK", "DENSE_RANK"], "rows": [[101, 900, 1, 1], [102, 700, 2, 2], [103, 700, 2, 2], [104, 500, 4, 3], [105, 400, 5, 4]], "tone": [null, "b", "b", null, null], "new": ["RANK", "DENSE_RANK"], "cells": [[3, "RANK"], [3, "DENSE_RANK"]]}]}
+```
 
 **How to write it.** Five loans, two of them tied at 700:
 
@@ -150,6 +158,10 @@ ORDER BY quartile;
 ### LAG and LEAD — the previous and the next row
 
 **What it is.** `LAG(column)` returns the value of `column` on the **previous** row of the window; `LEAD(column)` on the **next** row. "Previous" is decided by the `ORDER BY` inside `OVER`. They are **value window functions** (*функции смещения*): they do not aggregate, they look sideways.
+
+```pic
+{"id": "w03d2-pic3", "title": "LAG reads the row above", "caption": "Loan 1's payments. Each `prev_paid` is the `paid_at` of the row above (same colour); `gap_days` is the difference. The circled 58 days is the missed March instalment.", "tables": [{"id": "p", "name": "payments", "label": "loan_id = 1", "cols": ["paid_at", "prev_paid", "gap_days"], "rows": [["2026-01-28", "2025-12-27", 32], ["2026-02-26", "2026-01-28", 29], ["2026-04-25", "2026-02-26", 58], ["2026-05-12", "2026-04-25", 17], ["2026-05-26", "2026-05-12", 14]], "new": ["prev_paid", "gap_days"], "cells": [[2, "gap_days"]], "more": "… 18 payments in all"}], "links": [{"from": ["p", 0, "paid_at"], "to": ["p", 1, "prev_paid"]}, {"from": ["p", 1, "paid_at"], "to": ["p", 2, "prev_paid"]}, {"from": ["p", 2, "paid_at"], "to": ["p", 3, "prev_paid"]}, {"from": ["p", 3, "paid_at"], "to": ["p", 4, "prev_paid"]}]}
+```
 
 **How to write it.**
 

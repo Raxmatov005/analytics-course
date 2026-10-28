@@ -296,6 +296,10 @@ Only ISO `yyyy-mm-dd` reads the same everywhere. Our CSVs use it.
 
 **What it is.** Two `COUNTIFS` columns on the key show every duplicate **before** anything is deleted. **n** = how many rows share this key. **rank** = which copy this row is: 1 for the first, 2 for the repeat — Excel's `ROW_NUMBER() OVER (PARTITION BY key)`.
 
+```pic
+{"id": "w04d3-pic1", "title": "One key per person shows the duplicates", "caption": "Trimmed, lower-cased and joined with the birth date, the two spellings of each person give one key, so each pair shares a colour. **n** = 2 says the key repeats; **rank** = 2 (circled) marks the extra copy — the rows to look at before anything is removed.", "tables": [{"id": "raw", "name": "Customers", "label": "raw", "cols": ["customer_id", "first_name", "last_name"], "rows": [[4516, "Malika", "Jalilova"], [6001, "MALIKA", "jalilova"], [44, "Yulduz", "Karimova"], [6005, "Yulduz␣", "karimova"]], "tone": ["a", "a", "b", "b"]}, {"id": "res", "name": "Customers", "label": "with the key", "cols": ["customer_id", "n", "rank"], "rows": [[4516, 2, 1], [6001, 2, 2], [44, 2, 1], [6005, 2, 2]], "new": ["n", "rank"], "tone": ["a", "a", "b", "b"], "cells": [[1, "rank"], [3, "rank"]], "via": "key: name + birth_date"}]}
+```
+
 **How to write it.**
 
 ```excel
@@ -623,12 +627,9 @@ M: = Table.UnpivotOtherColumns(#"Changed Type", {"region"}, "Attribute", "Value"
 then rename Attribute → bucket, Value → outstanding
 ```
 
-| region | 0 | 1-30 | → | region | bucket | outstanding |
-|---|---|---|---|---|---|---|
-| Andijan | a | b | | Andijan | 0 | a |
-| Bukhara | c | d | | Andijan | 1-30 | b |
-| | | | | Bukhara | 0 | c |
-| | | | | Bukhara | 1-30 | d |
+```pic
+{"id": "w04d3-pic2", "title": "Unpivot: one row per old cell", "caption": "Outstanding in millions of soum, from `tblLoans`. Each old cell becomes one row: its old header goes into `bucket`, its number into `outstanding`. 2 regions × 2 buckets = 4 rows; each region keeps its colour.", "tables": [{"id": "wide", "name": "report", "cols": ["region", "0", "1-30"], "rows": [["Andijan", "18 806", 196], ["Bukhara", "14 037", 353]], "tone": ["a", "b"]}, {"id": "long", "name": "table", "cols": ["region", "bucket", "outstanding"], "rows": [["Andijan", "0", "18 806"], ["Andijan", "1-30", 196], ["Bukhara", "0", "14 037"], ["Bukhara", "1-30", 353]], "tone": ["a", "a", "b", "b"], "new": ["bucket"], "via": "Unpivot Other Columns"}]}
+```
 
 Rows after unpivot = label rows × value columns: 2 × 2 = 4.
 
@@ -645,6 +646,10 @@ Rows after unpivot = label rows × value columns: 2 × 2 = 4.
 ### Merge Queries — a JOIN
 
 **What it is.** **Merge Queries** (*объединить запросы*) joins two queries on a key. It is SQL's `JOIN`; the **Join Kind** dropdown holds week 2's whole chapter.
+
+```pic
+{"id": "w04d3-pic3", "title": "Left Outer keeps every top row; no match gives null", "caption": "Loan 2's instalments 7–10. Instalments 31–33 find their row in `paid_by_installment` (same colour) and bring `paid` across. Instalment 34 falls due on 2026-10-05, after the as-of date, so it has no payment: it stays, with `null`.", "tables": [{"id": "inst", "name": "installments", "label": "top", "cols": ["installment_id", "due_date", "total_due"], "rows": [[31, "2026-07-05", "2 791 000"], [32, "2026-08-05", "2 791 000"], [33, "2026-09-05", "2 791 000"], [34, "2026-10-05", "2 791 000"]], "more": "… more rows"}, {"id": "paid", "name": "paid_by_installment", "label": "bottom", "cols": ["installment_id", "paid"], "rows": [[31, "2 791 000"], [32, "2 791 000"], [33, "2 791 000"]], "more": "… more rows"}, {"id": "res", "name": "installments_paid", "cols": ["installment_id", "due_date", "paid"], "rows": [[31, "2026-07-05", "2 791 000"], [32, "2026-08-05", "2 791 000"], [33, "2026-09-05", "2 791 000"], [34, "2026-10-05", "null"]], "new": ["paid"], "cells": [[3, "paid"]], "via": "Join Kind: Left Outer"}], "links": [{"from": ["inst", 0, "installment_id"], "to": ["paid", 0, "installment_id"]}, {"from": ["inst", 1, "installment_id"], "to": ["paid", 1, "installment_id"]}, {"from": ["inst", 2, "installment_id"], "to": ["paid", 2, "installment_id"]}]}
+```
 
 **How to write it.**
 

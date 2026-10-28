@@ -44,15 +44,8 @@ PivotTable Fields
 
 The picture — six source rows become three pivot rows and a total:
 
-```text
-SOURCE: 6 rows                     PIVOT: Rows product, Values Sum of outstanding
-product    outstanding             Row Labels     Sum of outstanding
-SME        300                     Consumer        40
-Micro        5            →        Micro           10
-SME        150                     SME            450
-Micro        5                     Grand Total    500
-Consumer    40
-Micro        0
+```pic
+{"id": "w04d4-pic1", "title": "Six rows in, one row per product out", "caption": "Each colour is one product. The pivot adds each group's `outstanding`: SME 300 + 150 = 450, Micro 5 + 5 + 0 = 10. The Grand Total, 500, is the sum of all six rows — the pivot's check.", "tables": [{"id": "src", "name": "loans", "label": "small table", "cols": ["loan_id", "product", "outstanding"], "rows": [[1, "SME", 300], [2, "Micro", 5], [3, "SME", 150], [4, "Micro", 5], [5, "Consumer", 40], [6, "Micro", 0]], "tone": ["a", "b", "a", "b", "c", "b"]}, {"id": "pv", "name": "PivotTable", "cols": ["Row Labels", "outstanding"], "tags": {"outstanding": "Sum of"}, "rows": [["Consumer", 40], ["Micro", 10], ["SME", 450], ["Grand Total", 500]], "tone": ["c", "b", "a", null], "via": "Rows product · Sum"}]}
 ```
 
 On `tblLoans`, the same drag gives five product rows and a **Grand Total of 208 723 504 430** — the whole book, the same number as `=SUM(tblLoans[outstanding])`. The Grand Total is the pivot's check.
@@ -115,6 +108,10 @@ On `tblLoans`, Rows `product`, Values Sum of `outstanding` and Count of `loan_id
 ### Columns and Filters — the cross-tab and the page WHERE
 
 **What it is.** A field in **Columns** (*Столбцы*) is a second `GROUP BY` key spread across the top: the pivot becomes a **cross-tab**. A field in **Filters** (*Фильтры*) is a `WHERE` the reader can change: it sits above the pivot as a dropdown and decides which source rows are used at all.
+
+```pic
+{"id": "w04d4-pic2", "title": "Filters drops rows first; Columns spreads a key across", "caption": "Filters `status` = active removes the default and the closed loan before anything is added. Then `product` runs down and `region` across; an empty cell means no such loan (no Consumer loan in Fergana). Grand Total **495**.", "tables": [{"id": "src", "name": "loans", "label": "small table", "cols": ["product", "region", "status", "outstanding"], "rows": [["SME", "Tashkent", "active", 300], ["Micro", "Tashkent", "active", 5], ["SME", "Fergana", "active", 150], ["Micro", "Fergana", "default", 5], ["Consumer", "Tashkent", "active", 40], ["Micro", "Tashkent", "closed", 0]], "keep": [0, 1, 2, 4], "drop": [3, 5]}, {"id": "pv", "name": "PivotTable", "cols": ["product", "Fergana", "Tashkent", "Grand Total"], "rows": [["Consumer", "", 40, 40], ["Micro", "", 5, 5], ["SME", 150, 300, 450], ["Grand Total", 150, 345, 495]], "tags": {"product": "Rows", "Fergana": "Columns", "Tashkent": "Columns"}, "via": "Filters: status = active"}]}
+```
 
 **How to write it.**
 
@@ -524,6 +521,10 @@ From 24 bn, Tashkent Central's bar is about **7 times** longer. Its outstanding 
 ### Chart trap: the pie with many slices
 
 **What it is.** A pie asks the eye to compare **angles**, which it does badly. With more than three slices, or with slices under a few percent, the reader cannot rank them without the labels — and then the labels are doing the work a bar would do better.
+
+```pic
+{"id": "w04d4-pic3", "title": "A sorted bar shows what the pie hides", "caption": "The same five shares of the 208 723 504 430 outstanding as the table below. Lengths are easy to rank, and BNPL and Micro (0.5 % each) still show as bars, where a pie gives them a 2° sliver.", "chart": {"type": "bars", "labels": ["SME", "Auto", "Cons", "BNPL", "Micro"], "values": [60.3, 27.6, 11.0, 0.5, 0.5], "hl": [0], "show": true, "unit": " %", "note": "share of outstanding by product"}}
+```
 
 **How to write it.** The fix: change the chart type to a **sorted bar** (right-click → Change Chart Type → Bar), or keep a pie only for 2–3 parts.
 

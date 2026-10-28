@@ -102,6 +102,10 @@ Three rows on screen, but the window ran over all 7 828 loans: 404 783 280 000 i
 
 **What it is.** `PARTITION BY column` inside the brackets splits the rows into groups, one window per group. Each row gets the aggregate of **its own group**. The rows stay; only the window changes.
 
+```pic
+{"id": "w03d1-pic1", "title": "PARTITION BY: each row gets its own group's total", "caption": "One window per loan (one colour each). Loan A's three rows all carry 100 + 200 + 300 = 600, loan B's two rows carry 100. All five rows stay.", "tables": [{"name": "result", "cols": ["loan", "month", "amount", "loan_total"], "rows": [["A", 1, 100, 600], ["A", 2, 200, 600], ["A", 3, 300, 600], ["B", 1, 50, 100], ["B", 2, 50, 100]], "tone": ["a", "a", "a", "b", "b"], "new": ["loan_total"]}]}
+```
+
 **How to write it.** On the small table:
 
 ```sql
@@ -148,6 +152,10 @@ Loans 1 and 2 are Consumer loans, so both show the Consumer average, 26 926 915,
 ### ORDER BY inside OVER — a running total
 
 **What it is.** `ORDER BY` inside the brackets puts the rows of each window in order. The aggregate then covers the rows **from the first one up to the current one**. A `SUM` becomes a **running total** (*накопительный итог*).
+
+```pic
+{"id": "w03d1-pic2", "title": "ORDER BY inside OVER turns a sum into a running total", "caption": "Loan 1's payments in date order. Each row adds its own payment to everything above it, so the column climbs by 1 741 700 a row.", "tables": [{"name": "payments", "label": "loan_id = 1", "cols": ["paid_at", "amount", "collected_so_far"], "rows": [["2025-04-27", "1 741 700", "1 741 700"], ["2025-05-28", "1 741 700", "3 483 400"], ["2025-06-26", "1 741 700", "5 225 100"], ["2025-07-25", "1 741 700", "6 966 800"], ["2025-08-25", "1 741 700", "8 708 500"]], "new": ["collected_so_far"], "more": "… 13 more, ending at 31 350 600"}]}
+```
 
 **How to write it.** On the small table:
 
@@ -372,6 +380,10 @@ ORDER BY disbursed_at, loan_id;
 ### Moving average — a frame of fixed length
 
 **What it is.** A **moving average** (*скользящее среднее*) replaces each value by the average of itself and a fixed number of neighbours. `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW` is a three-row frame that slides down the rows:
+
+```pic
+{"id": "w03d1-pic3", "title": "A moving average reads a frame of three rows", "caption": "Billions of UZS. The coloured rows are the frame for 2026-08: June, July and August, averaged into the circled 19.7. One row down, the frame slides one month.", "tables": [{"name": "m", "cols": ["month", "disbursed_bn", "ma3_bn"], "rows": [["2026-04", "17.9", "16.5"], ["2026-05", "18.5", "18.7"], ["2026-06", "16.1", "17.5"], ["2026-07", "20.7", "18.4"], ["2026-08", "22.3", "19.7"], ["2026-09", "17.0", "20.0"]], "tone": [null, null, "a", "a", "a", null], "new": ["ma3_bn"], "cells": [[4, "ma3_bn"]]}]}
+```
 
 ```text
 month    disbursed   frame of the 3-month average

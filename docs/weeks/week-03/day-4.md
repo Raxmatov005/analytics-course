@@ -18,6 +18,10 @@
 
 **What it is.** A **view** (*представление*) is a `SELECT` saved in the database under a name. You query it like a table: `SELECT … FROM v_payments_clean`. It stores the **text of the query**, not its rows. Every time you read it, the query inside runs again on today's data.
 
+```pic
+{"id": "w03d4-pic1", "title": "A view is a saved query: raw rows in, clean rows out", "caption": "Raw `payments` above, the view's answer below. Payment 52869 repeats payment 110 (same instalment, day and amount) and is struck out; every `method` comes out cleaned. The table itself is not changed.", "tables": [{"id": "raw", "name": "payments", "cols": ["payment_id", "paid_at", "amount", "method"], "rows": [[110, "2025-05-28", "663 300", "'click'"], [265, "2024-04-03", "7 292 600", "'PayMe'"], [1394, "2025-01-05", "3 338 600", "'Card'"], [2184, "2025-05-15", "19 668 600", "'CASH '"], [52869, "2025-05-28", "663 300", "'click'"]], "tone": ["a", null, null, null, "a"], "drop": [4]}, {"id": "v", "name": "v_payments_clean", "cols": ["payment_id", "paid_at", "amount", "method"], "rows": [[110, "2025-05-28", "663 300", "'click'"], [265, "2024-04-03", "7 292 600", "'payme'"], [1394, "2025-01-05", "3 338 600", "'card'"], [2184, "2025-05-15", "19 668 600", "'cash'"]], "tone": ["a", null, null, null], "new": ["method"], "via": "FROM v_payments_clean", "more": "… more rows"}], "stack": true}
+```
+
 **How to write it.** Tuesday's de-duplicated payments, saved as a view, then read like a table:
 
 ```sql
@@ -212,6 +216,10 @@ SELECT (SELECT COUNT(*) FROM my_v_written_off) AS view_rows,
 ### Indexes — the phone book
 
 **What it is.** An **index** (*индекс*) is a sorted copy of one or more columns with a pointer to each row. Without one, the engine reads **every row** to find `customer_id = 3208` — a **scan**. With one, it jumps to the right place — a **seek** (SQLite says **SEARCH**). Like finding a name in a phone book instead of reading it cover to cover.
+
+```pic
+{"id": "w03d4-pic2", "title": "An index finds the rows without reading the table", "caption": "The index keeps `customer_id` sorted, each entry pointing to its loan. A SEARCH for 3208 jumps to its two entries and follows the pointers to loans 4265 and 7606; a SCAN would read all 7 828 loans.", "tables": [{"id": "ix", "name": "ix_loans_customer", "label": "index", "cols": ["customer_id", "loan_id"], "rows": [[3207, 2150], [3208, 4265], [3208, 7606], [3209, 5418], [3209, 5808]], "keep": [1, 2], "tags": {"customer_id": "sorted", "loan_id": "pointer"}, "more": "… 7 828 entries"}, {"id": "loans", "name": "loans", "label": "2 rows read", "cols": ["loan_id", "customer_id", "principal", "status"], "rows": [[4265, 3208, "568 200 000", "active"], [7606, 3208, "454 970 000", "active"]]}], "links": [{"from": ["ix", 1, "loan_id"], "to": ["loans", 0, "loan_id"]}, {"from": ["ix", 2, "loan_id"], "to": ["loans", 1, "loan_id"]}]}
+```
 
 **How to write it.**
 

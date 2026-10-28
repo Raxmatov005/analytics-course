@@ -73,6 +73,10 @@ The last three rows of `monthly`, the frame the chart draws:
 
 **What it is.** A **line chart** (*линейный график*) joins one point per period. Time runs left to right, so the eye reads the trend. A **rolling average** (*скользящее среднее*) — `rolling(3).mean()`, the average of this month and the two before — smooths the swings so the trend shows.
 
+```pic
+{"id": "w05d4-pic1", "title": "A one-day month looks like a crash", "caption": "Disbursements per month in 2026, from `monthly_disbursements.csv` (bars here, one per month). October holds one day, 2026-10-01, so its bar is 0.85 bn: drop it, or label it \"month to date\".", "chart": {"type": "bars", "labels": ["Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct 1"], "values": [19.66, 17.89, 18.53, 16.05, 20.69, 22.29, 17.02, 0.85], "hl": [7], "show": true, "note": "disbursed per month, bn UZS"}}
+```
+
 **How to write it.**
 
 ```python
@@ -109,6 +113,10 @@ September alone fell to 17.0 bn, but the 3-month average still rose, to 20.0 bn:
 ### Bar and barh — how categories compare
 
 **What it is.** A **bar chart** (*столбчатая диаграмма*) draws one bar per category; the bar's length is the number. `ax.bar` draws upright bars, `ax.barh` horizontal ones (*линейчатая диаграмма*) — better for rankings and long labels. A bar is read by its length, so **bars start at zero**.
+
+```pic
+{"id": "w05d4-pic2", "title": "234 of the 399 late loans are already 90+", "caption": "The four late buckets in their natural order, from zero, with one highlight. The 7 429 current loans are left out (and the note says so), so the late buckets stay readable.", "chart": {"type": "bars", "labels": ["1-30", "31-60", "61-90", "90+"], "values": [124, 25, 16, 234], "hl": [3], "show": true, "note": "late loans per bucket (current loans not shown)"}}
+```
 
 **How to write it.**
 
@@ -155,6 +163,10 @@ The 90+ bar is the tallest: 234 of the 399 late loans are already more than 90 d
 ### Histogram and box plot — how one number is spread
 
 **What it is.** A **histogram** (*гистограмма*) cuts a number's range into **bins** and draws one bar per bin: how many loans have a principal between 1 m and 1.3 m, between 1.3 m and 1.6 m, and so on. A **box plot** (*ящик с усами*) draws the same spread as five numbers per group: the median, the middle half (the box, from the 25th to the 75th percentile), the whiskers and the outliers.
+
+```pic
+{"id": "w05d4-pic3", "title": "Most loans are small; the mean sits far right of the median", "caption": "Each bar counts the loans from its edge up to ten times it (0.1–1 m, 1–10 m, …), so the bins are equal on a log scale. The median, 5.79 m, is in the tallest bar; the mean, 51.7 m, is pulled into the next one by 996 loans of 100 m and more.", "chart": {"type": "bars", "labels": ["0.1", "1", "10", "100"], "values": [472, 4134, 2226, 996], "hl": [1], "show": true, "marks": [{"at": 1.263, "label": "median"}, {"at": 2.214, "label": "mean"}], "note": "loans by principal, from m UZS (log bins)"}}
+```
 
 **How to write it.**
 

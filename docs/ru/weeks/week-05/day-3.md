@@ -59,12 +59,8 @@ by_region.sort_values(ascending=False).head()
 
 Три шага на четырёх оплатах:
 
-```text
- region    amount          разбить по region        сумма по группе      собрать вместе
- Tashkent  100     ──▶   Tashkent: 100, 300   ──▶   Tashkent 400   ──▶   Tashkent 400
- Fergana   200           Fergana:  200, 50          Fergana  250         Fergana  250
- Tashkent  300
- Fergana    50
+```pic
+{"id": "w05d3-pic1", "title": "Разбить по ключу, сложить каждую группу, собрать", "caption": "Каждый цвет — одна группа. Две оплаты Tashkent дают 400, Fergana — 250, и в результате по строке на регион. Ключ становится индексом, отсортированным: Fergana перед Tashkent.", "tables": [{"id": "src", "name": "pay", "cols": ["region", "amount"], "rows": [["Tashkent", 100], ["Fergana", 200], ["Tashkent", 300], ["Fergana", 50]], "tone": ["a", "b", "a", "b"]}, {"id": "res", "name": "результат", "cols": ["region", "amount"], "rows": [["Fergana", 250], ["Tashkent", 400]], "tone": ["b", "a"], "tags": {"region": "индекс"}, "via": "groupby(\"region\") → sum"}]}
 ```
 
 Функции, которые можно назвать: `sum`, `mean`, `median`, `min`, `max`, `count`, `size`, `nunique`, `first`. **Ключ становится индексом** результата; `.reset_index()` возвращает его в столбец.
@@ -167,6 +163,10 @@ pm.unstack(fill_value=0)                                   # второй клю
 
 **Что это.** `transform` считает число группы и записывает его **рядом с каждой строкой этой группы**. В результате столько же строк, сколько во фрейме. Это оконная функция с недели 3: `SUM(amount) OVER (PARTITION BY loan_id)`.
 
+```pic
+{"id": "w05d3-pic2", "title": "transform пишет итог группы в каждую строку", "caption": "18 оплат кредита 1 дают 31 350 600, 9 оплат кредита 2 — 25 119 000. Каждый итог стоит в каждой строке своего кредита (один цвет), поэтому во фрейме остаются все строки — `agg` вернул бы по строке на кредит.", "tables": [{"id": "p", "name": "pay", "cols": ["payment_id", "loan_id", "amount", "loan_total"], "rows": [[1, 1, "1 741 700", "31 350 600"], [2, 1, "1 741 700", "31 350 600"], [19, 2, "2 791 000", "25 119 000"], [20, 2, "2 791 000", "25 119 000"]], "new": ["loan_total"], "tone": ["a", "a", "b", "b"], "more": "… ещё строки"}]}
+```
+
 **Как пишется.**
 
 ```python
@@ -255,6 +255,10 @@ pd.DataFrame({"payments": counts, "share_pct": shares})
 ### merge — соединение и его четыре how= :id=merge--the-join-and-its-four-how
 
 **Что это.** `left.merge(right, on="key", how=...)` — это **соединение** (*join*): строки двух фреймов ставятся рядом там, где совпадает ключ. `how=` решает, что будет со строкой **без пары**, — ровно INNER / LEFT / RIGHT / FULL с недели 2.
+
+```pic
+{"id": "w05d3-pic3", "title": "how=\"left\" сохраняет каждую левую строку; без пары — NaN", "caption": "Платежи 2 и 3 находят оплату (тот же цвет). У платежа 1 оплаты нет, и он остаётся с **NaN** в `paid`; у лишней оплаты 4 нет левой строки, поэтому левое соединение её отбрасывает (зачёркнута).", "tables": [{"id": "sched", "name": "sched", "cols": ["installment_id", "total_due"], "rows": [[1, 100], [2, 100], [3, 100]]}, {"id": "got", "name": "got", "cols": ["installment_id", "paid"], "rows": [[2, 100], [3, 60], [4, 50]], "drop": [2]}, {"id": "res", "name": "результат", "cols": ["installment_id", "total_due", "paid"], "rows": [[1, 100, "NaN"], [2, 100, 100], [3, 100, 60]], "cells": [[0, "paid"]], "via": "merge(got, how=\"left\")"}], "links": [{"from": ["sched", 1, "installment_id"], "to": ["got", 0, "installment_id"]}, {"from": ["sched", 2, "installment_id"], "to": ["got", 1, "installment_id"]}]}
+```
 
 **Как пишется.** Сначала два крошечных фрейма: три платежа по графику и оплаты для платежей 2, 3 и случайного 4.
 

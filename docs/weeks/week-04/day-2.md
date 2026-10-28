@@ -49,12 +49,9 @@ return    the column to bring back            F2:F4
 
 The picture — the loans table with the looked-up rate added:
 
-| `loan_id` | `product` | `outstanding` | `rate` (looked up) |
-|---|---|---|---|
-| 101 | Micro loan | 4 | 0.42 |
-| 102 | Auto loan | 200 | 0.24 |
-| 103 | Car lease | 90 | `#N/A` |
-| 104 | Micro loan | 2 | 0.42 |
+```pic
+{"id": "w04d2-pic1", "title": "A lookup brings one column across, like a LEFT JOIN", "caption": "Same colour, same product: the key is found in `rates` and its `rate` comes back into the loan's row. `Car lease` has no row in `rates` — look at the circled cell.", "tables": [{"id": "loans", "name": "A1:D5", "label": "loans", "cols": ["loan_id", "product", "outstanding", "rate"], "rows": [[101, "Micro loan", 4, "0.42"], [102, "Auto loan", 200, "0.24"], [103, "Car lease", 90, "#N/A"], [104, "Micro loan", 2, "0.42"]], "new": ["rate"], "cells": [[2, "rate"]]}, {"id": "rates", "name": "E1:F4", "label": "rates", "cols": ["product", "rate"], "rows": [["Micro loan", "0.42"], ["Auto loan", "0.24"], ["Consumer loan", "0.30"]], "tags": {"product": "key"}}], "links": [{"from": ["loans", 0, "product"], "to": ["rates", 0, "product"]}, {"from": ["loans", 1, "product"], "to": ["rates", 1, "product"]}, {"from": ["loans", 3, "product"], "to": ["rates", 0, "product"]}]}
+```
 
 Four rows in, four rows out. `Car lease` finds no partner, so it gets `#N/A`. `Consumer loan` appears in no loan, so nothing brings it in — the same as the right-hand row of a LEFT JOIN.
 
@@ -224,19 +221,9 @@ match_mode   0 exact (default) · -1 exact or next smaller · 1 exact or next la
 
 The band table on `Lookup` and what three dpd values get:
 
-| `dpd_from` (A11:A15) | `bucket` (B11:B15) |
-|---|---|
-| 0 | 0 |
-| 1 | 1-30 |
-| 31 | 31-60 |
-| 61 | 61-90 |
-| 91 | 90+ |
-
-| dpd | largest `dpd_from` ≤ dpd | bucket |
-|---|---|---|
-| 0 | 0 | 0 |
-| 45 | 31 | 31-60 |
-| 919 | 91 | 90+ |
+```pic
+{"id": "w04d2-pic2", "title": "match_mode -1: the largest edge not above the value", "caption": "Each dpd goes to the band whose `dpd_from` is the largest one ≤ dpd (same colour): 45 → 31 → **31-60**, 919 → 91 → **90+**.", "tables": [{"id": "dpd", "name": "tblLoans", "cols": ["dpd", "bucket"], "rows": [[0, "0"], [45, "31-60"], [919, "90+"]], "new": ["bucket"]}, {"id": "band", "name": "Lookup!A11:B15", "cols": ["dpd_from", "bucket"], "rows": [[0, "0"], [1, "1-30"], [31, "31-60"], [61, "61-90"], [91, "90+"]], "tags": {"dpd_from": "lower edge"}}], "links": [{"from": ["dpd", 0, "dpd"], "to": ["band", 0, "dpd_from"]}, {"from": ["dpd", 1, "dpd"], "to": ["band", 2, "dpd_from"]}, {"from": ["dpd", 2, "dpd"], "to": ["band", 4, "dpd_from"]}]}
+```
 
 dpd takes 258 different values, from 0 to 919; five rows of edges cover all of them. On `tblLoans` this formula reproduces the shipped `bucket` column exactly. The same rule in older spellings: `=VLOOKUP([@dpd], Lookup!$A$11:$B$15, 2, TRUE)` or `=INDEX(Lookup!$B$11:$B$15, MATCH([@dpd], Lookup!$A$11:$A$15, 1))`.
 
@@ -416,6 +403,10 @@ On the small loans table: `=UNIQUE(B2:B5)` → `Micro loan`, `Auto loan`, `Car l
 ### FILTER — the rows that meet a condition
 
 **What it is.** **FILTER** (*ФИЛЬТР*) returns the rows of a range where a condition is TRUE. It is `SELECT … WHERE …` in a cell.
+
+```pic
+{"id": "w04d2-pic3", "title": "FILTER spills the rows where the condition is TRUE", "caption": "The condition is a column of TRUE/FALSE, one per row. Rows 101 and 104 say TRUE (green) and spill into the result; the formula lives in its top-left cell only.", "tables": [{"id": "src", "name": "A1:C5", "label": "loans", "cols": ["loan_id", "product", "outstanding"], "rows": [[101, "Micro loan", 4], [102, "Auto loan", 200], [103, "Car lease", 90], [104, "Micro loan", 2]], "tags": {"product": "condition"}, "keep": [0, 3], "drop": [1, 2]}, {"id": "res", "name": "FILTER(…)", "label": "spill", "cols": ["loan_id", "product", "outstanding"], "rows": [[101, "Micro loan", 4], [104, "Micro loan", 2]], "via": "B2:B5=\"Micro loan\""}]}
+```
 
 **How to write it.**
 

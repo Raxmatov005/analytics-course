@@ -44,15 +44,8 @@ PivotTable Fields
 
 Картинка — шесть исходных строк становятся тремя строками сводной таблицы и итогом:
 
-```text
-ИСТОЧНИК: 6 строк                  СВОДНАЯ: Rows product, Values Sum of outstanding
-product    outstanding             Row Labels     Sum of outstanding
-SME        300                     Consumer        40
-Micro        5            →        Micro           10
-SME        150                     SME            450
-Micro        5                     Grand Total    500
-Consumer    40
-Micro        0
+```pic
+{"id": "w04d4-pic1", "title": "Шесть строк на входе, по строке на продукт на выходе", "caption": "Каждый цвет — один продукт. Сводная таблица складывает `outstanding` каждой группы: SME 300 + 150 = 450, Micro 5 + 5 + 0 = 10. Grand Total, 500, — сумма всех шести строк, проверка сводной таблицы.", "tables": [{"id": "src", "name": "loans", "label": "маленькая таблица", "cols": ["loan_id", "product", "outstanding"], "rows": [[1, "SME", 300], [2, "Micro", 5], [3, "SME", 150], [4, "Micro", 5], [5, "Consumer", 40], [6, "Micro", 0]], "tone": ["a", "b", "a", "b", "c", "b"]}, {"id": "pv", "name": "PivotTable", "cols": ["Row Labels", "outstanding"], "tags": {"outstanding": "Sum of"}, "rows": [["Consumer", 40], ["Micro", 10], ["SME", 450], ["Grand Total", 500]], "tone": ["c", "b", "a", null], "via": "Rows product · Sum"}]}
 ```
 
 На `tblLoans` то же перетаскивание даёт пять строк продуктов и **Grand Total 208 723 504 430** — вся книга, то же число, что `=SUM(tblLoans[outstanding])`. Grand Total — это проверка сводной таблицы.
@@ -115,6 +108,10 @@ Values:  outstanding  (Sum)          → SUM(outstanding)
 ### Столбцы и фильтры — перекрёстная таблица и WHERE страницы :id=columns-and-filters-the-cross-tab-and-the-page-where
 
 **Что это.** Поле в **«Столбцах»** (Columns) — второй ключ `GROUP BY`, развёрнутый поперёк: сводная таблица становится **перекрёстной** (cross-tab). Поле в **«Фильтрах»** (Filters) — это `WHERE`, который может менять читатель: он стоит над сводной таблицей выпадающим списком и решает, какие исходные строки вообще используются.
+
+```pic
+{"id": "w04d4-pic2", "title": "Filters сначала убирает строки; Columns разворачивает ключ поперёк", "caption": "Filters `status` = active убирает кредит в default и закрытый кредит до любого сложения. Потом `product` идёт вниз, а `region` — поперёк; пустая ячейка значит, что такого кредита нет (нет Consumer в Fergana). Grand Total **495**.", "tables": [{"id": "src", "name": "loans", "label": "маленькая таблица", "cols": ["product", "region", "status", "outstanding"], "rows": [["SME", "Tashkent", "active", 300], ["Micro", "Tashkent", "active", 5], ["SME", "Fergana", "active", 150], ["Micro", "Fergana", "default", 5], ["Consumer", "Tashkent", "active", 40], ["Micro", "Tashkent", "closed", 0]], "keep": [0, 1, 2, 4], "drop": [3, 5]}, {"id": "pv", "name": "PivotTable", "cols": ["product", "Fergana", "Tashkent", "Grand Total"], "rows": [["Consumer", "", 40, 40], ["Micro", "", 5, 5], ["SME", 150, 300, 450], ["Grand Total", 150, 345, 495]], "tags": {"product": "Rows", "Fergana": "Columns", "Tashkent": "Columns"}, "via": "Filters: status = active"}]}
+```
 
 **Как пишется.**
 
@@ -524,6 +521,10 @@ Grand Total от Average — это среднее по **всем** строк�
 ### Ловушка диаграммы: круговая с множеством секторов :id=chart-trap-the-pie-with-many-slices
 
 **Что это.** Круговая диаграмма просит глаз сравнивать **углы**, а это у него получается плохо. Когда секторов больше трёх или они меньше нескольких процентов, читатель не может их упорядочить без подписей — и тогда подписи делают работу, которую лучше сделала бы линейчатая.
+
+```pic
+{"id": "w04d4-pic3", "title": "Отсортированная линейчатая показывает то, что прячет круг", "caption": "Те же пять долей от 208 723 504 430 остатка, что в таблице ниже. Длины легко упорядочить, а BNPL и Micro (по 0,5 %) всё ещё видны как столбцы — круг оставил бы им сектор в 2°.", "chart": {"type": "bars", "labels": ["SME", "Auto", "Cons", "BNPL", "Micro"], "values": [60.3, 27.6, 11.0, 0.5, 0.5], "hl": [0], "show": true, "unit": " %", "note": "доля остатка по продуктам"}}
+```
 
 **Как пишется.** Исправление: смените тип на **отсортированную линейчатую** (правый щелчок → Изменить тип диаграммы → Линейчатая) или оставьте круговую только для 2–3 частей.
 

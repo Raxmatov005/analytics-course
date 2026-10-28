@@ -193,6 +193,10 @@ On the real data: `=COUNTA(tblCustomers[customer_id])` → **6 040** customers. 
 
 **What it is.** These functions add up, count or average only the rows that meet a **criterion** (*условие*). `SUMIFS` is `SELECT SUM(x) FROM t WHERE …` in one cell. `MAXIFS` and `MINIFS` work the same way.
 
+```pic
+{"id": "w04d1-pic1", "title": "SUMIFS adds only the rows that meet the criterion", "caption": "The criterion `\"active\"` is checked in column C. Green rows pass and their `outstanding` is added: 100 + 50 + 30 = **180**; struck-through rows are skipped. COUNTIFS counts the same three rows; AVERAGEIFS divides 180 by 3.", "tables": [{"id": "src", "name": "A1:F6", "label": "small table", "cols": ["loan_id", "status", "dpd", "outstanding"], "rows": [[101, "active", 0, 100], [102, "active", 12, 50], [103, "default", 95, 40], [104, "active", 45, 30], [105, "closed", 0, 0]], "tags": {"status": "C: criterion", "outstanding": "F: summed"}, "keep": [0, 1, 3], "drop": [2, 4]}, {"id": "res", "name": "result", "cols": ["COUNTIFS", "SUMIFS", "AVERAGEIFS"], "rows": [[3, 180, 60]], "via": "C2:C6 = \"active\""}]}
+```
+
 **How to write it.**
 
 ```excel
@@ -238,6 +242,10 @@ On the real data:
 ### Several criteria — every pair is one more AND
 
 **What it is.** `SUMIFS`, `COUNTIFS` and `AVERAGEIFS` take up to 127 **pairs** of (criteria range, criterion). A row is counted only when it meets **every** pair. Each pair is one more `AND` in the `WHERE`.
+
+```pic
+{"id": "w04d1-pic2", "title": "Two pairs: a row must pass both", "caption": "Loan 101 is active but not late; 103 is late but not active; 105 is neither — all three are dropped. Only 102 and 104 pass **both** pairs: 50 + 30 = **80**.", "tables": [{"id": "src", "name": "A1:F6", "label": "small table", "cols": ["loan_id", "status", "dpd", "outstanding"], "rows": [[101, "active", 0, 100], [102, "active", 12, 50], [103, "default", 95, 40], [104, "active", 45, 30], [105, "closed", 0, 0]], "tags": {"status": "C: \"active\"", "dpd": "E: \">0\""}, "keep": [1, 3], "drop": [0, 2, 4]}, {"id": "res", "name": "result", "cols": ["COUNTIFS", "SUMIFS"], "rows": [[2, 80]], "via": "\"active\" AND \">0\""}]}
+```
 
 **How to write it.**
 
@@ -429,6 +437,10 @@ On the real data: the `visit` column marks **16** loans — active and more than
 ### IFS — many branches, the first TRUE wins
 
 **What it is.** **IFS** (*ЕСЛИМН*) takes pairs of (test, value) and returns the value of the **first** TRUE test. It reads top-down, exactly like `CASE WHEN … WHEN … END`. The last pair `TRUE, value` is the `ELSE`.
+
+```pic
+{"id": "w04d1-pic3", "title": "IFS reads the tests top-down and stops at the first TRUE", "caption": "dpd 45 fails `=0` and `<=30`, passes `<=60`: **31-60**. dpd 95 passes no test until the final `TRUE`: **90+**. A row and the test it stopped at share a colour.", "tables": [{"id": "tests", "name": "IFS", "label": "tests in order", "cols": ["test", "value"], "rows": [["dpd=0", "0"], ["dpd<=30", "1-30"], ["dpd<=60", "31-60"], ["dpd<=90", "61-90"], ["TRUE", "90+"]], "tone": ["a", "b", "c", "e", "d"]}, {"id": "src", "name": "A1:F6", "label": "small table", "cols": ["loan_id", "dpd", "bucket"], "rows": [[101, 0, "0"], [102, 12, "1-30"], [103, 95, "90+"], [104, 45, "31-60"], [105, 0, "0"]], "new": ["bucket"], "tone": ["a", "b", "d", "c", "a"]}]}
+```
 
 **How to write it.**
 

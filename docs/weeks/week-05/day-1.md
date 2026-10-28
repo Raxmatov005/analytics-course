@@ -229,6 +229,10 @@ Brackets work as in school: `100 * approved / total` and `(1 + r) ** -term` are 
 
 **What it is.** A **list** (*список*) holds several values in order, inside `[ ]`. Each value has a **position** (an *index*) starting at **0**. Negative positions count from the end.
 
+```pic
+{"id": "w05d1-pic1", "title": "A slice stops before its end position", "caption": "Positions start at 0. `buckets[1:3]` takes positions 1 and 2 (green) and stops **before** 3. The last column is what negative positions mean: `buckets[-1]` is `\"90+\"`.", "tables": [{"id": "b", "name": "buckets", "cols": ["position", "value", "from end"], "rows": [[0, "\"0\"", -5], [1, "\"1-30\"", -4], [2, "\"31-60\"", -3], [3, "\"61-90\"", -2], [4, "\"90+\"", -1]], "keep": [1, 2]}, {"id": "s", "name": "buckets[1:3]", "cols": ["position", "value"], "rows": [[0, "\"1-30\""], [1, "\"31-60\""]], "via": "buckets[1:3]"}]}
+```
+
 **How to write it.**
 
 ```python
@@ -288,11 +292,9 @@ counts["cash"] = 8788                                        # add a key (or rep
 print(counts, len(counts), "card" in counts)
 ```
 
-| key | value |
-|---|---|
-| `"card"` | 17612 |
-| `"payme"` | 8897 |
-| `"cash"` | 8788 |
+```pic
+{"id": "w05d1-pic2", "title": "A dict is a two-column lookup table", "caption": "You find a value by its key, not by a position: `counts[\"card\"]` → 17612. Assigning to a new key adds a row (green); assigning to a key that is already there would replace its value.", "tables": [{"id": "before", "name": "counts", "cols": ["key", "value"], "rows": [["\"card\"", 17612], ["\"payme\"", 8897]], "tags": {"key": "look up by"}}, {"id": "after", "name": "counts", "cols": ["key", "value"], "rows": [["\"card\"", 17612], ["\"payme\"", 8897], ["\"cash\"", 8788]], "keep": [2], "via": "counts[\"cash\"] = 8788"}]}
+```
 
 ```text
 0.24
@@ -366,6 +368,10 @@ Comparisons: `==` equal, `!=` not equal, `<`, `<=`, `>`, `>=`, `in` (inside a li
 ### for loops — once per element
 
 **What it is.** A **for loop** (*цикл for*) runs its block once for every element of a list (or the keys of a dict, or the rows of a file). Inside the block, the loop variable is the current element.
+
+```pic
+{"id": "w05d1-pic3", "title": "A loop and a dict count per group", "caption": "Each step adds 1 to the key of the current element, starting at 0 when the key is new. The three card steps (same colour) end as `'card': 3` — `GROUP BY method` with `COUNT(*)`, by hand.", "tables": [{"id": "m", "name": "methods", "cols": ["position", "m"], "rows": [[0, "\"card\""], [1, "\"cash\""], [2, "\"card\""], [3, "\"payme\""], [4, "\"card\""]], "tone": ["a", "b", "a", "c", "a"]}, {"id": "c", "name": "counts", "cols": ["key", "value"], "rows": [["\"card\"", 3], ["\"cash\"", 1], ["\"payme\"", 1]], "tone": ["a", "b", "c"], "via": "counts.get(m, 0) + 1"}]}
+```
 
 **How to write it.** A running total, and a count per group with a dict:
 

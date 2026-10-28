@@ -296,6 +296,10 @@ Nodir           Nodir
 
 **Что это.** Два столбца `COUNTIFS` по ключу показывают каждый дубликат **до того**, как что-либо удалено. **n** — сколько строк имеют этот ключ. **rank** — какая это копия: 1 для первой, 2 для повтора — `ROW_NUMBER() OVER (PARTITION BY key)` в Excel.
 
+```pic
+{"id": "w04d3-pic1", "title": "Один ключ на человека показывает дубликаты", "caption": "После TRIM, нижнего регистра и склейки с датой рождения два написания одного человека дают один ключ — у каждой пары свой цвет. **n** = 2 говорит, что ключ повторяется; **rank** = 2 (обведено) отмечает лишнюю копию — строки, на которые надо посмотреть, прежде чем что-то удалять.", "tables": [{"id": "raw", "name": "Customers", "label": "сырые", "cols": ["customer_id", "first_name", "last_name"], "rows": [[4516, "Malika", "Jalilova"], [6001, "MALIKA", "jalilova"], [44, "Yulduz", "Karimova"], [6005, "Yulduz␣", "karimova"]], "tone": ["a", "a", "b", "b"]}, {"id": "res", "name": "Customers", "label": "с ключом", "cols": ["customer_id", "n", "rank"], "rows": [[4516, 2, 1], [6001, 2, 2], [44, 2, 1], [6005, 2, 2]], "new": ["n", "rank"], "tone": ["a", "a", "b", "b"], "cells": [[1, "rank"], [3, "rank"]], "via": "ключ: имя + birth_date"}]}
+```
+
 **Как пишется.**
 
 ```excel
@@ -623,12 +627,9 @@ M: = Table.UnpivotOtherColumns(#"Changed Type", {"region"}, "Attribute", "Value"
 затем переименуйте Attribute → bucket, Value → outstanding
 ```
 
-| region | 0 | 1-30 | → | region | bucket | outstanding |
-|---|---|---|---|---|---|---|
-| Andijan | a | b | | Andijan | 0 | a |
-| Bukhara | c | d | | Andijan | 1-30 | b |
-| | | | | Bukhara | 0 | c |
-| | | | | Bukhara | 1-30 | d |
+```pic
+{"id": "w04d3-pic2", "title": "Отмена свёртывания: по строке на каждую бывшую ячейку", "caption": "Остаток долга в миллионах сумов, из `tblLoans`. Каждая бывшая ячейка становится строкой: её бывший заголовок уходит в `bucket`, её число — в `outstanding`. 2 региона × 2 корзины = 4 строки; каждый регион сохраняет свой цвет.", "tables": [{"id": "wide", "name": "отчёт", "cols": ["region", "0", "1-30"], "rows": [["Andijan", "18 806", 196], ["Bukhara", "14 037", 353]], "tone": ["a", "b"]}, {"id": "long", "name": "таблица", "cols": ["region", "bucket", "outstanding"], "rows": [["Andijan", "0", "18 806"], ["Andijan", "1-30", 196], ["Bukhara", "0", "14 037"], ["Bukhara", "1-30", 353]], "tone": ["a", "a", "b", "b"], "new": ["bucket"], "via": "Unpivot Other Columns"}]}
+```
 
 Строк после отмены свёртывания = строк подписей × столбцов значений: 2 × 2 = 4.
 
@@ -645,6 +646,10 @@ M: = Table.UnpivotOtherColumns(#"Changed Type", {"region"}, "Attribute", "Value"
 ### Слияние запросов — JOIN :id=merge-queries-a-join
 
 **Что это.** **Слияние запросов** («Объединить запросы», Merge Queries) соединяет два запроса по ключу. Это `JOIN` из SQL; в списке **Тип соединения** — вся глава второй недели.
+
+```pic
+{"id": "w04d3-pic3", "title": "Left Outer сохраняет каждую верхнюю строку; без пары — null", "caption": "Плановые платежи 7–10 кредита 2. Платежи 31–33 находят свою строку в `paid_by_installment` (тот же цвет) и приносят `paid`. Платёж 34 наступает 2026-10-05, после даты отчёта, поэтому оплаты нет: строка остаётся, с `null`.", "tables": [{"id": "inst", "name": "installments", "label": "верхняя", "cols": ["installment_id", "due_date", "total_due"], "rows": [[31, "2026-07-05", "2 791 000"], [32, "2026-08-05", "2 791 000"], [33, "2026-09-05", "2 791 000"], [34, "2026-10-05", "2 791 000"]], "more": "… ещё строки"}, {"id": "paid", "name": "paid_by_installment", "label": "нижняя", "cols": ["installment_id", "paid"], "rows": [[31, "2 791 000"], [32, "2 791 000"], [33, "2 791 000"]], "more": "… ещё строки"}, {"id": "res", "name": "installments_paid", "cols": ["installment_id", "due_date", "paid"], "rows": [[31, "2026-07-05", "2 791 000"], [32, "2026-08-05", "2 791 000"], [33, "2026-09-05", "2 791 000"], [34, "2026-10-05", "null"]], "new": ["paid"], "cells": [[3, "paid"]], "via": "Join Kind: Left Outer"}], "links": [{"from": ["inst", 0, "installment_id"], "to": ["paid", 0, "installment_id"]}, {"from": ["inst", 1, "installment_id"], "to": ["paid", 1, "installment_id"]}, {"from": ["inst", 2, "installment_id"], "to": ["paid", 2, "installment_id"]}]}
+```
 
 **Как пишется.**
 

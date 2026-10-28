@@ -229,6 +229,10 @@ More ways: `loans.columns.tolist()` lists the names; `loans.drop(columns=["custo
 
 **What it is.** A comparison on a column, `loans["dpd"] > 0`, returns a **boolean mask** (*булева маска*): a Series of `True` / `False`, one per row. `loans[mask]` keeps the rows where the mask is `True`. Every `WHERE` you wrote in weeks 1–3 is a mask. Masks combine with `&` (and), `|` (or) and `~` (not).
 
+```pic
+{"id": "w05d2-pic1", "title": "A mask is a True/False column; [ ] keeps the True rows", "caption": "`mask = loans[\"dpd\"] > 0` gives one True or False per row. `loans[mask]` keeps the True rows (green) and drops the rest; the kept rows keep their index labels 277, 280, 281. 399 of the 7 828 loans pass.", "tables": [{"id": "src", "name": "loans", "cols": ["(index)", "loan_id", "dpd", "mask"], "rows": [[277, 282, 79, "True"], [278, 283, 0, "False"], [279, 284, 0, "False"], [280, 285, 11, "True"], [281, 286, 379, "True"], [282, 287, 0, "False"]], "new": ["mask"], "keep": [0, 3, 4], "drop": [1, 2, 5], "more": "… 7 828 rows"}, {"id": "res", "name": "loans[mask]", "cols": ["(index)", "loan_id", "dpd"], "rows": [[277, 282, 79], [280, 285, 11], [281, 286, 379]], "via": "loans[mask]", "more": "… 399 rows"}]}
+```
+
 **How to write it.**
 
 ```python
@@ -304,11 +308,9 @@ late.loc[late["dpd"] > 400, ["loan_id", "product", "dpd"]].head(3)   # loc = a m
 22 22
 ```
 
-| position (`iloc`) | label (`loc`) | loan_id |
-|---|---|---|
-| 0 | 20 | 22 |
-| 1 | 54 | 57 |
-| 2 | 85 | 88 |
+```pic
+{"id": "w05d2-pic2", "title": "One row, two addresses: position for iloc, label for loc", "caption": "After the filter, loan 22 sits at **position** 0 of `late` but keeps its **label** 20 from `loans`. `late.iloc[0]` and `late.loc[20]` point at the same row; `late.loc[0]` raises `KeyError`.", "tables": [{"id": "late", "name": "late", "cols": ["position", "label", "loan_id", "dpd"], "rows": [[0, 20, 22, 627], [1, 54, 57, 46], [2, 85, 88, 422]], "tags": {"position": "iloc", "label": "loc"}, "cells": [[0, "position"], [0, "label"]], "more": "… 399 rows"}]}
+```
 
 The first late loan sits at **position** 0 of `late` but keeps its **label** 20 from `loans`; both point at loan 22. The last line returns loans 22, 88 and 128 — the first three more than 400 days late.
 
@@ -557,6 +559,10 @@ print(len(cust.dropna(subset=["monthly_income"])))
 ### pd.cut — buckets without a CASE
 
 **What it is.** `pd.cut(col, bins=edges, labels=…)` puts every number into an interval and returns its label — the `CASE WHEN dpd <= 30 THEN …` of week 2 in one line. Intervals are **right-closed** by default: `(30, 60]` contains 60 but not 30.
+
+```pic
+{"id": "w05d2-pic3", "title": "Right-closed: 60 is in (30, 60], 61 is not", "caption": "Six real loans near the edges. Loan 1997 is exactly 60 days late and lands in **31-60**; loan 7286, one day more, starts **61-90** (both circled). Same colour, same bucket.", "tables": [{"id": "l", "name": "loans", "cols": ["loan_id", "dpd", "interval", "bucket_pd"], "rows": [[1, 0, "(−1, 0]", "0"], [6227, 29, "(0, 30]", "1-30"], [5613, 31, "(30, 60]", "31-60"], [1997, 60, "(30, 60]", "31-60"], [7286, 61, "(60, 90]", "61-90"], [22, 627, "(90, ∞]", "90+"]], "new": ["bucket_pd"], "tone": ["a", "b", "c", "c", "d", "e"], "cells": [[3, "dpd"], [4, "dpd"]]}]}
+```
 
 **How to write it.**
 

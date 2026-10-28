@@ -59,12 +59,8 @@ Eight regions come back, one row each; Tashkent's customers paid 102.6 bn — th
 
 The three steps, drawn on four payments:
 
-```text
- region    amount          split by region          sum per group        combined
- Tashkent  100     ──▶   Tashkent: 100, 300   ──▶   Tashkent 400   ──▶   Tashkent 400
- Fergana   200           Fergana:  200, 50          Fergana  250         Fergana  250
- Tashkent  300
- Fergana    50
+```pic
+{"id": "w05d3-pic1", "title": "Split by the key, sum each group, combine", "caption": "Each colour is one group. Tashkent's two payments add up to 400, Fergana's to 250, and the result has one row per region. The key becomes the index, sorted: Fergana before Tashkent.", "tables": [{"id": "src", "name": "pay", "cols": ["region", "amount"], "rows": [["Tashkent", 100], ["Fergana", 200], ["Tashkent", 300], ["Fergana", 50]], "tone": ["a", "b", "a", "b"]}, {"id": "res", "name": "result", "cols": ["region", "amount"], "rows": [["Fergana", 250], ["Tashkent", 400]], "tone": ["b", "a"], "tags": {"region": "index"}, "via": "groupby(\"region\") → sum"}]}
 ```
 
 The functions you can name: `sum`, `mean`, `median`, `min`, `max`, `count`, `size`, `nunique`, `first`. The **key becomes the index** of the result; `.reset_index()` turns it back into a column.
@@ -167,6 +163,10 @@ pm.unstack(fill_value=0)                                   # the second key beco
 
 **What it is.** `transform` computes a group's number and writes it **next to every row of the group**. The result has as many rows as the frame. It is week 3's window function `SUM(amount) OVER (PARTITION BY loan_id)`.
 
+```pic
+{"id": "w05d3-pic2", "title": "transform writes the group's total on every row", "caption": "Loan 1's 18 payments add up to 31 350 600, loan 2's 9 payments to 25 119 000. Each total sits on every row of its loan (same colour), so the frame keeps all its rows — `agg` would return one row per loan.", "tables": [{"id": "p", "name": "pay", "cols": ["payment_id", "loan_id", "amount", "loan_total"], "rows": [[1, 1, "1 741 700", "31 350 600"], [2, 1, "1 741 700", "31 350 600"], [19, 2, "2 791 000", "25 119 000"], [20, 2, "2 791 000", "25 119 000"]], "new": ["loan_total"], "tone": ["a", "a", "b", "b"], "more": "… more rows"}]}
+```
+
 **How to write it.**
 
 ```python
@@ -255,6 +255,10 @@ Card carries a third of the 52 850 payments (17 612, 33.32 %); the other four me
 ### merge — the join, and its four how=
 
 **What it is.** `left.merge(right, on="key", how=...)` is the **join** (*соединение*): it puts the rows of two frames side by side where the key matches. `how=` decides what happens to a row with **no partner** — exactly week 2's INNER / LEFT / RIGHT / FULL.
+
+```pic
+{"id": "w05d3-pic3", "title": "how=\"left\" keeps every left row; no partner gives NaN", "caption": "Instalments 2 and 3 find a payment (same colour). Instalment 1 has none and stays, with **NaN** in `paid`; the stray payment 4 has no left row, so the left merge drops it (struck through).", "tables": [{"id": "sched", "name": "sched", "cols": ["installment_id", "total_due"], "rows": [[1, 100], [2, 100], [3, 100]]}, {"id": "got", "name": "got", "cols": ["installment_id", "paid"], "rows": [[2, 100], [3, 60], [4, 50]], "drop": [2]}, {"id": "res", "name": "result", "cols": ["installment_id", "total_due", "paid"], "rows": [[1, 100, "NaN"], [2, 100, 100], [3, 100, 60]], "cells": [[0, "paid"]], "via": "merge(got, how=\"left\")"}], "links": [{"from": ["sched", 1, "installment_id"], "to": ["got", 0, "installment_id"]}, {"from": ["sched", 2, "installment_id"], "to": ["got", 1, "installment_id"]}]}
+```
 
 **How to write it.** Two tiny frames first: three instalments, and payments for instalments 2, 3 and a stray 4.
 

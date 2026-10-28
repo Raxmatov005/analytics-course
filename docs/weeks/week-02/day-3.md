@@ -18,6 +18,10 @@
 
 **What it is.** A **function** takes a value from a row and returns a changed value. Nothing in the table changes; only the result does. Functions work in `SELECT`, `WHERE`, `GROUP BY`, `HAVING` and `ORDER BY`. The two dialects differ most on this day: every example is written for SQLite, with the SQL Server spelling in a trailing comment.
 
+```pic
+{"id": "w02d3-pic1", "title": "A function changes the value on its way out", "caption": "Each raw spelling of `method` goes through `TRIM`, then `LOWER`. Spellings of the same colour come out as one clean value.", "tables": [{"name": "result", "cols": ["method", "cleaned"], "rows": [["'Card'", "'card'"], ["'card'", "'card'"], ["'CASH '", "'cash'"], ["'cash'", "'cash'"], ["'PayMe'", "'payme'"], ["'payme'", "'payme'"]], "tone": ["a", "a", "b", "b", "c", "c"], "new": ["cleaned"], "more": "… 10 spellings, 6 clean values in all"}]}
+```
+
 **How to write it.** `function(value, other arguments)`, wherever a column could stand:
 
 ```sql
@@ -394,6 +398,10 @@ SELECT '2026-9-5' < '2026-10-01';                               -- 0 (false): '9
 
 **What it is.** **strftime**`('format', date)` returns parts of a date as **text**: `%Y` year, `%m` month, `%d` day, `%H` hour, `%w` weekday (0 = Sunday), and any combination such as `'%Y-%m'`. SQL Server has a function per part: `YEAR(d)`, `MONTH(d)`, `DAY(d)`, `DATEPART(hour, d)`, `DATEPART(weekday, d)`, `FORMAT(d, 'yyyy-MM')`.
 
+```pic
+{"id": "w02d3-pic2", "title": "strftime cuts a part out of a date, as text", "caption": "`strftime('%Y-%m', disbursed_at)` gives the month, `strftime('%w', disbursed_at)` the weekday (0 = Sunday … 6 = Saturday). Both come back as text: compare `weekday` with `'5'`, not `5`.", "tables": [{"name": "loans", "cols": ["loan_id", "disbursed_at", "month", "weekday"], "rows": [[1, "2025-03-28", "2025-03", "'5'"], [2, "2025-12-05", "2025-12", "'5'"], [3, "2026-03-28", "2026-03", "'6'"], [4, "2026-08-23", "2026-08", "'0'"], [5, "2024-05-22", "2024-05", "'3'"]], "new": ["month", "weekday"]}]}
+```
+
 **How to write it.**
 
 ```sql
@@ -418,6 +426,10 @@ Loans are paid out evenly on all seven days, about 1 100 each, Sundays included:
 ### Date arithmetic — days between two dates, months added to a date
 
 **What it is.** Two operations cover most needs. **The difference in days**: SQLite `julianday(b) - julianday(a)`, SQL Server `DATEDIFF(day, a, b)`. **A date moved by a period**: SQLite `date(d, '+1 month')`, `date(d, '-30 days')`, `date(d, 'start of month')`; SQL Server `DATEADD(month, 1, d)`, `DATEADD(day, -30, d)`, `DATEFROMPARTS(YEAR(d), MONTH(d), 1)`.
+
+```pic
+{"id": "w02d3-pic3", "title": "Days between two dates: the as-of date minus the payout date", "caption": "`julianday('2026-10-01') - julianday(disbursed_at)`, cut to whole days with `CAST(… AS INTEGER)`. The older the loan, the bigger the number: loan 1 is 552 days old.", "tables": [{"name": "loans", "cols": ["loan_id", "disbursed_at", "age_days"], "rows": [[1, "2025-03-28", 552], [2, "2025-12-05", 300], [3, "2026-03-28", 187], [4, "2026-08-23", 39], [5, "2024-05-22", 862]], "new": ["age_days"], "cells": [[0, "age_days"]]}]}
+```
 
 **How to write it.**
 

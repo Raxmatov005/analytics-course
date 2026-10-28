@@ -91,6 +91,10 @@ Customer 1 earns 3 894 708 a month, 46 736 496 a year. For the 356 customers wit
 
 **What it is.** Aggregates work on the known values only. `COUNT(column)` counts non-NULL values, `SUM` adds them, `AVG` divides their sum by **their** count. `COUNT(*)` is the one that counts every row.
 
+```pic
+{"id": "w02d4-pic1", "title": "COUNT(column) and AVG skip the NULL", "caption": "Six customers, one income missing. `COUNT(*)` counts 6 rows, `COUNT(monthly_income)` only the 5 known values, and `AVG` divides their sum by 5, not by 6.", "tables": [{"name": "customers", "cols": ["customer_id", "monthly_income"], "rows": [[10, "6 548 453"], [11, "35 330 309"], [12, "32 573 331"], [13, "5 894 498"], [14, null], [15, "12 982 263"]], "cells": [[4, "monthly_income"]]}, {"name": "result", "cols": ["rows_", "with_income", "avg_income"], "rows": [[6, 5, "18 665 771"]], "tags": {"rows_": "COUNT(*)", "with_income": "COUNT(col)", "avg_income": "AVG(col)"}, "via": "aggregate the six rows"}]}
+```
+
 **How to write it.**
 
 | Expression | Result | Why |
@@ -171,6 +175,10 @@ Fergana Central approves 72.8 % of the applications it decided; Nukus Central 68
 ### Searched CASE — a value chosen by conditions
 
 **What it is.** A **searched CASE** (*условное выражение*) tests conditions in order and returns the value of the **first** one that is true. `ELSE` is what all the other rows get; without `ELSE` they get NULL.
+
+```pic
+{"id": "w02d4-pic2", "title": "CASE gives each row the value of its first true WHEN", "caption": "Each income runs down the `WHEN` lines and stops at the first one that is true; the empty income is caught by the first line, `IS NULL`, and becomes `'unknown'`. Same colour, same band.", "tables": [{"name": "customers", "cols": ["customer_id", "monthly_income", "income_band"], "rows": [[13, "5 894 498", "5-10m"], [14, null, "unknown"], [15, "12 982 263", "10-20m"], [16, "3 120 523", "<5m"], [17, "4 074 987", "<5m"], [18, "22 271 413", "20m+"]], "tone": ["b", null, "c", "a", "a", "d"], "new": ["income_band"], "cells": [[1, "income_band"]]}]}
+```
 
 **How to write it.**
 
@@ -322,6 +330,10 @@ WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;        
 ### The LEFT JOIN that turns into an INNER JOIN — ON vs WHERE
 
 **What it is.** A filter on the **right** table written in `WHERE` runs after the join. On every row with no partner the right columns are NULL, so the test is not true, and `WHERE` deletes exactly the rows LEFT was there to keep. The LEFT JOIN becomes an INNER JOIN. In `ON`, the same filter only decides which right rows count as a match.
+
+```pic
+{"id": "w02d4-pic3", "title": "A right-table filter in WHERE deletes the rows LEFT kept", "caption": "Customer 8 has only a closed loan. With `l.status = 'active'` in `ON`, 8 stays with NULLs. In `WHERE`, the join first gives 8 its closed loan, then `WHERE` strikes the row out, and customer 8 is gone.", "tables": [{"id": "on", "name": "result", "label": "in ON", "cols": ["customer_id", "loan_id", "status"], "rows": [[5, 1305, "active"], [8, null, null]], "keep": [0, 1]}, {"id": "wh", "name": "result", "label": "in WHERE", "cols": ["customer_id", "loan_id", "status"], "rows": [[5, 1305, "active"], [8, 2418, "closed"]], "keep": [0], "drop": [1]}], "stack": true}
+```
 
 **How to write it.** "Every customer, with their active loans":
 

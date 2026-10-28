@@ -149,6 +149,10 @@ Loans run from 300 000 to 599 060 000 UZS. The first was paid out on 2 January 2
 
 **What it is.** **GROUP BY** (*группировка*) splits the rows into groups that share a value. Every aggregate then runs once per group, and the result has one row per group.
 
+```pic
+{"id": "w02d2-pic1", "title": "Five rows in, one row per group out", "caption": "Rows with the same `product` share a colour and fold into one row. `COUNT(*)` and `SUM(principal)` run once per colour: Auto 2 loans, 200 + 250 = 450.", "tables": [{"id": "ln", "name": "ln", "cols": ["loan_id", "product", "principal"], "rows": [[1, "Micro", 2], [2, "Auto", 200], [3, "Micro", 3], [4, "Auto", 250], [5, "BNPL", 4]], "tone": ["a", "b", "a", "b", "c"]}, {"id": "res", "name": "result", "cols": ["product", "loans", "total"], "rows": [["Auto", 2, 450], ["BNPL", 1, 4], ["Micro", 2, 5]], "tone": ["b", "c", "a"], "new": ["loans", "total"], "via": "GROUP BY product"}]}
+```
+
 **How to write it.** Five loans, three products:
 
 | `ln` | loan_id | product | principal |
@@ -243,6 +247,10 @@ ORDER BY month, disbursed DESC;       -- 50 rows: 10 months × 5 products
 ### WHERE vs HAVING — filter rows, or filter groups
 
 **What it is.** `WHERE` filters **rows before** grouping. **HAVING** filters **groups after** the aggregates are computed. "Active loans, branches with more than 300 of them" needs both.
+
+```pic
+{"id": "w02d2-pic2", "title": "WHERE picks the rows, HAVING picks the groups", "caption": "`WHERE` has already kept the active loans and `GROUP BY` has counted them per branch. Now `HAVING` asks each group: more than 300? Green groups stay, struck-through groups go.", "tables": [{"id": "grp", "name": "groups", "cols": ["branch_name", "active_loans"], "rows": [["Samarkand Central", 396], ["Fergana Central", 373], ["Andijan Central", 334], ["Namangan Central", 287], ["Bukhara Central", 270], ["Nukus Central", 213]], "keep": [0, 1, 2], "drop": [3, 4, 5], "more": "… and 4 more: 3 above, 1 below"}, {"id": "res", "name": "result", "cols": ["branch_name", "active_loans"], "rows": [["Tashkent Central", 435], ["Tashkent North", 428], ["Tashkent South", 416], ["Samarkand Central", 396], ["Fergana Central", 373], ["Andijan Central", 334]], "via": "HAVING COUNT(*) > 300"}]}
+```
 
 **How to write it.**
 
@@ -380,6 +388,10 @@ which rows      keep rows   make groups   keep groups    compute columns     sor
 ### Set operators — stacking results
 
 **What it is.** Joins put tables side by side; **set operators** (*операции над множествами*) put query results **on top of each other**. Both queries must return the same number of columns, of compatible types.
+
+```pic
+{"id": "w02d2-pic3", "title": "UNION stacks one result on the other, then removes repeats", "caption": "Customers 2, 5 and 17 only. `UNION` puts the second list under the first and strikes out every row it has already seen: 5 and 17 are in both lists. `UNION ALL` would keep all five rows.", "tables": [{"id": "l", "name": "loans", "cols": ["customer_id"], "rows": [[5], [17]], "tone": ["a", "b"]}, {"id": "a", "name": "applications", "cols": ["customer_id"], "rows": [[5], [2], [17]], "tone": ["a", "c", "b"]}, {"id": "res", "name": "result", "cols": ["customer_id"], "rows": [[5], [17], [5], [2], [17]], "tone": ["a", "b", "a", "c", "b"], "drop": [2, 4], "via": "UNION"}]}
+```
 
 **How to write it.**
 

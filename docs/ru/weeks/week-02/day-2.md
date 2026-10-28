@@ -149,6 +149,10 @@ FROM loans;
 
 **Что это.** **GROUP BY** (*группировка*) делит строки на группы с одинаковым значением. Каждый агрегат затем считается один раз на группу, и в результате одна строка на группу.
 
+```pic
+{"id": "w02d2-pic1", "title": "Пять строк на входе — по строке на группу на выходе", "caption": "Строки с одинаковым `product` одного цвета и сворачиваются в одну строку. `COUNT(*)` и `SUM(principal)` считаются один раз на цвет: Auto — 2 кредита, 200 + 250 = 450.", "tables": [{"id": "ln", "name": "ln", "cols": ["loan_id", "product", "principal"], "rows": [[1, "Micro", 2], [2, "Auto", 200], [3, "Micro", 3], [4, "Auto", 250], [5, "BNPL", 4]], "tone": ["a", "b", "a", "b", "c"]}, {"id": "res", "name": "результат", "cols": ["product", "loans", "total"], "rows": [["Auto", 2, 450], ["BNPL", 1, 4], ["Micro", 2, 5]], "tone": ["b", "c", "a"], "new": ["loans", "total"], "via": "GROUP BY product"}]}
+```
+
 **Как пишется.** Пять кредитов, три продукта:
 
 | `ln` | loan_id | product | principal |
@@ -243,6 +247,10 @@ ORDER BY month, disbursed DESC;       -- 50 строк: 10 месяцев × 5 �
 ### WHERE vs HAVING — фильтр строк или фильтр групп :id=where-vs-having-filter-rows-or-filter-groups
 
 **Что это.** `WHERE` фильтрует **строки до** группировки. **HAVING** фильтрует **группы после** того, как агрегаты посчитаны. «Активные кредиты, филиалы, где их больше 300» требует обоих.
+
+```pic
+{"id": "w02d2-pic2", "title": "WHERE отбирает строки, HAVING — группы", "caption": "`WHERE` уже оставил активные кредиты, а `GROUP BY` посчитал их по филиалам. Теперь `HAVING` спрашивает каждую группу: больше 300? Зелёные группы остаются, зачёркнутые уходят.", "tables": [{"id": "grp", "name": "группы", "cols": ["branch_name", "active_loans"], "rows": [["Samarkand Central", 396], ["Fergana Central", 373], ["Andijan Central", 334], ["Namangan Central", 287], ["Bukhara Central", 270], ["Nukus Central", 213]], "keep": [0, 1, 2], "drop": [3, 4, 5], "more": "… и ещё 4: 3 выше, 1 ниже"}, {"id": "res", "name": "результат", "cols": ["branch_name", "active_loans"], "rows": [["Tashkent Central", 435], ["Tashkent North", 428], ["Tashkent South", 416], ["Samarkand Central", 396], ["Fergana Central", 373], ["Andijan Central", 334]], "via": "HAVING COUNT(*) > 300"}]}
+```
 
 **Как пишется.**
 
@@ -380,6 +388,10 @@ FROM / JOIN  →  WHERE          →  GROUP BY         →  HAVING          → 
 ### Операции над множествами — результаты стопкой :id=set-operators-stacking-results
 
 **Что это.** Соединения ставят таблицы рядом; **операции над множествами** (*set operators*) кладут результаты запросов **друг на друга**. Оба запроса должны возвращать одинаковое число столбцов совместимых типов.
+
+```pic
+{"id": "w02d2-pic3", "title": "UNION кладёт один результат на другой и убирает повторы", "caption": "Только клиенты 2, 5 и 17. `UNION` ставит второй список под первый и вычёркивает каждую строку, которая уже была: 5 и 17 есть в обоих списках. `UNION ALL` оставил бы все пять строк.", "tables": [{"id": "l", "name": "loans", "cols": ["customer_id"], "rows": [[5], [17]], "tone": ["a", "b"]}, {"id": "a", "name": "applications", "cols": ["customer_id"], "rows": [[5], [2], [17]], "tone": ["a", "c", "b"]}, {"id": "res", "name": "результат", "cols": ["customer_id"], "rows": [[5], [17], [5], [2], [17]], "tone": ["a", "b", "a", "c", "b"], "drop": [2, 4], "via": "UNION"}]}
+```
 
 **Как пишется.**
 

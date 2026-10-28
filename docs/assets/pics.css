@@ -85,3 +85,19 @@
   .markdown-section .pic th, .markdown-section .pic td { padding: 5px 6px; font-size: 11px; }
   .pic-tag { font-size: 9px !important; letter-spacing: .02em; }
 }
+
+/* charts: drawn 360 wide (a phone), never wider than 560 px */
+.pic-body-chart { display: block; }
+.pic-chart { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; overflow: visible; font-family: var(--sans, system-ui); }
+.pic-chart .pc-v, .pic-chart .pc-x, .pic-chart .pc-m { text-anchor: middle; }
+.pic-chart .pc-v { font-size: 10px; font-weight: 700; fill: var(--ink, #0f172a); }
+.pic-chart .pc-x, .pic-chart .pc-e { font-size: 10px; fill: var(--muted, #64748b); }
+.pic-chart .pc-m { font-size: 10px; font-weight: 800; fill: #b45309; }
+.pic-chart .pc-note { font-size: 9.5px; fill: var(--muted, #64748b); }
+.pic-chart .pc-axis { stroke: #cbd5e1; stroke-width: 1; }
+.pic-chart .pc-mark { stroke: #d97706; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.pic-chart .pc-l { font-size: 10.5px; text-anchor: end; fill: var(--ink, #0f172a); }
+.pic-chart .pc-iv { stroke: var(--brand, #0f766e); stroke-width: 2.2; stroke-linecap: round; }
+.pic-chart .pc-dot { fill: var(--brand, #0f766e); }
+.pic-chart .miss { stroke: #e11d48; fill: #e11d48; }
+.pic-chart .pc-l.miss { stroke: none; font-weight: 700; }

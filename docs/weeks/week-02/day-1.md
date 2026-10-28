@@ -74,6 +74,10 @@ Run it: 7 828 rows — one per loan, because every loan has exactly one customer
 
 **What it is.** **INNER JOIN** (*внутреннее соединение*) keeps a row only when it finds a partner on the other side. A row with no partner is left out. `JOIN` on its own means `INNER JOIN`.
 
+```pic
+{"id": "w02d1-pic1", "title": "INNER JOIN keeps only the rows that find a partner", "caption": "Each customer looks for an application with `cust_id = id`. Bekzod and Dilnoza find one (same colour) and come out. Aziz has no application and application 103 has no customer: both are struck out.", "tables": [{"id": "cust", "name": "cust", "cols": ["id", "name"], "rows": [[1, "Aziz"], [2, "Bekzod"], [3, "Dilnoza"]], "drop": [0]}, {"id": "app", "name": "app", "cols": ["app_id", "cust_id", "amount"], "rows": [[101, 2, 500], [102, 3, 900], [103, 4, 120]], "drop": [2]}, {"id": "res", "name": "result", "cols": ["id", "name", "app_id", "amount"], "rows": [[2, "Bekzod", 101, 500], [3, "Dilnoza", 102, 900]], "tone": ["a", "b"], "via": "JOIN app ON cust_id = id"}], "links": [{"from": ["cust", 1, "id"], "to": ["app", 0, "cust_id"]}, {"from": ["cust", 2, "id"], "to": ["app", 1, "cust_id"]}]}
+```
+
 **How to write it.** On the small tables:
 
 ```sql
@@ -114,6 +118,10 @@ INNER JOIN applications a ON a.customer_id = c.customer_id;   -- 14 000 rows: on
 ### LEFT JOIN — every row of the left table
 
 **What it is.** **LEFT JOIN** (*левое соединение*) keeps **every row of the left table** — the table named in `FROM`. When a left row has a partner, the partner's columns are filled in. When it has none, the row stays and the right-hand columns are **NULL** (empty).
+
+```pic
+{"id": "w02d1-pic2", "title": "LEFT JOIN keeps every row of the left table", "caption": "The same two tables. Bekzod and Dilnoza get their application as before; Aziz stays too, with **NULL** where his application would be. Application 103 is still dropped: LEFT protects only the left table.", "tables": [{"id": "cust", "name": "cust", "cols": ["id", "name"], "rows": [[1, "Aziz"], [2, "Bekzod"], [3, "Dilnoza"]], "keep": [0, 1, 2]}, {"id": "app", "name": "app", "cols": ["app_id", "cust_id", "amount"], "rows": [[101, 2, 500], [102, 3, 900], [103, 4, 120]], "drop": [2]}, {"id": "res", "name": "result", "cols": ["id", "name", "app_id", "amount"], "rows": [[1, "Aziz", null, null], [2, "Bekzod", 101, 500], [3, "Dilnoza", 102, 900]], "tone": [null, "a", "b"], "via": "LEFT JOIN app ON cust_id = id"}], "links": [{"from": ["cust", 1, "id"], "to": ["app", 0, "cust_id"]}, {"from": ["cust", 2, "id"], "to": ["app", 1, "cust_id"]}]}
+```
 
 **How to write it.**
 
@@ -329,6 +337,10 @@ The second condition does two jobs: `b.customer_id > a.customer_id` stops a row 
 ### Many-to-one and one-to-many — what happens to your row count
 
 **What it is.** The **direction of the relationship** decides how many rows a join returns.
+
+```pic
+{"id": "w02d1-pic3", "title": "One to many: each loan comes out once per instalment", "caption": "Loans 3 and 6 have three instalments each, so two loans become six rows and each `principal` is repeated three times. One row is now an instalment, not a loan.", "tables": [{"name": "loans", "cols": ["loan_id", "principal"], "rows": [[3, "1 590 000"], [6, "4 720 000"]], "tone": ["a", "b"]}, {"name": "result", "cols": ["loan_id", "principal", "installment_no"], "rows": [[3, "1 590 000", 1], [3, "1 590 000", 2], [3, "1 590 000", 3], [6, "4 720 000", 1], [6, "4 720 000", 2], [6, "4 720 000", 3]], "tone": ["a", "a", "a", "b", "b", "b"], "tags": {"principal": "repeated"}, "via": "JOIN installments i", "more": "… 92 193 rows for all loans"}]}
+```
 
 - **Many → one** (`loans → customers`): every loan finds **one** customer. 7 828 loans in, 7 828 rows out. The row count does not change.
 - **One → many** (`loans → installments`): every loan finds **all** its instalments. 7 828 loans in, **92 193** rows out — one per instalment, and the loan's columns are **repeated** on every one of them.

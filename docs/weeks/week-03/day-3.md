@@ -18,6 +18,10 @@
 
 **What it is.** A **subquery** (*подзапрос*) is a query in brackets inside another query. A **scalar subquery** returns exactly one row and one column — one value. The engine runs it and uses the value wherever you could write a number.
 
+```pic
+{"id": "w03d3-pic1", "title": "A scalar subquery is one value, used like a number", "caption": "The brackets run first and return one value, the average principal. The outer `WHERE` then compares every loan with it: green loans are larger and stay.", "tables": [{"id": "sub", "name": "subquery", "label": "one value", "cols": ["AVG(principal)"], "rows": [["51 709 668"]], "cells": [[0, "AVG(principal)"]]}, {"id": "loans", "name": "loans", "cols": ["loan_id", "principal"], "rows": [[19, "7 220 000"], [20, "244 440 000"], [21, "21 790 000"], [22, "4 400 000"], [23, "4 530 000"], [24, "312 220 000"]], "keep": [1, 5], "drop": [0, 2, 3, 4], "via": "WHERE principal > ( … )", "more": "… 7 828 loans in all"}]}
+```
+
 **How to write it.**
 
 ```sql
@@ -240,6 +244,10 @@ The same seven rows: 2 089, 1 378, 593 … 4. The work is identical; the order o
 
 **What it is.** One `WITH` can define **several** CTEs, separated by commas. Each may use every CTE above it. A **chain** turns a long analysis into named steps, each with one **grain** — one thing that a row is.
 
+```pic
+{"id": "w03d3-pic2", "title": "A CTE chain: one grain per step", "caption": "Three customers, one colour each. Step 1 has a row per loan, step 2 a row per customer, step 3 a row per number of owing loans, counted over all borrowers. Each customer lands in the row of their own count.", "tables": [{"id": "pl", "name": "per_loan", "cols": ["loan_id", "outstanding"], "rows": [[3091, "3 315 222"], [5337, "3 266 500"], [1305, "2 720 000"], [1632, "13 363 875"], [4962, "9 794 087"], [7693, "6 195 970"]], "tone": ["b", "b", "a", "c", "c", "c"], "more": "… 3 409 loans"}, {"id": "pc", "name": "per_customer", "cols": ["customer_id", "owing_loans", "outstanding"], "rows": [[5, 1, "2 720 000"], [1, 2, "6 581 722"], [9, 3, "29 353 932"]], "tone": ["a", "b", "c"], "via": "GROUP BY l.customer_id"}, {"id": "fin", "name": "result", "cols": ["owing_loans", "customers", "avg_outstanding"], "rows": [[1, "1 859", "63 340 783"], [2, "513", "115 862 999"], [3, "134", "181 709 079"], [4, "24", "227 685 135"], [5, "4", "254 977 446"], [6, "1", "701 901 165"]], "tone": ["a", "b", "c", null, null, null], "via": "GROUP BY owing_loans"}], "stack": true}
+```
+
 **How to write it.** Outstanding per loan → per customer → customers by number of owing loans:
 
 ```sql
@@ -312,14 +320,9 @@ SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;  -- 21 · 2025-
 
 The trick is "ever": once a loan is late, it stays "ever late". A running `MAX` of a 0/1 flag (Day 1's running window) does exactly that:
 
-| loan | MOB | late30 (this instalment) | ever30 = `MAX(late30) OVER (PARTITION BY loan ORDER BY MOB)` |
-|---|---|---|---|
-| 1 | 1 | 0 | 0 |
-| 1 | 2 | 1 | **1** |
-| 1 | 3 | 0 | **1** — stays on |
-| 2 | 1 | 0 | 0 |
-| 2 | 2 | 0 | 0 |
-| 2 | 3 | 0 | 0 |
+```pic
+{"id": "w03d3-pic3", "title": "A running MAX: once late, always \"ever late\"", "caption": "`late30` is this instalment only; `ever30 = MAX(late30) OVER (PARTITION BY loan ORDER BY MOB)`. Loan 1 is late at MOB 2, and the circled 1 at MOB 3 stays on although that instalment was paid on time.", "tables": [{"name": "flag", "cols": ["loan", "MOB", "late30", "ever30"], "rows": [[1, 1, 0, 0], [1, 2, 1, 1], [1, 3, 0, 1], [2, 1, 0, 0], [2, 2, 0, 0], [2, 3, 0, 0]], "tone": ["a", "a", "a", "b", "b", "b"], "new": ["ever30"], "cells": [[1, "late30"], [2, "ever30"]]}]}
+```
 
 At MOB 3: 1 of 2 loans ever late = 50 %.
 

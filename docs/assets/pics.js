@@ -11,7 +11,8 @@ match, computed columns tinted, and a step label ("WHERE …", "GROUP BY …") b
 tags: {"col": "label"} circles any other column with its own label; tone: a colour per row (a–e, null = none) for groups and join matches; keep / drop: row numbers a filter keeps (green)
 or drops (faded, struck through); new: computed columns; cells: single cells to point at; a null value prints as NULL.
 Tables sit side by side and wrap under each other on a phone ("stack": true always stacks); the two cells of a link
-share a colour, and an arrow joins their rows while the target table sits to the right (drawn again on every resize). Every text is the page's own language (the Russian pages have their own blocks). */
+share a colour, and an arrow joins their rows while the target table sits to the right (drawn again on every resize). Every text is the page's own language (the Russian pages have their own blocks). A "chart" (bars or intervals, see
+below) draws instead of, or above, the tables. */
 (function () {
   function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -90,6 +91,60 @@ share a colour, and an arrow joins their rows while the target table sits to the
       '<path d="M0 0L10 5L0 10z"/></marker></defs>' + out;
   }
 
+  /* ---------- charts (Weeks 4–8): an SVG drawn at phone size (360 wide) that grows to at most 560 px ----------
+     {"type": "bars", "labels": ["0", "1–30"], "values": [14, 124], "hl": [1], "tone": ["a", null], "show": true,
+      "marks": [{"at": 1.5, "label": "mean"}], "unit": "%", "note": "y: loans"}
+       bars, highlighted ones (hl) in the brand colour, the rest pale; tone colours bars by group; show prints each value;
+       a mark is a dashed vertical line at a bar position (0 = the first bar's centre, 0.5 = between the first two).
+     {"type": "intervals", "rows": [{"label": "sample 1", "lo": 1.2, "mid": 2.3, "hi": 3.4, "miss": false}],
+      "ref": {"at": 2.5, "label": "true value"}, "min": 0, "max": 5, "unit": "%"}
+       one horizontal interval per row with its point; "miss" rows (an interval that misses the reference) in red. */
+  var TONE = { a: '#14b8a6', b: '#f59e0b', c: '#8b5cf6', d: '#f43f5e', e: '#0ea5e9' };
+  function num(v, unit) {
+    var s = Math.abs(v) >= 1000 ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : String(Math.round(v * 100) / 100);
+    return s + (unit || '');
+  }
+  function bars(c) {
+    var W = 360, H = 210, L = 8, R = 8, top = c.marks && c.marks.length ? 38 : 22, bottom = 34, n = c.values.length, max = Math.max.apply(null, c.values.concat([0])) || 1;
+    var bw = (W - L - R) / n, h = H - top - bottom, hl = c.hl || [], out = '';
+    c.values.forEach(function (v, i) {
+      var bh = Math.max(1, h * v / max), x = L + i * bw + bw * 0.12, y = top + h - bh;
+      var fill = c.tone && c.tone[i] ? TONE[c.tone[i]] : hl.indexOf(i) >= 0 ? 'var(--brand, #0f766e)' : '#99d5cd';
+      out += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw * 0.76).toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="3" fill="' + fill + '"/>';
+      if (c.show) out += '<text x="' + (x + bw * 0.38).toFixed(1) + '" y="' + (y - 4).toFixed(1) + '" class="pc-v">' + esc(num(v, c.unit)) + '</text>';
+      out += '<text x="' + (x + bw * 0.38).toFixed(1) + '" y="' + (H - bottom + 14) + '" class="pc-x">' + esc(c.labels[i]) + '</text>';
+    });
+    out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + (top + h) + '" y2="' + (top + h) + '" class="pc-axis"/>';
+    (c.marks || []).forEach(function (m) {
+      var x = L + (m.at + 0.5) * bw;
+      out += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="16" y2="' + (top + h) + '" class="pc-mark"/>' +
+        '<text x="' + x.toFixed(1) + '" y="11" class="pc-m">' + esc(m.label) + '</text>';
+    });
+    if (c.note) out += '<text x="' + L + '" y="' + (H - 4) + '" class="pc-note">' + esc(c.note) + '</text>';
+    return '<svg class="pic-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img">' + out + '</svg>';
+  }
+  function intervals(c) {
+    var W = 360, row = 24, top = c.ref ? 24 : 8, lab = 92, R = 14, n = c.rows.length, H = top + n * row + 22;
+    var lo = c.min != null ? c.min : Math.min.apply(null, c.rows.map(function (r) { return r.lo; }));
+    var hi = c.max != null ? c.max : Math.max.apply(null, c.rows.map(function (r) { return r.hi; }));
+    var X = function (v) { return lab + (W - lab - R) * (v - lo) / ((hi - lo) || 1); }, out = '';
+    if (c.ref) out += '<line x1="' + X(c.ref.at).toFixed(1) + '" x2="' + X(c.ref.at).toFixed(1) + '" y1="' + (top - 6) + '" y2="' + (top + n * row) + '" class="pc-mark"/>' +
+      '<text x="' + X(c.ref.at).toFixed(1) + '" y="' + (top - 9) + '" class="pc-m">' + esc(c.ref.label) + '</text>';
+    c.rows.forEach(function (r, i) {
+      var y = top + i * row + row / 2, cls = r.miss ? ' miss' : '';
+      out += '<text x="' + (lab - 8) + '" y="' + (y + 4) + '" class="pc-l' + cls + '">' + esc(r.label) + '</text>' +
+        '<line x1="' + X(r.lo).toFixed(1) + '" x2="' + X(r.hi).toFixed(1) + '" y1="' + y + '" y2="' + y + '" class="pc-iv' + cls + '"/>' +
+        '<line x1="' + X(r.lo).toFixed(1) + '" x2="' + X(r.lo).toFixed(1) + '" y1="' + (y - 5) + '" y2="' + (y + 5) + '" class="pc-iv' + cls + '"/>' +
+        '<line x1="' + X(r.hi).toFixed(1) + '" x2="' + X(r.hi).toFixed(1) + '" y1="' + (y - 5) + '" y2="' + (y + 5) + '" class="pc-iv' + cls + '"/>' +
+        (r.mid != null ? '<circle cx="' + X(r.mid).toFixed(1) + '" cy="' + y + '" r="4" class="pc-dot' + cls + '"/>' : '');
+    });
+    var yb = top + n * row + 14;
+    out += '<text x="' + lab + '" y="' + yb + '" class="pc-e" text-anchor="start">' + esc(num(lo, c.unit)) + '</text>' +
+      '<text x="' + (W - R) + '" y="' + yb + '" class="pc-e" text-anchor="end">' + esc(num(hi, c.unit)) + '</text>';
+    return '<svg class="pic-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img">' + out + '</svg>';
+  }
+  function chart(c) { return c.type === 'intervals' ? intervals(c) : bars(c); }
+
   function mount(pre) {
     var spec;
     try { spec = JSON.parse((pre.querySelector('code') || pre).textContent); }
@@ -98,7 +153,7 @@ share a colour, and an arrow joins their rows while the target table sits to the
     fig.className = 'pic' + (spec.stack ? ' pic-stack' : '');
     fig.id = 'pic' + (++uid);
     fig.innerHTML = (spec.title ? '<div class="pic-title">' + inline(spec.title) + '</div>' : '') +
-      '<div class="pic-body">' + spec.tables.map(table).join('') + (spec.links && spec.links.length ? '<svg class="pic-links" aria-hidden="true"></svg>' : '') + '</div>' +
+      '<div class="pic-body' + (spec.chart ? ' pic-body-chart' : '') + '">' + (spec.chart ? chart(spec.chart) : '') + (spec.tables || []).map(table).join('') + (spec.links && spec.links.length ? '<svg class="pic-links" aria-hidden="true"></svg>' : '') + '</div>' +
       (spec.caption ? '<figcaption>' + inline(spec.caption) + '</figcaption>' : '');
     pre.parentNode.replaceChild(fig, pre);
     if (spec.links && spec.links.length) {
