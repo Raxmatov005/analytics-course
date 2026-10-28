@@ -22,11 +22,12 @@
 
 ```sql
 -- только схема: замените имена, прежде чем выполнять
-SELECT   column1, column2        -- какие столбцы (или * — все)
-FROM     table_name              -- из какой таблицы
-WHERE    condition               -- какие строки (необязательно)
-ORDER BY column1 DESC            -- в каком порядке (необязательно)
-LIMIT    5;                      -- не больше скольких строк (необязательно; SQL Server: SELECT TOP 5 …)
+SELECT   column1, column2  -- какие столбцы (или * — все)
+FROM     table_name        -- из какой таблицы
+WHERE    condition         -- какие строки (необязательно)
+ORDER BY column1 DESC      -- в каком порядке (необязательно)
+LIMIT    5;
+-- не больше скольких строк (необязательно; SQL Server: SELECT TOP 5 …)
 ```
 
 Настоящий запрос со всеми предложениями — пять самых крупных кредитов в дефолте:
@@ -62,7 +63,8 @@ LIMIT 5;
 **Как пишется.**
 
 ```sql
-SELECT loan_id, principal, disbursed_at, status    -- четыре столбца, в этом порядке
+-- четыре столбца, в этом порядке
+SELECT loan_id, principal, disbursed_at, status
 FROM loans;
 ```
 
@@ -152,7 +154,8 @@ SELECT DISTINCT channel, status FROM applications;
 ```sql
 SELECT loan_id, product_id, principal
 FROM loans
-ORDER BY product_id, principal DESC;    -- сначала по продукту (1, 2, 3 и далее), внутри продукта — крупные сверху
+ORDER BY product_id, principal DESC;
+-- сначала по продукту (1, 2, 3 и далее), внутри продукта — крупные сверху
 ```
 
 7 828 строк. Первым идёт продукт 1 (Micro), а внутри него — самые крупные кредиты: сверху 4 990 000.
@@ -247,13 +250,15 @@ SELECT COUNT(*) FROM applications WHERE channel <> 'branch';
 **Как пишется.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE principal > 200000000;        -- числа: без кавычек и без пробелов
+SELECT COUNT(*) FROM loans WHERE principal > 200000000;
+-- числа: без кавычек и без пробелов
 ```
 
 755 кредитов больше 200 000 000.
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01'; -- даты: 'YYYY-MM-DD' в кавычках
+SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01';
+-- даты: 'YYYY-MM-DD' в кавычках
 ```
 
 382 кредита выданы 1 сентября 2026 или позже — до последнего дня данных, 1 октября.
@@ -273,7 +278,8 @@ SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01'; -- даты: 'YYY
 **Как пишется.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;   -- то же, что term_months >= 12 AND term_months <= 24
+SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;
+-- то же, что term_months >= 12 AND term_months <= 24
 ```
 
 2 940 кредитов выданы на срок от 12 до 24 месяцев — включая кредиты ровно на 12 и ровно на 24 месяца.
@@ -295,7 +301,8 @@ SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;   -- то же, 
 **Как пишется.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);   -- то же, что product_id = 4 OR product_id = 5
+SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);
+-- то же, что product_id = 4 OR product_id = 5
 ```
 
 1 172 кредита — это Auto (продукт 4) или SME (продукт 5): 391 + 781.
@@ -315,13 +322,15 @@ SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);   -- то же, что pr
 **Как пишется.**
 
 ```sql
-SELECT name FROM products WHERE name LIKE '%loan';   -- что угодно, а в конце «loan»
+SELECT name FROM products WHERE name LIKE '%loan';
+-- что угодно, а в конце «loan»
 ```
 
 4 строки: Micro loan, Consumer loan, Auto loan, Small business loan. *Buy now pay later* не кончается на «loan».
 
 ```sql
-SELECT code FROM products WHERE code LIKE '____';    -- четыре подчёркивания = ровно четыре символа
+SELECT code FROM products WHERE code LIKE '____';
+-- четыре подчёркивания = ровно четыре символа
 ```
 
 3 строки: CONS, BNPL, AUTO. В MICRO пять букв, в SME — три.
@@ -415,8 +424,10 @@ SELECT COUNT(*) FROM loans WHERE status NOT IN ('closed', 'written_off');
 **Как пишется.** В `applied_at` лежат дата и время, например `2025-06-02 10:35:00`:
 
 ```sql
-SELECT COUNT(*) FROM applications WHERE applied_at = '2025-06-02';                               -- 0: ни одной строки ровно в полночь
-SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_at < '2025-06-03'; -- весь день
+SELECT COUNT(*) FROM applications WHERE applied_at = '2025-06-02';
+-- 0: ни одной строки ровно в полночь
+SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_at < '2025-06-03';
+-- весь день
 ```
 
 2 июня 2025 года подано 14 заявок. Первая строка находит 0, потому что `'2025-06-02 10:35:00'` не равно `'2025-06-02'`.
@@ -439,13 +450,17 @@ SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_a
 SELECT loan_id      AS loan,
        product_id   AS product,
        principal    AS amount_uzs,
-       disbursed_at AS paid_out_on                                     -- SELECT + псевдонимы
-FROM loans                                                             -- FROM
-WHERE product_id IN (4, 5)                                             -- IN
-  AND disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01'     -- полуоткрытый диапазон дат
-  AND status = 'active'                                                -- =
-ORDER BY principal DESC                                                -- ORDER BY
-LIMIT 5;                                                               -- LIMIT (SQL Server: вместо него TOP 5 после SELECT)
+       -- SELECT + псевдонимы
+       disbursed_at AS paid_out_on
+FROM loans                  -- FROM
+WHERE product_id IN (4, 5)  -- IN
+  -- полуоткрытый диапазон дат
+  AND disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01'
+  AND status = 'active'     -- =
+-- ORDER BY
+ORDER BY principal DESC
+LIMIT 5;
+-- LIMIT (SQL Server: вместо него TOP 5 после SELECT)
 ```
 
 5 строк. Самый крупный — кредит 6478, SME на 588 780 000, выданный 1 сентября. Фильтр проходит 51 кредит; `LIMIT` показывает первые пять.
@@ -617,7 +632,8 @@ ORDER BY principal DESC;
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE principal BETWEEN 1000000 AND 5000000;   -- ожидайте 3228
+SELECT COUNT(*) FROM loans WHERE principal BETWEEN 1000000 AND 5000000;
+-- ожидайте 3228
 ```
 То же, что `principal >= 1000000 AND principal <= 5000000`.
 
@@ -670,8 +686,10 @@ SELECT COUNT(*) FROM customers WHERE first_name LIKE 'Ma%';   -- ожидайт�
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;      -- ожидайте 356
-SELECT COUNT(*) FROM customers WHERE monthly_income IS NOT NULL;  -- ожидайте 5684
+SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;
+-- ожидайте 356
+SELECT COUNT(*) FROM customers WHERE monthly_income IS NOT NULL;
+-- ожидайте 5684
 ```
 356 + 5 684 = 6 040. Если вы написали `= NULL`, то получили 0 — перечитайте *IS NULL — пустая ячейка*.
 
@@ -709,10 +727,12 @@ ORDER BY credit_score DESC;
 
 ```sql
 SELECT COUNT(*) FROM applications
-WHERE product_id = 5 AND requested_amount >= 500000000 AND status = 'approved';   -- ожидайте 128
+WHERE product_id = 5 AND requested_amount >= 500000000 AND status = 'approved';
+-- ожидайте 128
 
 SELECT COUNT(*) FROM applications
-WHERE product_id = 5 AND requested_amount >= 500000000 OR status = 'approved';    -- ожидайте 8010 (!)
+WHERE product_id = 5 AND requested_amount >= 500000000 OR status = 'approved';
+-- ожидайте 8010 (!)
 ```
 Второй запрос считает *каждую* одобренную заявку по любому продукту плюс крупные SME-заявки. 128 против 8 010 — и ни одного сообщения об ошибке. Скобки всегда, когда `AND` встречается с `OR`.
 
@@ -777,8 +797,10 @@ ORDER BY monthly_income DESC;
 Это первое число, на которое смотрит риск-менеджер после изменения правил скоринга, и первое число, на которое жалуется менеджер по продажам. Два запроса и деление вручную (на следующей неделе `GROUP BY` и `CASE` будут делить за вас):
 
 ```sql
-SELECT COUNT(*) FROM applications;                                                    -- ожидайте 14000
-SELECT COUNT(*) FROM applications WHERE status IN ('approved', 'approved_not_disbursed'); -- ожидайте 8595
+SELECT COUNT(*) FROM applications;
+-- ожидайте 14000
+SELECT COUNT(*) FROM applications WHERE status IN ('approved', 'approved_not_disbursed');
+-- ожидайте 8595
 ```
 
 8 595 / 14 000 = **61.4 %**. `approved_not_disbursed` считается одобренной: компания *сказала «да»*; клиент ушёл. Одобрение — это про наше решение, а не про решение клиента.

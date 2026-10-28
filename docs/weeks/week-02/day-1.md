@@ -37,7 +37,8 @@ You need a join whenever one question needs columns from two tables. "Each loan 
 Aziz (1) has no application. Application 103 points to customer 4, who is not in `cust`. Those two rows are what tells the join types apart.
 
 ```sql
--- the two small tables, built in the query itself (WITH … VALUES), so every box on this page can use them
+-- the two small tables, built in the query itself (WITH … VALUES), so every box
+-- on this page can use them
 WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
      app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
 SELECT * FROM cust;
@@ -48,10 +49,14 @@ SELECT * FROM cust;
 **How to write it.**
 
 ```sql
-SELECT l.loan_id, c.first_name, c.last_name, l.principal   -- columns from both tables, each with its table's alias
-FROM loans AS l                                           -- the first table, alias l
-JOIN customers AS c                                       -- the second table, alias c
-  ON c.customer_id = l.customer_id;                       -- the key: child.foreign_key = parent.primary_key
+-- columns from both tables, each with its table's alias
+SELECT l.loan_id, c.first_name, c.last_name, l.principal
+-- the first table, alias l
+FROM loans AS l
+-- the second table, alias c
+JOIN customers AS c
+  ON c.customer_id = l.customer_id;
+  -- the key: child.foreign_key = parent.primary_key
 ```
 
 Three parts, always the same:
@@ -100,7 +105,8 @@ On the real data:
 ```sql
 SELECT c.customer_id, c.first_name, a.application_id, a.requested_amount
 FROM customers c
-INNER JOIN applications a ON a.customer_id = c.customer_id;   -- 14 000 rows: one per application
+INNER JOIN applications a ON a.customer_id = c.customer_id;
+-- 14 000 rows: one per application
 ```
 
 14 000 rows — one per application. The 587 customers who never applied are not in the result.
@@ -194,7 +200,7 @@ LEFT JOIN applications a ON a.customer_id = c.customer_id;    -- 14 587 rows
 SELECT c.customer_id, c.first_name, c.last_name
 FROM customers c
 LEFT JOIN applications a ON a.customer_id = c.customer_id
-WHERE a.application_id IS NULL;                           -- 587 customers who never applied
+WHERE a.application_id IS NULL;  -- 587 customers who never applied
 ```
 
 587 rows — exactly the customers whose application columns came back NULL.
@@ -318,8 +324,9 @@ SELECT a.customer_id, a.first_name, a.last_name,
        b.customer_id AS other_id, b.first_name AS other_first, b.last_name AS other_last, a.phone
 FROM customers a
 JOIN customers b ON b.phone = a.phone
-               AND b.customer_id > a.customer_id          -- each pair once, never a row with itself
-ORDER BY a.customer_id;                                    -- 43 pairs
+               -- each pair once, never a row with itself
+               AND b.customer_id > a.customer_id
+ORDER BY a.customer_id;  -- 43 pairs
 ```
 
 43 pairs. The first one is customer 44, *Yulduz Karimova*, and customer 6005, *"Yulduz "* *"karimova"* — the same person typed twice, with a trailing space and a lower-case surname. (Keep this query: Thursday's detective case is built on rows like these.)
@@ -381,11 +388,14 @@ Each arrow is one `JOIN … ON` with that key. `loans` is the bridge: it points 
 ```sql
 SELECT p.name AS product, COUNT(*) AS loans
 FROM customers c
-JOIN loans    l ON l.customer_id = c.customer_id            -- arrow 1: customers → loans
-JOIN products p ON p.product_id  = l.product_id             -- arrow 2: loans → products
+-- arrow 1: customers → loans
+JOIN loans    l ON l.customer_id = c.customer_id
+-- arrow 2: loans → products
+JOIN products p ON p.product_id  = l.product_id
 WHERE c.region = 'Tashkent'
 GROUP BY p.name
-ORDER BY loans DESC;                                        -- 3 020 loans: Micro 1 041, Consumer 921, BNPL 594, SME 302, Auto 162
+ORDER BY loans DESC;
+-- 3 020 loans: Micro 1 041, Consumer 921, BNPL 594, SME 302, Auto 162
 ```
 
 3 020 loans belong to Tashkent customers; grouped by product (tomorrow's `GROUP BY`, shown here only to read the result), Micro loans lead with 1 041. Without the bridge the question has no answer.
@@ -399,10 +409,12 @@ loans ──application_id──▶ applications ──officer_id──▶ staff
 ```sql
 SELECT l.loan_id, s.full_name AS officer, s.role, b.branch_name
 FROM loans l
-JOIN applications a ON a.application_id = l.application_id  -- through applications (no column of it is shown)
+-- through applications (no column of it is shown)
+JOIN applications a ON a.application_id = l.application_id
 JOIN staff        s ON s.staff_id       = a.officer_id
 JOIN branches     b ON b.branch_id      = s.branch_id
-WHERE l.loan_id = 1;                                        -- Ulugbek Qodirov, loan_officer, Termez Central
+WHERE l.loan_id = 1;
+-- Ulugbek Qodirov, loan_officer, Termez Central
 ```
 
 `applications` appears in `FROM … JOIN` but not in `SELECT`: it is there only to carry the key from the loan to the officer. That is normal.
@@ -411,12 +423,13 @@ WHERE l.loan_id = 1;                                        -- Ulugbek Qodirov, 
 
 ```sql
 SELECT l.loan_id,
-       c.first_name || ' ' || c.last_name AS customer,     -- SQL Server: c.first_name + ' ' + c.last_name
+       -- SQL Server: c.first_name + ' ' + c.last_name
+       c.first_name || ' ' || c.last_name AS customer,
        p.name AS product, b.branch_name, l.principal, l.status
 FROM loans l
 JOIN customers c ON c.customer_id = l.customer_id
 JOIN products  p ON p.product_id  = l.product_id
-JOIN branches  b ON b.branch_id   = l.branch_id;            -- still 7 828 rows
+JOIN branches  b ON b.branch_id   = l.branch_id;  -- still 7 828 rows
 ```
 
 Still 7 828 rows: a loan has one customer, one product, one branch. Add `installments` and the count jumps to 92 193 — the previous subsection.
@@ -444,12 +457,16 @@ One request, several of today's tools. *"Every branch, with the number of its lo
 
 ```sql
 SELECT b.branch_name,
-       COUNT(l.loan_id)                                      AS loans,          -- counts matched loans; NULL (no loan) is not counted
+       -- counts matched loans; NULL (no loan) is not counted
+       COUNT(l.loan_id)                                      AS loans,
        SUM(CASE WHEN l.status = 'active' THEN 1 ELSE 0 END)  AS active_loans
-FROM branches b                                              -- the list that must be complete goes in FROM …
-LEFT JOIN loans l ON l.branch_id = b.branch_id               -- … so LEFT protects it
+-- the list that must be complete goes in FROM …
+FROM branches b
+-- … so LEFT protects it
+LEFT JOIN loans l ON l.branch_id = b.branch_id
 GROUP BY b.branch_name
-ORDER BY loans DESC;                                         -- 10 rows, one per branch
+ORDER BY loans DESC;
+-- 10 rows, one per branch
 ```
 
 Read it with the questions from this section: the complete list is `branches`, so it is the left table and the join is LEFT; the "many" side is `loans`, so one row before grouping is one loan; `GROUP BY` folds those rows back to one per branch (tomorrow). `COUNT(l.loan_id)` instead of `COUNT(*)` is on purpose: a branch with no loans would still have one row (with NULLs) and `COUNT(*)` would say 1.
@@ -521,7 +538,8 @@ Questions whose answer is a query have a box under them — write, **▶ Run**, 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id;   -- 7828
+SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id;
+-- 7828
 ```
 Every loan has exactly one customer (many-to-one), so the inner join neither drops nor multiplies rows. The relationship is real, but this teaching copy of the database declares no FOREIGN KEY, so nothing *guarantees* it — the count is how you check. If it had been lower, some loans would point at a customer that does not exist; check with a LEFT JOIN … IS NULL — it returns 0 here.
 
@@ -537,7 +555,7 @@ Every loan has exactly one customer (many-to-one), so the inner join neither dro
 
 ```sql
 SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id
-WHERE l.product_id = 5 AND c.segment = 'affluent';                                 -- 179
+WHERE l.product_id = 5 AND c.segment = 'affluent';  -- 179
 ```
 
 </details>
@@ -548,7 +566,7 @@ WHERE l.product_id = 5 AND c.segment = 'affluent';                              
 
 ```sql
 SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id
-WHERE l.product_id = 1 AND c.region = 'Samarkand';                                 -- 277
+WHERE l.product_id = 1 AND c.region = 'Samarkand';  -- 277
 ```
 
 </details>
@@ -560,7 +578,7 @@ WHERE l.product_id = 1 AND c.region = 'Samarkand';                              
 ```sql
 SELECT COUNT(*)
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
-WHERE b.region IN ('Nukus', 'Termez') AND l.status = 'active';                    -- 413
+WHERE b.region IN ('Nukus', 'Termez') AND l.status = 'active';  -- 413
 ```
 `customers` also has a `region` column. The question names the branch, so the join goes to `branches`.
 
@@ -606,8 +624,10 @@ Read your result: which instalment was paid latest relative to its due date? (Co
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id;   -- 7828
-SELECT COUNT(*) FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id;    -- 9533
+SELECT COUNT(*) FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id;
+-- 7828
+SELECT COUNT(*) FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id;
+-- 9533
 ```
 INNER keeps one row per loan: 7 828. LEFT keeps those rows and adds one row for every customer with no loan: 9 533 − 7 828 = 1 705. Check it from the other side: 6 040 customers − 4 335 different borrowers = 1 705.
 
@@ -625,9 +645,12 @@ How many customers have no loan?
 
 ```sql
 SELECT COUNT(*) FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id
-WHERE ca.action_id IS NULL;                                                         -- 7545
-SELECT COUNT(*) FROM loans;                                                         -- 7828
-SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                            -- 283
+WHERE ca.action_id IS NULL;
+-- 7545
+SELECT COUNT(*) FROM loans;
+-- 7828
+SELECT COUNT(DISTINCT loan_id) FROM collections_actions;
+-- 283
 ```
 7 828 − 283 = 7 545: most loans never needed a reminder. The anti-join and the arithmetic must agree; when they do not, your join key is wrong.
 
@@ -639,9 +662,11 @@ SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                        
 
 ```sql
 SELECT COUNT(*) FROM collections_actions ca RIGHT JOIN staff s ON s.staff_id = ca.collector_id
-WHERE ca.action_id IS NULL;                                                         -- 70
+WHERE ca.action_id IS NULL;
+-- 70
 SELECT COUNT(*) FROM staff s LEFT JOIN collections_actions ca ON ca.collector_id = s.staff_id
-WHERE ca.action_id IS NULL;                                                         -- 70, the same
+WHERE ca.action_id IS NULL;
+-- 70, the same
 ```
 70 of the 100 staff: the 60 loan officers and the 10 branch managers. Every one of the 30 collectors has actions. The LEFT version puts the complete list (`staff`) in `FROM` — easier to read.
 
@@ -676,7 +701,7 @@ SELECT b.branch_name, p.name AS product
 FROM products p
 CROSS JOIN branches b
 WHERE b.region = 'Tashkent'
-ORDER BY b.branch_name, p.name;                                                     -- 15 rows
+ORDER BY b.branch_name, p.name;  -- 15 rows
 ```
 Tashkent has three branches (Central, North, South), so 5 products × 3 branches = 15 rows. The `WHERE` runs on the grid after it is built.
 
@@ -692,7 +717,8 @@ FROM customers a
 JOIN customers b ON b.first_name = a.first_name
                AND b.last_name  = a.last_name
                AND b.birth_date = a.birth_date
-               AND b.customer_id > a.customer_id;                                    -- 2 pairs
+               AND b.customer_id > a.customer_id;
+               -- 2 pairs
 ```
 2 pairs: 823 and 1197 (Nodir Nazarov), 2460 and 5562 (Eldor Karimov), each with two different phones. The 40 duplicates with ids 6001+ do not appear: they were typed with a trailing space or with different upper/lower case, so `=` does not match them. Wednesday's `TRIM` and `LOWER` fix that.
 
@@ -709,9 +735,12 @@ Why does the exact self-join miss the 40 known duplicates?
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id;         -- 92193
-SELECT COUNT(*) FROM loans l JOIN payments p ON p.loan_id = l.loan_id;             -- 52875
-SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id;        -- 53267
+SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id;
+-- 92193
+SELECT COUNT(*) FROM loans l JOIN payments p ON p.loan_id = l.loan_id;
+-- 52875
+SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id;
+-- 53267
 ```
 One-to-many: the count is the number of rows on the *many* side (92 193 instalments; 52 875 payments). The LEFT JOIN adds one row for each loan that has no payment at all: 53 267 − 52 875 = **392** loans with nothing paid yet (new loans whose first instalment is not due, and the worst defaulters).
 
@@ -732,7 +761,8 @@ SELECT COUNT(*)
 FROM loans l
 JOIN products p ON p.product_id = l.product_id
 JOIN branches b ON b.branch_id = l.branch_id
-WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'active';   -- 60
+WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'active';
+-- 60
 ```
 The path: `products ← loans → branches`. Both keys sit on `loans`, so both `ON`s use `l.`.
 
@@ -747,7 +777,7 @@ SELECT COUNT(*)
 FROM collections_actions ca
 JOIN staff s    ON s.staff_id = ca.collector_id
 JOIN branches b ON b.branch_id = s.branch_id
-WHERE ca.action_type = 'call' AND b.region = 'Fergana';                              -- 416
+WHERE ca.action_type = 'call' AND b.region = 'Fergana';  -- 416
 ```
 The branch is the *collector's* branch, reached through `staff`; no column of `staff` is shown. Joining `collections_actions → loans → branches` would give the loan's branch — the same here (collectors work their own branch's loans), but not the same question.
 
@@ -760,11 +790,15 @@ The branch is the *collector's* branch, reached through `staff`; no column of `s
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'app';       -- 2669
-SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'branch';    -- 3590
-SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'partner';   -- 1569
+SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'app';
+-- 2669
+SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'branch';
+-- 3590
+SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'partner';
+-- 1569
 SELECT COUNT(*) FROM applications a LEFT JOIN loans l ON l.application_id = a.application_id
-WHERE a.status = 'approved' AND l.loan_id IS NULL;                                                                      -- 89
+WHERE a.status = 'approved' AND l.loan_id IS NULL;
+-- 89
 ```
 app 2 669 · branch 3 590 · partner 1 569 (= 7 828). Approved with no loan: **89**. All 89 were decided between 2026-09-29 and 2026-10-05 — approvals whose disbursement had not happened by the as-of date (some are even decided *after* it: the decision column carries a planned date). Not errors: a pipeline. Day 4 returns to them.
 
@@ -842,7 +876,7 @@ Bekzod's second question every Monday is *"how big is the book?"*. Two different
 ```sql
 SELECT SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i
-WHERE i.due_date > '2026-10-01';                          -- 208 723 504 430 across 3409 loans
+WHERE i.due_date > '2026-10-01';  -- 208 723 504 430 across 3409 loans
 ```
 
 **208.7 bn UZS** of principal is still scheduled to come in. The **portfolio** is this number, usually restricted to live loans: join `loans` and keep `status = 'active'` → **203.4 bn** on 3 341 loans; the remaining 5.3 bn sits on 22 `default` and 46 `written_off` loans whose schedules run on although nobody expects the money. Bekzod's "the Auto book" is the same query filtered through `products` (active loans: Auto 56.0 bn on 358 loans; SME 122.8 bn; Consumer 22.6 bn; BNPL 1.1 bn; Micro 1.0 bn). Note what outstanding is *not*: `SUM(principal)` of active loans is 297.0 bn — the amount originally lent, not what is left.
@@ -853,7 +887,8 @@ WHERE i.due_date > '2026-10-01';                          -- 208 723 504 430 acr
 SELECT SUM(i.total_due) AS overdue, COUNT(*) AS instalments, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id
-WHERE i.due_date <= '2026-10-01' AND p.payment_id IS NULL;   -- 6 475 544 633 · 1357 · 399
+WHERE i.due_date <= '2026-10-01' AND p.payment_id IS NULL;
+-- 6 475 544 633 · 1357 · 399
 ```
 
 **6.48 bn UZS** on 1 357 matured instalments of 399 loans has not been paid at all. Most of it is already dead money: joined to `loans`, 4.88 bn sits on written-off loans and 0.87 bn on defaults; **0.69 bn on 181 instalments of active loans** is what Sevara's team is actually chasing this week. One refinement for Wednesday: this query treats a *partially* paid instalment as paid. Counting "not fully paid" gives 1 784 instalments on 413 loans and 7.60 bn still owed — the number the DPD computation will use.

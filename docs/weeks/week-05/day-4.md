@@ -27,14 +27,21 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-Path("figures").mkdir(exist_ok=True)                                              # the folder the PNGs go to
-GREY, BLUE, RED = "#9ca3af", "#1d4ed8", "#dc2626"                                 # one grey for the data, one colour for the highlight
-status = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])   # one row per loan: dpd, bucket, outstanding
-md = pd.read_csv("../excel/monthly_disbursements.csv", parse_dates=["month"])     # one row per month × product
-md = md[md["month"] < "2026-10-01"]                                               # drop October 2026: one day is not a month
-monthly = md.groupby("month", as_index=False)[["loans", "amount"]].sum()          # one row per month
+# the folder the PNGs go to
+Path("figures").mkdir(exist_ok=True)
+# one grey for the data, one colour for the highlight
+GREY, BLUE, RED = "#9ca3af", "#1d4ed8", "#dc2626"
+# one row per loan: dpd, bucket, outstanding
+status = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])
+# one row per month × product
+md = pd.read_csv("../excel/monthly_disbursements.csv", parse_dates=["month"])
+# drop October 2026: one day is not a month
+md = md[md["month"] < "2026-10-01"]
+# one row per month
+monthly = md.groupby("month", as_index=False)[["loans", "amount"]].sum()
 
-fig, ax = plt.subplots(figsize=(8, 4))      # a figure (the page) holding one axes (the chart area), 8 × 4 inches
+# a figure (the page) holding one axes (the chart area), 8 × 4 inches
+fig, ax = plt.subplots(figsize=(8, 4))
 ax.plot(monthly["month"], monthly["amount"])  # draw on the axes: x, then y
 ax.set_title("Disbursed per month")
 ```
@@ -80,11 +87,15 @@ The last three rows of `monthly`, the frame the chart draws:
 **How to write it.**
 
 ```python
-monthly["ma3"] = monthly["amount"].rolling(3).mean()           # the 3-month average; the first two months have none (NaN)
+# the 3-month average; the first two months have none (NaN)
+monthly["ma3"] = monthly["amount"].rolling(3).mean()
 fig, ax = plt.subplots(figsize=(10, 4))
-ax.plot(monthly["month"], monthly["amount"], color=GREY, lw=1, label="month")              # the raw months, thin and grey
-ax.plot(monthly["month"], monthly["ma3"], color=BLUE, lw=2, label="3-month average")       # the trend, thick and blue
-ax.legend(frameon=False)                                         # two lines → a legend says which is which
+# the raw months, thin and grey
+ax.plot(monthly["month"], monthly["amount"], color=GREY, lw=1, label="month")
+# the trend, thick and blue
+ax.plot(monthly["month"], monthly["ma3"], color=BLUE, lw=2, label="3-month average")
+# two lines → a legend says which is which
+ax.legend(frameon=False)
 monthly.tail(3)
 ```
 
@@ -121,12 +132,16 @@ September alone fell to 17.0 bn, but the 3-month average still rose, to 20.0 bn:
 **How to write it.**
 
 ```python
-late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])   # the four late buckets, in their natural order
+# the four late buckets, in their natural order
+late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])   # one highlight: 90+ in red
-ax.set_ylim(0, late.max() * 1.15)                                                    # from zero, with room above the tallest bar
+# one highlight: 90+ in red
+ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])
+# from zero, with room above the tallest bar
+ax.set_ylim(0, late.max() * 1.15)
 
-prod = status.groupby("product")["outstanding"].sum().sort_values()                  # ascending: barh draws the last row on top
+# ascending: barh draws the last row on top
+prod = status.groupby("product")["outstanding"].sum().sort_values()
 fig, ax = plt.subplots(figsize=(8, 4))
 ax.barh(prod.index, prod.values / 1e9, color=GREY)
 ax.set_xlabel("outstanding, bn UZS")
@@ -172,11 +187,13 @@ The 90+ bar is the tallest: 234 of the 399 late loans are already more than 90 d
 
 ```python
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.hist(status["principal"], bins=np.logspace(5, 9, 41), color=GREY)   # 40 bins of equal width on a log scale, 100 000 to 1 000 000 000
+# 40 bins of equal width on a log scale, 100 000 to 1 000 000 000
+ax.hist(status["principal"], bins=np.logspace(5, 9, 41), color=GREY)
 ax.set_xscale("log")
 ax.set_xlabel("principal, UZS (log scale)")
 
-order = status.groupby("product")["principal"].median().sort_values().index      # products from the smallest median up
+# products from the smallest median up
+order = status.groupby("product")["principal"].median().sort_values().index
 fig, ax = plt.subplots(figsize=(8, 4))
 ax.boxplot([status.loc[status["product"] == p, "principal"] for p in order], labels=order)
 ax.set_yscale("log")
@@ -217,10 +234,13 @@ Most of the 7 828 loans sit between 1 m and 10 m — the median is 5.79 m — wh
 **How to write it.**
 
 ```python
-act = status[status["status"] == "active"]                                       # 3 352 active loans
+# 3 352 active loans
+act = status[status["status"] == "active"]
 fig, ax = plt.subplots(figsize=(6, 6))
-ax.scatter(act["principal"], act["outstanding"], s=8, alpha=0.3, color=BLUE)     # small, see-through dots
-ax.set_xscale("log"); ax.set_yscale("log")                                       # money on both axes → log
+# small, see-through dots
+ax.scatter(act["principal"], act["outstanding"], s=8, alpha=0.3, color=BLUE)
+# money on both axes → log
+ax.set_xscale("log"); ax.set_yscale("log")
 ax.set_xlabel("principal (log)"); ax.set_ylabel("outstanding (log)")
 act[["principal", "outstanding"]].corr()
 ```
@@ -254,17 +274,23 @@ act[["principal", "outstanding"]].corr()
 
 ```python
 from matplotlib.ticker import FuncFormatter
-bn = FuncFormatter(lambda x, _: f"{x / 1e9:,.0f} bn")     # every tick: 20000000000 → "20 bn"
+# every tick: 20000000000 → "20 bn"
+bn = FuncFormatter(lambda x, _: f"{x / 1e9:,.0f} bn")
 fig, ax = plt.subplots(figsize=(10, 4))
 ax.plot(monthly["month"], monthly["ma3"], color=BLUE, lw=2)
 ax.yaxis.set_major_formatter(bn)
-ax.set_ylim(0, None)                                      # from zero; the top is automatic
+# from zero; the top is automatic
+ax.set_ylim(0, None)
 last = monthly["ma3"].iloc[-1]
-ax.set_title(f"The 3-month average reached {last / 1e9:.1f} bn a month", loc="left")   # the finding, computed from the data
+# the finding, computed from the data
+ax.set_title(f"The 3-month average reached {last / 1e9:.1f} bn a month", loc="left")
 ax.set_ylabel("disbursed per month, 3-month average")
-ax.spines[["top", "right"]].set_visible(False)            # less ink: no frame on two sides
-fig.text(0.01, 0.01, "monthly_disbursements.csv · Jan 2024 – Sep 2026", fontsize=9, color="#6b7280")   # the source line
-fig.tight_layout()                                        # make room for every label
+# less ink: no frame on two sides
+ax.spines[["top", "right"]].set_visible(False)
+# the source line
+fig.text(0.01, 0.01, "monthly_disbursements.csv · Jan 2024 – Sep 2026", fontsize=9, color="#6b7280")
+# make room for every label
+fig.tight_layout()
 fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")
 ```
 
@@ -273,21 +299,34 @@ The title reads "The 3-month average reached 20.0 bn a month", the y-axis runs f
 The twelve rules of week 4 Day 4, each as the line that implements it:
 
 ```python
-late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])   # the four delinquent buckets, in order
-fig, ax = plt.subplots(figsize=(10, 5))                                   # 1  one chart, one message, a size that fits a slide
-ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])   # 2  one colour + one highlight
-ax.set_ylim(0, late.max() * 1.15)                                         # 3  bars from zero; headroom for labels
+# the four delinquent buckets, in order
+late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])
+# 1  one chart, one message, a size that fits a slide
+fig, ax = plt.subplots(figsize=(10, 5))
+# 2  one colour + one highlight
+ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])
+# 3  bars from zero; headroom for labels
+ax.set_ylim(0, late.max() * 1.15)
 for i, v in enumerate(late.values):
-    ax.text(i, v, f"{v:,}", ha="center", va="bottom")                     # 4  the number the reader will quote, formatted
-ax.set_title("399 loans are late; 234 are already 90+", loc="left")       # 5  the finding, left-aligned, not the chart's name
-ax.set_ylabel("loans"); ax.set_xlabel("DPD bucket as of 2026-10-01")      # 6  the unit and the as-of
-# no ax.legend() call                                                      # 7  no legend for one series
-ax.spines[["top", "right"]].set_visible(False)                            # 8  less ink: no frame on two sides
+    # 4  the number the reader will quote, formatted
+    ax.text(i, v, f"{v:,}", ha="center", va="bottom")
+# 5  the finding, left-aligned, not the chart's name
+ax.set_title("399 loans are late; 234 are already 90+", loc="left")
+# 6  the unit and the as-of
+ax.set_ylabel("loans"); ax.set_xlabel("DPD bucket as of 2026-10-01")
+# no ax.legend() call                                                      # 7 
+# no legend for one series
+# 8  less ink: no frame on two sides
+ax.spines[["top", "right"]].set_visible(False)
 ax.annotate("17 loans arrived from 61-90 this month", xy=(3, 234), xytext=(1.6, 200),
-            arrowprops=dict(arrowstyle="->", color=RED))                  # 9  one annotation for the point you talk about
-fig.text(0.01, 0.01, "loans_status.csv · 7 828 loans · payments de-duplicated", fontsize=9, color="#6b7280")  # 10 source line
-fig.tight_layout()                                                         # 11 nothing cut off
-fig.savefig("figures/03_dpd_buckets.png", dpi=150, facecolor="white")      # 12 a file, not a screenshot
+            # 9  one annotation for the point you talk about
+            arrowprops=dict(arrowstyle="->", color=RED))
+# 10 source line
+fig.text(0.01, 0.01, "loans_status.csv · 7 828 loans · payments de-duplicated", fontsize=9, color="#6b7280")
+# 11 nothing cut off
+fig.tight_layout()
+# 12 a file, not a screenshot
+fig.savefig("figures/03_dpd_buckets.png", dpi=150, facecolor="white")
 ```
 
 | `savefig` argument | does |
@@ -317,8 +356,10 @@ fig.savefig("figures/03_dpd_buckets.png", dpi=150, facecolor="white")      # 12 
 **How to write it.**
 
 ```python
-products = md.groupby("product")["amount"].sum().sort_values(ascending=False).index    # biggest product first
-fig, axes = plt.subplots(1, 5, figsize=(16, 3), sharey=False)                         # one row of five axes
+# biggest product first
+products = md.groupby("product")["amount"].sum().sort_values(ascending=False).index
+# one row of five axes
+fig, axes = plt.subplots(1, 5, figsize=(16, 3), sharey=False)
 for ax, p in zip(axes, products):
     one = md[md["product"] == p]
     ax.plot(one["month"], one["amount"] / 1e9, color=BLUE)
@@ -396,9 +437,12 @@ The rules that are not a matter of taste: **no pie** beyond three slices, **no 3
 **How to write it.**
 
 ```python
-wide = md.pivot(index="month", columns="product", values="amount")          # WIDE: the month as index, one column per product
-ax = wide.plot(figsize=(10, 4), title="Disbursed per month, by product")     # one call: one line per column, the index on x
-ax.set_xlabel("")                                                            # .plot returns the axes — decorate it as usual
+# WIDE: the month as index, one column per product
+wide = md.pivot(index="month", columns="product", values="amount")
+# one call: one line per column, the index on x
+ax = wide.plot(figsize=(10, 4), title="Disbursed per month, by product")
+# .plot returns the axes — decorate it as usual
+ax.set_xlabel("")
 wide.tail(3)
 ```
 
@@ -438,14 +482,19 @@ Five lines from one call, one per column. SME dominates every month — 8.6 bn o
 
 ```python
 import seaborn as sns
-sns.set_theme(style="whitegrid")                                              # one look for every chart after this line
+# one look for every chart after this line
+sns.set_theme(style="whitegrid")
 fig, ax = plt.subplots(figsize=(10, 4))
-sns.lineplot(data=md, x="month", y="amount", hue="product", ax=ax)            # LONG data: hue = one line per product
+# LONG data: hue = one line per product
+sns.lineplot(data=md, x="month", y="amount", hue="product", ax=ax)
 fig, ax = plt.subplots(figsize=(6, 3))
-sns.barplot(data=status, x="outstanding", y="product", estimator=sum, errorbar=None, color=GREY, ax=ax)   # a TOTAL per product
-ct = pd.crosstab(status["product"], status["grade"])                          # WIDE: products × grades
+# a TOTAL per product
+sns.barplot(data=status, x="outstanding", y="product", estimator=sum, errorbar=None, color=GREY, ax=ax)
+# WIDE: products × grades
+ct = pd.crosstab(status["product"], status["grade"])
 fig, ax = plt.subplots(figsize=(6, 3))
-sns.heatmap(ct, annot=True, fmt="d", cmap="Reds", ax=ax)                      # one coloured, numbered cell per pair
+# one coloured, numbered cell per pair
+sns.heatmap(ct, annot=True, fmt="d", cmap="Reds", ax=ax)
 ct
 ```
 
@@ -490,10 +539,12 @@ Every call takes `ax=` and returns the axes, so titles and formatters work as be
 
 ```python
 import sqlite3
-con = sqlite3.connect("../raw/nur.db")                                  # the database is a file: no server, no password
+# the database is a file: no server, no password
+con = sqlite3.connect("../raw/nur.db")
 q = """SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
        FROM loans WHERE disbursed_at < ? GROUP BY 1 ORDER BY 1"""
-by_month = pd.read_sql(q, con, params=("2026-10-01",))                 # the SQL runs in the database; a DataFrame comes back
+# the SQL runs in the database; a DataFrame comes back
+by_month = pd.read_sql(q, con, params=("2026-10-01",))
 fwd = pd.read_sql("SELECT COUNT(*) AS n FROM payments WHERE paid_at > ?", con, params=("2026-10-01",))
 print(len(by_month), fwd["n"][0])
 by_month.tail(3)
@@ -535,8 +586,10 @@ by_month.tail(3)
 **How to write it.** The same count, both ways — they must agree:
 
 ```python
-sql_way = pd.read_sql("SELECT product_id, COUNT(*) AS loans FROM loans GROUP BY product_id", con)   # aggregated in the database
-pandas_way = status["product"].value_counts()                                                       # aggregated in memory
+# aggregated in the database
+sql_way = pd.read_sql("SELECT product_id, COUNT(*) AS loans FROM loans GROUP BY product_id", con)
+# aggregated in memory
+pandas_way = status["product"].value_counts()
 print(sql_way["loans"].sum(), pandas_way.sum())
 ```
 
@@ -576,10 +629,13 @@ def fig_disbursements(con, as_of):
     """Figure 1: monthly disbursements and their 3-month average, for the months before as_of."""
     m = pd.read_sql("""SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed
                        FROM loans WHERE disbursed_at < ? GROUP BY 1 ORDER BY 1""", con, params=(as_of,))   # 1 SQL: the aggregation
-    assert m["disbursed"].gt(0).all(), "a month with no lending — check the extract"                     # 2 a check before the chart
-    m["month"] = pd.to_datetime(m["month"])                                                              # 3 pandas: types and the average
+    # 2 a check before the chart
+    assert m["disbursed"].gt(0).all(), "a month with no lending — check the extract"
+    # 3 pandas: types and the average
+    m["month"] = pd.to_datetime(m["month"])
     m["ma3"] = m["disbursed"].rolling(3).mean()
-    fig, ax = plt.subplots(figsize=(12, 5.4))                                                            # 4 matplotlib: a 16:9 chart
+    # 4 matplotlib: a 16:9 chart
+    fig, ax = plt.subplots(figsize=(12, 5.4))
     ax.plot(m["month"], m["disbursed"], color=GREY, lw=1, label="month")
     ax.plot(m["month"], m["ma3"], color=BLUE, lw=2, label="3-month average")
     ax.yaxis.set_major_formatter(bn)
@@ -591,7 +647,8 @@ def fig_disbursements(con, as_of):
     return fig
 
 fig = fig_disbursements(con, "2026-10-01")
-fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")            # 5 the file for the deck
+# 5 the file for the deck
+fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")
 ```
 
 The title reads "The 3-month average rose from 16.6 to 20.0 bn a month in 2026". Next month Timur calls `fig_disbursements(con, "2026-11-01")` and the title, the line and the file update themselves. In a loop that saves many figures, add `plt.close(fig)` after each `savefig`.
@@ -666,13 +723,17 @@ mix = pd.read_sql("""
     SELECT p.name AS product, SUM(i.principal_due) AS outstanding
     FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
     WHERE i.due_date > '2026-10-01' GROUP BY 1 ORDER BY 2""", con)                     # SQL does the 92 193-row join
-assert mix["outstanding"].sum() == 208_723_504_430                                      # the extract still has the shape we know
-mix["share"] = 100 * mix["outstanding"] / mix["outstanding"].sum()                      # pandas does the share
+# the extract still has the shape we know
+assert mix["outstanding"].sum() == 208_723_504_430
+# pandas does the share
+mix["share"] = 100 * mix["outstanding"] / mix["outstanding"].sum()
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.barh(mix["product"], mix["outstanding"], color=[BLUE if s == mix["share"].max() else GREY for s in mix["share"]])
 for y, (v, s) in enumerate(zip(mix["outstanding"], mix["share"])):
-    ax.text(v, y, f"  {v / 1e9:,.1f} bn · {s:.1f} %", va="center")                     # the number the board will quote
-ax.xaxis.set_major_formatter(bn); ax.set_xlim(0, mix["outstanding"].max() * 1.35)       # room for the labels
+    # the number the board will quote
+    ax.text(v, y, f"  {v / 1e9:,.1f} bn · {s:.1f} %", va="center")
+# room for the labels
+ax.xaxis.set_major_formatter(bn); ax.set_xlim(0, mix["outstanding"].max() * 1.35)
 ax.set_title(f"SME is {mix['share'].max():.0f} % of the {mix['outstanding'].sum() / 1e9:.1f} bn book on 10 % of the loans", loc="left")
 fig.tight_layout(); fig.savefig("figures/02_outstanding_mix.png", dpi=150)
 ```
@@ -806,20 +867,24 @@ The numbers behind the titles, from the notebook's own output: figure 1's averag
 The driver that Timur runs — each figure is a function `(con, as_of) → fig`, the pack is a loop:
 
 ```python
-# (shape only — not meant to run) … the five fig_* makers are in day4_starter.ipynb
+# (shape only — not meant to run) … the five fig_* makers are in
+# day4_starter.ipynb
 FIGURES = {"01_disbursements_ma3": fig_disbursements, "02_outstanding_mix": fig_mix, "03_dpd_buckets": fig_buckets,
            "04_vintage_heatmap": fig_vintage, "05_roll_rate": fig_roll}
 
 def figure_pack(con, as_of, out_dir="figures"):
-    out = Path(out_dir) / str(as_of.date()); out.mkdir(parents=True, exist_ok=True)     # figures/2026-10-01/
+    # figures/2026-10-01/
+    out = Path(out_dir) / str(as_of.date()); out.mkdir(parents=True, exist_ok=True)
     for name, make in FIGURES.items():
-        fig = make(con, as_of)                       # every maker queries with params=(as_of,) and asserts its counts
+        # every maker queries with params=(as_of,) and asserts its counts
+        fig = make(con, as_of)
         fig.savefig(out / f"{name}.png", dpi=150, facecolor="white")
         plt.close(fig)
     return sorted(p.name for p in out.glob("*.png"))
 
 figure_pack(con, pd.Timestamp("2026-10-01"))
-# ['01_disbursements_ma3.png', '02_outstanding_mix.png', '03_dpd_buckets.png', '04_vintage_heatmap.png', '05_roll_rate.png']
+# ['01_disbursements_ma3.png', '02_outstanding_mix.png', '03_dpd_buckets.png',
+# '04_vintage_heatmap.png', '05_roll_rate.png']
 ```
 
 > 💡 **Key idea.** **Reproducibility is the deliverable.** Three habits make the pack Timur's and not a favour: the as-of date is one variable used in every query (`params=(AS_OF,)`); every title that quotes a number computes it (`f"… {b['90+']:,} of them are already 90+ …"`); and an `assert` on each data frame before its chart (`assert b.sum() == 7828`) stops the run when the extract changes shape, instead of saving a wrong PNG. Next month: change `AS_OF`, Kernel → Restart & Run All, five new files in `figures/`.

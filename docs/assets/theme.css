@@ -158,7 +158,7 @@ body { background: var(--bg); color: var(--body); font-family: var(--sans); -web
 .sq-tip { color: var(--faint); }
 .sq-reset { margin-left: auto; border: 0; background: none; font: inherit; font-weight: 700; color: var(--muted); cursor: pointer; padding: .2em .4em; border-radius: 6px; }
 .sq-reset:hover { background: #e2e8f0; color: var(--ink); }
-.sq-edit { display: block; width: 100%; box-sizing: border-box; border: 0; margin: 0; padding: .9em 1.1em; font: 13.5px/1.65 var(--mono); background: #fff; color: var(--ink); resize: none; white-space: pre; overflow-x: auto; overflow-y: hidden; outline: none; tab-size: 2; }
+.sq-edit { display: block; width: 100%; box-sizing: border-box; border: 0; margin: 0; padding: .9em 1.1em; font: 13.5px/1.65 var(--mono); background: #fff; color: var(--ink); resize: none; white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; overflow-y: auto; outline: none; tab-size: 2; }
 .sq-edit:focus { box-shadow: inset 3px 0 0 var(--brand); }
 .sq-edit::placeholder { color: var(--faint); }
 .sq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6em; padding: .6em 1em; border-top: 1px solid var(--line); background: #fff; }
@@ -536,6 +536,13 @@ body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
 .markdown-section pre, .markdown-section .qz, .markdown-section .sq-box, .markdown-section .sq-ws, .markdown-section .gx, .yt-panel { max-width: 100%; box-sizing: border-box; }
 .markdown-section code { overflow-wrap: anywhere; }
 .markdown-section pre code { overflow-wrap: normal; }
+/* code never runs past its box: a long line wraps inside it (2026-10-28). Text pictures and lined-up columns
+   (text, Excel, no language) keep their columns: they are drawn narrow enough for a phone instead. */
+.markdown-section pre[data-lang="sql"] > code, .markdown-section pre[data-lang="python"] > code, .markdown-section pre[data-lang="dax"] > code,
+.markdown-section pre[data-lang="markdown"] > code, .markdown-section pre[data-lang="bash"] > code { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 480px) {   /* a phone holds 41 characters of a text picture at 12 px: they are drawn 40 wide */
+  .markdown-section pre[data-lang="text"] > code, .markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang=""] > code { font-size: 12px; padding: .9em; }
+}
 
 /* course files: a download button after the file name (files.js) */
 .markdown-section .fl-dl { display: inline-flex; align-items: center; gap: .25em; margin: 0 .25em; padding: .12em .6em; font: 700 .76em var(--sans); color: var(--brand-d); background: var(--brand-xl); border: 1px solid #99f6e4; border-radius: 999px; cursor: pointer; text-decoration: none; vertical-align: .08em; white-space: nowrap; }
@@ -546,7 +553,8 @@ body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
 body.reading-down #sq-db-btn { transform: translateY(160%); opacity: 0; pointer-events: none; }
 @media (max-width: 768px) { body.reading-down:not(.close) .sidebar-toggle { transform: translateY(160%); opacity: 0; pointer-events: none; } }
 .markdown-section table:not(.sq-table):not(.gx-table) td, .markdown-section table:not(.sq-table):not(.gx-table) th { min-width: 6.5em; max-width: 17em; }
-.markdown-section table code { overflow-wrap: normal; white-space: nowrap; }
+/* code in a table cell wraps at its spaces inside the cell (the cell stops at 17em); a nowrap code ran over the next column */
+.markdown-section table code { overflow-wrap: break-word; white-space: normal; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
 /* ---------- EN | RU switch (lang.js) ---------- */
 .lang-switch { position: fixed; top: 14px; right: 18px; z-index: 35; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(15, 23, 42, .12); font-family: var(--sans); }

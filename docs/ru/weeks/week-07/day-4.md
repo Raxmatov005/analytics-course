@@ -23,8 +23,10 @@
 **Как пишется.** Home → **New column** для столбца, Home → **New measure** для меры; строка формул принимает `Имя = выражение`.
 
 ```dax
-is_90plus   = IF ( v_loan_status[dpd] > 90, "yes", "no" )     -- столбец: одно значение на кредит, читается в этой строке
-Outstanding = SUM ( v_loan_status[outstanding] )              -- мера: одно значение на ячейку, по видимым строкам
+-- столбец: одно значение на кредит, читается в этой строке
+is_90plus   = IF ( v_loan_status[dpd] > 90, "yes", "no" )
+-- мера: одно значение на ячейку, по видимым строкам
+Outstanding = SUM ( v_loan_status[outstanding] )
 ```
 
 | | вычисляемый столбец | мера |
@@ -51,9 +53,12 @@ Outstanding = SUM ( v_loan_status[outstanding] )              -- мера: од�
 **Как пишется.**
 
 ```dax
-Disbursed Amount = SUM ( v_loan_status[principal] )                     -- SUM ( таблица[столбец] )
-Disbursed Count  = COUNTROWS ( v_loan_status )                          -- COUNTROWS ( таблица )
-Avg Ticket       = DIVIDE ( [Disbursed Amount], [Disbursed Count] )     -- DIVIDE ( числитель, знаменатель [, если ноль] )
+-- SUM ( таблица[столбец] )
+Disbursed Amount = SUM ( v_loan_status[principal] )
+-- COUNTROWS ( таблица )
+Disbursed Count  = COUNTROWS ( v_loan_status )
+-- DIVIDE ( числитель, знаменатель [, если ноль] )
+Avg Ticket       = DIVIDE ( [Disbursed Amount], [Disbursed Count] )
 ```
 
 | мера | без фильтра | SME | MICRO |
@@ -122,10 +127,14 @@ Avg Ticket       = DIVIDE ( [Disbursed Amount], [Disbursed Count] )     -- DIVID
 CALCULATE ( <выражение>, <фильтр 1>, <фильтр 2>, ... )
 --          что посчитать   как изменить фильтры ячейки
 
-Outstanding DPD30+ = CALCULATE ( [Outstanding], v_loan_status[dpd] > 30 )                    -- 6 507 526 953
-PAR30 %            = DIVIDE ( [Outstanding DPD30+], [Outstanding] )                          -- 3.12 %
-NPL90 %            = DIVIDE ( CALCULATE ( [Outstanding], v_loan_status[dpd] > 90 ), [Outstanding] )   -- 2.55 %
-Loans 90+          = CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[bucket] = "90+" )        -- 234
+-- 6 507 526 953
+Outstanding DPD30+ = CALCULATE ( [Outstanding], v_loan_status[dpd] > 30 )
+-- 3.12 %
+PAR30 %            = DIVIDE ( [Outstanding DPD30+], [Outstanding] )
+-- 2.55 %
+NPL90 %            = DIVIDE ( CALCULATE ( [Outstanding], v_loan_status[dpd] > 90 ), [Outstanding] )
+-- 234
+Loans 90+          = CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[bucket] = "90+" )
 ```
 
 Всегда три шага: (1) взять контекст фильтра ячейки; (2) применить каждый аргумент-фильтр — он **заменяет** существующий фильтр на тот же столбец, а разные столбцы объединяются через И; (3) вычислить выражение там. В строке SME PAR30 использует оба фильтра — `product = SME` из строки и `dpd > 30` из CALCULATE: **2.55 %**; AUTO **4.44 %**, MICRO **0.72 %**. SQL недели 3 `SUM(CASE WHEN dpd > 30 THEN outstanding END) / SUM(outstanding)` — ровно это.
@@ -149,8 +158,10 @@ Loans 90+          = CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[buck
 **Как пишется.** Два столбца на `v_loan_status`, читаем для кредита 1:
 
 ```dax
-share = v_loan_status[outstanding] / SUM ( v_loan_status[outstanding] )   -- SUM видит всю таблицу
-own   = CALCULATE ( SUM ( v_loan_status[outstanding] ) )                   -- CALCULATE делает «кредит 1» фильтром
+-- SUM видит всю таблицу
+share = v_loan_status[outstanding] / SUM ( v_loan_status[outstanding] )
+-- CALCULATE делает «кредит 1» фильтром
+own   = CALCULATE ( SUM ( v_loan_status[outstanding] ) )
 ```
 
 | loan_id | outstanding | share | own |
@@ -185,10 +196,13 @@ own   = CALCULATE ( SUM ( v_loan_status[outstanding] ) )                   -- CA
 ```dax
 Outstanding Share of Total =
 DIVIDE (
-    [Outstanding],                                         -- собственный остаток ячейки
-    CALCULATE ( [Outstanding], ALL ( products ) )          -- то же, со снятым фильтром продукта
+    -- собственный остаток ячейки
+    [Outstanding],
+    -- то же, со снятым фильтром продукта
+    CALCULATE ( [Outstanding], ALL ( products ) )
 )
--- без среза: SME 60.32 % · AUTO 27.64 % · CONS 11.05 % · BNPL 0.54 % · MICRO 0.46 % · итого 100 %
+-- без среза: SME 60.32 % · AUTO 27.64 % · CONS 11.05 % · BNPL 0.54 % · MICRO
+-- 0.46 % · итого 100 %
 ```
 
 ```pic
@@ -212,9 +226,12 @@ DIVIDE (
 **Как пишется.**
 
 ```dax
-YTD Disbursed        = TOTALYTD ( [Disbursed Amount], dim_date[date] )                          -- с 1 января до последней даты ячейки
-Disbursed SPLY       = CALCULATE ( [Disbursed Amount], SAMEPERIODLASTYEAR ( dim_date[date] ) )  -- те же даты год назад
-Disbursed Prev Month = CALCULATE ( [Disbursed Amount], DATEADD ( dim_date[date], -1, MONTH ) )  -- сдвиг на любое число дней / месяцев / лет
+-- с 1 января до последней даты ячейки
+YTD Disbursed        = TOTALYTD ( [Disbursed Amount], dim_date[date] )
+-- те же даты год назад
+Disbursed SPLY       = CALCULATE ( [Disbursed Amount], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+-- сдвиг на любое число дней / месяцев / лет
+Disbursed Prev Month = CALCULATE ( [Disbursed Amount], DATEADD ( dim_date[date], -1, MONTH ) )
 Disbursed YoY %      = DIVIDE ( [Disbursed Amount] - [Disbursed SPLY], [Disbursed SPLY] )
 Disbursed MoM %      = DIVIDE ( [Disbursed Amount] - [Disbursed Prev Month], [Disbursed Prev Month] )
 ```
@@ -248,10 +265,12 @@ Disbursed MoM %      = DIVIDE ( [Disbursed Amount] - [Disbursed Prev Month], [Di
 
 ```dax
 Outstanding Month-End =
-VAR LastMonth = CALCULATE ( MAX ( v_portfolio_monthly[month] ) )          -- последний месяц, видимый в ячейке
+-- последний месяц, видимый в ячейке
+VAR LastMonth = CALCULATE ( MAX ( v_portfolio_monthly[month] ) )
 RETURN
     CALCULATE ( SUM ( v_portfolio_monthly[outstanding_month_end] ),
-                v_portfolio_monthly[month] = LastMonth )                   -- суммируем продукты и филиалы, только за этот месяц
+                -- суммируем продукты и филиалы, только за этот месяц
+                v_portfolio_monthly[month] = LastMonth )
 ```
 
 | период | простой `SUM` остатков на конец месяца | `Outstanding Month-End` |
@@ -279,12 +298,15 @@ RETURN
 
 ```dax
 Running Outstanding =
-VAR CurrentOutstanding = [Outstanding]                                     -- остаток этого филиала, посчитан один раз
+-- остаток этого филиала, посчитан один раз
+VAR CurrentOutstanding = [Outstanding]
 RETURN
     CALCULATE (
         [Outstanding],
-        FILTER ( ALL ( branches[branch_name] ),                            -- пройти все десять филиалов
-                 [Outstanding] >= CurrentOutstanding )                     -- оставить не меньшие
+        -- пройти все десять филиалов
+        FILTER ( ALL ( branches[branch_name] ),
+                 -- оставить не меньшие
+                 [Outstanding] >= CurrentOutstanding )
     )
 Running Outstanding % = DIVIDE ( [Running Outstanding], CALCULATE ( [Outstanding], ALL ( branches ) ) )
 ```
@@ -317,9 +339,12 @@ Running Outstanding % = DIVIDE ( [Running Outstanding], CALCULATE ( [Outstanding
 ```dax
 Branch Rank =
 IF (
-    HASONEVALUE ( branches[branch_name] ),                 -- только в строках с одним филиалом (пусто в итоге)
-    RANKX ( ALL ( branches[branch_name] ),                 -- ранг среди всех десяти филиалов
-            [Outstanding], , DESC, DENSE )                 -- по Outstanding, крупнейший первым
+    -- только в строках с одним филиалом (пусто в итоге)
+    HASONEVALUE ( branches[branch_name] ),
+    -- ранг среди всех десяти филиалов
+    RANKX ( ALL ( branches[branch_name] ),
+            -- по Outstanding, крупнейший первым
+            [Outstanding], , DESC, DENSE )
 )
 ```
 
@@ -397,16 +422,18 @@ Tashkent Central 1, Tashkent South 2, … Bukhara Central 8, Nukus Central 9, Te
 
 ```dax
 PAR30 Colour =
-SWITCH ( TRUE (),                                   -- побеждает первое истинное условие, как CASE WHEN
-    [PAR30 %] >= 0.05, "#C0392B",                   -- 5 % и выше: красный
-    [PAR30 %] >= 0.03, "#E67E22",                   -- 3–5 %: янтарный
-    "#7F8C8D" )                                     -- иначе: серый
+-- побеждает первое истинное условие, как CASE WHEN
+SWITCH ( TRUE (),
+    [PAR30 %] >= 0.05, "#C0392B",  -- 5 % и выше: красный
+    [PAR30 %] >= 0.03, "#E67E22",  -- 3–5 %: янтарный
+    "#7F8C8D" )                    -- иначе: серый
 ```
 
 4. **Заголовки, которые говорят вывод** — «PAR30 сосредоточен в SME Нукуса и в Бухаре», а не «PAR30 по филиалам». **Динамический заголовок** говорит, что выбрано:
 
 ```dax
-Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all products" )   -- выбор или значение по умолчанию
+-- выбор или значение по умолчанию
+Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all products" )
               & " · as of 1 Oct 2026: " & FORMAT ( [Outstanding] / 1e9, "#,0.0" ) & " bn soum"
 -- без выбора: "Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"
 ```
@@ -455,9 +482,12 @@ Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all 
 2. На таблице `branches` фильтр:
 
 ```dax
-[branch_name] = "Bukhara Central"                                         -- статическая роль: по одной на филиал
--- динамическая, одна роль на всех управляющих, с таблицей соответствия e-mail → филиал:
--- [branch_name] = LOOKUPVALUE ( map[branch_name], map[email], USERPRINCIPALNAME () )
+-- статическая роль: по одной на филиал
+[branch_name] = "Bukhara Central"
+-- динамическая, одна роль на всех управляющих, с таблицей соответствия e-mail →
+-- филиал:
+-- [branch_name] = LOOKUPVALUE ( map[branch_name], map[email], USERPRINCIPALNAME
+-- () )
 ```
 
 3. Modeling → **View as** → роль. Фильтр идёт по связям к каждому факту:

@@ -44,9 +44,11 @@ FROM customers;
 **Как пишется.**
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE monthly_income = NULL;        -- 0, всегда: это никогда не истина
-SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;       -- 356
-SELECT COUNT(*) FROM customers WHERE monthly_income <> 5000000;    -- 5 684, а не 6 039: 356 строк с NULL тоже не проходят
+SELECT COUNT(*) FROM customers WHERE monthly_income = NULL;
+-- 0, всегда: это никогда не истина
+SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;  -- 356
+SELECT COUNT(*) FROM customers WHERE monthly_income <> 5000000;
+-- 5 684, а не 6 039: 356 строк с NULL тоже не проходят
 ```
 
 356 строк выпадают из *любого* сравнения: `monthly_income > x` и `monthly_income <= x` вместе дают 5 684 строки, а не 6 040.
@@ -70,9 +72,10 @@ SELECT COUNT(*) FROM customers WHERE monthly_income <> 5000000;    -- 5 684, а 
 ```sql
 SELECT customer_id, monthly_income, monthly_income * 12 AS yearly_income
 FROM customers
-WHERE customer_id <= 5;                  -- пять месячных доходов, пять годовых
+WHERE customer_id <= 5;  -- пять месячных доходов, пять годовых
 SELECT COUNT(*) - COUNT(monthly_income * 12) AS no_yearly
-FROM customers;                          -- 356: каждый пропущенный доход даёт пропущенный годовой доход
+FROM customers;
+-- 356: каждый пропущенный доход даёт пропущенный годовой доход
 ```
 
 Клиент 1 зарабатывает 3 894 708 в месяц, 46 736 496 в год. У 356 клиентов без дохода `monthly_income * 12` тоже NULL.
@@ -125,13 +128,15 @@ FROM customers;                          -- 356: каждый пропущенн
 **Как пишется.**
 
 ```sql
-SELECT COALESCE(NULL, NULL, 'x'),                -- 'x': первый аргумент не NULL
-       IFNULL(NULL, 0);                          -- 0      SQL Server: ISNULL(NULL, 0)
+SELECT COALESCE(NULL, NULL, 'x'),  -- 'x': первый аргумент не NULL
+       IFNULL(NULL, 0);
+       -- 0      SQL Server: ISNULL(NULL, 0)
 
 SELECT customer_id,
-       COALESCE(CAST(monthly_income AS TEXT), 'unknown') AS income_shown   -- подпись вместо пустой ячейки
+       -- подпись вместо пустой ячейки
+       COALESCE(CAST(monthly_income AS TEXT), 'unknown') AS income_shown
 FROM customers
-WHERE customer_id IN (1, 14);                    -- 3894708 · unknown
+WHERE customer_id IN (1, 14);      -- 3894708 · unknown
 ```
 
 Запрос DPD из среды использует `COALESCE(SUM(p.amount), 0)`: платёж по графику без оплат получает «оплачено = 0» вместо NULL, поэтому проверка `paid < total_due` для него может быть истинной.
@@ -157,7 +162,8 @@ SELECT b.branch_name, COUNT(*) AS applications,
        ROUND(100.0 * SUM(CASE WHEN a.status LIKE 'approved%' THEN 1 ELSE 0 END)
                    / NULLIF(SUM(CASE WHEN a.status <> 'cancelled' THEN 1 ELSE 0 END), 0), 1) AS approval_decided_pct
 FROM applications a JOIN branches b ON b.branch_id = a.branch_id
-GROUP BY b.branch_name ORDER BY approval_decided_pct DESC;      -- Fergana Central 72.8 … Nukus Central 68.5
+GROUP BY b.branch_name ORDER BY approval_decided_pct DESC;
+-- Fergana Central 72.8 … Nukus Central 68.5
 ```
 
 Fergana Central одобряет 72.8 % рассмотренных заявок; Nukus Central — 68.5 %. Сегодня ни у одного филиала нет нуля рассмотренных заявок; в тот день, когда появится, отчёт всё равно выполнится. (`SUM(CASE …)` объясняется через четыре подраздела — пока читайте его как «посчитать строки, где …».)
@@ -183,13 +189,15 @@ Fergana Central одобряет 72.8 % рассмотренных заявок;
 **Как пишется.**
 
 ```sql
-SELECT CASE WHEN monthly_income IS NULL      THEN 'unknown'      -- проверка на NULL первой
+-- проверка на NULL первой
+SELECT CASE WHEN monthly_income IS NULL      THEN 'unknown'
             WHEN monthly_income <  5000000   THEN '<5m'
             WHEN monthly_income < 10000000   THEN '5-10m'
             WHEN monthly_income < 20000000   THEN '10-20m'
             ELSE '20m+' END AS income_band,
        COUNT(*) AS customers
-FROM customers GROUP BY income_band;        -- SQL Server: повторите весь CASE в GROUP BY (без псевдонима, без GROUP BY 1)
+FROM customers GROUP BY income_band;
+-- SQL Server: повторите весь CASE в GROUP BY (без псевдонима, без GROUP BY 1)
 -- unknown 356 · <5m 1281 · 5-10m 2198 · 10-20m 576 · 20m+ 1629
 ```
 
@@ -217,7 +225,8 @@ SELECT CASE channel WHEN 'app'    THEN 'Mobile app'
                     ELSE 'Partner shop' END AS channel_name,
        COUNT(*) AS applications
 FROM applications
-GROUP BY channel_name;                    -- Branch office 6 223 · Mobile app 5 006 · Partner shop 2 771
+GROUP BY channel_name;
+-- Branch office 6 223 · Mobile app 5 006 · Partner shop 2 771
 ```
 
 Три читаемые подписи для трёх кодов каналов; числа — вторничные.
@@ -245,7 +254,9 @@ GROUP BY status
 ORDER BY CASE status WHEN 'active'      THEN 1
                      WHEN 'default'     THEN 2
                      WHEN 'written_off' THEN 3
-                     ELSE 4 END;          -- active 3 352 · default 44 · written_off 190 · closed 4 242
+                     ELSE 4 END;
+                     -- active 3 352 · default 44 · written_off 190 · closed 4
+                     -- 242
 ```
 
 Статусы идут в порядке жизни кредита — активные, потом плохие исходы, закрытые последними, — а не `active, closed, default, written_off`.
@@ -310,9 +321,11 @@ GROUP BY p.name ORDER BY p.name;
 
 ```sql
 SELECT COUNT(*) FROM customers c LEFT JOIN applications a ON a.customer_id = c.customer_id
-WHERE a.application_id IS NULL;                                                             -- 587 ни разу не подавали заявку
+WHERE a.application_id IS NULL;
+-- 587 ни разу не подавали заявку
 SELECT a.status, COUNT(*) FROM applications a LEFT JOIN loans l ON l.application_id = a.application_id
-WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;                    -- approved 89 · approved_not_disbursed 678
+WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;
+-- approved 89 · approved_not_disbursed 678
 ```
 
 587 клиентов ни разу не подавали заявку. У 767 одобренных заявок нет кредита: 678 помечены `approved_not_disbursed` и 89 — `approved`, понедельничный конвейер.
@@ -345,7 +358,8 @@ WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;        
 ```sql
 SELECT COUNT(*) AS rows_, COUNT(DISTINCT c.customer_id) AS customers
 FROM customers c
-LEFT JOIN loans l ON l.customer_id = c.customer_id AND l.status = 'active';   -- 6 894 · 6 040
+LEFT JOIN loans l ON l.customer_id = c.customer_id AND l.status = 'active';
+-- 6 894 · 6 040
 ```
 
 6 894 строки: по одной на активный кредит плюс по строке с NULL на каждого клиента без активного кредита. Все 6 040 клиентов на месте. Перенесите условие в `WHERE` — останется 3 352 строки, по одной на активный кредит; все остальные клиенты исчезнут.
@@ -369,7 +383,8 @@ LEFT JOIN loans l ON l.customer_id = c.customer_id AND l.status = 'active';   --
 ```sql
 SELECT a.customer_id, b.customer_id AS other_id, a.first_name, b.first_name AS other_first
 FROM customers a JOIN customers b
-  ON a.phone = b.phone AND a.birth_date = b.birth_date AND a.customer_id < b.customer_id;   -- 40 пар
+  ON a.phone = b.phone AND a.birth_date = b.birth_date AND a.customer_id < b.customer_id;
+  -- 40 пар
 ```
 
 40 пар — ровно 40 дубликатов с id 6001+. Только по телефону выходит 43 пары: три — члены семьи с общим номером.
@@ -400,7 +415,7 @@ SELECT COUNT(*) AS rows_, COUNT(DISTINCT p.payment_id) AS payments, COUNT(DISTIN
 FROM loans l
 JOIN payments p             ON p.loan_id  = l.loan_id
 JOIN collections_actions ca ON ca.loan_id = l.loan_id
-WHERE l.loan_id = 2167;                   -- 72 · 2 · 36 · 21 443 436
+WHERE l.loan_id = 2167;  -- 72 · 2 · 36 · 21 443 436
 ```
 
 72 строки = 2 платежа × 36 действий. `SUM(p.amount)` говорит 21.4 млн сумов; на самом деле два платежа по кредиту дают 595 651 — каждый посчитан 36 раз.
@@ -422,11 +437,13 @@ WHERE l.loan_id = 2167;                   -- 72 · 2 · 36 · 21 443 436
 **Как пишется.**
 
 ```sql
-SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;                 -- 52 875 · 52 850
+SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;
+-- 52 875 · 52 850
 SELECT installment_id, paid_at, amount, COUNT(*) AS copies
 FROM payments
 GROUP BY installment_id, paid_at, amount
-HAVING COUNT(*) > 1;                                                            -- 25 строк, у всех copies = 2
+HAVING COUNT(*) > 1;
+-- 25 строк, у всех copies = 2
 ```
 
 У 25 платежей по графику по два платежа, и каждая пара одинакова — тот же платёж по графику, та же дата, та же сумма. 58 397 800 сумов посчитаны дважды в каждом итоге «получено платежей».
@@ -448,15 +465,17 @@ HAVING COUNT(*) > 1;                                                            
 **Как пишется.**
 
 ```sql
-WITH pay AS (SELECT loan_id, COUNT(*) AS payments, SUM(amount) AS paid      -- одна строка на кредит
+-- одна строка на кредит
+WITH pay AS (SELECT loan_id, COUNT(*) AS payments, SUM(amount) AS paid
              FROM payments GROUP BY loan_id),
-     act AS (SELECT loan_id, COUNT(*) AS actions                            -- одна строка на кредит
+     -- одна строка на кредит
+     act AS (SELECT loan_id, COUNT(*) AS actions
              FROM collections_actions GROUP BY loan_id)
 SELECT l.loan_id, pay.payments, pay.paid, act.actions
 FROM loans l
 LEFT JOIN pay ON pay.loan_id = l.loan_id
 LEFT JOIN act ON act.loan_id = l.loan_id
-WHERE l.loan_id = 2167;                    -- 2 · 595 651 · 36
+WHERE l.loan_id = 2167;  -- 2 · 595 651 · 36
 ```
 
 Одна строка для кредита 2167: 2 платежа, оплачено 595 651 сум, 36 действий — настоящие числа. Та же идея убирает 25 дублированных платежей: в `WITH clean AS (SELECT DISTINCT loan_id, installment_id, paid_at, amount FROM payments)` 52 850 строк.
@@ -474,17 +493,24 @@ WHERE l.loan_id = 2167;                    -- 2 · 595 651 · 36
 Один запрос, инструменты дня вместе. *«По группам дохода, включая неизвестный: клиенты, кредиты и доля кредитов, ставших плохими (дефолт или списание)».*
 
 ```sql
-SELECT CASE WHEN c.monthly_income IS NULL     THEN 'unknown'                          -- проверка на NULL первой
+-- проверка на NULL первой
+SELECT CASE WHEN c.monthly_income IS NULL     THEN 'unknown'
             WHEN c.monthly_income <  5000000  THEN '<5m'
             WHEN c.monthly_income < 20000000  THEN '5-20m'
-            ELSE '20m+' END                                    AS income_band,        -- поисковый CASE
-       COUNT(DISTINCT c.customer_id)                           AS customers,          -- соединение размножает клиентов
-       COUNT(l.loan_id)                                        AS loans,              -- NULL (нет кредита) не считается
-       SUM(CASE WHEN l.status IN ('default', 'written_off') THEN 1 ELSE 0 END) AS bad_loans,   -- посчитать, где
+            -- поисковый CASE
+            ELSE '20m+' END                                    AS income_band,
+       -- соединение размножает клиентов
+       COUNT(DISTINCT c.customer_id)                           AS customers,
+       -- NULL (нет кредита) не считается
+       COUNT(l.loan_id)                                        AS loans,
+       -- посчитать, где
+       SUM(CASE WHEN l.status IN ('default', 'written_off') THEN 1 ELSE 0 END) AS bad_loans,
        ROUND(100.0 * SUM(CASE WHEN l.status IN ('default', 'written_off') THEN 1 ELSE 0 END)
-                   / NULLIF(COUNT(l.loan_id), 0), 1)           AS bad_pct             -- безопасное деление
+                   -- безопасное деление
+                   / NULLIF(COUNT(l.loan_id), 0), 1)           AS bad_pct
 FROM customers c
-LEFT JOIN loans l ON l.customer_id = c.customer_id                                   -- клиенты без кредитов остаются
+-- клиенты без кредитов остаются
+LEFT JOIN loans l ON l.customer_id = c.customer_id
 GROUP BY income_band
 ORDER BY bad_pct DESC;
 ```
@@ -555,8 +581,10 @@ GROUP BY p.name ORDER BY p.name;
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at = NULL;       -- 0: никогда не истина
-SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL;      -- 15
+SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at = NULL;
+-- 0: никогда не истина
+SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL;
+-- 15
 ```
 15 кредитов «закрыты», но без даты закрытия. Вариант с `= NULL` отвечает 0 без всякой ошибки — самая опасная разновидность неверного ответа.
 
@@ -568,8 +596,10 @@ SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL;      -
 
 ```sql
 SELECT i.installment_no, i.total_due, p.amount,
-       i.total_due - p.amount              AS gap_raw,          -- NULL в 6 строках
-       i.total_due - COALESCE(p.amount, 0) AS left_to_pay       -- в этих строках — вся сумма к оплате
+       -- NULL в 6 строках
+       i.total_due - p.amount              AS gap_raw,
+       -- в этих строках — вся сумма к оплате
+       i.total_due - COALESCE(p.amount, 0) AS left_to_pay
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id
 WHERE i.loan_id = 1
@@ -586,7 +616,8 @@ ORDER BY i.installment_no;
 ```sql
 SELECT COUNT(*) AS rows_, COUNT(monthly_income) AS with_income, COUNT(*) - COUNT(monthly_income) AS missing,
        ROUND(100.0 * (COUNT(*) - COUNT(monthly_income)) / COUNT(*), 2) AS missing_pct
-FROM customers;                                                        -- 6040 · 5684 · 356 · 5.89
+FROM customers;
+-- 6040 · 5684 · 356 · 5.89
 ```
 
 </details>
@@ -598,10 +629,12 @@ FROM customers;                                                        -- 6040 �
 ```sql
 SELECT channel, COUNT(*) AS apps, COUNT(*) - COUNT(credit_score) AS no_score,
        ROUND(100.0 * (COUNT(*) - COUNT(credit_score)) / COUNT(*), 2) AS no_score_pct
-FROM applications GROUP BY channel;             -- app 2.64 · branch 2.80 · partner 2.96
+FROM applications GROUP BY channel;
+-- app 2.64 · branch 2.80 · partner 2.96
 SELECT status, COUNT(*) AS apps, COUNT(*) - COUNT(credit_score) AS no_score,
        ROUND(100.0 * (COUNT(*) - COUNT(credit_score)) / COUNT(*), 2) AS no_score_pct
-FROM applications GROUP BY status;              -- approved 2.69 · approved_not_disbursed 2.36 · cancelled 2.81 · rejected 3.01
+FROM applications GROUP BY status;
+-- approved 2.69 · approved_not_disbursed 2.36 · cancelled 2.81 · rejected 3.01
 ```
 Достаточно ровно, чтобы считать случайным; в реальных данных повышенная доля среди отказов часто означает «нет кредитной истории → отказ», а это политика, а не пропуск.
 
@@ -642,7 +675,8 @@ SELECT channel,
        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END)     AS rejected,
        ROUND(1.0 * SUM(CASE WHEN status LIKE 'approved%' THEN 1 ELSE 0 END)
                  / NULLIF(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0), 2) AS approved_per_rejected
-FROM applications GROUP BY channel;      -- app 2.14 · branch 2.62 · partner 2.40
+FROM applications GROUP BY channel;
+-- app 2.14 · branch 2.62 · partner 2.40
 ```
 Филиал одобряет 2.62 заявки на каждую отклонённую; приложение — 2.14. Канал без отказов показал бы NULL, а не остановил бы запрос.
 
@@ -657,7 +691,8 @@ SELECT CASE WHEN credit_score IS NULL THEN 'no score' WHEN credit_score >= 720 T
             WHEN credit_score >= 660 THEN 'B 660-719' WHEN credit_score >= 600 THEN 'C 600-659' ELSE 'D <600' END AS band,
        COUNT(*) AS apps, ROUND(100.0 * SUM(CASE WHEN status LIKE 'approved%' THEN 1 ELSE 0 END) / COUNT(*), 1) AS approval_pct
 FROM applications GROUP BY band ORDER BY band;
--- A 2150 / 91.3 % · B 4702 / 77.4 · C 4605 / 52.2 · D 2155 / 16.8 · no score 388 / 59.0
+-- A 2150 / 91.3 % · B 4702 / 77.4 · C 4605 / 52.2 · D 2155 / 16.8 · no score
+-- 388 / 59.0
 ```
 Группы дают в сумме 14 000 только потому, что есть группа для NULL. 59 % у «no score» — между B и C: такие заявки кто-то решает вручную.
 
@@ -672,7 +707,8 @@ SELECT CASE segment WHEN 'mass'     THEN 'Mass market'
                     WHEN 'affluent' THEN 'Affluent'
                     ELSE 'Small business' END AS segment_name,
        COUNT(*) AS customers
-FROM customers GROUP BY segment_name;    -- Affluent 1204 · Mass market 3585 · Small business 1251
+FROM customers GROUP BY segment_name;
+-- Affluent 1204 · Mass market 3585 · Small business 1251
 ```
 
 </details>
@@ -716,13 +752,16 @@ app 2 693 / 222 / 1 359 / 732 = 5 006 · branch 3 636 / 329 / 1 513 / 745 = 6 22
 ```sql
 -- (a)
 SELECT COUNT(*) FROM customers c LEFT JOIN applications a ON a.customer_id = c.customer_id
-WHERE a.application_id IS NULL;                                                  -- 587
+WHERE a.application_id IS NULL;
+-- 587
 -- (b) через соединение: строки против различных клиентов
 SELECT COUNT(*) AS rows_, COUNT(DISTINCT c.customer_id) AS customers
 FROM customers c JOIN applications a ON a.customer_id = c.customer_id
 LEFT JOIN loans l ON l.customer_id = c.customer_id
-WHERE l.loan_id IS NULL;                                                         -- 1806 · 1118
--- (b) через EXCEPT (вторничная операция над множествами): список из 1118 клиентов
+WHERE l.loan_id IS NULL;
+-- 1806 · 1118
+-- (b) через EXCEPT (вторничная операция над множествами): список из 1118
+-- клиентов
 SELECT customer_id FROM applications EXCEPT SELECT customer_id FROM loans;
 -- (c) блок WITH из Дня 3, затем анти-соединение с collections_actions
 WITH unpaid AS (
@@ -741,7 +780,8 @@ SELECT COUNT(*) AS never_contacted,
        SUM(CASE WHEN d.dpd > 0 THEN 1 ELSE 0 END) AS late_never_contacted,
        SUM(CASE WHEN d.dpd BETWEEN 1 AND 30 THEN 1 ELSE 0 END) AS of_which_1_30
 FROM dpd d LEFT JOIN collections_actions ca ON ca.loan_id = d.loan_id
-WHERE ca.action_id IS NULL;                                                      -- 130 · 117 · 106
+WHERE ca.action_id IS NULL;
+-- 130 · 117 · 106
 ```
 (a) 587. (b) **1 806 строк, но 1 118 клиентов** — соединение с `applications` размножило строки по числу заявок на человека; используйте `COUNT(DISTINCT c.customer_id)` или вторничный `EXCEPT` → сразу 1 118. (c) По 117 из 399 просроченных (DPD > 0) кредитов ни разу не связывались с клиентом (130 из 413, если считать и 13, у которых срок наступает сегодня, — по ним ещё не могли позвонить); из них 106 — из 124 кредитов корзины 1–30. Команда Севары работает со старым долгом и ещё не добралась до нового.
 
@@ -762,12 +802,14 @@ WHERE ca.action_id IS NULL;                                                     
 SELECT COUNT(*) AS rows_, COUNT(p.payment_id) AS with_payment
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id AND p.paid_at <= '2026-10-01'
-WHERE i.due_date <= '2026-10-01';                                                -- 54232 · 52851
+WHERE i.due_date <= '2026-10-01';
+-- 54232 · 52851
 -- (b) фильтр в WHERE
 SELECT COUNT(*) AS rows_
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id
-WHERE i.due_date <= '2026-10-01' AND p.paid_at <= '2026-10-01';                  -- 52851
+WHERE i.due_date <= '2026-10-01' AND p.paid_at <= '2026-10-01';
+-- 52851
 ```
 (a) 54 232 строки (54 207 наступивших платежей по графику + 25 дублированных платежей), `COUNT(p.payment_id)` 52 851. (b) 52 851 строка: каждый платёж по графику без оплаты исчез — `NULL <= '2026-10-01'` не истина. 24 платежа датированы после отчётной даты; с фильтром в `ON` они не учитываются, *а* неоплаченные платежи по графику остаются. (Если пересчитать DPD Дня 3 с этим фильтром в `ON`, DPD каждого кредита не изменится — ни один из 24 не меняет самый старый не полностью оплаченный платёж кредита.)
 
@@ -803,9 +845,12 @@ FROM customers a JOIN customers b
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM installments i JOIN payments p ON p.loan_id = i.loan_id WHERE i.loan_id = 1;   -- 432
-SELECT COUNT(*) FROM installments WHERE loan_id = 1;                                                 -- 24
-SELECT COUNT(*) FROM payments WHERE loan_id = 1;                                                     -- 18
+SELECT COUNT(*) FROM installments i JOIN payments p ON p.loan_id = i.loan_id WHERE i.loan_id = 1;
+-- 432
+SELECT COUNT(*) FROM installments WHERE loan_id = 1;
+-- 24
+SELECT COUNT(*) FROM payments WHERE loan_id = 1;
+-- 18
 ```
 432 = 24 платежа по графику × 18 платежей: `loan_id` — ключ родителя обеих таблиц, поэтому каждый платёж по графику встречается с каждым платежом кредита. Правильный ключ, `installment_id`, даёт одну строку на платёж (18) — или 24 с LEFT JOIN.
 
@@ -820,9 +865,11 @@ SELECT COUNT(*) FROM payments WHERE loan_id = 1;                                
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;                 -- 52875 · 52850
+SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;
+-- 52875 · 52850
 SELECT installment_id, paid_at, amount, COUNT(*) FROM payments
-GROUP BY installment_id, paid_at, amount HAVING COUNT(*) > 1;                  -- 25 строк, у всех COUNT = 2
+GROUP BY installment_id, paid_at, amount HAVING COUNT(*) > 1;
+-- 25 строк, у всех COUNT = 2
 ```
 58 397 800 сумов посчитаны дважды в каждом итоге «получено платежей»; 25 платежей по графику выглядят *пере*плаченными ровно на свою сумму. Чтобы их убрать, нужны номера строк — Неделя 3, День 2.
 
@@ -840,7 +887,8 @@ FROM act
 LEFT JOIN pay ON pay.loan_id = act.loan_id
 ORDER BY act.actions DESC
 LIMIT 3;
--- 2235 · 151 действие · 7 платежей · 29 554 662   |   6945 · 144 · 17 · 132 363 259   |   1494 · 143 · 10 · 75 023 491
+-- 2235 · 151 действие · 7 платежей · 29 554 662   |   6945 · 144 · 17 · 132 363
+-- 259   |   1494 · 143 · 10 · 75 023 491
 ```
 Одна строка на кредит, настоящие суммы. Размноженное соединение сложило бы платежи по кредиту 2235 151 раз: около 4.5 млрд сумов вместо 29.6 млн.
 
@@ -866,7 +914,8 @@ flags AS (
               ELSE 0 END AS fpd30
   FROM first_inst f
 )
-SELECT COUNT(*) AS loans_in_scope, SUM(fpd30) AS fpd30 FROM flags;             -- 7099 · 91
+SELECT COUNT(*) AS loans_in_scope, SUM(fpd30) AS fpd30 FROM flags;
+-- 7099 · 91
 ```
 7 099 кредитов в базе, **91** с флагом — 51 не оплачен или оплачен частично, 40 оплачены полностью, но позже чем через 30 дней. Важны обе части `CASE`: строгое правило «только неоплаченные» даёт 51 (0.72 %).
 
@@ -898,7 +947,8 @@ SELECT COUNT(*) AS loans_in_scope,
                 WHEN julianday(first_paid) - julianday(due_date) > 30 THEN 1 ELSE 0 END) AS spd30,
        ROUND(100.0 * SUM(CASE WHEN paid < total_due THEN 1
                               WHEN julianday(first_paid) - julianday(due_date) > 30 THEN 1 ELSE 0 END) / COUNT(*), 2) AS spd30_pct
-FROM second_inst;                                                               -- 6735 · 156 · 2.32
+FROM second_inst;
+-- 6735 · 156 · 2.32
 ```
 156 из 6 735 = **2.32 %** против 1.28 %. Само по себе не тревожно: у второго платежа был ещё месяц, чтобы проявились обычные финансовые трудности, и база на месяц старше. FPD выделяет сигнал «и не собирался платить»; SPD/TPD показывают кривую ранних проблем. Показывайте их рядом по каждому поколению.
 
@@ -954,22 +1004,28 @@ NULL ведут себя так же и в вашей собственной т�
 Запрос устроен как DPD в среду: два именованных шага в блоке `WITH`, затем `SELECT` с группировкой. `WITH` — инструмент недели 3; сегодня читайте его как два именованных результата, запускайте и меняйте только последний `SELECT`.
 
 ```sql
-WITH first_inst AS (                                   -- одна строка на кредит в области: срок, итог, дата первой оплаты, оплаченная сумма
+-- одна строка на кредит в области: срок, итог, дата первой оплаты, оплаченная
+-- сумма
+WITH first_inst AS (
   SELECT i.loan_id, i.due_date, i.total_due, MIN(p.paid_at) AS first_paid, COALESCE(SUM(p.amount), 0) AS paid
   FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.installment_no = 1
-    AND i.due_date <= date('2026-10-01', '-30 days')    -- SQL Server: DATEADD(day, -30, '2026-10-01')
+    -- SQL Server: DATEADD(day, -30, '2026-10-01')
+    AND i.due_date <= date('2026-10-01', '-30 days')
   GROUP BY i.loan_id, i.due_date, i.total_due
 ),
 flags AS (
   SELECT f.loan_id,
-         CASE WHEN f.paid < f.total_due THEN 1                                            -- так и не оплачен полностью
-              WHEN julianday(f.first_paid) - julianday(f.due_date) > 30 THEN 1           -- DATEDIFF(day, f.due_date, f.first_paid) > 30
+         -- так и не оплачен полностью
+         CASE WHEN f.paid < f.total_due THEN 1
+              -- DATEDIFF(day, f.due_date, f.first_paid) > 30
+              WHEN julianday(f.first_paid) - julianday(f.due_date) > 30 THEN 1
               ELSE 0 END AS fpd30
   FROM first_inst f
 )
-SELECT strftime('%Y-%m', l.disbursed_at) AS vintage,                                     -- FORMAT(l.disbursed_at, 'yyyy-MM')
+-- FORMAT(l.disbursed_at, 'yyyy-MM')
+SELECT strftime('%Y-%m', l.disbursed_at) AS vintage,
        a.channel,
        COUNT(*) AS loans,
        SUM(fpd30) AS fpd,

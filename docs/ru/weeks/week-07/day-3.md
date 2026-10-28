@@ -286,8 +286,10 @@ both:    products ◀─▶ v_loan_status ◀─▶ customers_clean ...   сре
 ```dax
 FPD Loans by Due Date =
 CALCULATE (
-    COUNTROWS ( fct_first_instalment ),                                       -- что считать
-    USERELATIONSHIP ( dim_date[date], fct_first_instalment[first_due_date] )  -- использовать пунктирную связь, только в этой мере
+    -- что считать
+    COUNTROWS ( fct_first_instalment ),
+    -- использовать пунктирную связь, только в этой мере
+    USERELATIONSHIP ( dim_date[date], fct_first_instalment[first_due_date] )
 )
 ```
 
@@ -395,9 +397,12 @@ CALCULATE (
 **Как пишется.**
 
 ```dax
-par30_outstanding = IF ( v_loan_status[dpd] > 30, v_loan_status[outstanding], 0 )             -- столбец: одно значение на кредит
-Outstanding       = SUM ( v_loan_status[outstanding] )                                         -- мера: одно значение на ячейку
-PAR30 %           = DIVIDE ( SUM ( v_loan_status[par30_outstanding] ), [Outstanding] )         -- мера: отношение сумм
+-- столбец: одно значение на кредит
+par30_outstanding = IF ( v_loan_status[dpd] > 30, v_loan_status[outstanding], 0 )
+-- мера: одно значение на ячейку
+Outstanding       = SUM ( v_loan_status[outstanding] )
+-- мера: отношение сумм
+PAR30 %           = DIVIDE ( SUM ( v_loan_status[par30_outstanding] ), [Outstanding] )
 ```
 
 | | вычисляемый столбец | мера |

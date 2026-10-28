@@ -60,19 +60,24 @@
 CREATE TABLE my_employers (
     employer_id   INT          NOT NULL PRIMARY KEY,
     name          NVARCHAR(200) NOT NULL,
-    tax_id        NVARCHAR(20)  NOT NULL,          -- естественный ключ хранится как столбец, UNIQUE
-    payday_dom    INT          NOT NULL,           -- день месяца, в который выплачивают зарплату
-    status        NVARCHAR(20) NOT NULL,           -- active / paused / terminated
+    -- естественный ключ хранится как столбец, UNIQUE
+    tax_id        NVARCHAR(20)  NOT NULL,
+    -- день месяца, в который выплачивают зарплату
+    payday_dom    INT          NOT NULL,
+    -- active / paused / terminated
+    status        NVARCHAR(20) NOT NULL,
     contract_start DATE        NOT NULL,
     contract_end  DATE         NULL
 );
 CREATE TABLE my_employees (
     employee_id   INT          NOT NULL PRIMARY KEY,
     employer_id   INT          NOT NULL,
-    customer_id   INT          NULL,                -- ссылка на customers, если сотрудник также клиент Nur Finance
+    -- ссылка на customers, если сотрудник также клиент Nur Finance
+    customer_id   INT          NULL,
     full_name     NVARCHAR(200) NOT NULL,
     phone         NVARCHAR(20) NOT NULL,
-    monthly_salary BIGINT      NOT NULL,            -- текущая зарплата, обновляется файлом от работодателя
+    -- текущая зарплата, обновляется файлом от работодателя
+    monthly_salary BIGINT      NOT NULL,
     enrolled_on   DATE         NOT NULL,
     left_on       DATE         NULL,
     status        NVARCHAR(20) NOT NULL,
@@ -81,11 +86,13 @@ CREATE TABLE my_employees (
 CREATE TABLE my_payroll_runs (
     payroll_run_id INT         NOT NULL PRIMARY KEY,
     employer_id   INT          NOT NULL,
-    period_month  DATE         NOT NULL,            -- первый день месяца, за который начислена зарплата
+    -- первый день месяца, за который начислена зарплата
+    period_month  DATE         NOT NULL,
     received_on   DATE         NULL,
     amount_expected BIGINT     NOT NULL,
     amount_received BIGINT     NULL,
-    status        NVARCHAR(20) NOT NULL,            -- expected / received / short
+    -- expected / received / short
+    status        NVARCHAR(20) NOT NULL,
     FOREIGN KEY (employer_id) REFERENCES my_employers(employer_id)
 );
 CREATE TABLE my_advances (
@@ -95,9 +102,10 @@ CREATE TABLE my_advances (
     disbursed_on  DATE         NOT NULL,
     amount        BIGINT       NOT NULL,
     fee           BIGINT       NOT NULL,
-    salary_at_request BIGINT   NOT NULL,            -- срез, см. решение 2
-    due_payroll_month DATE     NOT NULL,            -- какая выплата зарплаты должна его покрыть
-    status        NVARCHAR(20) NOT NULL,            -- open / repaid / unpaid
+    salary_at_request BIGINT   NOT NULL,  -- срез, см. решение 2
+    -- какая выплата зарплаты должна его покрыть
+    due_payroll_month DATE     NOT NULL,
+    status        NVARCHAR(20) NOT NULL,  -- open / repaid / unpaid
     FOREIGN KEY (employee_id) REFERENCES my_employees(employee_id)
 );
 CREATE TABLE my_repayments (
@@ -148,9 +156,10 @@ SELECT COUNT(*) FROM applications WHERE status = 'cancelled'; -- 1817
 <details><summary>B4–B6</summary>
 
 ```sql
-SELECT DISTINCT region FROM customers ORDER BY region;         -- 8: Andijan, Bukhara, Fergana, Namangan, Nukus, Samarkand, Tashkent, Termez
-SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;   -- 356
-SELECT COUNT(*) FROM loans WHERE principal >= 100000000;       -- 996
+SELECT DISTINCT region FROM customers ORDER BY region;
+-- 8: Andijan, Bukhara, Fergana, Namangan, Nukus, Samarkand, Tashkent, Termez
+SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;  -- 356
+SELECT COUNT(*) FROM loans WHERE principal >= 100000000;      -- 996
 ```
 
 </details>
@@ -160,9 +169,12 @@ SELECT COUNT(*) FROM loans WHERE principal >= 100000000;       -- 996
 <details><summary>B7–B9</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE segment = 'affluent' AND region = 'Tashkent';          -- 487
-SELECT COUNT(*) FROM customers WHERE last_name LIKE '%ova';                                 -- 2447
-SELECT COUNT(*) FROM installments WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';     -- 3392
+SELECT COUNT(*) FROM customers WHERE segment = 'affluent' AND region = 'Tashkent';
+-- 487
+SELECT COUNT(*) FROM customers WHERE last_name LIKE '%ova';
+-- 2447
+SELECT COUNT(*) FROM installments WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';
+-- 3392
 ```
 B8: 2 447 из 2 924 женщин — остальные носят фамилии на `eva` (Abdullaeva, Mirzaeva). `LIKE '%ova'` — это текстовый шаблон, а не «женщина»: скажите, что именно вы измерили.
 
@@ -186,9 +198,12 @@ B10 с `BETWEEN '2025-01-01' AND '2025-12-31'` даёт 5 388 — теряютс
 <details><summary>B12–B14</summary>
 
 ```sql
-SELECT COUNT(*) FROM collections_actions WHERE action_type = 'visit' AND outcome = 'promise_to_pay'; -- 381
-SELECT COUNT(*) FROM app_events WHERE event_name = 'contract_signed' AND device = 'ios';             -- 944
-SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;                     -- 1511
+SELECT COUNT(*) FROM collections_actions WHERE action_type = 'visit' AND outcome = 'promise_to_pay';
+-- 381
+SELECT COUNT(*) FROM app_events WHERE event_name = 'contract_signed' AND device = 'ios';
+-- 944
+SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;
+-- 1511
 ```
 
 </details>
@@ -198,10 +213,14 @@ SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;
 <details><summary>B15–B16</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE risk_grade IN ('C', 'D') AND status = 'written_off';   -- 128
-SELECT COUNT(*) FROM loans WHERE status = 'written_off';                                -- 190
-SELECT COUNT(*) FROM applications WHERE credit_score > 800 AND status = 'rejected';     -- 6
-SELECT COUNT(*) FROM applications WHERE credit_score > 800;                             -- 108
+SELECT COUNT(*) FROM loans WHERE risk_grade IN ('C', 'D') AND status = 'written_off';
+-- 128
+SELECT COUNT(*) FROM loans WHERE status = 'written_off';
+-- 190
+SELECT COUNT(*) FROM applications WHERE credit_score > 800 AND status = 'rejected';
+-- 6
+SELECT COUNT(*) FROM applications WHERE credit_score > 800;
+-- 108
 ```
 B15: 128 из 190 списаний (67 %) приходятся на два худших класса — скоринговая карта работает, но 62 списания пришли из A и B. B16: 6 из 108 лучших по баллу были отклонены; риск-аналитик захотел бы узнать почему (правило вне балла или ошибка в данных).
 
@@ -212,8 +231,10 @@ B15: 128 из 190 списаний (67 %) приходятся на два ху�
 <details><summary>B17</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE NOT (segment = 'mass' OR region = 'Tashkent');          -- 1481
-SELECT COUNT(*) FROM customers WHERE segment <> 'mass' AND region <> 'Tashkent';             -- 1481
+SELECT COUNT(*) FROM customers WHERE NOT (segment = 'mass' OR region = 'Tashkent');
+-- 1481
+SELECT COUNT(*) FROM customers WHERE segment <> 'mass' AND region <> 'Tashkent';
+-- 1481
 ```
 Закон де Моргана: `NOT (a OR b)` = `NOT a AND NOT b`. Засчитываются обе формы; вторую вы будете читать в чужом коде.
 
@@ -224,7 +245,8 @@ SELECT COUNT(*) FROM customers WHERE segment <> 'mass' AND region <> 'Tashkent';
 <details><summary>B18</summary>
 
 ```sql
--- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id;
+-- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments
+-- ORDER BY amount DESC, payment_id;
 SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id LIMIT 3;
 ```
 Платежи 30772, 30773, 30774 — все по 57 170 000, все по кредиту 4570 (SME-кредит на 598 450 000 из P3 второго дня), 2025-01-26 / 02-27 / 03-27. Три одинаковые суммы подряд — не дубликат: это три последовательных платежа по графику. (У платежа 30775 по тому же кредиту та же сумма, поэтому третье место — ничья; `payment_id` в `ORDER BY` делает три строки одинаковыми в обеих СУБД.) (Напишите это предложение; в нём разница между подсчётом и анализом.)
@@ -236,8 +258,10 @@ SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, 
 <details><summary>B19</summary>
 
 ```sql
-SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LIMIT 1;   -- 4185, 2024-01-02, 1 250 000
-SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;   -- 596,  2026-10-01, 2 510 000
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LIMIT 1;
+-- 4185, 2024-01-02, 1 250 000
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;
+-- 596,  2026-10-01, 2 510 000
 ```
 (`TOP 1` в SQL Server.) Последний приходится на саму дату, на которую актуальны данные: данные доведены до дня, когда их выгрузили.
 
@@ -251,7 +275,7 @@ SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LI
 SELECT customer_id, first_name, last_name, monthly_income, registered_at
 FROM customers
 WHERE registered_at >= '2026-01-01' AND monthly_income > 20000000
-ORDER BY monthly_income DESC;                                                -- 258 строк
+ORDER BY monthly_income DESC;  -- 258 строк
 ```
 Первая строка: клиент **6016**, `Bobur␣ rakhimov`, 59 962 504 — id выше 6000 с пробелом в конце и фамилией в нижнем регистре: одна из вчерашних сорока дублирующих строк. «Самый богатый новый клиент 2026 года» — это ошибка ввода, копия существующего клиента. Полный балл — только если ваша строка `-- result:` так и говорит.
 

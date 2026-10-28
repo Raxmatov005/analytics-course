@@ -25,7 +25,8 @@ Every concept below has the same five parts: what it is, how to write it (a box 
 ```python
 import pandas as pd
 import numpy as np
-loans = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])   # the table every box below uses
+# the table every box below uses
+loans = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])
 
 small = pd.DataFrame({"loan_id": [1, 2, 3],
                       "product": ["Consumer loan", "Consumer loan", "Micro loan"],
@@ -79,7 +80,7 @@ The column is a Series: it adds up to 72 800 000 and its largest value is loan 2
 **How to write it.**
 
 ```python
-raw = pd.read_csv("../excel/loans_status.csv")                       # no parse_dates
+raw = pd.read_csv("../excel/loans_status.csv")  # no parse_dates
 print(raw["disbursed_at"].dtype, loans["disbursed_at"].dtype)
 cust = pd.read_csv("../excel/customers_dirty.csv")
 print(cust["phone"].dtype, cust["phone"][0], cust["monthly_income"].dtype)
@@ -124,8 +125,8 @@ Other parameters you will need:
 **How to write it.**
 
 ```python
-print(loans.shape)       # (rows, columns)
-loans.head()             # the first 5 rows; head(10) for ten, tail() for the last 5
+print(loans.shape)  # (rows, columns)
+loans.head()        # the first 5 rows; head(10) for ten, tail() for the last 5
 ```
 
 `(7828, 13)`, then (7 of the 13 columns):
@@ -158,7 +159,7 @@ dtypes: datetime64[ns](1), int64(5), object(7)
 (five of the 13 lines shown.) Every column has 7 828 non-null values: this extract has no blanks. Five columns are whole numbers, one is a date, seven are text.
 
 ```python
-loans.describe()         # numeric columns: count, mean, std, min, quartiles, max
+loans.describe()  # numeric columns: count, mean, std, min, quartiles, max
 ```
 
 | | principal | outstanding | dpd |
@@ -193,8 +194,8 @@ loans.describe()         # numeric columns: count, mean, std, min, quartiles, ma
 **How to write it.**
 
 ```python
-print(type(loans["product"]).__name__)             # one column → Series
-loans[["loan_id", "product", "dpd"]].head(3)        # a list of columns → DataFrame
+print(type(loans["product"]).__name__)        # one column → Series
+loans[["loan_id", "product", "dpd"]].head(3)  # a list of columns → DataFrame
 ```
 
 | (index) | loan_id | product | dpd |
@@ -236,8 +237,8 @@ More ways: `loans.columns.tolist()` lists the names; `loans.drop(columns=["custo
 **How to write it.**
 
 ```python
-mask = loans["dpd"] > 90                       # one True/False per row
-print(mask.sum())                              # True counts as 1: how many rows pass
+mask = loans["dpd"] > 90  # one True/False per row
+print(mask.sum())         # True counts as 1: how many rows pass
 loans[mask][["loan_id", "product", "dpd", "status"]].head(3)
 ```
 
@@ -252,14 +253,22 @@ loans[mask][["loan_id", "product", "dpd", "status"]].head(3)
 The other filters, each with its row count on `loans_status.csv`:
 
 ```python
-active      = loans[loans["status"] == "active"]                                # WHERE status = 'active'
-late_active = loans[(loans["dpd"] > 0) & (loans["status"] == "active")]         # AND — a bracket round each condition
-big         = loans[loans["product"].isin(["Small business loan", "Auto loan"])] # IN (…)
-mid         = loans[loans["principal"].between(10_000_000, 50_000_000)]          # BETWEEN, both ends included
-tash        = loans[loans["branch"].str.contains("Tashkent")]                    # LIKE '%Tashkent%'
-not_closed  = loans[~(loans["status"] == "closed")]                              # NOT
-either      = loans[(loans["dpd"] > 90) | (loans["status"] == "written_off")]   # OR
-sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_at"] < "2026-10-01")]   # a half-open period
+# WHERE status = 'active'
+active      = loans[loans["status"] == "active"]
+# AND — a bracket round each condition
+late_active = loans[(loans["dpd"] > 0) & (loans["status"] == "active")]
+# IN (…)
+big         = loans[loans["product"].isin(["Small business loan", "Auto loan"])]
+# BETWEEN, both ends included
+mid         = loans[loans["principal"].between(10_000_000, 50_000_000)]
+# LIKE '%Tashkent%'
+tash        = loans[loans["branch"].str.contains("Tashkent")]
+# NOT
+not_closed  = loans[~(loans["status"] == "closed")]
+# OR
+either      = loans[(loans["dpd"] > 90) | (loans["status"] == "written_off")]
+# a half-open period
+sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_at"] < "2026-10-01")]
 [len(x) for x in [active, late_active, big, mid, tash, not_closed, either, sept]]
 ```
 
@@ -297,10 +306,14 @@ sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_
 **How to write it.**
 
 ```python
-late = loans[loans["dpd"] > 0]                   # the filter keeps the original labels
-print(late.index[:3].tolist())                   # the labels of the first three late loans
-print(late.iloc[0]["loan_id"], late.loc[20, "loan_id"])   # position 0 and label 20: the same row
-late.loc[late["dpd"] > 400, ["loan_id", "product", "dpd"]].head(3)   # loc = a mask + a column list
+# the filter keeps the original labels
+late = loans[loans["dpd"] > 0]
+# the labels of the first three late loans
+print(late.index[:3].tolist())
+# position 0 and label 20: the same row
+print(late.iloc[0]["loan_id"], late.loc[20, "loan_id"])
+# loc = a mask + a column list
+late.loc[late["dpd"] > 400, ["loan_id", "product", "dpd"]].head(3)
 ```
 
 ```text
@@ -341,8 +354,9 @@ The first late loan sits at **position** 0 of `late` but keeps its **label** 20 
 **How to write it.**
 
 ```python
-top = loans.sort_values("outstanding", ascending=False)        # ORDER BY outstanding DESC
-top[["loan_id", "product", "outstanding", "dpd"]].head(3)       # … LIMIT 3
+# ORDER BY outstanding DESC
+top = loans.sort_values("outstanding", ascending=False)
+top[["loan_id", "product", "outstanding", "dpd"]].head(3)  # … LIMIT 3
 ```
 
 | (index) | loan_id | product | outstanding | dpd |
@@ -354,8 +368,10 @@ top[["loan_id", "product", "outstanding", "dpd"]].head(3)       # … LIMIT 3
 The three largest balances are SME loans of 574–586 m, all current. The index labels are scrambled now: a sort moves rows, labels and all.
 
 ```python
-print(loans.nlargest(3, "principal")["loan_id"].tolist())                          # the shortcut
-loans.sort_values(["product", "dpd"], ascending=[True, False])[["product", "dpd"]].head(3)   # two keys
+# the shortcut
+print(loans.nlargest(3, "principal")["loan_id"].tolist())
+# two keys
+loans.sort_values(["product", "dpd"], ascending=[True, False])[["product", "dpd"]].head(3)
 ```
 
 `[2861, 4570, 4601]` — the three largest principals, 599.06 / 598.45 / 597.54 m. The two-key sort puts products A→Z and, inside each product, the latest loan first: Auto loans at 771, then 739 days.
@@ -379,9 +395,12 @@ loans.sort_values(["product", "dpd"], ascending=[True, False])[["product", "dpd"
 **How to write it.**
 
 ```python
-loans["outstanding_bn"] = loans["outstanding"] / 1e9                     # every row at once
-loans["repaid_share"] = 1 - loans["outstanding"] / loans["principal"]   # two columns, row by row
-loans["is_late"] = loans["dpd"] > 0                                      # a boolean column
+# every row at once
+loans["outstanding_bn"] = loans["outstanding"] / 1e9
+# two columns, row by row
+loans["repaid_share"] = 1 - loans["outstanding"] / loans["principal"]
+# a boolean column
+loans["is_late"] = loans["dpd"] > 0
 print(round(loans["outstanding_bn"].sum(), 1), loans["is_late"].sum())
 loans[["loan_id", "principal", "outstanding", "repaid_share", "is_late"]].head()
 ```
@@ -399,8 +418,8 @@ loans[["loan_id", "principal", "outstanding", "repaid_share", "is_late"]].head()
 Types: `astype(int)`, `astype(float)`, `astype(str)`, `astype("category")` (text with few values: less memory and an order), `astype(bool)`. For text that may be garbage, `pd.to_numeric(col, errors="coerce")` turns what it cannot read into `NaN` instead of crashing:
 
 ```python
-print(loans["term"].astype(str).head(3).tolist())                          # int → text
-pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")             # 658.0, NaN, NaN
+print(loans["term"].astype(str).head(3).tolist())              # int → text
+pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")  # 658.0, NaN, NaN
 ```
 
 The term becomes the text `['24', '18', '3']`; the scores `"658"`, `""`, `"n/a"` become 658.0, NaN, NaN.
@@ -426,7 +445,8 @@ The term becomes the text `['24', '18', '3']`; the scores `"658"`, `""`, `"n/a"`
 ```python
 AS_OF = pd.Timestamp("2026-10-01")
 loans["year"] = loans["disbursed_at"].dt.year
-loans["month"] = loans["disbursed_at"].dt.to_period("M")                 # week 3's strftime('%Y-%m')
+# week 3's strftime('%Y-%m')
+loans["month"] = loans["disbursed_at"].dt.to_period("M")
 loans["days_on_book"] = (AS_OF - loans["disbursed_at"]).dt.days
 print(loans["year"].value_counts().to_dict())
 loans[["loan_id", "disbursed_at", "year", "month", "days_on_book"]].head()
@@ -471,8 +491,8 @@ A datetime column compares with a text date directly: `loans["disbursed_at"] >= 
 **How to write it.**
 
 ```python
-print(loans["product"].nunique())                              # COUNT(DISTINCT product)
-loans["status"].value_counts()                                 # largest first
+print(loans["product"].nunique())  # COUNT(DISTINCT product)
+loans["status"].value_counts()     # largest first
 ```
 
 | status | count |
@@ -517,8 +537,9 @@ Micro 34.1 % · Consumer 30.9 · BNPL 20.0 · SME 10.0 · Auto 5.0 — the share
 ```python
 cust = pd.read_csv("../excel/customers_dirty.csv")
 inc = cust["monthly_income"]
-print(cust.isna().sum()[lambda s: s > 0])           # columns with blanks, and how many
-print(len(inc), inc.count())                        # rows vs non-blank values
+# columns with blanks, and how many
+print(cust.isna().sum()[lambda s: s > 0])
+print(len(inc), inc.count())  # rows vs non-blank values
 print(round(inc.mean()), round(inc.fillna(0).mean()), round(inc.fillna(inc.median()).mean()))
 print(len(cust.dropna(subset=["monthly_income"])))
 ```
@@ -651,7 +672,8 @@ watch = loans.loc[cond, ["loan_id", "branch", "product", "disbursed_at", "outsta
 watch["days_on_book"] = (AS_OF - watch["disbursed_at"]).dt.days
 watch["bucket"] = pd.cut(watch["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
 watch = watch.sort_values("outstanding", ascending=False)
-watch.to_csv("tashkent_watchlist.csv", index=False)       # index=False, or Excel gets a nameless first column
+# index=False, or Excel gets a nameless first column
+watch.to_csv("tashkent_watchlist.csv", index=False)
 print(len(watch), watch["outstanding"].sum())
 watch.head()
 ```
@@ -737,7 +759,8 @@ def portfolio_summary(df):
     }
 
 portfolio_summary(loans)
-# {'loans': 7828, 'active': 3352, 'outstanding': 208723504430, 'disbursed_2026': 3030, 'par30_pct': 3.12, 'npl90_pct': 2.55}
+# {'loans': 7828, 'active': 3352, 'outstanding': 208723504430, 'disbursed_2026':
+# 3030, 'par30_pct': 3.12, 'npl90_pct': 2.55}
 ```
 
 Every line is a SQL clause you have written: `len` is `COUNT(*)`, `(cond).sum()` is `SUM(CASE WHEN … THEN 1 END)`, `df.loc[mask, "col"].sum()` is `SUM(col) WHERE mask`. One number differs from week 4's tile on purpose: **3 030**, not 3 051 — this function uses the half-open `< AS_OF`, so the 21 loans disbursed on the as-of day itself (852 760 000) are out; week 4's `COUNTIFS` used `<=`. Neither is wrong; the function's docstring must say which.
@@ -880,11 +903,15 @@ The portfolio's three risk numbers, from `loans_status.csv`, each a one-liner on
 ```python
 edges, labels = [-1, 0, 30, 60, 90, np.inf], ["0", "1-30", "31-60", "61-90", "90+"]
 loans["bucket_pd"] = pd.cut(loans["dpd"], bins=edges, labels=labels)
-buckets = loans["bucket_pd"].value_counts().sort_index()              # 7429 · 124 · 25 · 16 · 234
+# 7429 · 124 · 25 · 16 · 234
+buckets = loans["bucket_pd"].value_counts().sort_index()
 
-total = loans["outstanding"].sum()                                    # 208 723 504 430
-par30 = loans.loc[loans["dpd"] > 30, "outstanding"].sum() / total     # 6 507 526 953 / total = 3.12 %
-npl90 = loans.loc[loans["dpd"] > 90, "outstanding"].sum() / total     # 5 319 475 527 / total = 2.55 %
+# 208 723 504 430
+total = loans["outstanding"].sum()
+# 6 507 526 953 / total = 3.12 %
+par30 = loans.loc[loans["dpd"] > 30, "outstanding"].sum() / total
+# 5 319 475 527 / total = 2.55 %
+npl90 = loans.loc[loans["dpd"] > 90, "outstanding"].sum() / total
 ```
 
 ```game

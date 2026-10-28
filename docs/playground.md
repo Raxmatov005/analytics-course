@@ -29,8 +29,9 @@ Four commands change data — **CREATE**, **INSERT**, **UPDATE**, **DELETE** —
 
 ```sql
 CREATE TABLE my_notes (
-    note_id  INTEGER PRIMARY KEY,   -- the key: one value per row, filled in for you
-    loan_id  INTEGER NOT NULL,      -- must be filled
+    -- the key: one value per row, filled in for you
+    note_id  INTEGER PRIMARY KEY,
+    loan_id  INTEGER NOT NULL,  -- must be filled
     note     TEXT    NOT NULL
 );
 ```

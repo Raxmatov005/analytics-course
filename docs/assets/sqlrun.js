@@ -338,7 +338,7 @@ Work in progress is kept in localStorage "al.sql". */
     box.className = 'sq-box';
     box.innerHTML = '<div class="sq-top"><span class="sq-lang">SQL</span><span class="sq-tip">' + T('edit it, then Run', 'измените и нажмите «Выполнить»') + '</span>' +
       '<button type="button" class="sq-reset" hidden>' + T('Reset', 'Вернуть') + '</button></div>' +
-      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off"></textarea>' +
+      '<textarea class="sq-edit" spellcheck="false" wrap="soft" autocapitalize="off" autocorrect="off"></textarea>' +
       '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><span class="sq-keys">Ctrl + Enter</span></div><div class="sq-out"></div>';
     pre.parentNode.replaceChild(box, pre);
     var ta = box.querySelector('textarea'), out = box.querySelector('.sq-out'), rs = box.querySelector('.sq-reset');
@@ -353,12 +353,26 @@ Work in progress is kept in localStorage "al.sql". */
         .catch(function () { out.innerHTML = '<div class="sq-err">' + T('Could not load the data — check the internet connection and try again.', 'Не удалось загрузить данные — проверьте подключение к интернету и попробуйте снова.') + '</div>'; });
     };
   }
-  function fit(ta) {   // the editor is as tall as its code, so nothing is cut off and nothing wraps
+  function fit(ta) {   // the editor is as tall as its code, so nothing is cut off; a long line wraps (grow)
     var lines = ta.value.split('\n').length;   // counted from the text, so it also works inside a closed <details>
     if (ta.classList.contains('sq-text')) lines += Math.floor(ta.value.length / 60);
     var least = ta.classList.contains('sq-text') || ta.closest('.sq-lab') ? 4 : ta.closest('.sq-task, .sq-prac, .sq-ed') ? 3 : 1;
     ta.rows = Math.max(least, Math.min(30, lines + (least > 1 ? 1 : 0)));
+    grow(ta);
   }
+  /* a long line wraps instead of running past the box: on screen, the box grows to its wrapped height; a box that
+     shows later (a closed <details>) or changes width is grown again by the observer. pyrun.js uses it too. */
+  var watch = window.ResizeObserver ? new ResizeObserver(function (es) {
+    es.forEach(function (e) { if (e.target._w !== e.target.clientWidth) grow(e.target); });
+  }) : null;
+  function grow(ta) {
+    if (watch && !ta._seen) { ta._seen = true; watch.observe(ta); }
+    ta.style.height = '';
+    if (!ta.offsetParent) return;
+    ta._w = ta.clientWidth;
+    if (ta.scrollHeight > ta.clientHeight + 1) ta.style.height = ta.scrollHeight + 'px';
+  }
+  window.ALGrow = grow;
   function tabKeys(ta) {
     ta.addEventListener('keydown', function (e) {
       if (e.key === 'Tab') { e.preventDefault(); var p = ta.selectionStart; ta.value = ta.value.slice(0, p) + '  ' + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = p + 2; }
@@ -390,7 +404,7 @@ Work in progress is kept in localStorage "al.sql". */
         var input = t.upload
           ? '<label class="sq-file"><input type="file"' + (t.accept ? ' accept="' + esc(t.accept) + '"' : '') + '> ' + T('📎 Choose file', '📎 Выбрать файл') + '</label><span class="sq-fname"></span>'
           : '<textarea class="sq-edit' + (t.text ? ' sq-text' : '') + '" spellcheck="' + (t.text ? 'true' : 'false') + '"' +
-            (t.text ? '' : ' wrap="off" autocapitalize="off" autocorrect="off"') +
+            (t.text ? '' : ' wrap="soft" autocapitalize="off" autocorrect="off"') +
             ' rows="' + (t.text ? 4 : 3) + '" placeholder="' + (t.text ? T('Write here…', 'Пишите здесь…') : T('-- write your query here', '-- напишите запрос здесь')) + '"></textarea>';
         return '<div class="sq-task" data-i="' + i + '"><div class="sq-task-q"><span class="sq-chip"></span><b>' + esc(hasSql ? t.id : String(i + 1)) + '</b><span>' + esc(t.q).replace(/`([^`]+)`/g, '<code>$1</code>') + '</span>' +
           (t.optional ? ' <span class="sq-opt">' + T('optional', 'по желанию') + '</span>' : '') + '<span class="sq-state"></span></div>' +
@@ -794,7 +808,7 @@ Work in progress is kept in localStorage "al.sql". */
     box.className = 'sq-box sq-prac' + (exam ? '' : ' al-block' + (okBefore ? ' al-done' : ''));
     box.innerHTML = '<div class="sq-top"><span class="sq-lang">' + T('YOUR QUERY · ', 'ВАШ ЗАПРОС · ') + esc(id) + '</span><span class="sq-tip">' + T('saved in this browser', 'сохраняется в этом браузере') + '</span>' +
       '<button type="button" class="sq-reset" hidden>' + T('Clear', 'Очистить') + '</button></div>' +
-      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="' + T('-- write your query here, then Run', '-- напишите запрос здесь и нажмите «Выполнить»') + '"></textarea>' +
+      '<textarea class="sq-edit" spellcheck="false" wrap="soft" autocapitalize="off" autocorrect="off" placeholder="' + T('-- write your query here, then Run', '-- напишите запрос здесь и нажмите «Выполнить»') + '"></textarea>' +
       '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button>' + (exam ? '' : '<button type="button" class="sq-check">' + T('✔ Check', '✔ Проверить') + '</button>') +
       '<span class="sq-msg"></span></div><div class="sq-out"></div>';
     det.parentNode.insertBefore(box, det);
@@ -869,7 +883,7 @@ Work in progress is kept in localStorage "al.sql". */
     box.innerHTML = '<div class="sq-play-chips"><span>' + T('Start from:', 'Начать с:') + '</span>' + STARTERS.map(function (s, i) { return '<button type="button" data-i="' + i + '">' + s[0] + '</button>'; }).join('') + '</div>' +
       '<div class="sq-box"><div class="sq-top"><span class="sq-lang">' + T('SQL · YOUR PRACTICE DATABASE', 'SQL · ВАША УЧЕБНАЯ БАЗА') + '</span><span class="sq-tip">' + T('saved in this browser', 'сохраняется в этом браузере') + '</span>' +
       '<button type="button" class="sq-reset">' + T('Clear', 'Очистить') + '</button></div>' +
-      '<textarea class="sq-edit sq-big" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="' +
+      '<textarea class="sq-edit sq-big" spellcheck="false" wrap="soft" autocapitalize="off" autocorrect="off" placeholder="' +
       T('-- write any SQL here: SELECT, CREATE TABLE, INSERT, UPDATE, DELETE…', '-- пишите здесь любой SQL: SELECT, CREATE TABLE, INSERT, UPDATE, DELETE…') + '"></textarea>' +
       '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><span class="sq-keys">Ctrl + Enter</span>' +
       '<button type="button" class="sq-open-db">' + T('Database', 'База данных') + '</button></div><div class="sq-out"></div></div>';
@@ -905,7 +919,7 @@ Work in progress is kept in localStorage "al.sql". */
     box.innerHTML = '<div class="sq-top"><span class="sq-lang">' + esc(opt.label || T('YOUR QUERY', 'ВАШ ЗАПРОС')) + '</span><span class="sq-tip">' +
       (clean0 ? T('saved in this browser', 'сохраняется в этом браузере') : T('runs on your practice copy · saved in this browser', 'выполняется в вашей учебной копии · сохраняется в этом браузере')) + '</span>' +
       '<button type="button" class="sq-reset" hidden>' + T('Clear', 'Очистить') + '</button></div>' +
-      '<textarea class="sq-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off" placeholder="' +
+      '<textarea class="sq-edit" spellcheck="false" wrap="soft" autocapitalize="off" autocorrect="off" placeholder="' +
       esc(opt.placeholder || T('-- write your query here, then Run', '-- напишите запрос здесь и нажмите «Выполнить»')) + '"></textarea>' +
       '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><span class="sq-keys">Ctrl + Enter</span>' +
       '<span class="sq-msg"></span></div><div class="sq-out"></div>';

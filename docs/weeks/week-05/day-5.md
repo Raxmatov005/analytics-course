@@ -147,7 +147,7 @@ pay = pd.read_sql("SELECT * FROM payments", con, parse_dates=["paid_at"])
 inst = pd.read_sql("SELECT * FROM installments", con, parse_dates=["due_date"])
 print(L["disbursed_at"].min(), L["disbursed_at"].max(), pay["paid_at"].min(), pay["paid_at"].max(), inst["due_date"].max())
 # 2024-01-02 · 2026-10-01 · 2024-01-31 · 2026-11-24 · 2030-10-01
-(pay["paid_at"] > AS_OF).sum()      # 24 forward-dated rows, 53 438 947
+(pay["paid_at"] > AS_OF).sum()  # 24 forward-dated rows, 53 438 947
 ```
 
 **Match:** identical. **Finding.** 33 months of lending, a schedule to October 2030, and `MAX(paid_at)` after the as-of — the 24 rows that every payment sum below excludes with `pay["paid_at"] <= AS_OF`. In pandas the five extremes are five method calls on typed columns; the `parse_dates=` argument is where the typing happens, and forgetting it turns `.max()` into a string comparison that still "works".
@@ -167,7 +167,8 @@ collected = pc.loc[pc["paid_at"] <= AS_OF, "amount"].sum()
 tiles = {"loans": len(L), "borrowers": L["customer_id"].nunique(), "disbursed": L["principal"].sum(),
          "avg_ticket": round(L["principal"].mean()), "avg_term": round(L["term_months"].mean(), 1),
          "outstanding": outstanding, "collected": collected, "interest": inst["interest_due"].sum()}
-# 7828 · 4335 · 404 783 280 000 · 51 709 668 · 11.8 · 208 723 504 430 · 255 061 333 229 · 122 497 355 801
+# 7828 · 4335 · 404 783 280 000 · 51 709 668 · 11.8 · 208 723 504 430 · 255 061
+# 333 229 · 122 497 355 801
 assert tiles["outstanding"] == 208_723_504_430 and tiles["collected"] == 255_061_333_229
 tiles
 ```
@@ -187,10 +188,14 @@ by_prod = L.groupby("code").agg(loans=("loan_id", "size"), disbursed=("principal
 by_prod["loan_share"] = 100 * by_prod["loans"] / by_prod["loans"].sum()
 by_prod["amount_share"] = 100 * by_prod["disbursed"] / by_prod["disbursed"].sum()
 print(by_prod.sort_values("disbursed", ascending=False).round(1))
-# SME 781 / 241 117 150 000 / 308 728 745 / 10.0 / 59.6 · AUTO 391 / 84 791 530 000 / 216 858 133 / 5.0 / 20.9 · CONS 2418 / 65 109 280 000 / 30.9 / 16.1 · MICRO 2669 / 7 221 210 000 / 34.1 / 1.8 · BNPL 1569 / 6 544 110 000 / 20.0 / 1.6
+# SME 781 / 241 117 150 000 / 308 728 745 / 10.0 / 59.6 · AUTO 391 / 84 791 530
+# 000 / 216 858 133 / 5.0 / 20.9 · CONS 2418 / 65 109 280 000 / 30.9 / 16.1 ·
+# MICRO 2669 / 7 221 210 000 / 34.1 / 1.8 · BNPL 1569 / 6 544 110 000 / 20.0 /
+# 1.6
 by_region = L.groupby("region")["principal"].sum().pipe(lambda s: (100 * s / s.sum()).round(1)).sort_values(ascending=False)
 by_region
-# Tashkent 39.7 · Fergana 12.7 · Samarkand 11.2 · Andijan 9.5 · Namangan 8.6 · Bukhara 6.9 · Nukus 5.8 · Termez 5.7
+# Tashkent 39.7 · Fergana 12.7 · Samarkand 11.2 · Andijan 9.5 · Namangan 8.6 ·
+# Bukhara 6.9 · Nukus 5.8 · Termez 5.7
 ```
 
 Chart: the Day-4 barh of outstanding by product (60.3 / 27.6 / 11.0 / 0.5 / 0.5). **Match:** identical to week 3 S5. **Finding.** Two books in one — 85 % of loans are Micro/Consumer/BNPL, 80 % of the money is SME/Auto; the ticket ratio SME : Micro is 114 : 1 (308.7 m vs 2.7 m). `agg` with named outputs then two share columns is the whole of week 3's window-over-`GROUP BY`.
@@ -210,13 +215,18 @@ rank = (y26.merge(br, on="branch_id", validate="m:1").groupby("branch_name")
            .agg(loans=("loan_id", "size"), disbursed_2026=("principal", "sum")).sort_values("disbursed_2026", ascending=False))
 rank["rk"] = rank["disbursed_2026"].rank(method="min", ascending=False).astype(int)
 print(rank)
-# 1 Tashkent South 381 / 21 380 780 000 · 2 Fergana Central 315 / 19 742 090 000 · 3 Samarkand Central 344 / 19 440 640 000 … 10 Termez Central 184 / 8 120 400 000
+# 1 Tashkent South 381 / 21 380 780 000 · 2 Fergana Central 315 / 19 742 090 000
+# · 3 Samarkand Central 344 / 19 440 640 000 … 10 Termez Central 184 / 8 120 400
+# 000
 cust = pd.read_sql("SELECT customer_id, first_name || ' ' || last_name AS customer, segment FROM customers", con)
 top = (L.groupby("customer_id").agg(loans=("loan_id", "size"), total=("principal", "sum")).nlargest(3, "total")
         .merge(cust, on="customer_id"))
 print(top)
-# Murod Yusupov (sme) 5 / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000
-L.groupby("code")["principal"].max()     # AUTO 399 530 000 · BNPL 7 990 000 · CONS 49 990 000 · MICRO 4 990 000 · SME 599 060 000
+# Murod Yusupov (sme) 5 / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170
+# 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000
+# AUTO 399 530 000 · BNPL 7 990 000 · CONS 49 990 000 · MICRO 4 990 000 · SME
+# 599 060 000
+L.groupby("code")["principal"].max()
 ```
 
 **Match:** identical. **Finding.** Fergana Central is second by money with fewer loans than four other branches — SME-heavy; Termez is last at 38 % of the leader. Every product's biggest loan sits at its `max_amount`. `rank(method="min")` is `RANK()`; `nlargest` is `ORDER BY … LIMIT`; the one place to be careful is the branch join — `validate="m:1"` says a loan has one branch.
@@ -259,14 +269,18 @@ Chart: Day-4 figure 1 (month in grey, average in blue). **Match:** all 33 rows i
 ```python
 rows = []
 for ms in pd.period_range("2026-01", "2026-09", freq="M"):
-    nxt = (ms + 1).to_timestamp()                                   # first day of the next month
-    live = L.loc[L["disbursed_at"] < nxt, "loan_id"]                # loans that existed at month end
+    # first day of the next month
+    nxt = (ms + 1).to_timestamp()
+    # loans that existed at month end
+    live = L.loc[L["disbursed_at"] < nxt, "loan_id"]
     bal = inst[(inst["due_date"] >= nxt) & inst["loan_id"].isin(live)]
     rows.append((str(ms), bal["principal_due"].sum(), bal["loan_id"].nunique()))
 s8 = pd.DataFrame(rows, columns=["month", "outstanding", "loans_with_balance"])
 s8["net_growth"] = s8["outstanding"].diff()
 s8
-# 2026-01 151 807 386 149 (2 579) · 02 154 145 984 724 (+2.3 bn) · 03 163 974 316 812 (+9.8) · … · 08 203 830 205 928 (+10.2) · 09 208 243 879 623 (+4.4 bn, 3 392 loans)
+# 2026-01 151 807 386 149 (2 579) · 02 154 145 984 724 (+2.3 bn) · 03 163 974
+# 316 812 (+9.8) · … · 08 203 830 205 928 (+10.2) · 09 208 243 879 623 (+4.4 bn,
+# 3 392 loans)
 ```
 
 **Match:** all nine month-ends equal week 3 S8 (`v_portfolio_monthly` / the recursive calendar). **Finding.** +56 bn (+37 %) in nine months while 161.5 bn was disbursed: two thirds of new lending replaces repayments. This is the one section where pandas is *clearer* than SQL — a nine-step loop with a readable condition replaces a recursive CTE plus a correlated aggregate — and also the one where it is slowest (nine passes over 92 193 rows; still under a second).
@@ -280,7 +294,8 @@ s8
 <details><summary>Model answer</summary>
 
 ```python
-def dpd_per_loan(inst, pay, as_of):                                             # HW 5.2 — Day 3's Company corner as a function
+# HW 5.2 — Day 3's Company corner as a function
+def dpd_per_loan(inst, pay, as_of):
     paid = pay[pay["paid_at"] <= as_of].groupby("installment_id", as_index=False).agg(paid=("amount", "sum"))
     mm = inst.merge(paid, on="installment_id", how="left", validate="1:1").fillna({"paid": 0})
     late = mm[(mm["paid"] < mm["total_due"]) & (mm["due_date"] <= as_of)]
@@ -289,13 +304,18 @@ def dpd_per_loan(inst, pay, as_of):                                             
     d["bucket"] = pd.cut(d["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
     return d
 
-d = dpd_per_loan(inst, pc, AS_OF)                                               # loan_id, dpd, bucket
+# loan_id, dpd, bucket
+d = dpd_per_loan(inst, pc, AS_OF)
 st = d.merge(inst[inst["due_date"] > AS_OF].groupby("loan_id")["principal_due"].sum().rename("outstanding"), on="loan_id", how="left").fillna({"outstanding": 0})
 b = st.groupby("bucket", observed=True).agg(loans=("loan_id", "size"), outstanding=("outstanding", "sum"))
 b["share_pct"] = (100 * b["outstanding"] / b["outstanding"].sum()).round(2)
-# 0 7429 / 197 486 207 578 / 94.62 · 1-30 124 / 4 729 769 899 / 2.27 · 31-60 25 / 748 610 049 / 0.36 · 61-90 16 / 439 441 377 / 0.21 · 90+ 234 / 5 319 475 527 / 2.55
-par30 = st.loc[st["dpd"] > 30, "outstanding"].sum() / st["outstanding"].sum()   # 3.12 %
-npl90 = st.loc[st["dpd"] > 90, "outstanding"].sum() / st["outstanding"].sum()   # 2.55 %
+# 0 7429 / 197 486 207 578 / 94.62 · 1-30 124 / 4 729 769 899 / 2.27 · 31-60 25
+# / 748 610 049 / 0.36 · 61-90 16 / 439 441 377 / 0.21 · 90+ 234 / 5 319 475 527
+# / 2.55
+# 3.12 %
+par30 = st.loc[st["dpd"] > 30, "outstanding"].sum() / st["outstanding"].sum()
+# 2.55 %
+npl90 = st.loc[st["dpd"] > 90, "outstanding"].sum() / st["outstanding"].sum()
 b, round(100 * par30, 2), round(100 * npl90, 2)
 ```
 
@@ -320,7 +340,8 @@ ct = pd.crosstab(lc["band"], lc["risk_grade"])
 ct["loans"] = ct.sum(axis=1); ct["cd_share_pct"] = (100 * (ct["C"] + ct["D"]) / ct["loans"]).round(1)
 ct["avg_ticket"] = lc.groupby("band")["principal"].mean().round()
 ct
-# unknown 466 loans / C+D 32.0 % · <5m 1670 / 33.0 · 5-10m 2781 / 32.8 · 10-20m 774 / 34.8 · 20m+ 2137 / 33.7
+# unknown 466 loans / C+D 32.0 % · <5m 1670 / 33.0 · 5-10m 2781 / 32.8 · 10-20m
+# 774 / 34.8 · 20m+ 2137 / 33.7
 ```
 
 Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borrowers 49.1 % (`sort_values().head(len // 10).sum()`). Chart: a heatmap of the crosstab or a stacked bar of grade shares per band.

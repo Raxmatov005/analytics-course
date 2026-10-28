@@ -23,13 +23,17 @@
 **Как пишется.** Внутри `CREATE TABLE`, после типа столбца. Нажмите **▶ Выполнить** — `CREATE TABLE` вы напишете сами ниже; здесь только посмотрите, что делает ключ.
 
 ```sql
-CREATE TABLE IF NOT EXISTS my_keys_demo (     -- IF NOT EXISTS: пропустить, если таблица уже есть
-    customer_id INTEGER PRIMARY KEY,          -- первичный ключ
-    first_name  TEXT    NOT NULL,             -- должно быть заполнено (следующий подраздел)
-    phone       TEXT    UNIQUE                -- две строки с одним телефоном запрещены (подраздел после него)
+-- IF NOT EXISTS: пропустить, если таблица уже есть
+CREATE TABLE IF NOT EXISTS my_keys_demo (
+    customer_id INTEGER PRIMARY KEY,  -- первичный ключ
+    -- должно быть заполнено (следующий подраздел)
+    first_name  TEXT    NOT NULL,
+    -- две строки с одним телефоном запрещены (подраздел после него)
+    phone       TEXT    UNIQUE
 );
 INSERT INTO my_keys_demo VALUES (1, 'Gulbahor', '+998907579830');
-INSERT INTO my_keys_demo VALUES (1, 'Aziz', '+998901112233');      -- снова id 1: отказ
+INSERT INTO my_keys_demo VALUES (1, 'Aziz', '+998901112233');
+-- снова id 1: отказ
 ```
 
 Блок заканчивается красным: *UNIQUE constraint failed: my_keys_demo.customer_id*. В этом отказе и смысл — второго клиента 1 быть не может. Откройте **«База данных» → «Ваши таблицы» → my_keys_demo**: одна строка и значок **PK** рядом с `customer_id`.
@@ -46,7 +50,8 @@ INSERT INTO my_keys_demo VALUES (1, 'Aziz', '+998901112233');      -- снова
 | Становится PK? | редко; хранится обычным столбцом | почти всегда |
 
 ```sql
-SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loans;   -- готовая проверка (COUNT(DISTINCT) — тема 2-й недели)
+SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loans;
+-- готовая проверка (COUNT(DISTINCT) — тема 2-й недели)
 ```
 
 7 828 строк и 7 828 различных `loan_id`: каждое значение встречается один раз, значит, `loan_id` может быть первичным ключом.
@@ -67,7 +72,8 @@ SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loa
 
 ```sql
 CREATE TABLE IF NOT EXISTS my_keys_demo (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, phone TEXT UNIQUE);
-INSERT INTO my_keys_demo (customer_id, phone) VALUES (2, '+998901112233');   -- нет first_name: отказ
+INSERT INTO my_keys_demo (customer_id, phone) VALUES (2, '+998901112233');
+-- нет first_name: отказ
 ```
 
 *NOT NULL constraint failed: my_keys_demo.first_name* — клиента без имени база не принимает.
@@ -89,7 +95,8 @@ INSERT INTO my_keys_demo (customer_id, phone) VALUES (2, '+998901112233');   -- 
 ```sql
 CREATE TABLE IF NOT EXISTS my_keys_demo (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, phone TEXT UNIQUE);
 INSERT INTO my_keys_demo VALUES (3, 'Aziz',    '+998905550000');
-INSERT INTO my_keys_demo VALUES (4, 'Dilnoza', '+998905550000');   -- тот же телефон ещё раз: отказ
+INSERT INTO my_keys_demo VALUES (4, 'Dilnoza', '+998905550000');
+-- тот же телефон ещё раз: отказ
 ```
 
 *UNIQUE constraint failed: my_keys_demo.phone*.
@@ -115,14 +122,16 @@ INSERT INTO my_keys_demo VALUES (4, 'Dilnoza', '+998905550000');   -- тот ж�
 **Как пишется.** В конце `CREATE TABLE`: `FOREIGN KEY (столбец) REFERENCES родительская_таблица(родительский_ключ)`. Родительский столбец должен быть PRIMARY KEY (или UNIQUE) своей таблицы.
 
 ```sql
-PRAGMA foreign_keys = ON;                       -- SQLite проверяет внешние ключи только после этой строки, в том же блоке
+PRAGMA foreign_keys = ON;
+-- SQLite проверяет внешние ключи только после этой строки, в том же блоке
 CREATE TABLE IF NOT EXISTS my_keys_demo (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, phone TEXT UNIQUE);
 CREATE TABLE IF NOT EXISTS my_loans_demo (
     loan_id     INTEGER PRIMARY KEY,
     customer_id INTEGER NOT NULL,
-    FOREIGN KEY (customer_id) REFERENCES my_keys_demo(customer_id)   -- клиент должен существовать
+    -- клиент должен существовать
+    FOREIGN KEY (customer_id) REFERENCES my_keys_demo(customer_id)
 );
-INSERT INTO my_loans_demo VALUES (1, 999999);   -- клиента 999999 нет: отказ
+INSERT INTO my_loans_demo VALUES (1, 999999);  -- клиента 999999 нет: отказ
 ```
 
 *FOREIGN KEY constraint failed*. `my_loans_demo` остаётся пустой.
@@ -152,10 +161,12 @@ CREATE TABLE IF NOT EXISTS my_schedule_demo (
     loan_id        INTEGER NOT NULL,
     installment_no INTEGER NOT NULL,
     due_date       TEXT    NOT NULL,
-    PRIMARY KEY (loan_id, installment_no)       -- ключ — это пара
+    PRIMARY KEY (loan_id, installment_no)  -- ключ — это пара
 );
-INSERT INTO my_schedule_demo VALUES (1, 1, '2025-04-28'), (1, 2, '2025-05-28'), (2, 1, '2026-01-05');  -- кредит 1 дважды, номер 1 дважды: можно
-INSERT INTO my_schedule_demo VALUES (1, 2, '2025-06-28');                                              -- пара (1, 2) ещё раз: отказ
+INSERT INTO my_schedule_demo VALUES (1, 1, '2025-04-28'), (1, 2, '2025-05-28'), (2, 1, '2026-01-05');
+-- кредит 1 дважды, номер 1 дважды: можно
+INSERT INTO my_schedule_demo VALUES (1, 2, '2025-06-28');
+-- пара (1, 2) ещё раз: отказ
 ```
 
 Первая вставка добавляет три строки: кредит 1 встречается дважды и номер 1 встречается дважды, но каждая пара новая. Вторая отклонена: у кредита 1 уже есть платёж номер 2.
@@ -361,10 +372,11 @@ Auto-кредиту на 48 месяцев нужно 48 строк, BNPL на 3
 ```sql
 -- только схема: замените имена, прежде чем выполнять
 CREATE TABLE table_name (
-    column1  TYPE  PRIMARY KEY,                         -- ключ
-    column2  TYPE  NOT NULL,                            -- должно быть заполнено
-    column3  TYPE,                                      -- может быть пустым
-    FOREIGN KEY (column2) REFERENCES parent(parent_key) -- по желанию: column2 указывает на другую таблицу
+    column1  TYPE  PRIMARY KEY,  -- ключ
+    column2  TYPE  NOT NULL,     -- должно быть заполнено
+    column3  TYPE,               -- может быть пустым
+    -- по желанию: column2 указывает на другую таблицу
+    FOREIGN KEY (column2) REFERENCES parent(parent_key)
 );
 ```
 
@@ -372,16 +384,21 @@ CREATE TABLE table_name (
 
 ```sql
 CREATE TABLE my_collectors (
-    collector_id  INTEGER NOT NULL PRIMARY KEY,      -- SQL Server: INT NOT NULL PRIMARY KEY
-    full_name     TEXT    NOT NULL,                  -- SQL Server: NVARCHAR(100)
+    -- SQL Server: INT NOT NULL PRIMARY KEY
+    collector_id  INTEGER NOT NULL PRIMARY KEY,
+    -- SQL Server: NVARCHAR(100)
+    full_name     TEXT    NOT NULL,
     branch_id     INTEGER NOT NULL
 );
 CREATE TABLE my_calls (
-    call_id       INTEGER PRIMARY KEY,               -- заполняется само: 1, 2, 3 и дальше
+    -- заполняется само: 1, 2, 3 и дальше
+    call_id       INTEGER PRIMARY KEY,
     loan_id       INTEGER NOT NULL,
     collector_id  INTEGER NOT NULL,
-    called_on     TEXT    NOT NULL,                  -- дата как 'YYYY-MM-DD'; SQL Server: DATE
-    outcome       TEXT,                              -- может быть пустым, пока не известно
+    -- дата как 'YYYY-MM-DD'; SQL Server: DATE
+    called_on     TEXT    NOT NULL,
+    -- может быть пустым, пока не известно
+    outcome       TEXT,
     FOREIGN KEY (collector_id) REFERENCES my_collectors(collector_id)
 );
 ```
@@ -419,9 +436,12 @@ CREATE TABLE my_calls (
 
 ```sql
 -- только схема: замените имена, прежде чем выполнять
-INSERT INTO table_name (column1, column2) VALUES (value1, value2);            -- одна строка
-INSERT INTO table_name (column1, column2) VALUES (v1, v2), (v3, v4);          -- несколько строк, по скобке на каждую
-INSERT INTO table_name (column1, column2) SELECT colA, colB FROM other_table; -- строки, которые вернул запрос
+INSERT INTO table_name (column1, column2) VALUES (value1, value2);
+-- одна строка
+INSERT INTO table_name (column1, column2) VALUES (v1, v2), (v3, v4);
+-- несколько строк, по скобке на каждую
+INSERT INTO table_name (column1, column2) SELECT colA, colB FROM other_table;
+-- строки, которые вернул запрос
 ```
 
 Одна строка — новый взыскатель:
@@ -458,7 +478,8 @@ SELECT * FROM my_calls;
 
 ```sql
 PRAGMA foreign_keys = ON;
-INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10-01');   -- взыскателя 999 нет
+INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10-01');
+-- взыскателя 999 нет
 ```
 
 *FOREIGN KEY constraint failed*. Без первой строки SQLite принял бы звонок от несуществующего взыскателя.
@@ -481,8 +502,9 @@ INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10
 ```sql
 -- только схема: замените имена, прежде чем выполнять
 UPDATE table_name
-SET    column1 = new_value1, column2 = new_value2   -- что меняется
-WHERE  condition;                                   -- в каких строках; без WHERE — во всех
+SET    column1 = new_value1, column2 = new_value2  -- что меняется
+WHERE  condition;
+-- в каких строках; без WHERE — во всех
 ```
 
 Звонок 1 закончился хорошо: заёмщик заплатил 1 октября. Сначала посмотрите на строку с тем же `WHERE`, затем измените её:
@@ -547,8 +569,10 @@ SELECT * FROM my_calls;
 
 ```sql
 -- только схема: замените имена, прежде чем выполнять
-ALTER TABLE table_name ADD COLUMN column_name TYPE;         -- SQL Server: ALTER TABLE t ADD column_name TYPE;
-ALTER TABLE table_name RENAME COLUMN old_name TO new_name;  -- SQL Server: EXEC sp_rename 't.old_name', 'new_name', 'COLUMN';
+ALTER TABLE table_name ADD COLUMN column_name TYPE;
+-- SQL Server: ALTER TABLE t ADD column_name TYPE;
+ALTER TABLE table_name RENAME COLUMN old_name TO new_name;
+-- SQL Server: EXEC sp_rename 't.old_name', 'new_name', 'COLUMN';
 ALTER TABLE table_name RENAME TO new_table_name;
 ALTER TABLE table_name DROP COLUMN column_name;
 ```
@@ -629,13 +653,15 @@ DROP TABLE IF EXISTS my_schedule_demo;
 4. Прочитайте сообщение: *n строк изменено* должно совпасть с числом из хода 2.
 
 ```sql
-SELECT COUNT(*) FROM my_collectors WHERE branch_id = 1;   -- ход 2: сколько строк заденет этот WHERE?
+SELECT COUNT(*) FROM my_collectors WHERE branch_id = 1;
+-- ход 2: сколько строк заденет этот WHERE?
 ```
 
 4 строки — Азиза Каримова и три настоящих взыскателя филиала 1. `DELETE … WHERE branch_id = 1`, задуманный для Азизы, удалил бы четверых.
 
 ```sql
-UPDATE my_collectors SET branch_id = 2 WHERE full_name = 'aziza karimova';   -- строчными: ничего не находит
+UPDATE my_collectors SET branch_id = 2 WHERE full_name = 'aziza karimova';
+-- строчными: ничего не находит
 ```
 
 *✓ Готово — 0 строк изменено*. Без ошибки: в SQLite `=` различает регистр, и строка осталась в филиале 1. Проверяйте число у каждого изменения.
@@ -653,18 +679,24 @@ UPDATE my_collectors SET branch_id = 2 WHERE full_name = 'aziza karimova';   -- 
 Жизнь одной таблицы, все команды по порядку. Выполните блок один раз:
 
 ```sql
-CREATE TABLE my_visits (                                          -- CREATE: форма, с ключом и NOT NULL
+-- CREATE: форма, с ключом и NOT NULL
+CREATE TABLE my_visits (
     visit_id   INTEGER PRIMARY KEY,
     branch_id  INTEGER NOT NULL,
     visited_on TEXT    NOT NULL,
     purpose    TEXT
 );
-INSERT INTO my_visits (branch_id, visited_on, purpose)            -- INSERT: несколько строк
+-- INSERT: несколько строк
+INSERT INTO my_visits (branch_id, visited_on, purpose)
 VALUES (1, '2026-10-01', 'audit'), (4, '2026-10-02', 'training'), (9, '2026-10-03', 'audit');
-UPDATE my_visits SET purpose = 'audit and training' WHERE visit_id = 1;   -- UPDATE: одна строка, по ключу
-DELETE FROM my_visits WHERE visit_id = 3;                         -- DELETE: одна строка, по ключу
-ALTER TABLE my_visits ADD COLUMN visitor TEXT;                    -- ALTER: ещё один столбец
-SELECT * FROM my_visits;                                          -- смотрим результат
+UPDATE my_visits SET purpose = 'audit and training' WHERE visit_id = 1;
+-- UPDATE: одна строка, по ключу
+DELETE FROM my_visits WHERE visit_id = 3;
+-- DELETE: одна строка, по ключу
+ALTER TABLE my_visits ADD COLUMN visitor TEXT;
+-- ALTER: ещё один столбец
+SELECT * FROM my_visits;
+-- смотрим результат
 ```
 
 2 строки: визит 1 в филиал 1 (*audit and training*) и визит 2 в филиал 4 (*training*), у каждой пустой `visitor`. Когда закончите, уберите за собой — DROP:
@@ -724,7 +756,8 @@ CREATE TABLE scratch_restructurings (
     old_term_months    INT           NOT NULL,
     new_term_months    INT           NOT NULL,
     new_monthly_payment BIGINT       NULL,
-    reason_code        NVARCHAR(30)  NOT NULL,     -- 'job_loss', 'illness', 'business_down', 'other'
+    -- 'job_loss', 'illness', 'business_down', 'other'
+    reason_code        NVARCHAR(30)  NOT NULL,
     approved_by        INT           NULL,
     status             NVARCHAR(20)  NOT NULL,
     FOREIGN KEY (loan_id)     REFERENCES scratch_loan_keys(loan_id),

@@ -36,16 +36,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 loans = pd.read_csv("data/raw/loans.csv")
-pop = loans["principal"].to_numpy(dtype=float)                 # all 7 828 principals: the population of this page's experiments
+# all 7 828 principals: the population of this page's experiments
+pop = loans["principal"].to_numpy(dtype=float)
 apps = pd.read_csv("data/raw/applications.csv")
-s = apps["credit_score"].dropna().to_numpy(dtype=float)       # 13 612 applicants' credit scores
-f = pd.read_csv("data/powerbi/fct_first_instalment.csv")      # week 5's FPD frame: 7 099 loans, fpd30 = 0/1
-f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")   # app = Micro only, partner = BNPL only
-rng = np.random.default_rng(2026)                              # seeded: the same "random" draws on every run
+# 13 612 applicants' credit scores
+s = apps["credit_score"].dropna().to_numpy(dtype=float)
+# week 5's FPD frame: 7 099 loans, fpd30 = 0/1
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
+# app = Micro only, partner = BNPL only
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
+# seeded: the same "random" draws on every run
+rng = np.random.default_rng(2026)
 
-print(len(pop), round(pop.mean()))                             # 7828 51709668: N and μ — a parameter
+# 7828 51709668: N and μ — a parameter
+print(len(pop), round(pop.mean()))
 app = f[f["channel"] == "app"]
-print(len(app), app["fpd30"].sum(), round(100 * app["fpd30"].mean(), 2))   # 2411 41 1.7: n, FPDs and p̂ — an estimate
+# 2411 41 1.7: n, FPDs and p̂ — an estimate
+print(len(app), app["fpd30"].sum(), round(100 * app["fpd30"].mean(), 2))
 ```
 
 The mean principal of all 7 828 loans, 51.71 m soum, is a parameter of the book: every loan is in it. The app's 1.70 % — 41 FPDs in 2 411 loans — is an estimate of the app process's true rate.
@@ -67,9 +74,12 @@ The mean principal of all 7 828 loans, 51.71 m soum, is a parameter of the book:
 **How to write it.** Sample variance = the sum of squared distances from the sample mean ÷ (n − 1). numpy: `x.var(ddof=1)`; pandas: `.var()`; Excel: `VAR.S`, `STDEV.S`. Check it by experiment — 20 000 samples of five scores, both formulas, averaged:
 
 ```python
-samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])   # 20 000 samples, n = 5 each
-print(round(s.var()))                                                    # 3543: the population variance of the 13 612 scores
-print(samples.var(axis=1, ddof=0).mean(), samples.var(axis=1, ddof=1).mean())   # ≈ 2 862 (too small), ≈ 3 578 (right on average)
+# 20 000 samples, n = 5 each
+samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])
+# 3543: the population variance of the 13 612 scores
+print(round(s.var()))
+# ≈ 2 862 (too small), ≈ 3 578 (right on average)
+print(samples.var(axis=1, ddof=0).mean(), samples.var(axis=1, ddof=1).mean())
 ```
 
 Dividing by n gives about 2 860 instead of 3 543 — 20 % too small at n = 5. Dividing by n − 1 lands near 3 543. The reason: the sample's own mean sits closer to its five points than the true mean does, so the squared distances come out too small by the factor (n − 1)/n. (The sd, √ of the variance, is still a little low on average — 56.2 against 59.5 here — and nobody minds.)
@@ -96,9 +106,11 @@ Dividing by n gives about 2 860 instead of 3 543 — 20 % too small at n = 5. Di
 **How to write it.** Sampling error = estimate − parameter. Here we know μ, so we can see the errors. Five samples of 392 loans each — every 20th loan, starting at loan 1, 2, 3, 4 and 5 (a **systematic sample**):
 
 ```python
-mu = pop.mean()                                                 # 51.71 m: the parameter
+# 51.71 m: the parameter
+mu = pop.mean()
 for start in range(5):
-    part = loans["principal"].iloc[start::20]                    # every 20th loan: 392 loans
+    # every 20th loan: 392 loans
+    part = loans["principal"].iloc[start::20]
     print(start + 1, len(part), round(part.mean() / 1e6, 2), round((part.mean() - mu) / 1e6, 2))
 ```
 
@@ -136,9 +148,11 @@ SE of a proportion = √( p̂ (1 − p̂) / n )
 ```
 
 ```python
-print(round(pop.std() / math.sqrt(392) / 1e6, 2))             # 5.69: SE of a 392-loan mean principal, m soum
+# 5.69: SE of a 392-loan mean principal, m soum
+print(round(pop.std() / math.sqrt(392) / 1e6, 2))
 p = 41 / 2411
-print(round(100 * math.sqrt(p * (1 - p) / 2411), 3))           # 0.263: SE of the app FPD rate, in points
+# 0.263: SE of the app FPD rate, in points
+print(round(100 * math.sqrt(p * (1 - p) / 2411), 3))
 ```
 
 A 392-loan mean principal moves by about 5.7 m from sample to sample — the size of the errors in the table above (−3.4 to +8.5 m). The app's 1.70 % moves by about 0.26 points.
@@ -168,10 +182,13 @@ A 392-loan mean principal moves by about 5.7 m from sample to sample — the siz
 **How to write it.** Running mean after n draws = the sum of the first n values ÷ n.
 
 ```python
-order = np.random.default_rng(2026).permutation(pop)          # the 7 828 principals in a random order
-running = np.cumsum(order) / np.arange(1, len(order) + 1)      # the mean after 1, 2, 3, … loans
+# the 7 828 principals in a random order
+order = np.random.default_rng(2026).permutation(pop)
+# the mean after 1, 2, 3, … loans
+running = np.cumsum(order) / np.arange(1, len(order) + 1)
 for n in (10, 100, 1000, 7828):
-    print(n, round(running[n - 1] / 1e6, 2))                   # wild at first; exactly 51.71 m at 7 828
+    # wild at first; exactly 51.71 m at 7 828
+    print(n, round(running[n - 1] / 1e6, 2))
 ```
 
 One shuffle gave **106.38 m** after 10 loans, **35.06 m** after 100, **52.06 m** after 1 000 and **51.71 m** after all 7 828. Early means swing because one SME loan (up to 599 m) outweighs ten Micro loans. The swings die out like 1 / √n.
@@ -202,10 +219,12 @@ One shuffle gave **106.38 m** after 10 loans, **35.06 m** after 100, **52.06 m**
 See it yourself — 2 000 samples per n (your numbers will sit close to the table's):
 
 ```python
-mu, sigma = pop.mean(), pop.std()                                          # 51.71 m, 112.6 m — the population
+# 51.71 m, 112.6 m — the population
+mu, sigma = pop.mean(), pop.std()
 fig, axes = plt.subplots(1, 4, figsize=(14, 3))
 for ax, n in zip(axes, (5, 30, 100, 1000)):
-    means = np.array([rng.choice(pop, n, replace=False).mean() for _ in range(2000)])   # 2 000 sample means
+    # 2 000 sample means
+    means = np.array([rng.choice(pop, n, replace=False).mean() for _ in range(2000)])
     ax.hist(means / 1e6, bins=40, color="#9bb7d4"); ax.axvline(mu / 1e6, color="#c0392b")
     ax.set_title(f"n = {n}: sd {means.std() / 1e6:.1f} m, SE {sigma / np.sqrt(n) / 1e6:.1f} m", fontsize=9)
 plt.tight_layout(); plt.show()
@@ -236,14 +255,22 @@ The spread of the means follows σ / √n, and their skew melts from 1.33 to 0.0
 | t₀.₉₇₅ | 2.776 | 2.262 | 2.045 | 2.010 | 1.984 | 1.962 | 1.960 |
 
 ```python
-cons = loans.loc[loans["product_id"] == 2, "principal"].to_numpy(dtype=float)   # the 2 418 Consumer loans (product_id 2 = CONS)
-smp = rng.choice(cons, 50, replace=False)                     # your 50 loans — the notebook's draw: mean 27 486 400, s 12 617 221
-m, s50, n = smp.mean(), smp.std(ddof=1), 50                   # estimate, sample sd (ddof=1), size
-se = s50 / np.sqrt(n)                                         # standard error — notebook: 1 784 345
-t_crit = 2.0096                                               # t(0.975, df = 49), from the table above — scipy.stats.t.ppf(0.975, 49)
-print(round(m - t_crit * se), round(m + t_crit * se))         # t interval — notebook: 23 900 625 … 31 072 175
-print(round(m - 1.96 * se), round(m + 1.96 * se))             # z: a little narrower (23 989 085 … 30 983 715)
-print(round(cons.mean()))                                     # the true Consumer mean: 26 926 915 — inside?
+# the 2 418 Consumer loans (product_id 2 = CONS)
+cons = loans.loc[loans["product_id"] == 2, "principal"].to_numpy(dtype=float)
+# your 50 loans — the notebook's draw: mean 27 486 400, s 12 617 221
+smp = rng.choice(cons, 50, replace=False)
+# estimate, sample sd (ddof=1), size
+m, s50, n = smp.mean(), smp.std(ddof=1), 50
+# standard error — notebook: 1 784 345
+se = s50 / np.sqrt(n)
+# t(0.975, df = 49), from the table above — scipy.stats.t.ppf(0.975, 49)
+t_crit = 2.0096
+# t interval — notebook: 23 900 625 … 31 072 175
+print(round(m - t_crit * se), round(m + t_crit * se))
+# z: a little narrower (23 989 085 … 30 983 715)
+print(round(m - 1.96 * se), round(m + 1.96 * se))
+# the true Consumer mean: 26 926 915 — inside?
+print(round(cons.mean()))
 # scipy (the notebook): scipy.stats.t.interval(0.95, n - 1, loc=m, scale=se)
 ```
 
@@ -276,9 +303,9 @@ On the notebook's 50 loans the t interval is 23.90–31.07 m, and the true Consu
 **How to write it.**
 
 ```python
-def wald(k, n, z=1.96):                       # k events in n trials
-    p = k / n                                 # the estimate p̂
-    half = z * math.sqrt(p * (1 - p) / n)     # critical value × standard error
+def wald(k, n, z=1.96):                    # k events in n trials
+    p = k / n                              # the estimate p̂
+    half = z * math.sqrt(p * (1 - p) / n)  # critical value × standard error
     return p - half, p + half
 
 for name, k, n in [("app", 41, 2411), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
@@ -314,12 +341,15 @@ half-width = z √( p̂(1 − p̂)/n + z²/4n² ) / (1 + z²/n)
 ```python
 def wilson(k, n, z=1.96):
     p = k / n
-    centre = (p + z**2 / (2 * n)) / (1 + z**2 / n)                     # pulled a little towards 50 %
+    # pulled a little towards 50 %
+    centre = (p + z**2 / (2 * n)) / (1 + z**2 / n)
     half = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / (1 + z**2 / n)
     return centre - half, centre + half
-def pmf(k, n, p):                                                      # binomial P(X = k), from Day 1 (Practice uses it)
+# binomial P(X = k), from Day 1 (Practice uses it)
+def pmf(k, n, p):
     return math.comb(n, k) * p**k * (1 - p)**(n - k)
-def newcombe(k1, n1, k2, n2):                                          # 95 % CI for the difference p1 − p2
+# 95 % CI for the difference p1 − p2
+def newcombe(k1, n1, k2, n2):
     p1, p2 = k1 / n1, k2 / n2
     l1, u1 = wilson(k1, n1); l2, u2 = wilson(k2, n2)
     d = p1 - p2
@@ -327,7 +357,8 @@ def newcombe(k1, n1, k2, n2):                                          # 95 % CI
 
 for name, k, n in [("app", 41, 2411), ("branch", 34, 3263), ("partner", 16, 1425), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
     print(name, "Wilson", [round(100 * v, 2) for v in wilson(k, n)], "Wald", [round(100 * v, 2) for v in wald(k, n)])
-print("app − branch", [round(100 * v, 2) for v in newcombe(41, 2411, 34, 3263)])   # [0.66, 0.05, 1.33]
+# [0.66, 0.05, 1.33]
+print("app − branch", [round(100 * v, 2) for v in newcombe(41, 2411, 34, 3263)])
 ```
 
 App **1.26–2.30 %**, branch **0.75–1.45 %**, partner **0.69–1.82 %**; 2 in 150 → 0.37–4.73 %; 0 in 120 → 0–3.10 %. The app's interval reaches 0.44 points below 1.70 and 0.60 above: the right shape for a rate near zero. Excel has no Wilson function — with k in B1, n in B2, z in B3 (`=NORM.S.INV(0.975)`):
@@ -368,11 +399,11 @@ A "95 %" Wald interval on a branch-month of 400 loans is really an 88 % interval
 
 ```python
 hits = 0
-for _ in range(100):                                          # 100 samples of 400 loans
+for _ in range(100):                               # 100 samples of 400 loans
     x = rng.choice(pop, 400, replace=False)
-    half = 1.966 * x.std(ddof=1) / math.sqrt(400)             # t(0.975, 399) × SE
+    half = 1.966 * x.std(ddof=1) / math.sqrt(400)  # t(0.975, 399) × SE
     hits += (x.mean() - half <= pop.mean() <= x.mean() + half)
-print(hits)                                                   # about 95 — one run gave 96
+print(hits)                                        # about 95 — one run gave 96
 ```
 
 One run: **96 of the 100** intervals contain the true 51.71 m. With 100 intervals, anything from about 90 to 99 is normal — the count itself is Bin(100, 0.95).
@@ -409,13 +440,15 @@ always round up
 
 ```python
 z = 1.96
-def n_for_rate(p, E):                              # loans needed to estimate a rate near p to ± E
+# loans needed to estimate a rate near p to ± E
+def n_for_rate(p, E):
     return math.ceil(z**2 * p * (1 - p) / E**2)
-def n_for_mean(sigma, E):                          # cases needed to estimate a mean to ± E
+# cases needed to estimate a mean to ± E
+def n_for_mean(sigma, E):
     return math.ceil((z * sigma / E) ** 2)
 
-print(n_for_rate(91 / 7099, 0.005), n_for_rate(0.5, 0.03))   # 1945 1068
-print(n_for_mean(112.6e6, 5e6))                                # 1949
+print(n_for_rate(91 / 7099, 0.005), n_for_rate(0.5, 0.03))  # 1945 1068
+print(n_for_mean(112.6e6, 5e6))                             # 1949
 ```
 
 A rate near 1.28 % to within ±0.5 points needs 1 945 loans. A rate you know nothing about, to ±3 points, needs 1 068 — the "about a thousand" of opinion polls. The mean principal to ±5 m soum needs 1 949 loans.
@@ -446,10 +479,14 @@ Halve the margin, quadruple the loans.
 
 ```python
 def bootstrap_ci(values, stat=np.mean, B=10_000, seed=2026):
-    g = np.random.default_rng(seed)                                       # its own seeded generator
-    boot = [stat(g.choice(values, len(values), replace=True)) for _ in range(B)]   # B resamples, the statistic of each
-    return np.quantile(boot, [0.025, 0.975])                              # the middle 95 %
-print(bootstrap_ci(f.loc[f.channel == "app", "fpd30"].to_numpy()))      # ≈ 1.20 % … 2.24 %   (Wilson 1.26 … 2.30)
+    # its own seeded generator
+    g = np.random.default_rng(seed)
+    # B resamples, the statistic of each
+    boot = [stat(g.choice(values, len(values), replace=True)) for _ in range(B)]
+    # the middle 95 %
+    return np.quantile(boot, [0.025, 0.975])
+# ≈ 1.20 % … 2.24 %   (Wilson 1.26 … 2.30)
+print(bootstrap_ci(f.loc[f.channel == "app", "fpd30"].to_numpy()))
 ```
 
 The app's FPD: bootstrap ≈ 1.20–2.24 %, close to Wilson's 1.26–2.30 %. Its strength is a statistic with no SE formula: a 200-loan sample's **median** principal is 5.69 m, bootstrap 95 % CI **4.54–8.27 m** (true median 5.79 m).
@@ -471,12 +508,15 @@ The app's FPD: bootstrap ≈ 1.20–2.24 %, close to Wilson's 1.26–2.30 %. Its
 One request, every tool of the day: *"Describe the app channel's FPD honestly, and say what more data would buy."*
 
 ```python
-k, n = 41, 2411                                       # the sample: app loans in FPD scope
-p = k / n                                             # the point estimate p̂
-se = math.sqrt(p * (1 - p) / n)                       # its standard error
-lo, hi = wilson(k, n)                                 # a rate near 0 % → Wilson, not Wald
+# the sample: app loans in FPD scope
+k, n = 41, 2411
+p = k / n                        # the point estimate p̂
+se = math.sqrt(p * (1 - p) / n)  # its standard error
+# a rate near 0 % → Wilson, not Wald
+lo, hi = wilson(k, n)
 print(f"FPD30 {100*p:.2f} % · n = {n} · SE {100*se:.2f} pt · 95 % CI {100*lo:.2f}–{100*hi:.2f} %")
-print(n_for_rate(p, 0.0025))                          # loans needed for ±0.25 points
+# loans needed for ±0.25 points
+print(n_for_rate(p, 0.0025))
 ```
 
 `FPD30 1.70 % · n = 2411 · SE 0.26 pt · 95 % CI 1.26–2.30 %`, and ±0.25 points would need **10 275** app loans — more than four times the channel's whole history. Read it with the subsections: the 2 411 loans are a sample of the app process; 1.70 % is an estimate with a sampling error; the SE says it typically moves by 0.26 points; the rate is near zero, so the interval is Wilson; "95 %" is the method's promise, not a probability about this range; and precision costs n quadratically.
@@ -879,13 +919,15 @@ FPD30 by branch (the branch the loan is booked to), Wilson 95 %, sorted by rate,
 | Nukus Central | 3 / 440 | **0.68 %** | 0.23–1.99 % | 0.45–2.50 % | 0.92 |
 
 ```python
-# uses scipy and statsmodels: they load on the first ▶ Run (the notebook has them too)
+# uses scipy and statsmodels: they load on the first ▶ Run (the notebook has
+# them too)
 p0 = 91 / 7099
 b = f.groupby("branch_name")["fpd30"].agg(fpd="sum", n="size")
 b[["lo", "hi"]] = [proportion_confint(k, n, method="wilson") for k, n in zip(b.fpd, b.n)]
 b["funnel_lo"] = stats.binom.ppf(0.025, b.n, p0) / b.n
 b["funnel_hi"] = stats.binom.ppf(0.975, b.n, p0) / b.n
-b["p_ge"] = stats.binom.sf(b.fpd - 1, b.n, p0)          # how surprising this many FPDs is at the book rate
+# how surprising this many FPDs is at the book rate
+b["p_ge"] = stats.binom.sf(b.fpd - 1, b.n, p0)
 ```
 
 **The ranking trap.** The "worst" branch (Bukhara, 1.43–3.97 %) and the "best" (Nukus, 0.23–1.99 %) **overlap between 1.43 and 1.99 %**: the data cannot even put the top and the bottom of the league table in a reliable order. Simulate a book in which all ten branches have exactly 1.28 % (`default_rng(2026)`, 10 000 books, the same n's): the top branch averages **2.00 %**, exceeds Bukhara's 2.39 % in **10.5 %** of books, and the bottom branch is below Nukus's 0.68 % in **50 %** of books. Somebody is always first and last; a league table of rates guarantees a "worst branch" even when there is none.

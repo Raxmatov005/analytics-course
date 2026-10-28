@@ -29,9 +29,12 @@ Change `branches` to `products` and run it again. That is the whole tool: write,
 The shapes you need (on other questions):
 
 ```sql
-SELECT COUNT(*) FROM customers;                                  -- how many rows
-SELECT COUNT(*) FROM customers WHERE segment = 'sme';            -- how many rows match
-SELECT name, min_amount FROM products ORDER BY min_amount DESC;  -- biggest first
+SELECT COUNT(*) FROM customers;
+-- how many rows
+SELECT COUNT(*) FROM customers WHERE segment = 'sme';
+-- how many rows match
+SELECT name, min_amount FROM products ORDER BY min_amount DESC;
+-- biggest first
 ```
 
 Not sure what a column holds? Look first: `SELECT DISTINCT role FROM staff;`

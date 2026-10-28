@@ -27,17 +27,20 @@
 ```sql
 SELECT COUNT(*) AS above_avg
 FROM loans
-WHERE principal > (SELECT AVG(principal) FROM loans);   -- (одно значение): 51 709 668
+WHERE principal > (SELECT AVG(principal) FROM loans);
+-- (одно значение): 51 709 668
 ```
 
 1 130 кредитов крупнее среднего по компании, 51 709 668, — один кредит из семи, потому что несколько крупных кредитов SME и Auto тянут среднее вверх. Скалярный подзапрос может стоять и в `SELECT` — как знаменатель доли:
 
 ```sql
 SELECT p.code, COUNT(*) AS loans,
-       ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM loans), 1) AS share_pct   -- одно и то же 7 828 в каждой строке
+       -- одно и то же 7 828 в каждой строке
+       ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM loans), 1) AS share_pct
 FROM loans l JOIN products p ON p.product_id = l.product_id
 GROUP BY p.code
-ORDER BY loans DESC;                                                             -- MICRO 34.1 · CONS 30.9 · BNPL 20.0 · SME 10.0 · AUTO 5.0
+ORDER BY loans DESC;
+-- MICRO 34.1 · CONS 30.9 · BNPL 20.0 · SME 10.0 · AUTO 5.0
 ```
 
 **Когда применять.**
@@ -95,7 +98,8 @@ WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
      app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
 SELECT c.id, c.name
 FROM cust c
-WHERE NOT EXISTS (SELECT 1 FROM app a WHERE a.cust_id = c.id);   -- 1 строка: Aziz
+WHERE NOT EXISTS (SELECT 1 FROM app a WHERE a.cust_id = c.id);
+-- 1 строка: Aziz
 ```
 
 На реальных данных — сотрудники, которые ни разу не вели заявку:
@@ -104,7 +108,7 @@ WHERE NOT EXISTS (SELECT 1 FROM app a WHERE a.cust_id = c.id);   -- 1 строк
 SELECT s.role, COUNT(*) AS staff
 FROM staff s
 WHERE NOT EXISTS (SELECT 1 FROM applications a
-                  WHERE a.officer_id = s.staff_id)     -- связь с внешней строкой
+                  WHERE a.officer_id = s.staff_id)  -- связь с внешней строкой
 GROUP BY s.role;
 ```
 
@@ -137,10 +141,13 @@ GROUP BY s.role;
 
 ```sql
 SELECT loans_per_customer, COUNT(*) AS customers
-FROM (SELECT customer_id, COUNT(*) AS loans_per_customer     -- шаг 1: одна строка на клиента
+-- шаг 1: одна строка на клиента
+FROM (SELECT customer_id, COUNT(*) AS loans_per_customer
       FROM loans
-      GROUP BY customer_id) AS t                             -- псевдоним обязателен
-GROUP BY loans_per_customer                                  -- шаг 2: одна строка на количество
+      -- псевдоним обязателен
+      GROUP BY customer_id) AS t
+-- шаг 2: одна строка на количество
+GROUP BY loans_per_customer
 ORDER BY loans_per_customer;
 ```
 
@@ -179,7 +186,8 @@ SELECT COUNT(*)
 FROM loans l
 WHERE l.principal >= 0.99 * (SELECT p.max_amount
                              FROM products p
-                             WHERE p.product_id = l.product_id);   -- l = внешняя строка: её собственный продукт
+                             WHERE p.product_id = l.product_id);
+                             -- l = внешняя строка: её собственный продукт
 ```
 
 85 кредитов лежат в пределах 1 % от максимальной суммы своего продукта. Читайте так: для каждого кредита `l` найдите лимит продукта `l`, затем сравните. Классическая форма сравнивает строку с её собственной группой — `l.principal > (SELECT AVG(x.principal) FROM loans x WHERE x.product_id = l.product_id)` даёт 3 919, P13 понедельника без окна, — но на наших таблицах, где пока нет индексов, она читает 7 828 × 7 828 строк и работает секунды (День 4).
@@ -209,11 +217,13 @@ WHERE l.principal >= 0.99 * (SELECT p.max_amount
 **Как пишется.** Производная таблица из примера выше, в виде CTE:
 
 ```sql
-WITH per_customer AS (                                   -- имя, затем запрос в скобках
+-- имя, затем запрос в скобках
+WITH per_customer AS (
   SELECT customer_id, COUNT(*) AS loans_per_customer
   FROM loans
   GROUP BY customer_id)
-SELECT loans_per_customer, COUNT(*) AS customers         -- основной запрос использует имя как таблицу
+-- основной запрос использует имя как таблицу
+SELECT loans_per_customer, COUNT(*) AS customers
 FROM per_customer
 GROUP BY loans_per_customer
 ORDER BY loans_per_customer;
@@ -251,17 +261,20 @@ ORDER BY loans_per_customer;
 **Как пишется.** Остаток долга по кредиту → по клиенту → клиенты по числу кредитов с остатком:
 
 ```sql
-WITH per_loan AS (                                        -- шаг 1, зернистость: кредит
+-- шаг 1, зернистость: кредит
+WITH per_loan AS (
   SELECT loan_id, SUM(principal_due) AS outstanding
   FROM installments
   WHERE due_date > '2026-10-01'
   GROUP BY loan_id),
-per_customer AS (                                         -- шаг 2, зернистость: клиент — строится из шага 1
+-- шаг 2, зернистость: клиент — строится из шага 1
+per_customer AS (
   SELECT l.customer_id, COUNT(*) AS owing_loans, SUM(pl.outstanding) AS outstanding
   FROM per_loan pl
   JOIN loans l ON l.loan_id = pl.loan_id
   GROUP BY l.customer_id)
-SELECT owing_loans, COUNT(*) AS customers,                -- шаг 3, зернистость: число кредитов с остатком
+-- шаг 3, зернистость: число кредитов с остатком
+SELECT owing_loans, COUNT(*) AS customers,
        ROUND(AVG(outstanding)) AS avg_outstanding
 FROM per_customer
 GROUP BY owing_loans
@@ -291,13 +304,19 @@ ORDER BY owing_loans;
 **Как пишется.**
 
 ```sql
-WITH RECURSIVE months(month_start) AS (                           -- SQL Server: без слова RECURSIVE
-  SELECT '2025-01-01'                                             -- якорь: первая строка
+-- SQL Server: без слова RECURSIVE
+WITH RECURSIVE months(month_start) AS (
+  -- якорь: первая строка
+  SELECT '2025-01-01'
   UNION ALL
-  SELECT date(month_start, '+1 month')                            -- рекурсивный шаг: следующая строка из последней
-  FROM months                                                     -- SQL Server: DATEADD(month, 1, month_start)
-  WHERE month_start < '2026-09-01')                               -- условие остановки
-SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;  -- 21 · 2025-01-01 · 2026-09-01
+  -- рекурсивный шаг: следующая строка из последней
+  SELECT date(month_start, '+1 month')
+  -- SQL Server: DATEADD(month, 1, month_start)
+  FROM months
+  -- условие остановки
+  WHERE month_start < '2026-09-01')
+SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;
+-- 21 · 2025-01-01 · 2026-09-01
 ```
 
 21 строка: с января 2025 по сентябрь 2026. Каждый проход добавляет месяц, пока последний месяц раньше сентября 2026. Числа от 1 до 6 строятся так же: `WITH RECURSIVE k(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM k WHERE n < 6) SELECT n FROM k`.
@@ -329,22 +348,29 @@ SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;  -- 21 · 2025-
 **Как пишется.** Четыре CTE, у каждого одна зернистость, затем доля по MOB для объединённых когорт 2025 года:
 
 ```sql
-WITH inst AS (                                      -- зернистость: платёж по графику — сколько оплачено в течение 30 дней после срока?
+-- зернистость: платёж по графику — сколько оплачено в течение 30 дней после
+-- срока?
+WITH inst AS (
   SELECT i.loan_id, i.installment_no, i.total_due,
-         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30   -- SQL Server: DATEADD(day, 30, i.due_date)
+         -- SQL Server: DATEADD(day, 30, i.due_date)
+         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30
   FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.installment_no <= 6
-    AND date(i.due_date, '+30 days') <= '2026-10-01'   -- только платежи, у которых 30 дней уже прошли
+    -- только платежи, у которых 30 дней уже прошли
+    AND date(i.due_date, '+30 days') <= '2026-10-01'
   GROUP BY i.installment_id, i.loan_id, i.installment_no, i.total_due),
-flag AS (                                           -- зернистость: платёж по графику — 1, если просрочка 30+
+-- зернистость: платёж по графику — 1, если просрочка 30+
+flag AS (
   SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30
   FROM inst),
-ever AS (                                           -- зернистость: платёж по графику — хоть раз к этому моменту (бегущий MAX)
+-- зернистость: платёж по графику — хоть раз к этому моменту (бегущий MAX)
+ever AS (
   SELECT loan_id, installment_no,
          MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30
   FROM flag),
-base AS (                                           -- зернистость: кредит — когорты, которые мы читаем
+-- зернистость: кредит — когорты, которые мы читаем
+base AS (
   SELECT loan_id FROM loans
   WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-01-01')
 SELECT e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever30,
@@ -383,15 +409,19 @@ ORDER BY mob;
 Один запрос, несколько сегодняшних инструментов. *«Кредиты Auto крупнее среднего кредита SME, от клиентов, у которых никогда не списывали кредит, — по годам выдачи, в сравнении с числом кредитов Auto за тот год».*
 
 ```sql
-WITH big_auto AS (                                                                          -- CTE: даём шагу имя
+-- CTE: даём шагу имя
+WITH big_auto AS (
   SELECT l.loan_id, strftime('%Y', l.disbursed_at) AS yr
   FROM loans l
   WHERE l.product_id = 4
-    AND l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)                 -- скалярный подзапрос со своим фильтром
-    AND NOT EXISTS (SELECT 1 FROM loans w                                                     -- коррелированный NOT EXISTS
+    -- скалярный подзапрос со своим фильтром
+    AND l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)
+    -- коррелированный NOT EXISTS
+    AND NOT EXISTS (SELECT 1 FROM loans w
                     WHERE w.customer_id = l.customer_id AND w.status = 'written_off'))
 SELECT yr, COUNT(*) AS big_auto_loans,
-       (SELECT COUNT(*) FROM loans x                                                           -- коррелированный скалярный подзапрос в SELECT
+       -- коррелированный скалярный подзапрос в SELECT
+       (SELECT COUNT(*) FROM loans x
         WHERE x.product_id = 4 AND strftime('%Y', x.disbursed_at) = b.yr) AS auto_loans
 FROM big_auto b
 GROUP BY yr
@@ -442,12 +472,14 @@ SELECT (SELECT SUM(principal_due) FROM installments WHERE due_date > '2026-10-01
 ```sql
 SELECT COUNT(*) AS repeat_loans, COUNT(DISTINCT l.customer_id) AS customers
 FROM loans l
-JOIN (SELECT customer_id, MIN(disbursed_at) AS first_wo          -- одна строка на клиента со списанием
+-- одна строка на клиента со списанием
+JOIN (SELECT customer_id, MIN(disbursed_at) AS first_wo
       FROM loans
       WHERE status = 'written_off'
       GROUP BY customer_id) AS f
   ON f.customer_id = l.customer_id
- AND l.disbursed_at > f.first_wo;                                 -- только кредиты, выданные позже
+ AND l.disbursed_at > f.first_wo;
+ -- только кредиты, выданные позже
 -- 145 повторных кредитов · 101 клиент
 ```
 
@@ -456,13 +488,16 @@ JOIN (SELECT customer_id, MIN(disbursed_at) AS first_wo          -- одна с�
 **Шаг 4 — цепочка CTE: сколько они должны в сравнении с ориентиром.** Одна зернистость на шаг: клиент → повторный кредит → клиент, который ещё должен → ответ.
 
 ```sql
-WITH first_wo AS (                                                   -- зернистость: клиент со списанием
+-- зернистость: клиент со списанием
+WITH first_wo AS (
   SELECT customer_id, MIN(disbursed_at) AS first_wo
   FROM loans WHERE status = 'written_off' GROUP BY customer_id),
-repeat_loans AS (                                                    -- зернистость: кредит, выданный после него
+-- зернистость: кредит, выданный после него
+repeat_loans AS (
   SELECT l.loan_id, l.customer_id, l.status
   FROM loans l JOIN first_wo f ON f.customer_id = l.customer_id AND l.disbursed_at > f.first_wo),
-owed AS (                                                            -- зернистость: клиент, который ещё должен по повторному кредиту
+-- зернистость: клиент, который ещё должен по повторному кредиту
+owed AS (
   SELECT r.customer_id, SUM(i.principal_due) AS outstanding
   FROM repeat_loans r
   JOIN installments i ON i.loan_id = r.loan_id
@@ -499,7 +534,8 @@ FROM owed;
 ```sql
 SELECT p.code, COUNT(*) AS loans
 FROM loans l JOIN products p ON p.product_id = l.product_id
-WHERE l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)      -- 308 728 745, средний кредит SME
+-- 308 728 745, средний кредит SME
+WHERE l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)
 GROUP BY p.code;
 -- AUTO 88 · SME 400
 ```
@@ -518,10 +554,12 @@ SME 400, AUTO 88 — крупнейшие кредиты Auto превышают
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE customer_id IN (SELECT customer_id FROM loans WHERE status = 'written_off');      -- 188
+SELECT COUNT(*) FROM customers WHERE customer_id IN (SELECT customer_id FROM loans WHERE status = 'written_off');
+-- 188
 SELECT COUNT(*) FROM customers c
 WHERE EXISTS     (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'written_off')
-  AND NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active');            -- 127
+  AND NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active');
+  -- 127
 ```
 188 обоими способами. Второе условие — второй `NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active')` → 127 клиентов со списанием и без живого кредита — две проверки рядом читаются как предложение; с `IN` это становится `IN (…) AND customer_id NOT IN (…)`, что тоже работает, потому что `customer_id` никогда не NULL. Посчитайте оба и оставьте тот, который можете объяснить. В браузере эта коррелированная форма выполняется около десяти секунд — у `loans` пока нет индекса по `customer_id`; завтра вы его создадите, и тот же запрос выполнится мгновенно.
 
@@ -538,9 +576,12 @@ WHERE EXISTS     (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND 
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans);                               -- 0
-SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans WHERE closed_at IS NOT NULL);    -- 649
-SELECT COUNT(*) FROM loans l WHERE NOT EXISTS (SELECT 1 FROM loans x WHERE x.closed_at = l.disbursed_at);         -- 649
+SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans);
+-- 0
+SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans WHERE closed_at IS NOT NULL);
+-- 649
+SELECT COUNT(*) FROM loans l WHERE NOT EXISTS (SELECT 1 FROM loans x WHERE x.closed_at = l.disbursed_at);
+-- 649
 ```
 0 · 649 · 649 (раздел 1). `closed_at` равно NULL у 3 601 кредита; один NULL в списке делает `NOT IN` неизвестным для каждой строки. `NOT EXISTS` сравнивает строка за строкой через `=`, и NULL просто никогда не совпадает.
 
@@ -561,7 +602,8 @@ SELECT n_inst, COUNT(*) AS loans FROM (SELECT loan_id, COUNT(*) AS n_inst FROM i
 -- 3 → 1867 · 6 → 2483 · 12 → 1346 · 18 → 621 · 24 → 973 · 36 → 401 · 48 → 137
 SELECT COUNT(*) FROM loans l
 JOIN (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id) t ON t.loan_id = l.loan_id
-WHERE t.n_inst <> l.term_months;                                                                                      -- 0
+WHERE t.n_inst <> l.term_months;
+-- 0
 ```
 В каждом графике ровно `term_months` строк (это доказывает производная таблица, присоединённая обратно к `loans`: 0 расхождений). Количества: 3-месячные = Micro 1 335 + BNPL 532 = 1 867 — сумма сходится с таблицей продукт × срок за вторник.
 
@@ -575,7 +617,8 @@ WHERE t.n_inst <> l.term_months;                                                
 SELECT COUNT(*) FROM loans l
 WHERE l.product_id = 5
   AND l.principal = (SELECT MAX(x.principal) FROM loans x
-                     WHERE x.customer_id = l.customer_id AND x.product_id = 5);   -- 724
+                     WHERE x.customer_id = l.customer_id AND x.product_id = 5);
+                     -- 724
 ```
 724 = по одному на заёмщика SME (`COUNT(DISTINCT customer_id)` по кредитам SME тоже 724). Было бы больше, если бы у клиента было два кредита с *одинаковым* максимальным основным долгом (оба совпадут с `= MAX`); `ROW_NUMBER() … ORDER BY principal DESC, loan_id` с `rn = 1` — версия, которая гарантирует одну строку. Знайте обе; скажите, какую использовали.
 
@@ -595,7 +638,8 @@ WHERE l.product_id = 5
 WITH per_loan AS (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id)
 SELECT n_inst, COUNT(*) AS loans, ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS share_pct
 FROM per_loan GROUP BY n_inst ORDER BY n_inst;
--- 3 → 1867 (23.9 %) · 6 → 2483 (31.7 %) · 12 → 1346 (17.2 %) · 18 → 621 (7.9 %) · 24 → 973 (12.4 %) · 36 → 401 (5.1 %) · 48 → 137 (1.8 %)
+-- 3 → 1867 (23.9 %) · 6 → 2483 (31.7 %) · 12 → 1346 (17.2 %) · 18 → 621 (7.9 %)
+-- · 24 → 973 (12.4 %) · 36 → 401 (5.1 %) · 48 → 137 (1.8 %)
 ```
 Чаще всего — шесть месяцев: 2 483 кредита, 31.7 %. Результат тот же, что в P4; CTE даёт имя первому шагу, и основной запрос читается как предложение.
 
@@ -611,7 +655,8 @@ per_customer AS (SELECT l.customer_id, SUM(pl.outstanding) AS outstanding, COUNT
 ranked AS (SELECT *, ROW_NUMBER() OVER (ORDER BY outstanding DESC) AS rn FROM per_customer)
 SELECT r.rn, c.first_name || ' ' || c.last_name AS customer, c.segment, r.loans, r.outstanding
 FROM ranked r JOIN customers c ON c.customer_id = r.customer_id WHERE r.rn <= 10 ORDER BY r.rn;
--- 1 Улугбек Назаров (sme) 2 кредита 977 697 006 · 2 Даврон Ташкентов (mass) 4 · 840 677 484 · 3 Умида Юсупова (mass) 3 · 752 948 733 …
+-- 1 Улугбек Назаров (sme) 2 кредита 977 697 006 · 2 Даврон Ташкентов (mass) 4 ·
+-- 840 677 484 · 3 Умида Юсупова (mass) 3 · 752 948 733 …
 ```
 У каждого шага одна зернистость (платёж → кредит → клиент → клиент с рангом). Присоединить `customers` в конце, к 10 строкам, дешевле и безопаснее, чем присоединять её в начале к 92 193 платежам.
 
@@ -662,7 +707,8 @@ SELECT b.cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS
        ROUND(100.0 * SUM(e.ever30) / COUNT(*), 2) AS rate_pct
 FROM base b JOIN ever e ON e.loan_id = b.loan_id
 GROUP BY b.cohort, e.installment_no ORDER BY b.cohort, mob;
--- 90 строк; на MOB 3: 2025-10 217 / 15 / 6.91 · 2025-09 5.70 · 2025-03 5.59 · 2025-05 5.41
+-- 90 строк; на MOB 3: 2025-10 217 / 15 / 6.91 · 2025-09 5.70 · 2025-03 5.59 ·
+-- 2025-05 5.41
 ```
 Цепочка поколений из раздела 1, где `cohort` добавлена в `base` и в `GROUP BY`. Хуже всех на MOB 3: **2025-10 — 15 из 217 = 6.91 %**; затем 2025-09 5.70 %, 2025-03 5.59 %, 2025-05 5.41 %. Уголок компании разворачивает это в широкую матрицу.
 
@@ -738,7 +784,8 @@ SELECT e.installment_no AS mob, COUNT(*) AS observed, ROUND(100.0 * SUM(e.ever30
 FROM loans l JOIN ever e ON e.loan_id = l.loan_id
 WHERE l.term_months >= 12 AND l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-09-01'
 GROUP BY e.installment_no ORDER BY mob;
--- 853 кредита на каждом MOB (852 на MOB 12): 1.29 → 2.58 → 3.87 → 5.39 → 5.98 → 6.80 → 7.62 → 8.44 → 8.56 → 9.03 → 9.50 → 10.21
+-- 853 кредита на каждом MOB (852 на MOB 12): 1.29 → 2.58 → 3.87 → 5.39 → 5.98 →
+-- 6.80 → 7.62 → 8.44 → 8.56 → 9.03 → 9.50 → 10.21
 ```
 `SELECT DISTINCT date(date_key, 'start of month') FROM dim_date WHERE date_key BETWEEN …` заменяет строку рекурсивного CTE один в один. Для MOB 1..12 оставьте `term_months >= 12` и только когорты, достаточно старые, чтобы быть наблюдаемыми на MOB 12, — с января по август 2025 года (853 кредита). Кривая пересекает 10 % на **MOB 12** (10.21 %). Если объединить все двенадцать когорт 2025 года, линия «пересекает» 10 % на MOB 10 (10.56 %), а затем *падает* до 10.36 на MOB 11 — для бегущего `MAX` это невозможно, значит, объединённая линия смешивает разные кредиты в разном возрасте. Первые шесть MOB базы со сроком ≥ 6 идут 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 %; кривая вогнутая — больше всего проблем появляется в первые три месяца, поэтому FPD/SPD/TPD отслеживают отдельно.
 
@@ -772,7 +819,8 @@ GROUP BY e.installment_no ORDER BY mob;
 - **База:** кредиты с `term_months >= 6` (чтобы у каждого кредита были все шесть платежей); ячейка показывается только когда у **всех** кредитов когорты на этом MOB истекли их 30 дней.
 
 ```sql
-WITH inst AS ( … ), flag AS ( … ), ever AS ( … ),                        -- цепочка поколений из раздела 1
+-- цепочка поколений из раздела 1
+WITH inst AS ( … ), flag AS ( … ), ever AS ( … ),
 base AS (SELECT loan_id, strftime('%Y-%m', disbursed_at) AS cohort FROM loans
          WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01'),
 cells AS (SELECT b.cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever,
@@ -786,7 +834,8 @@ SELECT cohort, MAX(cohort_size) AS loans,
        MAX(CASE WHEN mob = 5 AND observed = cohort_size THEN ROUND(100.0 * ever / observed, 2) END) AS mob5,
        MAX(CASE WHEN mob = 6 AND observed = cohort_size THEN ROUND(100.0 * ever / observed, 2) END) AS mob6
 FROM cells GROUP BY cohort ORDER BY cohort;
--- SQL Server: то же самое, кроме DATEADD(day, 30, i.due_date) в inst и FORMAT(disbursed_at, 'yyyy-MM') в base
+-- SQL Server: то же самое, кроме DATEADD(day, 30, i.due_date) в inst и
+-- FORMAT(disbursed_at, 'yyyy-MM') в base
 ```
 
 | когорта | кредитов | MOB 1 | MOB 2 | MOB 3 | MOB 4 | MOB 5 | MOB 6 |

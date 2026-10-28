@@ -25,9 +25,11 @@
 **Как пишется.** `функция(значение, другие аргументы)` — везде, где мог бы стоять столбец:
 
 ```sql
-SELECT DISTINCT method, LOWER(TRIM(method)) AS cleaned   -- две функции, одна внутри другой
+-- две функции, одна внутри другой
+SELECT DISTINCT method, LOWER(TRIM(method)) AS cleaned
 FROM payments
-ORDER BY cleaned;                                        -- 10 строк: 10 сырых написаний, 6 очищенных значений
+ORDER BY cleaned;
+-- 10 строк: 10 сырых написаний, 6 очищенных значений
 ```
 
 Десять сырых написаний возвращаются рядом с очищенным значением: `Card` и `card` оба становятся `card`, `CASH ` и `cash` — `cash`. Внутренняя функция выполняется первой: сначала `TRIM`, потом `LOWER`.
@@ -49,10 +51,14 @@ ORDER BY cleaned;                                        -- 10 строк: 10 с
 **Как пишется.**
 
 ```sql
-SELECT first_name || ' ' || last_name AS full_name,      -- SQL Server: first_name + ' ' + last_name или CONCAT(first_name, ' ', last_name)
-       'Loan ' || 42                  AS label           -- число превращается в текст: 'Loan 42'
+-- SQL Server: first_name + ' ' + last_name или CONCAT(first_name, ' ',
+-- last_name)
+SELECT first_name || ' ' || last_name AS full_name,
+       -- число превращается в текст: 'Loan 42'
+       'Loan ' || 42                  AS label
 FROM customers
-WHERE customer_id = 1;                                   -- Eldor Olimov · Loan 42
+WHERE customer_id = 1;
+-- Eldor Olimov · Loan 42
 ```
 
 Клиент 1 — *Eldor Olimov*. `' '` посередине — текст из одного пробела; без него получится `EldorOlimov`.
@@ -76,7 +82,8 @@ WHERE customer_id = 1;                                   -- Eldor Olimov · Loan
 ```sql
 SELECT customer_id, first_name, last_name, UPPER(last_name) AS upper_last
 FROM customers
-WHERE last_name = LOWER(last_name);                      -- 40 строк: фамилии, набранные целиком строчными
+WHERE last_name = LOWER(last_name);
+-- 40 строк: фамилии, набранные целиком строчными
 ```
 
 У 40 клиентов фамилия набрана целиком строчными буквами, например `jalilova`. У всех 40 id 6001 или больше — это дубликаты прошлой недели.
@@ -119,9 +126,11 @@ SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);   -- 18
 **Как пишется.**
 
 ```sql
-SELECT LENGTH(phone) AS characters, COUNT(*) AS customers   -- SQL Server: LEN(phone)
+-- SQL Server: LEN(phone)
+SELECT LENGTH(phone) AS characters, COUNT(*) AS customers
 FROM customers
-GROUP BY LENGTH(phone);                                      -- одна строка: 13 · 6 040
+GROUP BY LENGTH(phone);
+-- одна строка: 13 · 6 040
 ```
 
 Одна строка: у всех 6 040 номеров по 13 символов (`+998` и девять цифр). Проверка длины — самый быстрый тест формата для кодов, телефонов и идентификаторов.
@@ -148,10 +157,12 @@ GROUP BY LENGTH(phone);                                      -- одна стр�
 ```
 
 ```sql
-SELECT SUBSTR(applied_at, 12, 2) AS hour, COUNT(*) AS applications   -- SQL Server: DATEPART(hour, applied_at)
+-- SQL Server: DATEPART(hour, applied_at)
+SELECT SUBSTR(applied_at, 12, 2) AS hour, COUNT(*) AS applications
 FROM applications
 GROUP BY SUBSTR(applied_at, 12, 2)
-ORDER BY applications DESC;                                           -- первым 15 → 1 089
+ORDER BY applications DESC;
+-- первым 15 → 1 089
 ```
 
 Заявки приходят с 08:00 до 21:59; самый загруженный час — 15:00, 1 089 заявок. `SUBSTR(phone, -4)` даёт последние четыре цифры (`RIGHT(phone, 4)` в SQL Server).
@@ -197,8 +208,9 @@ ORDER BY payments DESC;
 **Как пишется.**
 
 ```sql
-SELECT INSTR('bank transfer', ' '),      -- 5: пробел — 5-й символ      SQL Server: CHARINDEX(' ', 'bank transfer')
-       INSTR('card', ' ');               -- 0: пробела нет
+-- 5: пробел — 5-й символ      SQL Server: CHARINDEX(' ', 'bank transfer')
+SELECT INSTR('bank transfer', ' '),
+       INSTR('card', ' ');  -- 0: пробела нет
 ```
 
 Её обычный напарник — `SUBSTR`: найти, где что-то начинается, и резать там. Мажорная версия мобильного приложения — это текст до первой точки:
@@ -206,7 +218,7 @@ SELECT INSTR('bank transfer', ' '),      -- 5: пробел — 5-й симво�
 ```sql
 SELECT SUBSTR(app_version, 1, INSTR(app_version, '.') - 1) AS major, COUNT(*) AS events
 FROM app_events
-GROUP BY major;                          -- 3 → 11 325 · 4 → 11 459
+GROUP BY major;  -- 3 → 11 325 · 4 → 11 459
 ```
 
 События приложения делятся почти поровну: 11 325 из версии 3.x и 11 459 из версии 4.x.
@@ -226,9 +238,12 @@ GROUP BY major;                          -- 3 → 11 325 · 4 → 11 459
 **Как пишется.**
 
 ```sql
-SELECT COUNT(*) FROM applications WHERE status LIKE 'approved%';   -- 8 595: 'approved' и 'approved_not_disbursed'
-SELECT COUNT(*) FROM customers    WHERE last_name LIKE '%ova';     -- 2 447 фамилий на 'ova'
-SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';   -- 1 862 имени ровно из 5 символов
+SELECT COUNT(*) FROM applications WHERE status LIKE 'approved%';
+-- 8 595: 'approved' и 'approved_not_disbursed'
+SELECT COUNT(*) FROM customers    WHERE last_name LIKE '%ova';
+-- 2 447 фамилий на 'ova'
+SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';
+-- 1 862 имени ровно из 5 символов
 ```
 
 8 595 заявок начинаются с `approved`: 7 917 `approved` и 678 `approved_not_disbursed`.
@@ -250,10 +265,12 @@ SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';   -- 1 862 им
 **Как пишется.**
 
 ```sql
-SELECT p.name, ROUND(AVG(l.principal) / 1000000.0, 1) AS avg_ticket_m      -- сначала делим, потом один раз округляем
+-- сначала делим, потом один раз округляем
+SELECT p.name, ROUND(AVG(l.principal) / 1000000.0, 1) AS avg_ticket_m
 FROM loans l JOIN products p ON p.product_id = l.product_id
 GROUP BY p.name
-ORDER BY avg_ticket_m DESC;               -- SME 308.7 · Auto 216.9 · Consumer 26.9 · BNPL 4.2 · Micro 2.7
+ORDER BY avg_ticket_m DESC;
+-- SME 308.7 · Auto 216.9 · Consumer 26.9 · BNPL 4.2 · Micro 2.7
 ```
 
 Средний кредит SME — 308.7 млн сумов; средний микрокредит — 2.7 млн. Поделённые на миллион и округлённые до одного знака, числа готовы для слайда.
@@ -275,10 +292,11 @@ ORDER BY avg_ticket_m DESC;               -- SME 308.7 · Auto 216.9 · Consumer
 **Как пишется.**
 
 ```sql
-SELECT 7917 / 14000,                   -- 0
-       7917 * 100 / 14000,             -- 56   (снова целое: отброшено, не округлено)
-       7917 * 100.0 / 14000,           -- 56.55
-       ROUND(7917 * 100.0 / 14000, 2); -- 56.55
+SELECT 7917 / 14000,                    -- 0
+       -- 56   (снова целое: отброшено, не округлено)
+       7917 * 100 / 14000,
+       7917 * 100.0 / 14000,            -- 56.55
+       ROUND(7917 * 100.0 / 14000, 2);  -- 56.55
 -- Альтернатива в SQL Server: CAST(7917 AS FLOAT) / 14000
 ```
 
@@ -301,10 +319,12 @@ SELECT 7917 / 14000,                   -- 0
 **Как пишется.**
 
 ```sql
-SELECT CAST(AVG(principal) AS INTEGER),   -- 51 709 667: .86 отброшено, а не округлено      SQL Server: CAST(… AS BIGINT)
-       ROUND(AVG(principal)),             -- 51 709 668: округлено
-       CAST('2026' AS INTEGER) + 1,       -- 2027: текст в число
-       CAST(7917 AS REAL) / 14000         -- 0.5655: одна сторона стала десятичной до деления
+-- 51 709 667: .86 отброшено, а не округлено      SQL Server: CAST(… AS BIGINT)
+SELECT CAST(AVG(principal) AS INTEGER),
+       ROUND(AVG(principal)),        -- 51 709 668: округлено
+       CAST('2026' AS INTEGER) + 1,  -- 2027: текст в число
+       -- 0.5655: одна сторона стала десятичной до деления
+       CAST(7917 AS REAL) / 14000
 FROM loans;
 ```
 
@@ -328,10 +348,11 @@ FROM loans;
 
 ```sql
 SELECT COUNT(*) AS different,
-       SUM(p.amount > i.total_due) AS over_paid,          -- SQL Server: SUM(IIF(p.amount > i.total_due, 1, 0))
+       -- SQL Server: SUM(IIF(p.amount > i.total_due, 1, 0))
+       SUM(p.amount > i.total_due) AS over_paid,
        SUM(p.amount < i.total_due) AS under_paid
 FROM payments p JOIN installments i ON i.installment_id = p.installment_id
-WHERE ABS(p.amount - i.total_due) > 0;                    -- 427 · 0 · 427
+WHERE ABS(p.amount - i.total_due) > 0;  -- 427 · 0 · 427
 ```
 
 427 платежей отличаются от суммы к оплате, и все 427 меньше её: это частичные платежи. Больше положенного не заплатил никто.
@@ -353,9 +374,11 @@ WHERE ABS(p.amount - i.total_due) > 0;                    -- 427 · 0 · 427
 ```sql
 SELECT channel,
        COUNT(*) AS applications,
-       ROUND(100.0 * SUM(status LIKE 'approved%') / COUNT(*), 1) AS approval_pct   -- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0))
+       -- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0))
+       ROUND(100.0 * SUM(status LIKE 'approved%') / COUNT(*), 1) AS approval_pct
 FROM applications
-GROUP BY channel;                        -- app 58.2 · branch 63.7 · partner 61.9
+GROUP BY channel;
+-- app 58.2 · branch 63.7 · partner 61.9
 ```
 
 Филиал одобряет 63.7 % своих заявок, приложение — 58.2 %: разрыв 5.5 процентного пункта (а не «5.5 %»).
@@ -377,9 +400,12 @@ GROUP BY channel;                        -- app 58.2 · branch 63.7 · partner 6
 **Как пишется.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at = '2026-10-01';   -- 21 кредит выдан в отчётную дату
-SELECT date('2026-09-30 14:05:00');                             -- '2026-09-30': дата из даты со временем      SQL Server: CAST(… AS DATE)
-SELECT '2026-9-5' < '2026-10-01';                               -- 0 (ложь): '9' сортируется после '1' — нули важны
+SELECT COUNT(*) FROM loans WHERE disbursed_at = '2026-10-01';
+-- 21 кредит выдан в отчётную дату
+SELECT date('2026-09-30 14:05:00');
+-- '2026-09-30': дата из даты со временем      SQL Server: CAST(… AS DATE)
+SELECT '2026-9-5' < '2026-10-01';
+-- 0 (ложь): '9' сортируется после '1' — нули важны
 ```
 
 1 октября 2026 года, в последний день данных, был выдан 21 кредит.
@@ -405,10 +431,12 @@ SELECT '2026-9-5' < '2026-10-01';                               -- 0 (ложь):
 **Как пишется.**
 
 ```sql
-SELECT strftime('%w', disbursed_at) AS weekday, COUNT(*) AS loans   -- SQL Server: DATEPART(weekday, disbursed_at)
+-- SQL Server: DATEPART(weekday, disbursed_at)
+SELECT strftime('%w', disbursed_at) AS weekday, COUNT(*) AS loans
 FROM loans
 GROUP BY strftime('%w', disbursed_at)
-ORDER BY weekday;                        -- 0 (вс) 1 125 · 1 1 106 · … · 6 (сб) 1 081
+ORDER BY weekday;
+-- 0 (вс) 1 125 · 1 1 106 · … · 6 (сб) 1 081
 ```
 
 Кредиты выдаются равномерно во все семь дней, примерно по 1 100, включая воскресенья: эта синтетическая компания никогда не закрывается. Наша таблица `dim_date` — альтернатива без функций: `JOIN dim_date d ON d.date_key = l.disbursed_at` даёт `d.year`, `d.month_name`, `d.is_weekend` на обоих движках (2 206 кредитов выданы в субботу или воскресенье).
@@ -435,11 +463,15 @@ ORDER BY weekday;                        -- 0 (вс) 1 125 · 1 1 106 · … · 
 
 ```sql
 -- сколько дней кредиту 1 на отчётную дату?
-SELECT CAST(julianday('2026-10-01') - julianday(disbursed_at) AS INTEGER) AS age_days   -- SQL Server: DATEDIFF(day, disbursed_at, '2026-10-01')
-FROM loans WHERE loan_id = 1;                                                            -- 552
+-- SQL Server: DATEDIFF(day, disbursed_at, '2026-10-01')
+SELECT CAST(julianday('2026-10-01') - julianday(disbursed_at) AS INTEGER) AS age_days
+FROM loans WHERE loan_id = 1;
+-- 552
 
-SELECT date('2026-10-01', '-30 days'),                          -- '2026-09-01'      DATEADD(day, -30, '2026-10-01')
-       date('2026-10-01', 'start of month', '+1 month', '-1 day');   -- '2026-10-31': последний день месяца   EOMONTH('2026-10-01')
+-- '2026-09-01'      DATEADD(day, -30, '2026-10-01')
+SELECT date('2026-10-01', '-30 days'),
+       date('2026-10-01', 'start of month', '+1 month', '-1 day');
+       -- '2026-10-31': последний день месяца   EOMONTH('2026-10-01')
 ```
 
 Кредит 1 выдан 2025-03-28, за 552 дня до отчётной даты. Если в значении есть время, `julianday` считает дробные дни, поэтому оборачивайте разность в `CAST(… AS INTEGER)`, чтобы получить целые.
@@ -462,7 +494,8 @@ SELECT date('2026-10-01', '-30 days'),                          -- '2026-09-01' 
 
 ```sql
 SELECT COUNT(*) FROM applications
-WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';     -- 621: весь сентябрь, в любое время суток
+WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';
+-- 621: весь сентябрь, в любое время суток
 ```
 
 621 заявка в сентябре 2026 года. `BETWEEN '2026-09-01' AND '2026-09-30'` возвращает 598: он останавливается на 30 сентября **00:00:00**, и 23 заявки, поданные позже в тот день, теряются.
@@ -484,14 +517,20 @@ WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';     -- 621: ве
 Один запрос, функции всех трёх видов. *«За сентябрь 2026 года: платежи по очищенному способу оплаты, с долей опоздавших и средним числом дней опоздания».*
 
 ```sql
-SELECT REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer') AS method,             -- строки: TRIM, LOWER, REPLACE
+-- строки: TRIM, LOWER, REPLACE
+SELECT REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer') AS method,
        COUNT(*) AS payments,
-       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1)  AS late_pct,             -- числа: 100.0 первым, ROUND последним
-       ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_late       -- даты: разность julianday
+       -- числа: 100.0 первым, ROUND последним
+       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1)  AS late_pct,
+       -- даты: разность julianday
+       ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_late
 FROM payments p
-JOIN installments i ON i.installment_id = p.installment_id                               -- срок лежит в платеже по графику
-WHERE p.paid_at >= '2026-09-01' AND p.paid_at < '2026-10-01'                             -- полуоткрытый период
-GROUP BY REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer')                     -- то же выражение, что в SELECT
+-- срок лежит в платеже по графику
+JOIN installments i ON i.installment_id = p.installment_id
+-- полуоткрытый период
+WHERE p.paid_at >= '2026-09-01' AND p.paid_at < '2026-10-01'
+-- то же выражение, что в SELECT
+GROUP BY REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer')
 ORDER BY payments DESC;
 ```
 
@@ -575,7 +614,8 @@ ORDER BY days;
 SELECT REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,
        COUNT(*) AS payments, ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM payments), 1) AS share_pct
 FROM payments GROUP BY 1 ORDER BY payments DESC;
--- card 17621 (33.3 %) · payme 8900 (16.8) · click 8790 (16.6) · cash 8790 (16.6) · transfer 8774 (16.6)
+-- card 17621 (33.3 %) · payme 8900 (16.8) · click 8790 (16.6) · cash 8790
+-- (16.6) · transfer 8774 (16.6)
 ```
 Сырое `card` было 17 564 = 33.2 % в SQLite (сортировка SQL Server по умолчанию уже объединяет `Card` с `card`); плитка сдвинулась на 57 строк `Card`. За ночь ничего не изменилось, кроме того, какие строки программа кассира написала с заглавной буквы.
 
@@ -593,7 +633,8 @@ FROM payments GROUP BY 1 ORDER BY payments DESC;
 
 ```sql
 SELECT customer_id, TRIM(first_name) || ' ' || last_name AS full_name, LOWER(TRIM(first_name)) || ' ' || LOWER(last_name) AS match_key
-FROM customers WHERE customer_id BETWEEN 6001 AND 6003;   -- 'MALIKA jalilova' / 'malika jalilova', 'LOLA saidova', 'Bobur rakhimov'
+FROM customers WHERE customer_id BETWEEN 6001 AND 6003;
+-- 'MALIKA jalilova' / 'malika jalilova', 'LOLA saidova', 'Bobur rakhimov'
 ```
 `match_key` — это то, по чему группировался поиск дубликатов в прошлый четверг.
 
@@ -605,7 +646,8 @@ FROM customers WHERE customer_id BETWEEN 6001 AND 6003;   -- 'MALIKA jalilova' /
 
 ```sql
 SELECT COUNT(DISTINCT last_name) AS spellings, COUNT(DISTINCT LOWER(last_name)) AS surnames
-FROM customers;                                                        -- 60 · 36
+FROM customers;
+-- 60 · 36
 ```
 60 − 36 = **24** написания — строчные копии настоящей фамилии (`karimova` рядом с `Karimova`). Группируйте по `LOWER(last_name)` — и фамилий 36.
 
@@ -618,7 +660,7 @@ FROM customers;                                                        -- 60 · 
 ```sql
 SELECT DISTINCT '[' || method || ']' AS shown
 FROM payments
-WHERE method <> TRIM(method);                                          -- [CASH ]
+WHERE method <> TRIM(method);  -- [CASH ]
 ```
 Одно значение, `[CASH ]`: пробел в конце не виден в обычном результате и сразу заметен в скобках.
 
@@ -629,8 +671,10 @@ WHERE method <> TRIM(method);                                          -- [CASH 
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_name));   -- 18
--- SQL Server: LEN() игнорирует пробелы в конце, поэтому используйте DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))
+SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_name));
+-- 18
+-- SQL Server: LEN() игнорирует пробелы в конце, поэтому используйте
+-- DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))
 ```
 
 </details>
@@ -640,10 +684,12 @@ SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_nam
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT SUBSTR(disbursed_at, 1, 4) AS yr, COUNT(*) AS loans          -- SQL Server: YEAR(disbursed_at)
+-- SQL Server: YEAR(disbursed_at)
+SELECT SUBSTR(disbursed_at, 1, 4) AS yr, COUNT(*) AS loans
 FROM loans
 GROUP BY SUBSTR(disbursed_at, 1, 4)
-ORDER BY yr;                                                           -- 2024 1736 · 2025 3041 · 2026 3051
+ORDER BY yr;
+-- 2024 1736 · 2025 3041 · 2026 3051
 ```
 Те же числа, что у вторничного `strftime('%Y', …)`: в тексте `'YYYY-MM-DD'` первые четыре символа — это год.
 
@@ -655,7 +701,7 @@ ORDER BY yr;                                                           -- 2024 1
 
 ```sql
 SELECT customer_id, phone, REPLACE(phone, '+998', '8') AS local_phone
-FROM customers WHERE customer_id = 44;                                 -- +998902229531 → 8902229531
+FROM customers WHERE customer_id = 44;  -- +998902229531 → 8902229531
 ```
 
 </details>
@@ -690,7 +736,8 @@ SELECT COUNT(*) FROM customers WHERE phone LIKE '%00';                 -- 71
 ```sql
 SELECT p.name, ROUND(SUM(l.principal) / 1000000000.0, 1) AS disbursed_bn
 FROM loans l JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name ORDER BY disbursed_bn DESC;      -- SME 241.1 · Auto 84.8 · Consumer 65.1 · Micro 7.2 · BNPL 6.5
+GROUP BY p.name ORDER BY disbursed_bn DESC;
+-- SME 241.1 · Auto 84.8 · Consumer 65.1 · Micro 7.2 · BNPL 6.5
 ```
 Делите на миллиард с десятичной точкой (`1000000000.0`), затем округляйте один раз.
 
@@ -702,8 +749,10 @@ GROUP BY p.name ORDER BY disbursed_bn DESC;      -- SME 241.1 · Auto 84.8 · Co
 
 ```sql
 SELECT channel,
-       100 * SUM(status LIKE 'approved%') / COUNT(*)   AS whole_pct,      -- 58 · 63 · 61
-       100.0 * SUM(status LIKE 'approved%') / COUNT(*) AS decimal_pct     -- 58.23 · 63.72 · 61.89
+       -- 58 · 63 · 61
+       100 * SUM(status LIKE 'approved%') / COUNT(*)   AS whole_pct,
+       -- 58.23 · 63.72 · 61.89
+       100.0 * SUM(status LIKE 'approved%') / COUNT(*) AS decimal_pct
 FROM applications GROUP BY channel;
 -- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0)) для подсчёта
 ```
@@ -730,7 +779,8 @@ GROUP BY p.name;
 
 ```sql
 SELECT MAX(ABS(p.amount - i.total_due)) AS largest_gap
-FROM payments p JOIN installments i ON i.installment_id = p.installment_id;     -- 38 721 136
+FROM payments p JOIN installments i ON i.installment_id = p.installment_id;
+-- 38 721 136
 ```
 38.7 млн сумов: платёж 46016 по кредиту 6877 — 10 690 864 при 49 412 000 к оплате; частичный платёж примерно на пятую часть.
 
@@ -743,7 +793,8 @@ FROM payments p JOIN installments i ON i.installment_id = p.installment_id;     
 ```sql
 SELECT p.name, ROUND(100.0 * SUM(i.interest_due) / SUM(i.total_due), 1) AS interest_pct
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name;      -- Auto 29.5 · SME 23.1 · Consumer 17.5 · Micro 9.0 · BNPL 0.0
+GROUP BY p.name;
+-- Auto 29.5 · SME 23.1 · Consumer 17.5 · Micro 9.0 · BNPL 0.0
 ```
 У BNPL `annual_rate = 0` — платит продавец, а не заёмщик. Чем длиннее срок, тем больше доля процентов (Auto — 36 месяцев). Без `100.0` весь столбец будет нулями.
 
@@ -774,7 +825,8 @@ SELECT COUNT(*) FROM payments WHERE paid_at >= '2026-10-01';           -- 60
 SELECT d.month, d.month_name, COUNT(*) AS loans, SUM(l.principal) AS disbursed
 FROM loans l JOIN dim_date d ON d.date_key = l.disbursed_at
 WHERE d.year = 2026 GROUP BY d.month, d.month_name ORDER BY d.month;
--- Январь 287 / 17.45 млрд … Август 358 / 22.29 млрд, Сентябрь 361 / 17.02 млрд, Октябрь 21 / 0.85 млрд (один день)
+-- Январь 287 / 17.45 млрд … Август 358 / 22.29 млрд, Сентябрь 361 / 17.02 млрд,
+-- Октябрь 21 / 0.85 млрд (один день)
 ```
 Те же числа, что во вторничной версии с `strftime`, без разницы между диалектами и с читаемым названием месяца в придачу.
 
@@ -785,8 +837,10 @@ WHERE d.year = 2026 GROUP BY d.month, d.month_name ORDER BY d.month;
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans WHERE status = 'active';   -- 221
--- SQL Server: AVG(DATEDIFF(day, disbursed_at, '2026-10-01'))  (среднее от целых — сначала приведите одну сторону CAST AS FLOAT)
+SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans WHERE status = 'active';
+-- 221
+-- SQL Server: AVG(DATEDIFF(day, disbursed_at, '2026-10-01'))  (среднее от целых
+-- — сначала приведите одну сторону CAST AS FLOAT)
 ```
 
 </details>
@@ -797,11 +851,14 @@ SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans 
 
 ```sql
 SELECT p.payment_id, p.loan_id, i.due_date, p.paid_at,
-       CAST(julianday(p.paid_at) - julianday(i.due_date) AS INTEGER) AS days_late     -- DATEDIFF(day, i.due_date, p.paid_at)
+       -- DATEDIFF(day, i.due_date, p.paid_at)
+       CAST(julianday(p.paid_at) - julianday(i.due_date) AS INTEGER) AS days_late
 FROM payments p JOIN installments i ON i.installment_id = p.installment_id
-ORDER BY days_late DESC LIMIT 5;                      -- пять платежей ровно по 60 дней
+ORDER BY days_late DESC LIMIT 5;
+-- пять платежей ровно по 60 дней
 SELECT COUNT(*) FROM payments p JOIN installments i ON i.installment_id = p.installment_id
-WHERE p.paid_at > i.due_date;                         -- 6669 из 52875 = 12.6 % с опозданием
+WHERE p.paid_at > i.due_date;
+-- 6669 из 52875 = 12.6 % с опозданием
 ```
 Отрицательное days_late = оплачено раньше срока (34 649 платежей); 11 557 — в срок; 534 — с опозданием более 30 дней. Максимум — 60: заёмщики в этих данных никогда не платят позже двух месяцев; после этого они перестают платить, поэтому опоздание и DPD — это два разных измерения.
 
@@ -814,7 +871,8 @@ WHERE p.paid_at > i.due_date;                         -- 6669 из 52875 = 12.6 
 ```sql
 SELECT pr.name, COUNT(*) AS payments,
        ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_all,
-       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1) AS late_pct          -- SQL Server: SUM(IIF(p.paid_at > i.due_date, 1, 0))
+       -- SQL Server: SUM(IIF(p.paid_at > i.due_date, 1, 0))
+       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1) AS late_pct
 FROM payments p JOIN installments i ON i.installment_id = p.installment_id
 JOIN loans l ON l.loan_id = p.loan_id JOIN products pr ON pr.product_id = l.product_id
 GROUP BY pr.name ORDER BY avg_days_all DESC;
@@ -850,9 +908,12 @@ A 5.1 % с опозданием / −0.87 дня · B 9.8 % / −0.31 · C 19.6 
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';          -- 361
-SELECT COUNT(*) FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';       -- 621
-SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30';               -- 598 (неверно: теряем 23)
+SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';
+-- 361
+SELECT COUNT(*) FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';
+-- 621
+SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30';
+-- 598 (неверно: теряем 23)
 ```
 
 </details>
@@ -894,13 +955,15 @@ card −0.03 дня, payme 0.14, click 0.20, cash 0.09, transfer 0.16 — а д�
 
 ```sql
 SELECT l.loan_id, a.decided_at, l.disbursed_at, i.due_date AS first_due,
-       date(i.due_date, '-1 month') AS true_disbursed,                                  -- DATEADD(month, -1, i.due_date)
+       -- DATEADD(month, -1, i.due_date)
+       date(i.due_date, '-1 month') AS true_disbursed,
        CAST(julianday(date(i.due_date, '-1 month')) - julianday(a.decided_at) AS INTEGER) AS lag_days
 FROM loans l JOIN applications a ON a.application_id = l.application_id
 JOIN installments i ON i.loan_id = l.loan_id AND i.installment_no = 1
 WHERE l.disbursed_at < date(a.applied_at) ORDER BY l.loan_id;
 SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id AND i.installment_no = 1
-WHERE date(i.due_date, '-1 month') <> l.disbursed_at;                                 -- 166
+WHERE date(i.due_date, '-1 month') <> l.disbursed_at;
+-- 166
 ```
 Лаги 0–3 дня у всех двенадцати (1039 → 2025-01-07, через 2 дня после решения; 2244 → 2026-09-30, через 3 дня) — ровно тот лаг, который показывает каждый обычный кредит. По всем 7 828 кредитам правило `date(first_due, '-1 month') <> disbursed_at` отмечает **166**: 12 настоящих плюс 154 артефакта конца месяца (выдан 2026-01-29 → срок 2026-02-28, а февраль не вернёт 29 января). Правилу для дат нужен допуск; список «неправильных» всегда нужно просматривать глазами.
 
@@ -981,19 +1044,23 @@ WHERE date(i.due_date, '-1 month') <> l.disbursed_at;                           
 Шаги 1 и 2 — это две группировки подряд, для их цепочки нужен CTE (`WITH … AS (…)`) с недели 3. **Это предпросмотр: выполните и прочитайте.** Читайте его как два именованных результата; на следующей неделе вы сами напишете такую форму.
 
 ```sql
-WITH unpaid AS (                                   -- шаг 1: наступившие платежи, не оплаченные полностью
+-- шаг 1: наступившие платежи, не оплаченные полностью
+WITH unpaid AS (
   SELECT i.installment_id, i.loan_id, i.due_date, i.total_due,
-         COALESCE(SUM(p.amount), 0) AS paid        -- COALESCE: NULL (нет платежа) → 0; День 4
+         -- COALESCE: NULL (нет платежа) → 0; День 4
+         COALESCE(SUM(p.amount), 0) AS paid
   FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.due_date <= '2026-10-01'
   GROUP BY i.installment_id, i.loan_id, i.due_date, i.total_due
   HAVING COALESCE(SUM(p.amount), 0) < i.total_due
 ),
-dpd AS (                                           -- шаги 2 + 3: самый старый неоплаченный по кредиту, в днях
+-- шаги 2 + 3: самый старый неоплаченный по кредиту, в днях
+dpd AS (
   SELECT loan_id,
          MIN(due_date) AS oldest_unpaid_due,
-         CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,   -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+         -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+         CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,
          COUNT(*) AS unpaid_instalments,
          SUM(total_due - paid) AS overdue_amount
   FROM unpaid GROUP BY loan_id

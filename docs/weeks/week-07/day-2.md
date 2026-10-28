@@ -34,10 +34,14 @@ from math import sqrt, exp
 from statistics import NormalDist
 N = NormalDist()
 
-users  = pd.read_csv("data/ab/users.csv", parse_dates=["assigned_at"])          # one row per assignment
-events = pd.read_csv("data/ab/events.csv", parse_dates=["event_time"])          # one row per app event
-loans  = pd.read_csv("data/ab/loans_followup.csv", parse_dates=["signed_at"])   # one row per signed loan
-print(len(users), len(events), len(loans))                                      # 27974 67215 2583
+# one row per assignment
+users  = pd.read_csv("data/ab/users.csv", parse_dates=["assigned_at"])
+# one row per app event
+events = pd.read_csv("data/ab/events.csv", parse_dates=["event_time"])
+# one row per signed loan
+loans  = pd.read_csv("data/ab/loans_followup.csv", parse_dates=["signed_at"])
+# 27974 67215 2583
+print(len(users), len(events), len(loans))
 
 def with_conversion(users, events, window_days=7):
     """Adds conv = 1 if the user signed within window_days of their first assignment."""
@@ -46,12 +50,17 @@ def with_conversion(users, events, window_days=7):
     ok = s[(s["event_time"] >= s["first_at"]) & (s["event_time"] <= s["first_at"] + pd.Timedelta(days=window_days))]
     return users.assign(conv=users["user_id"].isin(ok["user_id"]).astype(int))
 
-print(with_conversion(users, events).head(6))                                   # the analysis table
-print(len(users), users["user_id"].nunique())                                   # 27 974 rows, 27 674 users
-dup = users[users["user_id"].duplicated(keep=False)]                            # 600 rows = 300 users
+# the analysis table
+print(with_conversion(users, events).head(6))
+# 27 974 rows, 27 674 users
+print(len(users), users["user_id"].nunique())
+# 600 rows = 300 users
+dup = users[users["user_id"].duplicated(keep=False)]
 dup_ids = dup["user_id"].unique()
-print(len(dup), len(dup_ids), dup.groupby("user_id")["variant"].nunique().eq(2).all())   # 600 300 True
-ud = users[~users["user_id"].isin(dup_ids)].copy()                              # 27 374 users, one row each
+# 600 300 True
+print(len(dup), len(dup_ids), dup.groupby("user_id")["variant"].nunique().eq(2).all())
+# 27 374 users, one row each
+ud = users[~users["user_id"].isin(dup_ids)].copy()
 ```
 
 The analysis table, first rows:
@@ -84,7 +93,8 @@ The analysis table, first rows:
 **How to write it.**
 
 ```python
-def srm_p(n_a, n_b, share_b=0.5):                           # Day 1's srm_pvalue: chi-square, 1 df
+# Day 1's srm_pvalue: chi-square, 1 df
+def srm_p(n_a, n_b, share_b=0.5):
     n = n_a + n_b
     chi2 = (n_a - n * (1 - share_b)) ** 2 / (n * (1 - share_b)) + (n_b - n * share_b) ** 2 / (n * share_b)
     return 2 * (1 - N.cdf(sqrt(chi2)))
@@ -92,7 +102,8 @@ def srm_p(n_a, n_b, share_b=0.5):                           # Day 1's srm_pvalue
 ud["week"] = (ud["assigned_at"] - pd.Timestamp("2026-08-01")).dt.days // 7 + 1
 for name, d in [("rows", users), ("users", ud)]:
     n = d["variant"].value_counts()
-    print(name, n["A"], n["B"], round(srm_p(n["A"], n["B"]), 3))    # rows 13 845 / 14 129, p = 0.090 · users 13 545 / 13 829, p = 0.086
+    # rows 13 845 / 14 129, p = 0.090 · users 13 545 / 13 829, p = 0.086
+    print(name, n["A"], n["B"], round(srm_p(n["A"], n["B"]), 3))
 
 def srm_by(df, cols):
     """One row per slice: users per arm, B's share, the SRM p-value."""
@@ -101,7 +112,8 @@ def srm_by(df, cols):
     t["SRM p"] = [srm_p(a, b) for a, b in zip(t["A"], t["B"])]
     return t
 
-srm_by(ud, ["device", "week"])                              # iOS week 4: 537 / 822, p ≈ 1e-14
+# iOS week 4: 537 / 822, p ≈ 1e-14
+srm_by(ud, ["device", "week"])
 ```
 
 Overall: p = 0.086, unremarkable. By slice, on the de-duplicated users:
@@ -136,18 +148,22 @@ One cell is broken: **iOS users assigned 22–28 August went 60 / 40 to B**. The
 **How to write it.**
 
 ```python
-def hash_variant(user_id, salt="offer_screen_v2"):          # Day 1
+def hash_variant(user_id, salt="offer_screen_v2"):  # Day 1
     h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)
     return "A" if h % 2 == 0 else "B"
 
 users["expected"] = users["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
 bad = users[users["variant"] != users["expected"]]
-print(len(bad), bad["user_id"].isin(dup_ids).sum())                     # 431, of which 300: the leaked users' second assignments
-print(bad[~bad["user_id"].isin(dup_ids)].groupby(["device", "variant"]).size())   # iOS / B: 131, all in Aug 22-28
+# 431, of which 300: the leaked users' second assignments
+print(len(bad), bad["user_id"].isin(dup_ids).sum())
+# iOS / B: 131, all in Aug 22-28
+print(bad[~bad["user_id"].isin(dup_ids)].groupby(["device", "variant"]).size())
 
-ud2 = ud[~((ud["device"] == "iOS") & (ud["assigned_at"] >= "2026-08-22"))]   # the broken cell, out of BOTH arms
+# the broken cell, out of BOTH arms
+ud2 = ud[~((ud["device"] == "iOS") & (ud["assigned_at"] >= "2026-08-22"))]
 n = ud2["variant"].value_counts()
-print(len(ud2), n["A"], n["B"], round(srm_p(n["A"], n["B"]), 3))         # 26 015 users: 13 008 / 13 007, p = 0.995
+# 26 015 users: 13 008 / 13 007, p = 0.995
+print(len(ud2), n["A"], n["B"], round(srm_p(n["A"], n["B"]), 3))
 ```
 
 431 rows disagree. 300 are the leaked users' second assignments. The other **131 are iOS users from week 4, logged as B although their hash says A**: the iOS client defaulted to B when the assignment call timed out. The cell is removed from **both** arms — inside it, B holds users who should be in A, and whoever times out is not a random user (slow phones, bad networks). After removal: 13 008 vs 13 007, SRM p = 0.995.
@@ -183,8 +199,9 @@ def balance(df):
                      two_prop_p(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])))
     return pd.DataFrame(rows, columns=["attribute", "A %", "B %", "p"]).round(4)
 
-print(balance(ud))     # iOS 20.67 % vs 22.61 %, p = 0.0001: the broken cell, seen from another side
-print(balance(ud2))    # iOS 17.40 % vs 17.72 %, p = 0.49: alike
+# iOS 20.67 % vs 22.61 %, p = 0.0001: the broken cell, seen from another side
+print(balance(ud))
+print(balance(ud2))  # iOS 17.40 % vs 17.72 %, p = 0.49: alike
 ```
 
 | attribute | A (`ud`) | B (`ud`) | p | A (`ud2`) | B (`ud2`) | p |
@@ -217,7 +234,8 @@ import matplotlib.pyplot as plt
 x = with_conversion(ud, events)
 daily = x.groupby([x["assigned_at"].dt.date, "variant"])["conv"].mean().unstack() * 100
 daily["lift"] = daily["B"] - daily["A"]
-print(daily.head(5).round(2))                                           # days 1-3: +4.0, +2.4, +3.9 points
+# days 1-3: +4.0, +2.4, +3.9 points
+print(daily.head(5).round(2))
 ax = daily["lift"].plot(marker="o", title="B - A by day of assignment, points")
 _ = ax.axhline(0, color="grey")
 ```
@@ -242,29 +260,39 @@ On 1–3 August, A converts 7.85 / 7.94 / 8.19 % and B **11.90 / 10.33 / 12.09 %
 
 ```python
 clean = with_conversion(users, events)
-clean = clean[~clean["user_id"].isin(dup_ids)]                                        # - the leak
-clean = clean[~((clean["device"] == "iOS") & (clean["assigned_at"] >= "2026-08-22"))]  # - the broken iOS cell
-clean = clean[clean["assigned_at"] >= "2026-08-04"]                                   # - novelty days: 22 906 users
+# - the leak
+clean = clean[~clean["user_id"].isin(dup_ids)]
+# - the broken iOS cell
+clean = clean[~((clean["device"] == "iOS") & (clean["assigned_at"] >= "2026-08-22"))]
+# - novelty days: 22 906 users
+clean = clean[clean["assigned_at"] >= "2026-08-04"]
 
 def z_test(kA, nA, kB, nB):
     """Two-proportion z-test, B minus A: z > 0 means B is higher."""
-    pool = (kA + kB) / (nA + nB)                                    # the shared rate if the screens did not differ
+    # the shared rate if the screens did not differ
+    pool = (kA + kB) / (nA + nB)
     z = (kB / nB - kA / nA) / sqrt(pool * (1 - pool) * (1 / nA + 1 / nB))
-    return z, 2 * (1 - N.cdf(abs(z)))                               # two-sided p
+    # two-sided p
+    return z, 2 * (1 - N.cdf(abs(z)))
 
-k = clean.groupby("variant")["conv"].agg(["sum", "size"])          # A 915 / 11 472 · B 1 013 / 11 434
+# A 915 / 11 472 · B 1 013 / 11 434
+k = clean.groupby("variant")["conv"].agg(["sum", "size"])
 z, p = z_test(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])
-print(f"z = {z:.2f}, p = {p:.4f}")                                  # z = 2.41, p = 0.0160
+# z = 2.41, p = 0.0160
+print(f"z = {z:.2f}, p = {p:.4f}")
 
 def welch(x, y):
     """Welch's t for two means, y minus x (normal p: fine with hundreds of rows per arm)."""
     t = (y.mean() - x.mean()) / sqrt(x.var() / len(x) + y.var() / len(y))
     return t, 2 * (1 - N.cdf(abs(t)))
 
-lc = loans.merge(clean[["user_id", "variant"]], on="user_id")      # loans of clean users: 993 / 1 076
+# loans of clean users: 993 / 1 076
+lc = loans.merge(clean[["user_id", "variant"]], on="user_id")
 t, p = welch(lc.loc[lc["variant"] == "A", "principal"], lc.loc[lc["variant"] == "B", "principal"])
-print(f"principal per loan: t = {t:.2f}, p = {p:.2f}")              # t = -1.28, p = 0.20
-# In Jupyter: statsmodels' proportions_ztest; scipy.stats.ttest_ind(..., equal_var=False)
+# t = -1.28, p = 0.20
+print(f"principal per loan: t = {t:.2f}, p = {p:.2f}")
+# In Jupyter: statsmodels' proportions_ztest; scipy.stats.ttest_ind(...,
+# equal_var=False)
 ```
 
 Conversion: 915 of 11 472 in A (7.98 %), 1 013 of 11 434 in B (8.86 %); z = 2.41, p = 0.016. If the screens did not differ, a gap this large would appear in about 1.6 % of such experiments. Principal per loan: B's loans are 69 172 soum smaller on average, t = −1.28, p = 0.20 — no evidence of a difference. The same z-test in Excel, one row per variant:
@@ -308,8 +336,10 @@ def ab_test(kA, nA, kB, nB):
     """B vs A: z-test, the difference with a 95 % CI, the relative lift with a log-ratio CI."""
     pA, pB = kA / nA, kB / nB
     z, p = z_test(kA, nA, kB, nB)
-    se = sqrt(pA * (1 - pA) / nA + pB * (1 - pB) / nB)              # standard error of the difference
-    se_log = sqrt(1 / kB - 1 / nB + 1 / kA - 1 / nA)                # standard error of log(pB / pA)
+    # standard error of the difference
+    se = sqrt(pA * (1 - pA) / nA + pB * (1 - pB) / nB)
+    # standard error of log(pB / pA)
+    se_log = sqrt(1 / kB - 1 / nB + 1 / kA - 1 / nA)
     r = pB / pA
     return {"A %": 100 * pA, "B %": 100 * pB, "diff pt": 100 * (pB - pA),
             "lo pt": 100 * (pB - pA - 1.96 * se), "hi pt": 100 * (pB - pA + 1.96 * se),
@@ -325,8 +355,10 @@ def ab_readout(df):
     return r
 
 r = ab_readout(clean)
-# A 915 / 11472 = 7.98 % · B 1013 / 11434 = 8.86 % · diff +0.88 pt (+0.16 to +1.60) · z = 2.41, p = 0.0160 · relative +11.1 % (+2.0 to +21.0)
-# In Jupyter: confint_proportions_2indep(kB, nB, kA, nA, method="newcomb"); compare="ratio", method="log" for the relative CI
+# A 915 / 11472 = 7.98 % · B 1013 / 11434 = 8.86 % · diff +0.88 pt (+0.16 to
+# +1.60) · z = 2.41, p = 0.0160 · relative +11.1 % (+2.0 to +21.0)
+# In Jupyter: confint_proportions_2indep(kB, nB, kA, nA, method="newcomb");
+# compare="ratio", method="log" for the relative CI
 ```
 
 **+0.88 points (95 % CI +0.16 to +1.60)**: about 9 more contracts per 1 000 viewers, and the data are compatible with anything from 1.6 to 16. **Relative: +11.1 % (95 % CI +2.0 % to +21.0 %).** The lower ends are close to nothing — the effect is real but its size is uncertain.
@@ -351,7 +383,8 @@ r = ab_readout(clean)
 prev = clean[["user_id", "variant"]]
 for step in ["start_application", "submit_application", "approved", "contract_signed"]:
     who = set(events.loc[events["event_name"] == step, "user_id"])
-    reached = prev[prev["user_id"].isin(who)]                       # users of the previous step who reached this one
+    # users of the previous step who reached this one
+    reached = prev[prev["user_id"].isin(who)]
     kA, nA = (reached["variant"] == "A").sum(), (prev["variant"] == "A").sum()
     kB, nB = (reached["variant"] == "B").sum(), (prev["variant"] == "B").sum()
     z, p = z_test(kA, nA, kB, nB)
@@ -387,12 +420,15 @@ The new screen does **not** make more people start. The starters finish a little
 ```python
 from math import asin
 lc["fpd"] = 1 - lc["first_instalment_paid_within_30d"]
-f = lc.groupby("variant")["fpd"].agg(["sum", "size"])              # A 15 / 993 · B 24 / 1 076
+# A 15 / 993 · B 24 / 1 076
+f = lc.groupby("variant")["fpd"].agg(["sum", "size"])
 r = ab_test(f.loc["A", "sum"], f.loc["A", "size"], f.loc["B", "sum"], f.loc["B", "size"])
 print(f"FPD A {r['A %']:.2f} %, B {r['B %']:.2f} %, diff {r['diff pt']:+.2f} pt (95 % CI {r['lo pt']:+.2f} to {r['hi pt']:+.2f}), p = {r['p']:.2f}")
-h = 2 * asin(sqrt(r["B %"] / 100)) - 2 * asin(sqrt(r["A %"] / 100))            # the effect, Cohen's h
+# the effect, Cohen's h
+h = 2 * asin(sqrt(r["B %"] / 100)) - 2 * asin(sqrt(r["A %"] / 100))
 power = N.cdf(abs(h) / sqrt(1 / f.loc["A", "size"] + 1 / f.loc["B", "size"]) - 1.96)
-print(f"power for a true {r['diff pt']:+.2f} pt: {power:.0%};  loans per arm for 80 %: {2 * ((1.96 + 0.8416) / h) ** 2:,.0f}")   # 23 %; 5 508
+# 23 %; 5 508
+print(f"power for a true {r['diff pt']:+.2f} pt: {power:.0%};  loans per arm for 80 %: {2 * ((1.96 + 0.8416) / h) ** 2:,.0f}")
 ```
 
 | | A | B |
@@ -430,14 +466,16 @@ def holm(pvals):
     return adj
 
 rows = []
-for col in ["device", "new_vs_returning", "segment"]:             # the seven pre-registered cuts
+# the seven pre-registered cuts
+for col in ["device", "new_vs_returning", "segment"]:
     for val, g in clean.groupby(col):
         k = g.groupby("variant")["conv"].agg(["sum", "size"])
         r = ab_test(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])
         rows.append((val, r["A %"], r["B %"], r["diff pt"], r["p"]))
 seg = pd.DataFrame(rows, columns=["segment", "A %", "B %", "lift pt", "p"])
 seg["Holm"] = holm(list(seg["p"]))
-print(seg.round(3))                                                # smallest Holm p: 0.21 (Android)
+# smallest Holm p: 0.21 (Android)
+print(seg.round(3))
 ```
 
 | segment | A | B | lift | p | Holm |
@@ -481,9 +519,11 @@ new +0.85 vs returning +0.96:  z = −0.15,  p = 0.88   → no evidence that the
 simpson = pd.DataFrame({"period": ["week 1 (90/10)", "week 1 (90/10)", "weeks 2-4 (50/50)", "weeks 2-4 (50/50)"],
                         "variant": ["A", "B", "A", "B"], "users": [900, 100, 1000, 1000], "conv": [90, 11, 50, 55]})
 simpson["rate %"] = 100 * simpson["conv"] / simpson["users"]
-print(simpson.pivot(index="period", columns="variant", values="rate %"))   # B wins both periods: 11.0 vs 10.0, 5.5 vs 5.0
+# B wins both periods: 11.0 vs 10.0, 5.5 vs 5.0
+print(simpson.pivot(index="period", columns="variant", values="rate %"))
 total = simpson.groupby("variant")[["conv", "users"]].sum()
-print((100 * total["conv"] / total["users"]).round(2))                     # ... and loses in total: A 7.37, B 6.00
+# ... and loses in total: A 7.37, B 6.00
+print((100 * total["conv"] / total["users"]).round(2))
 ```
 
 | | A | B | B − A |
@@ -627,14 +667,21 @@ The verdict "B converts better" survives every version. The size Kamola can prom
 **Ask:** Kamola's dashboard says "B wins: 9.37 % against 8.28 %, p = 0.001". Produce the number she can actually promise — each step is one concept of section 1, in its order.
 
 ```python
-x = with_conversion(users, events)                                         # data layout: conv = signed within 7 days
-dup_ids = users.loc[users["user_id"].duplicated(), "user_id"].unique()      # data layout: 300 users in both arms
-c = x[~x["user_id"].isin(dup_ids)]                                         # 27 374 — one row per user
-c = c[~((c["device"] == "iOS") & (c["assigned_at"] >= "2026-08-22"))]      # SRM + hash: the broken cell out of both arms — 26 015, SRM p = 0.995
-c = c[c["assigned_at"] >= "2026-08-04"]                                    # daily lift: novelty days out, as planned — 22 906, the clean population
+# data layout: conv = signed within 7 days
+x = with_conversion(users, events)
+# data layout: 300 users in both arms
+dup_ids = users.loc[users["user_id"].duplicated(), "user_id"].unique()
+# 27 374 — one row per user
+c = x[~x["user_id"].isin(dup_ids)]
+# SRM + hash: the broken cell out of both arms — 26 015, SRM p = 0.995
+c = c[~((c["device"] == "iOS") & (c["assigned_at"] >= "2026-08-22"))]
+# daily lift: novelty days out, as planned — 22 906, the clean population
+c = c[c["assigned_at"] >= "2026-08-04"]
 k = c.groupby("variant")["conv"].agg(["sum", "size"])
-r = ab_test(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])   # primary test + CI
-print({key: round(float(v), 4) for key, v in r.items()})    # z = 2.408, p = 0.0160 (B minus A: z > 0 means B is higher)
+# primary test + CI
+r = ab_test(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])
+# z = 2.408, p = 0.0160 (B minus A: z > 0 means B is higher)
+print({key: round(float(v), 4) for key, v in r.items()})
 ```
 
 1. **Data layout.** 27 974 rows, 27 674 users: 300 users were in both arms. All 600 of their rows go.

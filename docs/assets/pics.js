@@ -85,7 +85,7 @@ below) draws instead of, or above, the tables. */
       out += '<path d="M' + x1 + ' ' + ay + ' C' + mx + ' ' + ay + ' ' + mx + ' ' + by + ' ' + x2 + ' ' + by + '" marker-end="url(#' + fig.id + '-m)"/>';
       if (l.label) out += '<foreignObject x="' + (mx - 40) + '" y="' + ((ay + by) / 2 - 11) + '" width="80" height="22"><div class="pic-linklabel">' + esc(l.label) + '</div></foreignObject>';
     });
-    svg.setAttribute('width', body.scrollWidth);
+    svg.setAttribute('width', body.clientWidth);   // not scrollWidth: that counted the layer's own old width, 30 px past the picture
     svg.setAttribute('height', body.scrollHeight);
     svg.innerHTML = '<defs><marker id="' + fig.id + '-m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
       '<path d="M0 0L10 5L0 10z"/></marker></defs>' + out;

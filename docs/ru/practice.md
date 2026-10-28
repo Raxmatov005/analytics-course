@@ -29,9 +29,12 @@ SELECT * FROM branches;
 Нужные конструкции (на примерах других вопросов):
 
 ```sql
-SELECT COUNT(*) FROM customers;                                  -- сколько строк
-SELECT COUNT(*) FROM customers WHERE segment = 'sme';            -- сколько строк подходит
-SELECT name, min_amount FROM products ORDER BY min_amount DESC;  -- сначала самые большие
+SELECT COUNT(*) FROM customers;
+-- сколько строк
+SELECT COUNT(*) FROM customers WHERE segment = 'sme';
+-- сколько строк подходит
+SELECT name, min_amount FROM products ORDER BY min_amount DESC;
+-- сначала самые большие
 ```
 
 Не уверены, что хранится в столбце? Сначала посмотрите: `SELECT DISTINCT role FROM staff;`

@@ -51,7 +51,8 @@
 ```sql
 SELECT p.name, COUNT(*) AS loans, SUM(l.principal) AS principal
 FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.name ORDER BY principal DESC;
--- SME 781 / 241 117 150 000 · Auto 391 / 84 791 530 000 · Consumer 2418 / 65 109 280 000 · Micro 2669 / 7 221 210 000 · BNPL 1569 / 6 544 110 000
+-- SME 781 / 241 117 150 000 · Auto 391 / 84 791 530 000 · Consumer 2418 / 65
+-- 109 280 000 · Micro 2669 / 7 221 210 000 · BNPL 1569 / 6 544 110 000
 ```
 
 </details>
@@ -64,7 +65,8 @@ FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.name ORDE
 SELECT p.name, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
 WHERE i.due_date > '2026-10-01' GROUP BY p.name ORDER BY outstanding DESC;
--- SME 125 892 942 411 / 603 · Auto 57 684 271 333 / 368 · Consumer 23 054 933 316 / 1398 · BNPL 1 135 251 000 / 474 · Micro 956 106 370 / 566
+-- SME 125 892 942 411 / 603 · Auto 57 684 271 333 / 368 · Consumer 23 054 933
+-- 316 / 1398 · BNPL 1 135 251 000 / 474 · Micro 956 106 370 / 566
 ```
 Суммируется столбец *платежа* по `installments`, поэтому соединение с `loans` (многие к одному от платежа) безопасно; суммировать здесь `l.principal` было бы ловушкой. Итого 208 723 504 430.
 
@@ -78,8 +80,10 @@ WHERE i.due_date > '2026-10-01' GROUP BY p.name ORDER BY outstanding DESC;
 SELECT p.name, COUNT(*) AS loans, SUM(l.principal) AS disbursed, ROUND(AVG(l.principal)) AS avg_ticket
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2027-01-01' GROUP BY p.name ORDER BY disbursed DESC;
--- SME 305 / 95 235 100 000 / 312 246 230 · Auto 165 / 36 218 310 000 / 219 504 909 · Consumer 941 / 25 618 370 000 / 27 224 623
--- Micro 1045 / 2 811 950 000 / 2 690 861 · BNPL 595 / 2 449 330 000 / 4 116 521            (итого 3051 / 162 333 060 000)
+-- SME 305 / 95 235 100 000 / 312 246 230 · Auto 165 / 36 218 310 000 / 219 504
+-- 909 · Consumer 941 / 25 618 370 000 / 27 224 623
+-- Micro 1045 / 2 811 950 000 / 2 690 861 · BNPL 595 / 2 449 330 000 / 4 116 521
+-- (итого 3051 / 162 333 060 000)
 ```
 
 </details>
@@ -89,9 +93,11 @@ WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2027-01-01' GROUP BY 
 <details><summary>T4</summary>
 
 ```sql
-SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed      -- FORMAT(disbursed_at, 'yyyy-MM')
+-- FORMAT(disbursed_at, 'yyyy-MM')
+SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
 FROM loans WHERE disbursed_at >= '2026-01-01' GROUP BY strftime('%Y-%m', disbursed_at) ORDER BY month;
--- наибольшая сумма: 2026-08, 358 кредитов / 22 290 210 000; больше всего кредитов: 2026-05, 377 / 18 531 830 000
+-- наибольшая сумма: 2026-08, 358 кредитов / 22 290 210 000; больше всего
+-- кредитов: 2026-05, 377 / 18 531 830 000
 ```
 Десять строк; в октябре один день (21 кредит). Количество и сумма достигают пика в разные месяцы — на два кредита SME больше или меньше сдвигают сумму на миллиарды.
 
@@ -105,8 +111,10 @@ FROM loans WHERE disbursed_at >= '2026-01-01' GROUP BY strftime('%Y-%m', disburs
 SELECT b.region, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN branches b ON b.branch_id = l.branch_id
 WHERE i.due_date > '2026-10-01' GROUP BY b.region ORDER BY outstanding DESC;
--- Tashkent 81 679 738 071 / 1297 · Fergana 24 797 334 197 / 383 · Samarkand 24 655 889 676 / 401 · Andijan 19 798 392 956 / 340
--- Namangan 18 696 787 066 / 290 · Bukhara 15 116 046 338 / 279 · Nukus 13 309 138 567 / 216 · Termez 10 670 177 559 / 203
+-- Tashkent 81 679 738 071 / 1297 · Fergana 24 797 334 197 / 383 · Samarkand 24
+-- 655 889 676 / 401 · Andijan 19 798 392 956 / 340
+-- Namangan 18 696 787 066 / 290 · Bukhara 15 116 046 338 / 279 · Nukus 13 309
+-- 138 567 / 216 · Termez 10 670 177 559 / 203
 ```
 Вывод: на Ташкент приходится 39 % остатка долга при 38 % кредитов с долгом — портфель не сконцентрирован по регионам; он сконцентрирован по продуктам (T2: SME — 60 % остатка долга при 18 % кредитов с долгом).
 
@@ -117,7 +125,8 @@ WHERE i.due_date > '2026-10-01' GROUP BY b.region ORDER BY outstanding DESC;
 <details><summary>T6</summary>
 
 ```sql
-SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) >= 5;    -- 81 строка
+SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) >= 5;
+-- 81 строка
 ```
 Распределение (`GROUP BY customer_id`, затем подсчёт строк по каждому значению — сегодня на глаз, на следующей неделе подзапросом): 1 кредит → 2 089 клиентов · 2 → 1 378 · 3 → 593 · 4 → 194 · 5 → 62 · 6 → 15 · 7 → 4. Всего 4 335 заёмщиков.
 
@@ -134,8 +143,10 @@ SELECT p.name,
        SUM(CASE WHEN l.disbursed_at >= '2026-07-01' AND l.disbursed_at < '2026-10-01' THEN l.principal ELSE 0 END) AS q3
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY p.name ORDER BY p.name;
--- Q1 / Q2 / Q3:  Auto 13 637 110 000 / 10 773 540 000 / 11 611 170 000 · BNPL 775 920 000 / 733 850 000 / 921 270 000
---                Consumer 7 465 620 000 / 9 226 930 000 / 8 769 350 000 · Micro 782 600 000 / 988 770 000 / 1 019 870 000
+-- Q1 / Q2 / Q3:  Auto 13 637 110 000 / 10 773 540 000 / 11 611 170 000 · BNPL
+-- 775 920 000 / 733 850 000 / 921 270 000
+-- Consumer 7 465 620 000 / 9 226 930 000 / 8 769 350 000 · Micro 782 600 000 /
+-- 988 770 000 / 1 019 870 000
 --                SME 26 342 380 000 / 30 754 010 000 / 37 677 910 000
 ```
 Разобранный пример Дня 4 нарочно вёл последний столбец до конца данных (подпись «Q3 (+1 окт.)»); здесь Q3 должен закончиться 30 сентября, и полуоткрытая верхняя граница не пускает туда 1 октября (21 кредит, 852 760 000). Вывод: SME и Micro росли каждый квартал; BNPL и Consumer просели в Q2 или Q3; Auto упал после Q1 и не восстановился. Для полной оценки нужны полуоткрытые фильтры и вывод.
@@ -190,7 +201,8 @@ WHERE d.dpd BETWEEN 31 AND 90 ORDER BY d.dpd DESC;
 SELECT action_type, COUNT(*) AS actions,
        ROUND(100.0 * SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) / COUNT(*), 1) AS promise_pct
 FROM collections_actions GROUP BY action_type ORDER BY actions DESC;
--- sms 3265 / 38.4 · call 3114 / 25.2 · visit 1506 / 25.3 · restructure_offer 1476 / 23.3
+-- sms 3265 / 38.4 · call 3114 / 25.2 · visit 1506 / 25.3 · restructure_offer
+-- 1476 / 23.3
 ```
 
 </details>
@@ -222,7 +234,8 @@ SELECT channel, COUNT(*) AS apps,
        ROUND(100.0 * SUM(CASE WHEN status LIKE 'approved%' THEN 1 ELSE 0 END)
                    / NULLIF(SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 0), 1) AS rate_decided
 FROM applications GROUP BY channel;
--- app 5006 / 58.2 / 68.2 · branch 6223 / 63.7 / 72.4 · partner 2771 / 61.9 / 70.5
+-- app 5006 / 58.2 / 68.2 · branch 6223 / 63.7 / 72.4 · partner 2771 / 61.9 /
+-- 70.5
 ```
 
 </details>

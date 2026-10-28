@@ -37,7 +37,8 @@
 У Азиза (1) нет заявки. Заявка 103 указывает на клиента 4, которого нет в `cust`. Именно эти две строки отличают виды соединений друг от друга.
 
 ```sql
--- две маленькие таблицы, построенные прямо в запросе (WITH … VALUES), чтобы ими мог пользоваться каждый блок на странице
+-- две маленькие таблицы, построенные прямо в запросе (WITH … VALUES), чтобы ими
+-- мог пользоваться каждый блок на странице
 WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
      app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
 SELECT * FROM cust;
@@ -48,10 +49,14 @@ SELECT * FROM cust;
 **Как пишется.**
 
 ```sql
-SELECT l.loan_id, c.first_name, c.last_name, l.principal   -- столбцы из обеих таблиц, у каждого — псевдоним его таблицы
-FROM loans AS l                                           -- первая таблица, псевдоним l
-JOIN customers AS c                                       -- вторая таблица, псевдоним c
-  ON c.customer_id = l.customer_id;                       -- ключ: дочерняя.внешний_ключ = родительская.первичный_ключ
+-- столбцы из обеих таблиц, у каждого — псевдоним его таблицы
+SELECT l.loan_id, c.first_name, c.last_name, l.principal
+-- первая таблица, псевдоним l
+FROM loans AS l
+-- вторая таблица, псевдоним c
+JOIN customers AS c
+  ON c.customer_id = l.customer_id;
+  -- ключ: дочерняя.внешний_ключ = родительская.первичный_ключ
 ```
 
 Три части, всегда одни и те же:
@@ -100,7 +105,8 @@ INNER JOIN app a ON a.cust_id = c.id;
 ```sql
 SELECT c.customer_id, c.first_name, a.application_id, a.requested_amount
 FROM customers c
-INNER JOIN applications a ON a.customer_id = c.customer_id;   -- 14 000 строк: по одной на заявку
+INNER JOIN applications a ON a.customer_id = c.customer_id;
+-- 14 000 строк: по одной на заявку
 ```
 
 14 000 строк — по одной на заявку. 587 клиентов, которые ни разу не подавали заявку, в результат не попали.
@@ -194,7 +200,8 @@ LEFT JOIN applications a ON a.customer_id = c.customer_id;    -- 14 587 стро
 SELECT c.customer_id, c.first_name, c.last_name
 FROM customers c
 LEFT JOIN applications a ON a.customer_id = c.customer_id
-WHERE a.application_id IS NULL;                           -- 587 клиентов, которые ни разу не подавали заявку
+WHERE a.application_id IS NULL;
+-- 587 клиентов, которые ни разу не подавали заявку
 ```
 
 587 строк — ровно те клиенты, у которых столбцы заявки вернулись с NULL.
@@ -292,7 +299,7 @@ ORDER BY COALESCE(c.id, a.cust_id);
 SELECT p.name AS product, b.branch_name
 FROM products p
 CROSS JOIN branches b
-ORDER BY p.name, b.branch_name;                              -- 5 × 10 = 50 строк
+ORDER BY p.name, b.branch_name;  -- 5 × 10 = 50 строк
 ```
 
 50 строк: каждый из 5 продуктов в паре с каждым из 10 филиалов.
@@ -318,8 +325,9 @@ SELECT a.customer_id, a.first_name, a.last_name,
        b.customer_id AS other_id, b.first_name AS other_first, b.last_name AS other_last, a.phone
 FROM customers a
 JOIN customers b ON b.phone = a.phone
-               AND b.customer_id > a.customer_id          -- каждая пара один раз, строка никогда не в паре с собой
-ORDER BY a.customer_id;                                    -- 43 пары
+               -- каждая пара один раз, строка никогда не в паре с собой
+               AND b.customer_id > a.customer_id
+ORDER BY a.customer_id;  -- 43 пары
 ```
 
 43 пары. Первая — клиент 44, *Yulduz Karimova*, и клиент 6005, *"Yulduz "* *"karimova"*, — один и тот же человек, набранный дважды, с пробелом в конце и фамилией со строчной буквы. (Сохраните этот запрос: детективное дело в четверг построено на таких строках.)
@@ -381,11 +389,14 @@ customers ──customer_id──▶ loans ──product_id──▶ products
 ```sql
 SELECT p.name AS product, COUNT(*) AS loans
 FROM customers c
-JOIN loans    l ON l.customer_id = c.customer_id            -- стрелка 1: customers → loans
-JOIN products p ON p.product_id  = l.product_id             -- стрелка 2: loans → products
+-- стрелка 1: customers → loans
+JOIN loans    l ON l.customer_id = c.customer_id
+-- стрелка 2: loans → products
+JOIN products p ON p.product_id  = l.product_id
 WHERE c.region = 'Tashkent'
 GROUP BY p.name
-ORDER BY loans DESC;                                        -- 3 020 кредитов: Micro 1 041, Consumer 921, BNPL 594, SME 302, Auto 162
+ORDER BY loans DESC;
+-- 3 020 кредитов: Micro 1 041, Consumer 921, BNPL 594, SME 302, Auto 162
 ```
 
 3 020 кредитов принадлежат клиентам из Ташкента; в разбивке по продуктам (`GROUP BY` — тема завтрашнего дня, здесь он нужен только чтобы прочитать результат) впереди микрокредиты — 1 041. Без моста у вопроса нет ответа.
@@ -399,10 +410,12 @@ loans ──application_id──▶ applications ──officer_id──▶ staff
 ```sql
 SELECT l.loan_id, s.full_name AS officer, s.role, b.branch_name
 FROM loans l
-JOIN applications a ON a.application_id = l.application_id  -- через applications (ни один её столбец не выводится)
+-- через applications (ни один её столбец не выводится)
+JOIN applications a ON a.application_id = l.application_id
 JOIN staff        s ON s.staff_id       = a.officer_id
 JOIN branches     b ON b.branch_id      = s.branch_id
-WHERE l.loan_id = 1;                                        -- Ulugbek Qodirov, loan_officer, Termez Central
+WHERE l.loan_id = 1;
+-- Ulugbek Qodirov, loan_officer, Termez Central
 ```
 
 `applications` стоит в `FROM … JOIN`, но не в `SELECT`: она нужна только чтобы донести ключ от кредита до инспектора. Это нормально.
@@ -411,12 +424,14 @@ WHERE l.loan_id = 1;                                        -- Ulugbek Qodirov, 
 
 ```sql
 SELECT l.loan_id,
-       c.first_name || ' ' || c.last_name AS customer,     -- SQL Server: c.first_name + ' ' + c.last_name
+       -- SQL Server: c.first_name + ' ' + c.last_name
+       c.first_name || ' ' || c.last_name AS customer,
        p.name AS product, b.branch_name, l.principal, l.status
 FROM loans l
 JOIN customers c ON c.customer_id = l.customer_id
 JOIN products  p ON p.product_id  = l.product_id
-JOIN branches  b ON b.branch_id   = l.branch_id;            -- по-прежнему 7 828 строк
+JOIN branches  b ON b.branch_id   = l.branch_id;
+-- по-прежнему 7 828 строк
 ```
 
 По-прежнему 7 828 строк: у кредита один клиент, один продукт, один филиал. Добавьте `installments` — и число прыгнет до 92 193 (предыдущий подраздел).
@@ -444,12 +459,16 @@ JOIN branches  b ON b.branch_id   = l.branch_id;            -- по-прежне
 
 ```sql
 SELECT b.branch_name,
-       COUNT(l.loan_id)                                      AS loans,          -- считает найденные кредиты; NULL (нет кредита) не считается
+       -- считает найденные кредиты; NULL (нет кредита) не считается
+       COUNT(l.loan_id)                                      AS loans,
        SUM(CASE WHEN l.status = 'active' THEN 1 ELSE 0 END)  AS active_loans
-FROM branches b                                              -- список, который должен быть полным, ставим в FROM …
-LEFT JOIN loans l ON l.branch_id = b.branch_id               -- … чтобы LEFT его защитил
+-- список, который должен быть полным, ставим в FROM …
+FROM branches b
+-- … чтобы LEFT его защитил
+LEFT JOIN loans l ON l.branch_id = b.branch_id
 GROUP BY b.branch_name
-ORDER BY loans DESC;                                         -- 10 строк, по одной на филиал
+ORDER BY loans DESC;
+-- 10 строк, по одной на филиал
 ```
 
 Прочитайте его вопросами из этого раздела: полный список — `branches`, значит, это левая таблица и соединение LEFT; сторона «многие» — `loans`, значит, до группировки одна строка — это один кредит; `GROUP BY` сворачивает эти строки обратно до одной на филиал (завтра). `COUNT(l.loan_id)` вместо `COUNT(*)` — нарочно: у филиала без кредитов всё равно была бы одна строка (с NULL), и `COUNT(*)` сказал бы 1.
@@ -521,7 +540,8 @@ LIMIT 5;
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id;   -- 7828
+SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id;
+-- 7828
 ```
 У каждого кредита ровно один клиент (многие к одному), поэтому внутреннее соединение не теряет и не умножает строки. Связь настоящая, но в этой учебной копии базы не объявлено ни одного FOREIGN KEY, так что ничто её не *гарантирует* — проверить можно только подсчётом. Если бы число оказалось меньше, значит, какие-то кредиты указывают на несуществующего клиента; проверьте через LEFT JOIN … IS NULL — здесь вернётся 0.
 
@@ -537,7 +557,7 @@ SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id; 
 
 ```sql
 SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id
-WHERE l.product_id = 5 AND c.segment = 'affluent';                                 -- 179
+WHERE l.product_id = 5 AND c.segment = 'affluent';  -- 179
 ```
 
 </details>
@@ -548,7 +568,7 @@ WHERE l.product_id = 5 AND c.segment = 'affluent';                              
 
 ```sql
 SELECT COUNT(*) FROM loans l JOIN customers c ON c.customer_id = l.customer_id
-WHERE l.product_id = 1 AND c.region = 'Samarkand';                                 -- 277
+WHERE l.product_id = 1 AND c.region = 'Samarkand';  -- 277
 ```
 
 </details>
@@ -560,7 +580,7 @@ WHERE l.product_id = 1 AND c.region = 'Samarkand';                              
 ```sql
 SELECT COUNT(*)
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
-WHERE b.region IN ('Nukus', 'Termez') AND l.status = 'active';                    -- 413
+WHERE b.region IN ('Nukus', 'Termez') AND l.status = 'active';  -- 413
 ```
 Столбец `region` есть и в `customers`. Вопрос говорит о филиале, поэтому соединение идёт к `branches`.
 
@@ -606,8 +626,10 @@ ORDER BY i.installment_no;
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id;   -- 7828
-SELECT COUNT(*) FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id;    -- 9533
+SELECT COUNT(*) FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id;
+-- 7828
+SELECT COUNT(*) FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id;
+-- 9533
 ```
 INNER оставляет одну строку на кредит: 7 828. LEFT оставляет эти строки и добавляет по одной строке на каждого клиента без кредита: 9 533 − 7 828 = 1 705. Проверьте с другой стороны: 6 040 клиентов − 4 335 разных заёмщиков = 1 705.
 
@@ -625,9 +647,12 @@ INNER оставляет одну строку на кредит: 7 828. LEFT о
 
 ```sql
 SELECT COUNT(*) FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id
-WHERE ca.action_id IS NULL;                                                         -- 7545
-SELECT COUNT(*) FROM loans;                                                         -- 7828
-SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                            -- 283
+WHERE ca.action_id IS NULL;
+-- 7545
+SELECT COUNT(*) FROM loans;
+-- 7828
+SELECT COUNT(DISTINCT loan_id) FROM collections_actions;
+-- 283
 ```
 7 828 − 283 = 7 545: большинству кредитов напоминание никогда не требовалось. Анти-соединение и арифметика обязаны сходиться; если нет — значит, ключ соединения неверный.
 
@@ -639,9 +664,11 @@ SELECT COUNT(DISTINCT loan_id) FROM collections_actions;                        
 
 ```sql
 SELECT COUNT(*) FROM collections_actions ca RIGHT JOIN staff s ON s.staff_id = ca.collector_id
-WHERE ca.action_id IS NULL;                                                         -- 70
+WHERE ca.action_id IS NULL;
+-- 70
 SELECT COUNT(*) FROM staff s LEFT JOIN collections_actions ca ON ca.collector_id = s.staff_id
-WHERE ca.action_id IS NULL;                                                         -- 70, то же самое
+WHERE ca.action_id IS NULL;
+-- 70, то же самое
 ```
 70 из 100 сотрудников: 60 кредитных инспекторов и 10 управляющих филиалами. У каждого из 30 сотрудников взыскания действия есть. LEFT-версия ставит полный список (`staff`) в `FROM` — её легче читать.
 
@@ -676,7 +703,7 @@ SELECT b.branch_name, p.name AS product
 FROM products p
 CROSS JOIN branches b
 WHERE b.region = 'Tashkent'
-ORDER BY b.branch_name, p.name;                                                     -- 15 строк
+ORDER BY b.branch_name, p.name;  -- 15 строк
 ```
 В Ташкенте три филиала (Central, North, South), поэтому 5 продуктов × 3 филиала = 15 строк. `WHERE` работает по сетке после того, как она построена.
 
@@ -692,7 +719,8 @@ FROM customers a
 JOIN customers b ON b.first_name = a.first_name
                AND b.last_name  = a.last_name
                AND b.birth_date = a.birth_date
-               AND b.customer_id > a.customer_id;                                    -- 2 пары
+               AND b.customer_id > a.customer_id;
+               -- 2 пары
 ```
 2 пары: 823 и 1197 (Nodir Nazarov), 2460 и 5562 (Eldor Karimov), у каждой пары два разных телефона. 40 дубликатов с id 6001+ не появились: их набрали с пробелом в конце или с другим регистром букв, поэтому `=` их не находит. Это исправят `TRIM` и `LOWER` в среду.
 
@@ -709,9 +737,12 @@ JOIN customers b ON b.first_name = a.first_name
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id;         -- 92193
-SELECT COUNT(*) FROM loans l JOIN payments p ON p.loan_id = l.loan_id;             -- 52875
-SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id;        -- 53267
+SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id;
+-- 92193
+SELECT COUNT(*) FROM loans l JOIN payments p ON p.loan_id = l.loan_id;
+-- 52875
+SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id;
+-- 53267
 ```
 Один-ко-многим: число строк равно числу строк на стороне *«многие»* (92 193 платежа по графику; 52 875 платежей). LEFT JOIN добавляет по одной строке на каждый кредит, по которому не было ни одного платежа: 53 267 − 52 875 = **392** кредита, по которым пока ничего не оплачено (новые кредиты, у которых первый платёж ещё не наступил, и самые злостные должники).
 
@@ -732,7 +763,8 @@ SELECT COUNT(*)
 FROM loans l
 JOIN products p ON p.product_id = l.product_id
 JOIN branches b ON b.branch_id = l.branch_id
-WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'active';   -- 60
+WHERE p.code = 'AUTO' AND b.branch_name = 'Tashkent Central' AND l.status = 'active';
+-- 60
 ```
 Путь: `products ← loans → branches`. Оба ключа лежат в `loans`, поэтому оба `ON` используют `l.`.
 
@@ -747,7 +779,7 @@ SELECT COUNT(*)
 FROM collections_actions ca
 JOIN staff s    ON s.staff_id = ca.collector_id
 JOIN branches b ON b.branch_id = s.branch_id
-WHERE ca.action_type = 'call' AND b.region = 'Fergana';                              -- 416
+WHERE ca.action_type = 'call' AND b.region = 'Fergana';  -- 416
 ```
 Филиал здесь — это филиал *сотрудника взыскания*, до которого мы добираемся через `staff`; ни один столбец `staff` не выводится. Соединение `collections_actions → loans → branches` дало бы филиал кредита — здесь то же самое (сотрудники работают с кредитами своего филиала), но это не тот же вопрос.
 
@@ -760,11 +792,15 @@ WHERE ca.action_type = 'call' AND b.region = 'Fergana';                         
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'app';       -- 2669
-SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'branch';    -- 3590
-SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'partner';   -- 1569
+SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'app';
+-- 2669
+SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'branch';
+-- 3590
+SELECT COUNT(*) FROM loans l JOIN applications a ON a.application_id = l.application_id WHERE a.channel = 'partner';
+-- 1569
 SELECT COUNT(*) FROM applications a LEFT JOIN loans l ON l.application_id = a.application_id
-WHERE a.status = 'approved' AND l.loan_id IS NULL;                                                                      -- 89
+WHERE a.status = 'approved' AND l.loan_id IS NULL;
+-- 89
 ```
 app 2 669 · branch 3 590 · partner 1 569 (= 7 828). Одобрены, но без кредита: **89**. Все 89 были решены между 2026-09-29 и 2026-10-05 — одобрения, по которым к отчётной дате выдача ещё не состоялась (у некоторых решение даже принято *после* неё: в столбце решения стоит плановая дата). Не ошибки, а конвейер. К ним вернёмся в День 4.
 
@@ -842,7 +878,7 @@ INNER JOIN с укороченным справочником вернул бы 
 ```sql
 SELECT SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i
-WHERE i.due_date > '2026-10-01';                          -- 208 723 504 430 по 3409 кредитам
+WHERE i.due_date > '2026-10-01';  -- 208 723 504 430 по 3409 кредитам
 ```
 
 **208.7 млрд UZS** основного долга ещё предстоит получить по графику. **Портфель** — это это число, обычно ограниченное живыми кредитами: присоедините `loans` и оставьте `status = 'active'` → **203.4 млрд** по 3 341 кредиту; остальные 5.3 млрд приходятся на 22 кредита в `default` и 46 в `written_off`, графики которых продолжают идти, хотя денег никто не ждёт. «Автокредитный портфель» Бекзода — тот же запрос, отфильтрованный через `products` (активные кредиты: Auto 56.0 млрд по 358 кредитам; SME 122.8 млрд; Consumer 22.6 млрд; BNPL 1.1 млрд; Micro 1.0 млрд). Заметьте, чем остаток долга *не* является: `SUM(principal)` по активным кредитам — 297.0 млрд, то есть сумма, изначально выданная, а не то, что осталось.
@@ -853,7 +889,8 @@ WHERE i.due_date > '2026-10-01';                          -- 208 723 504 430 п�
 SELECT SUM(i.total_due) AS overdue, COUNT(*) AS instalments, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id
-WHERE i.due_date <= '2026-10-01' AND p.payment_id IS NULL;   -- 6 475 544 633 · 1357 · 399
+WHERE i.due_date <= '2026-10-01' AND p.payment_id IS NULL;
+-- 6 475 544 633 · 1357 · 399
 ```
 
 **6.48 млрд UZS** по 1 357 наступившим платежам 399 кредитов не оплачено совсем. Большая часть — уже мёртвые деньги: после соединения с `loans` 4.88 млрд приходится на списанные кредиты и 0.87 млрд — на дефолтные; **0.69 млрд по 181 платежу активных кредитов** — это то, что команда Севары действительно взыскивает на этой неделе. Одно уточнение к среде: этот запрос считает *частично* оплаченный платёж оплаченным. Если считать «не оплачено полностью», получится 1 784 платежа по 413 кредитам и 7.60 млрд всё ещё к оплате — именно это число будет использовать расчёт DPD.

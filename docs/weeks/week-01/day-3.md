@@ -23,13 +23,17 @@ This section has three parts, in this order: **keys** (what each one refuses), *
 **How to write it.** Inside `CREATE TABLE`, after the column's type. Press **▶ Run** — you write `CREATE TABLE` yourself further down; here only watch what the key does.
 
 ```sql
-CREATE TABLE IF NOT EXISTS my_keys_demo (     -- IF NOT EXISTS: skip this if the table is already there
-    customer_id INTEGER PRIMARY KEY,          -- the primary key
-    first_name  TEXT    NOT NULL,             -- must be filled (next subsection)
-    phone       TEXT    UNIQUE                -- no two rows with one phone (the one after)
+-- IF NOT EXISTS: skip this if the table is already there
+CREATE TABLE IF NOT EXISTS my_keys_demo (
+    customer_id INTEGER PRIMARY KEY,  -- the primary key
+    -- must be filled (next subsection)
+    first_name  TEXT    NOT NULL,
+    -- no two rows with one phone (the one after)
+    phone       TEXT    UNIQUE
 );
 INSERT INTO my_keys_demo VALUES (1, 'Gulbahor', '+998907579830');
-INSERT INTO my_keys_demo VALUES (1, 'Aziz', '+998901112233');      -- id 1 again: refused
+INSERT INTO my_keys_demo VALUES (1, 'Aziz', '+998901112233');
+-- id 1 again: refused
 ```
 
 The box ends in red: *UNIQUE constraint failed: my_keys_demo.customer_id*. That refusal is the point — a second customer 1 cannot exist. Open **Database → Your tables → my_keys_demo**: one row, and a **PK** badge next to `customer_id`.
@@ -46,7 +50,8 @@ The box ends in red: *UNIQUE constraint failed: my_keys_demo.customer_id*. That 
 | Used as the PK? | rarely; kept as an ordinary column | almost always |
 
 ```sql
-SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loans;   -- a ready-made check (COUNT(DISTINCT) is Week 2)
+SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loans;
+-- a ready-made check (COUNT(DISTINCT) is Week 2)
 ```
 
 7 828 rows and 7 828 different `loan_id`s: every value appears once, so `loan_id` can be the primary key.
@@ -67,7 +72,8 @@ SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loa
 
 ```sql
 CREATE TABLE IF NOT EXISTS my_keys_demo (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, phone TEXT UNIQUE);
-INSERT INTO my_keys_demo (customer_id, phone) VALUES (2, '+998901112233');   -- no first_name: refused
+INSERT INTO my_keys_demo (customer_id, phone) VALUES (2, '+998901112233');
+-- no first_name: refused
 ```
 
 *NOT NULL constraint failed: my_keys_demo.first_name* — a customer without a first name is not accepted.
@@ -89,7 +95,8 @@ INSERT INTO my_keys_demo (customer_id, phone) VALUES (2, '+998901112233');   -- 
 ```sql
 CREATE TABLE IF NOT EXISTS my_keys_demo (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, phone TEXT UNIQUE);
 INSERT INTO my_keys_demo VALUES (3, 'Aziz',    '+998905550000');
-INSERT INTO my_keys_demo VALUES (4, 'Dilnoza', '+998905550000');   -- the same phone again: refused
+INSERT INTO my_keys_demo VALUES (4, 'Dilnoza', '+998905550000');
+-- the same phone again: refused
 ```
 
 *UNIQUE constraint failed: my_keys_demo.phone*.
@@ -115,14 +122,17 @@ It allows a parent with many children — that is one-to-many — and a parent w
 **How to write it.** At the end of `CREATE TABLE`: `FOREIGN KEY (column) REFERENCES parent_table(parent_key)`. The parent column must be its table's PRIMARY KEY (or UNIQUE).
 
 ```sql
-PRAGMA foreign_keys = ON;                       -- SQLite checks foreign keys only after this line, in the same box
+PRAGMA foreign_keys = ON;
+-- SQLite checks foreign keys only after this line, in the same box
 CREATE TABLE IF NOT EXISTS my_keys_demo (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, phone TEXT UNIQUE);
 CREATE TABLE IF NOT EXISTS my_loans_demo (
     loan_id     INTEGER PRIMARY KEY,
     customer_id INTEGER NOT NULL,
-    FOREIGN KEY (customer_id) REFERENCES my_keys_demo(customer_id)   -- the customer must exist
+    -- the customer must exist
+    FOREIGN KEY (customer_id) REFERENCES my_keys_demo(customer_id)
 );
-INSERT INTO my_loans_demo VALUES (1, 999999);   -- customer 999999 does not exist: refused
+INSERT INTO my_loans_demo VALUES (1, 999999);
+-- customer 999999 does not exist: refused
 ```
 
 *FOREIGN KEY constraint failed*. `my_loans_demo` stays empty.
@@ -152,10 +162,12 @@ CREATE TABLE IF NOT EXISTS my_schedule_demo (
     loan_id        INTEGER NOT NULL,
     installment_no INTEGER NOT NULL,
     due_date       TEXT    NOT NULL,
-    PRIMARY KEY (loan_id, installment_no)       -- the pair is the key
+    PRIMARY KEY (loan_id, installment_no)  -- the pair is the key
 );
-INSERT INTO my_schedule_demo VALUES (1, 1, '2025-04-28'), (1, 2, '2025-05-28'), (2, 1, '2026-01-05');  -- loan 1 twice, number 1 twice: fine
-INSERT INTO my_schedule_demo VALUES (1, 2, '2025-06-28');                                              -- the pair (1, 2) again: refused
+INSERT INTO my_schedule_demo VALUES (1, 1, '2025-04-28'), (1, 2, '2025-05-28'), (2, 1, '2026-01-05');
+-- loan 1 twice, number 1 twice: fine
+INSERT INTO my_schedule_demo VALUES (1, 2, '2025-06-28');
+-- the pair (1, 2) again: refused
 ```
 
 The first insert adds three rows: loan 1 appears twice and instalment number 1 appears twice, but every pair is new. The second is refused: loan 1 already has an instalment number 2.
@@ -361,10 +373,11 @@ After the three fixes, Sevara's one sheet *is* our eleven tables: normalisation 
 ```sql
 -- the shape only: replace the names before you run it
 CREATE TABLE table_name (
-    column1  TYPE  PRIMARY KEY,                         -- the key
-    column2  TYPE  NOT NULL,                            -- must be filled
-    column3  TYPE,                                      -- may be empty
-    FOREIGN KEY (column2) REFERENCES parent(parent_key) -- optional: column2 points to another table
+    column1  TYPE  PRIMARY KEY,  -- the key
+    column2  TYPE  NOT NULL,     -- must be filled
+    column3  TYPE,               -- may be empty
+    -- optional: column2 points to another table
+    FOREIGN KEY (column2) REFERENCES parent(parent_key)
 );
 ```
 
@@ -372,16 +385,21 @@ The two tables for this section:
 
 ```sql
 CREATE TABLE my_collectors (
-    collector_id  INTEGER NOT NULL PRIMARY KEY,      -- SQL Server: INT NOT NULL PRIMARY KEY
-    full_name     TEXT    NOT NULL,                  -- SQL Server: NVARCHAR(100)
+    -- SQL Server: INT NOT NULL PRIMARY KEY
+    collector_id  INTEGER NOT NULL PRIMARY KEY,
+    -- SQL Server: NVARCHAR(100)
+    full_name     TEXT    NOT NULL,
     branch_id     INTEGER NOT NULL
 );
 CREATE TABLE my_calls (
-    call_id       INTEGER PRIMARY KEY,               -- filled in for you: 1, 2, 3 and on
+    -- filled in for you: 1, 2, 3 and on
+    call_id       INTEGER PRIMARY KEY,
     loan_id       INTEGER NOT NULL,
     collector_id  INTEGER NOT NULL,
-    called_on     TEXT    NOT NULL,                  -- a date as 'YYYY-MM-DD'; SQL Server: DATE
-    outcome       TEXT,                              -- may be empty until we know
+    -- a date as 'YYYY-MM-DD'; SQL Server: DATE
+    called_on     TEXT    NOT NULL,
+    -- may be empty until we know
+    outcome       TEXT,
     FOREIGN KEY (collector_id) REFERENCES my_collectors(collector_id)
 );
 ```
@@ -419,9 +437,12 @@ Types by engine:
 
 ```sql
 -- the shape only: replace the names before you run it
-INSERT INTO table_name (column1, column2) VALUES (value1, value2);            -- one row
-INSERT INTO table_name (column1, column2) VALUES (v1, v2), (v3, v4);          -- several rows, one bracket each
-INSERT INTO table_name (column1, column2) SELECT colA, colB FROM other_table; -- the rows a query returns
+INSERT INTO table_name (column1, column2) VALUES (value1, value2);
+-- one row
+INSERT INTO table_name (column1, column2) VALUES (v1, v2), (v3, v4);
+-- several rows, one bracket each
+INSERT INTO table_name (column1, column2) SELECT colA, colB FROM other_table;
+-- the rows a query returns
 ```
 
 One row — a new collector:
@@ -458,7 +479,8 @@ SELECT * FROM my_calls;
 
 ```sql
 PRAGMA foreign_keys = ON;
-INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10-01');   -- collector 999 does not exist
+INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10-01');
+-- collector 999 does not exist
 ```
 
 *FOREIGN KEY constraint failed*. Without the first line, SQLite would accept the call by a collector who does not exist.
@@ -481,8 +503,9 @@ INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10
 ```sql
 -- the shape only: replace the names before you run it
 UPDATE table_name
-SET    column1 = new_value1, column2 = new_value2   -- what changes
-WHERE  condition;                                   -- on which rows; without WHERE: on every row
+SET    column1 = new_value1, column2 = new_value2  -- what changes
+WHERE  condition;
+-- on which rows; without WHERE: on every row
 ```
 
 Call 1 turned out well: the borrower paid on 1 October. First look at the row with the same `WHERE`, then change it:
@@ -547,8 +570,10 @@ Two calls are left. In the Database panel, `my_calls` now shows 2 rows.
 
 ```sql
 -- the shape only: replace the names before you run it
-ALTER TABLE table_name ADD COLUMN column_name TYPE;         -- SQL Server: ALTER TABLE t ADD column_name TYPE;
-ALTER TABLE table_name RENAME COLUMN old_name TO new_name;  -- SQL Server: EXEC sp_rename 't.old_name', 'new_name', 'COLUMN';
+ALTER TABLE table_name ADD COLUMN column_name TYPE;
+-- SQL Server: ALTER TABLE t ADD column_name TYPE;
+ALTER TABLE table_name RENAME COLUMN old_name TO new_name;
+-- SQL Server: EXEC sp_rename 't.old_name', 'new_name', 'COLUMN';
 ALTER TABLE table_name RENAME TO new_table_name;
 ALTER TABLE table_name DROP COLUMN column_name;
 ```
@@ -629,13 +654,15 @@ DROP TABLE IF EXISTS my_schedule_demo;
 4. Read the message: *n rows changed* must equal the count from move 2.
 
 ```sql
-SELECT COUNT(*) FROM my_collectors WHERE branch_id = 1;   -- move 2: how many rows would this WHERE hit?
+SELECT COUNT(*) FROM my_collectors WHERE branch_id = 1;
+-- move 2: how many rows would this WHERE hit?
 ```
 
 4 rows — Aziza Karimova and the three real collectors of branch 1. A `DELETE … WHERE branch_id = 1` meant for Aziza would remove four people.
 
 ```sql
-UPDATE my_collectors SET branch_id = 2 WHERE full_name = 'aziza karimova';   -- lower case: matches nothing
+UPDATE my_collectors SET branch_id = 2 WHERE full_name = 'aziza karimova';
+-- lower case: matches nothing
 ```
 
 *✓ Done — 0 rows changed*. No error: in SQLite `=` is case-sensitive, so the row stayed in branch 1. Check the count of every change you make.
@@ -653,18 +680,24 @@ UPDATE my_collectors SET branch_id = 2 WHERE full_name = 'aziza karimova';   -- 
 The life of one table, every command in order. Run the box once:
 
 ```sql
-CREATE TABLE my_visits (                                          -- CREATE: the shape, with a key and NOT NULLs
+-- CREATE: the shape, with a key and NOT NULLs
+CREATE TABLE my_visits (
     visit_id   INTEGER PRIMARY KEY,
     branch_id  INTEGER NOT NULL,
     visited_on TEXT    NOT NULL,
     purpose    TEXT
 );
-INSERT INTO my_visits (branch_id, visited_on, purpose)            -- INSERT: several rows
+-- INSERT: several rows
+INSERT INTO my_visits (branch_id, visited_on, purpose)
 VALUES (1, '2026-10-01', 'audit'), (4, '2026-10-02', 'training'), (9, '2026-10-03', 'audit');
-UPDATE my_visits SET purpose = 'audit and training' WHERE visit_id = 1;   -- UPDATE: one row, by its key
-DELETE FROM my_visits WHERE visit_id = 3;                         -- DELETE: one row, by its key
-ALTER TABLE my_visits ADD COLUMN visitor TEXT;                    -- ALTER: one more column
-SELECT * FROM my_visits;                                          -- look at the result
+UPDATE my_visits SET purpose = 'audit and training' WHERE visit_id = 1;
+-- UPDATE: one row, by its key
+DELETE FROM my_visits WHERE visit_id = 3;
+-- DELETE: one row, by its key
+ALTER TABLE my_visits ADD COLUMN visitor TEXT;
+-- ALTER: one more column
+SELECT * FROM my_visits;
+-- look at the result
 ```
 
 2 rows: visit 1 to branch 1 (*audit and training*) and visit 2 to branch 4 (*training*), each with an empty `visitor`. When you are done, clean up — DROP:
@@ -724,13 +757,15 @@ CREATE TABLE scratch_restructurings (
     old_term_months    INT           NOT NULL,
     new_term_months    INT           NOT NULL,
     new_monthly_payment BIGINT       NULL,
-    reason_code        NVARCHAR(30)  NOT NULL,     -- 'job_loss', 'illness', 'business_down', 'other'
+    -- 'job_loss', 'illness', 'business_down', 'other'
+    reason_code        NVARCHAR(30)  NOT NULL,
     approved_by        INT           NULL,
     status             NVARCHAR(20)  NOT NULL,
     FOREIGN KEY (loan_id)     REFERENCES scratch_loan_keys(loan_id),
     FOREIGN KEY (approved_by) REFERENCES scratch_staff_keys(staff_id)
 );
--- SQLite: replace restructuring_id's type with  INTEGER PRIMARY KEY AUTOINCREMENT,
+-- SQLite: replace restructuring_id's type with  INTEGER PRIMARY KEY
+-- AUTOINCREMENT,
 -- INT → INTEGER, BIGINT → INTEGER, NVARCHAR(n) → TEXT, DATE → TEXT.
 ```
 

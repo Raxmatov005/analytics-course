@@ -32,14 +32,17 @@
 
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
-SELECT SUM(amount) AS total FROM pay;                                   -- 1 строка: 700
+SELECT SUM(amount) AS total FROM pay;
+-- 1 строка: 700
 ```
 
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
 SELECT loan, month, amount,
-       SUM(amount) OVER () AS total                                     -- слово OVER делает SUM окном
-FROM pay;                                                               -- 5 строк, в каждой 700
+       -- слово OVER делает SUM окном
+       SUM(amount) OVER () AS total
+FROM pay;
+-- 5 строк, в каждой 700
 ```
 
 | loan | month | amount | total |
@@ -70,7 +73,8 @@ FROM pay;                                                               -- 5 с�
 
 ```sql
 SELECT loan_id, principal,
-       SUM(principal)        OVER () AS company_total,    -- агрегат(столбец) OVER ()
+       -- агрегат(столбец) OVER ()
+       SUM(principal)        OVER () AS company_total,
        ROUND(AVG(principal) OVER ()) AS company_avg,
        COUNT(*)              OVER () AS loans
 FROM loans
@@ -111,7 +115,8 @@ LIMIT 3;
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
 SELECT loan, month, amount,
-       SUM(amount) OVER (PARTITION BY loan) AS loan_total    -- одно окно на кредит
+       -- одно окно на кредит
+       SUM(amount) OVER (PARTITION BY loan) AS loan_total
 FROM pay;
 ```
 
@@ -162,7 +167,8 @@ LIMIT 5;
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
 SELECT loan, month, amount,
-       SUM(amount) OVER (PARTITION BY loan ORDER BY month) AS running   -- заново для каждого кредита, складываем по месяцам
+       -- заново для каждого кредита, складываем по месяцам
+       SUM(amount) OVER (PARTITION BY loan ORDER BY month) AS running
 FROM pay;
 ```
 
@@ -225,7 +231,8 @@ GROUP BY product_id;                                                -- 5 стр�
 
 ```sql
 SELECT loan_id, product_id, COUNT(*) OVER (PARTITION BY product_id) AS loans_in_product
-FROM loans;                                                         -- 7 828 строк
+FROM loans;
+-- 7 828 строк
 ```
 
 5 строк против 7 828 — одни и те же количества (2 669, 2 418, 1 569, 391, 781): один раз свёрнутые, другой раз записанные в каждый кредит.
@@ -255,7 +262,8 @@ SELECT l.loan_id, p.code, l.principal,
        MIN(l.principal)        OVER (PARTITION BY p.code) AS product_min,
        MAX(l.principal)        OVER (PARTITION BY p.code) AS product_max,
        ROUND(AVG(l.principal)  OVER (PARTITION BY p.code)) AS product_avg,
-       ROUND(l.principal - AVG(l.principal) OVER (PARTITION BY p.code)) AS vs_avg   -- окно внутри арифметики
+       -- окно внутри арифметики
+       ROUND(l.principal - AVG(l.principal) OVER (PARTITION BY p.code)) AS vs_avg
 FROM loans l
 JOIN products p ON p.product_id = l.product_id
 ORDER BY l.loan_id
@@ -286,18 +294,21 @@ LIMIT 5;
 -- каждая строка: значение строки / итог окна
 SELECT loan_id, principal,
        ROUND(100.0 * principal / SUM(principal) OVER (), 4) AS share_pct
-FROM loans ORDER BY principal DESC LIMIT 3;                         -- кредит 2861: 0.148 % всего основного долга
+FROM loans ORDER BY principal DESC LIMIT 3;
+-- кредит 2861: 0.148 % всего основного долга
 ```
 
 ```sql
--- одна строка на группу: сначала GROUP BY, затем окно по сгруппированным строкам
+-- одна строка на группу: сначала GROUP BY, затем окно по сгруппированным
+-- строкам
 SELECT p.code,
        SUM(i.principal_due) AS outstanding,
        ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1) AS share_pct
 FROM installments i
 JOIN loans l    ON l.loan_id = i.loan_id
 JOIN products p ON p.product_id = l.product_id
-WHERE i.due_date > '2026-10-01'                                     -- остаток долга = основной долг платежей, срок которых ещё не наступил
+-- остаток долга = основной долг платежей, срок которых ещё не наступил
+WHERE i.due_date > '2026-10-01'
 GROUP BY p.code
 ORDER BY outstanding DESC;
 ```
@@ -341,7 +352,8 @@ UNBOUNDED FOLLOWING   последняя строка окна
 
 ```sql
 SUM(amount) OVER (PARTITION BY loan ORDER BY month
-                  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)   -- от первой строки до этой
+                  -- от первой строки до этой
+                  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
 ```
 
 Если внутри `OVER` есть `ORDER BY`, а рамки нет, движок берёт рамку по умолчанию: `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. **RANGE** включает каждую строку, у которой значение `ORDER BY` равно текущему. При совпадениях две рамки расходятся:
@@ -356,8 +368,10 @@ SUM(amount) OVER (PARTITION BY loan ORDER BY month
 
 ```sql
 SELECT disbursed_at, loan_id, principal,
-       SUM(principal) OVER (ORDER BY disbursed_at)                               AS range_run,  -- рамка по умолчанию
-       SUM(principal) OVER (ORDER BY disbursed_at, loan_id ROWS UNBOUNDED PRECEDING) AS rows_run   -- строка за строкой
+       -- рамка по умолчанию
+       SUM(principal) OVER (ORDER BY disbursed_at)                               AS range_run,
+       -- строка за строкой
+       SUM(principal) OVER (ORDER BY disbursed_at, loan_id ROWS UNBOUNDED PRECEDING) AS rows_run
 FROM loans
 WHERE disbursed_at >= '2026-09-24' AND disbursed_at < '2026-10-01'
 ORDER BY disbursed_at, loan_id;
@@ -397,9 +411,11 @@ month    disbursed   рамка трёхмесячного среднего
 
 ```sql
 WITH m AS (
-  SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed      -- SQL Server: FORMAT(disbursed_at, 'yyyy-MM')
+  -- SQL Server: FORMAT(disbursed_at, 'yyyy-MM')
+  SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed
   FROM loans
-  WHERE disbursed_at < '2026-10-01'                                                 -- в октябре только один день: не берём его
+  -- в октябре только один день: не берём его
+  WHERE disbursed_at < '2026-10-01'
   GROUP BY strftime('%Y-%m', disbursed_at))
 SELECT month, disbursed,
        ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3,
@@ -436,9 +452,11 @@ FROM / JOIN → WHERE → GROUP BY → HAVING → окна → SELECT → ORDER 
 ```sql
 SELECT COUNT(*) AS above_product_avg
 FROM (SELECT l.loan_id, l.principal,
-             AVG(l.principal) OVER (PARTITION BY l.product_id) AS product_avg   -- шаг 1: окно внутри
+             -- шаг 1: окно внутри
+             AVG(l.principal) OVER (PARTITION BY l.product_id) AS product_avg
       FROM loans l) AS t
-WHERE principal > product_avg;                                                  -- шаг 2: фильтр снаружи
+WHERE principal > product_avg;
+-- шаг 2: фильтр снаружи
 ```
 
 3 919 кредитов больше среднего своего продукта — примерно половина каждого продукта. `WITH t AS (…) SELECT … FROM t WHERE …` делает то же самое; День 3 объясняет обе формы.
@@ -463,13 +481,18 @@ WHERE principal > product_avg;                                                  
 WITH m AS (
   SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
   FROM loans
-  WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'              -- девять полных месяцев
+  -- девять полных месяцев
+  WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'
   GROUP BY strftime('%Y-%m', disbursed_at))
 SELECT month, loans, disbursed,
-       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1)                         AS share_pct,    -- доля от итога
-       SUM(disbursed) OVER (ORDER BY month ROWS UNBOUNDED PRECEDING)                AS ytd,          -- накопительный итог
-       ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3, -- скользящее среднее
-       ROUND(100.0 * disbursed / MAX(disbursed) OVER (), 1)                         AS pct_of_best   -- MAX как окно
+       -- доля от итога
+       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1)                         AS share_pct,
+       -- накопительный итог
+       SUM(disbursed) OVER (ORDER BY month ROWS UNBOUNDED PRECEDING)                AS ytd,
+       -- скользящее среднее
+       ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3,
+       -- MAX как окно
+       ROUND(100.0 * disbursed / MAX(disbursed) OVER (), 1)                         AS pct_of_best
 FROM m
 ORDER BY month;
 ```
@@ -518,15 +541,19 @@ ORDER BY month;
 ```sql
 SELECT b.branch_name, b.region,
        SUM(i.principal_due)                                                                             AS outstanding,
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1)                      AS share_pct,        -- шаг 2
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY b.region), 1) AS share_in_region,  -- шаг 3
+       -- шаг 2
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1)                      AS share_pct,
+       -- шаг 3
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY b.region), 1) AS share_in_region,
        ROUND(100.0 * SUM(SUM(i.principal_due)) OVER (ORDER BY SUM(i.principal_due) DESC)
-                   / SUM(SUM(i.principal_due)) OVER (), 1)                                              AS cum_share_pct     -- шаг 4
+                   -- шаг 4
+                   / SUM(SUM(i.principal_due)) OVER (), 1)                                              AS cum_share_pct
 FROM installments i
 JOIN loans l    ON l.loan_id = i.loan_id
 JOIN branches b ON b.branch_id = l.branch_id
 WHERE i.due_date > '2026-10-01'
-GROUP BY b.branch_name, b.region                                                                         -- шаг 1
+-- шаг 1
+GROUP BY b.branch_name, b.region
 ORDER BY outstanding DESC;
 ```
 
@@ -569,7 +596,8 @@ ORDER BY outstanding DESC;
 ```sql
 SELECT loan_id, principal, SUM(principal) OVER () AS total, ROUND(AVG(principal) OVER ()) AS avg_principal, COUNT(*) OVER () AS n
 FROM loans WHERE customer_id = 3208;
--- 4265 · 568 200 000 · total 1 023 170 000 · avg 511 585 000 · n 2  (кредит 7606 — то же самое)
+-- 4265 · 568 200 000 · total 1 023 170 000 · avg 511 585 000 · n 2  (кредит
+-- 7606 — то же самое)
 ```
 Без `WHERE`: итог 404 783 280 000, среднее 51 709 668, n 7 828 в каждой строке. `WHERE` выполняется первым, поэтому окно видит только два кредита клиента.
 
@@ -591,7 +619,8 @@ SELECT l.loan_id, b.branch_name, l.principal,
        ROUND(AVG(l.principal) OVER (PARTITION BY l.branch_id)) AS branch_avg
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 ORDER BY l.loan_id;
--- 7 828 строк; кредит 1 · Termez Central · 31 150 000 · 483 · 47 593 561; кредит 2 · Nukus Central · 492 · 47 610 488
+-- 7 828 строк; кредит 1 · Termez Central · 31 150 000 · 483 · 47 593 561;
+-- кредит 2 · Nukus Central · 492 · 47 610 488
 ```
 Кредит 1 относится к Termez Central, самому маленькому филиалу: 483 кредита, среднее 47 593 561. Разбивать по `branch_id` (а не по названию) надёжнее — у двух филиалов могло бы совпасть название.
 
@@ -607,7 +636,9 @@ SELECT payment_id, paid_at, amount,
        ROUND(100.0 * amount / SUM(amount) OVER (PARTITION BY loan_id), 1)                AS share_pct,
        SUM(amount) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)              AS running_collected
 FROM payments WHERE loan_id = 1 ORDER BY paid_at;
--- 18 платежей по 1 741 700 = 31 350 600; каждый 5.6 %; накопленная сумма растёт на один платёж в месяц, кроме 2026-02-26 → 2026-04-25 (в марте ничего), затем два в мае
+-- 18 платежей по 1 741 700 = 31 350 600; каждый 5.6 %; накопленная сумма растёт
+-- на один платёж в месяц, кроме 2026-02-26 → 2026-04-25 (в марте ничего), затем
+-- два в мае
 ```
 Мартовский платёж внесли с опозданием в 45 дней (история кредита 1 из недели 2) — это видно как плоская ступенька в накопительном итоге, а затем наверстывание. Накопительный итог — самая быстрая картина истории платежей.
 
@@ -622,7 +653,8 @@ SELECT i.installment_no, i.due_date, i.principal_due,
        SUM(i.principal_due) OVER (ORDER BY i.installment_no) AS cum_principal,
        l.principal - SUM(i.principal_due) OVER (ORDER BY i.installment_no) AS remaining
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.loan_id = 1 ORDER BY i.installment_no;
--- no 1 remaining 30 187 050 … no 13 → 16 570 510 · no 14 → 15 243 073 (ниже 15 575 000 = половина) … no 24 → 0
+-- no 1 remaining 30 187 050 … no 13 → 16 570 510 · no 14 → 15 243 073 (ниже 15
+-- 575 000 = половина) … no 24 → 0
 ```
 Аннуитет: доли основного долга растут (962 950 → 1 698 725), поэтому половина остатка уходит только после платежа 14 из 24. «Остаток долга = платежи, срок которых ещё не наступил» — это именно этот столбец, прочитанный на дату отчёта.
 
@@ -638,7 +670,9 @@ WITH m AS (SELECT p.code, strftime('%Y-%m', l.disbursed_at) AS month, COUNT(*) A
            WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY 1, 2)
 SELECT code, month, loans, disbursed, SUM(disbursed) OVER (PARTITION BY code ORDER BY month) AS ytd
 FROM m ORDER BY code, month;
--- AUTO: янв 4 620 560 000 → ytd сен 36 021 820 000 · SME: янв 10 042 990 000 → ytd сен 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL → 2 431 040 000
+-- AUTO: янв 4 620 560 000 → ytd сен 36 021 820 000 · SME: янв 10 042 990 000 →
+-- ytd сен 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL
+-- → 2 431 040 000
 ```
 45 строк (5 продуктов × 9 месяцев). Забудьте `PARTITION BY code` — и «YTD» Auto за сентябрь включит январь всех остальных продуктов.
 
@@ -649,8 +683,10 @@ FROM m ORDER BY code, month;
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT branch_id, COUNT(*) AS loans FROM loans GROUP BY branch_id;                          -- 10 строк
-SELECT loan_id, branch_id, COUNT(*) OVER (PARTITION BY branch_id) AS loans FROM loans;      -- 7 828 строк
+SELECT branch_id, COUNT(*) AS loans FROM loans GROUP BY branch_id;
+-- 10 строк
+SELECT loan_id, branch_id, COUNT(*) OVER (PARTITION BY branch_id) AS loans FROM loans;
+-- 7 828 строк
 ```
 10 строк против 7 828. Количества одни и те же (Tashkent South 1 012 … Termez Central 483): в первом запросе по разу на филиал, во втором — в каждом кредите филиала. Один агрегат, две формы.
 
@@ -667,7 +703,8 @@ SELECT loan_id, principal,
        ROUND(principal - AVG(principal) OVER ()) AS vs_avg
 FROM loans WHERE product_id = 4
 ORDER BY vs_avg DESC;
--- 391 строка; 1501 · 399 530 000 · min 50 280 000 · max 399 530 000 · avg 216 858 133 · +182 671 867
+-- 391 строка; 1501 · 399 530 000 · min 50 280 000 · max 399 530 000 · avg 216
+-- 858 133 · +182 671 867
 ```
 Здесь `WHERE product_id = 4` делает окном кредиты Auto, поэтому хватает `OVER ()` — `PARTITION BY` не нужен. Кредит 1501 на 182 671 867 выше среднего по Auto, чуть ниже лимита продукта в 400 млн.
 
@@ -682,7 +719,8 @@ SELECT l.risk_grade, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_
        ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1) AS share_pct
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01'
 GROUP BY l.risk_grade ORDER BY outstanding DESC;
--- B 93 317 343 066 / 1457 кредитов / 44.7 % · C 56 322 842 888 / 1040 / 27.0 · A 48 417 895 338 / 754 / 23.2 · D 10 665 423 138 / 158 / 5.1
+-- B 93 317 343 066 / 1457 кредитов / 44.7 % · C 56 322 842 888 / 1040 / 27.0 ·
+-- A 48 417 895 338 / 754 / 23.2 · D 10 665 423 138 / 158 / 5.1
 ```
 B держит 45 % денег на 43 % кредитов с остатком; D — 5 % портфеля: мало, как и должен оставлять отсечку скоринг.
 
@@ -703,7 +741,8 @@ SELECT p.code, l.risk_grade, SUM(i.principal_due) AS outstanding,
        ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY p.code), 1) AS share_in_product
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
 WHERE i.due_date > '2026-10-01' GROUP BY p.code, l.risk_grade ORDER BY p.code, l.risk_grade;
--- MICRO C 35.2 % (A 22.7 · B 40.0 · D 2.1); BNPL C 31.4; CONS 30.8; AUTO 28.9; SME 25.3
+-- MICRO C 35.2 % (A 22.7 · B 40.0 · D 2.1); BNPL C 31.4; CONS 30.8; AUTO 28.9;
+-- SME 25.3
 ```
 Двадцать строк; четыре доли каждого продукта в сумме дают 100. Больше всего веса класса C у Micro — продукта из приложения, что согласуется с выводом про FPD из недели 2.
 
@@ -757,7 +796,8 @@ w AS (SELECT month, disbursed,
              ROUND(100.0 * disbursed / AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) - 100, 1) AS vs_ma_pct
       FROM m)
 SELECT * FROM w WHERE month >= '2025-01' ORDER BY month;
--- 2025-07: 14 590 460 000 против ma3 11 240 216 667 → +29.8 % (дальше всех); 2025-08 +24.0 %; 2026-03 19 657 410 000 против 16 334 543 333 → +20.3 %
+-- 2025-07: 14 590 460 000 против ma3 11 240 216 667 → +29.8 % (дальше всех);
+-- 2025-08 +24.0 %; 2026-03 19 657 410 000 против 16 334 543 333 → +20.3 %
 ```
 Два CTE: окно работает в `w` по **всему** ряду, фильтр для показа стоит во внешнем запросе. Поставьте `WHERE month >= '2025-01'` внутрь `w` — и `WHERE` выполнится *до* окна: январь 2025 усреднит один месяц, февраль два — `months_in_window` покажет 1 и 2 вместо 3. Фильтр для входа рамки и фильтр для показа — всегда раздельно.
 
@@ -772,7 +812,8 @@ SELECT code, SUM(above) AS above_avg, COUNT(*) AS loans
 FROM (SELECT p.code, CASE WHEN l.principal > AVG(l.principal) OVER (PARTITION BY p.code) THEN 1 ELSE 0 END AS above
       FROM loans l JOIN products p ON p.product_id = l.product_id) t
 GROUP BY code;
--- AUTO 189 из 391 · BNPL 787 из 1569 · CONS 1212 из 2418 · MICRO 1331 из 2669 · SME 400 из 781   (всего 3 919)
+-- AUTO 189 из 391 · BNPL 787 из 1569 · CONS 1212 из 2418 · MICRO 1331 из 2669 ·
+-- SME 400 из 781   (всего 3 919)
 ```
 `WHERE principal > AVG(principal) OVER (...)` — ошибка: к моменту выполнения `WHERE` окон ещё не существует. Оберните, потом фильтруйте. Примерно половина выше среднего в каждом продукте: размеры кредитов симметричны, длинного хвоста гигантов нет.
 
@@ -791,7 +832,8 @@ SELECT customer_id, outstanding,
        ROUND(100.0 * outstanding / SUM(outstanding) OVER (), 2)                                   AS share_pct,
        ROUND(100.0 * SUM(outstanding) OVER (ORDER BY outstanding DESC) / SUM(outstanding) OVER (), 2) AS cum_share_pct
 FROM c ORDER BY outstanding DESC;
--- 2 535 заёмщиков; строка 1: клиент 3208, 977 697 006, 0.47 % ; накопленно на строке 10: 3.60 %; на строке 25: 7.80 %
+-- 2 535 заёмщиков; строка 1: клиент 3208, 977 697 006, 0.47 % ; накопленно на
+-- строке 10: 3.60 %; на строке 25: 7.80 %
 ```
 Накопленная сумма, делённая на общий итог, — два окна с разными рамками в одном выражении. Верхняя четверть заёмщиков (634 человека, через `NTILE(4)` завтра) держит 82.7 % остатка долга; нижняя четверть — 0.5 %. Для филиалов накопленный столбец разобранного примера даёт 13.8 → 26.6 → **39.1 %** после трёх строк — это разбирает Уголок компании.
 

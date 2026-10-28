@@ -22,20 +22,23 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import statistics as st
-from statistics import NormalDist              # the normal distribution, from Python's standard library
+# the normal distribution, from Python's standard library
+from statistics import NormalDist
 
 apps  = pd.read_csv("data/raw/applications.csv")
 loans = pd.read_csv("data/raw/loans.csv")
-s = apps["credit_score"].dropna()             # 13 612 scored applicants of 14 000 — say so
+# 13 612 scored applicants of 14 000 — say so
+s = apps["credit_score"].dropna()
 
-def pmf(k, n, p):                             # binomial: P(X = k) for X ~ Bin(n, p)
+# binomial: P(X = k) for X ~ Bin(n, p)
+def pmf(k, n, p):
     return math.comb(n, k) * p**k * (1 - p)**(n - k)
-def cdf(k, n, p):                             # P(X <= k)
+def cdf(k, n, p):                     # P(X <= k)
     return sum(pmf(i, n, p) for i in range(k + 1))
-def at_least(k, n, p):                        # P(X >= k) = 1 - P(X <= k - 1)
+def at_least(k, n, p):                # P(X >= k) = 1 - P(X <= k - 1)
     return 1 - cdf(k - 1, n, p)
 
-print(len(apps), len(loans), len(s))          # 14000 7828 13612
+print(len(apps), len(loans), len(s))  # 14000 7828 13612
 ```
 
 ### Probability — a long-run share
@@ -45,11 +48,14 @@ print(len(apps), len(loans), len(s))          # 14000 7828 13612
 **How to write it.** P(A) ≈ (times A happened) / (times you looked). The box draws fresh batches of loans whose true FPD rate is 1.28 % and prints each batch's share.
 
 ```python
-random.seed(2026)                             # the same "random" draws on every run
-p_true = 91 / 7099                            # the long-run share
-for n in (10, 100, 1_000, 10_000, 100_000):   # one fresh batch of n loans each time
-    k = sum(random.random() < p_true for _ in range(n))   # True = this loan is an FPD
-    print(n, k, round(k / n, 4))              # loans, FPDs, share
+# the same "random" draws on every run
+random.seed(2026)
+p_true = 91 / 7099                # the long-run share
+# one fresh batch of n loans each time
+for n in (10, 100, 1_000, 10_000, 100_000):
+    # True = this loan is an FPD
+    k = sum(random.random() < p_true for _ in range(n))
+    print(n, k, round(k / n, 4))  # loans, FPDs, share
 ```
 
 | loans in the batch | FPDs | share |
@@ -95,9 +101,10 @@ total         91      7 008     7 099
 
 ```python
 n, app, fpd, both = 7099, 2411, 91, 41
-print(round(1 - fpd / n, 4))                  # not D:   0.9872
-print(round(both / n, 4))                     # A and D: 0.0058
-print(round((app + fpd - both) / n, 4))       # A or D:  0.3467 — the 41 are subtracted once
+print(round(1 - fpd / n, 4))  # not D:   0.9872
+print(round(both / n, 4))     # A and D: 0.0058
+# A or D:  0.3467 — the 41 are subtracted once
+print(round((app + fpd - both) / n, 4))
 ```
 
 The union is 2 461 loans — 2 411 app loans plus 91 FPDs minus the 41 that were counted twice — so P(A ∪ D) = 34.67 %.
@@ -122,8 +129,10 @@ Events that cannot happen together — "app" and "branch" for the same loan — 
 **How to write it.** P(D | A) = P(A ∩ D) / P(A) = (count of both) / (count of A).
 
 ```python
-print(round(both / app, 4))     # P(FPD | app) = 41 / 2 411 = 0.0170 — how risky is an app loan?
-print(round(both / fpd, 4))     # P(app | FPD) = 41 / 91    = 0.4505 — where do our FPDs come from?
+# P(FPD | app) = 41 / 2 411 = 0.0170 — how risky is an app loan?
+print(round(both / app, 4))
+# P(app | FPD) = 41 / 91    = 0.4505 — where do our FPDs come from?
+print(round(both / fpd, 4))
 ```
 
 Same 41 loans, two denominators: 1.70 % of app loans have an FPD, and 45.1 % of all FPDs came through the app.
@@ -153,8 +162,10 @@ Same 41 loans, two denominators: 1.70 % of app loans have an FPD, and 45.1 % of 
 
 ```python
 p_app, p_fpd = app / n, fpd / n
-print(round(both / app, 4), round(p_fpd, 4))          # P(D | A) = 0.0170   vs  P(D) = 0.0128
-print(round(both / n, 5), round(p_app * p_fpd, 5))    # P(A ∩ D) = 0.00578 vs  P(A)·P(D) = 0.00435
+# P(D | A) = 0.0170   vs  P(D) = 0.0128
+print(round(both / app, 4), round(p_fpd, 4))
+# P(A ∩ D) = 0.00578 vs  P(A)·P(D) = 0.00435
+print(round(both / n, 5), round(p_app * p_fpd, 5))
 ```
 
 If channel did not matter, 0.435 % of the 7 099 loans — about 31 — would be app FPDs; there are 41. In this sample, channel and FPD are **not** independent.
@@ -178,9 +189,12 @@ If channel did not matter, 0.435 % of the 7 099 loans — about 31 — would be 
 **How to write it.**
 
 ```python
-rate  = {"app": 41 / 2411,   "branch": 34 / 3263,   "partner": 16 / 1425}    # P(FPD | channel)
-share = {"app": 2411 / 7099, "branch": 3263 / 7099, "partner": 1425 / 7099}  # P(channel)
-print(round(sum(rate[c] * share[c] for c in rate), 4))                       # 0.0128 — the book rate
+# P(FPD | channel)
+rate  = {"app": 41 / 2411,   "branch": 34 / 3263,   "partner": 16 / 1425}
+# P(channel)
+share = {"app": 2411 / 7099, "branch": 3263 / 7099, "partner": 1425 / 7099}
+# 0.0128 — the book rate
+print(round(sum(rate[c] * share[c] for c in rate), 4))
 ```
 
 | channel | share P(channel) | FPD rate | share × rate |
@@ -227,7 +241,8 @@ honest = N - fraud            # honest applicants
 tp = sens * fraud             # fraudsters flagged
 fp = fpr * honest             # honest applicants flagged
 print(round(fraud), round(tp), round(honest), round(fp))   # 62 56 9938 497
-print(round(tp / (tp + fp), 3))                            # 0.101 = P(fraud | flag)
+# 0.101 = P(fraud | flag)
+print(round(tp / (tp + fp), 3))
 ```
 
 | of 10 000 applicants | flagged | not flagged | total |
@@ -265,11 +280,13 @@ print(round(tp / (tp + fp), 3))                            # 0.101 = P(fraud | f
 | 16.2 m soum (0.6 × 27 m) | 0.0318 |
 
 ```python
-values = [0, 0.6 * 27_000_000]                                  # the possible losses, soum
-probs  = [1 - 77 / 2418, 77 / 2418]                             # their probabilities (sum = 1)
-E   = sum(x * q for x, q in zip(values, probs))                 # expected value
-Var = sum((x - E) ** 2 * q for x, q in zip(values, probs))      # variance
-print(round(E), round(math.sqrt(Var)))                          # 515881 2844492
+# the possible losses, soum
+values = [0, 0.6 * 27_000_000]
+# their probabilities (sum = 1)
+probs  = [1 - 77 / 2418, 77 / 2418]
+E   = sum(x * q for x, q in zip(values, probs))             # expected value
+Var = sum((x - E) ** 2 * q for x, q in zip(values, probs))  # variance
+print(round(E), round(math.sqrt(Var)))                      # 515881 2844492
 ```
 
 The expected loss is 0.52 m soum and the sd is 2.84 m — the spread is five times the mean, so one loan is a lottery ticket.
@@ -300,12 +317,18 @@ Four rules you will use all week: E[aX + b] = a·E[X] + b; Var(aX + b) = a²·Va
 
 ```python
 n, p = 400, 91 / 7099
-print(round(n * p, 2), round(math.sqrt(n * p * (1 - p)), 2))     # 5.13 2.25 — mean and sd
-print(round(pmf(5, n, p), 4))          # P(X = 5)   = 0.1763   Excel: =BINOM.DIST(5, 400, 91/7099, FALSE)
-print(round(cdf(4, n, p), 4))          # P(X <= 4)  = 0.4172   Excel: =BINOM.DIST(4, 400, 91/7099, TRUE)
-print(round(at_least(10, n, p), 4))    # P(X >= 10) = 0.0357   Excel: =1 - BINOM.DIST(9, 400, 91/7099, TRUE)
-print(min(k for k in range(n + 1) if cdf(k, n, p) >= 0.95))      # 9: the 95th percentile   Excel: =BINOM.INV(400, 91/7099, 0.95)
-# the same in scipy (the notebook): X = scipy.stats.binom(400, p); X.mean(), X.std(), X.pmf(5), X.cdf(4), X.sf(9), X.ppf(0.95)
+# 5.13 2.25 — mean and sd
+print(round(n * p, 2), round(math.sqrt(n * p * (1 - p)), 2))
+# P(X = 5)   = 0.1763   Excel: =BINOM.DIST(5, 400, 91/7099, FALSE)
+print(round(pmf(5, n, p), 4))
+# P(X <= 4)  = 0.4172   Excel: =BINOM.DIST(4, 400, 91/7099, TRUE)
+print(round(cdf(4, n, p), 4))
+# P(X >= 10) = 0.0357   Excel: =1 - BINOM.DIST(9, 400, 91/7099, TRUE)
+print(round(at_least(10, n, p), 4))
+# 9: the 95th percentile   Excel: =BINOM.INV(400, 91/7099, 0.95)
+print(min(k for k in range(n + 1) if cdf(k, n, p) >= 0.95))
+# the same in scipy (the notebook): X = scipy.stats.binom(400, p); X.mean(),
+# X.std(), X.pmf(5), X.cdf(4), X.sf(9), X.ppf(0.95)
 ```
 
 | FPDs k in 400 loans | 0 | 2 | 4 | 5 | 6 | 8 | 10 | 12 |
@@ -333,12 +356,15 @@ Expect 5.13 FPDs, give or take 2.25; ten or more happens in 3.57 % of months.
 **How to write it.** P(X = k) = e^(−λ) · λ^k / k!. Nur's 2026 applications (1 Jan – 30 Sep, clock hours 08:00–20:59, empty hours counted): 5 102 applications in 3 549 hours.
 
 ```python
-lam, hours = 5102 / 3549, 3549                 # λ = 1.44 applications per hour
-def pois(k, lam):                              # P(X = k) for X ~ Poisson(lam)
+lam, hours = 5102 / 3549, 3549  # λ = 1.44 applications per hour
+def pois(k, lam):               # P(X = k) for X ~ Poisson(lam)
     return math.exp(-lam) * lam**k / math.factorial(k)
-print([round(hours * pois(k, lam), 1) for k in range(7)])    # hours the model expects with 0, 1, … 6 applications
-print(round(pois(0, lam), 4))                                # 0.2375: an empty hour   Excel: =POISSON.DIST(0, 1.4376, FALSE)
-print(round(1 - sum(pois(k, lam) for k in range(5)), 4))     # 0.0158: 5 or more       Excel: =1 - POISSON.DIST(4, 1.4376, TRUE)
+# hours the model expects with 0, 1, … 6 applications
+print([round(hours * pois(k, lam), 1) for k in range(7)])
+# 0.2375: an empty hour   Excel: =POISSON.DIST(0, 1.4376, FALSE)
+print(round(pois(0, lam), 4))
+# 0.0158: 5 or more       Excel: =1 - POISSON.DIST(4, 1.4376, TRUE)
+print(round(1 - sum(pois(k, lam) for k in range(5)), 4))
 ```
 
 | applications in the hour | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7+ |
@@ -375,9 +401,13 @@ The model expects 842.9 empty hours and 850 were observed; the data's mean and v
 **How to write it.** P(gap > t) = e^(−t / mean gap).
 
 ```python
-mean_gap = 39.34                               # minutes, the 4 829 gaps within 2026 working days
-print(round(math.exp(-60 / mean_gap), 4))      # 0.2176: P(gap > 60 min); observed 0.2172   Excel: =1 - EXPON.DIST(60, 1/39.34, TRUE)
-print(round(math.exp(-30 / mean_gap), 4))      # 0.4665: P(gap > 30 min); observed 0.4587
+# minutes, the 4 829 gaps within 2026 working days
+mean_gap = 39.34
+# 0.2176: P(gap > 60 min); observed 0.2172   Excel: =1 - EXPON.DIST(60, 1/39.34,
+# TRUE)
+print(round(math.exp(-60 / mean_gap), 4))
+# 0.4665: P(gap > 30 min); observed 0.4587
+print(round(math.exp(-30 / mean_gap), 4))
 ```
 
 The model says 21.8 % of gaps last more than an hour; the data say 21.7 %.
@@ -401,11 +431,16 @@ The model says 21.8 % of gaps last more than an hour; the data say 21.7 %.
 
 ```python
 a, b = 0, 60
-print((a + b) / 2, round((b - a) / math.sqrt(12), 2))           # 30.0 17.32 — the model's mean and sd
-mins = pd.to_datetime(apps["applied_at"]).dt.minute             # minute past the hour, 14 000 applications
-print(round(mins.mean(), 1), round(mins.std(), 1))              # 28.9 17.2 — the data's mean and sd
-print(round((mins < 15).mean(), 3))                             # 0.255 — the model says 15 / 60 = 0.25
-print(mins.floordiv(10).value_counts().sort_index().tolist())   # [2375, 2385, 2491, 2342, 2210, 2197]
+# 30.0 17.32 — the model's mean and sd
+print((a + b) / 2, round((b - a) / math.sqrt(12), 2))
+# minute past the hour, 14 000 applications
+mins = pd.to_datetime(apps["applied_at"]).dt.minute
+# 28.9 17.2 — the data's mean and sd
+print(round(mins.mean(), 1), round(mins.std(), 1))
+# 0.255 — the model says 15 / 60 = 0.25
+print(round((mins < 15).mean(), 3))
+# [2375, 2385, 2491, 2342, 2210, 2197]
+print(mins.floordiv(10).value_counts().sort_index().tolist())
 ```
 
 | minutes past the hour | 0–9 | 10–19 | 20–29 | 30–39 | 40–49 | 50–59 |
@@ -434,21 +469,27 @@ Each 10-minute block holds between 2 197 and 2 491 applications; a perfectly fla
 ```python
 mu, sd = s.mean(), s.std()
 model = NormalDist(mu, sd)
-print(len(s), round(mu, 1), round(sd, 1))                        # 13612 659.6 59.5
-print(round((600 - mu) / sd, 2))                                 # -1.0: a score of 600 is one sd below the mean
-print(round(model.cdf(600), 4), round((s < 600).mean(), 4))      # 0.1583 model, 0.1583 data   Excel: =NORM.DIST(600, 659.6, 59.5, TRUE)
+# 13612 659.6 59.5
+print(len(s), round(mu, 1), round(sd, 1))
+# -1.0: a score of 600 is one sd below the mean
+print(round((600 - mu) / sd, 2))
+# 0.1583 model, 0.1583 data   Excel: =NORM.DIST(600, 659.6, 59.5, TRUE)
+print(round(model.cdf(600), 4), round((s < 600).mean(), 4))
 
 fig, ax = plt.subplots(1, 2, figsize=(10, 3.6))
-ax[0].hist(s, bins=40, density=True, color="#9bb7d4")            # the bars
+ax[0].hist(s, bins=40, density=True, color="#9bb7d4")  # the bars
 grid = np.linspace(s.min(), s.max(), 200)
-ax[0].plot(grid, [model.pdf(v) for v in grid], color="#c0392b")  # the bell over the bars
+# the bell over the bars
+ax[0].plot(grid, [model.pdf(v) for v in grid], color="#c0392b")
 ax[0].set_title("Applicants' credit score + the normal curve")
-q = np.sort(s.sample(2000, random_state=2026).to_numpy())        # QQ plot: data quantiles vs normal quantiles
+# QQ plot: data quantiles vs normal quantiles
+q = np.sort(s.sample(2000, random_state=2026).to_numpy())
 theory = [model.inv_cdf((i + 0.5) / len(q)) for i in range(len(q))]
 ax[1].scatter(theory, q, s=4); ax[1].plot(theory, theory, color="#c0392b")
 ax[1].set_title("QQ plot (2 000 applicants): on the line = normal")
 plt.tight_layout(); plt.show()
-# scipy (the notebook): scipy.stats.norm.cdf(600, 659.6, 59.5), scipy.stats.probplot(s, dist="norm", plot=plt)
+# scipy (the notebook): scipy.stats.norm.cdf(600, 659.6, 59.5),
+# scipy.stats.probplot(s, dist="norm", plot=plt)
 ```
 
 μ = 659.6, σ = 59.5; the model puts 15.83 % of applicants below 600, and the data say 15.83 %.
@@ -479,10 +520,13 @@ The **QQ plot** (*квантиль-квантильный график*) puts th
 
 ```python
 for k in (1, 2, 3):
-    rule = NormalDist().cdf(k) - NormalDist().cdf(-k)          # share of N(0, 1) within ±k
-    data = ((s - mu).abs() <= k * sd).mean()                   # share of applicants within ±k sd
+    # share of N(0, 1) within ±k
+    rule = NormalDist().cdf(k) - NormalDist().cdf(-k)
+    # share of applicants within ±k sd
+    data = ((s - mu).abs() <= k * sd).mean()
     print(k, round(rule, 3), round(data, 3), round(mu - k * sd), round(mu + k * sd))
-print(round(NormalDist().inv_cdf(0.975), 2))                   # 1.96   Excel: =NORM.S.INV(0.975)
+# 1.96   Excel: =NORM.S.INV(0.975)
+print(round(NormalDist().inv_cdf(0.975), 2))
 ```
 
 | within | the rule | applicants' scores | score range |
@@ -516,10 +560,13 @@ print(round(NormalDist().inv_cdf(0.975), 2))                   # 1.96   Excel: =
 
 ```python
 x = [2, 4, 5, 6, 33]
-print(st.mean(x), st.median(x))                                  # 10 5
-prin = loans["principal"]                                           # all 7 828 loans, soum
-print(round(prin.mean() / 1e6, 2), round(prin.median() / 1e6, 2))      # 51.71 5.79 (m soum)
-print(loans["term_months"].mode().tolist(), (loans["term_months"] == 6).sum())   # [6] 2483
+print(st.mean(x), st.median(x))  # 10 5
+# all 7 828 loans, soum
+prin = loans["principal"]
+# 51.71 5.79 (m soum)
+print(round(prin.mean() / 1e6, 2), round(prin.median() / 1e6, 2))
+# [6] 2483
+print(loans["term_months"].mode().tolist(), (loans["term_months"] == 6).sum())
 ```
 
 The average loan is 51.71 m soum, but half of all loans are below 5.79 m: a few large Auto and SME loans pull the mean up. The most common term is 6 months (2 483 loans).
@@ -558,8 +605,10 @@ The average loan is 51.71 m soum, but half of all loans are below 5.79 m: a few 
 Variance = 670 / (5 − 1) = 167.5; sd = √167.5 = 12.94.
 
 ```python
-print(st.variance(x), round(st.stdev(x), 2))           # 167.5 12.94   Excel: =VAR.S(…), =STDEV.S(…)
-print(round(s.std(), 1), round(prin.std() / 1e6, 1))      # 59.5 points (scores), 112.6 m soum (principal)
+# 167.5 12.94   Excel: =VAR.S(…), =STDEV.S(…)
+print(st.variance(x), round(st.stdev(x), 2))
+# 59.5 points (scores), 112.6 m soum (principal)
+print(round(s.std(), 1), round(prin.std() / 1e6, 1))
 ```
 
 Scores swing about 59.5 points around 659.6; principals swing 112.6 m around 51.7 m — more than twice the mean.
@@ -583,9 +632,12 @@ Scores swing about 59.5 points around 659.6; principals swing 112.6 m around 51.
 **How to write it.** `col.quantile(q)` with q between 0 and 1.
 
 ```python
-print((prin.quantile([0.25, 0.5, 0.75, 0.9]) / 1e6).round(2).tolist())   # [2.88, 5.79, 34.71, 187.03] m soum
-print(s.quantile([0.1, 0.5, 0.9]).tolist())                          # [583.0, 660.0, 736.0]
-print(round(100 * (s < 600).mean(), 1))                              # 15.8: a score of 600 sits at the 16th percentile
+# [2.88, 5.79, 34.71, 187.03] m soum
+print((prin.quantile([0.25, 0.5, 0.75, 0.9]) / 1e6).round(2).tolist())
+# [583.0, 660.0, 736.0]
+print(s.quantile([0.1, 0.5, 0.9]).tolist())
+# 15.8: a score of 600 sits at the 16th percentile
+print(round(100 * (s < 600).mean(), 1))
 ```
 
 | principal, m soum | Q1 (25 %) | median (50 %) | Q3 (75 %) | 90 % |
@@ -614,8 +666,9 @@ A quarter of loans are below 2.88 m; the middle half lies between 2.88 m and 34.
 **How to write it.** pandas `.skew()`. Above about +1 or below −1 counts as strongly skewed.
 
 ```python
-print(round(prin.skew(), 2), round(s.skew(), 2))     # 2.93 -0.04
-print(round(prin.mean() / prin.median(), 1))           # 8.9: the mean principal is almost nine times the median
+print(round(prin.skew(), 2), round(s.skew(), 2))  # 2.93 -0.04
+# 8.9: the mean principal is almost nine times the median
+print(round(prin.mean() / prin.median(), 1))
 ```
 
 | column | mean | median | skew | shape |
@@ -645,10 +698,14 @@ Principal is strongly right-skewed — many small Micro and BNPL loans, a few hu
 **How to write it.** Draw, count, compare with a formula where one exists.
 
 ```python
-rng = np.random.default_rng(2026)                 # seeded: the same "random" numbers on every run
-months = rng.binomial(400, 91 / 7099, size=100_000)   # 100 000 simulated months of 400 loans
-print(months.mean(), np.mean(months >= 10))       # 5.115, 0.0355 — the formula says 5.127, 0.0357
-print(np.quantile(months, [0.025, 0.975]))        # [1, 10]: the middle 95 % of months
+# seeded: the same "random" numbers on every run
+rng = np.random.default_rng(2026)
+# 100 000 simulated months of 400 loans
+months = rng.binomial(400, 91 / 7099, size=100_000)
+# 5.115, 0.0355 — the formula says 5.127, 0.0357
+print(months.mean(), np.mean(months >= 10))
+# [1, 10]: the middle 95 % of months
+print(np.quantile(months, [0.025, 0.975]))
 ```
 
 100 000 simulated months average 5.115 FPDs and reach 10 or more 3.55 % of the time — the formula's 5.127 and 3.57 %, within the simulation's noise.
@@ -670,15 +727,22 @@ print(np.quantile(months, [0.025, 0.975]))        # [1, 10]: the middle 95 % of 
 One request, most of today's tools: *"400 Consumer loans next month — how many defaults, and how much money could we lose?"*
 
 ```python
-n, p_c = 400, 77 / 2418                       # probability: PD of a Consumer loan, a long-run share
-loss_if_default = 0.6 * 27_000_000           # random variable: 16.2 m soum lost if one loan defaults
-mean_d = n * p_c                             # binomial: expected defaults
-sd_d = math.sqrt(n * p_c * (1 - p_c))        #           and their sd (independence assumed)
-lo = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.025)    # binomial percentiles:
-hi = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.975)    # the middle 95 % of months
-print(round(mean_d, 1), round(sd_d, 2), lo, hi)                 # 12.7 3.51 6 20
-print(round(mean_d * loss_if_default / 1e6, 1))                 # 206.4: expected loss, m soum (expectations add)
-print(round(mean_d - 1.96 * sd_d, 1), round(mean_d + 1.96 * sd_d, 1))   # 5.9 19.6: the normal shortcut, ±1.96 sd
+# probability: PD of a Consumer loan, a long-run share
+n, p_c = 400, 77 / 2418
+# random variable: 16.2 m soum lost if one loan defaults
+loss_if_default = 0.6 * 27_000_000
+mean_d = n * p_c                                 # binomial: expected defaults
+# and their sd (independence assumed)
+sd_d = math.sqrt(n * p_c * (1 - p_c))
+# binomial percentiles:
+lo = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.025)
+# the middle 95 % of months
+hi = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.975)
+print(round(mean_d, 1), round(sd_d, 2), lo, hi)  # 12.7 3.51 6 20
+# 206.4: expected loss, m soum (expectations add)
+print(round(mean_d * loss_if_default / 1e6, 1))
+# 5.9 19.6: the normal shortcut, ±1.96 sd
+print(round(mean_d - 1.96 * sd_d, 1), round(mean_d + 1.96 * sd_d, 1))
 ```
 
 | step | the number | the concept |
@@ -868,8 +932,10 @@ print(round(100 * sum(plan[c] * rate[c] for c in rate) / 400, 2))     # 1.22
 
 ```python
 base, sens, fpr = 89 / 6907, 7 / 89, 300 / 6818
-print(sens * base / (sens * base + fpr * (1 - base)), 7 / (7 + 300))     # 0.0228 0.0228
-# on the frame: g = f.dropna(subset=["credit_score"]); flag = g.credit_score < 600; g[flag].fpd30.mean()
+# 0.0228 0.0228
+print(sens * base / (sens * base + fpr * (1 - base)), 7 / (7 + 300))
+# on the frame: g = f.dropna(subset=["credit_score"]); flag = g.credit_score <
+# 600; g[flag].fpd30.mean()
 ```
 Base **1.289 %**, sensitivity **7.9 %**, false-positive rate **4.4 %**; Bayes **2.28 %**, direct 7 / 307 = **2.28 %** — the formula is just the count, reorganised. A flag that lifts risk 1.8× still leaves 98 % of flagged loans paying: score < 600 is a pricing signal, not a fraud signal.
 
@@ -896,8 +962,10 @@ Loss if default = 0.6 × 308.7 m = 185.2 m; PD = 3.71 %; **E = 6.88 m, sd = 35.0
 <details><summary>Answer</summary>
 
 ```python
-print(round(pmf(0, 400, 91 / 7099), 4), round(cdf(2, 400, 91 / 7099), 4))   # 0.0057 0.1128
-# scipy.stats.binom(400, 91 / 7099).pmf(0), .cdf(2)    Excel: =BINOM.DIST(0, 400, 91/7099, FALSE), =BINOM.DIST(2, 400, 91/7099, TRUE)
+# 0.0057 0.1128
+print(round(pmf(0, 400, 91 / 7099), 4), round(cdf(2, 400, 91 / 7099), 4))
+# scipy.stats.binom(400, 91 / 7099).pmf(0), .cdf(2)    Excel: =BINOM.DIST(0,
+# 400, 91/7099, FALSE), =BINOM.DIST(2, 400, 91/7099, TRUE)
 ```
 0.57 % and 11.3 %. Two or fewer happens in one month in nine by luck alone, so a 0–2 month is not evidence that anything improved. Zero is rare enough (0.6 %) to check the data first: a month with no FPDs is more often a broken join or a vintage not yet 30 days past its first due date than a miracle.
 
@@ -926,10 +994,13 @@ E = **8.65**, sd 2.91, middle 95 % **3 to 15**, P(X ≥ 10) = **36.6 %**, P(X �
 ```python
 def pois(k, lam):
     return math.exp(-lam) * lam**k / math.factorial(k)
-print(round(pois(0, 1.4376), 4), round(1 - sum(pois(k, 1.4376) for k in range(5)), 4))   # 0.2375 0.0158   observed 0.2395, 0.0138
-lam_day = 13 * 1.4376                                                                   # 18.69
+# 0.2375 0.0158   observed 0.2395, 0.0138
+print(round(pois(0, 1.4376), 4), round(1 - sum(pois(k, 1.4376) for k in range(5)), 4))
+# 18.69
+lam_day = 13 * 1.4376
 c = np.cumsum([pois(k, lam_day) for k in range(60)])
-print(int(np.argmax(c >= 0.025)), int(np.argmax(c >= 0.975)))                           # 11 28   scipy.stats.poisson.interval(0.95, lam_day)
+# 11 28   scipy.stats.poisson.interval(0.95, lam_day)
+print(int(np.argmax(c >= 0.025)), int(np.argmax(c >= 0.975)))
 ```
 Excel: `=POISSON.DIST(0, 1.4376, FALSE)`, `=1 - POISSON.DIST(4, 1.4376, TRUE)`. A day with 11–28 applications is ordinary; a day below 11 is worth a look at the app's error log before anyone talks about demand.
 
@@ -1035,8 +1106,10 @@ Q1 = 619, Q3 = 700, **IQR = 81** points: the middle half of applicants is 81 poi
 <details><summary>Answer</summary>
 
 ```python
-print(loans.groupby("product_id")["principal"].skew().round(2).tolist())   # [0.03, -0.02, -0.01, 0.1, -0.04]
-print(round(loans["principal"].skew(), 2))                                 # 2.93
+# [0.03, -0.02, -0.01, 0.1, -0.04]
+print(loans.groupby("product_id")["principal"].skew().round(2).tolist())
+# 2.93
+print(round(loans["principal"].skew(), 2))
 ```
 The skew comes from the **mix**, not from any product. Report principal per product (mean ≈ median inside each), or report the book's median and percentiles — never the book's mean as "a typical loan".
 
@@ -1066,7 +1139,8 @@ Simulation **14.69 %** (mean 6.79), formula `at_least(10, 400, 41/2411)` (scipy:
 rng = np.random.default_rng(2026)
 pm = np.where(rng.random(100_000) < 0.1, 0.0245, 0.0115)
 sims = rng.binomial(400, pm)
-print(sims.mean(), sims.std(), np.mean(sims >= 10), np.mean(sims >= 12))      # 5.11, 2.74, 0.0683, 0.0300
+# 5.11, 2.74, 0.0683, 0.0300
+print(sims.mean(), sims.std(), np.mean(sims >= 10), np.mean(sims >= 12))
 ```
 Same mean, wider spread (sd 2.74 vs 2.25), and the tail is **twice** (≥ 10: 6.8 % vs 3.6 %) to **five times** (≥ 12: 3.0 % vs 0.6 %) heavier: correlation hides in the tail, never in the mean. Nur's history: Σ (k − np)² / Σ np(1 − p) over 31 vintages = **1.23** (1.0 = pure binomial), χ² = 36.6 on 30 df, p = **0.19** — no evidence yet of a common "bad month" factor, the largest z being 2025-04 (7 of 225, z = 2.44). Banks model this with a single "economy" factor (the Vasicek model behind Basel capital); the binomial is the calm-weather special case.
 
@@ -1163,7 +1237,8 @@ A crude version for Nur, by grade, as of 2026-10-01: PD = the share of the grade
 
 ```python
 # (shape only — not meant to run)
-L = loans_with_dpd_and_outstanding                       # week 5's dpd_per_loan + outstanding (principal due after the as-of)
+# week 5's dpd_per_loan + outstanding (principal due after the as-of)
+L = loans_with_dpd_and_outstanding
 L["d90"] = (L["dpd"] > 90).astype(int)
 el = L.groupby("risk_grade").agg(loans=("loan_id", "size"), d90=("d90", "sum"))
 el["PD"] = el["d90"] / el["loans"]

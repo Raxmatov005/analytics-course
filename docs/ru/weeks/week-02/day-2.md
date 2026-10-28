@@ -33,9 +33,9 @@
 
 ```sql
 WITH pay(loan_id, method) AS (VALUES (1, 'card'), (1, 'cash'), (2, 'card'), (3, NULL))
-SELECT COUNT(*)               AS rows_,         -- 4: каждая строка
-       COUNT(method)          AS with_method,   -- 3: NULL пропущен
-       COUNT(DISTINCT method) AS methods        -- 2: card и cash
+SELECT COUNT(*)               AS rows_,        -- 4: каждая строка
+       COUNT(method)          AS with_method,  -- 3: NULL пропущен
+       COUNT(DISTINCT method) AS methods       -- 2: card и cash
 FROM pay;
 ```
 
@@ -73,12 +73,13 @@ FROM loans;
 **Как пишется.**
 
 ```sql
-SELECT SUM(principal) AS disbursed            -- 404 783 280 000
+SELECT SUM(principal) AS disbursed         -- 404 783 280 000
 FROM loans;
 
-SELECT SUM(principal) AS active_disbursed     -- 296 980 040 000
+SELECT SUM(principal) AS active_disbursed  -- 296 980 040 000
 FROM loans
-WHERE status = 'active';                      -- сначала WHERE, потом сумма по оставшимся строкам
+WHERE status = 'active';
+-- сначала WHERE, потом сумма по оставшимся строкам
 ```
 
 Всего выдано 404.8 млрд сумов; 297.0 млрд из них — по кредитам, которые ещё активны.
@@ -100,11 +101,13 @@ WHERE status = 'active';                      -- сначала WHERE, пото�
 **Как пишется.**
 
 ```sql
-SELECT AVG(principal)                   AS avg_ticket,    -- 51 709 667.86
-       SUM(principal) / COUNT(*)        AS int_division,  -- 51 709 667: целое ÷ целое
-       1.0 * SUM(principal) / COUNT(*)  AS by_hand        -- 51 709 667.86
+SELECT AVG(principal)                   AS avg_ticket,  -- 51 709 667.86
+       -- 51 709 667: целое ÷ целое
+       SUM(principal) / COUNT(*)        AS int_division,
+       1.0 * SUM(principal) / COUNT(*)  AS by_hand      -- 51 709 667.86
 FROM loans;
--- SQL Server: AVG по целочисленному столбцу тоже даёт целое — пишите AVG(1.0 * principal)
+-- SQL Server: AVG по целочисленному столбцу тоже даёт целое — пишите AVG(1.0 *
+-- principal)
 ```
 
 Средний кредит — 51.7 млн сумов. При делении вручную два целых числа теряют .86: дробная часть отбрасывается, а не округляется.
@@ -226,12 +229,13 @@ ORDER BY status, risk_grade;          -- 16 строк: 4 статуса × 4 г
 Группой может быть и **выражение**. Месяц даты — тема среды; он нужен вам уже сегодня, так что скопируйте как есть:
 
 ```sql
--- SQL Server:  FORMAT(l.disbursed_at, 'yyyy-MM')      SQLite:  strftime('%Y-%m', l.disbursed_at)
+-- SQL Server:  FORMAT(l.disbursed_at, 'yyyy-MM')      SQLite: 
+-- strftime('%Y-%m', l.disbursed_at)
 SELECT strftime('%Y-%m', l.disbursed_at) AS month, p.name, COUNT(*) AS loans, SUM(l.principal) AS disbursed
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01'
 GROUP BY strftime('%Y-%m', l.disbursed_at), p.name
-ORDER BY month, disbursed DESC;       -- 50 строк: 10 месяцев × 5 продуктов
+ORDER BY month, disbursed DESC;  -- 50 строк: 10 месяцев × 5 продуктов
 ```
 
 `GROUP BY` повторяет выражение: SQL Server не принимает там псевдоним `month` (SQLite принимает оба варианта).
@@ -257,10 +261,13 @@ ORDER BY month, disbursed DESC;       -- 50 строк: 10 месяцев × 5 �
 ```sql
 SELECT b.branch_name, COUNT(*) AS active_loans
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
-WHERE l.status = 'active'            -- оставить только активные кредиты (строки)
+-- оставить только активные кредиты (строки)
+WHERE l.status = 'active'
 GROUP BY b.branch_name
-HAVING COUNT(*) > 300                -- оставить только филиалы, где их больше 300 (группы)
-ORDER BY active_loans DESC;          -- 6 филиалов: Tashkent Central 435 … Andijan Central 334
+-- оставить только филиалы, где их больше 300 (группы)
+HAVING COUNT(*) > 300
+ORDER BY active_loans DESC;
+-- 6 филиалов: Tashkent Central 435 … Andijan Central 334
 ```
 
 У шести филиалов из десяти больше 300 активных кредитов — от Tashkent Central с 435 до Andijan Central с 334.
@@ -291,7 +298,8 @@ ORDER BY active_loans DESC;          -- 6 филиалов: Tashkent Central 435
 ```sql
 SELECT p.name, COUNT(*) AS loans, COUNT(DISTINCT l.customer_id) AS customers, SUM(l.principal) AS disbursed
 FROM loans l
-JOIN products p ON p.product_id = l.product_id     -- многие к одному: одна строка — по-прежнему один кредит
+-- многие к одному: одна строка — по-прежнему один кредит
+JOIN products p ON p.product_id = l.product_id
 GROUP BY p.name
 ORDER BY disbursed DESC;
 ```
@@ -310,9 +318,11 @@ ORDER BY disbursed DESC;
 
 ```sql
 SELECT p.name, SUM(l.principal)
-FROM loans l JOIN installments i ON i.loan_id = l.loan_id    -- один ко многим: одна строка — платёж по графику
+-- один ко многим: одна строка — платёж по графику
+FROM loans l JOIN installments i ON i.loan_id = l.loan_id
 JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name;                     -- SME 5 862 295 560 000 — в 24 раза больше, и никто бы не заметил
+GROUP BY p.name;
+-- SME 5 862 295 560 000 — в 24 раза больше, и никто бы не заметил
 ```
 
 Каждый основной долг посчитан по разу на каждый платёж по графику. Множитель — срок, а он у продуктов разный, поэтому меняется даже порядок: BNPL обгоняет Micro.
@@ -343,8 +353,10 @@ SELECT b.branch_name, COUNT(*) AS active_loans
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 WHERE l.status = 'active'
 GROUP BY b.branch_name
-ORDER BY active_loans DESC           -- псевдоним; COUNT(*) DESC или 2 DESC дают тот же порядок
-LIMIT 3;                             -- SQL Server: SELECT TOP 3 … (строку с LIMIT уберите)
+-- псевдоним; COUNT(*) DESC или 2 DESC дают тот же порядок
+ORDER BY active_loans DESC
+LIMIT 3;
+-- SQL Server: SELECT TOP 3 … (строку с LIMIT уберите)
 ```
 
 Tashkent Central 435, Tashkent North 428, Tashkent South 416 — три ташкентских филиала держат больше всего активных кредитов.
@@ -397,8 +409,9 @@ FROM / JOIN  →  WHERE          →  GROUP BY         →  HAVING          → 
 
 ```sql
 SELECT customer_id FROM loans
-UNION                                        -- сложить стопкой и убрать повторяющиеся строки
-SELECT customer_id FROM applications;        -- 5 453 строки
+-- сложить стопкой и убрать повторяющиеся строки
+UNION
+SELECT customer_id FROM applications;  -- 5 453 строки
 ```
 
 5 453 строки — каждый клиент, подававший заявку: каждый заёмщик тоже подавал заявку.
@@ -426,15 +439,19 @@ SELECT customer_id FROM applications;        -- 5 453 строки
 
 ```sql
 SELECT b.branch_name,
-       COUNT(*)                AS active_loans,       -- COUNT: одна строка группы = один кредит
-       SUM(l.principal)        AS active_principal,   -- SUM по тем же строкам
-       ROUND(AVG(l.principal)) AS avg_ticket          -- AVG; ROUND (среда) = целые сумы
+       -- COUNT: одна строка группы = один кредит
+       COUNT(*)                AS active_loans,
+       SUM(l.principal)        AS active_principal,  -- SUM по тем же строкам
+       -- AVG; ROUND (среда) = целые сумы
+       ROUND(AVG(l.principal)) AS avg_ticket
 FROM loans l
-JOIN branches b ON b.branch_id = l.branch_id          -- многие к одному: одна строка — по-прежнему кредит
-WHERE l.status = 'active'                             -- строки, до группировки
-GROUP BY b.branch_name                                -- одна строка на филиал
-HAVING COUNT(*) > 300                                 -- группы, после группировки
-ORDER BY active_principal DESC;                       -- псевдоним, после SELECT
+-- многие к одному: одна строка — по-прежнему кредит
+JOIN branches b ON b.branch_id = l.branch_id
+WHERE l.status = 'active'                            -- строки, до группировки
+GROUP BY b.branch_name                               -- одна строка на филиал
+-- группы, после группировки
+HAVING COUNT(*) > 300
+ORDER BY active_principal DESC;                      -- псевдоним, после SELECT
 ```
 
 | branch_name | active_loans | active_principal | avg_ticket |
@@ -502,7 +519,7 @@ ORDER BY active_principal DESC;                       -- псевдоним, п�
 
 ```sql
 SELECT COUNT(*) AS customers, COUNT(monthly_income) AS with_income, COUNT(DISTINCT region) AS regions
-FROM customers;                                               -- 6040 · 5684 · 8
+FROM customers;  -- 6040 · 5684 · 8
 ```
 6 040 − 5 684 = **356** клиентов с NULL в `monthly_income`: `COUNT(столбец)` их пропустил. День 4 — про эти 356.
 
@@ -526,7 +543,8 @@ SELECT SUM(principal) FROM loans;                             -- 404 783 280 000
 
 ```sql
 SELECT AVG(principal) AS avg_ticket, SUM(principal) / COUNT(*) AS by_hand, COUNT(*) AS loans
-FROM loans WHERE status = 'active';                           -- 88 597 863.96 · 88 597 863 · 3352
+FROM loans WHERE status = 'active';
+-- 88 597 863.96 · 88 597 863 · 3352
 ```
 Обе стороны `SUM(principal) / COUNT(*)` — целые числа, поэтому и деление целочисленное: .96 отбрасывается. `1.0 * SUM(principal) / COUNT(*)` даёт те же 88 597 863.96, что и `AVG`. (В SQL Server `AVG` по целочисленному столбцу тоже целый.)
 
@@ -537,8 +555,10 @@ FROM loans WHERE status = 'active';                           -- 88 597 863.96 �
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT MIN(principal), MAX(principal) FROM loans WHERE product_id = 1;      -- 500 000 · 4 990 000
-SELECT MIN(applied_at), MAX(applied_at) FROM applications;                  -- 2024-01-01 10:07:00 · 2026-10-01 21:36:00
+SELECT MIN(principal), MAX(principal) FROM loans WHERE product_id = 1;
+-- 500 000 · 4 990 000
+SELECT MIN(applied_at), MAX(applied_at) FROM applications;
+-- 2024-01-01 10:07:00 · 2026-10-01 21:36:00
 ```
 Микрокредиты — от 0.5 млн до 4.99 млн сумов. Заявки начинаются 1 января 2024 года и заканчиваются вечером отчётной даты.
 
@@ -643,7 +663,8 @@ GROUP BY a.channel, p.name ORDER BY a.channel, applications DESC;
 ```sql
 SELECT b.branch_name, COUNT(*) FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 GROUP BY b.branch_name HAVING COUNT(*) > 900 ORDER BY 2 DESC;
--- Tashkent South 1012, Tashkent North 1007, Tashkent Central 1001, Fergana Central 906
+-- Tashkent South 1012, Tashkent North 1007, Tashkent Central 1001, Fergana
+-- Central 906
 ```
 Условие на агрегат → `HAVING`. Если написать его в `WHERE`, будет синтаксическая ошибка — а это ещё добрый исход: она хотя бы видна сразу.
 
@@ -655,7 +676,8 @@ GROUP BY b.branch_name HAVING COUNT(*) > 900 ORDER BY 2 DESC;
 
 ```sql
 SELECT p.name, AVG(l.principal) FROM loans l JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name HAVING AVG(l.principal) > 50000000;             -- Auto 216.9 млн, SME 308.7 млн
+GROUP BY p.name HAVING AVG(l.principal) > 50000000;
+-- Auto 216.9 млн, SME 308.7 млн
 ```
 
 </details>
@@ -701,8 +723,10 @@ sms 1 254 / 3 265 = 38.4 % · visit 381 / 1 506 = 25.3 % · call 785 / 3 114 = 2
 
 ```sql
 SELECT COUNT(*), COUNT(DISTINCT l.loan_id) FROM loans l JOIN payments p ON p.loan_id = l.loan_id WHERE l.status = 'active';
--- 22511 строк, 2971 кредит  → соединение умножило строки; 381 активный кредит ещё без платежей и пропал (внутреннее соединение)
-SELECT SUM(principal) FROM loans WHERE status = 'active';                                   -- 296 980 040 000 (верно)
+-- 22511 строк, 2971 кредит  → соединение умножило строки; 381 активный кредит
+-- ещё без платежей и пропал (внутреннее соединение)
+SELECT SUM(principal) FROM loans WHERE status = 'active';
+-- 296 980 040 000 (верно)
 ```
 `SUM(l.principal)` по соединению исчисляется триллионами — каждый основной долг посчитан по разу на платёж. Когда два счёта различаются, агрегируйте столбцы кредита только по `loans`.
 
@@ -738,7 +762,8 @@ Bekzod Mirzaev (28) 593 · Ilhom Qodirov (27) 590 · Bobur Tashkentov (29) 568. 
 ```sql
 SELECT '2025' AS yr, COUNT(*) AS loans FROM loans WHERE disbursed_at >= '2025-01-01' AND disbursed_at < '2026-01-01'
 UNION ALL
-SELECT '2026', COUNT(*) FROM loans WHERE disbursed_at >= '2026-01-01';          -- 3041 / 3051
+SELECT '2026', COUNT(*) FROM loans WHERE disbursed_at >= '2026-01-01';
+-- 3041 / 3051
 ```
 Столбец-подпись делает строки разными, поэтому `UNION` оставляет обе. Без подписи два одинаковых числа при `UNION` схлопнулись бы в одну строку — классическая тихая потеря. По умолчанию используйте `UNION ALL`.
 
@@ -816,8 +841,10 @@ GROUP BY p.name ORDER BY disbursed DESC;
 **Уровень одобрения по каналам** (*approval rate by channel*). На первой неделе вы считали его двумя подсчётами для всей компании. По каналам способ «двумя запросами» — это по три группы в каждом:
 
 ```sql
-SELECT channel, COUNT(*) AS applications FROM applications GROUP BY channel;                            -- app 5006 · branch 6223 · partner 2771
-SELECT channel, COUNT(*) AS approved FROM applications WHERE status LIKE 'approved%' GROUP BY channel;  -- app 2915 · branch 3965 · partner 1715
+SELECT channel, COUNT(*) AS applications FROM applications GROUP BY channel;
+-- app 5006 · branch 6223 · partner 2771
+SELECT channel, COUNT(*) AS approved FROM applications WHERE status LIKE 'approved%' GROUP BY channel;
+-- app 2915 · branch 3965 · partner 1715
 ```
 
 app 58.2 % · branch 63.7 % · partner 61.9 % (в знаменателе все заявки). Один запрос вместо двух: усредните выражение 0/1. В SQLite сравнение *и есть* 0 или 1, поэтому `AVG(status LIKE 'approved%')` работает; SQL Server нужен `IIF`, чтобы превратить проверку в число:

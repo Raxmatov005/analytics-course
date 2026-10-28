@@ -90,15 +90,24 @@
 ```python
 # (только схема — не для запуска: функции шаблона живут в ноутбуке)
 ...
-reg = users[users["region"] != "Tashkent"]                                # 16 738 строк
-reg["user_id"].nunique(), len(reg)                                       # 16 558 пользователей, 16 738 строк
-dup_ids = reg.loc[reg["user_id"].duplicated(), "user_id"].unique()        # 180 пользователей, каждый в A и B
-stats.chisquare(reg["variant"].value_counts().values).pvalue             # строки 8 299 / 8 439: p = 0.28
+# 16 738 строк
+reg = users[users["region"] != "Tashkent"]
+# 16 558 пользователей, 16 738 строк
+reg["user_id"].nunique(), len(reg)
+# 180 пользователей, каждый в A и B
+dup_ids = reg.loc[reg["user_id"].duplicated(), "user_id"].unique()
+# строки 8 299 / 8 439: p = 0.28
+stats.chisquare(reg["variant"].value_counts().values).pvalue
 ud = reg[~reg["user_id"].isin(dup_ids)].assign(week=lambda t: (t.assigned_at - pd.Timestamp("2026-08-01")).dt.days // 7 + 1)
-stats.chisquare(ud["variant"].value_counts().values).pvalue              # пользователи 8 119 / 8 259: p = 0.27
-srm_by(ud, ["device", "week"])                                           # iOS нед. 4: 330 / 482 (59.4 % B), p = 9.6e-8; во всех остальных ячейках p >= 0.13
+# пользователи 8 119 / 8 259: p = 0.27
+stats.chisquare(ud["variant"].value_counts().values).pvalue
+# iOS нед. 4: 330 / 482 (59.4 % B), p = 9.6e-8; во всех остальных ячейках p >=
+# 0.13
+srm_by(ud, ["device", "week"])
 expected = reg["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
-(reg["variant"] != expected).sum()                                       # 261 = 180 повторных назначений из утечки + 81 пользователь iOS нед. 4, залогированный как B при хеше A
+# 261 = 180 повторных назначений из утечки + 81 пользователь iOS нед. 4,
+# залогированный как B при хеше A
+(reg["variant"] != expected).sum()
 ```
 
 Порог: p < 0.001 для SRM (проверяется много срезов). Проблемы: (1) **180 пользователей в обоих вариантах** (360 строк; первое назначение A у 111, B у 69) — удалены полностью; (2) **SRM в iOS, 22–28 августа**: 812 пользователей, 59.4 % B, 81 из них — пользователи с хешем A, залогированные как B — ячейка удалена из обеих групп (после: 7 789 / 7 777, p = 0.92). Устройство iOS в целом (p = 0.0070) — тот же баг, увиденный через более широкий срез; неделя 4 целиком (p = 0.12) его не показывает вовсе.
@@ -132,12 +141,15 @@ expected = reg["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
 ```python
 # (только схема — не для запуска: функции шаблона живут в ноутбуке)
 ...
-clean = with_conversion(clean_users(reg), events)                       # 13 725 пользователей: A 6 883, B 6 842 (SRM p = 0.73)
+# 13 725 пользователей: A 6 883, B 6 842 (SRM p = 0.73)
+clean = with_conversion(clean_users(reg), events)
 ab_readout(clean)
-# A 530 / 6 883 = 7.70 % · B 599 / 6 842 = 8.75 % · разность +1.05 пт (Ньюкомб от +0.14 до +1.98) · z = 2.25, p = 0.025
+# A 530 / 6 883 = 7.70 % · B 599 / 6 842 = 8.75 % · разность +1.05 пт (Ньюкомб
+# от +0.14 до +1.98) · z = 2.25, p = 0.025
 # относительный +13.7 % (ДИ log-отношения от +1.7 % до +27.2 %)
 ab_readout(with_conversion(reg, events))
-# сырые: 8.12 % против 9.10 % · +0.98 пт (от +0.13 до +1.83) · p = 0.024 · +12.1 % (от +1.5 до +23.7)
+# сырые: 8.12 % против 9.10 % · +0.98 пт (от +0.13 до +1.83) · p = 0.024 · +12.1
+# % (от +1.5 до +23.7)
 ```
 
 | популяция | разность (95 % ДИ) | p | относительный |
@@ -178,8 +190,10 @@ ab_readout(with_conversion(reg, events))
 ...
 lc = loans.merge(clean[["user_id", "variant"]], on="user_id").assign(fpd=lambda t: 1 - t.first_instalment_paid_within_30d)
 # A 6 / 575 = 1.04 % (Уилсон 0.48-2.26) · B 14 / 636 = 2.20 % (1.32-3.66)
-# z-тест p = 0.11 · Фишер p = 0.17 · разность +1.16 пт (Ньюкомб от -0.35 до +2.72)
-# мощность для истинных +1.16 пт при таких n: 37 % · кредитов на группу для мощности 80 %: 1 809 (~20 700 пользователей на группу)
+# z-тест p = 0.11 · Фишер p = 0.17 · разность +1.16 пт (Ньюкомб от -0.35 до
+# +2.72)
+# мощность для истинных +1.16 пт при таких n: 37 % · кредитов на группу для
+# мощности 80 %: 1 809 (~20 700 пользователей на группу)
 ```
 
 Юнит-экономика (проценты 9.856 % от основного долга = 266 662 ÷ 2 705 586, LGD 60 %, FPD ≈ PD): на 1 000 просмотревших **A 18 555 488**, **B 18 303 993** (−1.4 %); FPD безубыточности для B **2.04 %** = A + **0.99** пункта — и наблюдаемые 2.20 % у B уже выше; на верхней границе ДИ (3.77 %) B приносит 15 898 606 (−14.3 % к A).
@@ -460,7 +474,7 @@ def with_conversion(users, events, window_days=7):
     return users.assign(conv=users["user_id"].isin(ok["user_id"]).astype(int))
 
 dup_ids = users.loc[users["user_id"].duplicated(), "user_id"].unique()
-print(len(users), len(events), len(dup_ids))      # 27974 67215 300
+print(len(users), len(events), len(dup_ids))  # 27974 67215 300
 ```
 
 ```challenge

@@ -24,13 +24,18 @@ Run this block first (▶ Run); every block below uses its five frames. `pay` is
 import pandas as pd
 import numpy as np
 AS_OF = pd.Timestamp("2026-10-01")
-pay_raw = pd.read_csv("../excel/payments_dirty.csv", parse_dates=["paid_at"])     # 52 875 rows, as recorded
+# 52 875 rows, as recorded
+pay_raw = pd.read_csv("../excel/payments_dirty.csv", parse_dates=["paid_at"])
 pay = (pay_raw.sort_values("payment_id")
-              .drop_duplicates(subset=["installment_id", "paid_at", "amount"])     # 52 850 — the dedup, explained below
+              # 52 850 — the dedup, explained below
+              .drop_duplicates(subset=["installment_id", "paid_at", "amount"])
               .assign(method=lambda d: d["method"].str.strip().str.lower().replace({"bank transfer": "transfer"})))
-cust = pd.read_csv("../excel/customers_dirty.csv")                                 # 6 040 rows, dirty on purpose
-inst = pd.read_csv("../excel/installments.csv", parse_dates=["due_date"])          # 92 193 instalments
-loans = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])     # 7 828 loans
+# 6 040 rows, dirty on purpose
+cust = pd.read_csv("../excel/customers_dirty.csv")
+# 92 193 instalments
+inst = pd.read_csv("../excel/installments.csv", parse_dates=["due_date"])
+# 7 828 loans
+loans = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])
 len(pay_raw), len(pay), len(cust), len(inst), len(loans)
 ```
 
@@ -43,7 +48,7 @@ The box shows `(52875, 52850, 6040, 92193, 7828)`: the five row counts every blo
 **How to write it.**
 
 ```python
-by_region = pay.groupby("region")["amount"].sum()        # key → column → aggregate
+by_region = pay.groupby("region")["amount"].sum()  # key → column → aggregate
 by_region.sort_values(ascending=False).head()
 ```
 
@@ -131,8 +136,10 @@ cust.groupby("segment").agg(customers=("customer_id", "size"), with_income=("mon
 **How to write it.**
 
 ```python
-pm = pay.groupby(["product", "method"]).size()            # one row per pair: 5 × 5 = 25 rows
-pm.unstack(fill_value=0)                                   # the second key becomes the columns
+# one row per pair: 5 × 5 = 25 rows
+pm = pay.groupby(["product", "method"]).size()
+# the second key becomes the columns
+pm.unstack(fill_value=0)
 ```
 
 | product | card | cash | click | payme | transfer |
@@ -170,8 +177,10 @@ pm.unstack(fill_value=0)                                   # the second key beco
 **How to write it.**
 
 ```python
-pay["loan_total"] = pay.groupby("loan_id")["amount"].transform("sum")   # SUM(amount) OVER (PARTITION BY loan_id)
-pay["share"] = pay["amount"] / pay["loan_total"]                        # each payment's share of its loan's payments
+# SUM(amount) OVER (PARTITION BY loan_id)
+pay["loan_total"] = pay.groupby("loan_id")["amount"].transform("sum")
+# each payment's share of its loan's payments
+pay["share"] = pay["amount"] / pay["loan_total"]
 pay[["payment_id", "loan_id", "amount", "loan_total", "share"]].head(3).round(4)
 ```
 
@@ -187,7 +196,8 @@ The same pattern answers "compared with my group": the segment's median income n
 
 ```python
 cust["seg_median"] = cust.groupby("segment")["monthly_income"].transform("median")
-(cust["monthly_income"] > cust["seg_median"]).sum()          # raw customers_dirty.csv: 2 841 earn above their segment's median
+# raw customers_dirty.csv: 2 841 earn above their segment's median
+(cust["monthly_income"] > cust["seg_median"]).sum()
 ```
 
 | | `agg` | `transform` |
@@ -326,8 +336,10 @@ The box shows `(52826, 52826, 92193)`: 52 826 instalments have a payment; the in
 
 ```python
 prod = pd.DataFrame({"name": ["Micro loan", "Consumer loan", "Buy now pay later", "Auto loan", "Small business loan"],
-                     "annual_rate": [0.42, 0.30, 0.0, 0.24, 0.26]})       # products.annual_rate
-lr = loans.merge(prod, left_on="product", right_on="name", how="left")    # different names on each side
+                     # products.annual_rate
+                     "annual_rate": [0.42, 0.30, 0.0, 0.24, 0.26]})
+# different names on each side
+lr = loans.merge(prod, left_on="product", right_on="name", how="left")
 print(len(lr), round(lr["annual_rate"].mean(), 4))
 both = pay.merge(loans[["loan_id", "product", "region"]], on="loan_id", how="left")
 print([c for c in both.columns if c[:7] in ("product", "region_")])
@@ -407,7 +419,7 @@ The **anti-join** is one filter on that column: `m[m["_merge"] == "left_only"]` 
 ```python
 a = pay[pay["region"] == "Tashkent"].assign(source="tashkent")
 b = pay[pay["region"] != "Tashkent"].assign(source="rest")
-u = pd.concat([a, b], ignore_index=True)                 # renumber the index 0 … n-1
+u = pd.concat([a, b], ignore_index=True)  # renumber the index 0 … n-1
 len(a), len(b), len(u)
 ```
 
@@ -528,10 +540,13 @@ Ten raw spellings — 180 rows outside the five clean ones — collapse into fiv
 **How to write it.**
 
 ```python
-cust["birth_date"] = pd.to_datetime(cust["birth_date"], errors="coerce")   # unparseable → NaT (not a crash)
-bad = (cust["birth_date"] > AS_OF) | (cust["birth_date"] < "1920-01-01")   # the business rule finds what parsing cannot
+# unparseable → NaT (not a crash)
+cust["birth_date"] = pd.to_datetime(cust["birth_date"], errors="coerce")
+# the business rule finds what parsing cannot
+bad = (cust["birth_date"] > AS_OF) | (cust["birth_date"] < "1920-01-01")
 cust["birth_date_invalid"] = bad
-cust["birth_date_clean"] = cust["birth_date"].where(~bad)                   # keep the date where valid, NaT where not
+# keep the date where valid, NaT where not
+cust["birth_date_clean"] = cust["birth_date"].where(~bad)
 print(cust["birth_date"].isna().sum(), bad.sum())
 cust.loc[bad, ["customer_id", "birth_date"]].head()
 ```
@@ -573,9 +588,11 @@ Parsing finds 0 bad values — every birth date is a valid ISO date — but the 
 
 ```python
 key = ["installment_id", "paid_at", "amount"]
-dup_mask = pay_raw.duplicated(subset=key, keep=False)                    # True on ALL members of a group
+# True on ALL members of a group
+dup_mask = pay_raw.duplicated(subset=key, keep=False)
 print(dup_mask.sum())
-pay_raw[dup_mask].sort_values(["installment_id", "payment_id"]).head(2)  # look before you delete
+# look before you delete
+pay_raw[dup_mask].sort_values(["installment_id", "payment_id"]).head(2)
 ```
 
 | payment_id | loan_id | installment_id | paid_at | amount | method |
@@ -586,8 +603,10 @@ pay_raw[dup_mask].sort_values(["installment_id", "payment_id"]).head(2)  # look 
 50 rows belong to a duplicate group — 25 pairs. Payment 52869 repeats payment 110 to the day and the soum: the same instalment of loan 18, the same date and amount, recorded twice.
 
 ```python
-pay_clean = pay_raw.sort_values("payment_id").drop_duplicates(subset=key, keep="first")   # keep the lowest payment_id
-len(pay_clean)                                                            # 52 850
+# keep the lowest payment_id
+pay_clean = pay_raw.sort_values("payment_id").drop_duplicates(subset=key, keep="first")
+# 52 850
+len(pay_clean)
 ```
 
 | `keep=` | `duplicated` marks | `drop_duplicates` keeps |
@@ -660,12 +679,16 @@ bands.value_counts(dropna=False).sort_index()
 **How to write it.**
 
 ```python
-def dpd_bucket(dpd):                                     # HW 5.1's function, in one line
+# HW 5.1's function, in one line
+def dpd_bucket(dpd):
     return "0" if dpd <= 0 else "1-30" if dpd <= 30 else "31-60" if dpd <= 60 else "61-90" if dpd <= 90 else "90+"
 
-inst["total"] = inst["principal_due"] + inst["interest_due"]                              # vectorised: milliseconds on 92 193 rows
-inst["total"] = inst.apply(lambda r: r["principal_due"] + r["interest_due"], axis=1)      # row-wise apply: ~1 000× slower (seconds on the page)
-loans["bucket_fn"] = loans["dpd"].apply(dpd_bucket)      # fine for a label function on one column
+# vectorised: milliseconds on 92 193 rows
+inst["total"] = inst["principal_due"] + inst["interest_due"]
+# row-wise apply: ~1 000× slower (seconds on the page)
+inst["total"] = inst.apply(lambda r: r["principal_due"] + r["interest_due"], axis=1)
+# fine for a label function on one column
+loans["bucket_fn"] = loans["dpd"].apply(dpd_bucket)
 (inst["total"] == inst["total_due"]).all(), (loans["bucket_fn"] == loans["bucket"].astype(str)).all()
 ```
 
@@ -698,8 +721,10 @@ The box shows `(True, True)`: both ways rebuild `total_due` on all 92 193 instal
 ```python
 assert len(pay_clean) == 52_850, f"expected 52 850 payments, got {len(pay_clean)}"
 assert pay["method"].nunique() == 5
-assert len(m) == len(inst)                           # a left merge keeps every instalment
-assert (m["_merge"] != "right_only").all()           # no payment without an instalment
+# a left merge keeps every instalment
+assert len(m) == len(inst)
+# no payment without an instalment
+assert (m["_merge"] != "right_only").all()
 print("all checks passed")
 ```
 
@@ -736,8 +761,10 @@ One question, most of the day's tools: *how much money is owed on matured instal
 paid = pay[pay["paid_at"] <= AS_OF].groupby("installment_id", as_index=False).agg(paid=("amount", "sum"))
 m = inst.merge(paid, on="installment_id", how="left", validate="1:1")
 assert len(m) == len(inst)
-m["paid"] = m["paid"].fillna(0)                                            # no payment = 0 paid, AFTER the merge
-open_ = m[(m["due_date"] <= AS_OF) & (m["paid"] < m["total_due"])].copy()   # matured and not fully paid
+# no payment = 0 paid, AFTER the merge
+m["paid"] = m["paid"].fillna(0)
+# matured and not fully paid
+open_ = m[(m["due_date"] <= AS_OF) & (m["paid"] < m["total_due"])].copy()
 open_["owed"] = open_["total_due"] - open_["paid"]
 open_ = open_.merge(loans[["loan_id", "product"]], on="loan_id", how="left", validate="m:1")
 owed = (open_.groupby("product").agg(instalments=("installment_id", "size"), owed=("owed", "sum"))
@@ -1019,20 +1046,31 @@ The week-2 DPD block, the week-3 `v_loan_status`, the week-4 Power Query merge �
 
 ```python
 AS_OF = pd.Timestamp("2026-10-01")
-inst = pd.read_csv("../excel/installments.csv", parse_dates=["due_date"])            # grain: instalment, 92 193
-pay  = (pd.read_csv("../excel/payments_dirty.csv", parse_dates=["paid_at"])          # clean_payments(): 52 850
+# grain: instalment, 92 193
+inst = pd.read_csv("../excel/installments.csv", parse_dates=["due_date"])
+# clean_payments(): 52 850
+pay  = (pd.read_csv("../excel/payments_dirty.csv", parse_dates=["paid_at"])
           .sort_values("payment_id").drop_duplicates(subset=["installment_id", "paid_at", "amount"]))
 
-paid = (pay[pay["paid_at"] <= AS_OF]                                                # 1. payments through the as-of …
-        .groupby("installment_id", as_index=False).agg(paid=("amount", "sum")))     #    … aggregated per instalment
-m = inst.merge(paid, on="installment_id", how="left", validate="1:1")               # 2. every instalment kept
+# 1. payments through the as-of …
+paid = (pay[pay["paid_at"] <= AS_OF]
+        # … aggregated per instalment
+        .groupby("installment_id", as_index=False).agg(paid=("amount", "sum")))
+# 2. every instalment kept
+m = inst.merge(paid, on="installment_id", how="left", validate="1:1")
 assert len(m) == len(inst)
-m["paid"] = m["paid"].fillna(0)                                                     #    no payment = 0 paid
-m["unpaid"]  = m["paid"] < m["total_due"]                                           # 3. not fully paid
-m["matured"] = m["due_date"] <= AS_OF                                               #    and already due
-late = m[m["unpaid"] & m["matured"]]                                                #    1 784 instalments
-dpd = (AS_OF - late.groupby("loan_id")["due_date"].min()).dt.days.rename("dpd")     # 4. per loan: as-of − oldest unpaid due date
-loans = (pd.read_csv("../excel/loans_status.csv")[["loan_id"]]                      # 5. every loan, 0 when nothing is late
+# no payment = 0 paid
+m["paid"] = m["paid"].fillna(0)
+# 3. not fully paid
+m["unpaid"]  = m["paid"] < m["total_due"]
+# and already due
+m["matured"] = m["due_date"] <= AS_OF
+# 1 784 instalments
+late = m[m["unpaid"] & m["matured"]]
+# 4. per loan: as-of − oldest unpaid due date
+dpd = (AS_OF - late.groupby("loan_id")["due_date"].min()).dt.days.rename("dpd")
+# 5. every loan, 0 when nothing is late
+loans = (pd.read_csv("../excel/loans_status.csv")[["loan_id"]]
          .merge(dpd, on="loan_id", how="left").fillna({"dpd": 0}).astype({"dpd": int}))
 loans["bucket"] = pd.cut(loans["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
 (loans["dpd"] > 0).sum(), loans["bucket"].value_counts().sort_index()
@@ -1052,7 +1090,8 @@ first = inst[(inst["installment_no"] == 1) & (inst["due_date"] <= AS_OF - pd.Tim
 paid1 = pay[pay["paid_at"] <= AS_OF].groupby("installment_id", as_index=False).agg(paid=("amount", "sum"), first_paid=("paid_at", "min"))
 f = first.merge(paid1, on="installment_id", how="left").fillna({"paid": 0})
 f["fpd30"] = ((f["paid"] < f["total_due"]) | ((f["first_paid"] - f["due_date"]).dt.days > 30)).astype(int)
-f = f.merge(loan_channel, on="loan_id", validate="1:1")          # loan_id, disbursed_at, channel
+# loan_id, disbursed_at, channel
+f = f.merge(loan_channel, on="loan_id", validate="1:1")
 f["vintage"] = f["disbursed_at"].dt.to_period("M").astype(str)
 pd.pivot_table(f, index="vintage", columns="channel", values="fpd30", aggfunc="mean").mul(100).round(2)
 ```

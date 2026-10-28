@@ -51,7 +51,8 @@ Three points per task: 1 for a query that runs and answers the question, 1 for t
 ```sql
 SELECT p.name, COUNT(*) AS loans, SUM(l.principal) AS principal
 FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.name ORDER BY principal DESC;
--- SME 781 / 241 117 150 000 · Auto 391 / 84 791 530 000 · Consumer 2418 / 65 109 280 000 · Micro 2669 / 7 221 210 000 · BNPL 1569 / 6 544 110 000
+-- SME 781 / 241 117 150 000 · Auto 391 / 84 791 530 000 · Consumer 2418 / 65
+-- 109 280 000 · Micro 2669 / 7 221 210 000 · BNPL 1569 / 6 544 110 000
 ```
 
 </details>
@@ -64,7 +65,8 @@ FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.name ORDE
 SELECT p.name, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
 WHERE i.due_date > '2026-10-01' GROUP BY p.name ORDER BY outstanding DESC;
--- SME 125 892 942 411 / 603 · Auto 57 684 271 333 / 368 · Consumer 23 054 933 316 / 1398 · BNPL 1 135 251 000 / 474 · Micro 956 106 370 / 566
+-- SME 125 892 942 411 / 603 · Auto 57 684 271 333 / 368 · Consumer 23 054 933
+-- 316 / 1398 · BNPL 1 135 251 000 / 474 · Micro 956 106 370 / 566
 ```
 Sums an *instalment* column over `installments`, so the join to `loans` (many-to-one from the instalment) is safe; summing `l.principal` here would be the trap. Total 208 723 504 430.
 
@@ -78,8 +80,10 @@ Sums an *instalment* column over `installments`, so the join to `loans` (many-to
 SELECT p.name, COUNT(*) AS loans, SUM(l.principal) AS disbursed, ROUND(AVG(l.principal)) AS avg_ticket
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2027-01-01' GROUP BY p.name ORDER BY disbursed DESC;
--- SME 305 / 95 235 100 000 / 312 246 230 · Auto 165 / 36 218 310 000 / 219 504 909 · Consumer 941 / 25 618 370 000 / 27 224 623
--- Micro 1045 / 2 811 950 000 / 2 690 861 · BNPL 595 / 2 449 330 000 / 4 116 521            (total 3051 / 162 333 060 000)
+-- SME 305 / 95 235 100 000 / 312 246 230 · Auto 165 / 36 218 310 000 / 219 504
+-- 909 · Consumer 941 / 25 618 370 000 / 27 224 623
+-- Micro 1045 / 2 811 950 000 / 2 690 861 · BNPL 595 / 2 449 330 000 / 4 116 521
+-- (total 3051 / 162 333 060 000)
 ```
 
 </details>
@@ -89,9 +93,11 @@ WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2027-01-01' GROUP BY 
 <details><summary>T4</summary>
 
 ```sql
-SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed      -- FORMAT(disbursed_at, 'yyyy-MM')
+-- FORMAT(disbursed_at, 'yyyy-MM')
+SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
 FROM loans WHERE disbursed_at >= '2026-01-01' GROUP BY strftime('%Y-%m', disbursed_at) ORDER BY month;
--- largest amount: 2026-08, 358 loans / 22 290 210 000; most loans: 2026-05, 377 / 18 531 830 000
+-- largest amount: 2026-08, 358 loans / 22 290 210 000; most loans: 2026-05, 377
+-- / 18 531 830 000
 ```
 Ten rows; October has one day (21 loans). Count and amount peak in different months — two SME loans more or less move the amount by billions.
 
@@ -105,8 +111,10 @@ Ten rows; October has one day (21 loans). Count and amount peak in different mon
 SELECT b.region, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_id) AS loans
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN branches b ON b.branch_id = l.branch_id
 WHERE i.due_date > '2026-10-01' GROUP BY b.region ORDER BY outstanding DESC;
--- Tashkent 81 679 738 071 / 1297 · Fergana 24 797 334 197 / 383 · Samarkand 24 655 889 676 / 401 · Andijan 19 798 392 956 / 340
--- Namangan 18 696 787 066 / 290 · Bukhara 15 116 046 338 / 279 · Nukus 13 309 138 567 / 216 · Termez 10 670 177 559 / 203
+-- Tashkent 81 679 738 071 / 1297 · Fergana 24 797 334 197 / 383 · Samarkand 24
+-- 655 889 676 / 401 · Andijan 19 798 392 956 / 340
+-- Namangan 18 696 787 066 / 290 · Bukhara 15 116 046 338 / 279 · Nukus 13 309
+-- 138 567 / 216 · Termez 10 670 177 559 / 203
 ```
 Note: Tashkent holds 39 % of outstanding with 38 % of the owing loans — the book is not concentrated by region; it is concentrated by product (T2: SME is 60 % of outstanding on 18 % of the owing loans).
 
@@ -117,7 +125,8 @@ Note: Tashkent holds 39 % of outstanding with 38 % of the owing loans — the bo
 <details><summary>T6</summary>
 
 ```sql
-SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) >= 5;    -- 81 rows
+SELECT customer_id, COUNT(*) AS loans FROM loans GROUP BY customer_id HAVING COUNT(*) >= 5;
+-- 81 rows
 ```
 Distribution (`GROUP BY customer_id`, then count the rows per value — by eye today, with a subquery next week): 1 loan → 2 089 customers · 2 → 1 378 · 3 → 593 · 4 → 194 · 5 → 62 · 6 → 15 · 7 → 4. Total 4 335 borrowers.
 
@@ -134,8 +143,10 @@ SELECT p.name,
        SUM(CASE WHEN l.disbursed_at >= '2026-07-01' AND l.disbursed_at < '2026-10-01' THEN l.principal ELSE 0 END) AS q3
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY p.name ORDER BY p.name;
--- Q1 / Q2 / Q3:  Auto 13 637 110 000 / 10 773 540 000 / 11 611 170 000 · BNPL 775 920 000 / 733 850 000 / 921 270 000
---                Consumer 7 465 620 000 / 9 226 930 000 / 8 769 350 000 · Micro 782 600 000 / 988 770 000 / 1 019 870 000
+-- Q1 / Q2 / Q3:  Auto 13 637 110 000 / 10 773 540 000 / 11 611 170 000 · BNPL
+-- 775 920 000 / 733 850 000 / 921 270 000
+-- Consumer 7 465 620 000 / 9 226 930 000 / 8 769 350 000 · Micro 782 600 000 /
+-- 988 770 000 / 1 019 870 000
 --                SME 26 342 380 000 / 30 754 010 000 / 37 677 910 000
 ```
 Day 4's worked example ran its last column to the end of the data on purpose (labelled "Q3 (+1 Oct)"); here Q3 must stop on 30 September, and the half-open upper bound keeps 1 October (21 loans, 852 760 000) out. Note: SME and Micro grew every quarter; BNPL and Consumer dipped in Q2 or Q3; Auto fell after Q1 and has not recovered. Full marks need the half-open filters and the note.
@@ -190,7 +201,8 @@ From `dpd`, `WHERE d.dpd > 0`, joined to `loans → products`: SME 47 loans / 4 
 SELECT action_type, COUNT(*) AS actions,
        ROUND(100.0 * SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) / COUNT(*), 1) AS promise_pct
 FROM collections_actions GROUP BY action_type ORDER BY actions DESC;
--- sms 3265 / 38.4 · call 3114 / 25.2 · visit 1506 / 25.3 · restructure_offer 1476 / 23.3
+-- sms 3265 / 38.4 · call 3114 / 25.2 · visit 1506 / 25.3 · restructure_offer
+-- 1476 / 23.3
 ```
 
 </details>
@@ -222,7 +234,8 @@ SELECT channel, COUNT(*) AS apps,
        ROUND(100.0 * SUM(CASE WHEN status LIKE 'approved%' THEN 1 ELSE 0 END)
                    / NULLIF(SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 0), 1) AS rate_decided
 FROM applications GROUP BY channel;
--- app 5006 / 58.2 / 68.2 · branch 6223 / 63.7 / 72.4 · partner 2771 / 61.9 / 70.5
+-- app 5006 / 58.2 / 68.2 · branch 6223 / 63.7 / 72.4 · partner 2771 / 61.9 /
+-- 70.5
 ```
 
 </details>

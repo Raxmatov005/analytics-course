@@ -25,9 +25,11 @@
 **How to write it.** `function(value, other arguments)`, wherever a column could stand:
 
 ```sql
-SELECT DISTINCT method, LOWER(TRIM(method)) AS cleaned   -- two functions, one inside the other
+-- two functions, one inside the other
+SELECT DISTINCT method, LOWER(TRIM(method)) AS cleaned
 FROM payments
-ORDER BY cleaned;                                        -- 10 rows: 10 raw spellings, 6 cleaned values
+ORDER BY cleaned;
+-- 10 rows: 10 raw spellings, 6 cleaned values
 ```
 
 Ten raw spellings come back next to their cleaned value: `Card` and `card` both become `card`, `CASH ` and `cash` both become `cash`. The inner function runs first: `TRIM`, then `LOWER`.
@@ -49,10 +51,14 @@ Ten raw spellings come back next to their cleaned value: `Card` and `card` both 
 **How to write it.**
 
 ```sql
-SELECT first_name || ' ' || last_name AS full_name,      -- SQL Server: first_name + ' ' + last_name, or CONCAT(first_name, ' ', last_name)
-       'Loan ' || 42                  AS label           -- a number is turned into text: 'Loan 42'
+-- SQL Server: first_name + ' ' + last_name, or CONCAT(first_name, ' ',
+-- last_name)
+SELECT first_name || ' ' || last_name AS full_name,
+       -- a number is turned into text: 'Loan 42'
+       'Loan ' || 42                  AS label
 FROM customers
-WHERE customer_id = 1;                                   -- Eldor Olimov · Loan 42
+WHERE customer_id = 1;
+-- Eldor Olimov · Loan 42
 ```
 
 Customer 1 is *Eldor Olimov*. The `' '` in the middle is a text of one space; without it you get `EldorOlimov`.
@@ -76,7 +82,8 @@ Customer 1 is *Eldor Olimov*. The `' '` in the middle is a text of one space; wi
 ```sql
 SELECT customer_id, first_name, last_name, UPPER(last_name) AS upper_last
 FROM customers
-WHERE last_name = LOWER(last_name);                      -- 40 rows: surnames typed all in small letters
+WHERE last_name = LOWER(last_name);
+-- 40 rows: surnames typed all in small letters
 ```
 
 40 customers have a surname typed entirely in small letters, such as `jalilova`. All 40 have an id of 6001 or above — last week's duplicates.
@@ -119,9 +126,11 @@ SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);   -- 18
 **How to write it.**
 
 ```sql
-SELECT LENGTH(phone) AS characters, COUNT(*) AS customers   -- SQL Server: LEN(phone)
+-- SQL Server: LEN(phone)
+SELECT LENGTH(phone) AS characters, COUNT(*) AS customers
 FROM customers
-GROUP BY LENGTH(phone);                                      -- one row: 13 · 6 040
+GROUP BY LENGTH(phone);
+-- one row: 13 · 6 040
 ```
 
 One row: all 6 040 phone numbers have 13 characters (`+998` and nine digits). A length check is the quickest format test for codes, phones and ids.
@@ -148,10 +157,12 @@ One row: all 6 040 phone numbers have 13 characters (`+998` and nine digits). A 
 ```
 
 ```sql
-SELECT SUBSTR(applied_at, 12, 2) AS hour, COUNT(*) AS applications   -- SQL Server: DATEPART(hour, applied_at)
+-- SQL Server: DATEPART(hour, applied_at)
+SELECT SUBSTR(applied_at, 12, 2) AS hour, COUNT(*) AS applications
 FROM applications
 GROUP BY SUBSTR(applied_at, 12, 2)
-ORDER BY applications DESC;                                           -- 15 → 1 089 first
+ORDER BY applications DESC;
+-- 15 → 1 089 first
 ```
 
 Applications arrive from 08:00 to 21:59; the busiest hour is 15:00 with 1 089 applications. `SUBSTR(phone, -4)` gives the last four digits (`RIGHT(phone, 4)` on SQL Server).
@@ -197,8 +208,10 @@ Five rows, the five real methods. `TRIM` and `LOWER` merge `Card`, `CASH `, `Pay
 **How to write it.**
 
 ```sql
-SELECT INSTR('bank transfer', ' '),      -- 5: the space is the 5th character      SQL Server: CHARINDEX(' ', 'bank transfer')
-       INSTR('card', ' ');               -- 0: no space
+-- 5: the space is the 5th character      SQL Server: CHARINDEX(' ', 'bank
+-- transfer')
+SELECT INSTR('bank transfer', ' '),
+       INSTR('card', ' ');  -- 0: no space
 ```
 
 Its usual partner is `SUBSTR`: find where something starts, then cut there. The major version of the mobile app is the text before the first dot:
@@ -206,7 +219,7 @@ Its usual partner is `SUBSTR`: find where something starts, then cut there. The 
 ```sql
 SELECT SUBSTR(app_version, 1, INSTR(app_version, '.') - 1) AS major, COUNT(*) AS events
 FROM app_events
-GROUP BY major;                          -- 3 → 11 325 · 4 → 11 459
+GROUP BY major;  -- 3 → 11 325 · 4 → 11 459
 ```
 
 App events split almost evenly: 11 325 from version 3.x and 11 459 from version 4.x.
@@ -226,9 +239,12 @@ App events split almost evenly: 11 325 from version 3.x and 11 459 from version 
 **How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM applications WHERE status LIKE 'approved%';   -- 8 595: 'approved' and 'approved_not_disbursed'
-SELECT COUNT(*) FROM customers    WHERE last_name LIKE '%ova';     -- 2 447 surnames ending in 'ova'
-SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';   -- 1 862 first names of exactly 5 characters
+SELECT COUNT(*) FROM applications WHERE status LIKE 'approved%';
+-- 8 595: 'approved' and 'approved_not_disbursed'
+SELECT COUNT(*) FROM customers    WHERE last_name LIKE '%ova';
+-- 2 447 surnames ending in 'ova'
+SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';
+-- 1 862 first names of exactly 5 characters
 ```
 
 8 595 applications start with `approved`: 7 917 `approved` and 678 `approved_not_disbursed`.
@@ -250,10 +266,12 @@ SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';   -- 1 862 firs
 **How to write it.**
 
 ```sql
-SELECT p.name, ROUND(AVG(l.principal) / 1000000.0, 1) AS avg_ticket_m      -- divide first, then round once
+-- divide first, then round once
+SELECT p.name, ROUND(AVG(l.principal) / 1000000.0, 1) AS avg_ticket_m
 FROM loans l JOIN products p ON p.product_id = l.product_id
 GROUP BY p.name
-ORDER BY avg_ticket_m DESC;               -- SME 308.7 · Auto 216.9 · Consumer 26.9 · BNPL 4.2 · Micro 2.7
+ORDER BY avg_ticket_m DESC;
+-- SME 308.7 · Auto 216.9 · Consumer 26.9 · BNPL 4.2 · Micro 2.7
 ```
 
 The average SME loan is 308.7 m UZS; the average Micro loan is 2.7 m. Divided by a million and rounded to one decimal, the numbers are ready for a slide.
@@ -301,10 +319,13 @@ SELECT 7917 / 14000,                   -- 0
 **How to write it.**
 
 ```sql
-SELECT CAST(AVG(principal) AS INTEGER),   -- 51 709 667: the .86 is cut off, not rounded      SQL Server: CAST(… AS BIGINT)
-       ROUND(AVG(principal)),             -- 51 709 668: rounded
-       CAST('2026' AS INTEGER) + 1,       -- 2027: text into a number
-       CAST(7917 AS REAL) / 14000         -- 0.5655: one side made decimal before dividing
+-- 51 709 667: the .86 is cut off, not rounded      SQL Server: CAST(… AS
+-- BIGINT)
+SELECT CAST(AVG(principal) AS INTEGER),
+       ROUND(AVG(principal)),        -- 51 709 668: rounded
+       CAST('2026' AS INTEGER) + 1,  -- 2027: text into a number
+       -- 0.5655: one side made decimal before dividing
+       CAST(7917 AS REAL) / 14000
 FROM loans;
 ```
 
@@ -328,10 +349,11 @@ FROM loans;
 
 ```sql
 SELECT COUNT(*) AS different,
-       SUM(p.amount > i.total_due) AS over_paid,          -- SQL Server: SUM(IIF(p.amount > i.total_due, 1, 0))
+       -- SQL Server: SUM(IIF(p.amount > i.total_due, 1, 0))
+       SUM(p.amount > i.total_due) AS over_paid,
        SUM(p.amount < i.total_due) AS under_paid
 FROM payments p JOIN installments i ON i.installment_id = p.installment_id
-WHERE ABS(p.amount - i.total_due) > 0;                    -- 427 · 0 · 427
+WHERE ABS(p.amount - i.total_due) > 0;  -- 427 · 0 · 427
 ```
 
 427 payments differ from the amount due, and all 427 are smaller: partial payments. Nobody paid more than asked.
@@ -353,9 +375,11 @@ WHERE ABS(p.amount - i.total_due) > 0;                    -- 427 · 0 · 427
 ```sql
 SELECT channel,
        COUNT(*) AS applications,
-       ROUND(100.0 * SUM(status LIKE 'approved%') / COUNT(*), 1) AS approval_pct   -- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0))
+       -- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0))
+       ROUND(100.0 * SUM(status LIKE 'approved%') / COUNT(*), 1) AS approval_pct
 FROM applications
-GROUP BY channel;                        -- app 58.2 · branch 63.7 · partner 61.9
+GROUP BY channel;
+-- app 58.2 · branch 63.7 · partner 61.9
 ```
 
 The branch approves 63.7 % of its applications, the app 58.2 %: a gap of 5.5 percentage points (not "5.5 %").
@@ -377,9 +401,12 @@ The branch approves 63.7 % of its applications, the app 58.2 %: a gap of 5.5 per
 **How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at = '2026-10-01';   -- 21 loans paid out on the as-of date
-SELECT date('2026-09-30 14:05:00');                             -- '2026-09-30': the date part of a datetime      SQL Server: CAST(… AS DATE)
-SELECT '2026-9-5' < '2026-10-01';                               -- 0 (false): '9' sorts after '1' — the zeros matter
+SELECT COUNT(*) FROM loans WHERE disbursed_at = '2026-10-01';
+-- 21 loans paid out on the as-of date
+SELECT date('2026-09-30 14:05:00');
+-- '2026-09-30': the date part of a datetime      SQL Server: CAST(… AS DATE)
+SELECT '2026-9-5' < '2026-10-01';
+-- 0 (false): '9' sorts after '1' — the zeros matter
 ```
 
 21 loans were paid out on 1 October 2026, the last day of the data.
@@ -405,10 +432,12 @@ SELECT '2026-9-5' < '2026-10-01';                               -- 0 (false): '9
 **How to write it.**
 
 ```sql
-SELECT strftime('%w', disbursed_at) AS weekday, COUNT(*) AS loans   -- SQL Server: DATEPART(weekday, disbursed_at)
+-- SQL Server: DATEPART(weekday, disbursed_at)
+SELECT strftime('%w', disbursed_at) AS weekday, COUNT(*) AS loans
 FROM loans
 GROUP BY strftime('%w', disbursed_at)
-ORDER BY weekday;                        -- 0 (Sun) 1 125 · 1 1 106 · … · 6 (Sat) 1 081
+ORDER BY weekday;
+-- 0 (Sun) 1 125 · 1 1 106 · … · 6 (Sat) 1 081
 ```
 
 Loans are paid out evenly on all seven days, about 1 100 each, Sundays included: this synthetic company never closes. Our `dim_date` table is the no-function alternative: `JOIN dim_date d ON d.date_key = l.disbursed_at` gives `d.year`, `d.month_name`, `d.is_weekend` on both engines (2 206 loans on a Saturday or Sunday).
@@ -435,11 +464,15 @@ Loans are paid out evenly on all seven days, about 1 100 each, Sundays included:
 
 ```sql
 -- how old is loan 1 on the as-of date?
-SELECT CAST(julianday('2026-10-01') - julianday(disbursed_at) AS INTEGER) AS age_days   -- SQL Server: DATEDIFF(day, disbursed_at, '2026-10-01')
-FROM loans WHERE loan_id = 1;                                                            -- 552
+-- SQL Server: DATEDIFF(day, disbursed_at, '2026-10-01')
+SELECT CAST(julianday('2026-10-01') - julianday(disbursed_at) AS INTEGER) AS age_days
+FROM loans WHERE loan_id = 1;
+-- 552
 
-SELECT date('2026-10-01', '-30 days'),                          -- '2026-09-01'      DATEADD(day, -30, '2026-10-01')
-       date('2026-10-01', 'start of month', '+1 month', '-1 day');   -- '2026-10-31': the last day of the month   EOMONTH('2026-10-01')
+-- '2026-09-01'      DATEADD(day, -30, '2026-10-01')
+SELECT date('2026-10-01', '-30 days'),
+       date('2026-10-01', 'start of month', '+1 month', '-1 day');
+       -- '2026-10-31': the last day of the month   EOMONTH('2026-10-01')
 ```
 
 Loan 1 was paid out on 2025-03-28, 552 days before the as-of date. `julianday` counts fractional days when a time is present, so wrap the difference in `CAST(… AS INTEGER)` for whole days.
@@ -462,7 +495,8 @@ Loan 1 was paid out on 2025-03-28, 552 days before the as-of date. `julianday` c
 
 ```sql
 SELECT COUNT(*) FROM applications
-WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';     -- 621: all of September, every time of day
+WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';
+-- 621: all of September, every time of day
 ```
 
 621 applications in September 2026. `BETWEEN '2026-09-01' AND '2026-09-30'` returns 598: it stops at 30 September **00:00:00**, so the 23 applications made later that day are lost.
@@ -484,14 +518,20 @@ WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';     -- 621: all 
 One request, functions of all three kinds. *"For September 2026: payments by cleaned method, with the share paid late and the average days late."*
 
 ```sql
-SELECT REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer') AS method,             -- strings: TRIM, LOWER, REPLACE
+-- strings: TRIM, LOWER, REPLACE
+SELECT REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer') AS method,
        COUNT(*) AS payments,
-       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1)  AS late_pct,             -- numbers: 100.0 first, ROUND last
-       ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_late       -- dates: julianday difference
+       -- numbers: 100.0 first, ROUND last
+       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1)  AS late_pct,
+       -- dates: julianday difference
+       ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_late
 FROM payments p
-JOIN installments i ON i.installment_id = p.installment_id                               -- the due date lives on the instalment
-WHERE p.paid_at >= '2026-09-01' AND p.paid_at < '2026-10-01'                             -- half-open period
-GROUP BY REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer')                     -- the same expression as in SELECT
+-- the due date lives on the instalment
+JOIN installments i ON i.installment_id = p.installment_id
+-- half-open period
+WHERE p.paid_at >= '2026-09-01' AND p.paid_at < '2026-10-01'
+-- the same expression as in SELECT
+GROUP BY REPLACE(LOWER(TRIM(p.method)), 'bank transfer', 'transfer')
 ORDER BY payments DESC;
 ```
 
@@ -575,7 +615,8 @@ How many loans were paid out before their application was submitted?
 SELECT REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,
        COUNT(*) AS payments, ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM payments), 1) AS share_pct
 FROM payments GROUP BY 1 ORDER BY payments DESC;
--- card 17621 (33.3 %) · payme 8900 (16.8) · click 8790 (16.6) · cash 8790 (16.6) · transfer 8774 (16.6)
+-- card 17621 (33.3 %) · payme 8900 (16.8) · click 8790 (16.6) · cash 8790
+-- (16.6) · transfer 8774 (16.6)
 ```
 Raw `card` was 17 564 = 33.2 % on SQLite (SQL Server's default collation already puts `Card` with `card`); the tile moved by the 57 `Card` rows. Nothing changed overnight except which rows the cashier's software capitalised.
 
@@ -593,7 +634,8 @@ Questions whose answer is a query have a box under them — write, **▶ Run**, 
 
 ```sql
 SELECT customer_id, TRIM(first_name) || ' ' || last_name AS full_name, LOWER(TRIM(first_name)) || ' ' || LOWER(last_name) AS match_key
-FROM customers WHERE customer_id BETWEEN 6001 AND 6003;   -- 'MALIKA jalilova' / 'malika jalilova', 'LOLA saidova', 'Bobur rakhimov'
+FROM customers WHERE customer_id BETWEEN 6001 AND 6003;
+-- 'MALIKA jalilova' / 'malika jalilova', 'LOLA saidova', 'Bobur rakhimov'
 ```
 The `match_key` is what last Thursday's duplicate search grouped on.
 
@@ -605,7 +647,8 @@ The `match_key` is what last Thursday's duplicate search grouped on.
 
 ```sql
 SELECT COUNT(DISTINCT last_name) AS spellings, COUNT(DISTINCT LOWER(last_name)) AS surnames
-FROM customers;                                                        -- 60 · 36
+FROM customers;
+-- 60 · 36
 ```
 60 − 36 = **24** spellings are lower-case copies of a real surname (`karimova` next to `Karimova`). Group on `LOWER(last_name)` and there are 36 surnames.
 
@@ -618,7 +661,7 @@ FROM customers;                                                        -- 60 · 
 ```sql
 SELECT DISTINCT '[' || method || ']' AS shown
 FROM payments
-WHERE method <> TRIM(method);                                          -- [CASH ]
+WHERE method <> TRIM(method);  -- [CASH ]
 ```
 One value, `[CASH ]`: the trailing space is invisible in a normal result and obvious between brackets.
 
@@ -629,8 +672,10 @@ One value, `[CASH ]`: the trailing space is invisible in a normal result and obv
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_name));   -- 18
--- SQL Server: LEN() ignores trailing spaces, so use DATALENGTH(first_name) <> DATALENGTH(TRIM(first_name))
+SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_name));
+-- 18
+-- SQL Server: LEN() ignores trailing spaces, so use DATALENGTH(first_name) <>
+-- DATALENGTH(TRIM(first_name))
 ```
 
 </details>
@@ -640,10 +685,12 @@ SELECT COUNT(*) FROM customers WHERE LENGTH(first_name) <> LENGTH(TRIM(first_nam
 <details><summary>Answer</summary>
 
 ```sql
-SELECT SUBSTR(disbursed_at, 1, 4) AS yr, COUNT(*) AS loans          -- SQL Server: YEAR(disbursed_at)
+-- SQL Server: YEAR(disbursed_at)
+SELECT SUBSTR(disbursed_at, 1, 4) AS yr, COUNT(*) AS loans
 FROM loans
 GROUP BY SUBSTR(disbursed_at, 1, 4)
-ORDER BY yr;                                                           -- 2024 1736 · 2025 3041 · 2026 3051
+ORDER BY yr;
+-- 2024 1736 · 2025 3041 · 2026 3051
 ```
 The same numbers as Tuesday's `strftime('%Y', …)`: on a `'YYYY-MM-DD'` text, the first four characters are the year.
 
@@ -655,7 +702,7 @@ The same numbers as Tuesday's `strftime('%Y', …)`: on a `'YYYY-MM-DD'` text, t
 
 ```sql
 SELECT customer_id, phone, REPLACE(phone, '+998', '8') AS local_phone
-FROM customers WHERE customer_id = 44;                                 -- +998902229531 → 8902229531
+FROM customers WHERE customer_id = 44;  -- +998902229531 → 8902229531
 ```
 
 </details>
@@ -690,7 +737,8 @@ SELECT COUNT(*) FROM customers WHERE phone LIKE '%00';                 -- 71
 ```sql
 SELECT p.name, ROUND(SUM(l.principal) / 1000000000.0, 1) AS disbursed_bn
 FROM loans l JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name ORDER BY disbursed_bn DESC;      -- SME 241.1 · Auto 84.8 · Consumer 65.1 · Micro 7.2 · BNPL 6.5
+GROUP BY p.name ORDER BY disbursed_bn DESC;
+-- SME 241.1 · Auto 84.8 · Consumer 65.1 · Micro 7.2 · BNPL 6.5
 ```
 Divide by a billion with a decimal point (`1000000000.0`), then round once.
 
@@ -702,8 +750,10 @@ Divide by a billion with a decimal point (`1000000000.0`), then round once.
 
 ```sql
 SELECT channel,
-       100 * SUM(status LIKE 'approved%') / COUNT(*)   AS whole_pct,      -- 58 · 63 · 61
-       100.0 * SUM(status LIKE 'approved%') / COUNT(*) AS decimal_pct     -- 58.23 · 63.72 · 61.89
+       -- 58 · 63 · 61
+       100 * SUM(status LIKE 'approved%') / COUNT(*)   AS whole_pct,
+       -- 58.23 · 63.72 · 61.89
+       100.0 * SUM(status LIKE 'approved%') / COUNT(*) AS decimal_pct
 FROM applications GROUP BY channel;
 -- SQL Server: SUM(IIF(status LIKE 'approved%', 1, 0)) for the count
 ```
@@ -730,7 +780,8 @@ In **3**: Auto (216 858 132 vs …133), BNPL (4 170 879 vs …880) and Consumer 
 
 ```sql
 SELECT MAX(ABS(p.amount - i.total_due)) AS largest_gap
-FROM payments p JOIN installments i ON i.installment_id = p.installment_id;     -- 38 721 136
+FROM payments p JOIN installments i ON i.installment_id = p.installment_id;
+-- 38 721 136
 ```
 38.7 m UZS: payment 46016 on loan 6877 paid 10 690 864 against 49 412 000 due — a partial payment of about a fifth.
 
@@ -743,7 +794,8 @@ FROM payments p JOIN installments i ON i.installment_id = p.installment_id;     
 ```sql
 SELECT p.name, ROUND(100.0 * SUM(i.interest_due) / SUM(i.total_due), 1) AS interest_pct
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name;      -- Auto 29.5 · SME 23.1 · Consumer 17.5 · Micro 9.0 · BNPL 0.0
+GROUP BY p.name;
+-- Auto 29.5 · SME 23.1 · Consumer 17.5 · Micro 9.0 · BNPL 0.0
 ```
 BNPL has `annual_rate = 0` — the merchant pays, not the borrower. Longer terms → more interest share (Auto 36 months). Without `100.0` the column is all zeros.
 
@@ -774,7 +826,8 @@ SELECT COUNT(*) FROM payments WHERE paid_at >= '2026-10-01';           -- 60
 SELECT d.month, d.month_name, COUNT(*) AS loans, SUM(l.principal) AS disbursed
 FROM loans l JOIN dim_date d ON d.date_key = l.disbursed_at
 WHERE d.year = 2026 GROUP BY d.month, d.month_name ORDER BY d.month;
--- January 287 / 17.45 bn … August 358 / 22.29 bn, September 361 / 17.02 bn, October 21 / 0.85 bn (one day)
+-- January 287 / 17.45 bn … August 358 / 22.29 bn, September 361 / 17.02 bn,
+-- October 21 / 0.85 bn (one day)
 ```
 Same numbers as Tuesday's `strftime` version, no dialect difference, and a readable month name for free.
 
@@ -785,8 +838,10 @@ Same numbers as Tuesday's `strftime` version, no dialect difference, and a reada
 <details><summary>Answer</summary>
 
 ```sql
-SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans WHERE status = 'active';   -- 221
--- SQL Server: AVG(DATEDIFF(day, disbursed_at, '2026-10-01'))  (integer average → CAST one side AS FLOAT first)
+SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans WHERE status = 'active';
+-- 221
+-- SQL Server: AVG(DATEDIFF(day, disbursed_at, '2026-10-01'))  (integer average
+-- → CAST one side AS FLOAT first)
 ```
 
 </details>
@@ -797,11 +852,14 @@ SELECT ROUND(AVG(julianday('2026-10-01') - julianday(disbursed_at))) FROM loans 
 
 ```sql
 SELECT p.payment_id, p.loan_id, i.due_date, p.paid_at,
-       CAST(julianday(p.paid_at) - julianday(i.due_date) AS INTEGER) AS days_late     -- DATEDIFF(day, i.due_date, p.paid_at)
+       -- DATEDIFF(day, i.due_date, p.paid_at)
+       CAST(julianday(p.paid_at) - julianday(i.due_date) AS INTEGER) AS days_late
 FROM payments p JOIN installments i ON i.installment_id = p.installment_id
-ORDER BY days_late DESC LIMIT 5;                      -- five payments at exactly 60 days
+ORDER BY days_late DESC LIMIT 5;
+-- five payments at exactly 60 days
 SELECT COUNT(*) FROM payments p JOIN installments i ON i.installment_id = p.installment_id
-WHERE p.paid_at > i.due_date;                         -- 6669 of 52875 = 12.6 % late
+WHERE p.paid_at > i.due_date;
+-- 6669 of 52875 = 12.6 % late
 ```
 Negative days_late = paid early (34 649 payments); 11 557 on the day; 534 more than 30 days late. The maximum is 60 — the data's borrowers never pay later than two months; after that they stop paying, which is why lateness and DPD are two different measurements.
 
@@ -814,7 +872,8 @@ Negative days_late = paid early (34 649 payments); 11 557 on the day; 534 more t
 ```sql
 SELECT pr.name, COUNT(*) AS payments,
        ROUND(AVG(julianday(p.paid_at) - julianday(i.due_date)), 2) AS avg_days_all,
-       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1) AS late_pct          -- SQL Server: SUM(IIF(p.paid_at > i.due_date, 1, 0))
+       -- SQL Server: SUM(IIF(p.paid_at > i.due_date, 1, 0))
+       ROUND(100.0 * SUM(p.paid_at > i.due_date) / COUNT(*), 1) AS late_pct
 FROM payments p JOIN installments i ON i.installment_id = p.installment_id
 JOIN loans l ON l.loan_id = p.loan_id JOIN products pr ON pr.product_id = l.product_id
 GROUP BY pr.name ORDER BY avg_days_all DESC;
@@ -850,9 +909,12 @@ A 5.1 % late / −0.87 days · B 9.8 % / −0.31 · C 19.6 % / +1.05 · D 35.6 %
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';          -- 361
-SELECT COUNT(*) FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';       -- 621
-SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30';               -- 598 (wrong: loses 23)
+SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';
+-- 361
+SELECT COUNT(*) FROM applications WHERE applied_at >= '2026-09-01' AND applied_at < '2026-10-01';
+-- 621
+SELECT COUNT(*) FROM applications WHERE applied_at BETWEEN '2026-09-01' AND '2026-09-30';
+-- 598 (wrong: loses 23)
 ```
 
 </details>
@@ -894,13 +956,15 @@ What do the 27 raw `bank transfer` rows average, in days late? (Two decimals.)
 
 ```sql
 SELECT l.loan_id, a.decided_at, l.disbursed_at, i.due_date AS first_due,
-       date(i.due_date, '-1 month') AS true_disbursed,                                  -- DATEADD(month, -1, i.due_date)
+       -- DATEADD(month, -1, i.due_date)
+       date(i.due_date, '-1 month') AS true_disbursed,
        CAST(julianday(date(i.due_date, '-1 month')) - julianday(a.decided_at) AS INTEGER) AS lag_days
 FROM loans l JOIN applications a ON a.application_id = l.application_id
 JOIN installments i ON i.loan_id = l.loan_id AND i.installment_no = 1
 WHERE l.disbursed_at < date(a.applied_at) ORDER BY l.loan_id;
 SELECT COUNT(*) FROM loans l JOIN installments i ON i.loan_id = l.loan_id AND i.installment_no = 1
-WHERE date(i.due_date, '-1 month') <> l.disbursed_at;                                 -- 166
+WHERE date(i.due_date, '-1 month') <> l.disbursed_at;
+-- 166
 ```
 Lags of 0–3 days for all twelve (1039 → 2025-01-07, 2 days after the decision; 2244 → 2026-09-30, 3 days) — exactly the lag every normal loan shows. On all 7 828 loans the rule `date(first_due, '-1 month') <> disbursed_at` flags **166**: the 12 real ones plus 154 month-end artefacts (disbursed 2026-01-29 → due 2026-02-28, and February cannot give January 29 back). A date rule needs a tolerance; a "wrong" flag list always needs a look.
 
@@ -981,19 +1045,23 @@ Week 1 Day 3 gave you the definition and the numbers 413 and 14 / 124 / 25 / 16 
 Steps 1 and 2 are two groupings in a row, which needs week 3's CTE (`WITH … AS (…)`) to chain. **This is a read-and-run preview:** run it, read it as two named results; next week you write this shape yourself.
 
 ```sql
-WITH unpaid AS (                                   -- step 1: matured instalments not fully paid
+-- step 1: matured instalments not fully paid
+WITH unpaid AS (
   SELECT i.installment_id, i.loan_id, i.due_date, i.total_due,
-         COALESCE(SUM(p.amount), 0) AS paid        -- COALESCE: NULL (no payment) → 0; Day 4
+         -- COALESCE: NULL (no payment) → 0; Day 4
+         COALESCE(SUM(p.amount), 0) AS paid
   FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.due_date <= '2026-10-01'
   GROUP BY i.installment_id, i.loan_id, i.due_date, i.total_due
   HAVING COALESCE(SUM(p.amount), 0) < i.total_due
 ),
-dpd AS (                                           -- step 2 + 3: oldest unpaid per loan, in days
+-- step 2 + 3: oldest unpaid per loan, in days
+dpd AS (
   SELECT loan_id,
          MIN(due_date) AS oldest_unpaid_due,
-         CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,   -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+         -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+         CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,
          COUNT(*) AS unpaid_instalments,
          SUM(total_due - paid) AS overdue_amount
   FROM unpaid GROUP BY loan_id

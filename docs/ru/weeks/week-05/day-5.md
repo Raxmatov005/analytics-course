@@ -41,7 +41,8 @@
 ~~~
 
 ```python
-# (shape only — not meant to run) … только форма: L — фрейм кредитов, прочитанный в S2
+# (shape only — not meant to run) … только форма: L — фрейм кредитов,
+# прочитанный в S2
 # grain: one row per loan (L, 7 828); products joined m:1 in the read_sql above
 by_prod = L.groupby("code").agg(loans=("loan_id", "size"), disbursed=("principal", "sum"))
 by_prod["amount_share"] = (100 * by_prod["disbursed"] / by_prod["disbursed"].sum()).round(1)
@@ -147,7 +148,7 @@ pay = pd.read_sql("SELECT * FROM payments", con, parse_dates=["paid_at"])
 inst = pd.read_sql("SELECT * FROM installments", con, parse_dates=["due_date"])
 print(L["disbursed_at"].min(), L["disbursed_at"].max(), pay["paid_at"].min(), pay["paid_at"].max(), inst["due_date"].max())
 # 2024-01-02 · 2026-10-01 · 2024-01-31 · 2026-11-24 · 2030-10-01
-(pay["paid_at"] > AS_OF).sum()      # 24 строки с датой в будущем, 53 438 947
+(pay["paid_at"] > AS_OF).sum()  # 24 строки с датой в будущем, 53 438 947
 ```
 
 **Совпадение:** идентично. **Вывод.** 33 месяца кредитования, график платежей до октября 2030 и `MAX(paid_at)` после даты отчёта — те 24 строки, которые каждая сумма платежей ниже исключает через `pay["paid_at"] <= AS_OF`. В pandas пять крайних значений — это пять вызовов методов на типизированных столбцах; типизация происходит в аргументе `parse_dates=`, а если его забыть, `.max()` превратится в сравнение строк, которое всё равно «работает».
@@ -167,7 +168,8 @@ collected = pc.loc[pc["paid_at"] <= AS_OF, "amount"].sum()
 tiles = {"loans": len(L), "borrowers": L["customer_id"].nunique(), "disbursed": L["principal"].sum(),
          "avg_ticket": round(L["principal"].mean()), "avg_term": round(L["term_months"].mean(), 1),
          "outstanding": outstanding, "collected": collected, "interest": inst["interest_due"].sum()}
-# 7828 · 4335 · 404 783 280 000 · 51 709 668 · 11.8 · 208 723 504 430 · 255 061 333 229 · 122 497 355 801
+# 7828 · 4335 · 404 783 280 000 · 51 709 668 · 11.8 · 208 723 504 430 · 255 061
+# 333 229 · 122 497 355 801
 assert tiles["outstanding"] == 208_723_504_430 and tiles["collected"] == 255_061_333_229
 tiles
 ```
@@ -187,10 +189,14 @@ by_prod = L.groupby("code").agg(loans=("loan_id", "size"), disbursed=("principal
 by_prod["loan_share"] = 100 * by_prod["loans"] / by_prod["loans"].sum()
 by_prod["amount_share"] = 100 * by_prod["disbursed"] / by_prod["disbursed"].sum()
 print(by_prod.sort_values("disbursed", ascending=False).round(1))
-# SME 781 / 241 117 150 000 / 308 728 745 / 10.0 / 59.6 · AUTO 391 / 84 791 530 000 / 216 858 133 / 5.0 / 20.9 · CONS 2418 / 65 109 280 000 / 30.9 / 16.1 · MICRO 2669 / 7 221 210 000 / 34.1 / 1.8 · BNPL 1569 / 6 544 110 000 / 20.0 / 1.6
+# SME 781 / 241 117 150 000 / 308 728 745 / 10.0 / 59.6 · AUTO 391 / 84 791 530
+# 000 / 216 858 133 / 5.0 / 20.9 · CONS 2418 / 65 109 280 000 / 30.9 / 16.1 ·
+# MICRO 2669 / 7 221 210 000 / 34.1 / 1.8 · BNPL 1569 / 6 544 110 000 / 20.0 /
+# 1.6
 by_region = L.groupby("region")["principal"].sum().pipe(lambda s: (100 * s / s.sum()).round(1)).sort_values(ascending=False)
 by_region
-# Tashkent 39.7 · Fergana 12.7 · Samarkand 11.2 · Andijan 9.5 · Namangan 8.6 · Bukhara 6.9 · Nukus 5.8 · Termez 5.7
+# Tashkent 39.7 · Fergana 12.7 · Samarkand 11.2 · Andijan 9.5 · Namangan 8.6 ·
+# Bukhara 6.9 · Nukus 5.8 · Termez 5.7
 ```
 
 График: barh остатка по продуктам из Дня 4 (60.3 / 27.6 / 11.0 / 0.5 / 0.5). **Совпадение:** идентично S5 недели 3. **Вывод.** Два портфеля в одном — 85 % кредитов это Micro/Consumer/BNPL, 80 % денег — SME/Auto; соотношение среднего чека SME : Micro составляет 114 : 1 (308.7 млн против 2.7 млн). `agg` с именованными результатами и затем два столбца долей — это всё окно поверх `GROUP BY` с недели 3.
@@ -210,13 +216,18 @@ rank = (y26.merge(br, on="branch_id", validate="m:1").groupby("branch_name")
            .agg(loans=("loan_id", "size"), disbursed_2026=("principal", "sum")).sort_values("disbursed_2026", ascending=False))
 rank["rk"] = rank["disbursed_2026"].rank(method="min", ascending=False).astype(int)
 print(rank)
-# 1 Tashkent South 381 / 21 380 780 000 · 2 Fergana Central 315 / 19 742 090 000 · 3 Samarkand Central 344 / 19 440 640 000 … 10 Termez Central 184 / 8 120 400 000
+# 1 Tashkent South 381 / 21 380 780 000 · 2 Fergana Central 315 / 19 742 090 000
+# · 3 Samarkand Central 344 / 19 440 640 000 … 10 Termez Central 184 / 8 120 400
+# 000
 cust = pd.read_sql("SELECT customer_id, first_name || ' ' || last_name AS customer, segment FROM customers", con)
 top = (L.groupby("customer_id").agg(loans=("loan_id", "size"), total=("principal", "sum")).nlargest(3, "total")
         .merge(cust, on="customer_id"))
 print(top)
-# Murod Yusupov (sme) 5 / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000
-L.groupby("code")["principal"].max()     # AUTO 399 530 000 · BNPL 7 990 000 · CONS 49 990 000 · MICRO 4 990 000 · SME 599 060 000
+# Murod Yusupov (sme) 5 / 1 258 430 000 · Ulugbek Nazarov (sme) 2 / 1 023 170
+# 000 · Ulugbek Mirzaev (mass) 3 / 971 810 000
+# AUTO 399 530 000 · BNPL 7 990 000 · CONS 49 990 000 · MICRO 4 990 000 · SME
+# 599 060 000
+L.groupby("code")["principal"].max()
 ```
 
 **Совпадение:** идентично. **Вывод.** Fergana Central — второй по деньгам при меньшем числе кредитов, чем у четырёх других филиалов, — много SME; Termez последний с 38 % от лидера. Самый крупный кредит каждого продукта упирается в его `max_amount`. `rank(method="min")` — это `RANK()`; `nlargest` — это `ORDER BY … LIMIT`; единственное место, где нужна осторожность, — соединение с филиалами: `validate="m:1"` говорит, что у кредита один филиал.
@@ -259,14 +270,18 @@ m.loc["2026-01":]
 ```python
 rows = []
 for ms in pd.period_range("2026-01", "2026-09", freq="M"):
-    nxt = (ms + 1).to_timestamp()                                   # первый день следующего месяца
-    live = L.loc[L["disbursed_at"] < nxt, "loan_id"]                # кредиты, существовавшие на конец месяца
+    # первый день следующего месяца
+    nxt = (ms + 1).to_timestamp()
+    # кредиты, существовавшие на конец месяца
+    live = L.loc[L["disbursed_at"] < nxt, "loan_id"]
     bal = inst[(inst["due_date"] >= nxt) & inst["loan_id"].isin(live)]
     rows.append((str(ms), bal["principal_due"].sum(), bal["loan_id"].nunique()))
 s8 = pd.DataFrame(rows, columns=["month", "outstanding", "loans_with_balance"])
 s8["net_growth"] = s8["outstanding"].diff()
 s8
-# 2026-01 151 807 386 149 (2 579) · 02 154 145 984 724 (+2.3 bn) · 03 163 974 316 812 (+9.8) · … · 08 203 830 205 928 (+10.2) · 09 208 243 879 623 (+4.4 bn, 3 392 loans)
+# 2026-01 151 807 386 149 (2 579) · 02 154 145 984 724 (+2.3 bn) · 03 163 974
+# 316 812 (+9.8) · … · 08 203 830 205 928 (+10.2) · 09 208 243 879 623 (+4.4 bn,
+# 3 392 loans)
 ```
 
 **Совпадение:** все девять концов месяцев равны S8 недели 3 (`v_portfolio_monthly` / рекурсивный календарь). **Вывод.** +56 млрд (+37 %) за девять месяцев при выдаче 161.5 млрд: две трети нового кредитования замещают погашения. Это единственный раздел, где pandas *понятнее* SQL, — девятишаговый цикл с читаемым условием заменяет рекурсивный CTE плюс коррелированный агрегат, — и он же единственный, где он медленнее всего (девять проходов по 92 193 строкам; всё равно меньше секунды).
@@ -280,7 +295,8 @@ s8
 <details><summary>Образец ответа</summary>
 
 ```python
-def dpd_per_loan(inst, pay, as_of):                                             # HW 5.2 — Уголок компании Дня 3 в виде функции
+# HW 5.2 — Уголок компании Дня 3 в виде функции
+def dpd_per_loan(inst, pay, as_of):
     paid = pay[pay["paid_at"] <= as_of].groupby("installment_id", as_index=False).agg(paid=("amount", "sum"))
     mm = inst.merge(paid, on="installment_id", how="left", validate="1:1").fillna({"paid": 0})
     late = mm[(mm["paid"] < mm["total_due"]) & (mm["due_date"] <= as_of)]
@@ -289,13 +305,18 @@ def dpd_per_loan(inst, pay, as_of):                                             
     d["bucket"] = pd.cut(d["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
     return d
 
-d = dpd_per_loan(inst, pc, AS_OF)                                               # loan_id, dpd, bucket
+# loan_id, dpd, bucket
+d = dpd_per_loan(inst, pc, AS_OF)
 st = d.merge(inst[inst["due_date"] > AS_OF].groupby("loan_id")["principal_due"].sum().rename("outstanding"), on="loan_id", how="left").fillna({"outstanding": 0})
 b = st.groupby("bucket", observed=True).agg(loans=("loan_id", "size"), outstanding=("outstanding", "sum"))
 b["share_pct"] = (100 * b["outstanding"] / b["outstanding"].sum()).round(2)
-# 0 7429 / 197 486 207 578 / 94.62 · 1-30 124 / 4 729 769 899 / 2.27 · 31-60 25 / 748 610 049 / 0.36 · 61-90 16 / 439 441 377 / 0.21 · 90+ 234 / 5 319 475 527 / 2.55
-par30 = st.loc[st["dpd"] > 30, "outstanding"].sum() / st["outstanding"].sum()   # 3.12 %
-npl90 = st.loc[st["dpd"] > 90, "outstanding"].sum() / st["outstanding"].sum()   # 2.55 %
+# 0 7429 / 197 486 207 578 / 94.62 · 1-30 124 / 4 729 769 899 / 2.27 · 31-60 25
+# / 748 610 049 / 0.36 · 61-90 16 / 439 441 377 / 0.21 · 90+ 234 / 5 319 475 527
+# / 2.55
+# 3.12 %
+par30 = st.loc[st["dpd"] > 30, "outstanding"].sum() / st["outstanding"].sum()
+# 2.55 %
+npl90 = st.loc[st["dpd"] > 90, "outstanding"].sum() / st["outstanding"].sum()
 b, round(100 * par30, 2), round(100 * npl90, 2)
 ```
 
@@ -320,7 +341,8 @@ ct = pd.crosstab(lc["band"], lc["risk_grade"])
 ct["loans"] = ct.sum(axis=1); ct["cd_share_pct"] = (100 * (ct["C"] + ct["D"]) / ct["loans"]).round(1)
 ct["avg_ticket"] = lc.groupby("band")["principal"].mean().round()
 ct
-# unknown 466 кредитов / C+D 32.0 % · <5m 1670 / 33.0 · 5-10m 2781 / 32.8 · 10-20m 774 / 34.8 · 20m+ 2137 / 33.7
+# unknown 466 кредитов / C+D 32.0 % · <5m 1670 / 33.0 · 5-10m 2781 / 32.8 ·
+# 10-20m 774 / 34.8 · 20m+ 2137 / 33.7
 ```
 
 Концентрация (pandas): три крупнейших филиала — 39.1 % остатка, верхний дециль заёмщиков — 49.1 % (`sort_values().head(len // 10).sum()`). График: heatmap из crosstab или составная столбчатая диаграмма долей грейдов по группам.

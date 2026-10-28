@@ -23,8 +23,10 @@
 **How to write it.** Home → **New column** for a column, Home → **New measure** for a measure; the formula bar takes `Name = expression`.
 
 ```dax
-is_90plus   = IF ( v_loan_status[dpd] > 90, "yes", "no" )     -- column: one value per loan, read in this row
-Outstanding = SUM ( v_loan_status[outstanding] )              -- measure: one value per cell, over the visible rows
+-- column: one value per loan, read in this row
+is_90plus   = IF ( v_loan_status[dpd] > 90, "yes", "no" )
+-- measure: one value per cell, over the visible rows
+Outstanding = SUM ( v_loan_status[outstanding] )
 ```
 
 | | calculated column | measure |
@@ -51,9 +53,12 @@ Outstanding = SUM ( v_loan_status[outstanding] )              -- measure: one va
 **How to write it.**
 
 ```dax
-Disbursed Amount = SUM ( v_loan_status[principal] )                     -- SUM ( table[column] )
-Disbursed Count  = COUNTROWS ( v_loan_status )                          -- COUNTROWS ( table )
-Avg Ticket       = DIVIDE ( [Disbursed Amount], [Disbursed Count] )     -- DIVIDE ( numerator, denominator [, if zero] )
+-- SUM ( table[column] )
+Disbursed Amount = SUM ( v_loan_status[principal] )
+-- COUNTROWS ( table )
+Disbursed Count  = COUNTROWS ( v_loan_status )
+-- DIVIDE ( numerator, denominator [, if zero] )
+Avg Ticket       = DIVIDE ( [Disbursed Amount], [Disbursed Count] )
 ```
 
 | measure | no filter | SME | MICRO |
@@ -122,10 +127,14 @@ The total row has only the column filter; the grand total has none.
 CALCULATE ( <expression>, <filter 1>, <filter 2>, ... )
 --          what to compute   how to change the cell's filters
 
-Outstanding DPD30+ = CALCULATE ( [Outstanding], v_loan_status[dpd] > 30 )                    -- 6 507 526 953
-PAR30 %            = DIVIDE ( [Outstanding DPD30+], [Outstanding] )                          -- 3.12 %
-NPL90 %            = DIVIDE ( CALCULATE ( [Outstanding], v_loan_status[dpd] > 90 ), [Outstanding] )   -- 2.55 %
-Loans 90+          = CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[bucket] = "90+" )        -- 234
+-- 6 507 526 953
+Outstanding DPD30+ = CALCULATE ( [Outstanding], v_loan_status[dpd] > 30 )
+-- 3.12 %
+PAR30 %            = DIVIDE ( [Outstanding DPD30+], [Outstanding] )
+-- 2.55 %
+NPL90 %            = DIVIDE ( CALCULATE ( [Outstanding], v_loan_status[dpd] > 90 ), [Outstanding] )
+-- 234
+Loans 90+          = CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[bucket] = "90+" )
 ```
 
 Three steps, always: (1) take the cell's filter context; (2) apply each filter argument — it **replaces** any existing filter on the same column, and different columns combine with AND; (3) evaluate the expression there. In the SME row, PAR30 uses both filters — `product = SME` from the row, `dpd > 30` from CALCULATE: **2.55 %**; AUTO **4.44 %**, MICRO **0.72 %**. Week 3's SQL `SUM(CASE WHEN dpd > 30 THEN outstanding END) / SUM(outstanding)` is exactly this.
@@ -149,8 +158,10 @@ When the condition involves a measure or several columns, write the filter as a 
 **How to write it.** Two columns on `v_loan_status`, read for loan 1:
 
 ```dax
-share = v_loan_status[outstanding] / SUM ( v_loan_status[outstanding] )   -- SUM sees the whole table
-own   = CALCULATE ( SUM ( v_loan_status[outstanding] ) )                   -- CALCULATE makes "loan 1" a filter
+-- SUM sees the whole table
+share = v_loan_status[outstanding] / SUM ( v_loan_status[outstanding] )
+-- CALCULATE makes "loan 1" a filter
+own   = CALCULATE ( SUM ( v_loan_status[outstanding] ) )
 ```
 
 | loan_id | outstanding | share | own |
@@ -185,10 +196,13 @@ own   = CALCULATE ( SUM ( v_loan_status[outstanding] ) )                   -- CA
 ```dax
 Outstanding Share of Total =
 DIVIDE (
-    [Outstanding],                                         -- the cell's own outstanding
-    CALCULATE ( [Outstanding], ALL ( products ) )          -- the same, with the product filter removed
+    -- the cell's own outstanding
+    [Outstanding],
+    -- the same, with the product filter removed
+    CALCULATE ( [Outstanding], ALL ( products ) )
 )
--- no slicer: SME 60.32 % · AUTO 27.64 % · CONS 11.05 % · BNPL 0.54 % · MICRO 0.46 % · total 100 %
+-- no slicer: SME 60.32 % · AUTO 27.64 % · CONS 11.05 % · BNPL 0.54 % · MICRO
+-- 0.46 % · total 100 %
 ```
 
 ```pic
@@ -212,9 +226,12 @@ DIVIDE (
 **How to write it.**
 
 ```dax
-YTD Disbursed        = TOTALYTD ( [Disbursed Amount], dim_date[date] )                          -- 1 January → the cell's last date
-Disbursed SPLY       = CALCULATE ( [Disbursed Amount], SAMEPERIODLASTYEAR ( dim_date[date] ) )  -- the same dates, a year back
-Disbursed Prev Month = CALCULATE ( [Disbursed Amount], DATEADD ( dim_date[date], -1, MONTH ) )  -- shift by any number of days / months / years
+-- 1 January → the cell's last date
+YTD Disbursed        = TOTALYTD ( [Disbursed Amount], dim_date[date] )
+-- the same dates, a year back
+Disbursed SPLY       = CALCULATE ( [Disbursed Amount], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+-- shift by any number of days / months / years
+Disbursed Prev Month = CALCULATE ( [Disbursed Amount], DATEADD ( dim_date[date], -1, MONTH ) )
 Disbursed YoY %      = DIVIDE ( [Disbursed Amount] - [Disbursed SPLY], [Disbursed SPLY] )
 Disbursed MoM %      = DIVIDE ( [Disbursed Amount] - [Disbursed Prev Month], [Disbursed Prev Month] )
 ```
@@ -248,10 +265,12 @@ September 2026: 17.0 bn disbursed, 16.2 % more than September 2025 but 23.7 % le
 
 ```dax
 Outstanding Month-End =
-VAR LastMonth = CALCULATE ( MAX ( v_portfolio_monthly[month] ) )          -- the last month visible in the cell
+-- the last month visible in the cell
+VAR LastMonth = CALCULATE ( MAX ( v_portfolio_monthly[month] ) )
 RETURN
     CALCULATE ( SUM ( v_portfolio_monthly[outstanding_month_end] ),
-                v_portfolio_monthly[month] = LastMonth )                   -- sum products and branches, for that month only
+                -- sum products and branches, for that month only
+                v_portfolio_monthly[month] = LastMonth )
 ```
 
 | period | plain `SUM` of month-end | `Outstanding Month-End` |
@@ -279,12 +298,15 @@ RETURN
 
 ```dax
 Running Outstanding =
-VAR CurrentOutstanding = [Outstanding]                                     -- this branch's outstanding, computed once
+-- this branch's outstanding, computed once
+VAR CurrentOutstanding = [Outstanding]
 RETURN
     CALCULATE (
         [Outstanding],
-        FILTER ( ALL ( branches[branch_name] ),                            -- walk all ten branches
-                 [Outstanding] >= CurrentOutstanding )                     -- keep those at least as large
+        -- walk all ten branches
+        FILTER ( ALL ( branches[branch_name] ),
+                 -- keep those at least as large
+                 [Outstanding] >= CurrentOutstanding )
     )
 Running Outstanding % = DIVIDE ( [Running Outstanding], CALCULATE ( [Outstanding], ALL ( branches ) ) )
 ```
@@ -317,9 +339,12 @@ Four of ten branches hold half the book.
 ```dax
 Branch Rank =
 IF (
-    HASONEVALUE ( branches[branch_name] ),                 -- only in rows with one branch (blank on the total)
-    RANKX ( ALL ( branches[branch_name] ),                 -- rank among all ten branches
-            [Outstanding], , DESC, DENSE )                 -- by Outstanding, largest first
+    -- only in rows with one branch (blank on the total)
+    HASONEVALUE ( branches[branch_name] ),
+    -- rank among all ten branches
+    RANKX ( ALL ( branches[branch_name] ),
+            -- by Outstanding, largest first
+            [Outstanding], , DESC, DENSE )
 )
 ```
 
@@ -397,16 +422,18 @@ Tashkent Central 1, Tashkent South 2, … Bukhara Central 8, Nukus Central 9, Te
 
 ```dax
 PAR30 Colour =
-SWITCH ( TRUE (),                                   -- the first true condition wins, like CASE WHEN
-    [PAR30 %] >= 0.05, "#C0392B",                   -- 5 % and above: red
-    [PAR30 %] >= 0.03, "#E67E22",                   -- 3–5 %: amber
-    "#7F8C8D" )                                     -- otherwise: grey
+-- the first true condition wins, like CASE WHEN
+SWITCH ( TRUE (),
+    [PAR30 %] >= 0.05, "#C0392B",  -- 5 % and above: red
+    [PAR30 %] >= 0.03, "#E67E22",  -- 3–5 %: amber
+    "#7F8C8D" )                    -- otherwise: grey
 ```
 
 4. **Titles that state the finding** — "PAR30 is concentrated in Nukus SME and Bukhara", not "PAR30 by branch". A **dynamic title** says what is selected:
 
 ```dax
-Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all products" )   -- the selection, or a default
+-- the selection, or a default
+Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all products" )
               & " · as of 1 Oct 2026: " & FORMAT ( [Outstanding] / 1e9, "#,0.0" ) & " bn soum"
 -- no selection: "Outstanding - all products · as of 1 Oct 2026: 208.7 bn soum"
 ```
@@ -455,9 +482,11 @@ Use it: Format → Title → **fx** → Field value → `Dynamic Title`.
 2. On the `branches` table, the filter:
 
 ```dax
-[branch_name] = "Bukhara Central"                                         -- a static role: one per branch
+-- a static role: one per branch
+[branch_name] = "Bukhara Central"
 -- dynamic, one role for all managers, with a mapping table of e-mail → branch:
--- [branch_name] = LOOKUPVALUE ( map[branch_name], map[email], USERPRINCIPALNAME () )
+-- [branch_name] = LOOKUPVALUE ( map[branch_name], map[email], USERPRINCIPALNAME
+-- () )
 ```
 
 3. Modeling → **View as** → the role. The filter flows through the relationships to every fact:

@@ -21,13 +21,18 @@ import math
 import numpy as np
 import pandas as pd
 from statistics import NormalDist
-Phi = NormalDist().cdf                                    # the standard normal CDF, Φ — turns a z into a p-value
+# the standard normal CDF, Φ — turns a z into a p-value
+Phi = NormalDist().cdf
 
-f = pd.read_csv("data/powerbi/fct_first_instalment.csv", parse_dates=["disbursed_at"])   # week 5's FPD frame: 7 099 loans, fpd30 = 0/1
-f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")   # app = Micro only, partner = BNPL only
+# week 5's FPD frame: 7 099 loans, fpd30 = 0/1
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv", parse_dates=["disbursed_at"])
+# app = Micro only, partner = BNPL only
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
 f["year"] = f["disbursed_at"].dt.year
-apps = pd.read_csv("data/raw/applications.csv")           # 14 000 applications; 388 have no credit score
-print(f.groupby("channel")["fpd30"].agg(["sum", "size"]))  # app 41 / 2 411 · branch 34 / 3 263 · partner 16 / 1 425
+# 14 000 applications; 388 have no credit score
+apps = pd.read_csv("data/raw/applications.csv")
+# app 41 / 2 411 · branch 34 / 3 263 · partner 16 / 1 425
+print(f.groupby("channel")["fpd30"].agg(["sum", "size"]))
 ```
 
 Three channels, three FPD counts: app 41 of 2 411 loans (1.70 %), branch 34 of 3 263 (1.04 %), partner 16 of 1 425 (1.12 %). Most of this page asks one question about them: is the app's higher rate real, or noise?
@@ -74,9 +79,12 @@ For Nilufar: H₀ says the app and branch channels share one FPD rate; H₁ says
 **How to write it.** In words: the observed gap, minus the gap H₀ expects (zero), divided by the gap's standard error under H₀.
 
 ```python
-gap = 41 / 2411 - 34 / 3263                           # observed: app rate − branch rate
-p0 = 75 / 5674                                        # the one rate H0 says both channels share (pooled)
-se = math.sqrt(p0 * (1 - p0) * (1 / 2411 + 1 / 3263)) # the noise of the gap if H0 were true (the two-proportion section explains it)
+# observed: app rate − branch rate
+gap = 41 / 2411 - 34 / 3263
+# the one rate H0 says both channels share (pooled)
+p0 = 75 / 5674
+# the noise of the gap if H0 were true (the two-proportion section explains it)
+se = math.sqrt(p0 * (1 - p0) * (1 / 2411 + 1 / 3263))
 z = (gap - 0) / se                                    # H0 says the gap is 0
 print(round(gap * 100, 2), round(se * 100, 3), round(z, 2))   # 0.66 0.307 2.15
 ```
@@ -112,12 +120,15 @@ The gap is 0.66 points and the noise is 0.307 points, so the gap is 2.15 noise-u
 **How to write it.** Two ways. The formula: two-sided p = 2 · (1 − Φ(|z|)). The definition: build the H₀ world by simulation and count how often it looks as extreme as ours.
 
 ```python
-print(round(2 * (1 - Phi(abs(2.147))), 4))                # 0.0318 — the formula: both tails beyond |z|
+# 0.0318 — the formula: both tails beyond |z|
+print(round(2 * (1 - Phi(abs(2.147))), 4))
 
-rng = np.random.default_rng(2026)                         # the H0 world: both channels at the pooled rate 1.322 %
+# the H0 world: both channels at the pooled rate 1.322 %
+rng = np.random.default_rng(2026)
 p0 = 75 / 5674
 diff = rng.binomial(2411, p0, 100_000) / 2411 - rng.binomial(3263, p0, 100_000) / 3263
-print(np.mean(np.abs(diff) >= 41/2411 - 34/3263))          # 0.0321 — the share of H0 samples with a gap ≥ 0.66 points either way
+# 0.0321 — the share of H0 samples with a gap ≥ 0.66 points either way
+print(np.mean(np.abs(diff) >= 41/2411 - 34/3263))
 ```
 
 If both channels had the same FPD rate, a gap of 0.66 points or more, in either direction, would appear in about 3.2 % of samples of this size: p = 0.032.
@@ -152,7 +163,8 @@ If both channels had the same FPD rate, a gap of 0.66 points or more, in either 
 **How to write it.** The decision rule is one line:
 
 ```python
-alpha = 0.05                                    # fixed BEFORE looking at the data
+# fixed BEFORE looking at the data
+alpha = 0.05
 p = 0.0318                                      # app vs branch, two-sided
 print("reject H0" if p < alpha else "fail to reject H0")   # reject H0
 ```
@@ -178,9 +190,11 @@ At α = 5 % the app-vs-branch p of 0.032 rejects H₀; at α = 1 % the same data
 **How to write it.**
 
 ```python
-z = 2.147                                        # app vs branch
-print(round(1 - Phi(z), 4))                      # 0.0159 — one-sided, H1: p_app > p_branch (upper tail only)
-print(round(2 * (1 - Phi(abs(z))), 4))           # 0.0318 — two-sided, H1: p_app ≠ p_branch (both tails)
+z = 2.147  # app vs branch
+# 0.0159 — one-sided, H1: p_app > p_branch (upper tail only)
+print(round(1 - Phi(z), 4))
+# 0.0318 — two-sided, H1: p_app ≠ p_branch (both tails)
+print(round(2 * (1 - Phi(abs(z))), 4))
 ```
 
 The same z gives a one-sided p of 0.016 and a two-sided p of 0.032.
@@ -208,13 +222,18 @@ The same z gives a one-sided p of 0.016 and a two-sided p of 0.032.
 **How to write it.** In words: the sample mean minus the H₀ value, divided by the standard error of the mean. One line of context: the scorecard vendor says applicants average 660 points — is that still true in 2026?
 
 ```python
-s26 = apps.loc[apps["applied_at"].str[:4] == "2026", "credit_score"].dropna()   # 2026 applicants with a score
-mu0 = 660                                        # H0: the 2026 average is still 660
-se = s26.std() / math.sqrt(len(s26))             # standard error of the mean: s / √n
-t = (s26.mean() - mu0) / se                      # the test statistic
+# 2026 applicants with a score
+s26 = apps.loc[apps["applied_at"].str[:4] == "2026", "credit_score"].dropna()
+# H0: the 2026 average is still 660
+mu0 = 660
+# standard error of the mean: s / √n
+se = s26.std() / math.sqrt(len(s26))
+t = (s26.mean() - mu0) / se  # the test statistic
 print(len(s26), round(s26.mean(), 1), round(se, 2), round(t, 2), round(2 * (1 - Phi(abs(t))), 3))
-# 5361 658.6 0.81 -1.74 0.083 — with 5 360 df the t tail and the normal tail are the same
-# small n: stats.ttest_1samp(x, 660) uses the t distribution (scipy)   Excel: =T.DIST.2T(ABS(t), COUNT(r) - 1)
+# 5361 658.6 0.81 -1.74 0.083 — with 5 360 df the t tail and the normal tail are
+# the same
+# small n: stats.ttest_1samp(x, 660) uses the t distribution (scipy)   Excel:
+# =T.DIST.2T(ABS(t), COUNT(r) - 1)
 ```
 
 5 361 applicants average 658.6, which is 1.4 points below 660 — that is 1.74 standard errors, p = 0.083, so there is no evidence at 5 % that the average moved.
@@ -243,19 +262,28 @@ print(len(s26), round(s26.mean(), 1), round(se, 2), round(t, 2), round(2 * (1 - 
 
 ```python
 def welch_t(a, b):
-    se = math.sqrt(a.var() / len(a) + b.var() / len(b))     # SE of the difference: each group keeps its own variance
+    # SE of the difference: each group keeps its own variance
+    se = math.sqrt(a.var() / len(a) + b.var() / len(b))
     t = (a.mean() - b.mean()) / se
-    return t, 2 * (1 - Phi(abs(t)))                         # normal tail: fine with hundreds per group
+    # normal tail: fine with hundreds per group
+    return t, 2 * (1 - Phi(abs(t)))
 
-sa = apps.loc[apps["channel"] == "app", "credit_score"].dropna()       # applicants, app
-sb = apps.loc[apps["channel"] == "branch", "credit_score"].dropna()    # applicants, branch
-print(round(sa.mean(), 1), round(sb.mean(), 1), [round(v, 3) for v in welch_t(sa, sb)])   # 661.0 659.6 [1.233, 0.218]
+# applicants, app
+sa = apps.loc[apps["channel"] == "app", "credit_score"].dropna()
+# applicants, branch
+sb = apps.loc[apps["channel"] == "branch", "credit_score"].dropna()
+# 661.0 659.6 [1.233, 0.218]
+print(round(sa.mean(), 1), round(sb.mean(), 1), [round(v, 3) for v in welch_t(sa, sb)])
 
 loans = pd.read_csv("data/raw/loans.csv").merge(apps[["application_id", "channel", "credit_score"]], on="application_id")
-la = loans.loc[loans["channel"] == "app", "credit_score"].dropna()     # approved loans, app
-lb = loans.loc[loans["channel"] == "branch", "credit_score"].dropna()  # approved loans, branch
-print(round(la.mean(), 1), round(lb.mean(), 1), [round(v, 3) for v in welch_t(la, lb)])   # 683.2 679.8 [2.482, 0.013]
-# scipy: stats.ttest_ind(sa, sb, equal_var=False)   Excel: =T.TEST(r1, r2, 2, 3)  (2 = two-tailed, 3 = unequal variances)
+# approved loans, app
+la = loans.loc[loans["channel"] == "app", "credit_score"].dropna()
+# approved loans, branch
+lb = loans.loc[loans["channel"] == "branch", "credit_score"].dropna()
+# 683.2 679.8 [2.482, 0.013]
+print(round(la.mean(), 1), round(lb.mean(), 1), [round(v, 3) for v in welch_t(la, lb)])
+# scipy: stats.ttest_ind(sa, sb, equal_var=False)   Excel: =T.TEST(r1, r2, 2, 3)
+# (2 = two-tailed, 3 = unequal variances)
 ```
 
 | credit score | app | branch | Welch t | p |
@@ -285,11 +313,15 @@ App and branch applicants arrive with the same scores (p = 0.22); among approved
 
 ```python
 w = f[f["year"].isin([2025, 2026])].pivot_table(index="branch_name", columns="year", values="fpd30", aggfunc="mean") * 100
-d = w[2026] - w[2025]                                      # ten differences, one per branch
-print(round(d.mean(), 2), round(d.mean() / (d.std() / math.sqrt(len(d))), 2))   # -0.58 -2.56 — the paired t statistic
-# with only 9 df the p-value needs the t distribution — scipy (it loads on the first run):
-print(stats.ttest_rel(w[2026], w[2025]))     # t = -2.56, p = 0.031
-print(stats.ttest_ind(w[2026], w[2025]))     # t = -2.05, p = 0.055 — the wrong test throws away the pairing
+# ten differences, one per branch
+d = w[2026] - w[2025]
+# -0.58 -2.56 — the paired t statistic
+print(round(d.mean(), 2), round(d.mean() / (d.std() / math.sqrt(len(d))), 2))
+# with only 9 df the p-value needs the t distribution — scipy (it loads on the
+# first run):
+print(stats.ttest_rel(w[2026], w[2025]))  # t = -2.56, p = 0.031
+# t = -2.05, p = 0.055 — the wrong test throws away the pairing
+print(stats.ttest_ind(w[2026], w[2025]))
 ```
 
 The ten branches fell by 0.58 points on average; paired, that gives t = −2.56 and p = 0.031, while the unpaired test on the same numbers gives p = 0.055.
@@ -318,12 +350,14 @@ The ten branches fell by 0.58 points on average; paired, that gives t = −2.56 
 
 ```python
 def one_prop_z(k, n, p0):
-    se = math.sqrt(p0 * (1 - p0) / n)              # the noise of a rate IF H0 (rate = p0) is true — p0, not k / n
+    # the noise of a rate IF H0 (rate = p0) is true — p0, not k / n
+    se = math.sqrt(p0 * (1 - p0) / n)
     z = (k / n - p0) / se
     return z, 2 * (1 - Phi(abs(z)))                # z and the two-sided p-value
 
 print([round(v, 3) for v in one_prop_z(25, 2322, 0.015)])   # [-1.678, 0.093]
-# Excel: =(25/2322 - 0.015) / SQRT(0.015*(1-0.015)/2322), then =2*(1-NORM.S.DIST(ABS(z),TRUE))
+# Excel: =(25/2322 - 0.015) / SQRT(0.015*(1-0.015)/2322), then
+# =2*(1-NORM.S.DIST(ABS(z),TRUE))
 ```
 
 2026 runs at 1.08 %, 0.42 points under budget — 1.68 standard errors, p = 0.093, so the data do not yet show at 5 % that 2026 is below the 1.5 % budget.
@@ -353,13 +387,15 @@ app vs branch: pooled = 75 / 5 674 = 1.322 %;  SE = 0.307 points;  z = (1.700 �
 
 ```python
 def two_prop_z(k1, n1, k2, n2):
-    p = (k1 + k2) / (n1 + n2)                             # the pooled rate: what H0 says both channels share
+    # the pooled rate: what H0 says both channels share
+    p = (k1 + k2) / (n1 + n2)
     se = math.sqrt(p * (1 - p) * (1 / n1 + 1 / n2))
     z = (k1 / n1 - k2 / n2) / se
-    return z, 2 * (1 - Phi(abs(z)))                       # z and the two-sided p-value
+    # z and the two-sided p-value
+    return z, 2 * (1 - Phi(abs(z)))
 
 z, p = two_prop_z(41, 2411, 34, 3263)
-print(round(z, 3), round(p, 4))                           # 2.147 0.0318
+print(round(z, 3), round(p, 4))  # 2.147 0.0318
 ```
 
 App vs branch: z = 2.15, p = 0.032 — at α = 5 % the two FPD rates differ.
@@ -368,8 +404,10 @@ The same in statsmodels (optional: it loads an extra package on the first run):
 
 ```python
 from statsmodels.stats.proportion import proportions_ztest, confint_proportions_2indep
-print(proportions_ztest([41, 34], [2411, 3263]))                                  # (2.147, 0.0318)
-print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))           # difference: +0.05 to +1.33 points
+# (2.147, 0.0318)
+print(proportions_ztest([41, 34], [2411, 3263]))
+# difference: +0.05 to +1.33 points
+print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))
 ```
 
 In Excel, one row per channel and four formula cells:
@@ -411,13 +449,18 @@ In Excel, one row per channel and four formula cells:
 **How to write it.** In words: expected count = row total × column total / grand total; χ² = Σ (observed − expected)² / expected; degrees of freedom = (rows − 1)(columns − 1).
 
 ```python
-ct = pd.crosstab(f["channel"], f["fpd30"])                        # app 2370/41 · branch 3229/34 · partner 1409/16
+# app 2370/41 · branch 3229/34 · partner 1409/16
+ct = pd.crosstab(f["channel"], f["fpd30"])
 obs = ct.to_numpy()
-expected = np.outer(obs.sum(axis=1), obs.sum(axis=0)) / obs.sum()  # row total × column total / grand total
+# row total × column total / grand total
+expected = np.outer(obs.sum(axis=1), obs.sum(axis=0)) / obs.sum()
 chi2 = ((obs - expected) ** 2 / expected).sum()
 print(expected.round(1))
-print(round(chi2, 3), round(math.exp(-chi2 / 2), 4))              # 5.108 0.0778 — with 2 df the p-value is e^(−χ²/2)
-# scipy (the notebook): chi2, p, dof, expected = scipy.stats.chi2_contingency(ct)   Excel: =CHISQ.TEST(observed_range, expected_range)
+# 5.108 0.0778 — with 2 df the p-value is e^(−χ²/2)
+print(round(chi2, 3), round(math.exp(-chi2 / 2), 4))
+# scipy (the notebook): chi2, p, dof, expected =
+# scipy.stats.chi2_contingency(ct)   Excel: =CHISQ.TEST(observed_range,
+# expected_range)
 ```
 
 | channel | observed FPD | expected FPD | observed no FPD | expected no FPD | (O − E)² / E, FPD cell |
@@ -456,10 +499,14 @@ The two do not contradict each other. The z-test answers a narrower question —
 ```python
 # (shape only — not meant to run)
 pa = loans.loc[loans.channel == "app", "principal"]
-stats.probplot(pa, dist="norm", plot=plt)                         # the picture first: an S with steps, not a line (flat, round tickets)
-stats.shapiro(pa.sample(500, random_state=2026))                  # p = 1.2e-12: not normal — and with n = 2 669 the CLT does not care
-stats.levene(sa, sb)                                              # p = 0.77: equal variances (Welch would not have needed it)
-stats.skew(pa), len(pa)                                           # 0.03, 2 669 — symmetric and many: the mean's interval is safe
+# the picture first: an S with steps, not a line (flat, round tickets)
+stats.probplot(pa, dist="norm", plot=plt)
+# p = 1.2e-12: not normal — and with n = 2 669 the CLT does not care
+stats.shapiro(pa.sample(500, random_state=2026))
+# p = 0.77: equal variances (Welch would not have needed it)
+stats.levene(sa, sb)
+# 0.03, 2 669 — symmetric and many: the mean's interval is safe
+stats.skew(pa), len(pa)
 ```
 
 Shapiro says the app principals are not normal (p = 1.2 × 10⁻¹²), and the t-test on 2 669 of them is still fine: the mean of 2 669 values is normal enough.
@@ -486,11 +533,15 @@ Shapiro says the app principals are not normal (p = 1.2 × 10⁻¹²), and the t
 **How to write it.**
 
 ```python
-diff = 41 / 2411 - 34 / 3263                               # difference in rates
-rr = (41 / 2411) / (34 / 3263)                             # relative risk: how many times higher
-print(round(diff * 100, 2), round(rr, 2), round(diff * 1000, 1))   # 0.66 1.63 6.6 — points, ×, extra FPDs per 1 000
-d = (la.mean() - lb.mean()) / math.sqrt((la.var() + lb.var()) / 2) # Cohen's d: difference in sd units
-print(round(d, 2))                                         # 0.06 — approved-loan scores, app vs branch: negligible
+diff = 41 / 2411 - 34 / 3263  # difference in rates
+# relative risk: how many times higher
+rr = (41 / 2411) / (34 / 3263)
+# 0.66 1.63 6.6 — points, ×, extra FPDs per 1 000
+print(round(diff * 100, 2), round(rr, 2), round(diff * 1000, 1))
+# Cohen's d: difference in sd units
+d = (la.mean() - lb.mean()) / math.sqrt((la.var() + lb.var()) / 2)
+# 0.06 — approved-loan scores, app vs branch: negligible
+print(round(d, 2))
 ```
 
 The app's FPD is 0.66 points higher (95 % CI +0.05 to +1.33), 1.63 times the branch rate (CI 1.04–2.56), about 6.6 extra FPDs per 1 000 loans. The significant score gap among approved loans is d = 0.06 — nothing. Late payment × grade has Cramér's V = 0.22, a moderate association.
@@ -522,8 +573,10 @@ a [named test] gives [statistic] = [value], p = [value];
 ```python
 # (shape only — not meant to run)
 r = stats.ttest_ind(sa, sb, equal_var=False)
-r.statistic, r.pvalue, r.df          # 1.233, 0.218, 10 451 — Welch's df is fractional, that is normal
-r.confidence_interval()              # the interval of the difference in means: report it too
+# 1.233, 0.218, 10 451 — Welch's df is fractional, that is normal
+r.statistic, r.pvalue, r.df
+# the interval of the difference in means: report it too
+r.confidence_interval()
 ```
 
 Filled for app vs branch: *"App loans had FPD30 1.70 % vs 1.04 % for branch loans (difference +0.66 points, 95 % CI +0.05 to +1.33); a two-sided two-proportion z-test gives z = 2.15, p = 0.032; at α = 5 % the app's rate is higher, about 7 extra FPDs per 1 000 loans."*
@@ -545,12 +598,17 @@ Filled for app vs branch: *"App loans had FPD30 1.70 % vs 1.04 % for branch loan
 One request, every step of the day: *"Is FPD30 different between grade A and grade C?"*
 
 ```python
-# 1 hypotheses  H0: p_A = p_C   H1: p_A ≠ p_C (two-sided)      2 alpha = 0.05, fixed now
+# 1 hypotheses  H0: p_A = p_C   H1: p_A ≠ p_C (two-sided)      2 alpha = 0.05,
+# fixed now
 g = f.merge(pd.read_csv("data/raw/loans.csv")[["loan_id", "risk_grade"]], on="loan_id")
-print(g.groupby("risk_grade")["fpd30"].agg(["sum", "size"]))     # A 10 / 1 667 · B 30 / 3 084 · C 44 / 2 034 · D 7 / 314
-z, p = two_prop_z(10, 1667, 44, 2034)                              # 3 two independent rates → two-proportion z-test
-print(round(z, 2), f"{p:.1e}")                                     # -3.95 7.9e-05      4 p < alpha → reject H0
-print(round((44 / 2034 - 10 / 1667) * 1000, 1), round((44 / 2034) / (10 / 1667), 1))   # 15.6 3.6   5 the effect size
+# A 10 / 1 667 · B 30 / 3 084 · C 44 / 2 034 · D 7 / 314
+print(g.groupby("risk_grade")["fpd30"].agg(["sum", "size"]))
+# 3 two independent rates → two-proportion z-test
+z, p = two_prop_z(10, 1667, 44, 2034)
+# -3.95 7.9e-05      4 p < alpha → reject H0
+print(round(z, 2), f"{p:.1e}")
+# 15.6 3.6   5 the effect size
+print(round((44 / 2034 - 10 / 1667) * 1000, 1), round((44 / 2034) / (10 / 1667), 1))
 ```
 
 Read it with the day's questions: H₀ holds the "=", the test is two-sided because both directions would matter, α was fixed first, the data are two independent rates so the two-proportion z-test fits, p = 0.00008 is below 5 %, and the effect — 15.6 extra FPDs per 1 000 loans, 3.6 times the rate — is what goes into the sentence.
@@ -638,13 +696,19 @@ Read it with the day's questions: H₀ holds the "=", the test is two-sided beca
 **3. The test — *two-proportion z-test*, its *statistic* and *p-value*.** Two independent rates, 34–41 events per group (expected counts far above 5): the two-proportion z-test fits. **z = 2.147, p = 0.032** < α, so H₀ is rejected. Fisher's exact test (tomorrow) agrees: p = 0.034.
 
 ```python
-# uses scipy and statsmodels: they load on the first ▶ Run (the notebook has them too)
+# uses scipy and statsmodels: they load on the first ▶ Run (the notebook has
+# them too)
 k, n = np.array([41, 34]), np.array([2411, 3263])
-z, p = proportions_ztest(k, n)                                                    # 2.147, 0.0318
-lo, hi = confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb")          # +0.0005, +0.0133
-rr_lo, rr_hi = confint_proportions_2indep(41, 2411, 34, 3263, compare="ratio", method="log")   # 1.04, 2.56
-stats.fisher_exact([[41, 2370], [34, 3229]])                                       # odds ratio 1.64, p = 0.0344
-stats.chi2_contingency(pd.crosstab(f.channel, f.fpd30))[1]                         # 0.0778 — the three-channel check
+# 2.147, 0.0318
+z, p = proportions_ztest(k, n)
+# +0.0005, +0.0133
+lo, hi = confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb")
+# 1.04, 2.56
+rr_lo, rr_hi = confint_proportions_2indep(41, 2411, 34, 3263, compare="ratio", method="log")
+# odds ratio 1.64, p = 0.0344
+stats.fisher_exact([[41, 2370], [34, 3229]])
+# 0.0778 — the three-channel check
+stats.chi2_contingency(pd.crosstab(f.channel, f.fpd30))[1]
 ```
 
 **4. The size — *effect size*.** +0.66 points (95 % CI +0.05 to +1.33); RR 1.63 (1.04–2.56); **6.6 extra FPDs per 1 000 app loans**. At the 2026 pace (1 036 app loans in January–September, ~1 381 a year) that is ~9 extra FPDs a year on loans averaging 2.69 m: ~25 m soum of exposure, ~15 m of expected loss at 60 % LGD.

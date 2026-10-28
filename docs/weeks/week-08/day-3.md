@@ -37,8 +37,10 @@ Then check the as-of date against the data itself:
 SELECT (SELECT MAX(applied_at)   FROM applications)        AS last_application,
        (SELECT MAX(disbursed_at) FROM loans)               AS last_loan,
        (SELECT MAX(event_time)   FROM app_events)          AS last_app_event,
-       (SELECT MAX(paid_at)      FROM payments)            AS last_payment,       -- later than the as-of date
-       (SELECT MAX(action_date)  FROM collections_actions) AS last_action;        -- later too
+       -- later than the as-of date
+       (SELECT MAX(paid_at)      FROM payments)            AS last_payment,
+       (SELECT MAX(action_date)  FROM collections_actions) AS last_action;
+       -- later too
 ```
 
 Applications, loans and app events end on 1 October 2026 — the as-of date. Payments run to 24 November and collections actions to 4 October: rows dated after the as-of date exist, and every query must cut them off.
@@ -73,12 +75,12 @@ Where do we grow, where do we stop, what do we change?
 When a branch splits a number, MECE has a test you can run: the parts must add back to the whole.
 
 ```sql
-SELECT p.channel, COUNT(*) AS loans, SUM(l.principal) AS amount          -- the branches
+SELECT p.channel, COUNT(*) AS loans, SUM(l.principal) AS amount  -- the branches
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01'
 GROUP BY p.channel
 UNION ALL
-SELECT 'TOTAL', COUNT(*), SUM(principal)                                  -- the whole
+SELECT 'TOTAL', COUNT(*), SUM(principal)                         -- the whole
 FROM loans
 WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01';
 ```
@@ -109,7 +111,8 @@ Branch 1 403 loans, app 1 036 and partner 591 add up to the 3 030 loans of the t
 
 ```sql
 SELECT (SELECT COUNT(*) FROM loans)                                   AS loans,
-       (SELECT COUNT(DISTINCT loan_id) FROM loans)                    AS distinct_loan_ids,     -- equal: no duplicate keys
+       -- equal: no duplicate keys
+       (SELECT COUNT(DISTINCT loan_id) FROM loans)                    AS distinct_loan_ids,
        (SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL) AS closed_without_date,
        (SELECT COUNT(*) - COUNT(DISTINCT installment_id || '|' || paid_at || '|' || amount)
           FROM payments)                                              AS duplicate_payments,
@@ -155,9 +158,11 @@ SELECT (SELECT COUNT(*) FROM loans)                                   AS loans,
 Check the grain before you sum anything:
 
 ```sql
-SELECT COUNT(*)                AS rows_after_join,          -- one row per instalment, not per loan
+-- one row per instalment, not per loan
+SELECT COUNT(*)                AS rows_after_join,
        COUNT(DISTINCT l.loan_id) AS loans,
-       SUM(l.principal)        AS principal_summed_per_row  -- wrong: each principal counted once per instalment
+       -- wrong: each principal counted once per instalment
+       SUM(l.principal)        AS principal_summed_per_row
 FROM loans l
 JOIN installments i ON i.loan_id = l.loan_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01';
@@ -227,7 +232,8 @@ Show the effect of an assumption with a query, not a guess:
 
 ```sql
 SELECT ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END)
-             / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_a1,        -- with assumption A1
+             -- with assumption A1
+             / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_a1,
        ROUND(100.0 * SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END)
              / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_without_a1
 FROM applications;
@@ -443,12 +449,14 @@ If your number differs, find out why **before** you build on it (usually: raw pa
 `v_loan_status` and `v_payments_clean` are not tables in `nur.db` — the capstone template creates them as TEMP views in its own connection. In these boxes, write the same logic as CTEs at the top of your query. The chain below gives every loan its outstanding and DPD on 2026-10-01 (▶ Run it, then build on `ls`):
 
 ```sql
-WITH pay AS (                                -- v_payments_clean: exact duplicates dropped
+-- v_payments_clean: exact duplicates dropped
+WITH pay AS (
   SELECT installment_id, paid_at, amount FROM (
     SELECT installment_id, paid_at, amount,
            ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
     FROM payments) WHERE rn = 1),
-unpaid AS (                                  -- instalments due by the as-of date and not paid in full
+-- instalments due by the as-of date and not paid in full
+unpaid AS (
   SELECT i.loan_id, i.due_date FROM installments i
   LEFT JOIN pay p ON p.installment_id = i.installment_id AND p.paid_at <= '2026-10-01'
   WHERE i.due_date <= '2026-10-01'

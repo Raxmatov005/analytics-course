@@ -27,15 +27,23 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-Path("figures").mkdir(exist_ok=True)                                              # папка для PNG-файлов
-GREY, BLUE, RED = "#9ca3af", "#1d4ed8", "#dc2626"                                 # один серый для данных, один цвет для акцента
-status = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])   # одна строка на кредит: dpd, корзина, остаток
-md = pd.read_csv("../excel/monthly_disbursements.csv", parse_dates=["month"])     # одна строка на месяц × продукт
-md = md[md["month"] < "2026-10-01"]                                               # убираем октябрь 2026: один день — не месяц
-monthly = md.groupby("month", as_index=False)[["loans", "amount"]].sum()          # одна строка на месяц
+# папка для PNG-файлов
+Path("figures").mkdir(exist_ok=True)
+# один серый для данных, один цвет для акцента
+GREY, BLUE, RED = "#9ca3af", "#1d4ed8", "#dc2626"
+# одна строка на кредит: dpd, корзина, остаток
+status = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])
+# одна строка на месяц × продукт
+md = pd.read_csv("../excel/monthly_disbursements.csv", parse_dates=["month"])
+# убираем октябрь 2026: один день — не месяц
+md = md[md["month"] < "2026-10-01"]
+# одна строка на месяц
+monthly = md.groupby("month", as_index=False)[["loans", "amount"]].sum()
 
-fig, ax = plt.subplots(figsize=(8, 4))      # фигура (страница) с одними осями (область графика), 8 × 4 дюйма
-ax.plot(monthly["month"], monthly["amount"])  # рисуем на осях: сначала x, потом y
+# фигура (страница) с одними осями (область графика), 8 × 4 дюйма
+fig, ax = plt.subplots(figsize=(8, 4))
+# рисуем на осях: сначала x, потом y
+ax.plot(monthly["month"], monthly["amount"])
 ax.set_title("Disbursed per month")
 ```
 
@@ -80,11 +88,15 @@ ax.set_title("Disbursed per month")
 **Как пишется.**
 
 ```python
-monthly["ma3"] = monthly["amount"].rolling(3).mean()           # 3-месячное среднее; у первых двух месяцев его нет (NaN)
+# 3-месячное среднее; у первых двух месяцев его нет (NaN)
+monthly["ma3"] = monthly["amount"].rolling(3).mean()
 fig, ax = plt.subplots(figsize=(10, 4))
-ax.plot(monthly["month"], monthly["amount"], color=GREY, lw=1, label="month")              # сами месяцы — тонкая серая линия
-ax.plot(monthly["month"], monthly["ma3"], color=BLUE, lw=2, label="3-month average")       # тренд — толстая синяя линия
-ax.legend(frameon=False)                                         # две линии → легенда говорит, какая есть какая
+# сами месяцы — тонкая серая линия
+ax.plot(monthly["month"], monthly["amount"], color=GREY, lw=1, label="month")
+# тренд — толстая синяя линия
+ax.plot(monthly["month"], monthly["ma3"], color=BLUE, lw=2, label="3-month average")
+# две линии → легенда говорит, какая есть какая
+ax.legend(frameon=False)
 monthly.tail(3)
 ```
 
@@ -121,12 +133,16 @@ monthly.tail(3)
 **Как пишется.**
 
 ```python
-late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])   # четыре корзины просрочки в их естественном порядке
+# четыре корзины просрочки в их естественном порядке
+late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])   # один акцент: 90+ красным
-ax.set_ylim(0, late.max() * 1.15)                                                    # от нуля, с запасом над самым высоким столбцом
+# один акцент: 90+ красным
+ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])
+# от нуля, с запасом над самым высоким столбцом
+ax.set_ylim(0, late.max() * 1.15)
 
-prod = status.groupby("product")["outstanding"].sum().sort_values()                  # по возрастанию: barh рисует последнюю строку сверху
+# по возрастанию: barh рисует последнюю строку сверху
+prod = status.groupby("product")["outstanding"].sum().sort_values()
 fig, ax = plt.subplots(figsize=(8, 4))
 ax.barh(prod.index, prod.values / 1e9, color=GREY)
 ax.set_xlabel("outstanding, bn UZS")
@@ -172,11 +188,14 @@ late
 
 ```python
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.hist(status["principal"], bins=np.logspace(5, 9, 41), color=GREY)   # 40 интервалов равной ширины на логарифмической шкале, от 100 000 до 1 000 000 000
+# 40 интервалов равной ширины на логарифмической шкале, от 100 000 до 1 000 000
+# 000
+ax.hist(status["principal"], bins=np.logspace(5, 9, 41), color=GREY)
 ax.set_xscale("log")
 ax.set_xlabel("principal, UZS (log scale)")
 
-order = status.groupby("product")["principal"].median().sort_values().index      # продукты от наименьшей медианы вверх
+# продукты от наименьшей медианы вверх
+order = status.groupby("product")["principal"].median().sort_values().index
 fig, ax = plt.subplots(figsize=(8, 4))
 ax.boxplot([status.loc[status["product"] == p, "principal"] for p in order], labels=order)
 ax.set_yscale("log")
@@ -217,10 +236,13 @@ status["principal"].describe()[["count", "mean", "50%", "max"]]
 **Как пишется.**
 
 ```python
-act = status[status["status"] == "active"]                                       # 3 352 активных кредита
+# 3 352 активных кредита
+act = status[status["status"] == "active"]
 fig, ax = plt.subplots(figsize=(6, 6))
-ax.scatter(act["principal"], act["outstanding"], s=8, alpha=0.3, color=BLUE)     # маленькие полупрозрачные точки
-ax.set_xscale("log"); ax.set_yscale("log")                                       # деньги на обеих осях → логарифм
+# маленькие полупрозрачные точки
+ax.scatter(act["principal"], act["outstanding"], s=8, alpha=0.3, color=BLUE)
+# деньги на обеих осях → логарифм
+ax.set_xscale("log"); ax.set_yscale("log")
 ax.set_xlabel("principal (log)"); ax.set_ylabel("outstanding (log)")
 act[["principal", "outstanding"]].corr()
 ```
@@ -254,17 +276,23 @@ act[["principal", "outstanding"]].corr()
 
 ```python
 from matplotlib.ticker import FuncFormatter
-bn = FuncFormatter(lambda x, _: f"{x / 1e9:,.0f} bn")     # каждое деление: 20000000000 → "20 bn"
+# каждое деление: 20000000000 → "20 bn"
+bn = FuncFormatter(lambda x, _: f"{x / 1e9:,.0f} bn")
 fig, ax = plt.subplots(figsize=(10, 4))
 ax.plot(monthly["month"], monthly["ma3"], color=BLUE, lw=2)
 ax.yaxis.set_major_formatter(bn)
-ax.set_ylim(0, None)                                      # от нуля; верх — автоматически
+# от нуля; верх — автоматически
+ax.set_ylim(0, None)
 last = monthly["ma3"].iloc[-1]
-ax.set_title(f"The 3-month average reached {last / 1e9:.1f} bn a month", loc="left")   # вывод, посчитанный из данных
+# вывод, посчитанный из данных
+ax.set_title(f"The 3-month average reached {last / 1e9:.1f} bn a month", loc="left")
 ax.set_ylabel("disbursed per month, 3-month average")
-ax.spines[["top", "right"]].set_visible(False)            # меньше краски: без рамки с двух сторон
-fig.text(0.01, 0.01, "monthly_disbursements.csv · Jan 2024 – Sep 2026", fontsize=9, color="#6b7280")   # строка источника
-fig.tight_layout()                                        # освободить место для всех подписей
+# меньше краски: без рамки с двух сторон
+ax.spines[["top", "right"]].set_visible(False)
+# строка источника
+fig.text(0.01, 0.01, "monthly_disbursements.csv · Jan 2024 – Sep 2026", fontsize=9, color="#6b7280")
+# освободить место для всех подписей
+fig.tight_layout()
 fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")
 ```
 
@@ -273,21 +301,34 @@ fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")
 Двенадцать правил недели 4, дня 4, — каждое как строка, которая его выполняет:
 
 ```python
-late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])   # четыре корзины просрочки, по порядку
-fig, ax = plt.subplots(figsize=(10, 5))                                   # 1  один график, одна мысль, размер под слайд
-ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])   # 2  один цвет + один акцент
-ax.set_ylim(0, late.max() * 1.15)                                         # 3  столбцы от нуля; запас под подписи
+# четыре корзины просрочки, по порядку
+late = status["bucket"].value_counts().reindex(["1-30", "31-60", "61-90", "90+"])
+# 1  один график, одна мысль, размер под слайд
+fig, ax = plt.subplots(figsize=(10, 5))
+# 2  один цвет + один акцент
+ax.bar(late.index, late.values, color=[RED if k == "90+" else GREY for k in late.index])
+# 3  столбцы от нуля; запас под подписи
+ax.set_ylim(0, late.max() * 1.15)
 for i, v in enumerate(late.values):
-    ax.text(i, v, f"{v:,}", ha="center", va="bottom")                     # 4  число, которое процитирует читатель, отформатированное
-ax.set_title("399 loans are late; 234 are already 90+", loc="left")       # 5  вывод, по левому краю, а не название графика
-ax.set_ylabel("loans"); ax.set_xlabel("DPD bucket as of 2026-10-01")      # 6  единица и дата отчёта
-# без вызова ax.legend()                                                   # 7  нет легенды для одного ряда
-ax.spines[["top", "right"]].set_visible(False)                            # 8  меньше краски: без рамки с двух сторон
+    # 4  число, которое процитирует читатель, отформатированное
+    ax.text(i, v, f"{v:,}", ha="center", va="bottom")
+# 5  вывод, по левому краю, а не название графика
+ax.set_title("399 loans are late; 234 are already 90+", loc="left")
+# 6  единица и дата отчёта
+ax.set_ylabel("loans"); ax.set_xlabel("DPD bucket as of 2026-10-01")
+# без вызова ax.legend()                                                   # 7 
+# нет легенды для одного ряда
+# 8  меньше краски: без рамки с двух сторон
+ax.spines[["top", "right"]].set_visible(False)
 ax.annotate("17 loans arrived from 61-90 this month", xy=(3, 234), xytext=(1.6, 200),
-            arrowprops=dict(arrowstyle="->", color=RED))                  # 9  одна аннотация к точке, о которой вы говорите
-fig.text(0.01, 0.01, "loans_status.csv · 7 828 loans · payments de-duplicated", fontsize=9, color="#6b7280")  # 10 строка источника
-fig.tight_layout()                                                         # 11 ничего не обрезано
-fig.savefig("figures/03_dpd_buckets.png", dpi=150, facecolor="white")      # 12 файл, а не скриншот
+            # 9  одна аннотация к точке, о которой вы говорите
+            arrowprops=dict(arrowstyle="->", color=RED))
+# 10 строка источника
+fig.text(0.01, 0.01, "loans_status.csv · 7 828 loans · payments de-duplicated", fontsize=9, color="#6b7280")
+# 11 ничего не обрезано
+fig.tight_layout()
+# 12 файл, а не скриншот
+fig.savefig("figures/03_dpd_buckets.png", dpi=150, facecolor="white")
 ```
 
 | аргумент `savefig` | что делает |
@@ -317,8 +358,10 @@ fig.savefig("figures/03_dpd_buckets.png", dpi=150, facecolor="white")      # 12 
 **Как пишется.**
 
 ```python
-products = md.groupby("product")["amount"].sum().sort_values(ascending=False).index    # самый крупный продукт первым
-fig, axes = plt.subplots(1, 5, figsize=(16, 3), sharey=False)                         # один ряд из пяти осей
+# самый крупный продукт первым
+products = md.groupby("product")["amount"].sum().sort_values(ascending=False).index
+# один ряд из пяти осей
+fig, axes = plt.subplots(1, 5, figsize=(16, 3), sharey=False)
 for ax, p in zip(axes, products):
     one = md[md["product"] == p]
     ax.plot(one["month"], one["amount"] / 1e9, color=BLUE)
@@ -396,9 +439,12 @@ SME выдал 240,7 млрд, BNPL — 6,5 млрд, в 37 раз меньше.
 **Как пишется.**
 
 ```python
-wide = md.pivot(index="month", columns="product", values="amount")          # ШИРОКИЙ формат: месяц — индекс, по столбцу на продукт
-ax = wide.plot(figsize=(10, 4), title="Disbursed per month, by product")     # один вызов: по линии на столбец, индекс по x
-ax.set_xlabel("")                                                            # .plot возвращает оси — оформляйте как обычно
+# ШИРОКИЙ формат: месяц — индекс, по столбцу на продукт
+wide = md.pivot(index="month", columns="product", values="amount")
+# один вызов: по линии на столбец, индекс по x
+ax = wide.plot(figsize=(10, 4), title="Disbursed per month, by product")
+# .plot возвращает оси — оформляйте как обычно
+ax.set_xlabel("")
 wide.tail(3)
 ```
 
@@ -438,14 +484,19 @@ wide.tail(3)
 
 ```python
 import seaborn as sns
-sns.set_theme(style="whitegrid")                                              # один стиль для всех графиков после этой строки
+# один стиль для всех графиков после этой строки
+sns.set_theme(style="whitegrid")
 fig, ax = plt.subplots(figsize=(10, 4))
-sns.lineplot(data=md, x="month", y="amount", hue="product", ax=ax)            # ДЛИННЫЕ данные: hue = по линии на продукт
+# ДЛИННЫЕ данные: hue = по линии на продукт
+sns.lineplot(data=md, x="month", y="amount", hue="product", ax=ax)
 fig, ax = plt.subplots(figsize=(6, 3))
-sns.barplot(data=status, x="outstanding", y="product", estimator=sum, errorbar=None, color=GREY, ax=ax)   # ИТОГ по продукту
-ct = pd.crosstab(status["product"], status["grade"])                          # ШИРОКИЕ данные: продукты × грейды
+# ИТОГ по продукту
+sns.barplot(data=status, x="outstanding", y="product", estimator=sum, errorbar=None, color=GREY, ax=ax)
+# ШИРОКИЕ данные: продукты × грейды
+ct = pd.crosstab(status["product"], status["grade"])
 fig, ax = plt.subplots(figsize=(6, 3))
-sns.heatmap(ct, annot=True, fmt="d", cmap="Reds", ax=ax)                      # по окрашенной подписанной ячейке на пару
+# по окрашенной подписанной ячейке на пару
+sns.heatmap(ct, annot=True, fmt="d", cmap="Reds", ax=ax)
 ct
 ```
 
@@ -490,10 +541,12 @@ ct
 
 ```python
 import sqlite3
-con = sqlite3.connect("../raw/nur.db")                                  # база данных — это файл: ни сервера, ни пароля
+# база данных — это файл: ни сервера, ни пароля
+con = sqlite3.connect("../raw/nur.db")
 q = """SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
        FROM loans WHERE disbursed_at < ? GROUP BY 1 ORDER BY 1"""
-by_month = pd.read_sql(q, con, params=("2026-10-01",))                 # SQL выполняется в базе; обратно приходит DataFrame
+# SQL выполняется в базе; обратно приходит DataFrame
+by_month = pd.read_sql(q, con, params=("2026-10-01",))
 fwd = pd.read_sql("SELECT COUNT(*) AS n FROM payments WHERE paid_at > ?", con, params=("2026-10-01",))
 print(len(by_month), fwd["n"][0])
 by_month.tail(3)
@@ -535,8 +588,10 @@ by_month.tail(3)
 **Как пишется.** Один и тот же подсчёт двумя способами — они обязаны совпасть:
 
 ```python
-sql_way = pd.read_sql("SELECT product_id, COUNT(*) AS loans FROM loans GROUP BY product_id", con)   # агрегировано в базе
-pandas_way = status["product"].value_counts()                                                       # агрегировано в памяти
+# агрегировано в базе
+sql_way = pd.read_sql("SELECT product_id, COUNT(*) AS loans FROM loans GROUP BY product_id", con)
+# агрегировано в памяти
+pandas_way = status["product"].value_counts()
 print(sql_way["loans"].sum(), pandas_way.sum())
 ```
 
@@ -576,10 +631,13 @@ def fig_disbursements(con, as_of):
     """Figure 1: monthly disbursements and their 3-month average, for the months before as_of."""
     m = pd.read_sql("""SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed
                        FROM loans WHERE disbursed_at < ? GROUP BY 1 ORDER BY 1""", con, params=(as_of,))   # 1 SQL: агрегация
-    assert m["disbursed"].gt(0).all(), "a month with no lending — check the extract"                     # 2 проверка перед графиком
-    m["month"] = pd.to_datetime(m["month"])                                                              # 3 pandas: типы и среднее
+    # 2 проверка перед графиком
+    assert m["disbursed"].gt(0).all(), "a month with no lending — check the extract"
+    # 3 pandas: типы и среднее
+    m["month"] = pd.to_datetime(m["month"])
     m["ma3"] = m["disbursed"].rolling(3).mean()
-    fig, ax = plt.subplots(figsize=(12, 5.4))                                                            # 4 matplotlib: график 16:9
+    # 4 matplotlib: график 16:9
+    fig, ax = plt.subplots(figsize=(12, 5.4))
     ax.plot(m["month"], m["disbursed"], color=GREY, lw=1, label="month")
     ax.plot(m["month"], m["ma3"], color=BLUE, lw=2, label="3-month average")
     ax.yaxis.set_major_formatter(bn)
@@ -591,7 +649,8 @@ def fig_disbursements(con, as_of):
     return fig
 
 fig = fig_disbursements(con, "2026-10-01")
-fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")            # 5 файл для презентации
+# 5 файл для презентации
+fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")
 ```
 
 Заголовок гласит «The 3-month average rose from 16.6 to 20.0 bn a month in 2026». В следующем месяце Тимур вызывает `fig_disbursements(con, "2026-11-01")` — и заголовок, линия и файл обновляются сами. В цикле, который сохраняет много рисунков, добавляйте `plt.close(fig)` после каждого `savefig`.
@@ -666,13 +725,17 @@ mix = pd.read_sql("""
     SELECT p.name AS product, SUM(i.principal_due) AS outstanding
     FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
     WHERE i.due_date > '2026-10-01' GROUP BY 1 ORDER BY 2""", con)                     # SQL делает соединение по 92 193 строкам
-assert mix["outstanding"].sum() == 208_723_504_430                                      # у выгрузки всё ещё известная нам форма
-mix["share"] = 100 * mix["outstanding"] / mix["outstanding"].sum()                      # pandas считает долю
+# у выгрузки всё ещё известная нам форма
+assert mix["outstanding"].sum() == 208_723_504_430
+# pandas считает долю
+mix["share"] = 100 * mix["outstanding"] / mix["outstanding"].sum()
 fig, ax = plt.subplots(figsize=(10, 5))
 ax.barh(mix["product"], mix["outstanding"], color=[BLUE if s == mix["share"].max() else GREY for s in mix["share"]])
 for y, (v, s) in enumerate(zip(mix["outstanding"], mix["share"])):
-    ax.text(v, y, f"  {v / 1e9:,.1f} bn · {s:.1f} %", va="center")                     # число, которое совет директоров будет цитировать
-ax.xaxis.set_major_formatter(bn); ax.set_xlim(0, mix["outstanding"].max() * 1.35)       # место для подписей
+    # число, которое совет директоров будет цитировать
+    ax.text(v, y, f"  {v / 1e9:,.1f} bn · {s:.1f} %", va="center")
+# место для подписей
+ax.xaxis.set_major_formatter(bn); ax.set_xlim(0, mix["outstanding"].max() * 1.35)
 ax.set_title(f"SME is {mix['share'].max():.0f} % of the {mix['outstanding'].sum() / 1e9:.1f} bn book on 10 % of the loans", loc="left")
 fig.tight_layout(); fig.savefig("figures/02_outstanding_mix.png", dpi=150)
 ```
@@ -806,20 +869,25 @@ fig.tight_layout(); fig.savefig("figures/02_outstanding_mix.png", dpi=150)
 Драйвер, который запускает Тимур, — каждый рисунок это функция `(con, as_of) → fig`, пакет — цикл:
 
 ```python
-# (shape only — not meant to run) … только форма: пять функций fig_* лежат в day4_starter.ipynb
+# (shape only — not meant to run) … только форма: пять функций fig_* лежат в
+# day4_starter.ipynb
 FIGURES = {"01_disbursements_ma3": fig_disbursements, "02_outstanding_mix": fig_mix, "03_dpd_buckets": fig_buckets,
            "04_vintage_heatmap": fig_vintage, "05_roll_rate": fig_roll}
 
 def figure_pack(con, as_of, out_dir="figures"):
-    out = Path(out_dir) / str(as_of.date()); out.mkdir(parents=True, exist_ok=True)     # figures/2026-10-01/
+    # figures/2026-10-01/
+    out = Path(out_dir) / str(as_of.date()); out.mkdir(parents=True, exist_ok=True)
     for name, make in FIGURES.items():
-        fig = make(con, as_of)                       # каждая функция делает запрос с params=(as_of,) и проверяет свои количества через assert
+        # каждая функция делает запрос с params=(as_of,) и проверяет свои
+        # количества через assert
+        fig = make(con, as_of)
         fig.savefig(out / f"{name}.png", dpi=150, facecolor="white")
         plt.close(fig)
     return sorted(p.name for p in out.glob("*.png"))
 
 figure_pack(con, pd.Timestamp("2026-10-01"))
-# ['01_disbursements_ma3.png', '02_outstanding_mix.png', '03_dpd_buckets.png', '04_vintage_heatmap.png', '05_roll_rate.png']
+# ['01_disbursements_ma3.png', '02_outstanding_mix.png', '03_dpd_buckets.png',
+# '04_vintage_heatmap.png', '05_roll_rate.png']
 ```
 
 > 💡 **Главное.** **Воспроизводимость — это и есть результат.** Три привычки делают пакет Тимура, а не одолжением: дата отчёта — одна переменная, используемая в каждом запросе (`params=(AS_OF,)`); каждый заголовок, цитирующий число, вычисляет его (`f"… {b['90+']:,} of them are already 90+ …"`); и `assert` на каждый датафрейм перед его графиком (`assert b.sum() == 7828`) останавливает запуск, когда выгрузка меняет форму, вместо того чтобы сохранить неверный PNG. В следующем месяце: меняете `AS_OF`, Kernel → Restart & Run All, пять новых файлов в `figures/`.

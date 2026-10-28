@@ -29,8 +29,9 @@
 
 ```sql
 CREATE TABLE my_notes (
-    note_id  INTEGER PRIMARY KEY,   -- ключ: одно значение на строку, заполняется само
-    loan_id  INTEGER NOT NULL,      -- должно быть заполнено
+    -- ключ: одно значение на строку, заполняется само
+    note_id  INTEGER PRIMARY KEY,
+    loan_id  INTEGER NOT NULL,  -- должно быть заполнено
     note     TEXT    NOT NULL
 );
 ```

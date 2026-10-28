@@ -60,19 +60,24 @@ Cardinality: `employers 1—∞ employees`, `employers 1—∞ payroll_runs`, `e
 CREATE TABLE my_employers (
     employer_id   INT          NOT NULL PRIMARY KEY,
     name          NVARCHAR(200) NOT NULL,
-    tax_id        NVARCHAR(20)  NOT NULL,          -- natural key kept as a column, UNIQUE
-    payday_dom    INT          NOT NULL,           -- day of month salaries are paid
-    status        NVARCHAR(20) NOT NULL,           -- active / paused / terminated
+    -- natural key kept as a column, UNIQUE
+    tax_id        NVARCHAR(20)  NOT NULL,
+    -- day of month salaries are paid
+    payday_dom    INT          NOT NULL,
+    -- active / paused / terminated
+    status        NVARCHAR(20) NOT NULL,
     contract_start DATE        NOT NULL,
     contract_end  DATE         NULL
 );
 CREATE TABLE my_employees (
     employee_id   INT          NOT NULL PRIMARY KEY,
     employer_id   INT          NOT NULL,
-    customer_id   INT          NULL,                -- link to customers if also a Nur Finance client
+    -- link to customers if also a Nur Finance client
+    customer_id   INT          NULL,
     full_name     NVARCHAR(200) NOT NULL,
     phone         NVARCHAR(20) NOT NULL,
-    monthly_salary BIGINT      NOT NULL,            -- current salary, updated by the employer's file
+    -- current salary, updated by the employer's file
+    monthly_salary BIGINT      NOT NULL,
     enrolled_on   DATE         NOT NULL,
     left_on       DATE         NULL,
     status        NVARCHAR(20) NOT NULL,
@@ -81,11 +86,13 @@ CREATE TABLE my_employees (
 CREATE TABLE my_payroll_runs (
     payroll_run_id INT         NOT NULL PRIMARY KEY,
     employer_id   INT          NOT NULL,
-    period_month  DATE         NOT NULL,            -- first day of the salary month
+    -- first day of the salary month
+    period_month  DATE         NOT NULL,
     received_on   DATE         NULL,
     amount_expected BIGINT     NOT NULL,
     amount_received BIGINT     NULL,
-    status        NVARCHAR(20) NOT NULL,            -- expected / received / short
+    -- expected / received / short
+    status        NVARCHAR(20) NOT NULL,
     FOREIGN KEY (employer_id) REFERENCES my_employers(employer_id)
 );
 CREATE TABLE my_advances (
@@ -95,9 +102,10 @@ CREATE TABLE my_advances (
     disbursed_on  DATE         NOT NULL,
     amount        BIGINT       NOT NULL,
     fee           BIGINT       NOT NULL,
-    salary_at_request BIGINT   NOT NULL,            -- snapshot, see decision 2
-    due_payroll_month DATE     NOT NULL,            -- which payroll should cover it
-    status        NVARCHAR(20) NOT NULL,            -- open / repaid / unpaid
+    salary_at_request BIGINT   NOT NULL,  -- snapshot, see decision 2
+    -- which payroll should cover it
+    due_payroll_month DATE     NOT NULL,
+    status        NVARCHAR(20) NOT NULL,  -- open / repaid / unpaid
     FOREIGN KEY (employee_id) REFERENCES my_employees(employee_id)
 );
 CREATE TABLE my_repayments (
@@ -148,9 +156,10 @@ SELECT COUNT(*) FROM applications WHERE status = 'cancelled'; -- 1817
 <details><summary>B4–B6</summary>
 
 ```sql
-SELECT DISTINCT region FROM customers ORDER BY region;         -- 8: Andijan, Bukhara, Fergana, Namangan, Nukus, Samarkand, Tashkent, Termez
-SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;   -- 356
-SELECT COUNT(*) FROM loans WHERE principal >= 100000000;       -- 996
+SELECT DISTINCT region FROM customers ORDER BY region;
+-- 8: Andijan, Bukhara, Fergana, Namangan, Nukus, Samarkand, Tashkent, Termez
+SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;  -- 356
+SELECT COUNT(*) FROM loans WHERE principal >= 100000000;      -- 996
 ```
 
 </details>
@@ -160,9 +169,12 @@ SELECT COUNT(*) FROM loans WHERE principal >= 100000000;       -- 996
 <details><summary>B7–B9</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE segment = 'affluent' AND region = 'Tashkent';          -- 487
-SELECT COUNT(*) FROM customers WHERE last_name LIKE '%ova';                                 -- 2447
-SELECT COUNT(*) FROM installments WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';     -- 3392
+SELECT COUNT(*) FROM customers WHERE segment = 'affluent' AND region = 'Tashkent';
+-- 487
+SELECT COUNT(*) FROM customers WHERE last_name LIKE '%ova';
+-- 2447
+SELECT COUNT(*) FROM installments WHERE due_date BETWEEN '2026-10-01' AND '2026-10-31';
+-- 3392
 ```
 B8: 2 447 of 2 924 women — surnames ending `eva` (Abdullaeva, Mirzaeva) are the rest. `LIKE '%ova'` is a text pattern, not "female": say what you measured.
 
@@ -186,9 +198,12 @@ B10 with `BETWEEN '2025-01-01' AND '2025-12-31'` gives 5 388 — it loses the 19
 <details><summary>B12–B14</summary>
 
 ```sql
-SELECT COUNT(*) FROM collections_actions WHERE action_type = 'visit' AND outcome = 'promise_to_pay'; -- 381
-SELECT COUNT(*) FROM app_events WHERE event_name = 'contract_signed' AND device = 'ios';             -- 944
-SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;                     -- 1511
+SELECT COUNT(*) FROM collections_actions WHERE action_type = 'visit' AND outcome = 'promise_to_pay';
+-- 381
+SELECT COUNT(*) FROM app_events WHERE event_name = 'contract_signed' AND device = 'ios';
+-- 944
+SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;
+-- 1511
 ```
 
 </details>
@@ -198,10 +213,14 @@ SELECT COUNT(*) FROM loans WHERE product_id NOT IN (1, 3) AND term_months >= 24;
 <details><summary>B15–B16</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE risk_grade IN ('C', 'D') AND status = 'written_off';   -- 128
-SELECT COUNT(*) FROM loans WHERE status = 'written_off';                                -- 190
-SELECT COUNT(*) FROM applications WHERE credit_score > 800 AND status = 'rejected';     -- 6
-SELECT COUNT(*) FROM applications WHERE credit_score > 800;                             -- 108
+SELECT COUNT(*) FROM loans WHERE risk_grade IN ('C', 'D') AND status = 'written_off';
+-- 128
+SELECT COUNT(*) FROM loans WHERE status = 'written_off';
+-- 190
+SELECT COUNT(*) FROM applications WHERE credit_score > 800 AND status = 'rejected';
+-- 6
+SELECT COUNT(*) FROM applications WHERE credit_score > 800;
+-- 108
 ```
 B15: 128 of 190 write-offs (67 %) come from the two worst grades — the scorecard works, but 62 write-offs came from A and B. B16: 6 of 108 top scorers were rejected; a risk analyst would want to know why (a rule outside the score, or a data error).
 
@@ -212,8 +231,10 @@ B15: 128 of 190 write-offs (67 %) come from the two worst grades — the scoreca
 <details><summary>B17</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE NOT (segment = 'mass' OR region = 'Tashkent');          -- 1481
-SELECT COUNT(*) FROM customers WHERE segment <> 'mass' AND region <> 'Tashkent';             -- 1481
+SELECT COUNT(*) FROM customers WHERE NOT (segment = 'mass' OR region = 'Tashkent');
+-- 1481
+SELECT COUNT(*) FROM customers WHERE segment <> 'mass' AND region <> 'Tashkent';
+-- 1481
 ```
 De Morgan: `NOT (a OR b)` = `NOT a AND NOT b`. Both forms score; the second is what you will read in other people's code.
 
@@ -224,7 +245,8 @@ De Morgan: `NOT (a OR b)` = `NOT a AND NOT b`. Both forms score; the second is w
 <details><summary>B18</summary>
 
 ```sql
--- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id;
+-- SQL Server:  SELECT TOP 3 payment_id, loan_id, amount, paid_at FROM payments
+-- ORDER BY amount DESC, payment_id;
 SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, payment_id LIMIT 3;
 ```
 Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 000 SME loan from Day 2 P3), 2025-01-26 / 02-27 / 03-27. Three equal amounts in a row is not a duplicate: they are three consecutive instalments. (Payment 30775 on the same loan has the same amount, so third place is a tie; `payment_id` in the `ORDER BY` makes the three rows the same on both engines.) (Write that sentence; it is the difference between a count and an analysis.)
@@ -236,8 +258,10 @@ Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 0
 <details><summary>B19</summary>
 
 ```sql
-SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LIMIT 1;   -- 4185, 2024-01-02, 1 250 000
-SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;   -- 596,  2026-10-01, 2 510 000
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LIMIT 1;
+-- 4185, 2024-01-02, 1 250 000
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;
+-- 596,  2026-10-01, 2 510 000
 ```
 (`TOP 1` on SQL Server.) The latest is on the as-of date itself: the data is current to the day it was cut.
 
@@ -251,7 +275,7 @@ SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LI
 SELECT customer_id, first_name, last_name, monthly_income, registered_at
 FROM customers
 WHERE registered_at >= '2026-01-01' AND monthly_income > 20000000
-ORDER BY monthly_income DESC;                                                -- 258 rows
+ORDER BY monthly_income DESC;  -- 258 rows
 ```
 First row: customer **6016**, `Bobur␣ rakhimov`, 59 962 504 — an id above 6000 with a trailing space and a lower-case surname: one of yesterday's forty duplicates. The "richest new customer of 2026" is a data-entry copy of an existing client. Full marks only if your `-- result:` line says so.
 

@@ -33,9 +33,9 @@
 
 ```sql
 WITH pay(loan_id, method) AS (VALUES (1, 'card'), (1, 'cash'), (2, 'card'), (3, NULL))
-SELECT COUNT(*)               AS rows_,         -- 4: every row
-       COUNT(method)          AS with_method,   -- 3: the NULL is skipped
-       COUNT(DISTINCT method) AS methods        -- 2: card and cash
+SELECT COUNT(*)               AS rows_,        -- 4: every row
+       COUNT(method)          AS with_method,  -- 3: the NULL is skipped
+       COUNT(DISTINCT method) AS methods       -- 2: card and cash
 FROM pay;
 ```
 
@@ -73,12 +73,13 @@ FROM loans;
 **How to write it.**
 
 ```sql
-SELECT SUM(principal) AS disbursed            -- 404 783 280 000
+SELECT SUM(principal) AS disbursed         -- 404 783 280 000
 FROM loans;
 
-SELECT SUM(principal) AS active_disbursed     -- 296 980 040 000
+SELECT SUM(principal) AS active_disbursed  -- 296 980 040 000
 FROM loans
-WHERE status = 'active';                      -- WHERE first, then the sum over the rows that are left
+WHERE status = 'active';
+-- WHERE first, then the sum over the rows that are left
 ```
 
 404.8 bn UZS lent in total; 297.0 bn of it sits on loans that are still active.
@@ -100,11 +101,13 @@ WHERE status = 'active';                      -- WHERE first, then the sum over 
 **How to write it.**
 
 ```sql
-SELECT AVG(principal)                   AS avg_ticket,    -- 51 709 667.86
-       SUM(principal) / COUNT(*)        AS int_division,  -- 51 709 667: whole number ÷ whole number
-       1.0 * SUM(principal) / COUNT(*)  AS by_hand        -- 51 709 667.86
+SELECT AVG(principal)                   AS avg_ticket,  -- 51 709 667.86
+       -- 51 709 667: whole number ÷ whole number
+       SUM(principal) / COUNT(*)        AS int_division,
+       1.0 * SUM(principal) / COUNT(*)  AS by_hand      -- 51 709 667.86
 FROM loans;
--- SQL Server: AVG of an integer column is a whole number too — write AVG(1.0 * principal)
+-- SQL Server: AVG of an integer column is a whole number too — write AVG(1.0 *
+-- principal)
 ```
 
 The average loan is 51.7 m UZS. Divided by hand, two whole numbers lose the .86: the fraction is cut off, not rounded.
@@ -226,12 +229,13 @@ A combination that does not occur gets **no row** — not a row with 0. When you
 A group can also be an **expression**. The month of a date is Wednesday's topic; you need it today, so copy it as it stands:
 
 ```sql
--- SQL Server:  FORMAT(l.disbursed_at, 'yyyy-MM')      SQLite:  strftime('%Y-%m', l.disbursed_at)
+-- SQL Server:  FORMAT(l.disbursed_at, 'yyyy-MM')      SQLite: 
+-- strftime('%Y-%m', l.disbursed_at)
 SELECT strftime('%Y-%m', l.disbursed_at) AS month, p.name, COUNT(*) AS loans, SUM(l.principal) AS disbursed
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01'
 GROUP BY strftime('%Y-%m', l.disbursed_at), p.name
-ORDER BY month, disbursed DESC;       -- 50 rows: 10 months × 5 products
+ORDER BY month, disbursed DESC;  -- 50 rows: 10 months × 5 products
 ```
 
 `GROUP BY` repeats the expression: SQL Server does not accept the alias `month` there (SQLite accepts either).
@@ -257,10 +261,12 @@ ORDER BY month, disbursed DESC;       -- 50 rows: 10 months × 5 products
 ```sql
 SELECT b.branch_name, COUNT(*) AS active_loans
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
-WHERE l.status = 'active'            -- keep only active loans (rows)
+WHERE l.status = 'active'  -- keep only active loans (rows)
 GROUP BY b.branch_name
-HAVING COUNT(*) > 300                -- keep only branches with more than 300 of them (groups)
-ORDER BY active_loans DESC;          -- 6 branches: Tashkent Central 435 … Andijan Central 334
+-- keep only branches with more than 300 of them (groups)
+HAVING COUNT(*) > 300
+ORDER BY active_loans DESC;
+-- 6 branches: Tashkent Central 435 … Andijan Central 334
 ```
 
 Six of the ten branches have more than 300 active loans, from Tashkent Central with 435 down to Andijan Central with 334.
@@ -291,7 +297,8 @@ Six of the ten branches have more than 300 active loans, from Tashkent Central w
 ```sql
 SELECT p.name, COUNT(*) AS loans, COUNT(DISTINCT l.customer_id) AS customers, SUM(l.principal) AS disbursed
 FROM loans l
-JOIN products p ON p.product_id = l.product_id     -- many-to-one: one row is still one loan
+-- many-to-one: one row is still one loan
+JOIN products p ON p.product_id = l.product_id
 GROUP BY p.name
 ORDER BY disbursed DESC;
 ```
@@ -310,9 +317,11 @@ A one-to-many join repeats each loan, so a loan column summed over it is wrong:
 
 ```sql
 SELECT p.name, SUM(l.principal)
-FROM loans l JOIN installments i ON i.loan_id = l.loan_id    -- one-to-many: one row is an instalment
+-- one-to-many: one row is an instalment
+FROM loans l JOIN installments i ON i.loan_id = l.loan_id
 JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name;                     -- SME 5 862 295 560 000 — 24× too big, and nobody would blink
+GROUP BY p.name;
+-- SME 5 862 295 560 000 — 24× too big, and nobody would blink
 ```
 
 Each principal is counted once per instalment. The factor is the term, which differs by product, so even the ranking changes: BNPL overtakes Micro.
@@ -343,8 +352,10 @@ SELECT b.branch_name, COUNT(*) AS active_loans
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 WHERE l.status = 'active'
 GROUP BY b.branch_name
-ORDER BY active_loans DESC           -- the alias; COUNT(*) DESC or 2 DESC give the same order
-LIMIT 3;                             -- SQL Server: SELECT TOP 3 … (drop the LIMIT line)
+-- the alias; COUNT(*) DESC or 2 DESC give the same order
+ORDER BY active_loans DESC
+LIMIT 3;
+-- SQL Server: SELECT TOP 3 … (drop the LIMIT line)
 ```
 
 Tashkent Central 435, Tashkent North 428, Tashkent South 416 — the three Tashkent branches hold the most active loans.
@@ -397,8 +408,8 @@ which rows      keep rows   make groups   keep groups    compute columns     sor
 
 ```sql
 SELECT customer_id FROM loans
-UNION                                        -- stack, then remove duplicate rows
-SELECT customer_id FROM applications;        -- 5 453 rows
+UNION                                  -- stack, then remove duplicate rows
+SELECT customer_id FROM applications;  -- 5 453 rows
 ```
 
 5 453 rows — every customer who applied, because every borrower also applied.
@@ -426,15 +437,18 @@ One request, every tool of the day. *"Active loans per branch: how many, how muc
 
 ```sql
 SELECT b.branch_name,
-       COUNT(*)                AS active_loans,       -- COUNT: one row of the group = one loan
-       SUM(l.principal)        AS active_principal,   -- SUM over the same rows
-       ROUND(AVG(l.principal)) AS avg_ticket          -- AVG; ROUND (Wednesday) = whole UZS
+       -- COUNT: one row of the group = one loan
+       COUNT(*)                AS active_loans,
+       SUM(l.principal)        AS active_principal,  -- SUM over the same rows
+       -- AVG; ROUND (Wednesday) = whole UZS
+       ROUND(AVG(l.principal)) AS avg_ticket
 FROM loans l
-JOIN branches b ON b.branch_id = l.branch_id          -- many-to-one: one row is still a loan
-WHERE l.status = 'active'                             -- rows, before grouping
-GROUP BY b.branch_name                                -- one row per branch
-HAVING COUNT(*) > 300                                 -- groups, after grouping
-ORDER BY active_principal DESC;                       -- the alias, after SELECT
+-- many-to-one: one row is still a loan
+JOIN branches b ON b.branch_id = l.branch_id
+WHERE l.status = 'active'                            -- rows, before grouping
+GROUP BY b.branch_name                               -- one row per branch
+HAVING COUNT(*) > 300                                -- groups, after grouping
+ORDER BY active_principal DESC;                      -- the alias, after SELECT
 ```
 
 | branch_name | active_loans | active_principal | avg_ticket |
@@ -502,7 +516,7 @@ Questions whose answer is a query have a box under them — write, **▶ Run**, 
 
 ```sql
 SELECT COUNT(*) AS customers, COUNT(monthly_income) AS with_income, COUNT(DISTINCT region) AS regions
-FROM customers;                                               -- 6040 · 5684 · 8
+FROM customers;  -- 6040 · 5684 · 8
 ```
 6 040 − 5 684 = **356** customers have NULL in `monthly_income`: `COUNT(column)` skipped them. Day 4 is about those 356.
 
@@ -526,7 +540,8 @@ SELECT SUM(principal) FROM loans;                             -- 404 783 280 000
 
 ```sql
 SELECT AVG(principal) AS avg_ticket, SUM(principal) / COUNT(*) AS by_hand, COUNT(*) AS loans
-FROM loans WHERE status = 'active';                           -- 88 597 863.96 · 88 597 863 · 3352
+FROM loans WHERE status = 'active';
+-- 88 597 863.96 · 88 597 863 · 3352
 ```
 Both sides of `SUM(principal) / COUNT(*)` are whole numbers, so the division is whole too: the .96 is cut off. `1.0 * SUM(principal) / COUNT(*)` gives the same 88 597 863.96 as `AVG`. (On SQL Server `AVG` of an integer column is whole as well.)
 
@@ -537,8 +552,10 @@ Both sides of `SUM(principal) / COUNT(*)` are whole numbers, so the division is 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT MIN(principal), MAX(principal) FROM loans WHERE product_id = 1;      -- 500 000 · 4 990 000
-SELECT MIN(applied_at), MAX(applied_at) FROM applications;                  -- 2024-01-01 10:07:00 · 2026-10-01 21:36:00
+SELECT MIN(principal), MAX(principal) FROM loans WHERE product_id = 1;
+-- 500 000 · 4 990 000
+SELECT MIN(applied_at), MAX(applied_at) FROM applications;
+-- 2024-01-01 10:07:00 · 2026-10-01 21:36:00
 ```
 Micro loans run from 0.5 m to 4.99 m UZS. Applications start on 1 January 2024 and end on the evening of the as-of date.
 
@@ -643,7 +660,8 @@ GROUP BY a.channel, p.name ORDER BY a.channel, applications DESC;
 ```sql
 SELECT b.branch_name, COUNT(*) FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 GROUP BY b.branch_name HAVING COUNT(*) > 900 ORDER BY 2 DESC;
--- Tashkent South 1012, Tashkent North 1007, Tashkent Central 1001, Fergana Central 906
+-- Tashkent South 1012, Tashkent North 1007, Tashkent Central 1001, Fergana
+-- Central 906
 ```
 A condition on an aggregate → `HAVING`. Writing it in `WHERE` is a syntax error, which is the kind one.
 
@@ -655,7 +673,8 @@ A condition on an aggregate → `HAVING`. Writing it in `WHERE` is a syntax erro
 
 ```sql
 SELECT p.name, AVG(l.principal) FROM loans l JOIN products p ON p.product_id = l.product_id
-GROUP BY p.name HAVING AVG(l.principal) > 50000000;             -- Auto 216.9 m, SME 308.7 m
+GROUP BY p.name HAVING AVG(l.principal) > 50000000;
+-- Auto 216.9 m, SME 308.7 m
 ```
 
 </details>
@@ -701,8 +720,10 @@ Divide by hand: what is the highest share of actions ending in a promise to pay,
 
 ```sql
 SELECT COUNT(*), COUNT(DISTINCT l.loan_id) FROM loans l JOIN payments p ON p.loan_id = l.loan_id WHERE l.status = 'active';
--- 22511 rows, 2971 loans  → the join multiplied; 381 active loans have no payment yet and vanished (inner join)
-SELECT SUM(principal) FROM loans WHERE status = 'active';                                   -- 296 980 040 000 (right)
+-- 22511 rows, 2971 loans  → the join multiplied; 381 active loans have no
+-- payment yet and vanished (inner join)
+SELECT SUM(principal) FROM loans WHERE status = 'active';
+-- 296 980 040 000 (right)
 ```
 `SUM(l.principal)` over the join is in the trillions — every principal counted once per payment. When the two counts differ, aggregate loan columns on `loans` alone.
 
@@ -738,7 +759,8 @@ Bekzod Mirzaev (28) 593 · Ilhom Qodirov (27) 590 · Bobur Tashkentov (29) 568. 
 ```sql
 SELECT '2025' AS yr, COUNT(*) AS loans FROM loans WHERE disbursed_at >= '2025-01-01' AND disbursed_at < '2026-01-01'
 UNION ALL
-SELECT '2026', COUNT(*) FROM loans WHERE disbursed_at >= '2026-01-01';          -- 3041 / 3051
+SELECT '2026', COUNT(*) FROM loans WHERE disbursed_at >= '2026-01-01';
+-- 3041 / 3051
 ```
 The label column makes the rows different, so `UNION` keeps both. Without the label, two equal counts would collapse into one row under `UNION` — the classic silent loss. Default to `UNION ALL`.
 
@@ -816,8 +838,10 @@ GROUP BY p.name ORDER BY disbursed DESC;
 **Approval rate by channel** (*уровень одобрения по каналам*). Week 1 you did it with two counts for the whole company. Per channel, the two-query way is three groups each:
 
 ```sql
-SELECT channel, COUNT(*) AS applications FROM applications GROUP BY channel;                            -- app 5006 · branch 6223 · partner 2771
-SELECT channel, COUNT(*) AS approved FROM applications WHERE status LIKE 'approved%' GROUP BY channel;  -- app 2915 · branch 3965 · partner 1715
+SELECT channel, COUNT(*) AS applications FROM applications GROUP BY channel;
+-- app 5006 · branch 6223 · partner 2771
+SELECT channel, COUNT(*) AS approved FROM applications WHERE status LIKE 'approved%' GROUP BY channel;
+-- app 2915 · branch 3965 · partner 1715
 ```
 
 app 58.2 % · branch 63.7 % · partner 61.9 % (all-applications denominator). One query instead of two: average a 0/1 expression. In SQLite a comparison *is* 0 or 1, so `AVG(status LIKE 'approved%')` works; SQL Server needs `IIF` to turn the test into a number:

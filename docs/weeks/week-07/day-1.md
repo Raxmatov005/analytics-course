@@ -98,13 +98,18 @@ because <mechanism>.                  → a clear monthly payment removes hesita
 
 ```python
 import pandas as pd
-aa = pd.read_csv("data/ab/aa_users.csv", parse_dates=["assigned_at"])   # one row per assigned user (the denominator)
-ev = pd.read_csv("data/ab/aa_events.csv", parse_dates=["event_time"])   # one row per app event
+# one row per assigned user (the denominator)
+aa = pd.read_csv("data/ab/aa_users.csv", parse_dates=["assigned_at"])
+# one row per app event
+ev = pd.read_csv("data/ab/aa_events.csv", parse_dates=["event_time"])
 signed = ev[ev["event_name"] == "contract_signed"].merge(aa[["user_id", "assigned_at"]], on="user_id")
 in_window = signed[(signed["event_time"] >= signed["assigned_at"]) &
-                   (signed["event_time"] <= signed["assigned_at"] + pd.Timedelta(days=7))]   # the 7-day window
-conv = aa["user_id"].isin(in_window["user_id"]).mean()                  # numerator ÷ denominator
-print(f"{conv:.2%} of {len(aa):,} users signed within 7 days")          # 8.19 % of 12 852
+                   # the 7-day window
+                   (signed["event_time"] <= signed["assigned_at"] + pd.Timedelta(days=7))]
+# numerator ÷ denominator
+conv = aa["user_id"].isin(in_window["user_id"]).mean()
+# 8.19 % of 12 852
+print(f"{conv:.2%} of {len(aa):,} users signed within 7 days")
 ```
 
 8.19 % — 1 053 of 12 852 users signed within seven days. Why seven: 85 % of signings come within two days of the first view and 94 % within seven. A fixed window treats a user who arrived on 28 August the same as one from 1 August.
@@ -148,9 +153,12 @@ print(f"{conv:.2%} of {len(aa):,} users signed within 7 days")          # 8.19 %
 **How to write it.**
 
 ```python
-baseline = 0.080                     # today's 7-day conversion (Kamola's planning number)
-mde_abs  = 0.009                     # +0.9 points: the smallest lift worth the release risk
-print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}")   # 8.9 %, 11.25 %
+# today's 7-day conversion (Kamola's planning number)
+baseline = 0.080
+# +0.9 points: the smallest lift worth the release risk
+mde_abs  = 0.009
+# 8.9 %, 11.25 %
+print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}")
 ```
 
 8.0 % → 8.9 % is +0.9 points absolute and +11.25 % relative. Both describe the same effect.
@@ -184,19 +192,26 @@ z = NormalDist().inv_cdf                      # z(0.975) = 1.96, z(0.80) = 0.84
 
 def n_per_arm(p1, p2, alpha=0.05, power=0.80, two_sided=True):
     """Users per arm to detect p1 -> p2 (Cohen's h: what statsmodels' zt_ind_solve_power returns)."""
-    h = 2 * asin(sqrt(p2)) - 2 * asin(sqrt(p1))          # the effect on the arcsine scale
-    z_a = z(1 - alpha / 2) if two_sided else z(1 - alpha) # how strict the "significant" line is
-    return 2 * ((z_a + z(power)) / h) ** 2                # how sure we want to be to cross it
+    # the effect on the arcsine scale
+    h = 2 * asin(sqrt(p2)) - 2 * asin(sqrt(p1))
+    # how strict the "significant" line is
+    z_a = z(1 - alpha / 2) if two_sided else z(1 - alpha)
+    # how sure we want to be to cross it
+    return 2 * ((z_a + z(power)) / h) ** 2
 
 n = n_per_arm(0.080, 0.089)
-print(f"Cohen's h method: {n:.1f} -> {ceil(n)} users per arm")      # 14 982.2 -> 14 983
+# 14 982.2 -> 14 983
+print(f"Cohen's h method: {n:.1f} -> {ceil(n)} users per arm")
 
 p1, p2 = 0.080, 0.089
 pbar = (p1 + p2) / 2
 n_classic = (z(0.975) * sqrt(2 * pbar * (1 - pbar)) + z(0.80) * sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2 / (p2 - p1) ** 2
-print(f"classic formula:  {n_classic:.1f} -> {ceil(n_classic)}")    # 14 991.1 -> 14 992
+# 14 991.1 -> 14 992
+print(f"classic formula:  {n_classic:.1f} -> {ceil(n_classic)}")
 print(f"days at 1 000 viewers a day: {2 * ceil(n) / 1000:.0f}")    # 30
-# In Jupyter with statsmodels: zt_ind_solve_power(effect_size=proportion_effectsize(0.089, 0.080), alpha=0.05, power=0.80)
+# In Jupyter with statsmodels:
+# zt_ind_solve_power(effect_size=proportion_effectsize(0.089, 0.080),
+# alpha=0.05, power=0.80)
 ```
 
 14 983 users per arm — 29 966 viewers, 30 days at about 1 000 offer viewers a day. The classic formula gives 14 992: two methods, nine users apart. Name the one you used. Each input, moved one at a time:
@@ -256,10 +271,13 @@ Kamola's choice: **28 days**, about 14 000 per arm. That buys an MDE of +0.93 po
 ```python
 import hashlib
 def hash_variant(user_id, salt="offer_screen_v2"):
-    h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)   # the hash, read as an integer
-    return "A" if h % 2 == 0 else "B"                                       # even → A, odd → B
+    # the hash, read as an integer
+    h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)
+    # even → A, odd → B
+    return "A" if h % 2 == 0 else "B"
 
-print([hash_variant(u, "offer_screen_aa_2026_07") for u in [925601, 665666, 652995, 774155, 376261]])   # B A A B A
+# B A A B A
+print([hash_variant(u, "offer_screen_aa_2026_07") for u in [925601, 665666, 652995, 774155, 376261]])
 # SQL Server: ABS(CHECKSUM(CONCAT('offer_screen_v2', user_id))) % 2
 ```
 
@@ -296,13 +314,17 @@ from statistics import NormalDist
 def srm_pvalue(n_a, n_b, expected_share_b=0.5):
     """Chi-square goodness-of-fit for two groups (1 df): the same p as scipy.stats.chisquare."""
     n = n_a + n_b
-    e_a, e_b = n * (1 - expected_share_b), n * expected_share_b          # the counts the plan expects
+    # the counts the plan expects
+    e_a, e_b = n * (1 - expected_share_b), n * expected_share_b
     chi2 = (n_a - e_a) ** 2 / e_a + (n_b - e_b) ** 2 / e_b
-    return 2 * (1 - NormalDist().cdf(sqrt(chi2)))                         # with 1 df, chi2 is z squared
+    # with 1 df, chi2 is z squared
+    return 2 * (1 - NormalDist().cdf(sqrt(chi2)))
 
-print(round(srm_pvalue(14200, 13800), 3))   # chi2 = 5.71, p = 0.017  -> look for the bug before reading anything
-print(round(srm_pvalue(14050, 13950), 2))   # chi2 = 0.36, p = 0.55   -> fine
-# In Jupyter: scipy.stats.chisquare([14200, 13800], [14000, 14000]); Excel: =CHISQ.TEST({14200,13800},{14000,14000})
+# chi2 = 5.71, p = 0.017  -> look for the bug before reading anything
+print(round(srm_pvalue(14200, 13800), 3))
+print(round(srm_pvalue(14050, 13950), 2))  # chi2 = 0.36, p = 0.55   -> fine
+# In Jupyter: scipy.stats.chisquare([14200, 13800], [14000, 14000]); Excel:
+# =CHISQ.TEST({14200,13800},{14000,14000})
 ```
 
 14 200 vs 13 800 is a 50.7 / 49.3 split of 28 000 users: p = 0.017, a split that chance produces less than twice in a hundred tests. 14 050 vs 13 950: p = 0.55, fine.
@@ -351,9 +373,11 @@ One A/A run says little about a 5 % error rate. So re-split the same users at ra
 **How to write it.** What a test reports is the average over its days. Suppose B's true lift is +2.0 points in week 1 and +0.5 afterwards:
 
 ```python
-lift_by_day = [2.0] * 7 + [0.5] * 21                       # novelty: big in week 1, small after
+# novelty: big in week 1, small after
+lift_by_day = [2.0] * 7 + [0.5] * 21
 for days in (7, 14, 28):
-    print(days, "days:", round(sum(lift_by_day[:days]) / days, 3), "points")   # 2.0 · 1.25 · 0.875
+    # 2.0 · 1.25 · 0.875
+    print(days, "days:", round(sum(lift_by_day[:days]) / days, 3), "points")
 ```
 
 A one-week test reports +2.0 — four times the lasting +0.5. Four weeks report +0.875, still above it.
@@ -382,17 +406,23 @@ A one-week test reports +2.0 — four times the lasting +0.5. Four weeks report 
 import numpy as np
 rng = np.random.default_rng(2026)
 n_exp, days, per_day, p = 2000, 28, 500, 0.08
-conv_a = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)   # cumulative conversions in A
-conv_b = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)   # B has the same 8 %: an A/A test
-n = per_day * np.arange(1, days + 1)                                   # users per arm after each day
+# cumulative conversions in A
+conv_a = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)
+# B has the same 8 %: an A/A test
+conv_b = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)
+# users per arm after each day
+n = per_day * np.arange(1, days + 1)
 pool = (conv_a + conv_b) / (2 * n)
 z = (conv_b - conv_a) / n / np.sqrt(pool * (1 - pool) * 2 / n)
-sig = np.abs(z) > 1.96                                                 # "p < 0.05" on that day
-weeks = [6, 13, 20, 27]                                                # days 7, 14, 21, 28
+# "p < 0.05" on that day
+sig = np.abs(z) > 1.96
+# days 7, 14, 21, 28
+weeks = [6, 13, 20, 27]
 print(f"one look on day 28: {sig[:, -1].mean():.1%}")
 print(f"weekly looks:       {sig[:, weeks].any(axis=1).mean():.1%}")
 print(f"daily looks:        {sig.any(axis=1).mean():.1%}")
-print(f"weekly, Pocock:     {(np.abs(z[:, weeks]) > 2.361).any(axis=1).mean():.1%}")   # p < 0.0182 at each look
+# p < 0.0182 at each look
+print(f"weekly, Pocock:     {(np.abs(z[:, weeks]) > 2.361).any(axis=1).mean():.1%}")
 first_win = sig.argmax(axis=1)[sig.any(axis=1)] + 1
 print(f"median day of the first false win (daily looks): {np.median(first_win):.0f}")
 ```

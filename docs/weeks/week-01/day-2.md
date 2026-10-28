@@ -22,11 +22,12 @@
 
 ```sql
 -- the shape only: replace the names before you run it
-SELECT   column1, column2        -- which columns (or * for all)
-FROM     table_name              -- which table
-WHERE    condition               -- which rows (optional)
-ORDER BY column1 DESC            -- in what order (optional)
-LIMIT    5;                      -- how many rows at most (optional; SQL Server: SELECT TOP 5 …)
+SELECT   column1, column2  -- which columns (or * for all)
+FROM     table_name        -- which table
+WHERE    condition         -- which rows (optional)
+ORDER BY column1 DESC      -- in what order (optional)
+LIMIT    5;
+-- how many rows at most (optional; SQL Server: SELECT TOP 5 …)
 ```
 
 One real query with every clause — the five biggest loans in default:
@@ -62,7 +63,7 @@ LIMIT 5;
 **How to write it.**
 
 ```sql
-SELECT loan_id, principal, disbursed_at, status    -- four columns, in this order
+SELECT loan_id, principal, disbursed_at, status  -- four columns, in this order
 FROM loans;
 ```
 
@@ -152,7 +153,8 @@ SELECT DISTINCT channel, status FROM applications;
 ```sql
 SELECT loan_id, product_id, principal
 FROM loans
-ORDER BY product_id, principal DESC;    -- first by product (1, 2, 3 and on), inside each product the biggest first
+ORDER BY product_id, principal DESC;
+-- first by product (1, 2, 3 and on), inside each product the biggest first
 ```
 
 7 828 rows. Product 1 (Micro) comes first, and inside it the biggest loans: 4 990 000 at the top.
@@ -247,13 +249,15 @@ SELECT COUNT(*) FROM applications WHERE channel <> 'branch';
 **How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE principal > 200000000;        -- numbers: no quotes, no spaces
+SELECT COUNT(*) FROM loans WHERE principal > 200000000;
+-- numbers: no quotes, no spaces
 ```
 
 755 loans are bigger than 200 000 000.
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01'; -- dates: 'YYYY-MM-DD' in quotes
+SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01';
+-- dates: 'YYYY-MM-DD' in quotes
 ```
 
 382 loans were paid out on or after 1 September 2026 — up to the data's last day, 1 October.
@@ -273,7 +277,8 @@ SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01'; -- dates: 'YYYY-M
 **How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;   -- the same as term_months >= 12 AND term_months <= 24
+SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;
+-- the same as term_months >= 12 AND term_months <= 24
 ```
 
 2 940 loans run from 12 to 24 months — the 12-month and the 24-month loans included.
@@ -295,7 +300,8 @@ SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;   -- the same as
 **How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);   -- the same as product_id = 4 OR product_id = 5
+SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);
+-- the same as product_id = 4 OR product_id = 5
 ```
 
 1 172 loans are Auto (product 4) or SME (product 5): 391 + 781.
@@ -315,13 +321,15 @@ SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);   -- the same as product_
 **How to write it.**
 
 ```sql
-SELECT name FROM products WHERE name LIKE '%loan';   -- anything, then "loan" at the end
+SELECT name FROM products WHERE name LIKE '%loan';
+-- anything, then "loan" at the end
 ```
 
 4 rows: Micro loan, Consumer loan, Auto loan, Small business loan. *Buy now pay later* does not end in "loan".
 
 ```sql
-SELECT code FROM products WHERE code LIKE '____';    -- four underscores = exactly four characters
+SELECT code FROM products WHERE code LIKE '____';
+-- four underscores = exactly four characters
 ```
 
 3 rows: CONS, BNPL, AUTO. MICRO has five letters and SME three.
@@ -415,8 +423,10 @@ SELECT COUNT(*) FROM loans WHERE status NOT IN ('closed', 'written_off');
 **How to write it.** `applied_at` holds a date and a time, such as `2025-06-02 10:35:00`:
 
 ```sql
-SELECT COUNT(*) FROM applications WHERE applied_at = '2025-06-02';                               -- 0: no row is exactly midnight
-SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_at < '2025-06-03'; -- the whole day
+SELECT COUNT(*) FROM applications WHERE applied_at = '2025-06-02';
+-- 0: no row is exactly midnight
+SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_at < '2025-06-03';
+-- the whole day
 ```
 
 14 applications were made on 2 June 2025. The first line finds 0, because `'2025-06-02 10:35:00'` is not equal to `'2025-06-02'`.
@@ -439,13 +449,17 @@ Bekzod: *"The five biggest Auto or SME loans paid out in September 2026 that are
 SELECT loan_id      AS loan,
        product_id   AS product,
        principal    AS amount_uzs,
-       disbursed_at AS paid_out_on                                     -- SELECT + aliases
-FROM loans                                                             -- FROM
-WHERE product_id IN (4, 5)                                             -- IN
-  AND disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01'     -- a half-open date range
-  AND status = 'active'                                                -- =
-ORDER BY principal DESC                                                -- ORDER BY
-LIMIT 5;                                                               -- LIMIT (SQL Server: TOP 5 after SELECT instead)
+       -- SELECT + aliases
+       disbursed_at AS paid_out_on
+FROM loans                  -- FROM
+WHERE product_id IN (4, 5)  -- IN
+  -- a half-open date range
+  AND disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01'
+  AND status = 'active'     -- =
+-- ORDER BY
+ORDER BY principal DESC
+LIMIT 5;
+-- LIMIT (SQL Server: TOP 5 after SELECT instead)
 ```
 
 5 rows. Loan 6478, an SME loan of 588 780 000 paid out on 1 September, is the biggest. 51 loans pass the filter; `LIMIT` shows the top five.
@@ -617,7 +631,8 @@ Expect 89 rows; the biggest is loan 7608, 396 210 000, disbursed 2026-05-26.
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE principal BETWEEN 1000000 AND 5000000;   -- expect 3228
+SELECT COUNT(*) FROM loans WHERE principal BETWEEN 1000000 AND 5000000;
+-- expect 3228
 ```
 Same as `principal >= 1000000 AND principal <= 5000000`.
 
@@ -709,10 +724,12 @@ Expect 1 359 rows; the top is application 10764 with score 821 (then 811, 806). 
 
 ```sql
 SELECT COUNT(*) FROM applications
-WHERE product_id = 5 AND requested_amount >= 500000000 AND status = 'approved';   -- expect 128
+WHERE product_id = 5 AND requested_amount >= 500000000 AND status = 'approved';
+-- expect 128
 
 SELECT COUNT(*) FROM applications
-WHERE product_id = 5 AND requested_amount >= 500000000 OR status = 'approved';    -- expect 8010 (!)
+WHERE product_id = 5 AND requested_amount >= 500000000 OR status = 'approved';
+-- expect 8010 (!)
 ```
 The second counts *every* approved application of any product plus the big SME ones. 128 vs 8 010 — and no error message. Brackets whenever `AND` meets `OR`.
 
@@ -777,8 +794,10 @@ Expect 108 rows; first is Zafar Mirzaev (customer 3056), born 1958-12-02, income
 It is the first number a risk manager looks at after a change in scoring rules, and the first number a sales manager complains about. Two queries, and a division by hand (next week `GROUP BY` and `CASE` do the division for you):
 
 ```sql
-SELECT COUNT(*) FROM applications;                                                    -- expect 14000
-SELECT COUNT(*) FROM applications WHERE status IN ('approved', 'approved_not_disbursed'); -- expect 8595
+SELECT COUNT(*) FROM applications;
+-- expect 14000
+SELECT COUNT(*) FROM applications WHERE status IN ('approved', 'approved_not_disbursed');
+-- expect 8595
 ```
 
 8 595 / 14 000 = **61.4 %**. `approved_not_disbursed` counts as approved: the company *said yes*; the customer walked away. Approval is about our decision, not the customer's.

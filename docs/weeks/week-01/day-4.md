@@ -24,7 +24,8 @@
 **How to write it.** A typical OLTP request touches one row, found by its primary key:
 
 ```sql
-SELECT loan_id, customer_id, principal, status FROM loans WHERE loan_id = 4516;   -- "show me loan 4516"
+SELECT loan_id, customer_id, principal, status FROM loans WHERE loan_id = 4516;
+-- "show me loan 4516"
 ```
 
 1 row: loan 4516, customer 2954, 2 960 000, closed. This is what a cashier's screen asks a thousand times a day. The other typical request is an `INSERT` of one new row — Day 3's commands.
@@ -45,7 +46,8 @@ SELECT loan_id, customer_id, principal, status FROM loans WHERE loan_id = 4516; 
 
 ```sql
 SELECT COUNT(*) FROM payments
-WHERE paid_at >= '2025-01-01' AND paid_at < '2026-01-01';   -- every payment of a whole year
+WHERE paid_at >= '2025-01-01' AND paid_at < '2026-01-01';
+-- every payment of a whole year
 ```
 
 21 194 payments arrived in 2025. To answer, the database reads all 52 875 rows of `payments`. Run that on production at 11:00 and the cashier in Fergana waits for her screen.
@@ -331,9 +333,12 @@ HR's 6 000 counts *people*. So either 40 people are missing from HR, or 40 rows 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);     -- your count (SQLite)
-SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);     -- your count (SQLite)
-SELECT COUNT(*) FROM customers WHERE last_name  = LOWER(last_name);      -- your count (SQLite)
+SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);
+-- your count (SQLite)
+SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);
+-- your count (SQLite)
+SELECT COUNT(*) FROM customers WHERE last_name  = LOWER(last_name);
+-- your count (SQLite)
 
 SELECT customer_id, first_name, last_name, birth_date, registered_at
 FROM customers
@@ -414,13 +419,16 @@ Try the opposite check too: group by `phone` alone. A few groups appear that the
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE birth_date > '2026-10-01';   -- not born yet
-SELECT COUNT(*) FROM customers WHERE birth_date = '1900-01-01';   -- the classic "unknown" placeholder
+SELECT COUNT(*) FROM customers WHERE birth_date > '2026-10-01';
+-- not born yet
+SELECT COUNT(*) FROM customers WHERE birth_date = '1900-01-01';
+-- the classic "unknown" placeholder
 
 SELECT customer_id, first_name, last_name, birth_date
 FROM customers
 WHERE birth_date > '2026-10-01' OR birth_date < '1920-01-01'
-ORDER BY birth_date;                                              -- the full list
+ORDER BY birth_date;
+-- the full list
 ```
 Look at the dates in the list: the placeholder `1900-01-01`, years far in the future — and one that looks like a normal date until you notice it is **after the as-of date**: a customer born next year. That is the lesson: a type check (is it a date?) catches nothing here; only a *business* check (born between 1920 and today minus 18 years) does. Every row of the list is a finding for the memo; check whether any of them is one of the duplicate rows. Everyone else was born between 1955-01-04 and 2006-12-26 — plausible.
 

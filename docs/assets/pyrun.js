@@ -477,6 +477,7 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
   /* ---------- the editor box ---------- */
   function fit(ta, least) {   // as tall as its code, so nothing is cut off
     ta.rows = Math.max(least || 1, Math.min(30, ta.value.split('\n').length));
+    if (window.ALGrow) window.ALGrow(ta);   // a long line wraps: grown to its wrapped height (sqlrun.js)
   }
   function keys(ta, go) {
     ta.addEventListener('keydown', function (e) {
@@ -500,7 +501,7 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
     el.innerHTML = '<div class="sq-top"><span class="sq-lang">' + esc(o.label) + '</span><span class="sq-tip">' + esc(o.tip) + '</span>' +
       '<span class="py-ok" title="' + T('ran without an error', 'выполнено без ошибок') + '">✓</span>' +
       '<button type="button" class="sq-reset" hidden>' + T('Reset', 'Вернуть') + '</button></div>' +
-      '<textarea class="sq-edit py-edit" spellcheck="false" wrap="off" autocapitalize="off" autocorrect="off"' + (o.placeholder ? ' placeholder="' + esc(o.placeholder) + '"' : '') + '></textarea>' +
+      '<textarea class="sq-edit py-edit" spellcheck="false" wrap="soft" autocapitalize="off" autocorrect="off"' + (o.placeholder ? ' placeholder="' + esc(o.placeholder) + '"' : '') + '></textarea>' +
       '<div class="sq-bar"><button type="button" class="sq-run">' + T('▶ Run', '▶ Выполнить') + '</button><span class="sq-keys">Ctrl + Enter</span>' +
       '<button type="button" class="py-link py-above" hidden>' + T('▶ Run all above', '▶ Выполнить всё выше') + '</button>' +
       '<button type="button" class="py-link py-restart"' + (state === 'off' ? ' hidden' : '') + '>' + T('↺ Restart Python', '↺ Перезапустить Python') + '</button></div>' +

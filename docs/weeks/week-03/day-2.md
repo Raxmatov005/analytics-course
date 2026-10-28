@@ -26,8 +26,10 @@
 
 ```sql
 SELECT customer_id, loan_id, disbursed_at,
-       ROW_NUMBER() OVER (PARTITION BY customer_id          -- restart for every customer
-                          ORDER BY disbursed_at, loan_id)    -- what "first" means; loan_id breaks ties
+       -- restart for every customer
+       ROW_NUMBER() OVER (PARTITION BY customer_id
+                          -- what "first" means; loan_id breaks ties
+                          ORDER BY disbursed_at, loan_id)
        AS loan_no
 FROM loans
 WHERE customer_id = 1893
@@ -69,9 +71,12 @@ Seven rows: customer 1893 has seven loans, numbered in the order they were paid 
 ```sql
 WITH t(loan, principal) AS (VALUES (101, 900), (102, 700), (103, 700), (104, 500), (105, 400))
 SELECT loan, principal,
-       ROW_NUMBER() OVER (ORDER BY principal DESC, loan) AS rn,     -- always unique
-       RANK()       OVER (ORDER BY principal DESC)       AS rk,     -- ties share, then a gap
-       DENSE_RANK() OVER (ORDER BY principal DESC)       AS drk     -- ties share, no gap
+       -- always unique
+       ROW_NUMBER() OVER (ORDER BY principal DESC, loan) AS rn,
+       -- ties share, then a gap
+       RANK()       OVER (ORDER BY principal DESC)       AS rk,
+       -- ties share, no gap
+       DENSE_RANK() OVER (ORDER BY principal DESC)       AS drk
 FROM t;
 ```
 
@@ -119,7 +124,8 @@ Rows 1–4 (loans 448, 2680, 4162, 5855) are all `RANK` 1 and `DENSE_RANK` 1. Th
 **How to write it.** Borrowers in four groups by outstanding, largest first:
 
 ```sql
-WITH c AS (                                                         -- one row per borrower: outstanding as of 2026-10-01
+-- one row per borrower: outstanding as of 2026-10-01
+WITH c AS (
   SELECT l.customer_id, SUM(i.principal_due) AS outstanding
   FROM installments i JOIN loans l ON l.loan_id = i.loan_id
   WHERE i.due_date > '2026-10-01'
@@ -166,7 +172,8 @@ ORDER BY quartile;
 **How to write it.**
 
 ```sql
-LAG(column, offset, default) OVER (PARTITION BY … ORDER BY …)   -- offset: rows back (1 if left out); default: instead of NULL
+-- offset: rows back (1 if left out); default: instead of NULL
+LAG(column, offset, default) OVER (PARTITION BY … ORDER BY …)
 ```
 
 Loan 1's payments, each with the one before and the one after:
@@ -176,7 +183,8 @@ SELECT payment_id, paid_at,
        LAG(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id) AS prev_paid,
        LEAD(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id) AS next_paid,
        CAST(julianday(paid_at)
-          - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS INTEGER) AS gap_days   -- SQL Server: DATEDIFF(day, the same LAG, paid_at)
+          -- SQL Server: DATEDIFF(day, the same LAG, paid_at)
+          - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS INTEGER) AS gap_days
 FROM payments
 WHERE loan_id = 1
 ORDER BY paid_at;
@@ -192,9 +200,11 @@ WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS di
 SELECT month, disbursed,
        LAG(disbursed) OVER (ORDER BY month) AS prev_month,
        ROUND(100.0 * (disbursed - LAG(disbursed) OVER (ORDER BY month))
-             / LAG(disbursed) OVER (ORDER BY month), 1)      AS mom_pct,       -- month on month
+             -- month on month
+             / LAG(disbursed) OVER (ORDER BY month), 1)      AS mom_pct,
        ROUND(100.0 * (disbursed - LAG(disbursed, 12) OVER (ORDER BY month))
-             / LAG(disbursed, 12) OVER (ORDER BY month), 1)  AS yoy_pct        -- year on year
+             -- year on year
+             / LAG(disbursed, 12) OVER (ORDER BY month), 1)  AS yoy_pct
 FROM m
 ORDER BY month;
 ```
@@ -223,7 +233,8 @@ ORDER BY month;
 ```sql
 SELECT paid_at,
        FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) AS first_payment,
-       LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_wrong,      -- default frame: ends at this row
+       -- default frame: ends at this row
+       LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_wrong,
        LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at
                                   ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS last_payment
 FROM payments
@@ -251,11 +262,13 @@ WHERE loan_id = 1;
 **How to write it.**
 
 ```sql
-WITH r AS (                                                          -- step 1: number the rows inside each product
+-- step 1: number the rows inside each product
+WITH r AS (
   SELECT l.loan_id, p.code, l.principal, l.disbursed_at,
          ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.principal DESC, l.loan_id) AS rn
   FROM loans l JOIN products p ON p.product_id = l.product_id)
-SELECT * FROM r                                                      -- step 2: keep the first three
+-- step 2: keep the first three
+SELECT * FROM r
 WHERE rn <= 3
 ORDER BY code, rn;
 ```
@@ -285,11 +298,13 @@ Change `rn <= 3` to `rn = 1` and the window to `PARTITION BY customer_id ORDER B
 ```sql
 WITH r AS (
   SELECT customer_id, first_name, last_name, phone,
-         ROW_NUMBER() OVER (PARTITION BY phone            -- what makes two rows "the same"
-                            ORDER BY customer_id) AS rn    -- which one counts as the original: the lowest id
+         -- what makes two rows "the same"
+         ROW_NUMBER() OVER (PARTITION BY phone
+                            -- which one counts as the original: the lowest id
+                            ORDER BY customer_id) AS rn
   FROM customers)
 SELECT * FROM r
-WHERE rn > 1                                               -- the repeats
+WHERE rn > 1  -- the repeats
 ORDER BY customer_id;
 ```
 
@@ -298,7 +313,8 @@ ORDER BY customer_id;
 **Removing** them physically is the same list inside a `DELETE` — on your own copy only:
 
 ```sql
--- shape only: delete the repeats from a table of your own (the lab below does it for real)
+-- shape only: delete the repeats from a table of your own (the lab below does
+-- it for real)
 DELETE FROM my_table
 WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY … ORDER BY id) AS rn FROM my_table) t
              WHERE rn > 1);
@@ -339,8 +355,10 @@ loan  asof        bucket      LAG(bucket) OVER (PARTITION BY loan ORDER BY asof)
 **How to write it.** Week 2's DPD rule, computed at two as-of dates at once, then `LAG`, then a count per from × to:
 
 ```sql
-WITH snaps(asof) AS (VALUES ('2026-09-01'), ('2026-10-01')),            -- the two snapshot dates
-unpaid AS (                                                             -- matured instalments not fully paid, per date
+-- the two snapshot dates
+WITH snaps(asof) AS (VALUES ('2026-09-01'), ('2026-10-01')),
+-- matured instalments not fully paid, per date
+unpaid AS (
   SELECT s.asof, i.loan_id, i.due_date
   FROM snaps s
   JOIN installments i ON i.due_date <= s.asof
@@ -349,7 +367,8 @@ unpaid AS (                                                             -- matur
   HAVING COALESCE(SUM(p.amount), 0) < i.total_due),
 dpd AS (SELECT asof, loan_id, CAST(julianday(asof) - julianday(MIN(due_date)) AS INTEGER) AS dpd
         FROM unpaid GROUP BY asof, loan_id),
-b AS (                                                                  -- one row per loan per date; no unpaid instalment = DPD 0
+-- one row per loan per date; no unpaid instalment = DPD 0
+b AS (
   SELECT s.asof, l.loan_id,
          CASE WHEN COALESCE(d.dpd, 0) = 0 THEN '0' WHEN d.dpd <= 30 THEN '1-30' WHEN d.dpd <= 60 THEN '31-60'
               WHEN d.dpd <= 90 THEN '61-90' ELSE '90+' END AS bucket
@@ -357,7 +376,8 @@ b AS (                                                                  -- one r
   JOIN loans l ON l.disbursed_at < '2026-09-01'
   LEFT JOIN dpd d ON d.asof = s.asof AND d.loan_id = l.loan_id),
 moves AS (SELECT asof, loan_id, bucket AS to_bucket,
-                 LAG(bucket) OVER (PARTITION BY loan_id ORDER BY asof) AS from_bucket   -- last month's bucket, same row
+                 -- last month's bucket, same row
+                 LAG(bucket) OVER (PARTITION BY loan_id ORDER BY asof) AS from_bucket
           FROM b)
 SELECT from_bucket, to_bucket, COUNT(*) AS loans,
        ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY from_bucket), 1) AS pct_of_from
@@ -388,13 +408,17 @@ One request, several of today's tools. *"For every product: the latest loan, its
 ```sql
 WITH r AS (
   SELECT l.loan_id, p.code, l.disbursed_at, l.principal,
-         ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.disbursed_at DESC, l.loan_id DESC) AS newest_first,   -- ROW_NUMBER
-         LAG(l.principal) OVER (PARTITION BY p.code ORDER BY l.disbursed_at, l.loan_id)        AS prev_principal, -- LAG
-         NTILE(4) OVER (PARTITION BY p.code ORDER BY l.principal DESC)                          AS size_quartile   -- NTILE
+         -- ROW_NUMBER
+         ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.disbursed_at DESC, l.loan_id DESC) AS newest_first,
+         -- LAG
+         LAG(l.principal) OVER (PARTITION BY p.code ORDER BY l.disbursed_at, l.loan_id)        AS prev_principal,
+         -- NTILE
+         NTILE(4) OVER (PARTITION BY p.code ORDER BY l.principal DESC)                          AS size_quartile
   FROM loans l JOIN products p ON p.product_id = l.product_id)
 SELECT code, loan_id, disbursed_at, principal, prev_principal, size_quartile
 FROM r
-WHERE newest_first = 1                                                                                            -- top-N, N = 1
+-- top-N, N = 1
+WHERE newest_first = 1
 ORDER BY code;
 ```
 
@@ -462,7 +486,8 @@ SELECT * FROM d WHERE rn > 1 ORDER BY payment_id;
 ```sql
 WITH d AS (
   SELECT payment_id, loan_id, installment_id, paid_at, amount,
-         REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,      -- week 2's cleaning, in the same pass
+         -- week 2's cleaning, in the same pass
+         REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,
          ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
   FROM payments)
 SELECT payment_id, loan_id, installment_id, paid_at, amount, method FROM d WHERE rn = 1;
@@ -544,7 +569,8 @@ Yesterday's branch outstanding plus the three functions over `ORDER BY outstandi
 SELECT collector_id, COUNT(*) AS actions, SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) AS promises,
        RANK() OVER (ORDER BY SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) DESC) AS rk
 FROM collections_actions GROUP BY collector_id ORDER BY rk LIMIT 5;
--- 29 → 568 actions / 182 promises · 28 → 593 / 177 · 27 → 590 / 170 · 57 → 419 / 125 · 7 → 393 / 121
+-- 29 → 568 actions / 182 promises · 28 → 593 / 177 · 27 → 590 / 170 · 57 → 419
+-- / 125 · 7 → 393 / 121
 ```
 A window over an aggregate with `CASE` inside — three layers, still one query. Ranking by *count* rewards the busiest collector; add `100.0 * promises / actions` and rank by that too before anyone gets a bonus.
 
@@ -561,7 +587,8 @@ q AS (SELECT customer_id, outstanding, NTILE(10) OVER (ORDER BY outstanding DESC
 SELECT decile, COUNT(*) AS borrowers, SUM(outstanding) AS outstanding,
        ROUND(100.0 * SUM(outstanding) / SUM(SUM(outstanding)) OVER (), 1) AS share_pct
 FROM q GROUP BY decile ORDER BY decile;
--- 1 · 254 · 102 681 050 696 · 49.2 %   2 · 254 · 54 113 118 283 · 25.9 %   3 · 254 · 12.4 % …
+-- 1 · 254 · 102 681 050 696 · 49.2 %   2 · 254 · 54 113 118 283 · 25.9 %   3 ·
+-- 254 · 12.4 % …
 ```
 Section 1 gives quartiles 82.7 / 13.6 / 3.2 / 0.5 %. `NTILE(10)`: the first decile (254 borrowers) holds **49.2 %** of the book, the second 25.9 % — three quarters of the outstanding in a fifth of the borrowers. A decile table is the standard "who are our customers by exposure" slide; quote the borrower count with every share.
 
@@ -647,7 +674,8 @@ WITH f AS (SELECT l.customer_id,
 SELECT first_product, latest_product, COUNT(DISTINCT customer_id) AS customers
 FROM f WHERE loans >= 2
 GROUP BY first_product, latest_product ORDER BY customers DESC;
--- 25 rows: MICRO → MICRO 263 · MICRO → CONS 259 · CONS → MICRO 221 … MICRO → SME 70
+-- 25 rows: MICRO → MICRO 263 · MICRO → CONS 259 · CONS → MICRO 221 … MICRO →
+-- SME 70
 ```
 70 customers took a Micro loan first and an SME loan last. The most common path out of Micro is Consumer (259). `FIRST_VALUE` with the order reversed is the safe "latest" — `LAST_VALUE` with the default frame would return each row's own product. `COUNT(DISTINCT customer_id)` because the window wrote the same pair on every loan of the customer.
 
@@ -663,7 +691,8 @@ WITH r AS (
          ROW_NUMBER() OVER (PARTITION BY b.branch_name ORDER BY l.principal DESC, l.loan_id) AS rn
   FROM loans l JOIN branches b ON b.branch_id = l.branch_id JOIN products p ON p.product_id = l.product_id)
 SELECT * FROM r WHERE rn <= 3 ORDER BY branch_name, rn;
--- 30 rows; every one an SME loan; the largest per branch from 573 480 000 (Samarkand Central) to 599 060 000 (Tashkent Central)
+-- 30 rows; every one an SME loan; the largest per branch from 573 480 000
+-- (Samarkand Central) to 599 060 000 (Tashkent Central)
 ```
 ```sql
 WITH r AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at DESC, loan_id DESC) AS rn FROM loans)
@@ -691,7 +720,9 @@ WITH d AS (SELECT payment_id, loan_id, installment_id, paid_at, amount, method,
                   MAX(payment_id) OVER (PARTITION BY installment_id, paid_at, amount) AS second_id
            FROM payments)
 SELECT DISTINCT first_id, second_id, loan_id, installment_id, paid_at, amount, method FROM d WHERE cnt > 1 ORDER BY amount DESC;
--- 25 rows; largest: loan 5106, instalment 59838, 2026-07-17, 12 410 700 (click), ids 34356 and 52857; then loan 1814 12 059 800 (11981/52858); loan 3676 11 445 500 (24496/52863)
+-- 25 rows; largest: loan 5106, instalment 59838, 2026-07-17, 12 410 700
+-- (click), ids 34356 and 52857; then loan 1814 12 059 800 (11981/52858); loan
+-- 3676 11 445 500 (24496/52863)
 ```
 Aggregate windows over the duplicate partition; `DISTINCT` collapses the pair to one line — acceptable here because the two rows are identical by construction. (Thursday's performance habits warn against `DISTINCT` used to *hide* a join bug; this is not that.)
 
@@ -745,7 +776,8 @@ SELECT from_bucket, to_bucket, COUNT(*) AS loans,
        ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY from_bucket), 1) AS pct_of_from
 FROM moves WHERE asof = '2026-09-01' AND from_bucket <> '0'
 GROUP BY from_bucket, to_bucket ORDER BY from_bucket, to_bucket;
--- 1-30 → 0 75 (74.3 %) · → 1-30 5 (5.0) · → 31-60 21 (20.8) | 31-60 → 0 16 (47.1) · → 1-30 1 · → 61-90 17 (50.0) | 61-90 → 90+ 16 | 90+ → 90+ 201
+-- 1-30 → 0 75 (74.3 %) · → 1-30 5 (5.0) · → 31-60 21 (20.8) | 31-60 → 0 16
+-- (47.1) · → 1-30 1 · → 61-90 17 (50.0) | 61-90 → 90+ 16 | 90+ → 90+ 201
 ```
 1–30 rolled forward at **20.8 %** (21 of 101) in August, 19.5 % in September: about one in five, stable. 31–60 is less stable — 50.0 % then 69.6 % — on 34 and 23 loans; small rows swing. Two months before you call any of these "the" roll rate.
 
@@ -763,7 +795,9 @@ WITH r AS (SELECT p.code, l.principal,
                   COUNT(*)     OVER (PARTITION BY p.code) AS n
            FROM loans l JOIN products p ON p.product_id = l.product_id)
 SELECT code, n, AVG(principal) AS median FROM r WHERE rn IN ((n + 1) / 2, (n + 2) / 2) GROUP BY code;
--- AUTO median 214 840 000 (avg 216 858 133) · SME 314 770 000 (308 728 745) · CONS 26 965 000 (26 926 915) · MICRO 2 700 000 (2 705 586) · BNPL 4 180 000 (4 170 880)
+-- AUTO median 214 840 000 (avg 216 858 133) · SME 314 770 000 (308 728 745) ·
+-- CONS 26 965 000 (26 926 915) · MICRO 2 700 000 (2 705 586) · BNPL 4 180 000
+-- (4 170 880)
 ```
 Integer division picks one middle row for odd n and two for even. Median ≈ mean everywhere: ticket sizes are spread evenly between the product's min and max, no skew. (SQL Server has `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY principal) OVER (PARTITION BY code)`; SQLite does not — this is the portable way.)
 
@@ -789,7 +823,8 @@ A **roll rate** (*миграция между корзинами*) is the share 
 **1. A snapshot per date.** Week 2's DPD block, with the as-of date as a *parameter* in two places — the instalment filter **and** the payment filter. The second was not needed on 2026-10-01 (the extract date), but on 2026-09-01 a payment made on 15 September must not count:
 
 ```sql
-WITH u0 AS (                                            -- unpaid matured instalments as of 2026-09-01
+-- unpaid matured instalments as of 2026-09-01
+WITH u0 AS (
   SELECT i.loan_id, i.due_date FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id AND p.paid_at <= '2026-09-01'
   WHERE i.due_date <= '2026-09-01'

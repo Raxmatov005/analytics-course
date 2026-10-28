@@ -36,16 +36,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 loans = pd.read_csv("data/raw/loans.csv")
-pop = loans["principal"].to_numpy(dtype=float)                 # все 7 828 основных долгов: совокупность для экспериментов на этой странице
+# все 7 828 основных долгов: совокупность для экспериментов на этой странице
+pop = loans["principal"].to_numpy(dtype=float)
 apps = pd.read_csv("data/raw/applications.csv")
-s = apps["credit_score"].dropna().to_numpy(dtype=float)       # кредитные скоры 13 612 заявителей
-f = pd.read_csv("data/powerbi/fct_first_instalment.csv")      # таблица FPD с 5-й недели: 7 099 кредитов, fpd30 = 0/1
-f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")   # app = только Micro, partner = только BNPL
-rng = np.random.default_rng(2026)                              # с зерном: одни и те же «случайные» выборки при каждом запуске
+# кредитные скоры 13 612 заявителей
+s = apps["credit_score"].dropna().to_numpy(dtype=float)
+# таблица FPD с 5-й недели: 7 099 кредитов, fpd30 = 0/1
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
+# app = только Micro, partner = только BNPL
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
+# с зерном: одни и те же «случайные» выборки при каждом запуске
+rng = np.random.default_rng(2026)
 
-print(len(pop), round(pop.mean()))                             # 7828 51709668: N и μ — параметр
+# 7828 51709668: N и μ — параметр
+print(len(pop), round(pop.mean()))
 app = f[f["channel"] == "app"]
-print(len(app), app["fpd30"].sum(), round(100 * app["fpd30"].mean(), 2))   # 2411 41 1.7: n, число FPD и p̂ — оценка
+# 2411 41 1.7: n, число FPD и p̂ — оценка
+print(len(app), app["fpd30"].sum(), round(100 * app["fpd30"].mean(), 2))
 ```
 
 Средний основной долг всех 7 828 кредитов, 51.71 млн сумов, — параметр портфеля: в нём каждый кредит. 1.70 % приложения — 41 FPD на 2 411 кредитов — оценка истинной ставки процесса в приложении.
@@ -67,9 +74,12 @@ print(len(app), app["fpd30"].sum(), round(100 * app["fpd30"].mean(), 2))   # 241
 **Как пишется.** Выборочная дисперсия = сумма квадратов расстояний до выборочного среднего ÷ (n − 1). numpy: `x.var(ddof=1)`; pandas: `.var()`; Excel: `VAR.S`, `STDEV.S`. Проверьте экспериментом — 20 000 выборок по пять скоров, обе формулы, усреднение:
 
 ```python
-samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])   # 20 000 выборок, n = 5 в каждой
-print(round(s.var()))                                                    # 3543: дисперсия совокупности 13 612 скоров
-print(samples.var(axis=1, ddof=0).mean(), samples.var(axis=1, ddof=1).mean())   # ≈ 2 862 (занижено), ≈ 3 578 (верно в среднем)
+# 20 000 выборок, n = 5 в каждой
+samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])
+# 3543: дисперсия совокупности 13 612 скоров
+print(round(s.var()))
+# ≈ 2 862 (занижено), ≈ 3 578 (верно в среднем)
+print(samples.var(axis=1, ddof=0).mean(), samples.var(axis=1, ddof=1).mean())
 ```
 
 Деление на n даёт около 2 860 вместо 3 543 — на 20 % меньше при n = 5. Деление на n − 1 попадает около 3 543. Причина: собственное среднее выборки ближе к её пяти точкам, чем истинное среднее, поэтому квадраты расстояний выходят меньше в (n − 1)/n раза. (Стандартное отклонение, √ дисперсии, всё равно в среднем чуть занижено — 56.2 против 59.5 здесь, — и никто не против.)
@@ -96,9 +106,11 @@ print(samples.var(axis=1, ddof=0).mean(), samples.var(axis=1, ddof=1).mean())   
 **Как пишется.** Ошибка выборки = оценка − параметр. Здесь μ известно, поэтому ошибки видны. Пять выборок по 392 кредита — каждый 20-й кредит, начиная с кредита 1, 2, 3, 4 и 5 (**систематическая выборка**):
 
 ```python
-mu = pop.mean()                                                 # 51.71 млн: параметр
+# 51.71 млн: параметр
+mu = pop.mean()
 for start in range(5):
-    part = loans["principal"].iloc[start::20]                    # каждый 20-й кредит: 392 кредита
+    # каждый 20-й кредит: 392 кредита
+    part = loans["principal"].iloc[start::20]
     print(start + 1, len(part), round(part.mean() / 1e6, 2), round((part.mean() - mu) / 1e6, 2))
 ```
 
@@ -136,9 +148,11 @@ SE of a proportion = √( p̂ (1 − p̂) / n )
 ```
 
 ```python
-print(round(pop.std() / math.sqrt(392) / 1e6, 2))             # 5.69: SE среднего основного долга по 392 кредитам, млн сумов
+# 5.69: SE среднего основного долга по 392 кредитам, млн сумов
+print(round(pop.std() / math.sqrt(392) / 1e6, 2))
 p = 41 / 2411
-print(round(100 * math.sqrt(p * (1 - p) / 2411), 3))           # 0.263: SE ставки FPD приложения, в пунктах
+# 0.263: SE ставки FPD приложения, в пунктах
+print(round(100 * math.sqrt(p * (1 - p) / 2411), 3))
 ```
 
 Средний основной долг по 392 кредитам сдвигается от выборки к выборке примерно на 5.7 млн — это размер ошибок в таблице выше (от −3.4 до +8.5 млн). 1.70 % приложения сдвигается примерно на 0.26 пункта.
@@ -168,10 +182,13 @@ print(round(100 * math.sqrt(p * (1 - p) / 2411), 3))           # 0.263: SE ст�
 **Как пишется.** Скользящее среднее после n наблюдений = сумма первых n значений ÷ n.
 
 ```python
-order = np.random.default_rng(2026).permutation(pop)          # 7 828 основных долгов в случайном порядке
-running = np.cumsum(order) / np.arange(1, len(order) + 1)      # среднее после 1, 2, 3, … кредитов
+# 7 828 основных долгов в случайном порядке
+order = np.random.default_rng(2026).permutation(pop)
+# среднее после 1, 2, 3, … кредитов
+running = np.cumsum(order) / np.arange(1, len(order) + 1)
 for n in (10, 100, 1000, 7828):
-    print(n, round(running[n - 1] / 1e6, 2))                   # сначала скачет; ровно 51.71 млн на 7 828
+    # сначала скачет; ровно 51.71 млн на 7 828
+    print(n, round(running[n - 1] / 1e6, 2))
 ```
 
 Одно перемешивание дало **106.38 млн** после 10 кредитов, **35.06 млн** после 100, **52.06 млн** после 1 000 и **51.71 млн** после всех 7 828. Ранние средние скачут, потому что один кредит МСБ (до 599 млн) перевешивает десять микрокредитов. Колебания затухают как 1 / √n.
@@ -202,10 +219,12 @@ for n in (10, 100, 1000, 7828):
 Посмотрите сами — 2 000 выборок на каждое n (ваши числа будут близки к табличным):
 
 ```python
-mu, sigma = pop.mean(), pop.std()                                          # 51.71 млн, 112.6 млн — совокупность
+# 51.71 млн, 112.6 млн — совокупность
+mu, sigma = pop.mean(), pop.std()
 fig, axes = plt.subplots(1, 4, figsize=(14, 3))
 for ax, n in zip(axes, (5, 30, 100, 1000)):
-    means = np.array([rng.choice(pop, n, replace=False).mean() for _ in range(2000)])   # 2 000 выборочных средних
+    # 2 000 выборочных средних
+    means = np.array([rng.choice(pop, n, replace=False).mean() for _ in range(2000)])
     ax.hist(means / 1e6, bins=40, color="#9bb7d4"); ax.axvline(mu / 1e6, color="#c0392b")
     ax.set_title(f"n = {n}: sd {means.std() / 1e6:.1f} m, SE {sigma / np.sqrt(n) / 1e6:.1f} m", fontsize=9)
 plt.tight_layout(); plt.show()
@@ -236,14 +255,22 @@ plt.tight_layout(); plt.show()
 | t₀.₉₇₅ | 2.776 | 2.262 | 2.045 | 2.010 | 1.984 | 1.962 | 1.960 |
 
 ```python
-cons = loans.loc[loans["product_id"] == 2, "principal"].to_numpy(dtype=float)   # 2 418 потребительских кредитов (product_id 2 = CONS)
-smp = rng.choice(cons, 50, replace=False)                     # ваши 50 кредитов — в ноутбуке: среднее 27 486 400, s 12 617 221
-m, s50, n = smp.mean(), smp.std(ddof=1), 50                   # оценка, выборочное sd (ddof=1), объём
-se = s50 / np.sqrt(n)                                         # стандартная ошибка — в ноутбуке: 1 784 345
-t_crit = 2.0096                                               # t(0.975, df = 49) из таблицы выше — scipy.stats.t.ppf(0.975, 49)
-print(round(m - t_crit * se), round(m + t_crit * se))         # t-интервал — в ноутбуке: 23 900 625 … 31 072 175
-print(round(m - 1.96 * se), round(m + 1.96 * se))             # z: чуть уже (23 989 085 … 30 983 715)
-print(round(cons.mean()))                                     # истинное среднее потребительских: 26 926 915 — внутри?
+# 2 418 потребительских кредитов (product_id 2 = CONS)
+cons = loans.loc[loans["product_id"] == 2, "principal"].to_numpy(dtype=float)
+# ваши 50 кредитов — в ноутбуке: среднее 27 486 400, s 12 617 221
+smp = rng.choice(cons, 50, replace=False)
+# оценка, выборочное sd (ddof=1), объём
+m, s50, n = smp.mean(), smp.std(ddof=1), 50
+# стандартная ошибка — в ноутбуке: 1 784 345
+se = s50 / np.sqrt(n)
+# t(0.975, df = 49) из таблицы выше — scipy.stats.t.ppf(0.975, 49)
+t_crit = 2.0096
+# t-интервал — в ноутбуке: 23 900 625 … 31 072 175
+print(round(m - t_crit * se), round(m + t_crit * se))
+# z: чуть уже (23 989 085 … 30 983 715)
+print(round(m - 1.96 * se), round(m + 1.96 * se))
+# истинное среднее потребительских: 26 926 915 — внутри?
+print(round(cons.mean()))
 # scipy (в ноутбуке): scipy.stats.t.interval(0.95, n - 1, loc=m, scale=se)
 ```
 
@@ -276,9 +303,10 @@ print(round(cons.mean()))                                     # истинное
 **Как пишется.**
 
 ```python
-def wald(k, n, z=1.96):                       # k событий в n испытаниях
-    p = k / n                                 # оценка p̂
-    half = z * math.sqrt(p * (1 - p) / n)     # критическое значение × стандартная ошибка
+def wald(k, n, z=1.96):  # k событий в n испытаниях
+    p = k / n            # оценка p̂
+    # критическое значение × стандартная ошибка
+    half = z * math.sqrt(p * (1 - p) / n)
     return p - half, p + half
 
 for name, k, n in [("app", 41, 2411), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
@@ -314,12 +342,15 @@ half-width = z √( p̂(1 − p̂)/n + z²/4n² ) / (1 + z²/n)
 ```python
 def wilson(k, n, z=1.96):
     p = k / n
-    centre = (p + z**2 / (2 * n)) / (1 + z**2 / n)                     # чуть сдвинут к 50 %
+    # чуть сдвинут к 50 %
+    centre = (p + z**2 / (2 * n)) / (1 + z**2 / n)
     half = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / (1 + z**2 / n)
     return centre - half, centre + half
-def pmf(k, n, p):                                                      # биномиальная P(X = k), из Дня 1 (нужна в практике)
+# биномиальная P(X = k), из Дня 1 (нужна в практике)
+def pmf(k, n, p):
     return math.comb(n, k) * p**k * (1 - p)**(n - k)
-def newcombe(k1, n1, k2, n2):                                          # 95 % CI для разности p1 − p2
+# 95 % CI для разности p1 − p2
+def newcombe(k1, n1, k2, n2):
     p1, p2 = k1 / n1, k2 / n2
     l1, u1 = wilson(k1, n1); l2, u2 = wilson(k2, n2)
     d = p1 - p2
@@ -327,7 +358,8 @@ def newcombe(k1, n1, k2, n2):                                          # 95 % CI
 
 for name, k, n in [("app", 41, 2411), ("branch", 34, 3263), ("partner", 16, 1425), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
     print(name, "Wilson", [round(100 * v, 2) for v in wilson(k, n)], "Wald", [round(100 * v, 2) for v in wald(k, n)])
-print("app − branch", [round(100 * v, 2) for v in newcombe(41, 2411, 34, 3263)])   # [0.66, 0.05, 1.33]
+# [0.66, 0.05, 1.33]
+print("app − branch", [round(100 * v, 2) for v in newcombe(41, 2411, 34, 3263)])
 ```
 
 Приложение **1.26–2.30 %**, филиалы **0.75–1.45 %**, партнёры **0.69–1.82 %**; 2 из 150 → 0.37–4.73 %; 0 из 120 → 0–3.10 %. Интервал приложения уходит на 0.44 пункта ниже 1.70 и на 0.60 выше: правильная форма для ставки около нуля. В Excel нет функции Уилсона — при k в B1, n в B2, z в B3 (`=NORM.S.INV(0.975)`):
@@ -368,11 +400,14 @@ Clopper–Pearson: =BETA.INV(0.025, B1, B2-B1+1)  and  =BETA.INV(0.975, B1+1, B2
 
 ```python
 hits = 0
-for _ in range(100):                                          # 100 выборок по 400 кредитов
+# 100 выборок по 400 кредитов
+for _ in range(100):
     x = rng.choice(pop, 400, replace=False)
-    half = 1.966 * x.std(ddof=1) / math.sqrt(400)             # t(0.975, 399) × SE
+    # t(0.975, 399) × SE
+    half = 1.966 * x.std(ddof=1) / math.sqrt(400)
     hits += (x.mean() - half <= pop.mean() <= x.mean() + half)
-print(hits)                                                   # около 95 — один запуск дал 96
+# около 95 — один запуск дал 96
+print(hits)
 ```
 
 Один запуск: **96 из 100** интервалов содержат истинные 51.71 млн. При 100 интервалах нормально всё примерно от 90 до 99 — само это число распределено как Bin(100, 0.95).
@@ -409,13 +444,15 @@ print(hits)                                                   # около 95 �
 
 ```python
 z = 1.96
-def n_for_rate(p, E):                              # кредитов нужно, чтобы оценить долю около p с точностью ± E
+# кредитов нужно, чтобы оценить долю около p с точностью ± E
+def n_for_rate(p, E):
     return math.ceil(z**2 * p * (1 - p) / E**2)
-def n_for_mean(sigma, E):                          # наблюдений нужно, чтобы оценить среднее с точностью ± E
+# наблюдений нужно, чтобы оценить среднее с точностью ± E
+def n_for_mean(sigma, E):
     return math.ceil((z * sigma / E) ** 2)
 
-print(n_for_rate(91 / 7099, 0.005), n_for_rate(0.5, 0.03))   # 1945 1068
-print(n_for_mean(112.6e6, 5e6))                                # 1949
+print(n_for_rate(91 / 7099, 0.005), n_for_rate(0.5, 0.03))  # 1945 1068
+print(n_for_mean(112.6e6, 5e6))                             # 1949
 ```
 
 Ставка около 1.28 % с точностью ±0.5 пункта требует 1 945 кредитов. Доля, о которой вы ничего не знаете, с точностью ±3 пункта требует 1 068 — та самая «примерно тысяча» опросов общественного мнения. Средний основной долг с точностью ±5 млн сумов требует 1 949 кредитов.
@@ -446,10 +483,14 @@ print(n_for_mean(112.6e6, 5e6))                                # 1949
 
 ```python
 def bootstrap_ci(values, stat=np.mean, B=10_000, seed=2026):
-    g = np.random.default_rng(seed)                                       # собственный генератор с зерном
-    boot = [stat(g.choice(values, len(values), replace=True)) for _ in range(B)]   # B пересэмплов, статистика каждого
-    return np.quantile(boot, [0.025, 0.975])                              # средние 95 %
-print(bootstrap_ci(f.loc[f.channel == "app", "fpd30"].to_numpy()))      # ≈ 1.20 % … 2.24 %   (Уилсон 1.26 … 2.30)
+    # собственный генератор с зерном
+    g = np.random.default_rng(seed)
+    # B пересэмплов, статистика каждого
+    boot = [stat(g.choice(values, len(values), replace=True)) for _ in range(B)]
+    # средние 95 %
+    return np.quantile(boot, [0.025, 0.975])
+# ≈ 1.20 % … 2.24 %   (Уилсон 1.26 … 2.30)
+print(bootstrap_ci(f.loc[f.channel == "app", "fpd30"].to_numpy()))
 ```
 
 FPD приложения: бутстреп ≈ 1.20–2.24 %, близко к 1.26–2.30 % Уилсона. Его сила — статистика без формулы SE: **медиана** основного долга в выборке из 200 кредитов — 5.69 млн, бутстреп 95 % CI **4.54–8.27 млн** (истинная медиана 5.79 млн).
@@ -471,12 +512,15 @@ FPD приложения: бутстреп ≈ 1.20–2.24 %, близко к 1.
 Один запрос, все инструменты дня: *«Честно опишите FPD канала приложения и скажите, что дадут дополнительные данные»*.
 
 ```python
-k, n = 41, 2411                                       # выборка: кредиты приложения в выборке FPD
-p = k / n                                             # точечная оценка p̂
-se = math.sqrt(p * (1 - p) / n)                       # её стандартная ошибка
-lo, hi = wilson(k, n)                                 # доля около 0 % → Уилсон, не Вальд
+# выборка: кредиты приложения в выборке FPD
+k, n = 41, 2411
+p = k / n                        # точечная оценка p̂
+se = math.sqrt(p * (1 - p) / n)  # её стандартная ошибка
+# доля около 0 % → Уилсон, не Вальд
+lo, hi = wilson(k, n)
 print(f"FPD30 {100*p:.2f} % · n = {n} · SE {100*se:.2f} pt · 95 % CI {100*lo:.2f}–{100*hi:.2f} %")
-print(n_for_rate(p, 0.0025))                          # кредитов нужно для ±0.25 пункта
+# кредитов нужно для ±0.25 пункта
+print(n_for_rate(p, 0.0025))
 ```
 
 `FPD30 1.70 % · n = 2411 · SE 0.26 pt · 95 % CI 1.26–2.30 %`, а для ±0.25 пункта понадобилось бы **10 275** кредитов из приложения — более чем в четыре раза больше всей истории канала. Прочитайте это по подразделам: 2 411 кредитов — выборка из процесса приложения; 1.70 % — оценка с ошибкой выборки; SE говорит, что она обычно сдвигается на 0.26 пункта; ставка около нуля, поэтому интервал — Уилсона; «95 %» — обещание метода, а не вероятность про этот диапазон; а точность стоит n в квадрате.
@@ -734,7 +778,8 @@ SE = √(0.01282 × 0.98718 / 7 099) = **0.134 пункта**. Вальд **1.02
 <details><summary>Ответ</summary>
 
 ```python
-# использует statsmodels: он загружается при первом ▶ Run (в ноутбуке он тоже есть)
+# использует statsmodels: он загружается при первом ▶ Run (в ноутбуке он тоже
+# есть)
 rng = np.random.default_rng(2026); p = 91 / 7099
 k = rng.binomial(400, p, 20_000)
 for m in ("normal", "wilson", "beta"):
@@ -879,13 +924,15 @@ FPD30 по филиалам (филиал, в котором оформлен к
 | Nukus Central | 3 / 440 | **0.68 %** | 0.23–1.99 % | 0.45–2.50 % | 0.92 |
 
 ```python
-# использует scipy и statsmodels: они загружаются при первом ▶ Run (в ноутбуке они тоже есть)
+# использует scipy и statsmodels: они загружаются при первом ▶ Run (в ноутбуке
+# они тоже есть)
 p0 = 91 / 7099
 b = f.groupby("branch_name")["fpd30"].agg(fpd="sum", n="size")
 b[["lo", "hi"]] = [proportion_confint(k, n, method="wilson") for k, n in zip(b.fpd, b.n)]
 b["funnel_lo"] = stats.binom.ppf(0.025, b.n, p0) / b.n
 b["funnel_hi"] = stats.binom.ppf(0.975, b.n, p0) / b.n
-b["p_ge"] = stats.binom.sf(b.fpd - 1, b.n, p0)          # how surprising this many FPDs is at the book rate
+# how surprising this many FPDs is at the book rate
+b["p_ge"] = stats.binom.sf(b.fpd - 1, b.n, p0)
 ```
 
 **Ловушка ранжирования.** «Худший» филиал (Bukhara, 1.43–3.97 %) и «лучший» (Nukus, 0.23–1.99 %) **пересекаются между 1.43 и 1.99 %**: данные не способны даже надёжно упорядочить верх и низ турнирной таблицы. Смоделируйте портфель, в котором все десять филиалов имеют ровно 1.28 % (`default_rng(2026)`, 10 000 портфелей, те же n): лучший по таблице филиал в среднем показывает **2.00 %**, превышает 2.39 % Bukhara в **10.5 %** портфелей, а нижний филиал оказывается ниже 0.68 % Nukus в **50 %** портфелей. Кто-то всегда первый и последний; таблица рейтинга ставок гарантирует «худший филиал», даже когда его нет.

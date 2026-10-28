@@ -31,15 +31,19 @@ Yesterday produced findings. Today they become something a busy board can act on
 | Kamola | the app | the funnel | app sessions that reach money |
 
 ```sql
-SELECT (SELECT SUM(principal_due) FROM installments WHERE due_date > '2026-10-01')        AS outstanding,       -- Bekzod
+-- Bekzod
+SELECT (SELECT SUM(principal_due) FROM installments WHERE due_date > '2026-10-01')        AS outstanding,
        (SELECT ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END)
                / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 1)
-          FROM applications WHERE applied_at >= '2026-01-01' AND applied_at < '2026-10-01') AS approval_2026_pct, -- Nilufar
+          -- Nilufar
+          FROM applications WHERE applied_at >= '2026-01-01' AND applied_at < '2026-10-01') AS approval_2026_pct,
        (SELECT COUNT(*) FROM collections_actions
-         WHERE action_date >= '2026-09-01' AND action_date < '2026-10-01')                AS actions_september, -- Sevara
+         -- Sevara
+         WHERE action_date >= '2026-09-01' AND action_date < '2026-10-01')                AS actions_september,
        (SELECT ROUND(100.0 * COUNT(l.loan_id) / COUNT(*), 1)
           FROM (SELECT DISTINCT application_id FROM app_events) s
-          LEFT JOIN loans l ON l.application_id = s.application_id)                       AS app_to_money_pct;  -- Kamola
+          LEFT JOIN loans l ON l.application_id = s.application_id)                       AS app_to_money_pct;
+          -- Kamola
 ```
 
 Bekzod's book is 208 723 504 430 soum. Nilufar's approval rate for 2026 is 70.4 %. Sevara's team logged 651 actions in September. Kamola's app turns 53.3 % of sessions into money. Know each of these before you walk in.
@@ -150,10 +154,13 @@ The three key lines map to the three parts of the governing thought: what to gro
 import matplotlib.pyplot as plt
 
 regions = ["Nukus", "Namangan", "Bukhara", "Andijan", "Samarkand", "Tashkent", "Fergana", "Termez"]
-growth  = [89.7, 83.4, 76.4, 61.2, 58.6, 38.3, 26.1, -9.1]      # disbursed Jan–Sep 2026 vs 2025, %  (P7)
-par30   = [6.8, 1.7, 4.8, 4.0, 3.0, 3.4, 0.7, 0.7]               # PAR30 on 2026-10-01, % of outstanding
+# disbursed Jan–Sep 2026 vs 2025, %  (P7)
+growth  = [89.7, 83.4, 76.4, 61.2, 58.6, 38.3, 26.1, -9.1]
+# PAR30 on 2026-10-01, % of outstanding
+par30   = [6.8, 1.7, 4.8, 4.0, 3.0, 3.4, 0.7, 0.7]
 
-colours = ["#c0392b" if r == "Nukus" else "#9aa0a6" for r in regions]   # one colour for the point, grey for context
+# one colour for the point, grey for context
+colours = ["#c0392b" if r == "Nukus" else "#9aa0a6" for r in regions]
 plt.scatter(growth, par30, c=colours, s=60)
 for r, x, y in zip(regions, growth, par30):
     plt.annotate(r, (x, y), textcoords="offset points", xytext=(5, 4), fontsize=8)

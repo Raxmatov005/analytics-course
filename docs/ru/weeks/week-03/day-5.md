@@ -135,7 +135,8 @@ SELECT (SELECT MIN(disbursed_at) FROM loans) AS first_disbursed, (SELECT MAX(dis
        (SELECT MIN(applied_at) FROM applications) AS first_application, (SELECT MAX(applied_at) FROM applications) AS last_application,
        (SELECT MIN(paid_at) FROM payments) AS first_payment, (SELECT MAX(paid_at) FROM payments) AS last_payment,
        (SELECT MAX(due_date) FROM installments) AS last_due, '2026-10-01' AS as_of;
--- 2024-01-02 · 2026-10-01 · 2024-01-01 10:07 · 2026-10-01 21:36 · 2024-01-31 · 2026-11-24 · 2030-10-01 · 2026-10-01
+-- 2024-01-02 · 2026-10-01 · 2024-01-01 10:07 · 2026-10-01 21:36 · 2024-01-31 ·
+-- 2026-11-24 · 2030-10-01 · 2026-10-01
 ```
 
 **Вывод.** Портфелю 33 месяца (с января 2024 до 1 октября 2026), а графики тянутся до октября 2030 (48-месячные кредиты Auto). `MAX(paid_at)` = 2026-11-24 — **после** даты отчёта: 24 платежа с датой в будущем (T23 недели 2), поэтому каждая сумма платежей в этом отчёте фильтруется по `paid_at <= '2026-10-01'`. Семь скалярных подзапросов в одной строке — законное применение скалярной формы.
@@ -153,7 +154,8 @@ SELECT (SELECT COUNT(*) FROM loans) AS loans, (SELECT COUNT(DISTINCT customer_id
        (SELECT SUM(outstanding) FROM v_loan_status) AS outstanding,
        (SELECT SUM(amount) FROM v_payments_clean WHERE paid_at <= '2026-10-01') AS collected_to_date,
        (SELECT SUM(interest_due) FROM installments) AS contracted_interest;
--- 7828 · 4335 · 404 783 280 000 · 51 709 668 · 11.8 · 208 723 504 430 · 255 061 333 229 (52 826 платежей) · 122 497 355 801
+-- 7828 · 4335 · 404 783 280 000 · 51 709 668 · 11.8 · 208 723 504 430 · 255 061
+-- 333 229 (52 826 платежей) · 122 497 355 801
 ```
 
 Через чистое представление и фильтр по дате отчёта собранная сумма равна 255 061 333 229 — сырые `payments` дают 255 173 169 976: убрано 58.4 млн дубликатов и 53.4 млн строк с датой в будущем. Приводите чистую цифру и говорите об этом.
@@ -171,8 +173,11 @@ SELECT p.code, COUNT(*) AS loans, ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER ()
        SUM(l.principal) AS disbursed, ROUND(100.0 * SUM(l.principal) / SUM(SUM(l.principal)) OVER (), 1) AS amount_share_pct,
        ROUND(AVG(l.principal)) AS avg_ticket
 FROM loans l JOIN products p ON p.product_id = l.product_id GROUP BY p.code ORDER BY disbursed DESC;
--- SME 781 / 10.0 % / 241 117 150 000 / 59.6 % / 308 728 745 · AUTO 391 / 5.0 / 84 791 530 000 / 20.9 / 216 858 133
--- CONS 2418 / 30.9 / 65 109 280 000 / 16.1 / 26 926 915 · MICRO 2669 / 34.1 / 7 221 210 000 / 1.8 / 2 705 586 · BNPL 1569 / 20.0 / 6 544 110 000 / 1.6 / 4 170 880
+-- SME 781 / 10.0 % / 241 117 150 000 / 59.6 % / 308 728 745 · AUTO 391 / 5.0 /
+-- 84 791 530 000 / 20.9 / 216 858 133
+-- CONS 2418 / 30.9 / 65 109 280 000 / 16.1 / 26 926 915 · MICRO 2669 / 34.1 / 7
+-- 221 210 000 / 1.8 / 2 705 586 · BNPL 1569 / 20.0 / 6 544 110 000 / 1.6 / 4
+-- 170 880
 ```
 
 По регионам (та же форма, `GROUP BY b.region`): Tashkent 3 020 кредитов / 160.5 млрд / **39.7 %** · Fergana 12.7 · Samarkand 11.2 · Andijan 9.5 · Namangan 8.6 · Bukhara 6.9 · Nukus 5.8 · Termez 5.7. Остаток долга по филиалам и структура продуктов 60.3 / 27.6 / 11.0 / 0.5 / 0.5: День 1.
@@ -190,8 +195,11 @@ WITH b AS (SELECT b.branch_name, COUNT(*) AS loans, SUM(l.principal) AS disburse
            FROM loans l JOIN branches b ON b.branch_id = l.branch_id
            WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY b.branch_name)
 SELECT branch_name, loans, disbursed_2026, RANK() OVER (ORDER BY disbursed_2026 DESC) AS rk FROM b ORDER BY rk;
--- 1 Tashkent South 381 / 21 380 780 000 · 2 Fergana Central 315 / 19 742 090 000 · 3 Samarkand Central 344 / 19 440 640 000 · 4 Tashkent Central · 5 Tashkent North
--- … 9 Nukus Central 201 / 11 345 780 000 · 10 Termez Central 184 / 8 120 400 000
+-- 1 Tashkent South 381 / 21 380 780 000 · 2 Fergana Central 315 / 19 742 090
+-- 000 · 3 Samarkand Central 344 / 19 440 640 000 · 4 Tashkent Central · 5
+-- Tashkent North
+-- … 9 Nukus Central 201 / 11 345 780 000 · 10 Termez Central 184 / 8 120 400
+-- 000
 ```
 
 Крупнейшие заёмщики по общему основному долгу (`GROUP BY customer_id`, `ORDER BY … LIMIT 5`): Мурод Юсупов (sme) 5 кредитов / 1 258 430 000 · Улугбек Назаров (sme) 2 / 1 023 170 000 · Улугбек Мирзаев (mass) 3 / 971 810 000. Крупнейший кредит по продуктам (`ROW_NUMBER`, топ-1): SME 2861 599 060 000 · AUTO 1501 399 530 000 · CONS 1464 49 990 000 · BNPL 7 990 000 (четыре с равным значением) · MICRO 4 990 000 (четыре с равным значением).
@@ -241,8 +249,10 @@ SELECT * FROM w WHERE month >= '2026-01' ORDER BY month;
 SELECT month, SUM(disbursed_amount) AS disbursed, SUM(outstanding_month_end) AS outstanding_month_end,
        SUM(outstanding_month_end) - LAG(SUM(outstanding_month_end)) OVER (ORDER BY month) AS net_growth
 FROM v_portfolio_monthly WHERE month >= '2026-01-01' AND month < '2026-10-01' GROUP BY month ORDER BY month;
--- 2026-01 151 807 386 149 · 02 154 145 984 724 (+2.3 млрд) · 03 163 974 316 812 (+9.8) · 04 171 675 271 237 · 05 179 741 433 725 · 06 184 617 414 010
--- 07 193 664 170 150 (+9.0) · 08 203 830 205 928 (+10.2) · 09 208 243 879 623 (+4.4 млрд)
+-- 2026-01 151 807 386 149 · 02 154 145 984 724 (+2.3 млрд) · 03 163 974 316 812
+-- (+9.8) · 04 171 675 271 237 · 05 179 741 433 725 · 06 184 617 414 010
+-- 07 193 664 170 150 (+9.0) · 08 203 830 205 928 (+10.2) · 09 208 243 879 623
+-- (+4.4 млрд)
 ```
 
 Без представления: рекурсивный календарь месяцев и, по каждому месяцу, `SUM(principal_due)` платежей с `due_date >= next_month` по кредитам с `disbursed_at < next_month` (День 4). Накопленная выдача по годам нарастающим итогом: 86.5 → 242.4 → 404.8 млрд (`SUM(SUM(principal)) OVER (ORDER BY year)`).
@@ -291,8 +301,10 @@ SELECT CASE WHEN c.monthly_income IS NULL THEN 'unknown' WHEN c.monthly_income <
        ROUND(AVG(l.principal)) AS avg_ticket
 FROM loans l JOIN customers c ON c.customer_id = l.customer_id
 GROUP BY income_band ORDER BY MIN(COALESCE(c.monthly_income, -1));
--- unknown 466 / 116 201 132 17 / 32.0 % / 53.9 млн · <5m 1670 / 388 731 478 73 / 33.0 / 48.1 млн · 5-10m 2781 / 640 1228 792 121 / 32.8 / 52.3 млн
--- 10-20m 774 / 183 322 232 37 / 34.8 / 55.4 млн · 20m+ 2137 / 494 922 630 91 / 33.7 / 51.9 млн
+-- unknown 466 / 116 201 132 17 / 32.0 % / 53.9 млн · <5m 1670 / 388 731 478 73
+-- / 33.0 / 48.1 млн · 5-10m 2781 / 640 1228 792 121 / 32.8 / 52.3 млн
+-- 10-20m 774 / 183 322 232 37 / 34.8 / 55.4 млн · 20m+ 2137 / 494 922 630 91 /
+-- 33.7 / 51.9 млн
 ```
 
 Структура (S5): доля по количеству против доли по деньгам по продуктам; структура остатка долга 60.3 / 27.6 / 11.0 / 0.5 / 0.5 (День 1); концентрация — топ-3 филиала 39.1 %, крупнейший заёмщик 0.47 %, верхний дециль заёмщиков 49.2 %.

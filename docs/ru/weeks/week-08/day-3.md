@@ -37,8 +37,10 @@
 SELECT (SELECT MAX(applied_at)   FROM applications)        AS last_application,
        (SELECT MAX(disbursed_at) FROM loans)               AS last_loan,
        (SELECT MAX(event_time)   FROM app_events)          AS last_app_event,
-       (SELECT MAX(paid_at)      FROM payments)            AS last_payment,       -- позже даты среза
-       (SELECT MAX(action_date)  FROM collections_actions) AS last_action;        -- тоже позже
+       -- позже даты среза
+       (SELECT MAX(paid_at)      FROM payments)            AS last_payment,
+       (SELECT MAX(action_date)  FROM collections_actions) AS last_action;
+       -- тоже позже
 ```
 
 Заявки, кредиты и события приложения заканчиваются 1 октября 2026 — это дата среза. Платежи идут до 24 ноября, действия взыскания — до 4 октября. Строки с датой позже среза существуют, и каждый запрос должен их отсекать.
@@ -73,12 +75,12 @@ SELECT (SELECT MAX(applied_at)   FROM applications)        AS last_application,
 Когда ветвь делит число, у MECE есть тест, который можно запустить: части должны складываться обратно в целое.
 
 ```sql
-SELECT p.channel, COUNT(*) AS loans, SUM(l.principal) AS amount          -- ветви
+SELECT p.channel, COUNT(*) AS loans, SUM(l.principal) AS amount  -- ветви
 FROM loans l JOIN products p ON p.product_id = l.product_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01'
 GROUP BY p.channel
 UNION ALL
-SELECT 'TOTAL', COUNT(*), SUM(principal)                                  -- целое
+SELECT 'TOTAL', COUNT(*), SUM(principal)                         -- целое
 FROM loans
 WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01';
 ```
@@ -109,7 +111,8 @@ WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01';
 
 ```sql
 SELECT (SELECT COUNT(*) FROM loans)                                   AS loans,
-       (SELECT COUNT(DISTINCT loan_id) FROM loans)                    AS distinct_loan_ids,     -- равны: дублей ключей нет
+       -- равны: дублей ключей нет
+       (SELECT COUNT(DISTINCT loan_id) FROM loans)                    AS distinct_loan_ids,
        (SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL) AS closed_without_date,
        (SELECT COUNT(*) - COUNT(DISTINCT installment_id || '|' || paid_at || '|' || amount)
           FROM payments)                                              AS duplicate_payments,
@@ -155,9 +158,11 @@ SELECT (SELECT COUNT(*) FROM loans)                                   AS loans,
 Проверьте гранулярность, прежде чем что-либо суммировать:
 
 ```sql
-SELECT COUNT(*)                AS rows_after_join,          -- одна строка на платёж по графику, а не на кредит
+-- одна строка на платёж по графику, а не на кредит
+SELECT COUNT(*)                AS rows_after_join,
        COUNT(DISTINCT l.loan_id) AS loans,
-       SUM(l.principal)        AS principal_summed_per_row  -- неверно: основной долг посчитан по разу на каждый платёж
+       -- неверно: основной долг посчитан по разу на каждый платёж
+       SUM(l.principal)        AS principal_summed_per_row
 FROM loans l
 JOIN installments i ON i.loan_id = l.loan_id
 WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01';
@@ -227,7 +232,8 @@ FROM loans;
 
 ```sql
 SELECT ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END)
-             / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_a1,        -- с допущением A1
+             -- с допущением A1
+             / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_a1,
        ROUND(100.0 * SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END)
              / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 2) AS approval_without_a1
 FROM applications;
@@ -443,12 +449,14 @@ GROUP BY p.channel ORDER BY amount_growth_pct DESC;
 `v_loan_status` и `v_payments_clean` не являются таблицами в `nur.db` — шаблон итогового проекта создаёт их как TEMP-представления в собственном соединении. В этих полях пишите ту же логику как CTE в начале запроса. Цепочка ниже даёт каждому кредиту остаток долга и DPD на 2026-10-01 (▶ запустите её, затем стройте на `ls`):
 
 ```sql
-WITH pay AS (                                -- v_payments_clean: точные дубли убраны
+-- v_payments_clean: точные дубли убраны
+WITH pay AS (
   SELECT installment_id, paid_at, amount FROM (
     SELECT installment_id, paid_at, amount,
            ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
     FROM payments) WHERE rn = 1),
-unpaid AS (                                  -- платежи со сроком до даты среза, не оплаченные полностью
+-- платежи со сроком до даты среза, не оплаченные полностью
+unpaid AS (
   SELECT i.loan_id, i.due_date FROM installments i
   LEFT JOIN pay p ON p.installment_id = i.installment_id AND p.paid_at <= '2026-10-01'
   WHERE i.due_date <= '2026-10-01'

@@ -100,10 +100,11 @@ type(31_150_000), type(0.30), type("Consumer loan"), type(True), type(None)
 **Как пишется.**
 
 ```python
-customer = "Gulbahor Sobirova"     # имя = значение
+customer = "Gulbahor Sobirova"  # имя = значение
 principal = 31_150_000
 status = "active"
-status = "closed"                  # новое значение для того же имени — "active" больше нет
+# новое значение для того же имени — "active" больше нет
+status = "closed"
 print(customer, principal, status)
 ```
 
@@ -135,12 +136,13 @@ Gulbahor Sobirova 31150000 closed
 
 ```python
 method = "  Bank Transfer "
-clean = method.strip().lower()                 # 'bank transfer' — LOWER(TRIM()) с недели 2
+# 'bank transfer' — LOWER(TRIM()) с недели 2
+clean = method.strip().lower()
 print(clean.replace("bank transfer", "transfer"))
 day = "2025-03-28"
-print(day[:7], len(day))                       # месяц и длина текста
+print(day[:7], len(day))              # месяц и длина текста
 status = "approved_not_disbursed"
-print(status.startswith("approved"))           # шаблон "approved*" с недели 4
+print(status.startswith("approved"))  # шаблон "approved*" с недели 4
 outstanding = 208_723_504_430
 print(f"Outstanding: {outstanding:,} soum = {outstanding / 1e9:.1f} bn; PAR30 {0.0312:.2%}")
 ```
@@ -183,14 +185,16 @@ Outstanding: 208,723,504,430 soum = 208.7 bn; PAR30 3.12%
 **Как пишется.**
 
 ```python
-principal = 31_150_000                       # кредит 1
+principal = 31_150_000          # кредит 1
 annual_rate = 0.30
-interest_1 = principal * annual_rate / 12    # проценты за 1-й месяц: годовые проценты на остаток ÷ 12
+# проценты за 1-й месяц: годовые проценты на остаток ÷ 12
+interest_1 = principal * annual_rate / 12
 term = 24
 print(interest_1)
-print(term // 12, term % 12)                 # целые годы, оставшиеся месяцы
-print(round(1_741_684.35, -2))               # до ближайших 100 сумов
-print(annual_rate / 12, round(annual_rate / 12, 4))   # месячная ставка — посмотрите на последние цифры
+print(term // 12, term % 12)    # целые годы, оставшиеся месяцы
+print(round(1_741_684.35, -2))  # до ближайших 100 сумов
+# месячная ставка — посмотрите на последние цифры
+print(annual_rate / 12, round(annual_rate / 12, 4))
 ```
 
 ```text
@@ -238,9 +242,10 @@ print(annual_rate / 12, round(annual_rate / 12, 4))   # месячная ста�
 ```python
 buckets = ["0", "1-30", "31-60", "61-90", "90+"]
 print(buckets[0], buckets[-1], buckets[1:3])
-principals = [31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]   # кредиты 1–5
+# кредиты 1–5
+principals = [31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]
 print(len(principals), sum(principals), max(principals))
-principals.append(4_990_000)              # добавить в конец
+principals.append(4_990_000)  # добавить в конец
 print(len(principals), "1-30" in buckets)
 ```
 
@@ -284,11 +289,14 @@ print(len(principals), "1-30" in buckets)
 
 ```python
 rates = {"Micro loan": 0.42, "Consumer loan": 0.30, "Buy now pay later": 0.0,
-         "Auto loan": 0.24, "Small business loan": 0.26}      # products.annual_rate
-print(rates["Auto loan"])                                    # поиск по ключу
-print(rates.get("Mortgage", "no such product"))              # .get: значение по умолчанию вместо ошибки
+         # products.annual_rate
+         "Auto loan": 0.24, "Small business loan": 0.26}
+print(rates["Auto loan"])  # поиск по ключу
+# .get: значение по умолчанию вместо ошибки
+print(rates.get("Mortgage", "no such product"))
 counts = {"card": 17612, "payme": 8897}
-counts["cash"] = 8788                                        # добавить ключ (или заменить его значение)
+# добавить ключ (или заменить его значение)
+counts["cash"] = 8788
 print(counts, len(counts), "card" in counts)
 ```
 
@@ -376,16 +384,18 @@ print(bucket)
 **Как пишется.** Накопительная сумма и подсчёт по группам через словарь:
 
 ```python
-amounts = [1_741_700, 2_791_000, 567_500]       # ежемесячные платежи кредитов 1, 2, 3
-total = 0                                        # начать ДО цикла
+# ежемесячные платежи кредитов 1, 2, 3
+amounts = [1_741_700, 2_791_000, 567_500]
+total = 0            # начать ДО цикла
 for amount in amounts:
-    total += amount                              # += прибавляет к переменной
+    total += amount  # += прибавляет к переменной
 print(total)
 
 methods = ["card", "cash", "card", "payme", "card"]
 counts = {}
 for m in methods:
-    counts[m] = counts.get(m, 0) + 1             # ещё один для этого ключа, с 0, если ключ новый
+    # ещё один для этого ключа, с 0, если ключ новый
+    counts[m] = counts.get(m, 0) + 1
 print(counts)
 ```
 
@@ -469,9 +479,11 @@ print(sum(1 for d in dpds if d > 90))          # COUNT с условием
 
 ```python
 def approval_rate(approved, total, decimals=1):
-    """Approval rate in percent."""           # docstring: что делает функция — для следующего читателя
+    # docstring: что делает функция — для следующего читателя
+    """Approval rate in percent."""
     if total == 0:
-        return None                           # никогда не делим на ноль; None — «нет ответа»
+        # никогда не делим на ноль; None — «нет ответа»
+        return None
     return round(100 * approved / total, decimals)
 
 def label(dpd):
@@ -569,9 +581,10 @@ print(st.median([31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]))
 ```python
 import csv
 with open("../excel/applications.csv", newline="", encoding="utf-8") as f:
-    rows = list(csv.DictReader(f))           # список словарей, по одному на строку
+    # список словарей, по одному на строку
+    rows = list(csv.DictReader(f))
 with open("../excel/loans_status.csv", newline="", encoding="utf-8") as f:
-    loans = list(csv.DictReader(f))          # 7 828 кредитов, тем же способом
+    loans = list(csv.DictReader(f))  # 7 828 кредитов, тем же способом
 print(len(rows), len(loans))
 print(rows[0]["channel"], rows[0]["status"], rows[0]["requested_amount"], type(rows[0]["requested_amount"]))
 ```
@@ -689,7 +702,7 @@ total, late = {}, {}
 for r in loans:
     p = r["product"]
     total[p] = total.get(p, 0) + 1
-    if int(r["dpd"]) > 0:                       # текст → число до сравнения
+    if int(r["dpd"]) > 0:  # текст → число до сравнения
         late[p] = late.get(p, 0) + 1
 
 for p in sorted(total, key=lambda k: share(late.get(k, 0), total[k]), reverse=True):

@@ -27,17 +27,20 @@
 ```sql
 SELECT COUNT(*) AS above_avg
 FROM loans
-WHERE principal > (SELECT AVG(principal) FROM loans);   -- (one value): 51 709 668
+WHERE principal > (SELECT AVG(principal) FROM loans);
+-- (one value): 51 709 668
 ```
 
 1 130 loans are larger than the company average of 51 709 668 — one loan in seven, because a few big SME and Auto loans pull the average up. A scalar subquery can also sit in `SELECT` as the denominator of a share:
 
 ```sql
 SELECT p.code, COUNT(*) AS loans,
-       ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM loans), 1) AS share_pct   -- the same 7 828 on every row
+       -- the same 7 828 on every row
+       ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM loans), 1) AS share_pct
 FROM loans l JOIN products p ON p.product_id = l.product_id
 GROUP BY p.code
-ORDER BY loans DESC;                                                             -- MICRO 34.1 · CONS 30.9 · BNPL 20.0 · SME 10.0 · AUTO 5.0
+ORDER BY loans DESC;
+-- MICRO 34.1 · CONS 30.9 · BNPL 20.0 · SME 10.0 · AUTO 5.0
 ```
 
 **When you use it.**
@@ -95,7 +98,7 @@ WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
      app(app_id, cust_id, amount) AS (VALUES (101, 2, 500), (102, 3, 900), (103, 4, 120))
 SELECT c.id, c.name
 FROM cust c
-WHERE NOT EXISTS (SELECT 1 FROM app a WHERE a.cust_id = c.id);   -- 1 row: Aziz
+WHERE NOT EXISTS (SELECT 1 FROM app a WHERE a.cust_id = c.id);  -- 1 row: Aziz
 ```
 
 On the real data — staff who never handled an application:
@@ -104,7 +107,7 @@ On the real data — staff who never handled an application:
 SELECT s.role, COUNT(*) AS staff
 FROM staff s
 WHERE NOT EXISTS (SELECT 1 FROM applications a
-                  WHERE a.officer_id = s.staff_id)     -- linked to the outer row
+                  WHERE a.officer_id = s.staff_id)  -- linked to the outer row
 GROUP BY s.role;
 ```
 
@@ -137,10 +140,13 @@ Both give the same 1 705 customers. For "has none" `NOT EXISTS` usually reads be
 
 ```sql
 SELECT loans_per_customer, COUNT(*) AS customers
-FROM (SELECT customer_id, COUNT(*) AS loans_per_customer     -- step 1: one row per customer
+-- step 1: one row per customer
+FROM (SELECT customer_id, COUNT(*) AS loans_per_customer
       FROM loans
-      GROUP BY customer_id) AS t                             -- the alias is required
-GROUP BY loans_per_customer                                  -- step 2: one row per count
+      -- the alias is required
+      GROUP BY customer_id) AS t
+-- step 2: one row per count
+GROUP BY loans_per_customer
 ORDER BY loans_per_customer;
 ```
 
@@ -179,7 +185,8 @@ SELECT COUNT(*)
 FROM loans l
 WHERE l.principal >= 0.99 * (SELECT p.max_amount
                              FROM products p
-                             WHERE p.product_id = l.product_id);   -- l = the outer row: its own product
+                             WHERE p.product_id = l.product_id);
+                             -- l = the outer row: its own product
 ```
 
 85 loans are within 1 % of their own product's maximum amount. Read it as: for each loan `l`, look up the limit of `l`'s product, then compare. The classic form compares a row with its own group — `l.principal > (SELECT AVG(x.principal) FROM loans x WHERE x.product_id = l.product_id)` gives 3 919, Monday's P13 without a window — but on our tables, which have no indexes yet, it reads 7 828 × 7 828 rows and takes seconds (Day 4).
@@ -209,11 +216,13 @@ WHERE l.principal >= 0.99 * (SELECT p.max_amount
 **How to write it.** The derived table from above, as a CTE:
 
 ```sql
-WITH per_customer AS (                                   -- the name, then the query in brackets
+-- the name, then the query in brackets
+WITH per_customer AS (
   SELECT customer_id, COUNT(*) AS loans_per_customer
   FROM loans
   GROUP BY customer_id)
-SELECT loans_per_customer, COUNT(*) AS customers         -- the main query uses the name like a table
+-- the main query uses the name like a table
+SELECT loans_per_customer, COUNT(*) AS customers
 FROM per_customer
 GROUP BY loans_per_customer
 ORDER BY loans_per_customer;
@@ -251,17 +260,19 @@ The same seven rows: 2 089, 1 378, 593 … 4. The work is identical; the order o
 **How to write it.** Outstanding per loan → per customer → customers by number of owing loans:
 
 ```sql
-WITH per_loan AS (                                        -- step 1, grain: loan
+WITH per_loan AS (  -- step 1, grain: loan
   SELECT loan_id, SUM(principal_due) AS outstanding
   FROM installments
   WHERE due_date > '2026-10-01'
   GROUP BY loan_id),
-per_customer AS (                                         -- step 2, grain: customer — built from step 1
+-- step 2, grain: customer — built from step 1
+per_customer AS (
   SELECT l.customer_id, COUNT(*) AS owing_loans, SUM(pl.outstanding) AS outstanding
   FROM per_loan pl
   JOIN loans l ON l.loan_id = pl.loan_id
   GROUP BY l.customer_id)
-SELECT owing_loans, COUNT(*) AS customers,                -- step 3, grain: number of owing loans
+-- step 3, grain: number of owing loans
+SELECT owing_loans, COUNT(*) AS customers,
        ROUND(AVG(outstanding)) AS avg_outstanding
 FROM per_customer
 GROUP BY owing_loans
@@ -291,13 +302,19 @@ Six rows. 1 859 borrowers owe on one loan (63 340 783 on average); one borrower 
 **How to write it.**
 
 ```sql
-WITH RECURSIVE months(month_start) AS (                           -- SQL Server: no RECURSIVE keyword
-  SELECT '2025-01-01'                                             -- anchor: the first row
+-- SQL Server: no RECURSIVE keyword
+WITH RECURSIVE months(month_start) AS (
+  -- anchor: the first row
+  SELECT '2025-01-01'
   UNION ALL
-  SELECT date(month_start, '+1 month')                            -- recursive step: the next row from the last one
-  FROM months                                                     -- SQL Server: DATEADD(month, 1, month_start)
-  WHERE month_start < '2026-09-01')                               -- stop condition
-SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;  -- 21 · 2025-01-01 · 2026-09-01
+  -- recursive step: the next row from the last one
+  SELECT date(month_start, '+1 month')
+  -- SQL Server: DATEADD(month, 1, month_start)
+  FROM months
+  -- stop condition
+  WHERE month_start < '2026-09-01')
+SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;
+-- 21 · 2025-01-01 · 2026-09-01
 ```
 
 21 rows: January 2025 to September 2026. Each pass adds one month while the last one is before September 2026. The numbers 1 to 6 work the same way: `WITH RECURSIVE k(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM k WHERE n < 6) SELECT n FROM k`.
@@ -329,22 +346,28 @@ At MOB 3: 1 of 2 loans ever late = 50 %.
 **How to write it.** Four CTEs, one grain each, then the rate per MOB for the 2025 cohorts pooled:
 
 ```sql
-WITH inst AS (                                      -- grain: instalment — how much was paid within 30 days of due?
+-- grain: instalment — how much was paid within 30 days of due?
+WITH inst AS (
   SELECT i.loan_id, i.installment_no, i.total_due,
-         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30   -- SQL Server: DATEADD(day, 30, i.due_date)
+         -- SQL Server: DATEADD(day, 30, i.due_date)
+         COALESCE(SUM(CASE WHEN p.paid_at <= date(i.due_date, '+30 days') THEN p.amount END), 0) AS paid_by_30
   FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.installment_no <= 6
-    AND date(i.due_date, '+30 days') <= '2026-10-01'   -- only instalments whose 30 days are over
+    -- only instalments whose 30 days are over
+    AND date(i.due_date, '+30 days') <= '2026-10-01'
   GROUP BY i.installment_id, i.loan_id, i.installment_no, i.total_due),
-flag AS (                                           -- grain: instalment — 1 if 30+ late
+-- grain: instalment — 1 if 30+ late
+flag AS (
   SELECT loan_id, installment_no, CASE WHEN paid_by_30 < total_due THEN 1 ELSE 0 END AS late30
   FROM inst),
-ever AS (                                           -- grain: instalment — ever late so far (running MAX)
+-- grain: instalment — ever late so far (running MAX)
+ever AS (
   SELECT loan_id, installment_no,
          MAX(late30) OVER (PARTITION BY loan_id ORDER BY installment_no) AS ever30
   FROM flag),
-base AS (                                           -- grain: loan — the cohorts we read
+-- grain: loan — the cohorts we read
+base AS (
   SELECT loan_id FROM loans
   WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-01-01')
 SELECT e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever30,
@@ -383,15 +406,19 @@ ORDER BY mob;
 One request, several of today's tools. *"Auto loans larger than the average SME loan, from customers who never had a loan written off — per year of disbursement, against the number of Auto loans that year."*
 
 ```sql
-WITH big_auto AS (                                                                          -- CTE: name the step
+-- CTE: name the step
+WITH big_auto AS (
   SELECT l.loan_id, strftime('%Y', l.disbursed_at) AS yr
   FROM loans l
   WHERE l.product_id = 4
-    AND l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)                 -- scalar subquery, its own filter
-    AND NOT EXISTS (SELECT 1 FROM loans w                                                     -- correlated NOT EXISTS
+    -- scalar subquery, its own filter
+    AND l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)
+    -- correlated NOT EXISTS
+    AND NOT EXISTS (SELECT 1 FROM loans w
                     WHERE w.customer_id = l.customer_id AND w.status = 'written_off'))
 SELECT yr, COUNT(*) AS big_auto_loans,
-       (SELECT COUNT(*) FROM loans x                                                           -- correlated scalar subquery in SELECT
+       -- correlated scalar subquery in SELECT
+       (SELECT COUNT(*) FROM loans x
         WHERE x.product_id = 4 AND strftime('%Y', x.disbursed_at) = b.yr) AS auto_loans
 FROM big_auto b
 GROUP BY yr
@@ -442,12 +469,14 @@ SELECT (SELECT SUM(principal_due) FROM installments WHERE due_date > '2026-10-01
 ```sql
 SELECT COUNT(*) AS repeat_loans, COUNT(DISTINCT l.customer_id) AS customers
 FROM loans l
-JOIN (SELECT customer_id, MIN(disbursed_at) AS first_wo          -- one row per customer with a write-off
+-- one row per customer with a write-off
+JOIN (SELECT customer_id, MIN(disbursed_at) AS first_wo
       FROM loans
       WHERE status = 'written_off'
       GROUP BY customer_id) AS f
   ON f.customer_id = l.customer_id
- AND l.disbursed_at > f.first_wo;                                 -- only the loans that came later
+ AND l.disbursed_at > f.first_wo;
+ -- only the loans that came later
 -- 145 repeat loans · 101 customers
 ```
 
@@ -456,13 +485,16 @@ The same set can be written as a correlated `EXISTS (SELECT 1 FROM loans w WHERE
 **Step 4 — a chain of CTEs: what they owe, against the benchmark.** One grain per step: customer → repeat loan → customer who still owes → answer.
 
 ```sql
-WITH first_wo AS (                                                   -- grain: customer with a write-off
+-- grain: customer with a write-off
+WITH first_wo AS (
   SELECT customer_id, MIN(disbursed_at) AS first_wo
   FROM loans WHERE status = 'written_off' GROUP BY customer_id),
-repeat_loans AS (                                                    -- grain: loan disbursed after it
+-- grain: loan disbursed after it
+repeat_loans AS (
   SELECT l.loan_id, l.customer_id, l.status
   FROM loans l JOIN first_wo f ON f.customer_id = l.customer_id AND l.disbursed_at > f.first_wo),
-owed AS (                                                            -- grain: customer who still owes on a repeat loan
+-- grain: customer who still owes on a repeat loan
+owed AS (
   SELECT r.customer_id, SUM(i.principal_due) AS outstanding
   FROM repeat_loans r
   JOIN installments i ON i.loan_id = r.loan_id
@@ -499,7 +531,8 @@ Start with the lab — you build a small vintage table on your own copy, step by
 ```sql
 SELECT p.code, COUNT(*) AS loans
 FROM loans l JOIN products p ON p.product_id = l.product_id
-WHERE l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)      -- 308 728 745, the average SME loan
+-- 308 728 745, the average SME loan
+WHERE l.principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)
 GROUP BY p.code;
 -- AUTO 88 · SME 400
 ```
@@ -518,10 +551,12 @@ SME 400, AUTO 88 — Auto's biggest loans exceed the average SME loan; no other 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE customer_id IN (SELECT customer_id FROM loans WHERE status = 'written_off');      -- 188
+SELECT COUNT(*) FROM customers WHERE customer_id IN (SELECT customer_id FROM loans WHERE status = 'written_off');
+-- 188
 SELECT COUNT(*) FROM customers c
 WHERE EXISTS     (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'written_off')
-  AND NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active');            -- 127
+  AND NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active');
+  -- 127
 ```
 188 both ways. The second condition is a second `NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND l.status = 'active')` → 127 customers with a write-off and no live loan — two tests side by side read as a sentence; with `IN` it becomes `IN (…) AND customer_id NOT IN (…)`, which also works because `customer_id` is never NULL. Count both and keep the one you can explain. In the browser this correlated form takes about ten seconds — `loans` has no index on `customer_id` yet; tomorrow you create one, and the same query runs in a blink.
 
@@ -538,9 +573,12 @@ WHERE EXISTS     (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id AND 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans);                               -- 0
-SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans WHERE closed_at IS NOT NULL);    -- 649
-SELECT COUNT(*) FROM loans l WHERE NOT EXISTS (SELECT 1 FROM loans x WHERE x.closed_at = l.disbursed_at);         -- 649
+SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans);
+-- 0
+SELECT COUNT(*) FROM loans WHERE disbursed_at NOT IN (SELECT closed_at FROM loans WHERE closed_at IS NOT NULL);
+-- 649
+SELECT COUNT(*) FROM loans l WHERE NOT EXISTS (SELECT 1 FROM loans x WHERE x.closed_at = l.disbursed_at);
+-- 649
 ```
 0 · 649 · 649 (section 1). `closed_at` is NULL for 3 601 loans; one NULL in the list makes `NOT IN` unknown for every row. `NOT EXISTS` compares row by row with `=`, and a NULL simply never matches.
 
@@ -561,7 +599,8 @@ SELECT n_inst, COUNT(*) AS loans FROM (SELECT loan_id, COUNT(*) AS n_inst FROM i
 -- 3 → 1867 · 6 → 2483 · 12 → 1346 · 18 → 621 · 24 → 973 · 36 → 401 · 48 → 137
 SELECT COUNT(*) FROM loans l
 JOIN (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id) t ON t.loan_id = l.loan_id
-WHERE t.n_inst <> l.term_months;                                                                                      -- 0
+WHERE t.n_inst <> l.term_months;
+-- 0
 ```
 Every schedule has exactly `term_months` rows (the derived table joined back to `loans` proves it: 0 mismatches). Counts: 3-month = Micro 1 335 + BNPL 532 = 1 867 — the sum reconciles with Tuesday's product × term table.
 
@@ -575,7 +614,8 @@ Every schedule has exactly `term_months` rows (the derived table joined back to 
 SELECT COUNT(*) FROM loans l
 WHERE l.product_id = 5
   AND l.principal = (SELECT MAX(x.principal) FROM loans x
-                     WHERE x.customer_id = l.customer_id AND x.product_id = 5);   -- 724
+                     WHERE x.customer_id = l.customer_id AND x.product_id = 5);
+                     -- 724
 ```
 724 = one per SME borrower (`COUNT(DISTINCT customer_id)` of SME loans is also 724). It would give more if a customer had two loans with the *same* maximal principal (both match `= MAX`); `ROW_NUMBER() … ORDER BY principal DESC, loan_id` with `rn = 1` is the version that guarantees one row. Know both; say which you used.
 
@@ -595,7 +635,8 @@ WHERE l.product_id = 5
 WITH per_loan AS (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id)
 SELECT n_inst, COUNT(*) AS loans, ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS share_pct
 FROM per_loan GROUP BY n_inst ORDER BY n_inst;
--- 3 → 1867 (23.9 %) · 6 → 2483 (31.7 %) · 12 → 1346 (17.2 %) · 18 → 621 (7.9 %) · 24 → 973 (12.4 %) · 36 → 401 (5.1 %) · 48 → 137 (1.8 %)
+-- 3 → 1867 (23.9 %) · 6 → 2483 (31.7 %) · 12 → 1346 (17.2 %) · 18 → 621 (7.9 %)
+-- · 24 → 973 (12.4 %) · 36 → 401 (5.1 %) · 48 → 137 (1.8 %)
 ```
 Six months is the most common term: 2 483 loans, 31.7 %. The same result as P4; the CTE names the first step, and the main query reads like a sentence.
 
@@ -611,7 +652,8 @@ per_customer AS (SELECT l.customer_id, SUM(pl.outstanding) AS outstanding, COUNT
 ranked AS (SELECT *, ROW_NUMBER() OVER (ORDER BY outstanding DESC) AS rn FROM per_customer)
 SELECT r.rn, c.first_name || ' ' || c.last_name AS customer, c.segment, r.loans, r.outstanding
 FROM ranked r JOIN customers c ON c.customer_id = r.customer_id WHERE r.rn <= 10 ORDER BY r.rn;
--- 1 Ulugbek Nazarov (sme) 2 loans 977 697 006 · 2 Davron Tashkentov (mass) 4 · 840 677 484 · 3 Umida Yusupova (mass) 3 · 752 948 733 …
+-- 1 Ulugbek Nazarov (sme) 2 loans 977 697 006 · 2 Davron Tashkentov (mass) 4 ·
+-- 840 677 484 · 3 Umida Yusupova (mass) 3 · 752 948 733 …
 ```
 Each step has one grain (instalment → loan → customer → ranked customer). Joining `customers` at the end, to 10 rows, is cheaper and safer than joining it to 92 193 instalments at the start.
 
@@ -662,7 +704,8 @@ SELECT b.cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS
        ROUND(100.0 * SUM(e.ever30) / COUNT(*), 2) AS rate_pct
 FROM base b JOIN ever e ON e.loan_id = b.loan_id
 GROUP BY b.cohort, e.installment_no ORDER BY b.cohort, mob;
--- 90 rows; at MOB 3: 2025-10 217 / 15 / 6.91 · 2025-09 5.70 · 2025-03 5.59 · 2025-05 5.41
+-- 90 rows; at MOB 3: 2025-10 217 / 15 / 6.91 · 2025-09 5.70 · 2025-03 5.59 ·
+-- 2025-05 5.41
 ```
 Section 1's vintage chain with `cohort` added to `base` and to the `GROUP BY`. Worst at MOB 3: **2025-10 — 15 of 217 = 6.91 %**; then 2025-09 5.70 %, 2025-03 5.59 %, 2025-05 5.41 %. The Company corner pivots this into the wide matrix.
 
@@ -738,7 +781,8 @@ SELECT e.installment_no AS mob, COUNT(*) AS observed, ROUND(100.0 * SUM(e.ever30
 FROM loans l JOIN ever e ON e.loan_id = l.loan_id
 WHERE l.term_months >= 12 AND l.disbursed_at >= '2025-01-01' AND l.disbursed_at < '2025-09-01'
 GROUP BY e.installment_no ORDER BY mob;
--- 853 loans at every MOB (852 at MOB 12): 1.29 → 2.58 → 3.87 → 5.39 → 5.98 → 6.80 → 7.62 → 8.44 → 8.56 → 9.03 → 9.50 → 10.21
+-- 853 loans at every MOB (852 at MOB 12): 1.29 → 2.58 → 3.87 → 5.39 → 5.98 →
+-- 6.80 → 7.62 → 8.44 → 8.56 → 9.03 → 9.50 → 10.21
 ```
 `SELECT DISTINCT date(date_key, 'start of month') FROM dim_date WHERE date_key BETWEEN …` replaces the recursive CTE line for line. For MOB 1..12 keep `term_months >= 12` and only the cohorts old enough to be observed at MOB 12 — January to August 2025 (853 loans). The curve crosses 10 % at **MOB 12** (10.21 %). Pool all twelve 2025 cohorts instead and the line "crosses" at MOB 10 (10.56 %) and then *falls* to 10.36 at MOB 11 — impossible for a running `MAX`, so the pooled line is mixing different loans at different ages. The first six MOBs of the term ≥ 6 base run 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 %; concave — most trouble appears in the first three months, which is why FPD/SPD/TPD are watched separately.
 
@@ -772,7 +816,8 @@ A **vintage** (*винтаж*) is the set of loans disbursed in one month; a **v
 - **Base:** loans with `term_months >= 6` (so every loan has all six instalments); a cell is shown only when **all** of the cohort's loans have had their 30 days at that MOB.
 
 ```sql
-WITH inst AS ( … ), flag AS ( … ), ever AS ( … ),                        -- section 1's vintage chain
+-- section 1's vintage chain
+WITH inst AS ( … ), flag AS ( … ), ever AS ( … ),
 base AS (SELECT loan_id, strftime('%Y-%m', disbursed_at) AS cohort FROM loans
          WHERE term_months >= 6 AND disbursed_at >= '2025-01-01' AND disbursed_at < '2026-04-01'),
 cells AS (SELECT b.cohort, e.installment_no AS mob, COUNT(*) AS observed, SUM(e.ever30) AS ever,
@@ -786,7 +831,8 @@ SELECT cohort, MAX(cohort_size) AS loans,
        MAX(CASE WHEN mob = 5 AND observed = cohort_size THEN ROUND(100.0 * ever / observed, 2) END) AS mob5,
        MAX(CASE WHEN mob = 6 AND observed = cohort_size THEN ROUND(100.0 * ever / observed, 2) END) AS mob6
 FROM cells GROUP BY cohort ORDER BY cohort;
--- SQL Server: identical except DATEADD(day, 30, i.due_date) in inst and FORMAT(disbursed_at, 'yyyy-MM') in base
+-- SQL Server: identical except DATEADD(day, 30, i.due_date) in inst and
+-- FORMAT(disbursed_at, 'yyyy-MM') in base
 ```
 
 | cohort | loans | MOB 1 | MOB 2 | MOB 3 | MOB 4 | MOB 5 | MOB 6 |

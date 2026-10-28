@@ -84,7 +84,7 @@ SELECT COUNT(*) AS duplicate_rows, SUM(amount) AS counted_twice
 FROM (SELECT amount,
              ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
       FROM payments)
-WHERE rn > 1;                                  -- каждая копия после первой
+WHERE rn > 1;  -- каждая копия после первой
 ```
 
 25 строк и 58 397 800 сумов: строка результата в истории, точная до сума.
@@ -112,10 +112,12 @@ WHERE rn > 1;                                  -- каждая копия пос
 -- гранулярность: один кредит, таблицы: loans → applications (ради канала)
 SELECT a.channel, COUNT(*) AS loans, SUM(l.principal) AS disbursed
 FROM loans l JOIN applications a ON a.application_id = l.application_id
-WHERE l.disbursed_at >= '2026-09-01' AND l.disbursed_at < '2026-10-01'      -- полуоткрытый интервал: без BETWEEN по датам
+-- полуоткрытый интервал: без BETWEEN по датам
+WHERE l.disbursed_at >= '2026-09-01' AND l.disbursed_at < '2026-10-01'
 GROUP BY a.channel
 UNION ALL
-SELECT 'TOTAL', COUNT(*), SUM(principal)                                     -- проверка: известный итог сентября
+-- проверка: известный итог сентября
+SELECT 'TOTAL', COUNT(*), SUM(principal)
 FROM loans
 WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';
 ```
@@ -147,12 +149,14 @@ branch — 172 кредита, app — 123, partner — 66; строка ито�
 **Как пишется.** Первые два шага — это запрос. FPD30 в приложении по месяцу, в котором наступил срок первого платежа:
 
 ```sql
-WITH pay AS (                                                  -- очищенные платежи
+-- очищенные платежи
+WITH pay AS (
   SELECT installment_id, paid_at, amount FROM (
     SELECT installment_id, paid_at, amount,
            ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
     FROM payments) WHERE rn = 1),
-first_inst AS (                                                -- первые платежи по графику, достаточно зрелые для оценки
+-- первые платежи по графику, достаточно зрелые для оценки
+first_inst AS (
   SELECT i.loan_id, i.due_date, i.total_due, COALESCE(SUM(p.amount), 0) AS paid_in_30
   FROM installments i
   LEFT JOIN pay p ON p.installment_id = i.installment_id

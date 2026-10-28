@@ -22,23 +22,31 @@
 
 ```sql
 -- форма любой метрики-доли
-SELECT SUM(CASE WHEN <сделал действие> THEN 1 ELSE 0 END) AS numerator,     -- единицы, которые сделали действие
-       COUNT(*)                                           AS denominator,   -- все единицы, которые могли
+-- единицы, которые сделали действие
+SELECT SUM(CASE WHEN <сделал действие> THEN 1 ELSE 0 END) AS numerator,
+       -- все единицы, которые могли
+       COUNT(*)                                           AS denominator,
        ROUND(100.0 * SUM(CASE WHEN <сделал действие> THEN 1 ELSE 0 END) / COUNT(*), 1) AS rate_pct
 FROM <одна строка на единицу>
-WHERE <фильтр>                                                               -- какие единицы вообще учитываются
-  AND <дата> >= '<начало>' AND <дата> < '<конец>';                          -- период: начало включено, конец исключён
+-- какие единицы вообще учитываются
+WHERE <фильтр>
+  AND <дата> >= '<начало>' AND <дата> < '<конец>';
+  -- период: начало включено, конец исключён
 ```
 
 Доля одобрений заявок из приложения в сентябре 2026:
 
 ```sql
-SELECT SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,   -- числитель
-       COUNT(*)                                                                           AS decided,    -- знаменатель
+-- числитель
+SELECT SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,
+       -- знаменатель
+       COUNT(*)                                                                           AS decided,
        ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) / COUNT(*), 1) AS approval_pct
 FROM applications
-WHERE channel = 'app' AND status <> 'cancelled'                    -- фильтр: канал app, только рассмотренные заявки
-  AND applied_at >= '2026-09-01' AND applied_at < '2026-10-01';    -- период: заявка подана в сентябре 2026
+-- фильтр: канал app, только рассмотренные заявки
+WHERE channel = 'app' AND status <> 'cancelled'
+  AND applied_at >= '2026-09-01' AND applied_at < '2026-10-01';
+  -- период: заявка подана в сентябре 2026
 ```
 
 128 одобренных из 192 рассмотренных: 66.7 %. В виде карточки определения:
@@ -82,12 +90,14 @@ WITH m AS (
          COUNT(l.loan_id)                                                                  AS loans,
          SUM(l.principal)                                                                  AS amount
   FROM applications a
-  LEFT JOIN loans l ON l.application_id = a.application_id          -- кредит, если заявка им стала
+  -- кредит, если заявка им стала
+  LEFT JOIN loans l ON l.application_id = a.application_id
   WHERE a.applied_at >= '2026-09-01' AND a.applied_at < '2026-10-01')
 SELECT applications,
-       ROUND(100.0 * approved / applications, 2) AS approval_pct,   -- драйвер 2
-       ROUND(100.0 * loans / approved, 2)        AS take_up_pct,    -- драйвер 3
-       ROUND(1.0 * amount / loans)                AS avg_ticket,     -- драйвер 4
+       ROUND(100.0 * approved / applications, 2) AS approval_pct,  -- драйвер 2
+       ROUND(100.0 * loans / approved, 2)        AS take_up_pct,   -- драйвер 3
+       -- драйвер 4
+       ROUND(1.0 * amount / loans)                AS avg_ticket,
        ROUND(applications * (1.0 * approved / applications) * (1.0 * loans / approved) * (1.0 * amount / loans)) AS product,
        amount
 FROM m;
@@ -128,22 +138,26 @@ FROM m;
 -- форма
 WITH u AS (
   SELECT <id единицы>,
-         MAX(CASE WHEN <шаг 1 случился> THEN 1 ELSE 0 END) AS step1,   -- 1, если единица дошла до шага 1
+         -- 1, если единица дошла до шага 1
+         MAX(CASE WHEN <шаг 1 случился> THEN 1 ELSE 0 END) AS step1,
          MAX(CASE WHEN <шаг 2 случился> THEN 1 ELSE 0 END) AS step2
   FROM <события> GROUP BY <id единицы>)
-SELECT SUM(step1), SUM(step2) FROM u;                                  -- единицы, дошедшие до каждого шага
+SELECT SUM(step1), SUM(step2) FROM u;
+-- единицы, дошедшие до каждого шага
 ```
 
 Единица здесь — **сессия в приложении** (`application_id` в `app_events`). Сессии, открытые в январе–июне 2026, прослеженные до первого платежа по графику:
 
 ```sql
-WITH s AS (                                                    -- одна строка на сессию в приложении
+-- одна строка на сессию в приложении
+WITH s AS (
   SELECT application_id, MIN(event_time) AS opened_at,
          MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS visit,
          MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS application,
          MAX(CASE WHEN event_name = 'approved'           THEN 1 ELSE 0 END) AS approval
   FROM app_events GROUP BY application_id),
-first_inst AS (                                                -- первый платёж по графику каждого кредита и когда его оплатили
+-- первый платёж по графику каждого кредита и когда его оплатили
+first_inst AS (
   SELECT i.loan_id, i.due_date, MIN(p.paid_at) AS paid_at
   FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.installment_no = 1
@@ -152,7 +166,8 @@ SELECT SUM(s.visit)                                             AS visit,
        SUM(s.application)                                       AS application,
        SUM(s.approval)                                          AS approval,
        COUNT(l.loan_id)                                         AS disbursement,
-       SUM(CASE WHEN f.paid_at <= f.due_date THEN 1 ELSE 0 END) AS repayment     -- первый платёж оплачен вовремя
+       -- первый платёж оплачен вовремя
+       SUM(CASE WHEN f.paid_at <= f.due_date THEN 1 ELSE 0 END) AS repayment
 FROM s
 LEFT JOIN loans l      ON l.application_id = s.application_id
 LEFT JOIN first_inst f ON f.loan_id = l.loan_id
@@ -194,7 +209,8 @@ WHERE s.opened_at >= '2026-01-01' AND s.opened_at < '2026-07-01';
 **Как пишется.** Разбейте крупные шаги на подшаги и поставьте рядом с каждым отвал. `LAG` читает число предыдущего шага:
 
 ```sql
-WITH s AS (                                                    -- каждая сессия в приложении, по одной строке
+-- каждая сессия в приложении, по одной строке
+WITH s AS (
   SELECT application_id,
          MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS opened,
          MAX(CASE WHEN event_name = 'view_offer'         THEN 1 ELSE 0 END) AS viewed,
@@ -212,8 +228,10 @@ steps AS (
   SELECT 6, 'contract_signed',    SUM(signed)    FROM s UNION ALL
   SELECT 7, 'disbursed', COUNT(*) FROM s JOIN loans l ON l.application_id = s.application_id)
 SELECT k, step, n,
-       LAG(n) OVER (ORDER BY k) - n                    AS lost,        -- отвал на этом шаге
-       ROUND(100.0 * n / LAG(n) OVER (ORDER BY k), 1)  AS step_pct     -- конверсия шага
+       -- отвал на этом шаге
+       LAG(n) OVER (ORDER BY k) - n                    AS lost,
+       -- конверсия шага
+       ROUND(100.0 * n / LAG(n) OVER (ORDER BY k), 1)  AS step_pct
 FROM steps ORDER BY k;
 ```
 
@@ -258,11 +276,13 @@ FROM steps ORDER BY k;
 Клиенты, чей первый кредит выдан в январе 2025, N = 6 месяцев:
 
 ```sql
-WITH ranked AS (                                               -- нумеруем кредиты каждого клиента 1, 2, 3 … по дате
+-- нумеруем кредиты каждого клиента 1, 2, 3 … по дате
+WITH ranked AS (
   SELECT customer_id, disbursed_at,
          ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS n
   FROM loans),
-pairs AS (                                                     -- одна строка на клиента: даты первого и второго кредитов
+-- одна строка на клиента: даты первого и второго кредитов
+pairs AS (
   SELECT f.customer_id, f.disbursed_at AS first_at, s.disbursed_at AS second_at
   FROM ranked f
   LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2
@@ -305,9 +325,11 @@ WHERE first_at >= '2025-01-01' AND first_at < '2025-02-01';
 
 ```sql
 WITH first_loan AS (
-  SELECT customer_id, MIN(disbursed_at) AS first_at              -- старт: первая выдача
+  -- старт: первая выдача
+  SELECT customer_id, MIN(disbursed_at) AS first_at
   FROM loans GROUP BY customer_id)
-SELECT strftime('%Y-%m', first_at) AS cohort,                    -- в SQL Server: FORMAT(first_at, 'yyyy-MM')
+-- в SQL Server: FORMAT(first_at, 'yyyy-MM')
+SELECT strftime('%Y-%m', first_at) AS cohort,
        COUNT(*)                    AS customers
 FROM first_loan
 GROUP BY cohort ORDER BY cohort;
@@ -349,7 +371,8 @@ pairs AS (
   FROM ranked f LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2
   WHERE f.n = 1)
 SELECT cohort, COUNT(*) AS customers,
-       CASE WHEN MAX(date(first_at, '+3 months')) <= '2026-10-01'            -- пусто, если не у каждого клиента прошло 3 месяца
+       -- пусто, если не у каждого клиента прошло 3 месяца
+       CASE WHEN MAX(date(first_at, '+3 months')) <= '2026-10-01'
             THEN ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+3 months') THEN 1 ELSE 0 END) / COUNT(*), 1) END AS m3,
        CASE WHEN MAX(date(first_at, '+6 months')) <= '2026-10-01'
             THEN ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+6 months') THEN 1 ELSE 0 END) / COUNT(*), 1) END AS m6,
@@ -393,7 +416,8 @@ for cohort in ["2024Q1", "2024Q3", "2025Q1", "2025Q3", "2026Q1"]:
     g = pairs[pairs["cohort"] == cohort]
     ages, values = [], []
     for n in range(1, 25):
-        if g["first_at"].max() + pd.DateOffset(months=n) > as_of:   # не у каждого клиента прошло n месяцев: стоп
+        # не у каждого клиента прошло n месяцев: стоп
+        if g["first_at"].max() + pd.DateOffset(months=n) > as_of:
             break
         ages.append(n)
         values.append(100 * (g["second_at"] <= g["first_at"] + pd.DateOffset(months=n)).mean())
@@ -428,19 +452,22 @@ plt.show()
 **Как пишется.** Клиенты, чей кредит закрылся в первом квартале 2026:
 
 ```sql
-WITH closers AS (                                              -- клиенты, погасившие кредит в I квартале 2026
+-- клиенты, погасившие кредит в I квартале 2026
+WITH closers AS (
   SELECT customer_id, MAX(closed_at) AS closed_at
   FROM loans
   WHERE status = 'closed' AND closed_at >= '2026-01-01' AND closed_at < '2026-04-01'
   GROUP BY customer_id),
-still_borrowing AS (                                           -- в тот день был другой действующий кредит: уйти в отток не может
+-- в тот день был другой действующий кредит: уйти в отток не может
+still_borrowing AS (
   SELECT DISTINCT c.customer_id
   FROM closers c
   JOIN loans l ON l.customer_id = c.customer_id
               AND l.disbursed_at <= c.closed_at AND (l.closed_at IS NULL OR l.closed_at > c.closed_at)),
 base AS (
   SELECT * FROM closers WHERE customer_id NOT IN (SELECT customer_id FROM still_borrowing)),
-next_loan AS (                                                 -- первый кредит после закрытия, если он есть
+-- первый кредит после закрытия, если он есть
+next_loan AS (
   SELECT b.customer_id, MIN(l.disbursed_at) AS next_at
   FROM base b JOIN loans l ON l.customer_id = b.customer_id AND l.disbursed_at > b.closed_at
   GROUP BY b.customer_id)
@@ -479,11 +506,14 @@ FROM base b LEFT JOIN next_loan n ON n.customer_id = b.customer_id;
 
 ```sql
 SELECT (SELECT COUNT(DISTINCT customer_id) FROM app_events
-         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')        AS app_mau,          -- открыли приложение
+         -- открыли приложение
+         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')        AS app_mau,
        (SELECT COUNT(*) FROM (SELECT DISTINCT date(event_time), customer_id FROM app_events
-         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')) / 30.0 AS app_avg_dau,     -- в сентябре 30 дней
+         -- в сентябре 30 дней
+         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')) / 30.0 AS app_avg_dau,
        (SELECT COUNT(DISTINCT customer_id) FROM loans
-         WHERE status IN ('active', 'default'))                                   AS borrowers_now;   -- действующий кредит на 2026-10-01
+         WHERE status IN ('active', 'default'))                                   AS borrowers_now;
+         -- действующий кредит на 2026-10-01
 ```
 
 201 клиент открыл приложение в сентябре; в средний день — 7.43. Липкость 7.43 ÷ 201 = 3.7 %. По второму определению действующий кредит есть у 2 526 клиентов — «активных» людей в двенадцать раз больше.
@@ -510,12 +540,14 @@ SELECT (SELECT COUNT(DISTINCT customer_id) FROM app_events
 WITH monthly AS (
   SELECT strftime('%Y-%m', registered_at) AS month, COUNT(*) AS new_customers
   FROM customers GROUP BY month),
-running AS (                                                      -- тщеславная: нарастающий итог может только расти
+-- тщеславная: нарастающий итог может только расти
+running AS (
   SELECT month, new_customers, SUM(new_customers) OVER (ORDER BY month) AS all_customers
   FROM monthly),
 first_loan AS (
   SELECT customer_id, MIN(disbursed_at) AS first_at FROM loans GROUP BY customer_id),
-activated AS (                                                    -- для действий: новые клиенты с первым кредитом в течение 60 дней
+-- для действий: новые клиенты с первым кредитом в течение 60 дней
+activated AS (
   SELECT strftime('%Y-%m', c.registered_at) AS month,
          ROUND(100.0 * SUM(CASE WHEN f.first_at >= date(c.registered_at)
                                  AND f.first_at <= date(c.registered_at, '+60 days') THEN 1 ELSE 0 END) / COUNT(*), 1) AS loan_in_60d_pct
@@ -550,16 +582,21 @@ ORDER BY r.month;
 Камола спрашивает: *«Становится ли приложение лучше в превращении визитов в постоянных клиентов?»* Четыре сегодняшних понятия отвечают на это одним запросом — сессии в приложении по кварталам 2025 года, прослеженные до денег:
 
 ```sql
-WITH s AS (                                                    -- единица воронки: сессия в приложении
+-- единица воронки: сессия в приложении
+WITH s AS (
   SELECT application_id, MIN(event_time) AS opened_at,
          MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS submitted
   FROM app_events GROUP BY application_id)
-SELECT strftime('%Y', s.opened_at) || 'Q' || ((CAST(strftime('%m', s.opened_at) AS INTEGER) + 2) / 3) AS quarter,   -- период
-       COUNT(*)                                                    AS sessions,          -- знаменатель
+-- период
+SELECT strftime('%Y', s.opened_at) || 'Q' || ((CAST(strftime('%m', s.opened_at) AS INTEGER) + 2) / 3) AS quarter,
+       -- знаменатель
+       COUNT(*)                                                    AS sessions,
        ROUND(100.0 * SUM(s.submitted) / COUNT(*), 1)               AS visit_to_application_pct,
-       ROUND(100.0 * COUNT(l.loan_id) / COUNT(*), 1)               AS visit_to_money_pct  -- конец воронки
+       -- конец воронки
+       ROUND(100.0 * COUNT(l.loan_id) / COUNT(*), 1)               AS visit_to_money_pct
 FROM s LEFT JOIN loans l ON l.application_id = s.application_id
-WHERE s.opened_at >= '2025-01-01' AND s.opened_at < '2026-01-01'                        -- фильтр: закрытые кварталы
+-- фильтр: закрытые кварталы
+WHERE s.opened_at >= '2025-01-01' AND s.opened_at < '2026-01-01'
 GROUP BY quarter ORDER BY quarter;
 ```
 
@@ -626,11 +663,16 @@ apps AS (
   SELECT a.application_id, a.status, l.principal
   FROM applications a LEFT JOIN loans l ON l.application_id = a.application_id
   WHERE a.applied_at >= '2026-08-01' AND a.applied_at < '2026-09-01')
-SELECT (SELECT COUNT(*) FROM act)                                            AS active_customers,   -- 2 846
-       COUNT(*)                                                              AS applications,       -- 649
-       SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved, -- 392
-       COUNT(principal)                                                      AS loans,              -- 363
-       SUM(principal)                                                        AS disbursed           -- 23 335 710 000
+-- 2 846
+SELECT (SELECT COUNT(*) FROM act)                                            AS active_customers,
+       -- 649
+       COUNT(*)                                                              AS applications,
+       -- 392
+       SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,
+       -- 363
+       COUNT(principal)                                                      AS loans,
+       -- 23 335 710 000
+       SUM(principal)                                                        AS disbursed
 FROM apps;
 ```
 

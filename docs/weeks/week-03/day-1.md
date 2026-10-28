@@ -32,14 +32,17 @@
 
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
-SELECT SUM(amount) AS total FROM pay;                                   -- 1 row: 700
+SELECT SUM(amount) AS total FROM pay;
+-- 1 row: 700
 ```
 
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
 SELECT loan, month, amount,
-       SUM(amount) OVER () AS total                                     -- the word OVER makes SUM a window
-FROM pay;                                                               -- 5 rows, 700 on each
+       -- the word OVER makes SUM a window
+       SUM(amount) OVER () AS total
+FROM pay;
+-- 5 rows, 700 on each
 ```
 
 | loan | month | amount | total |
@@ -70,7 +73,8 @@ The first query returns one row: 700. The second returns all five payments, each
 
 ```sql
 SELECT loan_id, principal,
-       SUM(principal)        OVER () AS company_total,    -- aggregate(column) OVER ()
+       -- aggregate(column) OVER ()
+       SUM(principal)        OVER () AS company_total,
        ROUND(AVG(principal) OVER ()) AS company_avg,
        COUNT(*)              OVER () AS loans
 FROM loans
@@ -111,7 +115,8 @@ Three rows on screen, but the window ran over all 7 828 loans: 404 783 280 000 i
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
 SELECT loan, month, amount,
-       SUM(amount) OVER (PARTITION BY loan) AS loan_total    -- one window per loan
+       -- one window per loan
+       SUM(amount) OVER (PARTITION BY loan) AS loan_total
 FROM pay;
 ```
 
@@ -162,7 +167,8 @@ Loans 1 and 2 are Consumer loans, so both show the Consumer average, 26 926 915,
 ```sql
 WITH pay(loan, month, amount) AS (VALUES ('A', 1, 100), ('A', 2, 200), ('A', 3, 300), ('B', 1, 50), ('B', 2, 50))
 SELECT loan, month, amount,
-       SUM(amount) OVER (PARTITION BY loan ORDER BY month) AS running   -- restart per loan, add up in month order
+       -- restart per loan, add up in month order
+       SUM(amount) OVER (PARTITION BY loan ORDER BY month) AS running
 FROM pay;
 ```
 
@@ -225,7 +231,8 @@ GROUP BY product_id;                                                -- 5 rows
 
 ```sql
 SELECT loan_id, product_id, COUNT(*) OVER (PARTITION BY product_id) AS loans_in_product
-FROM loans;                                                         -- 7 828 rows
+FROM loans;
+-- 7 828 rows
 ```
 
 5 rows against 7 828 rows — the same counts (2 669, 2 418, 1 569, 391, 781), once folded and once written on every loan.
@@ -255,7 +262,8 @@ SELECT l.loan_id, p.code, l.principal,
        MIN(l.principal)        OVER (PARTITION BY p.code) AS product_min,
        MAX(l.principal)        OVER (PARTITION BY p.code) AS product_max,
        ROUND(AVG(l.principal)  OVER (PARTITION BY p.code)) AS product_avg,
-       ROUND(l.principal - AVG(l.principal) OVER (PARTITION BY p.code)) AS vs_avg   -- a window inside arithmetic
+       -- a window inside arithmetic
+       ROUND(l.principal - AVG(l.principal) OVER (PARTITION BY p.code)) AS vs_avg
 FROM loans l
 JOIN products p ON p.product_id = l.product_id
 ORDER BY l.loan_id
@@ -286,7 +294,8 @@ Loan 1 (Consumer, 31 150 000) sits between 3 110 000 and 49 990 000 and is 4 223
 -- every row: a row's value / the window's total
 SELECT loan_id, principal,
        ROUND(100.0 * principal / SUM(principal) OVER (), 4) AS share_pct
-FROM loans ORDER BY principal DESC LIMIT 3;                         -- loan 2861: 0.148 % of all principal
+FROM loans ORDER BY principal DESC LIMIT 3;
+-- loan 2861: 0.148 % of all principal
 ```
 
 ```sql
@@ -297,7 +306,8 @@ SELECT p.code,
 FROM installments i
 JOIN loans l    ON l.loan_id = i.loan_id
 JOIN products p ON p.product_id = l.product_id
-WHERE i.due_date > '2026-10-01'                                     -- outstanding = principal of instalments not yet due
+-- outstanding = principal of instalments not yet due
+WHERE i.due_date > '2026-10-01'
 GROUP BY p.code
 ORDER BY outstanding DESC;
 ```
@@ -341,7 +351,8 @@ UNBOUNDED FOLLOWING   the last row of the window
 
 ```sql
 SUM(amount) OVER (PARTITION BY loan ORDER BY month
-                  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)   -- from the first row to this one
+                  -- from the first row to this one
+                  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
 ```
 
 When you write `ORDER BY` inside `OVER` and no frame, the engine uses a default: `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. **RANGE** includes every row whose `ORDER BY` value equals the current one. With ties, the two frames differ:
@@ -356,8 +367,10 @@ On the real data, a running total of principal by disbursement date in the last 
 
 ```sql
 SELECT disbursed_at, loan_id, principal,
-       SUM(principal) OVER (ORDER BY disbursed_at)                               AS range_run,  -- default frame
-       SUM(principal) OVER (ORDER BY disbursed_at, loan_id ROWS UNBOUNDED PRECEDING) AS rows_run   -- row by row
+       -- default frame
+       SUM(principal) OVER (ORDER BY disbursed_at)                               AS range_run,
+       -- row by row
+       SUM(principal) OVER (ORDER BY disbursed_at, loan_id ROWS UNBOUNDED PRECEDING) AS rows_run
 FROM loans
 WHERE disbursed_at >= '2026-09-24' AND disbursed_at < '2026-10-01'
 ORDER BY disbursed_at, loan_id;
@@ -397,9 +410,11 @@ month    disbursed   frame of the 3-month average
 
 ```sql
 WITH m AS (
-  SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed      -- SQL Server: FORMAT(disbursed_at, 'yyyy-MM')
+  -- SQL Server: FORMAT(disbursed_at, 'yyyy-MM')
+  SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS disbursed
   FROM loans
-  WHERE disbursed_at < '2026-10-01'                                                 -- October has one day only: leave it out
+  -- October has one day only: leave it out
+  WHERE disbursed_at < '2026-10-01'
   GROUP BY strftime('%Y-%m', disbursed_at))
 SELECT month, disbursed,
        ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3,
@@ -436,9 +451,11 @@ FROM / JOIN → WHERE → GROUP BY → HAVING → windows → SELECT → ORDER B
 ```sql
 SELECT COUNT(*) AS above_product_avg
 FROM (SELECT l.loan_id, l.principal,
-             AVG(l.principal) OVER (PARTITION BY l.product_id) AS product_avg   -- step 1: the window, inside
+             -- step 1: the window, inside
+             AVG(l.principal) OVER (PARTITION BY l.product_id) AS product_avg
       FROM loans l) AS t
-WHERE principal > product_avg;                                                  -- step 2: the filter, outside
+WHERE principal > product_avg;
+-- step 2: the filter, outside
 ```
 
 3 919 loans are larger than their own product's average — about half of every product. `WITH t AS (…) SELECT … FROM t WHERE …` does the same; Day 3 explains both.
@@ -463,13 +480,18 @@ One request, five of today's tools. *"2026 monthly disbursement, January to Sept
 WITH m AS (
   SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS disbursed
   FROM loans
-  WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'              -- the nine full months
+  -- the nine full months
+  WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'
   GROUP BY strftime('%Y-%m', disbursed_at))
 SELECT month, loans, disbursed,
-       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1)                         AS share_pct,    -- share of total
-       SUM(disbursed) OVER (ORDER BY month ROWS UNBOUNDED PRECEDING)                AS ytd,          -- running total
-       ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3, -- moving average
-       ROUND(100.0 * disbursed / MAX(disbursed) OVER (), 1)                         AS pct_of_best   -- MAX as a window
+       -- share of total
+       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1)                         AS share_pct,
+       -- running total
+       SUM(disbursed) OVER (ORDER BY month ROWS UNBOUNDED PRECEDING)                AS ytd,
+       -- moving average
+       ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS ma3,
+       -- MAX as a window
+       ROUND(100.0 * disbursed / MAX(disbursed) OVER (), 1)                         AS pct_of_best
 FROM m
 ORDER BY month;
 ```
@@ -518,15 +540,19 @@ Nine rows, one per month: `GROUP BY` made them, the windows only added columns. 
 ```sql
 SELECT b.branch_name, b.region,
        SUM(i.principal_due)                                                                             AS outstanding,
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1)                      AS share_pct,        -- step 2
-       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY b.region), 1) AS share_in_region,  -- step 3
+       -- step 2
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1)                      AS share_pct,
+       -- step 3
+       ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY b.region), 1) AS share_in_region,
        ROUND(100.0 * SUM(SUM(i.principal_due)) OVER (ORDER BY SUM(i.principal_due) DESC)
-                   / SUM(SUM(i.principal_due)) OVER (), 1)                                              AS cum_share_pct     -- step 4
+                   -- step 4
+                   / SUM(SUM(i.principal_due)) OVER (), 1)                                              AS cum_share_pct
 FROM installments i
 JOIN loans l    ON l.loan_id = i.loan_id
 JOIN branches b ON b.branch_id = l.branch_id
 WHERE i.due_date > '2026-10-01'
-GROUP BY b.branch_name, b.region                                                                         -- step 1
+-- step 1
+GROUP BY b.branch_name, b.region
 ORDER BY outstanding DESC;
 ```
 
@@ -569,7 +595,8 @@ Start with the lab: four steps on your own copy of the database, so the running 
 ```sql
 SELECT loan_id, principal, SUM(principal) OVER () AS total, ROUND(AVG(principal) OVER ()) AS avg_principal, COUNT(*) OVER () AS n
 FROM loans WHERE customer_id = 3208;
--- 4265 · 568 200 000 · total 1 023 170 000 · avg 511 585 000 · n 2  (loan 7606 the same)
+-- 4265 · 568 200 000 · total 1 023 170 000 · avg 511 585 000 · n 2  (loan 7606
+-- the same)
 ```
 Without the `WHERE`: total 404 783 280 000, average 51 709 668, n 7 828 on every row. `WHERE` runs first, so the window only sees the customer's two loans.
 
@@ -591,7 +618,8 @@ SELECT l.loan_id, b.branch_name, l.principal,
        ROUND(AVG(l.principal) OVER (PARTITION BY l.branch_id)) AS branch_avg
 FROM loans l JOIN branches b ON b.branch_id = l.branch_id
 ORDER BY l.loan_id;
--- 7 828 rows; loan 1 · Termez Central · 31 150 000 · 483 · 47 593 561; loan 2 · Nukus Central · 492 · 47 610 488
+-- 7 828 rows; loan 1 · Termez Central · 31 150 000 · 483 · 47 593 561; loan 2 ·
+-- Nukus Central · 492 · 47 610 488
 ```
 Loan 1 belongs to Termez Central, the smallest branch: 483 loans, average 47 593 561. Partitioning by `branch_id` (not by name) is safer — two branches could share a name.
 
@@ -607,7 +635,9 @@ SELECT payment_id, paid_at, amount,
        ROUND(100.0 * amount / SUM(amount) OVER (PARTITION BY loan_id), 1)                AS share_pct,
        SUM(amount) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)              AS running_collected
 FROM payments WHERE loan_id = 1 ORDER BY paid_at;
--- 18 payments of 1 741 700 = 31 350 600; each 5.6 %; running climbs by one instalment a month, except 2026-02-26 → 2026-04-25 (nothing in March) then two in May
+-- 18 payments of 1 741 700 = 31 350 600; each 5.6 %; running climbs by one
+-- instalment a month, except 2026-02-26 → 2026-04-25 (nothing in March) then
+-- two in May
 ```
 The March instalment was paid 45 days late (week 2's loan 1 story) — visible as a flat step in the running total, then a catch-up. A running total is the quickest picture of a payment history.
 
@@ -622,7 +652,8 @@ SELECT i.installment_no, i.due_date, i.principal_due,
        SUM(i.principal_due) OVER (ORDER BY i.installment_no) AS cum_principal,
        l.principal - SUM(i.principal_due) OVER (ORDER BY i.installment_no) AS remaining
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.loan_id = 1 ORDER BY i.installment_no;
--- no 1 remaining 30 187 050 … no 13 → 16 570 510 · no 14 → 15 243 073 (below 15 575 000 = half) … no 24 → 0
+-- no 1 remaining 30 187 050 … no 13 → 16 570 510 · no 14 → 15 243 073 (below 15
+-- 575 000 = half) … no 24 → 0
 ```
 Annuity: principal parts grow (962 950 → 1 698 725), so half the balance is gone only after instalment 14 of 24. "Outstanding = instalments not yet due" is exactly this column read on the as-of date.
 
@@ -638,7 +669,9 @@ WITH m AS (SELECT p.code, strftime('%Y-%m', l.disbursed_at) AS month, COUNT(*) A
            WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01' GROUP BY 1, 2)
 SELECT code, month, loans, disbursed, SUM(disbursed) OVER (PARTITION BY code ORDER BY month) AS ytd
 FROM m ORDER BY code, month;
--- AUTO: Jan 4 620 560 000 → ytd Sep 36 021 820 000 · SME: Jan 10 042 990 000 → ytd Sep 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL → 2 431 040 000
+-- AUTO: Jan 4 620 560 000 → ytd Sep 36 021 820 000 · SME: Jan 10 042 990 000 →
+-- ytd Sep 94 774 300 000 · CONS → 25 461 900 000 · MICRO → 2 791 240 000 · BNPL
+-- → 2 431 040 000
 ```
 45 rows (5 products × 9 months). Forget `PARTITION BY code` and Auto's September "YTD" includes every other product's January.
 
@@ -649,8 +682,10 @@ FROM m ORDER BY code, month;
 <details><summary>Answer</summary>
 
 ```sql
-SELECT branch_id, COUNT(*) AS loans FROM loans GROUP BY branch_id;                          -- 10 rows
-SELECT loan_id, branch_id, COUNT(*) OVER (PARTITION BY branch_id) AS loans FROM loans;      -- 7 828 rows
+SELECT branch_id, COUNT(*) AS loans FROM loans GROUP BY branch_id;
+-- 10 rows
+SELECT loan_id, branch_id, COUNT(*) OVER (PARTITION BY branch_id) AS loans FROM loans;
+-- 7 828 rows
 ```
 10 rows against 7 828. The counts are the same (Tashkent South 1 012 … Termez Central 483): in the first query once per branch, in the second on every loan of the branch. Same aggregate, two shapes.
 
@@ -667,7 +702,8 @@ SELECT loan_id, principal,
        ROUND(principal - AVG(principal) OVER ()) AS vs_avg
 FROM loans WHERE product_id = 4
 ORDER BY vs_avg DESC;
--- 391 rows; 1501 · 399 530 000 · min 50 280 000 · max 399 530 000 · avg 216 858 133 · +182 671 867
+-- 391 rows; 1501 · 399 530 000 · min 50 280 000 · max 399 530 000 · avg 216 858
+-- 133 · +182 671 867
 ```
 Here `WHERE product_id = 4` makes the window the Auto loans, so `OVER ()` is enough — no `PARTITION BY` needed. Loan 1501 is 182 671 867 above the Auto average, just under the product's 400 m limit.
 
@@ -682,7 +718,8 @@ SELECT l.risk_grade, SUM(i.principal_due) AS outstanding, COUNT(DISTINCT i.loan_
        ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (), 1) AS share_pct
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id WHERE i.due_date > '2026-10-01'
 GROUP BY l.risk_grade ORDER BY outstanding DESC;
--- B 93 317 343 066 / 1457 loans / 44.7 % · C 56 322 842 888 / 1040 / 27.0 · A 48 417 895 338 / 754 / 23.2 · D 10 665 423 138 / 158 / 5.1
+-- B 93 317 343 066 / 1457 loans / 44.7 % · C 56 322 842 888 / 1040 / 27.0 · A
+-- 48 417 895 338 / 754 / 23.2 · D 10 665 423 138 / 158 / 5.1
 ```
 B holds 45 % of the money on 43 % of the owing loans; D is 5 % of the book — small, as a cut-off should make it.
 
@@ -703,7 +740,8 @@ SELECT p.code, l.risk_grade, SUM(i.principal_due) AS outstanding,
        ROUND(100.0 * SUM(i.principal_due) / SUM(SUM(i.principal_due)) OVER (PARTITION BY p.code), 1) AS share_in_product
 FROM installments i JOIN loans l ON l.loan_id = i.loan_id JOIN products p ON p.product_id = l.product_id
 WHERE i.due_date > '2026-10-01' GROUP BY p.code, l.risk_grade ORDER BY p.code, l.risk_grade;
--- MICRO C 35.2 % (A 22.7 · B 40.0 · D 2.1); BNPL C 31.4; CONS 30.8; AUTO 28.9; SME 25.3
+-- MICRO C 35.2 % (A 22.7 · B 40.0 · D 2.1); BNPL C 31.4; CONS 30.8; AUTO 28.9;
+-- SME 25.3
 ```
 Twenty rows; each product's four shares add to 100. Micro carries the most grade-C weight — the app product, consistent with the FPD finding of week 2.
 
@@ -757,7 +795,8 @@ w AS (SELECT month, disbursed,
              ROUND(100.0 * disbursed / AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) - 100, 1) AS vs_ma_pct
       FROM m)
 SELECT * FROM w WHERE month >= '2025-01' ORDER BY month;
--- 2025-07: 14 590 460 000 vs ma3 11 240 216 667 → +29.8 % (the furthest); 2025-08 +24.0 %; 2026-03 19 657 410 000 vs 16 334 543 333 → +20.3 %
+-- 2025-07: 14 590 460 000 vs ma3 11 240 216 667 → +29.8 % (the furthest);
+-- 2025-08 +24.0 %; 2026-03 19 657 410 000 vs 16 334 543 333 → +20.3 %
 ```
 Two CTEs: the window runs in `w` over the **whole** series, the display filter sits in the outer query. Put `WHERE month >= '2025-01'` inside `w` instead and `WHERE` runs *before* the window: January 2025 averages one month, February two — `months_in_window` shows 1 and 2 instead of 3. Filter the frame's input and the display separately, always.
 
@@ -772,7 +811,8 @@ SELECT code, SUM(above) AS above_avg, COUNT(*) AS loans
 FROM (SELECT p.code, CASE WHEN l.principal > AVG(l.principal) OVER (PARTITION BY p.code) THEN 1 ELSE 0 END AS above
       FROM loans l JOIN products p ON p.product_id = l.product_id) t
 GROUP BY code;
--- AUTO 189 of 391 · BNPL 787 of 1569 · CONS 1212 of 2418 · MICRO 1331 of 2669 · SME 400 of 781   (3 919 in all)
+-- AUTO 189 of 391 · BNPL 787 of 1569 · CONS 1212 of 2418 · MICRO 1331 of 2669 ·
+-- SME 400 of 781   (3 919 in all)
 ```
 `WHERE principal > AVG(principal) OVER (...)` is an error — windows do not exist yet when `WHERE` runs. Wrap, then filter. Roughly half above average in every product: the ticket sizes are symmetric, no long tail of giants.
 
@@ -791,7 +831,8 @@ SELECT customer_id, outstanding,
        ROUND(100.0 * outstanding / SUM(outstanding) OVER (), 2)                                   AS share_pct,
        ROUND(100.0 * SUM(outstanding) OVER (ORDER BY outstanding DESC) / SUM(outstanding) OVER (), 2) AS cum_share_pct
 FROM c ORDER BY outstanding DESC;
--- 2 535 borrowers; row 1: customer 3208, 977 697 006, 0.47 % ; row 10 cumulative 3.60 %; row 25 cumulative 7.80 %
+-- 2 535 borrowers; row 1: customer 3208, 977 697 006, 0.47 % ; row 10
+-- cumulative 3.60 %; row 25 cumulative 7.80 %
 ```
 A running sum divided by a grand total — two windows with different frames in one expression. The top quarter of borrowers (634 people, via `NTILE(4)` tomorrow) holds 82.7 % of outstanding; the bottom quarter 0.5 %. For branches the worked example's cumulative column gives 13.8 → 26.6 → **39.1 %** after three rows — the Company corner reads it.
 

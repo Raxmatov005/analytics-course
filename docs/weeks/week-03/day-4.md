@@ -33,7 +33,8 @@ WITH ranked AS (
   FROM payments)
 SELECT payment_id, loan_id, installment_id, paid_at, amount, method FROM ranked WHERE rn = 1;
 
-SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;     -- 52 850 · 255 114 772 176 · 5
+SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;
+-- 52 850 · 255 114 772 176 · 5
 ```
 
 52 850 rows, 255 114 772 176 UZS, 5 payment methods — the 52 875 raw payments without the 25 duplicates, with the method cleaned. Timur now sees six clean columns; the `ROW_NUMBER` and the cleaning live inside the view.
@@ -59,9 +60,10 @@ SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;     
 
 ```sql
 -- the shape
-CREATE VIEW view_name AS          -- a name: v_… for views, so nobody mistakes it for a table
-SELECT …;                         -- any SELECT: joins, GROUP BY, windows, CTEs
-DROP VIEW IF EXISTS view_name;    -- removes the saved query, never the data
+-- a name: v_… for views, so nobody mistakes it for a table
+CREATE VIEW view_name AS
+SELECT …;                       -- any SELECT: joins, GROUP BY, windows, CTEs
+DROP VIEW IF EXISTS view_name;  -- removes the saved query, never the data
 ```
 
 A view of your own, made so the box can run twice (`DROP … IF EXISTS` first):
@@ -73,7 +75,8 @@ CREATE VIEW my_v_written_off AS
 SELECT loan_id, customer_id, product_id, principal
 FROM loans
 WHERE status = 'written_off';
-SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;   -- 190 · 10 022 040 000
+SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;
+-- 190 · 10 022 040 000
 ```
 
 190 written-off loans with 10 022 040 000 of principal. The view now appears in the **Database** panel next to the tables; `DROP VIEW my_v_written_off` removes it again.
@@ -101,7 +104,8 @@ SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;   -
 DROP VIEW IF EXISTS my_v_paid_monthly;
 CREATE VIEW my_v_paid_monthly AS
 SELECT strftime('%Y-%m', paid_at) AS month, COUNT(*) AS payments, SUM(amount) AS collected
-FROM v_payments_clean                                     -- the inner view: duplicates already gone
+-- the inner view: duplicates already gone
+FROM v_payments_clean
 GROUP BY strftime('%Y-%m', paid_at);
 SELECT * FROM my_v_paid_monthly WHERE month >= '2026-07' AND month < '2026-10';
 ```
@@ -147,19 +151,22 @@ payments ──▶ v_payments_clean ──▶ my_v_paid_monthly
 ```sql
 -- a table: the rows are stored, frozen as of today
 DROP TABLE IF EXISTS t_payments_asof_20261001;
-CREATE TABLE t_payments_asof_20261001 AS                  -- SQL Server: SELECT * INTO t_payments_asof_20261001 FROM v_payments_clean
+-- SQL Server: SELECT * INTO t_payments_asof_20261001 FROM v_payments_clean
+CREATE TABLE t_payments_asof_20261001 AS
 SELECT * FROM v_payments_clean;
-SELECT COUNT(*) FROM t_payments_asof_20261001;            -- 52 850
+SELECT COUNT(*) FROM t_payments_asof_20261001;  -- 52 850
 ```
 
 ```sql
 -- a temp table: scratch space for this session only
 DROP TABLE IF EXISTS tmp_sep;
-CREATE TEMP TABLE tmp_sep AS                              -- SQL Server: SELECT * INTO #tmp_sep FROM v_payments_clean WHERE
+-- SQL Server: SELECT * INTO #tmp_sep FROM v_payments_clean WHERE
+CREATE TEMP TABLE tmp_sep AS
 SELECT * FROM v_payments_clean
 WHERE paid_at >= '2026-09-01' AND paid_at < '2026-10-01';
 SELECT method, COUNT(*) AS payments, SUM(amount) AS collected
-FROM tmp_sep GROUP BY method ORDER BY collected DESC;     -- card 1 050 · 5 173 658 728 first
+FROM tmp_sep GROUP BY method ORDER BY collected DESC;
+-- card 1 050 · 5 173 658 728 first
 ```
 
 The first table holds all 52 850 clean payments and will not change when `payments` does. The temp table holds September's 3 158 payments; card leads with 1 050 payments and 5 173 658 728. Close the page and `tmp_sep` is gone.
@@ -195,7 +202,8 @@ The first table holds all 52 850 clean payments and will not change when `paymen
 DROP TABLE IF EXISTS t_written_off;
 CREATE TABLE t_written_off AS SELECT * FROM my_v_written_off;
 SELECT (SELECT COUNT(*) FROM my_v_written_off) AS view_rows,
-       (SELECT COUNT(*) FROM t_written_off)    AS table_rows;    -- 190 · 190 today
+       (SELECT COUNT(*) FROM t_written_off)    AS table_rows;
+       -- 190 · 190 today
 ```
 
 190 and 190 today. Write off one more loan tomorrow and the view says 191, the table still 190.
@@ -225,7 +233,8 @@ SELECT (SELECT COUNT(*) FROM my_v_written_off) AS view_rows,
 
 ```sql
 -- the shape
-CREATE INDEX index_name ON table_name (column1);   -- one column, or several: (column1, column2)
+CREATE INDEX index_name ON table_name (column1);
+-- one column, or several: (column1, column2)
 DROP INDEX index_name;
 ```
 
@@ -236,7 +245,8 @@ Day 3's "customers with no loan" asks, for each of 6 040 customers, whether any 
 CREATE INDEX IF NOT EXISTS ix_loans_customer ON loans (customer_id);
 SELECT COUNT(*) AS customers_without_loan
 FROM customers c
-WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);   -- 1 705
+WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);
+-- 1 705
 ```
 
 1 705 customers, the same answer as on Wednesday. Measured with SQLite on a laptop: 2.4 seconds before the index, under a millisecond after — each lookup now reads a customer's own loans, not all 7 828. (The index stays in your practice copy; **Database → ↺ Reset** removes it.)
@@ -321,8 +331,10 @@ Same answer, different work. In SQL Server: *Display Estimated Execution Plan* (
 Habit 3 on the real data — the same count, two plans:
 
 ```sql
-SELECT COUNT(*) FROM installments WHERE strftime('%Y-%m', due_date) = '2026-09';            -- 3 305, cannot use an index
-SELECT COUNT(*) FROM installments WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01'; -- 3 305, can
+SELECT COUNT(*) FROM installments WHERE strftime('%Y-%m', due_date) = '2026-09';
+-- 3 305, cannot use an index
+SELECT COUNT(*) FROM installments WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01';
+-- 3 305, can
 ```
 
 Both say 3 305 instalments due in September. Only the second can use `ix_installments_due` once it exists.
@@ -348,11 +360,13 @@ One request, several of today's tools. *"September's collections by payment meth
 ```sql
 -- 1. an index on the column the filter will use
 CREATE INDEX IF NOT EXISTS ix_payments_paid ON payments (paid_at);
--- 2. a view over a view: only the columns the pack needs, the date kept as a bare column
+-- 2. a view over a view: only the columns the pack needs, the date kept as a
+-- bare column
 DROP VIEW IF EXISTS my_v_collections;
 CREATE VIEW my_v_collections AS
 SELECT paid_at, method, amount FROM v_payments_clean;
--- 3. a frozen table for the pack: half-open range on the bare column, SELECT only what is needed
+-- 3. a frozen table for the pack: half-open range on the bare column, SELECT
+-- only what is needed
 DROP TABLE IF EXISTS t_collections_2026_09;
 CREATE TABLE t_collections_2026_09 AS
 SELECT method, COUNT(*) AS payments, SUM(amount) AS collected
@@ -407,7 +421,8 @@ WITH unpaid AS (
   GROUP BY i.installment_id, i.loan_id, i.due_date, i.total_due
   HAVING COALESCE(SUM(p.amount), 0) < i.total_due),
 dpd AS (
-  SELECT loan_id, CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,     -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+  -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+  SELECT loan_id, CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,
          COUNT(*) AS unpaid_instalments, SUM(overdue_amount) AS overdue_amount
   FROM unpaid GROUP BY loan_id),
 outst AS (
@@ -703,7 +718,8 @@ SELECT c.month_start AS month, c.product, c.branch_name,
 FROM cells c
 LEFT JOIN disb  d ON d.month_start = c.month_start AND d.product_id = c.product_id AND d.branch_id = c.branch_id
 LEFT JOIN outst o ON o.month_start = c.month_start AND o.product_id = c.product_id AND o.branch_id = c.branch_id;
--- 1 700 rows; 2026 month-end outstanding: Jan 151.8 bn · Mar 164.0 · Jun 184.6 · Aug 203.8 · Sep 208.2 bn
+-- 1 700 rows; 2026 month-end outstanding: Jan 151.8 bn · Mar 164.0 · Jun 184.6
+-- · Aug 203.8 · Sep 208.2 bn
 ```
 
 The first version of this view joined `cells` (50 rows per month) to `loans` without matching product and branch — and reported 10 trillion of outstanding. The reconciliation check (`SUM(outstanding_month_end)` for September against `v_loan_status`) caught it in one line. **Every view ships with its check query**; that is what R1–R4 in HW 3.2 are for.

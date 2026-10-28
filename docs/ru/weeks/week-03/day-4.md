@@ -33,7 +33,8 @@ WITH ranked AS (
   FROM payments)
 SELECT payment_id, loan_id, installment_id, paid_at, amount, method FROM ranked WHERE rn = 1;
 
-SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;     -- 52 850 · 255 114 772 176 · 5
+SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;
+-- 52 850 · 255 114 772 176 · 5
 ```
 
 52 850 строк, 255 114 772 176 UZS, 5 способов оплаты — 52 875 сырых оплат без 25 дубликатов, с очищенным способом оплаты. Тимур теперь видит шесть чистых столбцов; `ROW_NUMBER` и очистка живут внутри представления.
@@ -59,9 +60,12 @@ SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;     
 
 ```sql
 -- схема
-CREATE VIEW view_name AS          -- имя: v_… для представлений, чтобы его не приняли за таблицу
-SELECT …;                         -- любой SELECT: соединения, GROUP BY, окна, CTE
-DROP VIEW IF EXISTS view_name;    -- удаляет сохранённый запрос, но никогда не данные
+-- имя: v_… для представлений, чтобы его не приняли за таблицу
+CREATE VIEW view_name AS
+SELECT …;
+-- любой SELECT: соединения, GROUP BY, окна, CTE
+DROP VIEW IF EXISTS view_name;
+-- удаляет сохранённый запрос, но никогда не данные
 ```
 
 Собственное представление, сделанное так, чтобы блок можно было выполнить дважды (сначала `DROP … IF EXISTS`):
@@ -73,7 +77,8 @@ CREATE VIEW my_v_written_off AS
 SELECT loan_id, customer_id, product_id, principal
 FROM loans
 WHERE status = 'written_off';
-SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;   -- 190 · 10 022 040 000
+SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;
+-- 190 · 10 022 040 000
 ```
 
 190 списанных кредитов с 10 022 040 000 основного долга. Представление теперь появилось в панели **«База данных»** рядом с таблицами; `DROP VIEW my_v_written_off` снова его удаляет.
@@ -101,7 +106,8 @@ SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;   -
 DROP VIEW IF EXISTS my_v_paid_monthly;
 CREATE VIEW my_v_paid_monthly AS
 SELECT strftime('%Y-%m', paid_at) AS month, COUNT(*) AS payments, SUM(amount) AS collected
-FROM v_payments_clean                                     -- внутреннее представление: дубликатов уже нет
+-- внутреннее представление: дубликатов уже нет
+FROM v_payments_clean
 GROUP BY strftime('%Y-%m', paid_at);
 SELECT * FROM my_v_paid_monthly WHERE month >= '2026-07' AND month < '2026-10';
 ```
@@ -147,19 +153,22 @@ payments ──▶ v_payments_clean ──▶ my_v_paid_monthly
 ```sql
 -- таблица: строки сохранены, заморожены на сегодня
 DROP TABLE IF EXISTS t_payments_asof_20261001;
-CREATE TABLE t_payments_asof_20261001 AS                  -- SQL Server: SELECT * INTO t_payments_asof_20261001 FROM v_payments_clean
+-- SQL Server: SELECT * INTO t_payments_asof_20261001 FROM v_payments_clean
+CREATE TABLE t_payments_asof_20261001 AS
 SELECT * FROM v_payments_clean;
-SELECT COUNT(*) FROM t_payments_asof_20261001;            -- 52 850
+SELECT COUNT(*) FROM t_payments_asof_20261001;  -- 52 850
 ```
 
 ```sql
 -- временная таблица: черновое место только для этого сеанса
 DROP TABLE IF EXISTS tmp_sep;
-CREATE TEMP TABLE tmp_sep AS                              -- SQL Server: SELECT * INTO #tmp_sep FROM v_payments_clean WHERE
+-- SQL Server: SELECT * INTO #tmp_sep FROM v_payments_clean WHERE
+CREATE TEMP TABLE tmp_sep AS
 SELECT * FROM v_payments_clean
 WHERE paid_at >= '2026-09-01' AND paid_at < '2026-10-01';
 SELECT method, COUNT(*) AS payments, SUM(amount) AS collected
-FROM tmp_sep GROUP BY method ORDER BY collected DESC;     -- первой идёт card: 1 050 · 5 173 658 728
+FROM tmp_sep GROUP BY method ORDER BY collected DESC;
+-- первой идёт card: 1 050 · 5 173 658 728
 ```
 
 Первая таблица хранит все 52 850 чистых оплат и не изменится, когда изменится `payments`. Временная таблица хранит 3 158 сентябрьских оплат; лидирует card — 1 050 оплат и 5 173 658 728. Закройте страницу — и `tmp_sep` исчезнет.
@@ -195,7 +204,8 @@ FROM tmp_sep GROUP BY method ORDER BY collected DESC;     -- первой идё
 DROP TABLE IF EXISTS t_written_off;
 CREATE TABLE t_written_off AS SELECT * FROM my_v_written_off;
 SELECT (SELECT COUNT(*) FROM my_v_written_off) AS view_rows,
-       (SELECT COUNT(*) FROM t_written_off)    AS table_rows;    -- сегодня 190 · 190
+       (SELECT COUNT(*) FROM t_written_off)    AS table_rows;
+       -- сегодня 190 · 190
 ```
 
 Сегодня 190 и 190. Спишите завтра ещё один кредит — представление скажет 191, таблица останется на 190.
@@ -225,7 +235,8 @@ SELECT (SELECT COUNT(*) FROM my_v_written_off) AS view_rows,
 
 ```sql
 -- схема
-CREATE INDEX index_name ON table_name (column1);   -- один столбец или несколько: (column1, column2)
+CREATE INDEX index_name ON table_name (column1);
+-- один столбец или несколько: (column1, column2)
 DROP INDEX index_name;
 ```
 
@@ -236,7 +247,8 @@ DROP INDEX index_name;
 CREATE INDEX IF NOT EXISTS ix_loans_customer ON loans (customer_id);
 SELECT COUNT(*) AS customers_without_loan
 FROM customers c
-WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);   -- 1 705
+WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);
+-- 1 705
 ```
 
 1 705 клиентов — тот же ответ, что в среду. Замер в SQLite на ноутбуке: 2.4 секунды до индекса, меньше миллисекунды после — каждый поиск теперь читает кредиты одного клиента, а не все 7 828. (Индекс остаётся в вашей учебной копии; **База данных → ↺ Сбросить** его удаляет.)
@@ -321,8 +333,10 @@ SELECT * FROM payments WHERE loan_id = 2242;
 Привычка 3 на реальных данных — одно и то же количество, два плана:
 
 ```sql
-SELECT COUNT(*) FROM installments WHERE strftime('%Y-%m', due_date) = '2026-09';            -- 3 305, индекс не поможет
-SELECT COUNT(*) FROM installments WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01'; -- 3 305, поможет
+SELECT COUNT(*) FROM installments WHERE strftime('%Y-%m', due_date) = '2026-09';
+-- 3 305, индекс не поможет
+SELECT COUNT(*) FROM installments WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01';
+-- 3 305, поможет
 ```
 
 Оба говорят: 3 305 платежей по графику со сроком в сентябре. Только второй сможет использовать `ix_installments_due`, когда он появится.
@@ -348,11 +362,13 @@ SELECT COUNT(*) FROM installments WHERE due_date >= '2026-09-01' AND due_date < 
 ```sql
 -- 1. индекс по столбцу, который будет использовать фильтр
 CREATE INDEX IF NOT EXISTS ix_payments_paid ON payments (paid_at);
--- 2. представление над представлением: только нужные пакету столбцы, дата остаётся «голым» столбцом
+-- 2. представление над представлением: только нужные пакету столбцы, дата
+-- остаётся «голым» столбцом
 DROP VIEW IF EXISTS my_v_collections;
 CREATE VIEW my_v_collections AS
 SELECT paid_at, method, amount FROM v_payments_clean;
--- 3. замороженная таблица для пакета: полуоткрытый диапазон по «голому» столбцу, SELECT только нужного
+-- 3. замороженная таблица для пакета: полуоткрытый диапазон по «голому»
+-- столбцу, SELECT только нужного
 DROP TABLE IF EXISTS t_collections_2026_09;
 CREATE TABLE t_collections_2026_09 AS
 SELECT method, COUNT(*) AS payments, SUM(amount) AS collected
@@ -407,7 +423,8 @@ WITH unpaid AS (
   GROUP BY i.installment_id, i.loan_id, i.due_date, i.total_due
   HAVING COALESCE(SUM(p.amount), 0) < i.total_due),
 dpd AS (
-  SELECT loan_id, CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,     -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+  -- DATEDIFF(day, MIN(due_date), '2026-10-01')
+  SELECT loan_id, CAST(julianday('2026-10-01') - julianday(MIN(due_date)) AS INTEGER) AS dpd,
          COUNT(*) AS unpaid_instalments, SUM(overdue_amount) AS overdue_amount
   FROM unpaid GROUP BY loan_id),
 outst AS (
@@ -703,7 +720,8 @@ SELECT c.month_start AS month, c.product, c.branch_name,
 FROM cells c
 LEFT JOIN disb  d ON d.month_start = c.month_start AND d.product_id = c.product_id AND d.branch_id = c.branch_id
 LEFT JOIN outst o ON o.month_start = c.month_start AND o.product_id = c.product_id AND o.branch_id = c.branch_id;
--- 1 700 rows; 2026 month-end outstanding: Jan 151.8 bn · Mar 164.0 · Jun 184.6 · Aug 203.8 · Sep 208.2 bn
+-- 1 700 rows; 2026 month-end outstanding: Jan 151.8 bn · Mar 164.0 · Jun 184.6
+-- · Aug 203.8 · Sep 208.2 bn
 ```
 
 Первая версия этого представления соединяла `cells` (50 строк в месяц) с `loans` без сопоставления продукта и филиала — и показала 10 триллионов остатка долга. Сверочная проверка (`SUM(outstanding_month_end)` за сентябрь против `v_loan_status`) поймала это одной строкой. **Каждое представление поставляется со своим проверочным запросом**; для этого и нужны R1–R4 в HW 3.2.

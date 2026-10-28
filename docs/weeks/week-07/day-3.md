@@ -286,8 +286,10 @@ both:    products ◀─▶ v_loan_status ◀─▶ customers_clean ...   a segm
 ```dax
 FPD Loans by Due Date =
 CALCULATE (
-    COUNTROWS ( fct_first_instalment ),                                       -- what to count
-    USERELATIONSHIP ( dim_date[date], fct_first_instalment[first_due_date] )  -- use the dashed line, for this measure only
+    -- what to count
+    COUNTROWS ( fct_first_instalment ),
+    -- use the dashed line, for this measure only
+    USERELATIONSHIP ( dim_date[date], fct_first_instalment[first_due_date] )
 )
 ```
 
@@ -395,9 +397,12 @@ August 2026: 11 loans were disbursed and are already in scope, but 367 loans had
 **How to write it.**
 
 ```dax
-par30_outstanding = IF ( v_loan_status[dpd] > 30, v_loan_status[outstanding], 0 )             -- column: one value per loan
-Outstanding       = SUM ( v_loan_status[outstanding] )                                         -- measure: one value per cell
-PAR30 %           = DIVIDE ( SUM ( v_loan_status[par30_outstanding] ), [Outstanding] )         -- measure: a ratio of sums
+-- column: one value per loan
+par30_outstanding = IF ( v_loan_status[dpd] > 30, v_loan_status[outstanding], 0 )
+-- measure: one value per cell
+Outstanding       = SUM ( v_loan_status[outstanding] )
+-- measure: a ratio of sums
+PAR30 %           = DIVIDE ( SUM ( v_loan_status[par30_outstanding] ), [Outstanding] )
 ```
 
 | | calculated column | measure |

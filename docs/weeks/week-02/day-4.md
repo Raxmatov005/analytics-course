@@ -44,9 +44,11 @@ FROM customers;
 **How to write it.**
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE monthly_income = NULL;        -- 0, always: this is never true
-SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;       -- 356
-SELECT COUNT(*) FROM customers WHERE monthly_income <> 5000000;    -- 5 684, not 6 039: the 356 NULL rows fail this test too
+SELECT COUNT(*) FROM customers WHERE monthly_income = NULL;
+-- 0, always: this is never true
+SELECT COUNT(*) FROM customers WHERE monthly_income IS NULL;  -- 356
+SELECT COUNT(*) FROM customers WHERE monthly_income <> 5000000;
+-- 5 684, not 6 039: the 356 NULL rows fail this test too
 ```
 
 The 356 rows leave *every* comparison: `monthly_income > x` and `monthly_income <= x` together return 5 684 rows, not 6 040.
@@ -70,9 +72,10 @@ The 356 rows leave *every* comparison: `monthly_income > x` and `monthly_income 
 ```sql
 SELECT customer_id, monthly_income, monthly_income * 12 AS yearly_income
 FROM customers
-WHERE customer_id <= 5;                  -- five incomes, five yearly incomes
+WHERE customer_id <= 5;  -- five incomes, five yearly incomes
 SELECT COUNT(*) - COUNT(monthly_income * 12) AS no_yearly
-FROM customers;                          -- 356: every missing income gives a missing yearly income
+FROM customers;
+-- 356: every missing income gives a missing yearly income
 ```
 
 Customer 1 earns 3 894 708 a month, 46 736 496 a year. For the 356 customers with no income, `monthly_income * 12` is NULL as well.
@@ -125,13 +128,16 @@ The average income is 15.2 m UZS — of the 94 % of customers who have an income
 **How to write it.**
 
 ```sql
-SELECT COALESCE(NULL, NULL, 'x'),                -- 'x': the first non-NULL argument
-       IFNULL(NULL, 0);                          -- 0      SQL Server: ISNULL(NULL, 0)
+-- 'x': the first non-NULL argument
+SELECT COALESCE(NULL, NULL, 'x'),
+       IFNULL(NULL, 0);
+       -- 0      SQL Server: ISNULL(NULL, 0)
 
 SELECT customer_id,
-       COALESCE(CAST(monthly_income AS TEXT), 'unknown') AS income_shown   -- a label instead of an empty cell
+       -- a label instead of an empty cell
+       COALESCE(CAST(monthly_income AS TEXT), 'unknown') AS income_shown
 FROM customers
-WHERE customer_id IN (1, 14);                    -- 3894708 · unknown
+WHERE customer_id IN (1, 14);  -- 3894708 · unknown
 ```
 
 Wednesday's DPD query uses `COALESCE(SUM(p.amount), 0)`: an instalment with no payment gets "paid = 0" instead of NULL, so the test `paid < total_due` can be true for it.
@@ -157,7 +163,8 @@ SELECT b.branch_name, COUNT(*) AS applications,
        ROUND(100.0 * SUM(CASE WHEN a.status LIKE 'approved%' THEN 1 ELSE 0 END)
                    / NULLIF(SUM(CASE WHEN a.status <> 'cancelled' THEN 1 ELSE 0 END), 0), 1) AS approval_decided_pct
 FROM applications a JOIN branches b ON b.branch_id = a.branch_id
-GROUP BY b.branch_name ORDER BY approval_decided_pct DESC;      -- Fergana Central 72.8 … Nukus Central 68.5
+GROUP BY b.branch_name ORDER BY approval_decided_pct DESC;
+-- Fergana Central 72.8 … Nukus Central 68.5
 ```
 
 Fergana Central approves 72.8 % of the applications it decided; Nukus Central 68.5 %. No branch has zero decided applications today; the day one does, the report still runs. (`SUM(CASE …)` is explained four subsections down — read it as "count the rows where …".)
@@ -183,13 +190,15 @@ Fergana Central approves 72.8 % of the applications it decided; Nukus Central 68
 **How to write it.**
 
 ```sql
-SELECT CASE WHEN monthly_income IS NULL      THEN 'unknown'      -- the NULL test first
+-- the NULL test first
+SELECT CASE WHEN monthly_income IS NULL      THEN 'unknown'
             WHEN monthly_income <  5000000   THEN '<5m'
             WHEN monthly_income < 10000000   THEN '5-10m'
             WHEN monthly_income < 20000000   THEN '10-20m'
             ELSE '20m+' END AS income_band,
        COUNT(*) AS customers
-FROM customers GROUP BY income_band;        -- SQL Server: repeat the whole CASE in GROUP BY (no alias, no GROUP BY 1)
+FROM customers GROUP BY income_band;
+-- SQL Server: repeat the whole CASE in GROUP BY (no alias, no GROUP BY 1)
 -- unknown 356 · <5m 1281 · 5-10m 2198 · 10-20m 576 · 20m+ 1629
 ```
 
@@ -217,7 +226,8 @@ SELECT CASE channel WHEN 'app'    THEN 'Mobile app'
                     ELSE 'Partner shop' END AS channel_name,
        COUNT(*) AS applications
 FROM applications
-GROUP BY channel_name;                    -- Branch office 6 223 · Mobile app 5 006 · Partner shop 2 771
+GROUP BY channel_name;
+-- Branch office 6 223 · Mobile app 5 006 · Partner shop 2 771
 ```
 
 Three readable labels for the three channel codes; the counts are Tuesday's.
@@ -245,7 +255,9 @@ GROUP BY status
 ORDER BY CASE status WHEN 'active'      THEN 1
                      WHEN 'default'     THEN 2
                      WHEN 'written_off' THEN 3
-                     ELSE 4 END;          -- active 3 352 · default 44 · written_off 190 · closed 4 242
+                     ELSE 4 END;
+                     -- active 3 352 · default 44 · written_off 190 · closed 4
+                     -- 242
 ```
 
 The statuses come out in the order of a loan's life — active, then the bad outcomes, closed last — instead of `active, closed, default, written_off`.
@@ -310,9 +322,11 @@ This spelling is portable; SQLite's `SUM(cond)` and SQL Server's `IIF` from Tues
 
 ```sql
 SELECT COUNT(*) FROM customers c LEFT JOIN applications a ON a.customer_id = c.customer_id
-WHERE a.application_id IS NULL;                                                             -- 587 never applied
+WHERE a.application_id IS NULL;
+-- 587 never applied
 SELECT a.status, COUNT(*) FROM applications a LEFT JOIN loans l ON l.application_id = a.application_id
-WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;                    -- approved 89 · approved_not_disbursed 678
+WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;
+-- approved 89 · approved_not_disbursed 678
 ```
 
 587 customers never applied. 767 approved applications have no loan: 678 marked `approved_not_disbursed` and 89 marked `approved` — Monday's pipeline.
@@ -345,7 +359,8 @@ WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;        
 ```sql
 SELECT COUNT(*) AS rows_, COUNT(DISTINCT c.customer_id) AS customers
 FROM customers c
-LEFT JOIN loans l ON l.customer_id = c.customer_id AND l.status = 'active';   -- 6 894 · 6 040
+LEFT JOIN loans l ON l.customer_id = c.customer_id AND l.status = 'active';
+-- 6 894 · 6 040
 ```
 
 6 894 rows: one per active loan, plus one row with NULLs for every customer without an active loan. All 6 040 customers are there. Move the condition to `WHERE` and 3 352 rows remain — one per active loan; every other customer is gone.
@@ -369,7 +384,8 @@ LEFT JOIN loans l ON l.customer_id = c.customer_id AND l.status = 'active';   --
 ```sql
 SELECT a.customer_id, b.customer_id AS other_id, a.first_name, b.first_name AS other_first
 FROM customers a JOIN customers b
-  ON a.phone = b.phone AND a.birth_date = b.birth_date AND a.customer_id < b.customer_id;   -- 40 pairs
+  ON a.phone = b.phone AND a.birth_date = b.birth_date AND a.customer_id < b.customer_id;
+  -- 40 pairs
 ```
 
 40 pairs — exactly the 40 duplicates with ids 6001+. Phone alone gives 43 pairs: three are family members sharing a number.
@@ -400,7 +416,7 @@ SELECT COUNT(*) AS rows_, COUNT(DISTINCT p.payment_id) AS payments, COUNT(DISTIN
 FROM loans l
 JOIN payments p             ON p.loan_id  = l.loan_id
 JOIN collections_actions ca ON ca.loan_id = l.loan_id
-WHERE l.loan_id = 2167;                   -- 72 · 2 · 36 · 21 443 436
+WHERE l.loan_id = 2167;  -- 72 · 2 · 36 · 21 443 436
 ```
 
 72 rows = 2 payments × 36 actions. `SUM(p.amount)` says 21.4 m UZS; the loan's two payments really total 595 651 — each counted 36 times.
@@ -422,11 +438,13 @@ WHERE l.loan_id = 2167;                   -- 72 · 2 · 36 · 21 443 436
 **How to write it.**
 
 ```sql
-SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;                 -- 52 875 · 52 850
+SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;
+-- 52 875 · 52 850
 SELECT installment_id, paid_at, amount, COUNT(*) AS copies
 FROM payments
 GROUP BY installment_id, paid_at, amount
-HAVING COUNT(*) > 1;                                                            -- 25 rows, all with copies = 2
+HAVING COUNT(*) > 1;
+-- 25 rows, all with copies = 2
 ```
 
 25 instalments carry two payments, and each pair is identical — same instalment, same date, same amount. 58 397 800 UZS is counted twice in every "payments received" total.
@@ -448,15 +466,17 @@ HAVING COUNT(*) > 1;                                                            
 **How to write it.**
 
 ```sql
-WITH pay AS (SELECT loan_id, COUNT(*) AS payments, SUM(amount) AS paid      -- one row per loan
+-- one row per loan
+WITH pay AS (SELECT loan_id, COUNT(*) AS payments, SUM(amount) AS paid
              FROM payments GROUP BY loan_id),
-     act AS (SELECT loan_id, COUNT(*) AS actions                            -- one row per loan
+     -- one row per loan
+     act AS (SELECT loan_id, COUNT(*) AS actions
              FROM collections_actions GROUP BY loan_id)
 SELECT l.loan_id, pay.payments, pay.paid, act.actions
 FROM loans l
 LEFT JOIN pay ON pay.loan_id = l.loan_id
 LEFT JOIN act ON act.loan_id = l.loan_id
-WHERE l.loan_id = 2167;                    -- 2 · 595 651 · 36
+WHERE l.loan_id = 2167;  -- 2 · 595 651 · 36
 ```
 
 One row for loan 2167: 2 payments, 595 651 UZS paid, 36 actions — the true numbers. The same idea removes the 25 duplicate payments: `WITH clean AS (SELECT DISTINCT loan_id, installment_id, paid_at, amount FROM payments)` has 52 850 rows.
@@ -474,17 +494,24 @@ One row for loan 2167: 2 payments, 595 651 UZS paid, 36 actions — the true num
 One request, the day's tools together. *"By income band, unknown included: customers, loans, and the share of loans that went bad (default or written off)."*
 
 ```sql
-SELECT CASE WHEN c.monthly_income IS NULL     THEN 'unknown'                          -- NULL test first
+-- NULL test first
+SELECT CASE WHEN c.monthly_income IS NULL     THEN 'unknown'
             WHEN c.monthly_income <  5000000  THEN '<5m'
             WHEN c.monthly_income < 20000000  THEN '5-20m'
-            ELSE '20m+' END                                    AS income_band,        -- searched CASE
-       COUNT(DISTINCT c.customer_id)                           AS customers,          -- the join multiplies customers
-       COUNT(l.loan_id)                                        AS loans,              -- NULL (no loan) is not counted
-       SUM(CASE WHEN l.status IN ('default', 'written_off') THEN 1 ELSE 0 END) AS bad_loans,   -- count where
+            -- searched CASE
+            ELSE '20m+' END                                    AS income_band,
+       -- the join multiplies customers
+       COUNT(DISTINCT c.customer_id)                           AS customers,
+       -- NULL (no loan) is not counted
+       COUNT(l.loan_id)                                        AS loans,
+       -- count where
+       SUM(CASE WHEN l.status IN ('default', 'written_off') THEN 1 ELSE 0 END) AS bad_loans,
        ROUND(100.0 * SUM(CASE WHEN l.status IN ('default', 'written_off') THEN 1 ELSE 0 END)
-                   / NULLIF(COUNT(l.loan_id), 0), 1)           AS bad_pct             -- safe division
+                   -- safe division
+                   / NULLIF(COUNT(l.loan_id), 0), 1)           AS bad_pct
 FROM customers c
-LEFT JOIN loans l ON l.customer_id = c.customer_id                                   -- customers without loans stay
+-- customers without loans stay
+LEFT JOIN loans l ON l.customer_id = c.customer_id
 GROUP BY income_band
 ORDER BY bad_pct DESC;
 ```
@@ -555,8 +582,10 @@ Questions whose answer is a query have a box under them — write, **▶ Run**, 
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at = NULL;       -- 0: never true
-SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL;      -- 15
+SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at = NULL;
+-- 0: never true
+SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL;
+-- 15
 ```
 15 loans are "closed" but have no closing date. The `= NULL` version answers 0 without any error — the most dangerous kind of wrong.
 
@@ -568,8 +597,10 @@ SELECT COUNT(*) FROM loans WHERE status = 'closed' AND closed_at IS NULL;      -
 
 ```sql
 SELECT i.installment_no, i.total_due, p.amount,
-       i.total_due - p.amount              AS gap_raw,          -- NULL on 6 rows
-       i.total_due - COALESCE(p.amount, 0) AS left_to_pay       -- the full amount on those rows
+       -- NULL on 6 rows
+       i.total_due - p.amount              AS gap_raw,
+       -- the full amount on those rows
+       i.total_due - COALESCE(p.amount, 0) AS left_to_pay
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id
 WHERE i.loan_id = 1
@@ -586,7 +617,8 @@ ORDER BY i.installment_no;
 ```sql
 SELECT COUNT(*) AS rows_, COUNT(monthly_income) AS with_income, COUNT(*) - COUNT(monthly_income) AS missing,
        ROUND(100.0 * (COUNT(*) - COUNT(monthly_income)) / COUNT(*), 2) AS missing_pct
-FROM customers;                                                        -- 6040 · 5684 · 356 · 5.89
+FROM customers;
+-- 6040 · 5684 · 356 · 5.89
 ```
 
 </details>
@@ -598,10 +630,12 @@ FROM customers;                                                        -- 6040 �
 ```sql
 SELECT channel, COUNT(*) AS apps, COUNT(*) - COUNT(credit_score) AS no_score,
        ROUND(100.0 * (COUNT(*) - COUNT(credit_score)) / COUNT(*), 2) AS no_score_pct
-FROM applications GROUP BY channel;             -- app 2.64 · branch 2.80 · partner 2.96
+FROM applications GROUP BY channel;
+-- app 2.64 · branch 2.80 · partner 2.96
 SELECT status, COUNT(*) AS apps, COUNT(*) - COUNT(credit_score) AS no_score,
        ROUND(100.0 * (COUNT(*) - COUNT(credit_score)) / COUNT(*), 2) AS no_score_pct
-FROM applications GROUP BY status;              -- approved 2.69 · approved_not_disbursed 2.36 · cancelled 2.81 · rejected 3.01
+FROM applications GROUP BY status;
+-- approved 2.69 · approved_not_disbursed 2.36 · cancelled 2.81 · rejected 3.01
 ```
 Flat enough to be random here; in real data a higher share among rejections often means "no bureau file → rejected", which is a policy, not a gap.
 
@@ -642,7 +676,8 @@ SELECT channel,
        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END)     AS rejected,
        ROUND(1.0 * SUM(CASE WHEN status LIKE 'approved%' THEN 1 ELSE 0 END)
                  / NULLIF(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0), 2) AS approved_per_rejected
-FROM applications GROUP BY channel;      -- app 2.14 · branch 2.62 · partner 2.40
+FROM applications GROUP BY channel;
+-- app 2.14 · branch 2.62 · partner 2.40
 ```
 The branch approves 2.62 applications for every one it rejects; the app 2.14. A channel with no rejections would show NULL, not stop the query.
 
@@ -657,7 +692,8 @@ SELECT CASE WHEN credit_score IS NULL THEN 'no score' WHEN credit_score >= 720 T
             WHEN credit_score >= 660 THEN 'B 660-719' WHEN credit_score >= 600 THEN 'C 600-659' ELSE 'D <600' END AS band,
        COUNT(*) AS apps, ROUND(100.0 * SUM(CASE WHEN status LIKE 'approved%' THEN 1 ELSE 0 END) / COUNT(*), 1) AS approval_pct
 FROM applications GROUP BY band ORDER BY band;
--- A 2150 / 91.3 % · B 4702 / 77.4 · C 4605 / 52.2 · D 2155 / 16.8 · no score 388 / 59.0
+-- A 2150 / 91.3 % · B 4702 / 77.4 · C 4605 / 52.2 · D 2155 / 16.8 · no score
+-- 388 / 59.0
 ```
 The bands add to 14 000 only because the NULL band exists. 59 % for "no score" sits between B and C — someone decides those by hand.
 
@@ -672,7 +708,8 @@ SELECT CASE segment WHEN 'mass'     THEN 'Mass market'
                     WHEN 'affluent' THEN 'Affluent'
                     ELSE 'Small business' END AS segment_name,
        COUNT(*) AS customers
-FROM customers GROUP BY segment_name;    -- Affluent 1204 · Mass market 3585 · Small business 1251
+FROM customers GROUP BY segment_name;
+-- Affluent 1204 · Mass market 3585 · Small business 1251
 ```
 
 </details>
@@ -716,12 +753,14 @@ app 2 693 / 222 / 1 359 / 732 = 5 006 · branch 3 636 / 329 / 1 513 / 745 = 6 22
 ```sql
 -- (a)
 SELECT COUNT(*) FROM customers c LEFT JOIN applications a ON a.customer_id = c.customer_id
-WHERE a.application_id IS NULL;                                                  -- 587
+WHERE a.application_id IS NULL;
+-- 587
 -- (b) with a join: rows vs distinct customers
 SELECT COUNT(*) AS rows_, COUNT(DISTINCT c.customer_id) AS customers
 FROM customers c JOIN applications a ON a.customer_id = c.customer_id
 LEFT JOIN loans l ON l.customer_id = c.customer_id
-WHERE l.loan_id IS NULL;                                                         -- 1806 · 1118
+WHERE l.loan_id IS NULL;
+-- 1806 · 1118
 -- (b) with EXCEPT (Tuesday's set operator): the list of 1118 customers
 SELECT customer_id FROM applications EXCEPT SELECT customer_id FROM loans;
 -- (c) Day 3's WITH block, then the anti-join on collections_actions
@@ -741,7 +780,8 @@ SELECT COUNT(*) AS never_contacted,
        SUM(CASE WHEN d.dpd > 0 THEN 1 ELSE 0 END) AS late_never_contacted,
        SUM(CASE WHEN d.dpd BETWEEN 1 AND 30 THEN 1 ELSE 0 END) AS of_which_1_30
 FROM dpd d LEFT JOIN collections_actions ca ON ca.loan_id = d.loan_id
-WHERE ca.action_id IS NULL;                                                      -- 130 · 117 · 106
+WHERE ca.action_id IS NULL;
+-- 130 · 117 · 106
 ```
 (a) 587. (b) **1 806 rows but 1 118 customers** — the join to `applications` multiplied by applications per person; use `COUNT(DISTINCT c.customer_id)`, or Tuesday's `EXCEPT` → 1 118 directly. (c) 117 of the 399 delinquent (DPD > 0) loans have never been contacted (130 of 413 if you also count the 13 that fall due today — those cannot have been called yet); 106 of the 124 loans in the 1–30 bucket among them. Sevara's team works the old debt and has not yet reached the new.
 
@@ -762,12 +802,14 @@ How many of the 399 delinquent loans (DPD > 0) have never had a collections acti
 SELECT COUNT(*) AS rows_, COUNT(p.payment_id) AS with_payment
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id AND p.paid_at <= '2026-10-01'
-WHERE i.due_date <= '2026-10-01';                                                -- 54232 · 52851
+WHERE i.due_date <= '2026-10-01';
+-- 54232 · 52851
 -- (b) the filter in WHERE
 SELECT COUNT(*) AS rows_
 FROM installments i
 LEFT JOIN payments p ON p.installment_id = i.installment_id
-WHERE i.due_date <= '2026-10-01' AND p.paid_at <= '2026-10-01';                  -- 52851
+WHERE i.due_date <= '2026-10-01' AND p.paid_at <= '2026-10-01';
+-- 52851
 ```
 (a) 54 232 rows (54 207 matured instalments + 25 duplicate payments), `COUNT(p.payment_id)` 52 851. (b) 52 851 rows: every instalment without a payment is gone — `NULL <= '2026-10-01'` is not true. 24 payments are dated after the as-of date; with the filter in `ON` they are ignored *and* the unpaid instalments stay. (Re-running Day 3's DPD with that `ON` filter gives exactly the same DPD for every loan — none of the 24 changes a loan's oldest not-fully-paid instalment.)
 
@@ -803,9 +845,12 @@ How many pairs, and what are they?
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*) FROM installments i JOIN payments p ON p.loan_id = i.loan_id WHERE i.loan_id = 1;   -- 432
-SELECT COUNT(*) FROM installments WHERE loan_id = 1;                                                 -- 24
-SELECT COUNT(*) FROM payments WHERE loan_id = 1;                                                     -- 18
+SELECT COUNT(*) FROM installments i JOIN payments p ON p.loan_id = i.loan_id WHERE i.loan_id = 1;
+-- 432
+SELECT COUNT(*) FROM installments WHERE loan_id = 1;
+-- 24
+SELECT COUNT(*) FROM payments WHERE loan_id = 1;
+-- 18
 ```
 432 = 24 instalments × 18 payments: `loan_id` is the parent key of both tables, so every instalment meets every payment of the loan. The right key, `installment_id`, gives one row per payment (18) — or 24 with a LEFT JOIN.
 
@@ -820,9 +865,11 @@ SELECT COUNT(*) FROM payments WHERE loan_id = 1;                                
 <details><summary>Answer</summary>
 
 ```sql
-SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;                 -- 52875 · 52850
+SELECT COUNT(*), COUNT(DISTINCT installment_id) FROM payments;
+-- 52875 · 52850
 SELECT installment_id, paid_at, amount, COUNT(*) FROM payments
-GROUP BY installment_id, paid_at, amount HAVING COUNT(*) > 1;                  -- 25 rows, all COUNT = 2
+GROUP BY installment_id, paid_at, amount HAVING COUNT(*) > 1;
+-- 25 rows, all COUNT = 2
 ```
 58 397 800 UZS is double-counted in every "payments received" total; the 25 instalments look *over*paid by exactly their amount. Removing them needs row numbers — Week 3 Day 2.
 
@@ -840,7 +887,8 @@ FROM act
 LEFT JOIN pay ON pay.loan_id = act.loan_id
 ORDER BY act.actions DESC
 LIMIT 3;
--- 2235 · 151 actions · 7 payments · 29 554 662   |   6945 · 144 · 17 · 132 363 259   |   1494 · 143 · 10 · 75 023 491
+-- 2235 · 151 actions · 7 payments · 29 554 662   |   6945 · 144 · 17 · 132 363
+-- 259   |   1494 · 143 · 10 · 75 023 491
 ```
 One row per loan, true amounts. The fanned-out join would have summed loan 2235's payments 151 times: about 4.5 bn UZS instead of 29.6 m.
 
@@ -866,7 +914,8 @@ flags AS (
               ELSE 0 END AS fpd30
   FROM first_inst f
 )
-SELECT COUNT(*) AS loans_in_scope, SUM(fpd30) AS fpd30 FROM flags;             -- 7099 · 91
+SELECT COUNT(*) AS loans_in_scope, SUM(fpd30) AS fpd30 FROM flags;
+-- 7099 · 91
 ```
 7 099 loans in scope, **91** flagged — 51 unpaid or partially paid, 40 paid in full but more than 30 days late. Both parts of the `CASE` matter: a strict "unpaid only" rule gives 51 (0.72 %).
 
@@ -898,7 +947,8 @@ SELECT COUNT(*) AS loans_in_scope,
                 WHEN julianday(first_paid) - julianday(due_date) > 30 THEN 1 ELSE 0 END) AS spd30,
        ROUND(100.0 * SUM(CASE WHEN paid < total_due THEN 1
                               WHEN julianday(first_paid) - julianday(due_date) > 30 THEN 1 ELSE 0 END) / COUNT(*), 2) AS spd30_pct
-FROM second_inst;                                                               -- 6735 · 156 · 2.32
+FROM second_inst;
+-- 6735 · 156 · 2.32
 ```
 156 of 6 735 = **2.32 %** vs 1.28 %. Not alarming by itself: the second instalment has had one more month for ordinary financial trouble to appear, and the scope is one month older. FPD isolates the "never meant to pay" signal; SPD/TPD show the early-trouble curve. Report them side by side per vintage.
 
@@ -954,22 +1004,27 @@ No new homework. **HW 2.2** (Sevara's 2026 lateness report, clean methods, the u
 The query has the shape of Wednesday's DPD: two named steps in a `WITH` block, then a grouped `SELECT`. `WITH` is week 3's tool — today read it as two named results, run it, and change only the last `SELECT`.
 
 ```sql
-WITH first_inst AS (                                   -- one row per loan in scope: due, total, first payment date, paid amount
+-- one row per loan in scope: due, total, first payment date, paid amount
+WITH first_inst AS (
   SELECT i.loan_id, i.due_date, i.total_due, MIN(p.paid_at) AS first_paid, COALESCE(SUM(p.amount), 0) AS paid
   FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.installment_no = 1
-    AND i.due_date <= date('2026-10-01', '-30 days')    -- SQL Server: DATEADD(day, -30, '2026-10-01')
+    -- SQL Server: DATEADD(day, -30, '2026-10-01')
+    AND i.due_date <= date('2026-10-01', '-30 days')
   GROUP BY i.loan_id, i.due_date, i.total_due
 ),
 flags AS (
   SELECT f.loan_id,
-         CASE WHEN f.paid < f.total_due THEN 1                                            -- never fully paid
-              WHEN julianday(f.first_paid) - julianday(f.due_date) > 30 THEN 1           -- DATEDIFF(day, f.due_date, f.first_paid) > 30
+         -- never fully paid
+         CASE WHEN f.paid < f.total_due THEN 1
+              -- DATEDIFF(day, f.due_date, f.first_paid) > 30
+              WHEN julianday(f.first_paid) - julianday(f.due_date) > 30 THEN 1
               ELSE 0 END AS fpd30
   FROM first_inst f
 )
-SELECT strftime('%Y-%m', l.disbursed_at) AS vintage,                                     -- FORMAT(l.disbursed_at, 'yyyy-MM')
+-- FORMAT(l.disbursed_at, 'yyyy-MM')
+SELECT strftime('%Y-%m', l.disbursed_at) AS vintage,
        a.channel,
        COUNT(*) AS loans,
        SUM(fpd30) AS fpd,

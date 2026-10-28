@@ -90,15 +90,22 @@ Every task: code with printed output, then **two sentences** for Kamola (product
 ```python
 # (shape only — not meant to run: the template's helpers live in the notebook)
 ...
-reg = users[users["region"] != "Tashkent"]                                # 16 738 rows
-reg["user_id"].nunique(), len(reg)                                       # 16 558 users, 16 738 rows
-dup_ids = reg.loc[reg["user_id"].duplicated(), "user_id"].unique()        # 180 users, each in A and B
-stats.chisquare(reg["variant"].value_counts().values).pvalue             # rows 8 299 / 8 439: p = 0.28
+# 16 738 rows
+reg = users[users["region"] != "Tashkent"]
+# 16 558 users, 16 738 rows
+reg["user_id"].nunique(), len(reg)
+# 180 users, each in A and B
+dup_ids = reg.loc[reg["user_id"].duplicated(), "user_id"].unique()
+# rows 8 299 / 8 439: p = 0.28
+stats.chisquare(reg["variant"].value_counts().values).pvalue
 ud = reg[~reg["user_id"].isin(dup_ids)].assign(week=lambda t: (t.assigned_at - pd.Timestamp("2026-08-01")).dt.days // 7 + 1)
-stats.chisquare(ud["variant"].value_counts().values).pvalue              # users 8 119 / 8 259: p = 0.27
-srm_by(ud, ["device", "week"])                                           # iOS wk4: 330 / 482 (59.4 % B), p = 9.6e-8; all other cells p >= 0.13
+# users 8 119 / 8 259: p = 0.27
+stats.chisquare(ud["variant"].value_counts().values).pvalue
+# iOS wk4: 330 / 482 (59.4 % B), p = 9.6e-8; all other cells p >= 0.13
+srm_by(ud, ["device", "week"])
 expected = reg["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
-(reg["variant"] != expected).sum()                                       # 261 = 180 leak re-assignments + 81 iOS wk4 users logged B, hash A
+# 261 = 180 leak re-assignments + 81 iOS wk4 users logged B, hash A
+(reg["variant"] != expected).sum()
 ```
 
 Threshold: p < 0.001 for SRM (many slices are checked). Problems: (1) **180 users in both variants** (360 rows; first assignment A for 111, B for 69) — removed entirely; (2) **SRM in iOS, 22–28 August**: 812 users, 59.4 % B, 81 of them hash-A users logged as B — the cell is removed from both arms (after: 7 789 / 7 777, p = 0.92). Device iOS overall (p = 0.0070) is the same bug seen through a wider slice; week 4 as a whole (p = 0.12) does not show it at all.
@@ -132,12 +139,15 @@ Daily conversion (de-duplicated), B − A on 1–3 August: **+2.8, +0.3, +2.0** 
 ```python
 # (shape only — not meant to run: the template's helpers live in the notebook)
 ...
-clean = with_conversion(clean_users(reg), events)                       # 13 725 users: A 6 883, B 6 842 (SRM p = 0.73)
+# 13 725 users: A 6 883, B 6 842 (SRM p = 0.73)
+clean = with_conversion(clean_users(reg), events)
 ab_readout(clean)
-# A 530 / 6 883 = 7.70 % · B 599 / 6 842 = 8.75 % · diff +1.05 pt (Newcombe +0.14 to +1.98) · z = 2.25, p = 0.025
+# A 530 / 6 883 = 7.70 % · B 599 / 6 842 = 8.75 % · diff +1.05 pt (Newcombe
+# +0.14 to +1.98) · z = 2.25, p = 0.025
 # relative +13.7 % (log-ratio CI +1.7 % to +27.2 %)
 ab_readout(with_conversion(reg, events))
-# raw: 8.12 % vs 9.10 % · +0.98 pt (+0.13 to +1.83) · p = 0.024 · +12.1 % (+1.5 to +23.7)
+# raw: 8.12 % vs 9.10 % · +0.98 pt (+0.13 to +1.83) · p = 0.024 · +12.1 % (+1.5
+# to +23.7)
 ```
 
 | population | diff (95 % CI) | p | relative |
@@ -178,8 +188,10 @@ Funnel (clean): start 33.3 vs 33.3 % (p 0.95); submit 73.5 vs 74.6 % of starters
 ...
 lc = loans.merge(clean[["user_id", "variant"]], on="user_id").assign(fpd=lambda t: 1 - t.first_instalment_paid_within_30d)
 # A 6 / 575 = 1.04 % (Wilson 0.48-2.26) · B 14 / 636 = 2.20 % (1.32-3.66)
-# z-test p = 0.11 · Fisher p = 0.17 · difference +1.16 pt (Newcombe -0.35 to +2.72)
-# power for a true +1.16 pt at these n: 37 % · loans per arm for 80 % power: 1 809 (~20 700 users per arm)
+# z-test p = 0.11 · Fisher p = 0.17 · difference +1.16 pt (Newcombe -0.35 to
+# +2.72)
+# power for a true +1.16 pt at these n: 37 % · loans per arm for 80 % power: 1
+# 809 (~20 700 users per arm)
 ```
 
 Unit economics (interest 9.856 % of principal = 266 662 ÷ 2 705 586, LGD 60 %, FPD ≈ PD): per 1 000 viewers **A 18 555 488**, **B 18 303 993** (−1.4 %); break-even FPD for B **2.04 %** = A + **0.99** points — and B's observed 2.20 % is already above it; at the CI's upper end (3.77 %) B makes 15 898 606 (−14.3 % vs A).
@@ -460,7 +472,7 @@ def with_conversion(users, events, window_days=7):
     return users.assign(conv=users["user_id"].isin(ok["user_id"]).astype(int))
 
 dup_ids = users.loc[users["user_id"].duplicated(), "user_id"].unique()
-print(len(users), len(events), len(dup_ids))      # 27974 67215 300
+print(len(users), len(events), len(dup_ids))  # 27974 67215 300
 ```
 
 ```challenge

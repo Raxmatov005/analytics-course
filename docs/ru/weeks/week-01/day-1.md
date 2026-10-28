@@ -51,7 +51,8 @@ SELECT COUNT(*) AS loans FROM loans;   -- ожидайте 7828
 Нажмите **▶ Выполнить**, чтобы увидеть те же три строки со всеми столбцами:
 
 ```sql
-SELECT * FROM customers LIMIT 3;   -- * = все столбцы, LIMIT 3 = первые три строки (оба объясняются в День 2)
+SELECT * FROM customers LIMIT 3;
+-- * = все столбцы, LIMIT 3 = первые три строки (оба объясняются в День 2)
 ```
 
 3 строки, 11 столбцов. Во всей таблице 6 040 строк — по одной на каждого зарегистрированного клиента.
@@ -87,7 +88,8 @@ SELECT * FROM customers LIMIT 3;   -- * = все столбцы, LIMIT 3 = пе�
 
 ```sql
 SELECT loan_id, principal, annual_rate, disbursed_at,
-       typeof(principal), typeof(annual_rate), typeof(disbursed_at)   -- typeof() = «какого типа это значение?» в SQLite
+       -- typeof() = «какого типа это значение?» в SQLite
+       typeof(principal), typeof(annual_rate), typeof(disbursed_at)
 FROM loans
 LIMIT 3;
 ```
@@ -117,7 +119,8 @@ LIMIT 3;
 **Как пишется.** Спросите одно значение первичного ключа — и вернётся ровно одна строка:
 
 ```sql
-SELECT * FROM loans WHERE loan_id = 1;   -- WHERE оставляет только подходящие строки (День 2)
+SELECT * FROM loans WHERE loan_id = 1;
+-- WHERE оставляет только подходящие строки (День 2)
 ```
 
 1 строка — кредит 1: клиент 3473, продукт 2, основной долг 31 150 000, 24 месяца, выдан 2025-03-28, статус `active`. У каждой из одиннадцати таблиц свой первичный ключ. Его имя кончается на `_id` (в `dim_date` — `date_key`).
@@ -256,7 +259,8 @@ WHERE customer_id = 3473;
 | `app_events` | что произошло | одно нажатие в мобильном приложении | `event_id` | `customer_id`, `application_id` |
 
 ```sql
-SELECT COUNT(*) FROM payments;   -- поменяйте имя таблицы, чтобы посчитать строки любой из одиннадцати
+SELECT COUNT(*) FROM payments;
+-- поменяйте имя таблицы, чтобы посчитать строки любой из одиннадцати
 ```
 
 52 875 строк — по одной на каждый полученный платёж. В `products` 5 строк. Таблицы «что произошло» длинные, таблицы «кто/что» — короткие.
@@ -276,13 +280,24 @@ SELECT COUNT(*) FROM payments;   -- поменяйте имя таблицы, ч
 **Как пишется.** Путь в виде схемы:
 
 ```text
-customers ──▶ applications ──(approved)──▶ loans ──┬──▶ installments         (график: что положено платить)
-  (кто)       (заявка)                   (выдан)   ├──▶ payments             (что пришло)
-                                                   └──▶ collections_actions  (если платёж просрочен)
-
-applications.status:  approved · approved_not_disbursed · rejected · cancelled
-loans.status:         active · closed · default · written_off
+customers           кто
+   │
+   ▼
+applications        заявка
+   │
+   │ approved
+   ▼
+loans               выдан
+   ├──▶ installments
+   │      график: что положено платить
+   ├──▶ payments
+   │      что пришло
+   └──▶ collections_actions
+          если платёж просрочен
 ```
+
+- `applications.status`: approved · approved_not_disbursed · rejected · cancelled
+- `loans.status`: active · closed · default · written_off
 
 Кредит 1 начался с заявки 2. Первый шаг его жизненного цикла:
 

@@ -90,7 +90,8 @@ SELECT channel,
        ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END)
              / SUM(CASE WHEN status <> 'cancelled' THEN 1 ELSE 0 END), 1) AS approval_rate_pct
 FROM applications
-WHERE applied_at >= '2026-01-01' AND applied_at < '2026-10-01'      -- не BETWEEN: в applied_at есть время
+-- не BETWEEN: в applied_at есть время
+WHERE applied_at >= '2026-01-01' AND applied_at < '2026-10-01'
 GROUP BY channel
 ORDER BY approval_rate_pct DESC;
 ```
@@ -120,11 +121,13 @@ WITH b AS (
   WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01'
   GROUP BY br.branch_name)
 SELECT branch_name, disbursed,
-       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1) AS share_pct,      -- окно по всему результату
+       -- окно по всему результату
+       ROUND(100.0 * disbursed / SUM(disbursed) OVER (), 1) AS share_pct,
        RANK() OVER (ORDER BY disbursed DESC) AS rnk
 FROM b
 ORDER BY disbursed DESC
-LIMIT 3;                                                                     -- SQL Server: SELECT TOP 3
+LIMIT 3;
+-- SQL Server: SELECT TOP 3
 ```
 
 | branch_name | disbursed | share_pct | rnk |
@@ -165,7 +168,8 @@ WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = a.customer_id);
 
 ```sql
 WITH m AS (
-  SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS amount   -- SQL Server: FORMAT(disbursed_at, 'yyyy-MM')
+  -- SQL Server: FORMAT(disbursed_at, 'yyyy-MM')
+  SELECT strftime('%Y-%m', disbursed_at) AS month, COUNT(*) AS loans, SUM(principal) AS amount
   FROM loans
   WHERE disbursed_at >= '2026-01-01' AND disbursed_at < '2026-10-01'
   GROUP BY 1)
@@ -220,16 +224,20 @@ FROM r WHERE rn > 1;
 <details><summary>Запрос и результат</summary>
 
 ```sql
-WITH clean_pay AS (                                                  -- дедуплицированные платежи, как в B5
+-- дедуплицированные платежи, как в B5
+WITH clean_pay AS (
   SELECT * FROM (
     SELECT p.*, ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
     FROM payments p) WHERE rn = 1),
 first_inst AS (
   SELECT i.loan_id, i.total_due,
-         COALESCE(SUM(CASE WHEN p.paid_at < date(i.due_date, '+31 days') THEN p.amount END), 0) AS paid_30   -- полуоткрытый интервал: включая 30-й день; DATEADD(day, 31, i.due_date)
+         -- полуоткрытый интервал: включая 30-й день; DATEADD(day, 31,
+         -- i.due_date)
+         COALESCE(SUM(CASE WHEN p.paid_at < date(i.due_date, '+31 days') THEN p.amount END), 0) AS paid_30
   FROM installments i
   LEFT JOIN clean_pay p ON p.installment_id = i.installment_id
-  WHERE i.installment_no = 1 AND i.due_date <= '2026-09-01'          -- только кредиты, у которых 30 дней уже прошли
+  -- только кредиты, у которых 30 дней уже прошли
+  WHERE i.installment_no = 1 AND i.due_date <= '2026-09-01'
   GROUP BY i.loan_id, i.total_due)
 SELECT a.channel, COUNT(*) AS loans,
        SUM(CASE WHEN f.paid_30 < f.total_due THEN 1 ELSE 0 END) AS fpd30,

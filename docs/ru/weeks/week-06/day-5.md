@@ -31,10 +31,13 @@
 
 ```python
 # (shape only — not meant to run)
-# A0 (example). FPD30, app vs branch — grain: one loan in FPD scope (f, 7 099 rows)
+# A0 (example). FPD30, app vs branch — grain: one loan in FPD scope (f, 7 099
+# rows)
 k = f.groupby("channel")["fpd30"].agg(["sum", "size"]).loc[["app", "branch"]]
-print(proportions_ztest(k["sum"], k["size"]))                       # (2.147, 0.0318)
-print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))   # (+0.0005, +0.0133)
+# (2.147, 0.0318)
+print(proportions_ztest(k["sum"], k["size"]))
+# (+0.0005, +0.0133)
+print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))
 ```
 
 > **Интерпретация.** FPD30 у приложения 1.70 % против 1.04 % у филиалов (+0.66 пункта, 95 % CI от +0.05 до +1.33; z-критерий p = 0.032), около 7 дополнительных дефолтов по первому платежу на 1 000 кредитов. Разрыв реален при 5 %, но мал в деньгах и смешан с продуктом, поэтому он поддерживает недорогое исправление и повторный тест, а не закрытие канала.
@@ -146,12 +149,16 @@ a2[["wilson_lo", "wilson_hi"]] = [proportion_confint(k, n, method="wilson") for 
 # grain: one row per clean payment; sme 11 413, mass 30 601 payments
 seg = pd.read_sql("SELECT l.loan_id, c.segment FROM loans l JOIN customers c ON c.customer_id = l.customer_id", con)
 xs = x.merge(seg, on="loan_id")
-t = pd.crosstab(xs["segment"], xs["late"]).loc[["sme", "mass"]]       # sme 9 925 / 1 488 · mass 26 752 / 3 849
+# sme 9 925 / 1 488 · mass 26 752 / 3 849
+t = pd.crosstab(xs["segment"], xs["late"]).loc[["sme", "mass"]]
 k, n = t[1].to_numpy(), t.sum(axis=1).to_numpy()
-proportions_ztest(k, n)                                                # z = 1.26, p = 0.21
-stats.chi2_contingency(t, correction=False)[:2]                        # chi2 = 1.58 (= z²), same p
+# z = 1.26, p = 0.21
+proportions_ztest(k, n)
+# chi2 = 1.58 (= z²), same p
+stats.chi2_contingency(t, correction=False)[:2]
 # late share sme 13.04 % · mass 12.58 % · diff +0.46 pp · RR 1.04
-# loan level (any late payment): sme 802 / 1 609 = 49.8 % · mass 2 234 / 4 345 = 51.4 %; z = -1.08, p = 0.28
+# loan level (any late payment): sme 802 / 1 609 = 49.8 % · mass 2 234 / 4 345 =
+# 51.4 %; z = -1.08, p = 0.28
 ```
 
 *Интерпретация.* Платежи клиентов сегмента sme просрочены в 13.0 % случаев против 12.6 % у клиентов mass — +0.46 пункта, RR 1.04, p = 0.21, — то есть данные не показывают различий в просрочке между сегментами, а на уровне кредитов направление даже меняется на обратное (49.8 % против 51.4 % кредитов с любой просрочкой, p = 0.28). Не назначайте цену и лимиты по сегменту клиента на таком основании; единица «платёж» могла лишь завысить различие, а проверка на уровне кредитов говорит, что объяснять нечего, — просрочников разделяет грейд риска (День 3).
@@ -183,8 +190,9 @@ cc = x.loc[(x.code == "CONS") & (x.risk_grade == "C"), "days_late"]
 # mean         -0.403     0.886
 # skew          6.366     4.438
 # share late    0.094     0.184
-u = stats.mannwhitneyu(cb, cc, alternative="two-sided")    # U = 26 323 435, p = 8.3e-27
-u.statistic / (len(cb) * len(cc))                          # 0.4504
+# U = 26 323 435, p = 8.3e-27
+u = stats.mannwhitneyu(cb, cc, alternative="two-sided")
+u.statistic / (len(cb) * len(cc))  # 0.4504
 ```
 
 Почему не t-критерий: дни просрочки сильно асимметричны вправо (асимметрия 4–6) при одинаковой медиане в обеих группах, поэтому среднее определяется тонким хвостом очень поздних платежей; вопрос «платят ли заёмщики по потребительским кредитам грейда C позже, чем грейда B?» — о типичном платеже, на что отвечает ранговый тест. (При n в тысячах тест Уэлча для средних всё равно *корректен* — t = −11.70, p = 2.1 × 10⁻³¹ — просто он отвечает на другой вопрос.)
@@ -210,12 +218,15 @@ u.statistic / (len(cb) * len(cc))                          # 0.4504
 
 ```python
 # (shape only — not meant to run)
-p1 = 2915 / 4274                                                  # 68.20 %
-h = proportion_effectsize(p1 + 0.02, p1)                          # 0.0433
-n_arm = int(np.ceil(zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80)))     # 8 362 per arm, 16 724 total
+p1 = 2915 / 4274                          # 68.20 %
+h = proportion_effectsize(p1 + 0.02, p1)  # 0.0433
+# 8 362 per arm, 16 724 total
+n_arm = int(np.ceil(zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80)))
 dec = apps[(apps.channel == "app") & (apps.status != "cancelled")
-           & (apps.applied_at >= "2026-01-01") & (apps.applied_at < "2026-10-01")]       # nine full months
-dec.groupby(dec.applied_at.dt.to_period("M")).size().mean()      # 183.0 a month → 16 724 / 183.0 ≈ 91 months
+           # nine full months
+           & (apps.applied_at >= "2026-01-01") & (apps.applied_at < "2026-10-01")]
+# 183.0 a month → 16 724 / 183.0 ≈ 91 months
+dec.groupby(dec.applied_at.dt.to_period("M")).size().mean()
 ```
 
 *Интерпретация.* Чтобы обнаружить рост доли одобрения в приложении на 2 пункта (68.2 → 70.2 %) с мощностью 80 %, нужно 8 362 рассмотренных заявки на группу — около 91 месяца текущего трафика приложения, поэтому тест такого размера неосуществим. При годовом трафике, поделённом пополам (~1 098 на группу), наименьшее обнаруживаемое изменение составляет около +5.4 пункта; команде стоит либо тестировать более крупное изменение, либо объединить каналы, либо принять контролируемый запуск вместо теста.

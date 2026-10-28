@@ -84,7 +84,7 @@ SELECT COUNT(*) AS duplicate_rows, SUM(amount) AS counted_twice
 FROM (SELECT amount,
              ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
       FROM payments)
-WHERE rn > 1;                                  -- every copy after the first
+WHERE rn > 1;  -- every copy after the first
 ```
 
 25 rows and 58 397 800 soum: the result line of the story, exact to the soum.
@@ -112,10 +112,12 @@ WHERE rn > 1;                                  -- every copy after the first
 -- grain: one loan, tables: loans → applications (for the channel)
 SELECT a.channel, COUNT(*) AS loans, SUM(l.principal) AS disbursed
 FROM loans l JOIN applications a ON a.application_id = l.application_id
-WHERE l.disbursed_at >= '2026-09-01' AND l.disbursed_at < '2026-10-01'      -- half-open: no BETWEEN on dates
+-- half-open: no BETWEEN on dates
+WHERE l.disbursed_at >= '2026-09-01' AND l.disbursed_at < '2026-10-01'
 GROUP BY a.channel
 UNION ALL
-SELECT 'TOTAL', COUNT(*), SUM(principal)                                     -- the check: September's known total
+-- the check: September's known total
+SELECT 'TOTAL', COUNT(*), SUM(principal)
 FROM loans
 WHERE disbursed_at >= '2026-09-01' AND disbursed_at < '2026-10-01';
 ```
@@ -147,12 +149,13 @@ Branch 172 loans, app 123, partner 66; the total row says 361 loans and 17 015 4
 **How to write it.** The first two steps are a query. App FPD30 by the month the first instalment fell due:
 
 ```sql
-WITH pay AS (                                                  -- clean payments
+WITH pay AS (  -- clean payments
   SELECT installment_id, paid_at, amount FROM (
     SELECT installment_id, paid_at, amount,
            ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
     FROM payments) WHERE rn = 1),
-first_inst AS (                                                -- first instalments old enough to judge
+-- first instalments old enough to judge
+first_inst AS (
   SELECT i.loan_id, i.due_date, i.total_due, COALESCE(SUM(p.amount), 0) AS paid_in_30
   FROM installments i
   LEFT JOIN pay p ON p.installment_id = i.installment_id

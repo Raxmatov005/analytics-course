@@ -22,23 +22,31 @@
 
 ```sql
 -- shape of every rate metric
-SELECT SUM(CASE WHEN <did the thing> THEN 1 ELSE 0 END) AS numerator,     -- the units that did it
-       COUNT(*)                                          AS denominator,   -- every unit that could have
+-- the units that did it
+SELECT SUM(CASE WHEN <did the thing> THEN 1 ELSE 0 END) AS numerator,
+       -- every unit that could have
+       COUNT(*)                                          AS denominator,
        ROUND(100.0 * SUM(CASE WHEN <did the thing> THEN 1 ELSE 0 END) / COUNT(*), 1) AS rate_pct
 FROM <one row per unit>
-WHERE <filter>                                                              -- which units count at all
-  AND <date> >= '<start>' AND <date> < '<end>';                             -- the period, start included, end excluded
+-- which units count at all
+WHERE <filter>
+  AND <date> >= '<start>' AND <date> < '<end>';
+  -- the period, start included, end excluded
 ```
 
 The approval rate of app applications in September 2026:
 
 ```sql
-SELECT SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,   -- numerator
-       COUNT(*)                                                                           AS decided,    -- denominator
+-- numerator
+SELECT SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,
+       -- denominator
+       COUNT(*)                                                                           AS decided,
        ROUND(100.0 * SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) / COUNT(*), 1) AS approval_pct
 FROM applications
-WHERE channel = 'app' AND status <> 'cancelled'                    -- filter: app channel, decided applications only
-  AND applied_at >= '2026-09-01' AND applied_at < '2026-10-01';    -- period: applied in September 2026
+-- filter: app channel, decided applications only
+WHERE channel = 'app' AND status <> 'cancelled'
+  AND applied_at >= '2026-09-01' AND applied_at < '2026-10-01';
+  -- period: applied in September 2026
 ```
 
 128 approved of 192 decided: 66.7 %. Written as a definition card, it reads:
@@ -82,12 +90,13 @@ WITH m AS (
          COUNT(l.loan_id)                                                                  AS loans,
          SUM(l.principal)                                                                  AS amount
   FROM applications a
-  LEFT JOIN loans l ON l.application_id = a.application_id          -- the loan, if the application became one
+  -- the loan, if the application became one
+  LEFT JOIN loans l ON l.application_id = a.application_id
   WHERE a.applied_at >= '2026-09-01' AND a.applied_at < '2026-10-01')
 SELECT applications,
-       ROUND(100.0 * approved / applications, 2) AS approval_pct,   -- driver 2
-       ROUND(100.0 * loans / approved, 2)        AS take_up_pct,    -- driver 3
-       ROUND(1.0 * amount / loans)                AS avg_ticket,     -- driver 4
+       ROUND(100.0 * approved / applications, 2) AS approval_pct,  -- driver 2
+       ROUND(100.0 * loans / approved, 2)        AS take_up_pct,   -- driver 3
+       ROUND(1.0 * amount / loans)                AS avg_ticket,   -- driver 4
        ROUND(applications * (1.0 * approved / applications) * (1.0 * loans / approved) * (1.0 * amount / loans)) AS product,
        amount
 FROM m;
@@ -128,22 +137,26 @@ FROM m;
 -- shape
 WITH u AS (
   SELECT <unit id>,
-         MAX(CASE WHEN <step 1 happened> THEN 1 ELSE 0 END) AS step1,   -- 1 if this unit reached step 1
+         -- 1 if this unit reached step 1
+         MAX(CASE WHEN <step 1 happened> THEN 1 ELSE 0 END) AS step1,
          MAX(CASE WHEN <step 2 happened> THEN 1 ELSE 0 END) AS step2
   FROM <events> GROUP BY <unit id>)
-SELECT SUM(step1), SUM(step2) FROM u;                                   -- units that reached each step
+SELECT SUM(step1), SUM(step2) FROM u;
+-- units that reached each step
 ```
 
 The unit here is an **app session** (`application_id` in `app_events`). Sessions opened January–June 2026, followed to the first instalment:
 
 ```sql
-WITH s AS (                                                    -- one row per app session
+-- one row per app session
+WITH s AS (
   SELECT application_id, MIN(event_time) AS opened_at,
          MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS visit,
          MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS application,
          MAX(CASE WHEN event_name = 'approved'           THEN 1 ELSE 0 END) AS approval
   FROM app_events GROUP BY application_id),
-first_inst AS (                                                -- the first instalment of every loan and when it was paid
+-- the first instalment of every loan and when it was paid
+first_inst AS (
   SELECT i.loan_id, i.due_date, MIN(p.paid_at) AS paid_at
   FROM installments i LEFT JOIN payments p ON p.installment_id = i.installment_id
   WHERE i.installment_no = 1
@@ -152,7 +165,8 @@ SELECT SUM(s.visit)                                             AS visit,
        SUM(s.application)                                       AS application,
        SUM(s.approval)                                          AS approval,
        COUNT(l.loan_id)                                         AS disbursement,
-       SUM(CASE WHEN f.paid_at <= f.due_date THEN 1 ELSE 0 END) AS repayment     -- first instalment paid on time
+       -- first instalment paid on time
+       SUM(CASE WHEN f.paid_at <= f.due_date THEN 1 ELSE 0 END) AS repayment
 FROM s
 LEFT JOIN loans l      ON l.application_id = s.application_id
 LEFT JOIN first_inst f ON f.loan_id = l.loan_id
@@ -194,7 +208,8 @@ Then read the table above: what is the step conversion from **approval to disbur
 **How to write it.** Split the big steps into their sub-steps and put the drop-off next to each one. `LAG` reads the previous step's count:
 
 ```sql
-WITH s AS (                                                    -- every app session, one row each
+-- every app session, one row each
+WITH s AS (
   SELECT application_id,
          MAX(CASE WHEN event_name = 'app_open'           THEN 1 ELSE 0 END) AS opened,
          MAX(CASE WHEN event_name = 'view_offer'         THEN 1 ELSE 0 END) AS viewed,
@@ -212,8 +227,10 @@ steps AS (
   SELECT 6, 'contract_signed',    SUM(signed)    FROM s UNION ALL
   SELECT 7, 'disbursed', COUNT(*) FROM s JOIN loans l ON l.application_id = s.application_id)
 SELECT k, step, n,
-       LAG(n) OVER (ORDER BY k) - n                    AS lost,        -- drop-off at this step
-       ROUND(100.0 * n / LAG(n) OVER (ORDER BY k), 1)  AS step_pct     -- step conversion
+       -- drop-off at this step
+       LAG(n) OVER (ORDER BY k) - n                    AS lost,
+       -- step conversion
+       ROUND(100.0 * n / LAG(n) OVER (ORDER BY k), 1)  AS step_pct
 FROM steps ORDER BY k;
 ```
 
@@ -258,11 +275,13 @@ retention(N) = customers whose 2nd loan is disbursed ≤ N months after their 1s
 Customers whose first loan was disbursed in January 2025, N = 6 months:
 
 ```sql
-WITH ranked AS (                                               -- number each customer's loans 1, 2, 3 … by date
+-- number each customer's loans 1, 2, 3 … by date
+WITH ranked AS (
   SELECT customer_id, disbursed_at,
          ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS n
   FROM loans),
-pairs AS (                                                     -- one row per customer: first and second loan dates
+-- one row per customer: first and second loan dates
+pairs AS (
   SELECT f.customer_id, f.disbursed_at AS first_at, s.disbursed_at AS second_at
   FROM ranked f
   LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2
@@ -305,9 +324,11 @@ WHERE first_at >= '2025-01-01' AND first_at < '2025-02-01';
 
 ```sql
 WITH first_loan AS (
-  SELECT customer_id, MIN(disbursed_at) AS first_at              -- the start: the first disbursement
+  -- the start: the first disbursement
+  SELECT customer_id, MIN(disbursed_at) AS first_at
   FROM loans GROUP BY customer_id)
-SELECT strftime('%Y-%m', first_at) AS cohort,                    -- SQL Server: FORMAT(first_at, 'yyyy-MM')
+-- SQL Server: FORMAT(first_at, 'yyyy-MM')
+SELECT strftime('%Y-%m', first_at) AS cohort,
        COUNT(*)                    AS customers
 FROM first_loan
 GROUP BY cohort ORDER BY cohort;
@@ -349,7 +370,8 @@ pairs AS (
   FROM ranked f LEFT JOIN ranked s ON s.customer_id = f.customer_id AND s.n = 2
   WHERE f.n = 1)
 SELECT cohort, COUNT(*) AS customers,
-       CASE WHEN MAX(date(first_at, '+3 months')) <= '2026-10-01'            -- blank unless every customer had 3 months
+       -- blank unless every customer had 3 months
+       CASE WHEN MAX(date(first_at, '+3 months')) <= '2026-10-01'
             THEN ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+3 months') THEN 1 ELSE 0 END) / COUNT(*), 1) END AS m3,
        CASE WHEN MAX(date(first_at, '+6 months')) <= '2026-10-01'
             THEN ROUND(100.0 * SUM(CASE WHEN second_at <= date(first_at, '+6 months') THEN 1 ELSE 0 END) / COUNT(*), 1) END AS m6,
@@ -393,7 +415,8 @@ for cohort in ["2024Q1", "2024Q3", "2025Q1", "2025Q3", "2026Q1"]:
     g = pairs[pairs["cohort"] == cohort]
     ages, values = [], []
     for n in range(1, 25):
-        if g["first_at"].max() + pd.DateOffset(months=n) > as_of:   # not every customer has had n months: stop
+        # not every customer has had n months: stop
+        if g["first_at"].max() + pd.DateOffset(months=n) > as_of:
             break
         ages.append(n)
         values.append(100 * (g["second_at"] <= g["first_at"] + pd.DateOffset(months=n)).mean())
@@ -428,19 +451,22 @@ Each line is one cohort. At one month, 2024Q1 starts at 6.0 % and 2026Q1 at 22.8
 **How to write it.** Customers whose loan closed in the first quarter of 2026:
 
 ```sql
-WITH closers AS (                                              -- customers who repaid a loan in Q1 2026
+-- customers who repaid a loan in Q1 2026
+WITH closers AS (
   SELECT customer_id, MAX(closed_at) AS closed_at
   FROM loans
   WHERE status = 'closed' AND closed_at >= '2026-01-01' AND closed_at < '2026-04-01'
   GROUP BY customer_id),
-still_borrowing AS (                                           -- had another loan running on that day: cannot churn
+-- had another loan running on that day: cannot churn
+still_borrowing AS (
   SELECT DISTINCT c.customer_id
   FROM closers c
   JOIN loans l ON l.customer_id = c.customer_id
               AND l.disbursed_at <= c.closed_at AND (l.closed_at IS NULL OR l.closed_at > c.closed_at)),
 base AS (
   SELECT * FROM closers WHERE customer_id NOT IN (SELECT customer_id FROM still_borrowing)),
-next_loan AS (                                                 -- the first loan after the closing, if any
+-- the first loan after the closing, if any
+next_loan AS (
   SELECT b.customer_id, MIN(l.disbursed_at) AS next_at
   FROM base b JOIN loans l ON l.customer_id = b.customer_id AND l.disbursed_at > b.closed_at
   GROUP BY b.customer_id)
@@ -479,11 +505,14 @@ FROM base b LEFT JOIN next_loan n ON n.customer_id = b.customer_id;
 
 ```sql
 SELECT (SELECT COUNT(DISTINCT customer_id) FROM app_events
-         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')        AS app_mau,          -- opened the app
+         -- opened the app
+         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')        AS app_mau,
        (SELECT COUNT(*) FROM (SELECT DISTINCT date(event_time), customer_id FROM app_events
-         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')) / 30.0 AS app_avg_dau,     -- 30 days in September
+         -- 30 days in September
+         WHERE event_time >= '2026-09-01' AND event_time < '2026-10-01')) / 30.0 AS app_avg_dau,
        (SELECT COUNT(DISTINCT customer_id) FROM loans
-         WHERE status IN ('active', 'default'))                                   AS borrowers_now;   -- a loan running on 2026-10-01
+         WHERE status IN ('active', 'default'))                                   AS borrowers_now;
+         -- a loan running on 2026-10-01
 ```
 
 201 customers opened the app in September; on an average day, 7.43 did. Stickiness is 7.43 ÷ 201 = 3.7 %. Under the second definition, 2 526 customers have a loan running — twelve times more "active" people.
@@ -510,12 +539,14 @@ SELECT (SELECT COUNT(DISTINCT customer_id) FROM app_events
 WITH monthly AS (
   SELECT strftime('%Y-%m', registered_at) AS month, COUNT(*) AS new_customers
   FROM customers GROUP BY month),
-running AS (                                                      -- vanity: the running total can only go up
+-- vanity: the running total can only go up
+running AS (
   SELECT month, new_customers, SUM(new_customers) OVER (ORDER BY month) AS all_customers
   FROM monthly),
 first_loan AS (
   SELECT customer_id, MIN(disbursed_at) AS first_at FROM loans GROUP BY customer_id),
-activated AS (                                                    -- actionable: new customers with a first loan within 60 days
+-- actionable: new customers with a first loan within 60 days
+activated AS (
   SELECT strftime('%Y-%m', c.registered_at) AS month,
          ROUND(100.0 * SUM(CASE WHEN f.first_at >= date(c.registered_at)
                                  AND f.first_at <= date(c.registered_at, '+60 days') THEN 1 ELSE 0 END) / COUNT(*), 1) AS loan_in_60d_pct
@@ -550,16 +581,21 @@ ORDER BY r.month;
 Kamola asks: *"Is the app getting better at turning visits into lasting customers?"* Four of today's concepts answer it in one query — app sessions by quarter of 2025, followed to money:
 
 ```sql
-WITH s AS (                                                    -- funnel unit: the app session
+-- funnel unit: the app session
+WITH s AS (
   SELECT application_id, MIN(event_time) AS opened_at,
          MAX(CASE WHEN event_name = 'submit_application' THEN 1 ELSE 0 END) AS submitted
   FROM app_events GROUP BY application_id)
-SELECT strftime('%Y', s.opened_at) || 'Q' || ((CAST(strftime('%m', s.opened_at) AS INTEGER) + 2) / 3) AS quarter,   -- period
-       COUNT(*)                                                    AS sessions,          -- denominator
+-- period
+SELECT strftime('%Y', s.opened_at) || 'Q' || ((CAST(strftime('%m', s.opened_at) AS INTEGER) + 2) / 3) AS quarter,
+       -- denominator
+       COUNT(*)                                                    AS sessions,
        ROUND(100.0 * SUM(s.submitted) / COUNT(*), 1)               AS visit_to_application_pct,
-       ROUND(100.0 * COUNT(l.loan_id) / COUNT(*), 1)               AS visit_to_money_pct  -- the end of the funnel
+       -- the end of the funnel
+       ROUND(100.0 * COUNT(l.loan_id) / COUNT(*), 1)               AS visit_to_money_pct
 FROM s LEFT JOIN loans l ON l.application_id = s.application_id
-WHERE s.opened_at >= '2025-01-01' AND s.opened_at < '2026-01-01'                        -- filter: closed quarters
+-- filter: closed quarters
+WHERE s.opened_at >= '2025-01-01' AND s.opened_at < '2026-01-01'
 GROUP BY quarter ORDER BY quarter;
 ```
 
@@ -626,11 +662,16 @@ apps AS (
   SELECT a.application_id, a.status, l.principal
   FROM applications a LEFT JOIN loans l ON l.application_id = a.application_id
   WHERE a.applied_at >= '2026-08-01' AND a.applied_at < '2026-09-01')
-SELECT (SELECT COUNT(*) FROM act)                                            AS active_customers,   -- 2 846
-       COUNT(*)                                                              AS applications,       -- 649
-       SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved, -- 392
-       COUNT(principal)                                                      AS loans,              -- 363
-       SUM(principal)                                                        AS disbursed           -- 23 335 710 000
+-- 2 846
+SELECT (SELECT COUNT(*) FROM act)                                            AS active_customers,
+       -- 649
+       COUNT(*)                                                              AS applications,
+       -- 392
+       SUM(CASE WHEN status IN ('approved', 'approved_not_disbursed') THEN 1 ELSE 0 END) AS approved,
+       -- 363
+       COUNT(principal)                                                      AS loans,
+       -- 23 335 710 000
+       SUM(principal)                                                        AS disbursed
 FROM apps;
 ```
 

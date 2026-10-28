@@ -51,7 +51,8 @@ Three more things live around the boxes:
 Press **▶ Run** to see the same three rows with every column:
 
 ```sql
-SELECT * FROM customers LIMIT 3;   -- * = every column, LIMIT 3 = the first three rows (Day 2 explains both)
+SELECT * FROM customers LIMIT 3;
+-- * = every column, LIMIT 3 = the first three rows (Day 2 explains both)
 ```
 
 3 rows, 11 columns. The whole table has 6 040 rows — one per registered customer.
@@ -87,7 +88,8 @@ SELECT * FROM customers LIMIT 3;   -- * = every column, LIMIT 3 = the first thre
 
 ```sql
 SELECT loan_id, principal, annual_rate, disbursed_at,
-       typeof(principal), typeof(annual_rate), typeof(disbursed_at)   -- typeof() = SQLite's "what type is this value?"
+       -- typeof() = SQLite's "what type is this value?"
+       typeof(principal), typeof(annual_rate), typeof(disbursed_at)
 FROM loans
 LIMIT 3;
 ```
@@ -117,7 +119,8 @@ Loan 1: the principal 31 150 000 is an `integer`, the rate 0.3 is a `real`, the 
 **How to write it.** Ask for one value of the primary key, and exactly one row comes back:
 
 ```sql
-SELECT * FROM loans WHERE loan_id = 1;   -- WHERE keeps only the rows that match (Day 2)
+SELECT * FROM loans WHERE loan_id = 1;
+-- WHERE keeps only the rows that match (Day 2)
 ```
 
 1 row — loan 1: customer 3473, product 2, principal 31 150 000, 24 months, paid out on 2025-03-28, status `active`. Every one of the eleven tables has its own primary key. Its name ends in `_id` (in `dim_date`: `date_key`).
@@ -256,7 +259,8 @@ Almost every company's data has this shape. On Day 4 you learn its warehouse nam
 | `app_events` | what happened | one tap in the mobile app | `event_id` | `customer_id`, `application_id` |
 
 ```sql
-SELECT COUNT(*) FROM payments;   -- change the table name to count the rows of any of the eleven
+SELECT COUNT(*) FROM payments;
+-- change the table name to count the rows of any of the eleven
 ```
 
 52 875 rows — one per payment received. `products` has 5 rows. What-happened tables are long; who/what tables are short.
@@ -276,13 +280,24 @@ SELECT COUNT(*) FROM payments;   -- change the table name to count the rows of a
 **How to write it.** The path as a picture:
 
 ```text
-customers ──▶ applications ──(approved)──▶ loans ──┬──▶ installments         (the schedule: what is due)
-  (who)       (the request)             (paid out) ├──▶ payments             (what came in)
-                                                   └──▶ collections_actions  (if a payment is late)
-
-applications.status:  approved · approved_not_disbursed · rejected · cancelled
-loans.status:         active · closed · default · written_off
+customers           who
+   │
+   ▼
+applications        the request
+   │
+   │ approved
+   ▼
+loans               paid out
+   ├──▶ installments
+   │      the schedule: what is due
+   ├──▶ payments
+   │      what came in
+   └──▶ collections_actions
+          if a payment is late
 ```
+
+- `applications.status`: approved · approved_not_disbursed · rejected · cancelled
+- `loans.status`: active · closed · default · written_off
 
 Loan 1 started as application 2. The first step of its lifecycle:
 

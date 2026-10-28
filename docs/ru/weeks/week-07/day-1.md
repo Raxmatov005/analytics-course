@@ -98,13 +98,18 @@ A/B-тест       1–28 авг., случайная половина:  экр�
 
 ```python
 import pandas as pd
-aa = pd.read_csv("data/ab/aa_users.csv", parse_dates=["assigned_at"])   # одна строка на назначенного пользователя (знаменатель)
-ev = pd.read_csv("data/ab/aa_events.csv", parse_dates=["event_time"])   # одна строка на событие в приложении
+# одна строка на назначенного пользователя (знаменатель)
+aa = pd.read_csv("data/ab/aa_users.csv", parse_dates=["assigned_at"])
+# одна строка на событие в приложении
+ev = pd.read_csv("data/ab/aa_events.csv", parse_dates=["event_time"])
 signed = ev[ev["event_name"] == "contract_signed"].merge(aa[["user_id", "assigned_at"]], on="user_id")
 in_window = signed[(signed["event_time"] >= signed["assigned_at"]) &
-                   (signed["event_time"] <= signed["assigned_at"] + pd.Timedelta(days=7))]   # окно 7 дней
-conv = aa["user_id"].isin(in_window["user_id"]).mean()                  # числитель ÷ знаменатель
-print(f"{conv:.2%} of {len(aa):,} users signed within 7 days")          # 8.19 % из 12 852
+                   # окно 7 дней
+                   (signed["event_time"] <= signed["assigned_at"] + pd.Timedelta(days=7))]
+# числитель ÷ знаменатель
+conv = aa["user_id"].isin(in_window["user_id"]).mean()
+# 8.19 % из 12 852
+print(f"{conv:.2%} of {len(aa):,} users signed within 7 days")
 ```
 
 8.19 % — 1 053 из 12 852 пользователей подписали договор в течение семи дней. Почему семь: 85 % подписаний приходится на первые два дня после первого просмотра и 94 % — на первые семь. Фиксированное окно ставит пользователя, пришедшего 28 августа, в те же условия, что и пришедшего 1 августа.
@@ -148,9 +153,12 @@ print(f"{conv:.2%} of {len(aa):,} users signed within 7 days")          # 8.19 %
 **Как пишется.**
 
 ```python
-baseline = 0.080                     # сегодняшняя конверсия за 7 дней (плановое число Камолы)
-mde_abs  = 0.009                     # +0.9 пункта: наименьший прирост, ради которого стоит риск релиза
-print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}")   # 8.9 %, 11.25 %
+# сегодняшняя конверсия за 7 дней (плановое число Камолы)
+baseline = 0.080
+# +0.9 пункта: наименьший прирост, ради которого стоит риск релиза
+mde_abs  = 0.009
+# 8.9 %, 11.25 %
+print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}")
 ```
 
 8.0 % → 8.9 % — это +0.9 пункта абсолютно и +11.25 % относительно. Оба описывают один и тот же эффект.
@@ -184,19 +192,26 @@ z = NormalDist().inv_cdf                      # z(0.975) = 1.96, z(0.80) = 0.84
 
 def n_per_arm(p1, p2, alpha=0.05, power=0.80, two_sided=True):
     """Пользователей на группу, чтобы обнаружить p1 -> p2 (h Коэна: то же, что даёт zt_ind_solve_power из statsmodels)."""
-    h = 2 * asin(sqrt(p2)) - 2 * asin(sqrt(p1))          # эффект в шкале арксинуса
-    z_a = z(1 - alpha / 2) if two_sided else z(1 - alpha) # насколько строга линия «значимо»
-    return 2 * ((z_a + z(power)) / h) ** 2                # насколько уверенно мы хотим её пересечь
+    # эффект в шкале арксинуса
+    h = 2 * asin(sqrt(p2)) - 2 * asin(sqrt(p1))
+    # насколько строга линия «значимо»
+    z_a = z(1 - alpha / 2) if two_sided else z(1 - alpha)
+    # насколько уверенно мы хотим её пересечь
+    return 2 * ((z_a + z(power)) / h) ** 2
 
 n = n_per_arm(0.080, 0.089)
-print(f"Cohen's h method: {n:.1f} -> {ceil(n)} users per arm")      # 14 982.2 -> 14 983
+# 14 982.2 -> 14 983
+print(f"Cohen's h method: {n:.1f} -> {ceil(n)} users per arm")
 
 p1, p2 = 0.080, 0.089
 pbar = (p1 + p2) / 2
 n_classic = (z(0.975) * sqrt(2 * pbar * (1 - pbar)) + z(0.80) * sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2 / (p2 - p1) ** 2
-print(f"classic formula:  {n_classic:.1f} -> {ceil(n_classic)}")    # 14 991.1 -> 14 992
+# 14 991.1 -> 14 992
+print(f"classic formula:  {n_classic:.1f} -> {ceil(n_classic)}")
 print(f"days at 1 000 viewers a day: {2 * ceil(n) / 1000:.0f}")    # 30
-# В Jupyter со statsmodels: zt_ind_solve_power(effect_size=proportion_effectsize(0.089, 0.080), alpha=0.05, power=0.80)
+# В Jupyter со statsmodels:
+# zt_ind_solve_power(effect_size=proportion_effectsize(0.089, 0.080),
+# alpha=0.05, power=0.80)
 ```
 
 14 983 пользователя на группу — 29 966 просмотревших, 30 дней при примерно 1 000 просмотров предложения в день. Классическая формула даёт 14 992: два метода, разница девять пользователей. Называйте тот, которым пользовались. Каждый вход, сдвинутый по одному:
@@ -256,10 +271,13 @@ for mde in [0.004, 0.005, 0.008, 0.009, 0.012, 0.016]:
 ```python
 import hashlib
 def hash_variant(user_id, salt="offer_screen_v2"):
-    h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)   # хеш, прочитанный как целое число
-    return "A" if h % 2 == 0 else "B"                                       # чётное → A, нечётное → B
+    # хеш, прочитанный как целое число
+    h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)
+    # чётное → A, нечётное → B
+    return "A" if h % 2 == 0 else "B"
 
-print([hash_variant(u, "offer_screen_aa_2026_07") for u in [925601, 665666, 652995, 774155, 376261]])   # B A A B A
+# B A A B A
+print([hash_variant(u, "offer_screen_aa_2026_07") for u in [925601, 665666, 652995, 774155, 376261]])
 # SQL Server: ABS(CHECKSUM(CONCAT('offer_screen_v2', user_id))) % 2
 ```
 
@@ -296,13 +314,18 @@ from statistics import NormalDist
 def srm_pvalue(n_a, n_b, expected_share_b=0.5):
     """Критерий согласия хи-квадрат для двух групп (1 степень свободы): тот же p, что у scipy.stats.chisquare."""
     n = n_a + n_b
-    e_a, e_b = n * (1 - expected_share_b), n * expected_share_b          # численности, которых ждёт план
+    # численности, которых ждёт план
+    e_a, e_b = n * (1 - expected_share_b), n * expected_share_b
     chi2 = (n_a - e_a) ** 2 / e_a + (n_b - e_b) ** 2 / e_b
-    return 2 * (1 - NormalDist().cdf(sqrt(chi2)))                         # при 1 степени свободы chi2 — это z в квадрате
+    # при 1 степени свободы chi2 — это z в квадрате
+    return 2 * (1 - NormalDist().cdf(sqrt(chi2)))
 
-print(round(srm_pvalue(14200, 13800), 3))   # chi2 = 5.71, p = 0.017  -> ищите баг, прежде чем читать что-либо
-print(round(srm_pvalue(14050, 13950), 2))   # chi2 = 0.36, p = 0.55   -> нормально
-# В Jupyter: scipy.stats.chisquare([14200, 13800], [14000, 14000]); Excel: =CHISQ.TEST({14200,13800},{14000,14000})
+# chi2 = 5.71, p = 0.017  -> ищите баг, прежде чем читать что-либо
+print(round(srm_pvalue(14200, 13800), 3))
+# chi2 = 0.36, p = 0.55   -> нормально
+print(round(srm_pvalue(14050, 13950), 2))
+# В Jupyter: scipy.stats.chisquare([14200, 13800], [14000, 14000]); Excel:
+# =CHISQ.TEST({14200,13800},{14000,14000})
 ```
 
 14 200 против 13 800 — это разбиение 50.7 / 49.3 на 28 000 пользователей: p = 0.017, случайность даёт такое реже двух раз на сотню тестов. 14 050 против 13 950: p = 0.55, нормально.
@@ -351,9 +374,11 @@ print(round(srm_pvalue(14050, 13950), 2))   # chi2 = 0.36, p = 0.55   -> нор�
 **Как пишется.** Тест сообщает среднее за свои дни. Пусть истинный прирост B — +2.0 пункта в первую неделю и +0.5 после:
 
 ```python
-lift_by_day = [2.0] * 7 + [0.5] * 21                       # новизна: большой в первую неделю, маленький потом
+# новизна: большой в первую неделю, маленький потом
+lift_by_day = [2.0] * 7 + [0.5] * 21
 for days in (7, 14, 28):
-    print(days, "days:", round(sum(lift_by_day[:days]) / days, 3), "points")   # 2.0 · 1.25 · 0.875
+    # 2.0 · 1.25 · 0.875
+    print(days, "days:", round(sum(lift_by_day[:days]) / days, 3), "points")
 ```
 
 Недельный тест сообщит +2.0 — вчетверо больше устойчивых +0.5. Четыре недели сообщат +0.875 — всё ещё выше.
@@ -382,17 +407,23 @@ for days in (7, 14, 28):
 import numpy as np
 rng = np.random.default_rng(2026)
 n_exp, days, per_day, p = 2000, 28, 500, 0.08
-conv_a = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)   # накопленные конверсии в A
-conv_b = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)   # у B те же 8 %: это A/A-тест
-n = per_day * np.arange(1, days + 1)                                   # пользователей на группу после каждого дня
+# накопленные конверсии в A
+conv_a = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)
+# у B те же 8 %: это A/A-тест
+conv_b = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)
+# пользователей на группу после каждого дня
+n = per_day * np.arange(1, days + 1)
 pool = (conv_a + conv_b) / (2 * n)
 z = (conv_b - conv_a) / n / np.sqrt(pool * (1 - pool) * 2 / n)
-sig = np.abs(z) > 1.96                                                 # «p < 0.05» в этот день
-weeks = [6, 13, 20, 27]                                                # дни 7, 14, 21, 28
+# «p < 0.05» в этот день
+sig = np.abs(z) > 1.96
+# дни 7, 14, 21, 28
+weeks = [6, 13, 20, 27]
 print(f"one look on day 28: {sig[:, -1].mean():.1%}")
 print(f"weekly looks:       {sig[:, weeks].any(axis=1).mean():.1%}")
 print(f"daily looks:        {sig.any(axis=1).mean():.1%}")
-print(f"weekly, Pocock:     {(np.abs(z[:, weeks]) > 2.361).any(axis=1).mean():.1%}")   # p < 0.0182 на каждом взгляде
+# p < 0.0182 на каждом взгляде
+print(f"weekly, Pocock:     {(np.abs(z[:, weeks]) > 2.361).any(axis=1).mean():.1%}")
 first_win = sig.argmax(axis=1)[sig.any(axis=1)] + 1
 print(f"median day of the first false win (daily looks): {np.median(first_win):.0f}")
 ```

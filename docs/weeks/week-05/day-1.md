@@ -100,10 +100,11 @@ The box shows five types — `int`, `float`, `str`, `bool`, `NoneType` — one p
 **How to write it.**
 
 ```python
-customer = "Gulbahor Sobirova"     # name = value
+customer = "Gulbahor Sobirova"  # name = value
 principal = 31_150_000
 status = "active"
-status = "closed"                  # a new value for the same name — "active" is gone
+# a new value for the same name — "active" is gone
+status = "closed"
 print(customer, principal, status)
 ```
 
@@ -135,12 +136,14 @@ Rules for names: letters, digits and `_`, not starting with a digit; `snake_case
 
 ```python
 method = "  Bank Transfer "
-clean = method.strip().lower()                 # 'bank transfer' — week 2's LOWER(TRIM())
+# 'bank transfer' — week 2's LOWER(TRIM())
+clean = method.strip().lower()
 print(clean.replace("bank transfer", "transfer"))
 day = "2025-03-28"
-print(day[:7], len(day))                       # the month, and the length of the text
+# the month, and the length of the text
+print(day[:7], len(day))
 status = "approved_not_disbursed"
-print(status.startswith("approved"))           # week 4's "approved*" wildcard
+print(status.startswith("approved"))  # week 4's "approved*" wildcard
 outstanding = 208_723_504_430
 print(f"Outstanding: {outstanding:,} soum = {outstanding / 1e9:.1f} bn; PAR30 {0.0312:.2%}")
 ```
@@ -183,14 +186,16 @@ The part after the colon inside `{ }` is the **format spec** — Excel's number 
 **How to write it.**
 
 ```python
-principal = 31_150_000                       # loan 1
+principal = 31_150_000          # loan 1
 annual_rate = 0.30
-interest_1 = principal * annual_rate / 12    # month 1's interest: a year's interest on the balance, ÷ 12
+# month 1's interest: a year's interest on the balance, ÷ 12
+interest_1 = principal * annual_rate / 12
 term = 24
 print(interest_1)
-print(term // 12, term % 12)                 # whole years, months left over
-print(round(1_741_684.35, -2))               # to the nearest 100 soum
-print(annual_rate / 12, round(annual_rate / 12, 4))   # the monthly rate — look at the last digits
+print(term // 12, term % 12)    # whole years, months left over
+print(round(1_741_684.35, -2))  # to the nearest 100 soum
+# the monthly rate — look at the last digits
+print(annual_rate / 12, round(annual_rate / 12, 4))
 ```
 
 ```text
@@ -238,9 +243,10 @@ Brackets work as in school: `100 * approved / total` and `(1 + r) ** -term` are 
 ```python
 buckets = ["0", "1-30", "31-60", "61-90", "90+"]
 print(buckets[0], buckets[-1], buckets[1:3])
-principals = [31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]   # loans 1–5
+# loans 1–5
+principals = [31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]
 print(len(principals), sum(principals), max(principals))
-principals.append(4_990_000)              # add one at the end
+principals.append(4_990_000)  # add one at the end
 print(len(principals), "1-30" in buckets)
 ```
 
@@ -284,11 +290,14 @@ A **tuple** (*кортеж*) looks like a list in round brackets and cannot be c
 
 ```python
 rates = {"Micro loan": 0.42, "Consumer loan": 0.30, "Buy now pay later": 0.0,
-         "Auto loan": 0.24, "Small business loan": 0.26}      # products.annual_rate
-print(rates["Auto loan"])                                    # look up by key
-print(rates.get("Mortgage", "no such product"))              # .get: a default instead of an error
+         # products.annual_rate
+         "Auto loan": 0.24, "Small business loan": 0.26}
+print(rates["Auto loan"])  # look up by key
+# .get: a default instead of an error
+print(rates.get("Mortgage", "no such product"))
 counts = {"card": 17612, "payme": 8897}
-counts["cash"] = 8788                                        # add a key (or replace its value)
+# add a key (or replace its value)
+counts["cash"] = 8788
 print(counts, len(counts), "card" in counts)
 ```
 
@@ -376,16 +385,18 @@ Comparisons: `==` equal, `!=` not equal, `<`, `<=`, `>`, `>=`, `in` (inside a li
 **How to write it.** A running total, and a count per group with a dict:
 
 ```python
-amounts = [1_741_700, 2_791_000, 567_500]       # the monthly payments of loans 1, 2, 3
-total = 0                                        # start BEFORE the loop
+# the monthly payments of loans 1, 2, 3
+amounts = [1_741_700, 2_791_000, 567_500]
+total = 0            # start BEFORE the loop
 for amount in amounts:
-    total += amount                              # += adds to the variable
+    total += amount  # += adds to the variable
 print(total)
 
 methods = ["card", "cash", "card", "payme", "card"]
 counts = {}
 for m in methods:
-    counts[m] = counts.get(m, 0) + 1             # one more for this key, starting at 0 if new
+    # one more for this key, starting at 0 if new
+    counts[m] = counts.get(m, 0) + 1
 print(counts)
 ```
 
@@ -469,9 +480,11 @@ Seven of the eight values are late; two are past 90 days. Tomorrow the same filt
 
 ```python
 def approval_rate(approved, total, decimals=1):
-    """Approval rate in percent."""           # the docstring: what it does, for the next reader
+    # the docstring: what it does, for the next reader
+    """Approval rate in percent."""
     if total == 0:
-        return None                           # never divide by zero; None is "no answer"
+        # never divide by zero; None is "no answer"
+        return None
     return round(100 * approved / total, decimals)
 
 def label(dpd):
@@ -522,13 +535,13 @@ The app channel approved 2 915 of 5 006 applications: 58.2 %, or 58.23 with two 
 **How to write it.**
 
 ```python
-import math                          # the whole module; use it as math.something
-from datetime import date            # one name from a module; use it directly
-import statistics as st              # a module under a short alias
+import math                # the whole module; use it as math.something
+from datetime import date  # one name from a module; use it directly
+import statistics as st    # a module under a short alias
 
-print(math.ceil(24 / 5))             # round UP
+print(math.ceil(24 / 5))   # round UP
 days = date(2026, 10, 1) - date(2025, 3, 28)
-print(days.days)                     # loan 1: days from disbursement to the as-of
+print(days.days)           # loan 1: days from disbursement to the as-of
 print(st.median([31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]))
 ```
 
@@ -569,9 +582,9 @@ print(st.median([31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]))
 ```python
 import csv
 with open("../excel/applications.csv", newline="", encoding="utf-8") as f:
-    rows = list(csv.DictReader(f))           # a list of dicts, one per row
+    rows = list(csv.DictReader(f))   # a list of dicts, one per row
 with open("../excel/loans_status.csv", newline="", encoding="utf-8") as f:
-    loans = list(csv.DictReader(f))          # the 7 828 loans, the same way
+    loans = list(csv.DictReader(f))  # the 7 828 loans, the same way
 print(len(rows), len(loans))
 print(rows[0]["channel"], rows[0]["status"], rows[0]["requested_amount"], type(rows[0]["requested_amount"]))
 ```
@@ -689,7 +702,7 @@ total, late = {}, {}
 for r in loans:
     p = r["product"]
     total[p] = total.get(p, 0) + 1
-    if int(r["dpd"]) > 0:                       # text → number before comparing
+    if int(r["dpd"]) > 0:  # text → number before comparing
         late[p] = late.get(p, 0) + 1
 
 for p in sorted(total, key=lambda k: share(late.get(k, 0), total[k]), reverse=True):

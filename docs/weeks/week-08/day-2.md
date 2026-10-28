@@ -26,11 +26,13 @@
 SELECT p.code, p.annual_rate,
        COUNT(*)                     AS loans,
        ROUND(AVG(l.principal))      AS avg_principal,
-       ROUND(AVG(s.interest))       AS interest_per_loan,                       -- revenue: interest over the schedule
+       -- revenue: interest over the schedule
+       ROUND(AVG(s.interest))       AS interest_per_loan,
        ROUND(1000.0 * AVG(s.interest) / AVG(l.principal), 1) AS interest_per_1000_lent
 FROM loans l
 JOIN products p ON p.product_id = l.product_id
-JOIN (SELECT loan_id, SUM(interest_due) AS interest                            -- one row per loan
+-- one row per loan
+JOIN (SELECT loan_id, SUM(interest_due) AS interest
       FROM installments GROUP BY loan_id) s ON s.loan_id = l.loan_id
 GROUP BY p.code, p.annual_rate
 ORDER BY interest_per_loan DESC;
@@ -66,7 +68,8 @@ balance before k        = principal − principal repaid in instalments 1 … k�
 ```
 
 ```sql
-WITH sched AS (                                              -- each instalment with the balance owed before it
+-- each instalment with the balance owed before it
+WITH sched AS (
   SELECT i.loan_id,
          l.principal - COALESCE(SUM(i.principal_due) OVER (PARTITION BY i.loan_id ORDER BY i.installment_no
                        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0) AS bal_before,
@@ -76,7 +79,8 @@ per_loan AS (
   SELECT loan_id, SUM(bal_before) AS bal_months, SUM(interest_due) AS interest
   FROM sched GROUP BY loan_id)
 SELECT p.code,
-       ROUND(AVG(pl.bal_months) * 0.18 / 12)                         AS cost_of_funds,     -- 1.5 % a month on the balance
+       -- 1.5 % a month on the balance
+       ROUND(AVG(pl.bal_months) * 0.18 / 12)                         AS cost_of_funds,
        ROUND(100.0 * AVG(pl.bal_months) * 0.18 / 12 / AVG(pl.interest), 1) AS share_of_interest_pct
 FROM per_loan pl
 JOIN loans l    ON l.loan_id = pl.loan_id
@@ -106,9 +110,13 @@ Funding eats 75.0 % of an Auto loan's interest, 69.2 % of SME's, 60.0 % of Consu
 
 ```python
 # EL = PD × LGD × EAD — an average Consumer loan
-pd_cons   = 77 / 2418                # PD: 77 of 2 418 Consumer loans are now 90+ days past due (week 6's crude PD)
-lgd       = 0.60                     # LGD: 60 % of what is owed is lost (our assumption)
-ead_cons  = 21_630_783              # EAD: Consumer loans in 90+ still owed 80.33 % of the 26 926 915 principal when they stopped
+# PD: 77 of 2 418 Consumer loans are now 90+ days past due (week 6's crude PD)
+pd_cons   = 77 / 2418
+# LGD: 60 % of what is owed is lost (our assumption)
+lgd       = 0.60
+# EAD: Consumer loans in 90+ still owed 80.33 % of the 26 926 915 principal when
+# they stopped
+ead_cons  = 21_630_783
 el_cons   = pd_cons * lgd * ead_cons
 print(f"PD {pd_cons:.2%} · EAD {ead_cons:,.0f} · EL {el_cons:,.0f} soum per loan")
 ```
@@ -142,8 +150,10 @@ PD 3.18 % × LGD 60 % × EAD 21 630 783 = 413 293 soum per loan. A defaulting lo
 ```sql
 SELECT p.code, p.channel,
        ROUND(AVG(l.term_months), 2)                                         AS avg_term,
-       CASE p.channel WHEN 'app' THEN 60000 WHEN 'branch' THEN 450000 ELSE 100000 END AS acquisition,  -- ours
-       CASE p.channel WHEN 'app' THEN 8000  WHEN 'branch' THEN 25000  ELSE 8000   END AS servicing_month, -- ours
+       -- ours
+       CASE p.channel WHEN 'app' THEN 60000 WHEN 'branch' THEN 450000 ELSE 100000 END AS acquisition,
+       -- ours
+       CASE p.channel WHEN 'app' THEN 8000  WHEN 'branch' THEN 25000  ELSE 8000   END AS servicing_month,
        ROUND(CASE p.channel WHEN 'app' THEN 60000 WHEN 'branch' THEN 450000 ELSE 100000 END
            + CASE p.channel WHEN 'app' THEN 8000  WHEN 'branch' THEN 25000  ELSE 8000   END * AVG(l.term_months)) AS opex_per_loan
 FROM loans l JOIN products p ON p.product_id = l.product_id
@@ -178,8 +188,9 @@ An Auto loan costs 1 354 604 soum to sell and service, SME 1 058 067, Consumer 8
 # an average Consumer loan, every line from the subsections above
 interest, pd_c, cof = 5_695_580, 77 / 2418, 3_417_348
 el, acq, serv       = 413_293, 450_000, 25_000 * 14.933
-income = (1 - pd_c) * interest                    # a defaulting loan pays no interest
-net    = income - cof - el - acq - serv           # contribution per loan
+# a defaulting loan pays no interest
+income = (1 - pd_c) * interest
+net    = income - cof - el - acq - serv  # contribution per loan
 print(f"income {income:,.0f} · contribution {net:,.0f} · margin {net / income:.1%} · per 1 000 lent {net / 26_926_915 * 1000:.1f}")
 ```
 
@@ -313,7 +324,8 @@ WITH ranked AS (
   SELECT l.customer_id, l.disbursed_at, p.code,
          ROW_NUMBER() OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at, l.loan_id) AS n
   FROM loans l JOIN products p ON p.product_id = l.product_id),
-firsts AS (                                                   -- new app customers with 12 observable months
+-- new app customers with 12 observable months
+firsts AS (
   SELECT customer_id, disbursed_at AS first_at FROM ranked
   WHERE n = 1 AND code = 'MICRO' AND disbursed_at < '2025-10-01')
 SELECT COUNT(DISTINCT f.customer_id) AS customers,
@@ -324,7 +336,7 @@ JOIN ranked r ON r.customer_id = f.customer_id AND r.code = 'MICRO'
 ```
 
 ```python
-customers, loans = 903, 1069                       # from the query above
+customers, loans = 903, 1069  # from the query above
 contrib_before_acq, repeat_cost, cac = 78_430, 20_000, 60_000
 ltv = (loans * contrib_before_acq - repeat_cost * (loans - customers)) / customers
 print(f"{loans / customers:.2f} Micro loans per customer · LTV {ltv:,.0f} · LTV/CAC {ltv / cac:.2f}")
@@ -351,7 +363,8 @@ print(f"{loans / customers:.2f} Micro loans per customer · LTV {ltv:,.0f} · LT
 **How to write it.**
 
 ```python
-loans_2026 = 1045                                    # Micro loans disbursed January–September 2026
+# Micro loans disbursed January–September 2026
+loans_2026 = 1045
 per_loan = {"interest income (1 − PD) × I": 259_069,
             "− cost of funds (18 %)":       -114_284,
             "− expected loss":              -30_360,
@@ -476,8 +489,10 @@ import pandas as pd
 con = sqlite3.connect("data/raw/nur.db")
 inst = pd.read_sql("SELECT installment_no, principal_due, interest_due FROM installments WHERE loan_id = 1 ORDER BY installment_no", con)
 inst["bal_before"] = 31_150_000 - (inst["principal_due"].cumsum() - inst["principal_due"])
-I   = inst["interest_due"].sum()                 # 10 650 293  interest over the schedule
-cof = inst["bal_before"].sum() * 0.18 / 12       # 426 011 732 balance-months × 1.5 % = 6 390 176
+# 10 650 293  interest over the schedule
+I   = inst["interest_due"].sum()
+# 426 011 732 balance-months × 1.5 % = 6 390 176
+cof = inst["bal_before"].sum() * 0.18 / 12
 print(f"interest {I:,.0f} · balance-months {inst['bal_before'].sum():,.0f} · cost of funds {cof:,.0f}")
 ```
 
@@ -507,9 +522,12 @@ The boxes run Python right here, in the page, and share one namespace in page or
 import sqlite3
 import pandas as pd
 con = sqlite3.connect("data/raw/nur.db")
-COF, LGD = 0.18, 0.60                                           # funding rate per year · loss given default (ours)
-ACQ  = {"app": 60_000, "branch": 450_000, "partner": 100_000}   # acquisition cost per loan, soum (ours)
-SERV = {"app": 8_000, "branch": 25_000, "partner": 8_000}       # servicing cost per month of the schedule (ours)
+# funding rate per year · loss given default (ours)
+COF, LGD = 0.18, 0.60
+# acquisition cost per loan, soum (ours)
+ACQ  = {"app": 60_000, "branch": 450_000, "partner": 100_000}
+# servicing cost per month of the schedule (ours)
+SERV = {"app": 8_000, "branch": 25_000, "partner": 8_000}
 ue = pd.read_sql("""
 WITH pay AS (                                -- v_payments_clean: exact duplicate payments dropped
   SELECT installment_id, paid_at, amount FROM (
@@ -538,7 +556,7 @@ JOIN sched s ON s.loan_id = l.loan_id
 LEFT JOIN first_unpaid f ON f.loan_id = l.loan_id
 GROUP BY l.loan_id, pr.code, pr.channel, l.risk_grade, l.principal, l.term_months, l.disbursed_at, f.due
 """, con)
-print(len(ue), "loans")                      # 7828
+print(len(ue), "loans")  # 7828
 ue.head()
 ```
 

@@ -25,7 +25,8 @@
 ```python
 import pandas as pd
 import numpy as np
-loans = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])   # таблица, которую используют все блоки ниже
+# таблица, которую используют все блоки ниже
+loans = pd.read_csv("../excel/loans_status.csv", parse_dates=["disbursed_at"])
 
 small = pd.DataFrame({"loan_id": [1, 2, 3],
                       "product": ["Consumer loan", "Consumer loan", "Micro loan"],
@@ -79,7 +80,7 @@ DataFrame Series
 **Как пишется.**
 
 ```python
-raw = pd.read_csv("../excel/loans_status.csv")                       # без parse_dates
+raw = pd.read_csv("../excel/loans_status.csv")  # без parse_dates
 print(raw["disbursed_at"].dtype, loans["disbursed_at"].dtype)
 cust = pd.read_csv("../excel/customers_dirty.csv")
 print(cust["phone"].dtype, cust["phone"][0], cust["monthly_income"].dtype)
@@ -124,8 +125,8 @@ print(cust_txt["phone"].dtype, cust_txt["phone"][0])
 **Как пишется.**
 
 ```python
-print(loans.shape)       # (строки, столбцы)
-loans.head()             # первые 5 строк; head(10) — десять, tail() — последние 5
+print(loans.shape)  # (строки, столбцы)
+loans.head()        # первые 5 строк; head(10) — десять, tail() — последние 5
 ```
 
 `(7828, 13)`, затем (7 из 13 столбцов):
@@ -158,7 +159,7 @@ dtypes: datetime64[ns](1), int64(5), object(7)
 (показаны пять из 13 строк.) В каждом столбце 7 828 непустых значений: в этой выгрузке пропусков нет. Пять столбцов — целые числа, один — дата, семь — текст.
 
 ```python
-loans.describe()         # числовые столбцы: count, mean, std, min, квартили, max
+loans.describe()  # числовые столбцы: count, mean, std, min, квартили, max
 ```
 
 | | principal | outstanding | dpd |
@@ -193,8 +194,8 @@ loans.describe()         # числовые столбцы: count, mean, std, mi
 **Как пишется.**
 
 ```python
-print(type(loans["product"]).__name__)             # один столбец → Series
-loans[["loan_id", "product", "dpd"]].head(3)        # список столбцов → DataFrame
+print(type(loans["product"]).__name__)        # один столбец → Series
+loans[["loan_id", "product", "dpd"]].head(3)  # список столбцов → DataFrame
 ```
 
 | (индекс) | loan_id | product | dpd |
@@ -236,8 +237,8 @@ loans[["loan_id", "product", "dpd"]].head(3)        # список столбц�
 **Как пишется.**
 
 ```python
-mask = loans["dpd"] > 90                       # по одному True/False на строку
-print(mask.sum())                              # True считается как 1: сколько строк проходит
+mask = loans["dpd"] > 90  # по одному True/False на строку
+print(mask.sum())         # True считается как 1: сколько строк проходит
 loans[mask][["loan_id", "product", "dpd", "status"]].head(3)
 ```
 
@@ -252,14 +253,22 @@ loans[mask][["loan_id", "product", "dpd", "status"]].head(3)
 Остальные фильтры, каждый с числом строк на `loans_status.csv`:
 
 ```python
-active      = loans[loans["status"] == "active"]                                # WHERE status = 'active'
-late_active = loans[(loans["dpd"] > 0) & (loans["status"] == "active")]         # AND — скобки вокруг каждого условия
-big         = loans[loans["product"].isin(["Small business loan", "Auto loan"])] # IN (…)
-mid         = loans[loans["principal"].between(10_000_000, 50_000_000)]          # BETWEEN, оба конца включены
-tash        = loans[loans["branch"].str.contains("Tashkent")]                    # LIKE '%Tashkent%'
-not_closed  = loans[~(loans["status"] == "closed")]                              # NOT
-either      = loans[(loans["dpd"] > 90) | (loans["status"] == "written_off")]   # OR
-sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_at"] < "2026-10-01")]   # полуоткрытый период
+# WHERE status = 'active'
+active      = loans[loans["status"] == "active"]
+# AND — скобки вокруг каждого условия
+late_active = loans[(loans["dpd"] > 0) & (loans["status"] == "active")]
+# IN (…)
+big         = loans[loans["product"].isin(["Small business loan", "Auto loan"])]
+# BETWEEN, оба конца включены
+mid         = loans[loans["principal"].between(10_000_000, 50_000_000)]
+# LIKE '%Tashkent%'
+tash        = loans[loans["branch"].str.contains("Tashkent")]
+# NOT
+not_closed  = loans[~(loans["status"] == "closed")]
+# OR
+either      = loans[(loans["dpd"] > 90) | (loans["status"] == "written_off")]
+# полуоткрытый период
+sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_at"] < "2026-10-01")]
 [len(x) for x in [active, late_active, big, mid, tash, not_closed, either, sept]]
 ```
 
@@ -297,10 +306,14 @@ sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_
 **Как пишется.**
 
 ```python
-late = loans[loans["dpd"] > 0]                   # фильтр сохраняет исходные метки
-print(late.index[:3].tolist())                   # метки первых трёх просроченных кредитов
-print(late.iloc[0]["loan_id"], late.loc[20, "loan_id"])   # позиция 0 и метка 20: одна и та же строка
-late.loc[late["dpd"] > 400, ["loan_id", "product", "dpd"]].head(3)   # loc = маска + список столбцов
+# фильтр сохраняет исходные метки
+late = loans[loans["dpd"] > 0]
+# метки первых трёх просроченных кредитов
+print(late.index[:3].tolist())
+# позиция 0 и метка 20: одна и та же строка
+print(late.iloc[0]["loan_id"], late.loc[20, "loan_id"])
+# loc = маска + список столбцов
+late.loc[late["dpd"] > 400, ["loan_id", "product", "dpd"]].head(3)
 ```
 
 ```text
@@ -341,8 +354,9 @@ late.loc[late["dpd"] > 400, ["loan_id", "product", "dpd"]].head(3)   # loc = м�
 **Как пишется.**
 
 ```python
-top = loans.sort_values("outstanding", ascending=False)        # ORDER BY outstanding DESC
-top[["loan_id", "product", "outstanding", "dpd"]].head(3)       # … LIMIT 3
+# ORDER BY outstanding DESC
+top = loans.sort_values("outstanding", ascending=False)
+top[["loan_id", "product", "outstanding", "dpd"]].head(3)  # … LIMIT 3
 ```
 
 | (индекс) | loan_id | product | outstanding | dpd |
@@ -354,8 +368,10 @@ top[["loan_id", "product", "outstanding", "dpd"]].head(3)       # … LIMIT 3
 Три наибольших остатка — SME-кредиты на 574–586 млн, все без просрочки. Метки индекса теперь перемешаны: сортировка переставляет строки вместе с метками.
 
 ```python
-print(loans.nlargest(3, "principal")["loan_id"].tolist())                          # короткий путь
-loans.sort_values(["product", "dpd"], ascending=[True, False])[["product", "dpd"]].head(3)   # два ключа
+# короткий путь
+print(loans.nlargest(3, "principal")["loan_id"].tolist())
+# два ключа
+loans.sort_values(["product", "dpd"], ascending=[True, False])[["product", "dpd"]].head(3)
 ```
 
 `[2861, 4570, 4601]` — три наибольших principal: 599.06 / 598.45 / 597.54 млн. Сортировка по двум ключам ставит продукты от A до Я, а внутри продукта — самый просроченный кредит первым: Auto-кредиты с 771, затем 739 днями.
@@ -379,9 +395,12 @@ loans.sort_values(["product", "dpd"], ascending=[True, False])[["product", "dpd"
 **Как пишется.**
 
 ```python
-loans["outstanding_bn"] = loans["outstanding"] / 1e9                     # все строки сразу
-loans["repaid_share"] = 1 - loans["outstanding"] / loans["principal"]   # два столбца, строка к строке
-loans["is_late"] = loans["dpd"] > 0                                      # булев столбец
+# все строки сразу
+loans["outstanding_bn"] = loans["outstanding"] / 1e9
+# два столбца, строка к строке
+loans["repaid_share"] = 1 - loans["outstanding"] / loans["principal"]
+# булев столбец
+loans["is_late"] = loans["dpd"] > 0
 print(round(loans["outstanding_bn"].sum(), 1), loans["is_late"].sum())
 loans[["loan_id", "principal", "outstanding", "repaid_share", "is_late"]].head()
 ```
@@ -399,8 +418,8 @@ loans[["loan_id", "principal", "outstanding", "repaid_share", "is_late"]].head()
 Типы: `astype(int)`, `astype(float)`, `astype(str)`, `astype("category")` (текст с немногими значениями: меньше памяти и порядок), `astype(bool)`. Для текста, в котором может быть мусор, `pd.to_numeric(col, errors="coerce")` превращает то, что не может прочитать, в `NaN`, а не падает:
 
 ```python
-print(loans["term"].astype(str).head(3).tolist())                          # int → текст
-pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")             # 658.0, NaN, NaN
+print(loans["term"].astype(str).head(3).tolist())              # int → текст
+pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")  # 658.0, NaN, NaN
 ```
 
 Срок становится текстом `['24', '18', '3']`; баллы `"658"`, `""`, `"n/a"` становятся 658.0, NaN, NaN.
@@ -426,7 +445,8 @@ pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")             # 658.
 ```python
 AS_OF = pd.Timestamp("2026-10-01")
 loans["year"] = loans["disbursed_at"].dt.year
-loans["month"] = loans["disbursed_at"].dt.to_period("M")                 # strftime('%Y-%m') недели 3
+# strftime('%Y-%m') недели 3
+loans["month"] = loans["disbursed_at"].dt.to_period("M")
 loans["days_on_book"] = (AS_OF - loans["disbursed_at"]).dt.days
 print(loans["year"].value_counts().to_dict())
 loans[["loan_id", "disbursed_at", "year", "month", "days_on_book"]].head()
@@ -471,8 +491,8 @@ loans[["loan_id", "disbursed_at", "year", "month", "days_on_book"]].head()
 **Как пишется.**
 
 ```python
-print(loans["product"].nunique())                              # COUNT(DISTINCT product)
-loans["status"].value_counts()                                 # от большего к меньшему
+print(loans["product"].nunique())  # COUNT(DISTINCT product)
+loans["status"].value_counts()     # от большего к меньшему
 ```
 
 | status | count |
@@ -517,8 +537,10 @@ Micro 34.1 % · Consumer 30.9 · BNPL 20.0 · SME 10.0 · Auto 5.0 — доли 
 ```python
 cust = pd.read_csv("../excel/customers_dirty.csv")
 inc = cust["monthly_income"]
-print(cust.isna().sum()[lambda s: s > 0])           # столбцы с пропусками и сколько их
-print(len(inc), inc.count())                        # строки против непустых значений
+# столбцы с пропусками и сколько их
+print(cust.isna().sum()[lambda s: s > 0])
+# строки против непустых значений
+print(len(inc), inc.count())
 print(round(inc.mean()), round(inc.fillna(0).mean()), round(inc.fillna(inc.median()).mean()))
 print(len(cust.dropna(subset=["monthly_income"])))
 ```
@@ -651,7 +673,8 @@ watch = loans.loc[cond, ["loan_id", "branch", "product", "disbursed_at", "outsta
 watch["days_on_book"] = (AS_OF - watch["disbursed_at"]).dt.days
 watch["bucket"] = pd.cut(watch["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
 watch = watch.sort_values("outstanding", ascending=False)
-watch.to_csv("tashkent_watchlist.csv", index=False)       # index=False, иначе в Excel появится безымянный первый столбец
+# index=False, иначе в Excel появится безымянный первый столбец
+watch.to_csv("tashkent_watchlist.csv", index=False)
 print(len(watch), watch["outstanding"].sum())
 watch.head()
 ```
@@ -737,7 +760,8 @@ def portfolio_summary(df):
     }
 
 portfolio_summary(loans)
-# {'loans': 7828, 'active': 3352, 'outstanding': 208723504430, 'disbursed_2026': 3030, 'par30_pct': 3.12, 'npl90_pct': 2.55}
+# {'loans': 7828, 'active': 3352, 'outstanding': 208723504430, 'disbursed_2026':
+# 3030, 'par30_pct': 3.12, 'npl90_pct': 2.55}
 ```
 
 Каждая строка — это SQL-оператор, который вы уже писали: `len` — это `COUNT(*)`, `(cond).sum()` — это `SUM(CASE WHEN … THEN 1 END)`, `df.loc[mask, "col"].sum()` — это `SUM(col) WHERE mask`. Одно число отличается от плитки недели 4 намеренно: **3 030**, а не 3 051 — эта функция использует полуоткрытое `< AS_OF`, поэтому 21 кредит, выданный в сам день отчёта (852 760 000), не входит; `COUNTIFS` на неделе 4 использовал `<=`. Ни то ни другое не ошибка; докстринг функции должен сказать, какое из них выбрано.
@@ -880,11 +904,15 @@ portfolio_summary(loans)
 ```python
 edges, labels = [-1, 0, 30, 60, 90, np.inf], ["0", "1-30", "31-60", "61-90", "90+"]
 loans["bucket_pd"] = pd.cut(loans["dpd"], bins=edges, labels=labels)
-buckets = loans["bucket_pd"].value_counts().sort_index()              # 7429 · 124 · 25 · 16 · 234
+# 7429 · 124 · 25 · 16 · 234
+buckets = loans["bucket_pd"].value_counts().sort_index()
 
-total = loans["outstanding"].sum()                                    # 208 723 504 430
-par30 = loans.loc[loans["dpd"] > 30, "outstanding"].sum() / total     # 6 507 526 953 / total = 3.12 %
-npl90 = loans.loc[loans["dpd"] > 90, "outstanding"].sum() / total     # 5 319 475 527 / total = 2.55 %
+# 208 723 504 430
+total = loans["outstanding"].sum()
+# 6 507 526 953 / total = 3.12 %
+par30 = loans.loc[loans["dpd"] > 30, "outstanding"].sum() / total
+# 5 319 475 527 / total = 2.55 %
+npl90 = loans.loc[loans["dpd"] > 90, "outstanding"].sum() / total
 ```
 
 ```game

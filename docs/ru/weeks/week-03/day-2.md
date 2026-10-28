@@ -26,8 +26,10 @@
 
 ```sql
 SELECT customer_id, loan_id, disbursed_at,
-       ROW_NUMBER() OVER (PARTITION BY customer_id          -- заново для каждого клиента
-                          ORDER BY disbursed_at, loan_id)    -- что значит «первый»; loan_id разрешает равенство
+       -- заново для каждого клиента
+       ROW_NUMBER() OVER (PARTITION BY customer_id
+                          -- что значит «первый»; loan_id разрешает равенство
+                          ORDER BY disbursed_at, loan_id)
        AS loan_no
 FROM loans
 WHERE customer_id = 1893
@@ -69,9 +71,12 @@ ORDER BY loan_no;
 ```sql
 WITH t(loan, principal) AS (VALUES (101, 900), (102, 700), (103, 700), (104, 500), (105, 400))
 SELECT loan, principal,
-       ROW_NUMBER() OVER (ORDER BY principal DESC, loan) AS rn,     -- всегда уникален
-       RANK()       OVER (ORDER BY principal DESC)       AS rk,     -- равные делят номер, затем пропуск
-       DENSE_RANK() OVER (ORDER BY principal DESC)       AS drk     -- равные делят номер, без пропуска
+       -- всегда уникален
+       ROW_NUMBER() OVER (ORDER BY principal DESC, loan) AS rn,
+       -- равные делят номер, затем пропуск
+       RANK()       OVER (ORDER BY principal DESC)       AS rk,
+       -- равные делят номер, без пропуска
+       DENSE_RANK() OVER (ORDER BY principal DESC)       AS drk
 FROM t;
 ```
 
@@ -119,7 +124,8 @@ LIMIT 7;
 **Как пишется.** Заёмщики в четырёх группах по остатку долга, от крупнейших:
 
 ```sql
-WITH c AS (                                                         -- одна строка на заёмщика: остаток долга на 2026-10-01
+-- одна строка на заёмщика: остаток долга на 2026-10-01
+WITH c AS (
   SELECT l.customer_id, SUM(i.principal_due) AS outstanding
   FROM installments i JOIN loans l ON l.loan_id = i.loan_id
   WHERE i.due_date > '2026-10-01'
@@ -166,7 +172,8 @@ ORDER BY quartile;
 **Как пишется.**
 
 ```sql
-LAG(column, offset, default) OVER (PARTITION BY … ORDER BY …)   -- offset: на сколько строк назад (1, если не указан); default: вместо NULL
+-- offset: на сколько строк назад (1, если не указан); default: вместо NULL
+LAG(column, offset, default) OVER (PARTITION BY … ORDER BY …)
 ```
 
 Платежи по кредиту 1, у каждого — предыдущий и следующий:
@@ -176,7 +183,8 @@ SELECT payment_id, paid_at,
        LAG(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id) AS prev_paid,
        LEAD(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id) AS next_paid,
        CAST(julianday(paid_at)
-          - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS INTEGER) AS gap_days   -- SQL Server: DATEDIFF(day, тот же LAG, paid_at)
+          -- SQL Server: DATEDIFF(day, тот же LAG, paid_at)
+          - julianday(LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at, payment_id)) AS INTEGER) AS gap_days
 FROM payments
 WHERE loan_id = 1
 ORDER BY paid_at;
@@ -192,9 +200,11 @@ WITH m AS (SELECT strftime('%Y-%m', disbursed_at) AS month, SUM(principal) AS di
 SELECT month, disbursed,
        LAG(disbursed) OVER (ORDER BY month) AS prev_month,
        ROUND(100.0 * (disbursed - LAG(disbursed) OVER (ORDER BY month))
-             / LAG(disbursed) OVER (ORDER BY month), 1)      AS mom_pct,       -- к предыдущему месяцу
+             -- к предыдущему месяцу
+             / LAG(disbursed) OVER (ORDER BY month), 1)      AS mom_pct,
        ROUND(100.0 * (disbursed - LAG(disbursed, 12) OVER (ORDER BY month))
-             / LAG(disbursed, 12) OVER (ORDER BY month), 1)  AS yoy_pct        -- к тому же месяцу прошлого года
+             -- к тому же месяцу прошлого года
+             / LAG(disbursed, 12) OVER (ORDER BY month), 1)  AS yoy_pct
 FROM m
 ORDER BY month;
 ```
@@ -223,7 +233,8 @@ ORDER BY month;
 ```sql
 SELECT paid_at,
        FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at) AS first_payment,
-       LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_wrong,      -- рамка по умолчанию: кончается на этой строке
+       -- рамка по умолчанию: кончается на этой строке
+       LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at) AS last_wrong,
        LAST_VALUE(paid_at)  OVER (PARTITION BY loan_id ORDER BY paid_at
                                   ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS last_payment
 FROM payments
@@ -251,11 +262,13 @@ WHERE loan_id = 1;
 **Как пишется.**
 
 ```sql
-WITH r AS (                                                          -- шаг 1: нумеруем строки внутри каждого продукта
+-- шаг 1: нумеруем строки внутри каждого продукта
+WITH r AS (
   SELECT l.loan_id, p.code, l.principal, l.disbursed_at,
          ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.principal DESC, l.loan_id) AS rn
   FROM loans l JOIN products p ON p.product_id = l.product_id)
-SELECT * FROM r                                                      -- шаг 2: оставляем первые три
+-- шаг 2: оставляем первые три
+SELECT * FROM r
 WHERE rn <= 3
 ORDER BY code, rn;
 ```
@@ -285,11 +298,13 @@ ORDER BY code, rn;
 ```sql
 WITH r AS (
   SELECT customer_id, first_name, last_name, phone,
-         ROW_NUMBER() OVER (PARTITION BY phone            -- что делает две строки «одинаковыми»
-                            ORDER BY customer_id) AS rn    -- какая считается оригиналом: наименьший id
+         -- что делает две строки «одинаковыми»
+         ROW_NUMBER() OVER (PARTITION BY phone
+                            -- какая считается оригиналом: наименьший id
+                            ORDER BY customer_id) AS rn
   FROM customers)
 SELECT * FROM r
-WHERE rn > 1                                               -- повторы
+WHERE rn > 1  -- повторы
 ORDER BY customer_id;
 ```
 
@@ -298,7 +313,8 @@ ORDER BY customer_id;
 **Удалить** их физически — это тот же список внутри `DELETE`, только в собственной копии:
 
 ```sql
--- только схема: удалить повторы из собственной таблицы (практикум ниже делает это по-настоящему)
+-- только схема: удалить повторы из собственной таблицы (практикум ниже делает
+-- это по-настоящему)
 DELETE FROM my_table
 WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY … ORDER BY id) AS rn FROM my_table) t
              WHERE rn > 1);
@@ -339,8 +355,10 @@ loan  asof        bucket      LAG(bucket) OVER (PARTITION BY loan ORDER BY asof)
 **Как пишется.** Правило DPD из недели 2, посчитанное сразу на две даты отчёта, затем `LAG`, затем подсчёт по парам «из × в»:
 
 ```sql
-WITH snaps(asof) AS (VALUES ('2026-09-01'), ('2026-10-01')),            -- две даты среза
-unpaid AS (                                                             -- платежи с наступившим сроком, оплаченные не полностью, на каждую дату
+-- две даты среза
+WITH snaps(asof) AS (VALUES ('2026-09-01'), ('2026-10-01')),
+-- платежи с наступившим сроком, оплаченные не полностью, на каждую дату
+unpaid AS (
   SELECT s.asof, i.loan_id, i.due_date
   FROM snaps s
   JOIN installments i ON i.due_date <= s.asof
@@ -349,7 +367,8 @@ unpaid AS (                                                             -- пл�
   HAVING COALESCE(SUM(p.amount), 0) < i.total_due),
 dpd AS (SELECT asof, loan_id, CAST(julianday(asof) - julianday(MIN(due_date)) AS INTEGER) AS dpd
         FROM unpaid GROUP BY asof, loan_id),
-b AS (                                                                  -- одна строка на кредит на дату; нет неоплаченного платежа = DPD 0
+-- одна строка на кредит на дату; нет неоплаченного платежа = DPD 0
+b AS (
   SELECT s.asof, l.loan_id,
          CASE WHEN COALESCE(d.dpd, 0) = 0 THEN '0' WHEN d.dpd <= 30 THEN '1-30' WHEN d.dpd <= 60 THEN '31-60'
               WHEN d.dpd <= 90 THEN '61-90' ELSE '90+' END AS bucket
@@ -357,7 +376,8 @@ b AS (                                                                  -- од�
   JOIN loans l ON l.disbursed_at < '2026-09-01'
   LEFT JOIN dpd d ON d.asof = s.asof AND d.loan_id = l.loan_id),
 moves AS (SELECT asof, loan_id, bucket AS to_bucket,
-                 LAG(bucket) OVER (PARTITION BY loan_id ORDER BY asof) AS from_bucket   -- корзина прошлого месяца, в той же строке
+                 -- корзина прошлого месяца, в той же строке
+                 LAG(bucket) OVER (PARTITION BY loan_id ORDER BY asof) AS from_bucket
           FROM b)
 SELECT from_bucket, to_bucket, COUNT(*) AS loans,
        ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY from_bucket), 1) AS pct_of_from
@@ -388,13 +408,17 @@ ORDER BY from_bucket, to_bucket;
 ```sql
 WITH r AS (
   SELECT l.loan_id, p.code, l.disbursed_at, l.principal,
-         ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.disbursed_at DESC, l.loan_id DESC) AS newest_first,   -- ROW_NUMBER
-         LAG(l.principal) OVER (PARTITION BY p.code ORDER BY l.disbursed_at, l.loan_id)        AS prev_principal, -- LAG
-         NTILE(4) OVER (PARTITION BY p.code ORDER BY l.principal DESC)                          AS size_quartile   -- NTILE
+         -- ROW_NUMBER
+         ROW_NUMBER() OVER (PARTITION BY p.code ORDER BY l.disbursed_at DESC, l.loan_id DESC) AS newest_first,
+         -- LAG
+         LAG(l.principal) OVER (PARTITION BY p.code ORDER BY l.disbursed_at, l.loan_id)        AS prev_principal,
+         -- NTILE
+         NTILE(4) OVER (PARTITION BY p.code ORDER BY l.principal DESC)                          AS size_quartile
   FROM loans l JOIN products p ON p.product_id = l.product_id)
 SELECT code, loan_id, disbursed_at, principal, prev_principal, size_quartile
 FROM r
-WHERE newest_first = 1                                                                                            -- топ-N, N = 1
+-- топ-N, N = 1
+WHERE newest_first = 1
 ORDER BY code;
 ```
 
@@ -462,11 +486,13 @@ SELECT * FROM d WHERE rn > 1 ORDER BY payment_id;
 ```sql
 WITH d AS (
   SELECT payment_id, loan_id, installment_id, paid_at, amount,
-         REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,      -- очистка из недели 2, в том же проходе
+         -- очистка из недели 2, в том же проходе
+         REPLACE(LOWER(TRIM(method)), 'bank transfer', 'transfer') AS method,
          ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount ORDER BY payment_id) AS rn
   FROM payments)
 SELECT payment_id, loan_id, installment_id, paid_at, amount, method FROM d WHERE rn = 1;
--- 52 850 строк · 255 114 772 176 UZS (сырые: 52 875 · 255 173 169 976) · 5 способов оплаты
+-- 52 850 строк · 255 114 772 176 UZS (сырые: 52 875 · 255 173 169 976) · 5
+-- способов оплаты
 ```
 
 <details><summary>Меняет ли это что-нибудь дальше?</summary>
@@ -544,7 +570,8 @@ FROM o ORDER BY rn;
 SELECT collector_id, COUNT(*) AS actions, SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) AS promises,
        RANK() OVER (ORDER BY SUM(CASE WHEN outcome = 'promise_to_pay' THEN 1 ELSE 0 END) DESC) AS rk
 FROM collections_actions GROUP BY collector_id ORDER BY rk LIMIT 5;
--- 29 → 568 действий / 182 обещания · 28 → 593 / 177 · 27 → 590 / 170 · 57 → 419 / 125 · 7 → 393 / 121
+-- 29 → 568 действий / 182 обещания · 28 → 593 / 177 · 27 → 590 / 170 · 57 → 419
+-- / 125 · 7 → 393 / 121
 ```
 Окно над агрегатом с `CASE` внутри — три слоя, всё ещё один запрос. Ранжирование по *количеству* награждает самого занятого сотрудника; добавьте `100.0 * promises / actions` и проранжируйте ещё и по этому показателю, прежде чем кто-то получит премию.
 
@@ -561,7 +588,8 @@ q AS (SELECT customer_id, outstanding, NTILE(10) OVER (ORDER BY outstanding DESC
 SELECT decile, COUNT(*) AS borrowers, SUM(outstanding) AS outstanding,
        ROUND(100.0 * SUM(outstanding) / SUM(SUM(outstanding)) OVER (), 1) AS share_pct
 FROM q GROUP BY decile ORDER BY decile;
--- 1 · 254 · 102 681 050 696 · 49.2 %   2 · 254 · 54 113 118 283 · 25.9 %   3 · 254 · 12.4 % …
+-- 1 · 254 · 102 681 050 696 · 49.2 %   2 · 254 · 54 113 118 283 · 25.9 %   3 ·
+-- 254 · 12.4 % …
 ```
 Раздел 1 даёт квартили 82.7 / 13.6 / 3.2 / 0.5 %. `NTILE(10)`: первый дециль (254 заёмщика) держит **49.2 %** портфеля, второй — 25.9 %: три четверти остатка долга у пятой части заёмщиков. Таблица децилей — стандартный слайд «кто наши клиенты по размеру долга»; с каждой долей указывайте число заёмщиков.
 
@@ -647,7 +675,8 @@ WITH f AS (SELECT l.customer_id,
 SELECT first_product, latest_product, COUNT(DISTINCT customer_id) AS customers
 FROM f WHERE loans >= 2
 GROUP BY first_product, latest_product ORDER BY customers DESC;
--- 25 строк: MICRO → MICRO 263 · MICRO → CONS 259 · CONS → MICRO 221 … MICRO → SME 70
+-- 25 строк: MICRO → MICRO 263 · MICRO → CONS 259 · CONS → MICRO 221 … MICRO →
+-- SME 70
 ```
 70 клиентов взяли первым кредит Micro, а последним — SME. Самый частый путь из Micro — в Consumer (259). `FIRST_VALUE` с обратным порядком — надёжное «последнее»: `LAST_VALUE` с рамкой по умолчанию вернул бы собственный продукт каждой строки. `COUNT(DISTINCT customer_id)` — потому что окно записало одну и ту же пару в каждый кредит клиента.
 
@@ -663,7 +692,8 @@ WITH r AS (
          ROW_NUMBER() OVER (PARTITION BY b.branch_name ORDER BY l.principal DESC, l.loan_id) AS rn
   FROM loans l JOIN branches b ON b.branch_id = l.branch_id JOIN products p ON p.product_id = l.product_id)
 SELECT * FROM r WHERE rn <= 3 ORDER BY branch_name, rn;
--- 30 строк; все — кредиты SME; крупнейший по филиалу от 573 480 000 (Samarkand Central) до 599 060 000 (Tashkent Central)
+-- 30 строк; все — кредиты SME; крупнейший по филиалу от 573 480 000 (Samarkand
+-- Central) до 599 060 000 (Tashkent Central)
 ```
 ```sql
 WITH r AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at DESC, loan_id DESC) AS rn FROM loans)
@@ -691,7 +721,9 @@ WITH d AS (SELECT payment_id, loan_id, installment_id, paid_at, amount, method,
                   MAX(payment_id) OVER (PARTITION BY installment_id, paid_at, amount) AS second_id
            FROM payments)
 SELECT DISTINCT first_id, second_id, loan_id, installment_id, paid_at, amount, method FROM d WHERE cnt > 1 ORDER BY amount DESC;
--- 25 строк; крупнейшая: кредит 5106, платёж 59838, 2026-07-17, 12 410 700 (click), id 34356 и 52857; затем кредит 1814 12 059 800 (11981/52858); кредит 3676 11 445 500 (24496/52863)
+-- 25 строк; крупнейшая: кредит 5106, платёж 59838, 2026-07-17, 12 410 700
+-- (click), id 34356 и 52857; затем кредит 1814 12 059 800 (11981/52858); кредит
+-- 3676 11 445 500 (24496/52863)
 ```
 Агрегатные окна по секции дубликатов; `DISTINCT` сворачивает пару в одну строку — здесь это допустимо, потому что две строки по построению одинаковы. (Привычки по производительности четверга предостерегают от `DISTINCT`, которым *прячут* ошибку соединения; здесь не тот случай.)
 
@@ -745,7 +777,8 @@ SELECT from_bucket, to_bucket, COUNT(*) AS loans,
        ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY from_bucket), 1) AS pct_of_from
 FROM moves WHERE asof = '2026-09-01' AND from_bucket <> '0'
 GROUP BY from_bucket, to_bucket ORDER BY from_bucket, to_bucket;
--- 1-30 → 0 75 (74.3 %) · → 1-30 5 (5.0) · → 31-60 21 (20.8) | 31-60 → 0 16 (47.1) · → 1-30 1 · → 61-90 17 (50.0) | 61-90 → 90+ 16 | 90+ → 90+ 201
+-- 1-30 → 0 75 (74.3 %) · → 1-30 5 (5.0) · → 31-60 21 (20.8) | 31-60 → 0 16
+-- (47.1) · → 1-30 1 · → 61-90 17 (50.0) | 61-90 → 90+ 16 | 90+ → 90+ 201
 ```
 1–30 перешли вперёд в **20.8 %** случаев (21 из 101) в августе и в 19.5 % в сентябре: примерно каждый пятый, стабильно. 31–60 менее стабильна — 50.0 %, затем 69.6 % — на 34 и 23 кредитах; маленькие строки сильно колеблются. Два месяца — прежде чем называть любую из этих долей «той самой» миграцией.
 
@@ -763,7 +796,9 @@ WITH r AS (SELECT p.code, l.principal,
                   COUNT(*)     OVER (PARTITION BY p.code) AS n
            FROM loans l JOIN products p ON p.product_id = l.product_id)
 SELECT code, n, AVG(principal) AS median FROM r WHERE rn IN ((n + 1) / 2, (n + 2) / 2) GROUP BY code;
--- AUTO медиана 214 840 000 (среднее 216 858 133) · SME 314 770 000 (308 728 745) · CONS 26 965 000 (26 926 915) · MICRO 2 700 000 (2 705 586) · BNPL 4 180 000 (4 170 880)
+-- AUTO медиана 214 840 000 (среднее 216 858 133) · SME 314 770 000 (308 728
+-- 745) · CONS 26 965 000 (26 926 915) · MICRO 2 700 000 (2 705 586) · BNPL 4
+-- 180 000 (4 170 880)
 ```
 Целочисленное деление выбирает одну среднюю строку при нечётном n и две при чётном. Медиана ≈ среднему везде: размеры кредитов равномерно распределены между минимумом и максимумом продукта, перекоса нет. (В SQL Server есть `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY principal) OVER (PARTITION BY code)`; в SQLite нет — это переносимый способ.)
 
@@ -789,7 +824,8 @@ SELECT code, n, AVG(principal) AS median FROM r WHERE rn IN ((n + 1) / 2, (n + 2
 **1. Срез на каждую дату.** Блок DPD из недели 2, в котором дата отчёта — *параметр* в двух местах: фильтр платежей по графику **и** фильтр оплат. Второй не был нужен на 2026-10-01 (дата выгрузки), но на 2026-09-01 оплата, сделанная 15 сентября, не должна учитываться:
 
 ```sql
-WITH u0 AS (                                            -- неоплаченные платежи с наступившим сроком на 2026-09-01
+-- неоплаченные платежи с наступившим сроком на 2026-09-01
+WITH u0 AS (
   SELECT i.loan_id, i.due_date FROM installments i
   LEFT JOIN payments p ON p.installment_id = i.installment_id AND p.paid_at <= '2026-09-01'
   WHERE i.due_date <= '2026-09-01'

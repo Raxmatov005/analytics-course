@@ -24,7 +24,8 @@
 **Как пишется.** Типичный OLTP-запрос касается одной строки, найденной по первичному ключу:
 
 ```sql
-SELECT loan_id, customer_id, principal, status FROM loans WHERE loan_id = 4516;   -- «покажи кредит 4516»
+SELECT loan_id, customer_id, principal, status FROM loans WHERE loan_id = 4516;
+-- «покажи кредит 4516»
 ```
 
 1 строка: кредит 4516, клиент 2954, 2 960 000, закрыт. Такой вопрос экран кассира задаёт тысячу раз в день. Второй типичный запрос — `INSERT` одной новой строки, команды Дня 3.
@@ -45,7 +46,8 @@ SELECT loan_id, customer_id, principal, status FROM loans WHERE loan_id = 4516; 
 
 ```sql
 SELECT COUNT(*) FROM payments
-WHERE paid_at >= '2025-01-01' AND paid_at < '2026-01-01';   -- все платежи за целый год
+WHERE paid_at >= '2025-01-01' AND paid_at < '2026-01-01';
+-- все платежи за целый год
 ```
 
 В 2025 году пришёл 21 194 платёж. Чтобы ответить, база читает все 52 875 строк `payments`. Запустите такое на боевой базе в 11:00 — и кассир в Фергане ждёт свой экран.
@@ -331,9 +333,12 @@ SELECT COUNT(*) FROM customers;   -- ожидайте 6040
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);     -- ваш результат (SQLite)
-SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);     -- ваш результат (SQLite)
-SELECT COUNT(*) FROM customers WHERE last_name  = LOWER(last_name);      -- ваш результат (SQLite)
+SELECT COUNT(*) FROM customers WHERE first_name = UPPER(first_name);
+-- ваш результат (SQLite)
+SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);
+-- ваш результат (SQLite)
+SELECT COUNT(*) FROM customers WHERE last_name  = LOWER(last_name);
+-- ваш результат (SQLite)
 
 SELECT customer_id, first_name, last_name, birth_date, registered_at
 FROM customers
@@ -414,13 +419,16 @@ ORDER BY n DESC, ln, fn;
 <details><summary>Ответ</summary>
 
 ```sql
-SELECT COUNT(*) FROM customers WHERE birth_date > '2026-10-01';   -- ещё не родились
-SELECT COUNT(*) FROM customers WHERE birth_date = '1900-01-01';   -- классическая заглушка «неизвестно»
+SELECT COUNT(*) FROM customers WHERE birth_date > '2026-10-01';
+-- ещё не родились
+SELECT COUNT(*) FROM customers WHERE birth_date = '1900-01-01';
+-- классическая заглушка «неизвестно»
 
 SELECT customer_id, first_name, last_name, birth_date
 FROM customers
 WHERE birth_date > '2026-10-01' OR birth_date < '1920-01-01'
-ORDER BY birth_date;                                              -- полный список
+ORDER BY birth_date;
+-- полный список
 ```
 Посмотрите на даты в списке: заглушка `1900-01-01`, годы далеко в будущем — и одна, которая выглядит как обычная дата, пока не заметишь, что она **позже даты, на которую актуальны данные**: клиент, родившийся в следующем году. В этом и урок: проверка типа (дата ли это?) здесь ничего не ловит; только *бизнес*-проверка (родился между 1920 годом и «сегодня минус 18 лет») ловит. Каждая строка списка — находка для записки; проверьте, не входит ли какая-то из них в число дублирующих строк. Все остальные родились между 1955-01-04 и 2006-12-26 — правдоподобно.
 

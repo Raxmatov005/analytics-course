@@ -31,13 +31,16 @@ import math, sqlite3
 import numpy as np
 import pandas as pd
 from statistics import NormalDist
-Phi, zq = NormalDist().cdf, NormalDist().inv_cdf          # the normal CDF and its inverse (z for a probability)
-def pmf(k, n, p):                                          # binomial P(X = k), from Day 1
+# the normal CDF and its inverse (z for a probability)
+Phi, zq = NormalDist().cdf, NormalDist().inv_cdf
+# binomial P(X = k), from Day 1
+def pmf(k, n, p):
     return math.comb(n, k) * p**k * (1 - p)**(n - k)
-def cdf(k, n, p):                                          # binomial P(X <= k)
+def cdf(k, n, p):  # binomial P(X <= k)
     return sum(pmf(i, n, p) for i in range(k + 1))
 
-f = pd.read_csv("data/powerbi/fct_first_instalment.csv")          # 7 099 first instalments, fpd30 = 0/1
+# 7 099 first instalments, fpd30 = 0/1
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
 f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
 
 con = sqlite3.connect("data/raw/nur.db")
@@ -52,8 +55,10 @@ x = pd.read_sql("""
     JOIN products pr    ON pr.product_id = l.product_id""", con)
 
 two = x[x["code"].isin(["AUTO", "SME"])].groupby("code")["days_late"]
-print(len(x), two.agg(["size", "mean", "median", "skew"]).round(2))   # 52850; AUTO 4688 −0.21 −1 5.85; SME 8222 0.04 −1 5.53
-print(two.apply(lambda d: (d > 0).mean()).round(3))                  # share paid late: AUTO 0.101, SME 0.124
+# 52850; AUTO 4688 −0.21 −1 5.85; SME 8222 0.04 −1 5.53
+print(len(x), two.agg(["size", "mean", "median", "skew"]).round(2))
+# share paid late: AUTO 0.101, SME 0.124
+print(two.apply(lambda d: (d > 0).mean()).round(3))
 ```
 
 | | n payments | mean days | median | skew | share paid late | share > 30 days | 99th percentile |
@@ -98,20 +103,27 @@ Both products pay one day early in the middle (median −1), and both have a thi
 A's ranks add up to 2 + 5 + 7 = 14, so U = 14 − 3·4/2 = **8**: A wins 8 of the 3 × 4 = 12 pairs, a share of 0.67.
 
 ```python
-def mann_whitney(a, b):                                    # two-sided; normal approximation with the tie correction
+# two-sided; normal approximation with the tie correction
+def mann_whitney(a, b):
     a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
     n1, n2 = len(a), len(b)
     pooled = pd.Series(np.concatenate([a, b]))
-    r = pooled.rank().to_numpy()                           # ranks of all values together; ties get the average rank
-    u = r[:n1].sum() - n1 * (n1 + 1) / 2                   # U for group a
+    # ranks of all values together; ties get the average rank
+    r = pooled.rank().to_numpy()
+    u = r[:n1].sum() - n1 * (n1 + 1) / 2  # U for group a
     n, t = n1 + n2, pooled.value_counts().to_numpy().astype(float)
-    sd = math.sqrt(n1 * n2 / 12 * ((n + 1) - (t**3 - t).sum() / (n * (n - 1))))   # the spread of U under H0
-    z = (abs(u - n1 * n2 / 2) - 0.5) / sd                  # 0.5 = continuity correction
-    return u, u / (n1 * n2), 2 * (1 - Phi(z))              # U, P(a random a > a random b), p-value
+    # the spread of U under H0
+    sd = math.sqrt(n1 * n2 / 12 * ((n + 1) - (t**3 - t).sum() / (n * (n - 1))))
+    # 0.5 = continuity correction
+    z = (abs(u - n1 * n2 / 2) - 0.5) / sd
+    # U, P(a random a > a random b), p-value
+    return u, u / (n1 * n2), 2 * (1 - Phi(z))
 
-print(mann_whitney([2, 5, 9], [1, 3, 4, 7])[:2])           # (8.0, 0.667) — the small table
+# (8.0, 0.667) — the small table
+print(mann_whitney([2, 5, 9], [1, 3, 4, 7])[:2])
 auto, sme = x.loc[x.code == "AUTO", "days_late"], x.loc[x.code == "SME", "days_late"]
-print([round(v, 3) for v in mann_whitney(auto, sme)])      # [19075370.5, 0.495, 0.323]
+# [19075370.5, 0.495, 0.323]
+print([round(v, 3) for v in mann_whitney(auto, sme)])
 # scipy (the notebook): scipy.stats.mannwhitneyu(auto, sme) — the same U and p
 ```
 
@@ -161,15 +173,20 @@ Both answers are right: the averages differ because SME has a slightly heavier l
 f["year"] = pd.to_datetime(f["disbursed_at"]).dt.year
 w = f[f.year.isin([2025, 2026])].pivot_table(index="branch_name", columns="year", values="fpd30", aggfunc="mean") * 100
 d = (w[2026] - w[2025]).to_numpy()
-d = d[d != 0]                                              # a zero difference has no sign
-r = pd.Series(np.abs(d)).rank().to_numpy()                 # rank the sizes of the differences
+# a zero difference has no sign
+d = d[d != 0]
+# rank the sizes of the differences
+r = pd.Series(np.abs(d)).rank().to_numpy()
 w_plus, w_minus = r[d > 0].sum(), r[d < 0].sum()
 W = min(w_plus, w_minus)
-# exact p-value: under H0 every pattern of + and − signs on the ranks is equally likely (2^10 = 1 024 patterns)
+# exact p-value: under H0 every pattern of + and − signs on the ranks is equally
+# likely (2^10 = 1 024 patterns)
 signs = (np.arange(2 ** len(d))[:, None] >> np.arange(len(d))) & 1
-plus = signs @ r                                           # W+ of every pattern
-print(w_plus, w_minus, np.mean(np.minimum(plus, r.sum() - plus) <= W))   # 7.0 48.0 0.037
-# scipy (the notebook): scipy.stats.wilcoxon(w[2026], w[2025]) → W = 7, p = 0.037
+plus = signs @ r  # W+ of every pattern
+# 7.0 48.0 0.037
+print(w_plus, w_minus, np.mean(np.minimum(plus, r.sum() - plus) <= W))
+# scipy (the notebook): scipy.stats.wilcoxon(w[2026], w[2025]) → W = 7, p =
+# 0.037
 ```
 
 W+ = 7: only Tashkent North got worse, and its rise is the 7th-largest change of ten; 38 of the 1 024 sign patterns are this lopsided, so p = 0.037.
@@ -200,16 +217,20 @@ def kruskal(groups):
     pooled = pd.concat(groups, ignore_index=True)
     r, n = pooled.rank().to_numpy(), len(pooled)
     h, start = 0.0, 0
-    for g in groups:                                        # each group's mean rank against the overall (n + 1) / 2
+    # each group's mean rank against the overall (n + 1) / 2
+    for g in groups:
         rg = r[start:start + len(g)]; start += len(g)
         h += len(g) * (rg.mean() - (n + 1) / 2) ** 2
     h *= 12 / (n * (n + 1))
     t = pooled.value_counts().to_numpy().astype(float)
-    return h / (1 - (t**3 - t).sum() / (n**3 - n))          # tie correction
+    return h / (1 - (t**3 - t).sum() / (n**3 - n))  # tie correction
 H = kruskal([g["days_late"] for _, g in x.groupby("code")])
-print(round(H, 1), math.exp(-H / 2) * (1 + H / 2))         # 61.0 1.8e-12 — for 4 df, P(χ² > H) = e^(−H/2)·(1 + H/2)
-print(x.groupby("code")["days_late"].mean().round(2))      # Micro +0.56 stands out; the others −0.21 to +0.04
-# scipy (the notebook): scipy.stats.kruskal(*groups); one-way ANOVA: scipy.stats.f_oneway(*groups) → F = 19.3
+# 61.0 1.8e-12 — for 4 df, P(χ² > H) = e^(−H/2)·(1 + H/2)
+print(round(H, 1), math.exp(-H / 2) * (1 + H / 2))
+# Micro +0.56 stands out; the others −0.21 to +0.04
+print(x.groupby("code")["days_late"].mean().round(2))
+# scipy (the notebook): scipy.stats.kruskal(*groups); one-way ANOVA:
+# scipy.stats.f_oneway(*groups) → F = 19.3
 ```
 
 H = 61.0 on 4 degrees of freedom, p = 1.8 × 10⁻¹²: the days late of at least one product differ from the rest, and the means point at Micro.
@@ -235,10 +256,13 @@ H = 61.0 on 4 degrees of freedom, p = 1.8 × 10⁻¹²: the days late of at leas
 ```python
 ab = f[f["channel"].isin(["app", "branch"])]
 y, is_app = ab["fpd30"].to_numpy(), (ab["channel"] == "app").to_numpy()
-obs = y[is_app].mean() - y[~is_app].mean()                       # the real gap: +0.6586 points
-g = np.random.default_rng(2026)                                  # seeded, so you get the same shuffles
+# the real gap: +0.6586 points
+obs = y[is_app].mean() - y[~is_app].mean()
+# seeded, so you get the same shuffles
+g = np.random.default_rng(2026)
 diffs = np.array([(lambda s: y[s].mean() - y[~s].mean())(g.permutation(is_app)) for _ in range(10_000)])
-print(round(100 * obs, 4), np.mean(np.abs(diffs) >= abs(obs)))   # 0.6586 and p ≈ 0.033 (notebook 0.0326; z-test 0.0318, Fisher 0.0344)
+# 0.6586 and p ≈ 0.033 (notebook 0.0326; z-test 0.0318, Fisher 0.0344)
+print(round(100 * obs, 4), np.mean(np.abs(diffs) >= abs(obs)))
 ```
 
 A gap of 0.66 points or more appeared in about 3.3 % of 10 000 shuffles, so p ≈ 0.033 — the same answer as yesterday's z-test.
@@ -267,7 +291,9 @@ A gap of 0.66 points or more appeared in about 3.3 % of 10 000 shuffles, so p �
 g = np.random.default_rng(2026)
 a, b = f.loc[f.channel == "app", "fpd30"].to_numpy(), f.loc[f.channel == "branch", "fpd30"].to_numpy()
 d = [g.choice(a, len(a)).mean() - g.choice(b, len(b)).mean() for _ in range(10_000)]
-print(np.quantile(d, [0.025, 0.975]))   # ≈ +0.0005 to +0.0130, i.e. +0.05 to +1.30 points — zero is outside; Newcombe gave +0.05 to +1.33
+# ≈ +0.0005 to +0.0130, i.e. +0.05 to +1.30 points — zero is outside; Newcombe
+# gave +0.05 to +1.33
+print(np.quantile(d, [0.025, 0.975]))
 ```
 
 The app's FPD is higher by somewhere between 0.05 and 1.30 points; zero is outside, so the difference is significant at 5 %.
@@ -302,18 +328,25 @@ The app's FPD is higher by somewhere between 0.05 and 1.30 points; zero is outsi
 | total | 6 | 240 | 246 |
 
 ```python
-t = np.array([[4, 63], [2, 177]])                                 # partner vs branch: FPD / no FPD
-print((np.outer(t.sum(axis=1), t.sum(axis=0)) / t.sum()).round(2))   # [[1.63 65.37] [4.37 174.63]] — two cells below 5
+# partner vs branch: FPD / no FPD
+t = np.array([[4, 63], [2, 177]])
+# [[1.63 65.37] [4.37 174.63]] — two cells below 5
+print((np.outer(t.sum(axis=1), t.sum(axis=0)) / t.sum()).round(2))
 
-def fisher(a, b, c, d):                                           # two-sided Fisher exact test for [[a, b], [c, d]]
+# two-sided Fisher exact test for [[a, b], [c, d]]
+def fisher(a, b, c, d):
     r1, c1, n = a + b, a + c, a + b + c + d
-    def table_p(k):                                               # P(k in the top-left cell) with the margins fixed
+    # P(k in the top-left cell) with the margins fixed
+    def table_p(k):
         return math.comb(c1, k) * math.comb(n - c1, r1 - k) / math.comb(n, r1)
     p_obs = table_p(a)
-    ks = range(max(0, r1 - (n - c1)), min(r1, c1) + 1)            # every possible top-left count
-    return sum(table_p(k) for k in ks if table_p(k) <= p_obs * (1 + 1e-7))   # tables as unlikely as ours, or more
-print(round(fisher(4, 63, 2, 177), 4))                            # 0.0485
-# scipy (the notebook): scipy.stats.chi2_contingency(t)[1] → 0.083 (Yates), correction=False → 0.028; scipy.stats.fisher_exact(t) → p 0.0485
+    # every possible top-left count
+    ks = range(max(0, r1 - (n - c1)), min(r1, c1) + 1)
+    # tables as unlikely as ours, or more
+    return sum(table_p(k) for k in ks if table_p(k) <= p_obs * (1 + 1e-7))
+print(round(fisher(4, 63, 2, 177), 4))  # 0.0485
+# scipy (the notebook): scipy.stats.chi2_contingency(t)[1] → 0.083 (Yates),
+# correction=False → 0.028; scipy.stats.fisher_exact(t) → p 0.0485
 ```
 
 Two expected counts are below 5, the two χ² versions disagree (0.028 and 0.083), and Fisher gives the exact answer, p = 0.0485.
@@ -339,23 +372,27 @@ Two expected counts are below 5, the two χ² versions disagree (0.028 and 0.083
 **How to write it.** Each branch against the other nine (Fisher), then the three corrections:
 
 ```python
-print(round(1 - 0.95 ** 10, 3))                      # 0.401 — at least one false alarm in 10 tests
+# 0.401 — at least one false alarm in 10 tests
+print(round(1 - 0.95 ** 10, 3))
 
 def holm(pvals):
     pvals = np.asarray(pvals, dtype=float)
     m, adj, run = len(pvals), np.empty(len(pvals)), 0.0
     for rank, i in enumerate(np.argsort(pvals)):     # smallest p first
-        run = max(run, min(1.0, (m - rank) * pvals[i]))   # × m, × (m − 1), … keeping the running maximum
+        # × m, × (m − 1), … keeping the running maximum
+        run = max(run, min(1.0, (m - rank) * pvals[i]))
         adj[i] = run
     return adj
 def bh(pvals):
     pvals = np.asarray(pvals, dtype=float)
     m, adj, run = len(pvals), np.empty(len(pvals)), 1.0
     for k, i in enumerate(np.argsort(pvals)[::-1]):  # largest p first
-        run = min(run, pvals[i] * m / (m - k))       # × m / rank, keeping the running minimum
+        # × m / rank, keeping the running minimum
+        run = min(run, pvals[i] * m / (m - k))
         adj[i] = run
     return adj
-print(holm([0.0318, 0.153, 0.804]))                  # [0.0954 0.306 0.804] — yesterday's three channel pairs
+# [0.0954 0.306 0.804] — yesterday's three channel pairs
+print(holm([0.0318, 0.153, 0.804]))
 
 br = f.groupby("branch_name")["fpd30"].agg(["sum", "size"])
 k_all, n_all = f["fpd30"].sum(), len(f)              # 91 FPDs in 7 099 loans
@@ -363,7 +400,8 @@ br["p"] = [fisher(k, n - k, k_all - k, n_all - n - (k_all - k)) for k, n in zip(
 br["bonferroni"] = np.minimum(1, br["p"] * len(br))
 br["holm"], br["bh"] = holm(br["p"]), bh(br["p"])
 print(br.sort_values("p").head(3).round(3))
-# statsmodels (the notebook): statsmodels.stats.multitest.multipletests(p, method="holm") — also "bonferroni", "fdr_bh"
+# statsmodels (the notebook): statsmodels.stats.multitest.multipletests(p,
+# method="holm") — also "bonferroni", "fdr_bh"
 ```
 
 | branch | FPD / loans | p | Bonferroni | Holm | BH |
@@ -396,12 +434,17 @@ Bukhara's p = 0.020 looks "significant" alone; tested as one of ten, every corre
 ```python
 g = np.random.default_rng(2026)
 p_late, runs, per_month = 947 / 7099, 20_000, 150
-ka = g.binomial(per_month, p_late, size=(runs, 12)).cumsum(axis=1)   # arm A: late first instalments so far, month by month
-kb = g.binomial(per_month, p_late, size=(runs, 12)).cumsum(axis=1)   # arm B: identical — the SMS does nothing
-n_arm = per_month * np.arange(1, 13)                                  # loans per arm after 1, 2, …, 12 months
+# arm A: late first instalments so far, month by month
+ka = g.binomial(per_month, p_late, size=(runs, 12)).cumsum(axis=1)
+# arm B: identical — the SMS does nothing
+kb = g.binomial(per_month, p_late, size=(runs, 12)).cumsum(axis=1)
+# loans per arm after 1, 2, …, 12 months
+n_arm = per_month * np.arange(1, 13)
 pool = (ka + kb) / (2 * n_arm)
-z = (ka - kb) / n_arm / np.sqrt(pool * (1 - pool) * 2 / n_arm)        # the two-proportion z at every monthly look
-print(np.mean(np.abs(z[:, -1]) > 1.96), np.mean((np.abs(z) > 1.96).any(axis=1)))   # ≈ 0.05 once at the end, ≈ 0.21 looking monthly
+# the two-proportion z at every monthly look
+z = (ka - kb) / n_arm / np.sqrt(pool * (1 - pool) * 2 / n_arm)
+# ≈ 0.05 once at the end, ≈ 0.21 looking monthly
+print(np.mean(np.abs(z[:, -1]) > 1.96), np.mean((np.abs(z) > 1.96).any(axis=1)))
 ```
 
 Testing once at the end gives a false positive about 5 % of the time (the notebook: 5.05 %); looking every month and stopping at the first p < 0.05 gives about **21 %** (20.9 %) — a "winning" SMS one time in five, usually declared in month 3.
@@ -431,23 +474,34 @@ FPD 1.28 % → 1.00 %:  h = 0.02642;   n = 2 · ((1.960 + 0.842) / 0.02642)² = 
 **How to write it.** One calculator for the whole page — sample size, power and (next subsection) MDE:
 
 ```python
-def cohens_h(p1, p2):                                # the effect size for two rates
+# the effect size for two rates
+def cohens_h(p1, p2):
     return 2 * math.asin(math.sqrt(p1)) - 2 * math.asin(math.sqrt(p2))
-def n_per_arm(p1, p2, alpha=0.05, power=0.80):       # loans needed in EACH group
+# loans needed in EACH group
+def n_per_arm(p1, p2, alpha=0.05, power=0.80):
     return 2 * ((zq(1 - alpha / 2) + zq(power)) / cohens_h(p1, p2)) ** 2
-def power_at(p1, p2, n, alpha=0.05):                 # two-sided power with n loans per arm
+# two-sided power with n loans per arm
+def power_at(p1, p2, n, alpha=0.05):
     h, za = abs(cohens_h(p1, p2)), zq(1 - alpha / 2)
     return Phi(h * math.sqrt(n / 2) - za) + Phi(-h * math.sqrt(n / 2) - za)
-def mde_rate(p1, n, alpha=0.05, power=0.80):         # the lowest rate the treated arm must reach to be seen
+# the lowest rate the treated arm must reach to be seen
+def mde_rate(p1, n, alpha=0.05, power=0.80):
     h = (zq(1 - alpha / 2) + zq(power)) * math.sqrt(2 / n)
     return math.sin(math.asin(math.sqrt(p1)) - h / 2) ** 2
 
-print(round(cohens_h(0.0128, 0.010), 5), math.ceil(n_per_arm(0.0128, 0.010)))   # 0.02642 22481 — the base case
-print(math.ceil(n_per_arm(0.0128, 0.010, alpha=0.01)), math.ceil(n_per_arm(0.0128, 0.010, power=0.90)))   # 33452 30096
-print(math.ceil(n_per_arm(0.0128, 0.0064)), math.ceil(n_per_arm(0.128, 0.100)))  # 3541 2016
-print(round(power_at(0.0128, 0.010, 1000), 3))       # 0.091 — power with 1 000 per arm
-# statsmodels (the notebook): proportion_effectsize(0.0128, 0.010); zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80)
-# Excel: =2*((NORM.S.INV(0.975)+NORM.S.INV(0.8))/(2*ASIN(SQRT(0.0128))-2*ASIN(SQRT(0.01))))^2 → 22 481
+# 0.02642 22481 — the base case
+print(round(cohens_h(0.0128, 0.010), 5), math.ceil(n_per_arm(0.0128, 0.010)))
+# 33452 30096
+print(math.ceil(n_per_arm(0.0128, 0.010, alpha=0.01)), math.ceil(n_per_arm(0.0128, 0.010, power=0.90)))
+# 3541 2016
+print(math.ceil(n_per_arm(0.0128, 0.0064)), math.ceil(n_per_arm(0.128, 0.100)))
+# 0.091 — power with 1 000 per arm
+print(round(power_at(0.0128, 0.010, 1000), 3))
+# statsmodels (the notebook): proportion_effectsize(0.0128, 0.010);
+# zt_ind_solve_power(effect_size=h, alpha=0.05, power=0.80)
+# Excel:
+# =2*((NORM.S.INV(0.975)+NORM.S.INV(0.8))/(2*ASIN(SQRT(0.0128))-2*ASIN(SQRT(0.01))))^2
+# → 22 481
 ```
 
 Change one input at a time from the base case (FPD 1.28 % → 1.00 %, α 5 %, power 80 %):
@@ -487,10 +541,13 @@ Detecting FPD falling from 1.28 % to 1.00 % needs 22 481 loans in each arm; with
 **How to write it.** `mde_rate` and `power_at` from the calculator:
 
 ```python
-print([round(100 * mde_rate(0.0128, n), 2) for n in (1000, 2000, 10000, 22481)])   # [0.26, 0.48, 0.87, 1.0]
+# [0.26, 0.48, 0.87, 1.0]
+print([round(100 * mde_rate(0.0128, n), 2) for n in (1000, 2000, 10000, 22481)])
 ns = [1000, 2000, 5000, 10000, 22481, 30000]
-print([round(100 * power_at(0.0128, 0.010, n), 1) for n in ns])                    # FPD30 1.28 → 1.00 %
-print([round(100 * power_at(947 / 7099, 0.8 * 947 / 7099, n), 1) for n in ns])    # late at all 13.3 → 10.7 %
+# FPD30 1.28 → 1.00 %
+print([round(100 * power_at(0.0128, 0.010, n), 1) for n in ns])
+# late at all 13.3 → 10.7 %
+print([round(100 * power_at(947 / 7099, 0.8 * 947 / 7099, n), 1) for n in ns])
 ```
 
 | loans per arm | 1 000 | 2 000 | 5 000 | 10 000 | 22 481 | 30 000 |
@@ -523,15 +580,19 @@ With 1 000 loans per arm the SMS must cut FPD from 1.28 % to 0.26 % — by 80 % 
 **How to write it.**
 
 ```python
-def cohens_d(a, b):                                   # difference of means in pooled standard deviations
+# difference of means in pooled standard deviations
+def cohens_d(a, b):
     a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
     sp = math.sqrt(((len(a) - 1) * a.var(ddof=1) + (len(b) - 1) * b.var(ddof=1)) / (len(a) + len(b) - 2))
     return (a.mean() - b.mean()) / sp
-print(round(cohens_d(auto, sme), 3))                  # -0.042 — Welch p = 0.02, yet the effect is nothing
+# -0.042 — Welch p = 0.02, yet the effect is nothing
+print(round(cohens_d(auto, sme), 3))
 gr = x.groupby("risk_grade")["days_late"]
-print(round(cohens_d(gr.get_group("D"), gr.get_group("A")), 2))   # 0.7 — grade D vs grade A: a real difference
+# 0.7 — grade D vs grade A: a real difference
+print(round(cohens_d(gr.get_group("D"), gr.get_group("A")), 2))
 pa, pb = f.loc[f.channel == "app", "fpd30"].mean(), f.loc[f.channel == "branch", "fpd30"].mean()
-print(round(100 * (pa - pb), 2), round(pa / pb, 2), round(cohens_h(pa, pb), 3))   # 0.66 1.63 0.057
+# 0.66 1.63 0.057
+print(round(100 * (pa - pb), 2), round(pa / pb, 2), round(cohens_h(pa, pb), 3))
 ```
 
 | Comparison | p-value | Effect size | Reading |
@@ -564,11 +625,13 @@ Auto and SME differ by 0.04 standard deviations — significant only because the
 g = np.random.default_rng(2026)
 y_all, hits = f["fpd30"].to_numpy(), 0
 for _ in range(2000):
-    s = g.choice(y_all, 4000, replace=False)          # 4 000 real loans: the first 2 000 are "A", the rest "A" again
+    # 4 000 real loans: the first 2 000 are "A", the rest "A" again
+    s = g.choice(y_all, 4000, replace=False)
     ka, kb = s[:2000].sum(), s[2000:].sum()
     pool = (ka + kb) / 4000
     hits += abs(ka - kb) / 2000 / math.sqrt(pool * (1 - pool) * 2 / 2000) > 1.96
-print(hits / 2000)                                    # ≈ 0.05 (the notebook's run: 0.049) — about α, as it should be
+# ≈ 0.05 (the notebook's run: 0.049) — about α, as it should be
+print(hits / 2000)
 ```
 
 About 5 % of the A/A splits come out "significant" (the notebook: 4.9 %) — that is α, so the split and the test behave.
@@ -594,8 +657,10 @@ others = ["CONS", "BNPL", "AUTO", "SME"]
 res = pd.DataFrame(
     [(c, *mann_whitney(micro, x.loc[x.code == c, "days_late"])[1:], cohens_d(micro, x.loc[x.code == c, "days_late"])) for c in others],
     columns=["vs", "P(Micro later)", "p", "d"])
-res["holm"] = holm(res["p"])                          # four pairwise tests → correct for four
-print(res.round({"P(Micro later)": 3, "d": 3}))       # P 0.52–0.53, every Holm p below 1e-6, d 0.08–0.12
+# four pairwise tests → correct for four
+res["holm"] = holm(res["p"])
+# P 0.52–0.53, every Holm p below 1e-6, d 0.08–0.12
+print(res.round({"P(Micro later)": 3, "d": 3}))
 ```
 
 Read it with the questions from this section:
@@ -806,7 +871,8 @@ Observed −0.248 days; permutation **p = 0.023**; Welch 0.0195. The permutation
 g = np.random.default_rng(2026)
 m, a = x.loc[x.code == "MICRO", "days_late"].to_numpy(), x.loc[x.code == "AUTO", "days_late"].to_numpy()
 d = [g.choice(m, len(m)).mean() - g.choice(a, len(a)).mean() for _ in range(2000)]
-print(round(m.mean() - a.mean(), 3), np.quantile(d, [0.025, 0.975]).round(2))   # 0.774 and about [0.57 0.99]
+# 0.774 and about [0.57 0.99]
+print(round(m.mean() - a.mean(), 3), np.quantile(d, [0.025, 0.975]).round(2))
 ```
 Observed **+0.77 days**; interval about **+0.57 to +0.99**. Zero is outside: significant at 5 %. The interval is the part to report — "Micro payments arrive 0.6 to 1.0 days later on average than Auto payments".
 
