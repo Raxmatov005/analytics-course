@@ -1,0 +1,58 @@
+/* ---------- dark mode, by hand (copied first into docs/assets/dark.css by scripts/make_dark_css.py) ----------
+   html[data-theme="dark"] is set before the page draws (index.html <head>), from the switch (theme.js) or, until she
+   picks, from the device's own setting. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e1217; --card: #161b22; --line: #2a313c;
+  --ink: #e6edf3; --body: #c9d1d9; --muted: #a5b0bd; --faint: #8b949e;
+  --brand: #0f766e; --brand-d: #0d9488; --brand-l: #1f5f5a; --brand-xl: #0d2624; --brand-text: #5eead4;
+  --ok: #16a34a; --bad: #dc2626; --hot: #ea580c;   /* strong, under white letters; as text they are lightened (make_dark_css.py) */
+  --sh: 0 1px 2px rgba(0, 0, 0, .45), 0 6px 20px rgba(0, 0, 0, .35);
+  --theme-color: #2dd4bf;
+  /* the dark SQL editor (the founder's DBeaver screenshot) */
+  --code-bg: #2b2b2b; --code-line: #3c3f41; --code-text: #d4d4d4; --code-col: #2fc1c6; --code-caret: #f5f5f5;
+  --code-ph: #8a8f94; --code-sel: rgba(120, 160, 255, .38); --code-label: #8a8f94;
+  --tk-com: #808a90; --tk-kw: #7fa8e0; --tk-table: #c39ae6; --tk-alias: #5fd8e3; --tk-fn: #2fc1c6; --tk-pyfn: #e2d58a;
+  --tk-str: #9fcf7f; --tk-num: #f0f0f0; --tk-var: #c39ae6; --tk-builtin: #4ec9b0; --tk-punct: #d4d4d4;
+}
+html[data-theme="dark"] body, html[data-theme="dark"] .content, html[data-theme="dark"] main { background: var(--bg); color: var(--body); }
+html[data-theme="dark"] ::selection { background: rgba(45, 212, 191, .3); }
+
+/* Docsify's own theme (vue.css) */
+html[data-theme="dark"] .sidebar { background: #12171d; color: var(--body); border-right-color: var(--line); }
+html[data-theme="dark"] .sidebar ul li a { color: var(--muted); }
+html[data-theme="dark"] .sidebar ul li a:hover { color: var(--ink); }
+html[data-theme="dark"] .sidebar ul li.active > a { color: var(--brand-text); }
+html[data-theme="dark"] .sidebar .app-name-link, html[data-theme="dark"] .app-name { color: var(--ink); }
+html[data-theme="dark"] .sidebar-toggle { background: rgba(14, 18, 23, .85); }
+html[data-theme="dark"] .sidebar-toggle span { background-color: var(--brand-text); }
+html[data-theme="dark"] .search { border-bottom-color: var(--line); }
+html[data-theme="dark"] .search input { background: #0e1217; color: var(--ink); border-color: var(--line); }
+html[data-theme="dark"] .search .matching-post { border-bottom-color: var(--line); }
+html[data-theme="dark"] .search p, html[data-theme="dark"] .search h2 { color: var(--body); }
+html[data-theme="dark"] .markdown-section, html[data-theme="dark"] .markdown-section p, html[data-theme="dark"] .markdown-section li { color: var(--body); }
+html[data-theme="dark"] .markdown-section tr:nth-child(2n) { background: rgba(255, 255, 255, .025); }
+html[data-theme="dark"] .markdown-section td, html[data-theme="dark"] .markdown-section th { border-color: var(--line); }
+html[data-theme="dark"] .markdown-section blockquote { color: var(--muted); border-left-color: var(--brand); }
+html[data-theme="dark"] .markdown-section a { color: var(--brand-text); border-bottom-color: #1f5f5a; }
+html[data-theme="dark"] .markdown-section h1 > a > span, html[data-theme="dark"] .markdown-section h2 > a > span,
+html[data-theme="dark"] .markdown-section h3 > a > span { color: var(--ink); }
+html[data-theme="dark"] .docsify-copy-code-button { background: #2a313c !important; color: var(--ink) !important; }
+html[data-theme="dark"] .pagination-item-title, html[data-theme="dark"] .pagination-item-label { color: var(--body); }
+html[data-theme="dark"] img.emoji { filter: none; }
+html[data-theme="dark"] .markdown-section pre.hi-back { color: var(--code-text); }
+html[data-theme="dark"] .markdown-section pre.hi-back.lang-sql { color: var(--code-col); }
+
+/* a coloured code box stays see-through in the dark too: the generated .sq-edit ground would hide its copy */
+html[data-theme="dark"] textarea.sq-edit.hi-on { background: transparent !important; }
+html[data-theme="dark"] textarea.sq-edit:not(.sq-text):not(.hi-on) { background: var(--code-bg) !important; }
+html[data-theme="dark"] { --tk-com: #939ea5; }
+/* badges keep pure white letters on their strong colours */
+html[data-theme="dark"] .markdown-section .badge { color: #fff; }
+/* pictures (pics.css): marked cells keep their meaning, in light letters on deep grounds */
+html[data-theme="dark"] .markdown-section .pic th.new, html[data-theme="dark"] .markdown-section .pic td.new { color: #ddd0ff; }
+html[data-theme="dark"] .markdown-section .pic th.mk, html[data-theme="dark"] .markdown-section .pic td.mk { color: #e7d3ff; }
+html[data-theme="dark"] .markdown-section .pic td.hot { background: #5a4a10 !important; color: #fff3c4; }
+html[data-theme="dark"] .markdown-section .pic tr.tone-a td, html[data-theme="dark"] .markdown-section .pic tr.tone-b td { color: var(--ink); }
+html[data-theme="dark"] .markdown-section .pic tr.tone-a td.new, html[data-theme="dark"] .markdown-section .pic tr.tone-b td.new { color: #ddd0ff; }
+html[data-theme="dark"] .pic-null { color: #b3bdc9; }

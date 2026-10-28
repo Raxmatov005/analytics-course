@@ -564,6 +564,8 @@ body.reading-down #sq-db-btn { transform: translateY(160%); opacity: 0; pointer-
 
 /* ---------- EN | RU switch (lang.js) ---------- */
 .lang-switch { position: fixed; top: 14px; right: 18px; z-index: 35; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(15, 23, 42, .12); font-family: var(--sans); }
+.lang-switch .theme-btn { display: inline-flex; align-items: center; justify-content: center; padding: .42em .62em; margin-right: 2px; color: var(--muted); }
+.lang-switch .theme-btn:hover { color: var(--ink); }
 .lang-switch button { font: 700 12.5px var(--sans); letter-spacing: .04em; padding: .42em .85em; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; }
 .lang-switch button:hover { color: var(--ink); }
 .lang-switch button.on { background: var(--brand); color: #fff; cursor: default; }
@@ -773,24 +775,28 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
   .al-chip { font-size: .8em; }
 }
 /* on phones the EN | RU switch sits over the title's first line: give the title room on the right */
-@media (max-width: 768px) { .markdown-section > h1:first-child, .markdown-section > h1:first-of-type { padding-right: 104px; } }
+@media (max-width: 768px) { .markdown-section > h1:first-child, .markdown-section > h1:first-of-type { padding-right: 140px; } }
 
-/* ---------- colours in code (codehi.js, 2026-10-28): a dark SQL editor's look, in examples and in the boxes she types in ---------- */
+/* ---------- colours in code (codehi.js, 2026-10-28): light with a light page, the dark SQL editor's look with a dark one ---------- */
 .hi-wrap { position: relative; }
 .markdown-section pre.hi-back { position: absolute; inset: 0; margin: 0; border: 0; border-radius: 0; background: none; max-width: none;
   overflow: hidden; pointer-events: none; color: var(--ink, #0f172a); box-sizing: border-box; }
 .markdown-section pre.hi-back::after { content: none; }
 textarea.sq-edit.hi-on { position: relative; overflow-y: hidden; background: transparent; color: transparent; -webkit-text-fill-color: transparent; caret-color: var(--ink, #0f172a); }
-textarea.sq-edit.hi-on::placeholder { color: #94a3b8; -webkit-text-fill-color: #94a3b8; }
-textarea.sq-edit.hi-on::selection { background: rgba(37, 99, 235, .22); }
-/* the dark SQL editor look (the founder's DBeaver screenshot): one ground and palette for the boxes she types in and
-   for the code examples; plain SQL names (columns) take the teal text colour */
-:root { --code-bg: #2b2b2b; --code-line: #3c3f41; --code-text: #d4d4d4; --code-col: #2fc1c6; }
+/* dark:skip */
+/* one palette for the boxes she types in and the code examples, light or dark with the page (dark.css sets the dark
+   values: the founder's DBeaver look); plain SQL names (columns) take the column colour */
+:root {
+  --code-bg: #fbfcfd; --code-line: #e2e8f0; --code-text: #1e293b; --code-col: #0e7490; --code-caret: #0f172a;
+  --code-ph: #94a3b8; --code-sel: rgba(37, 99, 235, .2); --code-label: #94a3b8;
+  --tk-com: #6b7280; --tk-kw: #1d4ed8; --tk-table: #7e22ce; --tk-alias: #0369a1; --tk-fn: #0e7490; --tk-pyfn: #795e26;
+  --tk-str: #067d17; --tk-num: #1750eb; --tk-var: #7e22ce; --tk-builtin: #1f6f86; --tk-punct: #334155;
+}
+textarea.sq-edit.hi-on::placeholder, textarea.sq-edit:not(.sq-text)::placeholder { color: var(--code-ph); -webkit-text-fill-color: var(--code-ph); }
+textarea.sq-edit.hi-on::selection { background: var(--code-sel); }
 textarea.sq-edit:not(.sq-text):not(.hi-on), .markdown-section .hi-wrap { background: var(--code-bg) !important; }   /* a coloured box stays see-through: its copy is behind it */
-textarea.sq-edit:not(.sq-text) { color: var(--code-text); caret-color: #f5f5f5; }
-textarea.sq-edit:not(.sq-text)::placeholder { color: #8a8f94; -webkit-text-fill-color: #8a8f94; }
-textarea.sq-edit.hi-on { caret-color: #f5f5f5; }
-textarea.sq-edit.hi-on::selection { background: rgba(120, 160, 255, .38); }
+textarea.sq-edit:not(.sq-text) { color: var(--code-text); caret-color: var(--code-caret); }
+textarea.sq-edit.hi-on { caret-color: var(--code-caret); }
 .markdown-section pre.hi-back { color: var(--code-text); }
 .markdown-section pre.hi-back.lang-sql { color: var(--code-col); }
 .markdown-section pre[data-lang="sql"], .markdown-section pre[data-lang="python"], .markdown-section pre[data-lang="dax"],
@@ -800,17 +806,17 @@ textarea.sq-edit.hi-on::selection { background: rgba(120, 160, 255, .38); }
 .markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang="powerquery"] > code, .markdown-section pre[data-lang="bash"] > code {
   color: var(--code-text); background: none; }
 .markdown-section pre[data-lang="sql"] > code { color: var(--code-col); }
-.markdown-section pre[data-lang]::after { color: #8a8f94; }
-.markdown-section .token.comment, .markdown-section .token.prolog { color: #808a90; font-style: italic; }
-.markdown-section .token.keyword, .markdown-section .token.boolean, .markdown-section .token.important { color: #7fa8e0; font-weight: 700; }
-.markdown-section .token.table-name { color: #c39ae6; font-style: italic; }
-.markdown-section .token.alias { color: #5fd8e3; font-style: italic; }
-.markdown-section .token.function { color: var(--code-col); }
-.markdown-section .lang-python .token.function, .markdown-section pre[data-lang="python"] .token.function { color: #e2d58a; }
-.markdown-section .token.decorator { color: #e2d58a; }
-.markdown-section .token.string, .markdown-section .token.triple-quoted-string, .markdown-section .token.char { color: #9fcf7f; }
-.markdown-section .token.number { color: #f0f0f0; }
+.markdown-section pre[data-lang]::after { color: var(--code-label); }
+.markdown-section .token.comment, .markdown-section .token.prolog { color: var(--tk-com); font-style: italic; }
+.markdown-section .token.keyword, .markdown-section .token.boolean, .markdown-section .token.important { color: var(--tk-kw); font-weight: 700; }
+.markdown-section .token.table-name { color: var(--tk-table); font-style: italic; }
+.markdown-section .token.alias { color: var(--tk-alias); font-style: italic; }
+.markdown-section .token.function { color: var(--tk-fn); }
+.markdown-section .lang-python .token.function, .markdown-section pre[data-lang="python"] .token.function, .markdown-section .token.decorator { color: var(--tk-pyfn); }
+.markdown-section .token.string, .markdown-section .token.triple-quoted-string, .markdown-section .token.char { color: var(--tk-str); }
+.markdown-section .token.number { color: var(--tk-num); }
 .markdown-section .token.property, .markdown-section .token.identifier { color: var(--code-col); }
-.markdown-section .token.variable { color: #c39ae6; }
-.markdown-section .token.builtin, .markdown-section .token.class-name { color: #4ec9b0; }
-.markdown-section .token.operator, .markdown-section .token.punctuation { color: #d4d4d4; background: none; }
+.markdown-section .token.variable { color: var(--tk-var); }
+.markdown-section .token.builtin, .markdown-section .token.class-name { color: var(--tk-builtin); }
+.markdown-section .token.operator, .markdown-section .token.punctuation { color: var(--tk-punct); background: none; }
+/* dark:end */

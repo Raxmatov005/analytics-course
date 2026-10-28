@@ -62,12 +62,12 @@ The English pages live where they always did; the Russian copy of each page live
       box.setAttribute('aria-label', 'Language / Язык');
       box.innerHTML = '<button type="button" data-l="en" lang="en">EN</button><button type="button" data-l="ru" lang="ru">RU</button>';
       box.addEventListener('click', function (e) {
-        var b = e.target.closest('button');
+        var b = e.target.closest('button[data-l]');   // the theme button (theme.js) shares the pill
         if (b && b.getAttribute('data-l') !== current()) go(b.getAttribute('data-l'));
       });
       document.body.appendChild(box);
     }
-    Array.prototype.forEach.call(box.querySelectorAll('button'), function (b) {
+    Array.prototype.forEach.call(box.querySelectorAll('button[data-l]'), function (b) {
       var on = b.getAttribute('data-l') === current();
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
