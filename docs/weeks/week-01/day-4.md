@@ -77,6 +77,10 @@ Madina's board pack comes from the warehouse, loaded on 1 October; HR's number c
 - A **fact table** (*таблица фактов*) has one row per **event or measurement**. It holds **measures** — numbers you add up: an amount, a count, days late — and **keys** to the dimensions. It is long and narrow: millions of rows.
 - A **dimension table** (*таблица измерений*) has one row per **thing you slice by**: a customer, a product, a branch, a date. It holds **attributes** — descriptive text: region, segment, product name, month name. It is short and wide.
 
+```pic
+{"id": "w01d4-pic1", "title": "A fact row: keys and a number. A dimension row: words to slice by", "caption": "The fact (`loans`) is long and narrow: keys to the dimensions and one **measure** you add up. The dimension (`products`) is short: one row per product, with its name. Same colour, same product.", "tables": [{"name": "loans", "label": "fact", "cols": ["loan_id", "product_id", "principal"], "rows": [[1, 2, "31 150 000"], [2, 2, "40 060 000"], [3, 1, "1 590 000"], [4, 1, "2 520 000"]], "fk": ["product_id"], "tags": {"principal": "measure"}, "more": "… 7 824 more rows"}, {"name": "products", "label": "dimension", "cols": ["product_id", "name"], "rows": [[1, "Micro loan"], [2, "Consumer loan"], [3, "Buy now pay later"], [4, "Auto loan"], [5, "Small business loan"]], "pk": "product_id"}], "links": [{"from": ["loans", 0, "product_id"], "to": ["products", 1, "product_id"]}, {"from": ["loans", 1, "product_id"], "to": ["products", 1, "product_id"]}, {"from": ["loans", 2, "product_id"], "to": ["products", 0, "product_id"]}, {"from": ["loans", 3, "product_id"], "to": ["products", 0, "product_id"]}]}
+```
+
 **How to write it.** Our `loans` already has the shape of a fact; `dim_date` is a ready dimension.
 
 ```sql

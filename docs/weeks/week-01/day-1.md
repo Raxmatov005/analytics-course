@@ -44,11 +44,9 @@ Three more things live around the boxes:
 
 **How to write it.** Today you read tables; you write them from Day 3. Three rows and five of the eleven columns of `customers`:
 
-| customer_id | first_name | last_name | birth_date | region |
-|---|---|---|---|---|
-| 1 | Eldor | Olimov | 1975-09-10 | Bukhara |
-| 2 | Sanjar | Qodirov | 1987-02-10 | Bukhara |
-| 3 | Shavkat | Nazarov | 1957-07-15 | Samarkand |
+```pic
+{"id": "w01d1-pic1", "title": "A table: rows across, columns down", "caption": "One **row** (green) is one customer: Eldor Olimov. One **column** (circled) is one property that every row has: here the region.", "tables": [{"name": "customers", "cols": ["customer_id", "first_name", "last_name", "region"], "rows": [[1, "Eldor", "Olimov", "Bukhara"], [2, "Sanjar", "Qodirov", "Bukhara"], [3, "Shavkat", "Nazarov", "Samarkand"]], "tone": ["a", null, null], "tags": {"region": "one column"}}]}
+```
 
 Press **▶ Run** to see the same three rows with every column:
 
@@ -112,6 +110,10 @@ Loan 1: the principal 31 150 000 is an `integer`, the rate 0.3 is a `real`, the 
 
 **What it is.** A **primary key** (*первичный ключ*, PK) is a column whose value is **different on every row** and **never empty**. It names exactly one row. In `loans` the primary key is `loan_id`; in `customers` it is `customer_id`.
 
+```pic
+{"id": "w01d1-pic2", "title": "Same name, three different people", "caption": "Three customers are called Murod Abdullaev. The circled column, the **primary key** `customer_id`, is different on every row and never empty, so each number names exactly one of them.", "tables": [{"name": "customers", "cols": ["customer_id", "first_name", "last_name", "region"], "rows": [[2481, "Murod", "Abdullaev", "Namangan"], [3133, "Murod", "Abdullaev", "Tashkent"], [3710, "Murod", "Abdullaev", "Tashkent"]], "pk": "customer_id", "more": "… 6 037 more rows"}]}
+```
+
 **How to write it.** Ask for one value of the primary key, and exactly one row comes back:
 
 ```sql
@@ -138,13 +140,9 @@ SELECT * FROM loans WHERE loan_id = 1;   -- WHERE keeps only the rows that match
 
 **How to write it.** Follow the key by hand. The loan row carries a number; that number is the primary key of a row in `customers`.
 
-| `loans` | loan_id | customer_id | principal |
-|---|---|---|---|
-| | 1 | **3473** | 31 150 000 |
-
-| `customers` | customer_id | first_name | last_name | region |
-|---|---|---|---|---|
-| | **3473** | Gulbahor | Sobirova | Termez |
+```pic
+{"id": "w01d1-pic3", "title": "Each loan points at its customer", "caption": "`loans.customer_id` is a **foreign key**: it stores a number that is the **primary key** of one row in `customers`. Same colour, same number: loan 1 carries 3473, and customer 3473 is Gulbahor Sobirova.", "tables": [{"name": "loans", "cols": ["loan_id", "customer_id", "principal"], "rows": [[1, 3473, "31 150 000"], [2, 4570, "40 060 000"], [3, 1397, "1 590 000"]], "pk": "loan_id", "fk": ["customer_id"]}, {"name": "customers", "cols": ["customer_id", "first_name", "last_name"], "rows": [[1397, "Sardor", "Abdullaev"], [3473, "Gulbahor", "Sobirova"], [4570, "Nilufar", "Mirzaeva"]], "pk": "customer_id"}], "links": [{"from": ["loans", 0, "customer_id"], "to": ["customers", 1, "customer_id"]}, {"from": ["loans", 1, "customer_id"], "to": ["customers", 2, "customer_id"]}, {"from": ["loans", 2, "customer_id"], "to": ["customers", 0, "customer_id"]}]}
+```
 
 Run both boxes — the first reads the key, the second follows it:
 
@@ -173,6 +171,10 @@ Loan 1 carries `customer_id` 3473, and customer 3473 is Gulbahor Sobirova from T
 ### One-to-many — the "many" side carries the key
 
 **What it is.** A **one-to-many** relationship (*связь «один ко многим»*) links one row on one side to many rows on the other. One customer can have many loans; one loan belongs to exactly one customer. Write it `customers 1 — ∞ loans`. The foreign key always sits on the **many** side: every loan stores its `customer_id`, and a customer stores no list of loans.
+
+```pic
+{"id": "w01d1-pic4", "title": "One customer, many loans", "caption": "All four loans of Gulbahor Sobirova carry 3473. The key sits on the **many** side: `loans` stores the customer, the customer row does not list its loans.", "tables": [{"name": "loans", "cols": ["loan_id", "customer_id", "status"], "rows": [[1, 3473, "active"], [634, 3473, "closed"], [2733, 3473, "written_off"], [2926, 3473, "closed"]], "pk": "loan_id", "fk": ["customer_id"]}, {"name": "customers", "cols": ["customer_id", "first_name", "last_name"], "rows": [[3473, "Gulbahor", "Sobirova"]], "pk": "customer_id"}], "links": [{"from": ["loans", 0, "customer_id"], "to": ["customers", 0, "customer_id"]}, {"from": ["loans", 1, "customer_id"], "to": ["customers", 0, "customer_id"]}, {"from": ["loans", 2, "customer_id"], "to": ["customers", 0, "customer_id"]}, {"from": ["loans", 3, "customer_id"], "to": ["customers", 0, "customer_id"]}]}
+```
 
 **How to write it.** Customer 3473's loans are the rows of `loans` that carry 3473:
 

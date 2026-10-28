@@ -44,11 +44,9 @@ SELECT COUNT(*) AS loans FROM loans;   -- ожидайте 7828
 
 **Как пишется.** Сегодня вы читаете таблицы; создавать их вы начнёте в День 3. Три строки и пять из одиннадцати столбцов `customers`:
 
-| customer_id | first_name | last_name | birth_date | region |
-|---|---|---|---|---|
-| 1 | Eldor | Olimov | 1975-09-10 | Bukhara |
-| 2 | Sanjar | Qodirov | 1987-02-10 | Bukhara |
-| 3 | Shavkat | Nazarov | 1957-07-15 | Samarkand |
+```pic
+{"id": "w01d1-pic1", "title": "Таблица: строки поперёк, столбцы вниз", "caption": "Одна **строка** (зелёная) — один клиент: Eldor Olimov. Один **столбец** (обведён) — одно свойство, которое есть у каждой строки: здесь регион.", "tables": [{"name": "customers", "cols": ["customer_id", "first_name", "last_name", "region"], "rows": [[1, "Eldor", "Olimov", "Bukhara"], [2, "Sanjar", "Qodirov", "Bukhara"], [3, "Shavkat", "Nazarov", "Samarkand"]], "tone": ["a", null, null], "tags": {"region": "один столбец"}}]}
+```
 
 Нажмите **▶ Выполнить**, чтобы увидеть те же три строки со всеми столбцами:
 
@@ -112,6 +110,10 @@ LIMIT 3;
 
 **Что это.** **Первичный ключ** (*primary key*, PK) — столбец, значение которого **разное в каждой строке** и **никогда не бывает пустым**. Он называет ровно одну строку. В `loans` первичный ключ — `loan_id`, в `customers` — `customer_id`.
 
+```pic
+{"id": "w01d1-pic2", "title": "Одно имя — три разных человека", "caption": "Трёх клиентов зовут Murod Abdullaev. Обведённый столбец — **первичный ключ** `customer_id` — разный в каждой строке и никогда не пустой, поэтому каждое число называет ровно одного из них.", "tables": [{"name": "customers", "cols": ["customer_id", "first_name", "last_name", "region"], "rows": [[2481, "Murod", "Abdullaev", "Namangan"], [3133, "Murod", "Abdullaev", "Tashkent"], [3710, "Murod", "Abdullaev", "Tashkent"]], "pk": "customer_id", "more": "… ещё 6 037 строк"}]}
+```
+
 **Как пишется.** Спросите одно значение первичного ключа — и вернётся ровно одна строка:
 
 ```sql
@@ -138,13 +140,9 @@ SELECT * FROM loans WHERE loan_id = 1;   -- WHERE оставляет тольк�
 
 **Как пишется.** Пройдите по ключу руками. В строке кредита лежит число; это число — первичный ключ строки в `customers`.
 
-| `loans` | loan_id | customer_id | principal |
-|---|---|---|---|
-| | 1 | **3473** | 31 150 000 |
-
-| `customers` | customer_id | first_name | last_name | region |
-|---|---|---|---|---|
-| | **3473** | Gulbahor | Sobirova | Termez |
+```pic
+{"id": "w01d1-pic3", "title": "Каждый кредит указывает на своего клиента", "caption": "`loans.customer_id` — **внешний ключ**: он хранит число, которое является **первичным ключом** одной строки в `customers`. Один цвет — одно и то же число: у кредита 1 записано 3473, а клиент 3473 — Gulbahor Sobirova.", "tables": [{"name": "loans", "cols": ["loan_id", "customer_id", "principal"], "rows": [[1, 3473, "31 150 000"], [2, 4570, "40 060 000"], [3, 1397, "1 590 000"]], "pk": "loan_id", "fk": ["customer_id"]}, {"name": "customers", "cols": ["customer_id", "first_name", "last_name"], "rows": [[1397, "Sardor", "Abdullaev"], [3473, "Gulbahor", "Sobirova"], [4570, "Nilufar", "Mirzaeva"]], "pk": "customer_id"}], "links": [{"from": ["loans", 0, "customer_id"], "to": ["customers", 1, "customer_id"]}, {"from": ["loans", 1, "customer_id"], "to": ["customers", 2, "customer_id"]}, {"from": ["loans", 2, "customer_id"], "to": ["customers", 0, "customer_id"]}]}
+```
 
 Выполните оба блока — первый читает ключ, второй идёт по нему:
 
@@ -173,6 +171,10 @@ SELECT customer_id, first_name, last_name, region FROM customers WHERE customer_
 ### «Один ко многим» — ключ хранит сторона «многие» :id=one-to-many-the-many-side-carries-the-key
 
 **Что это.** Связь **«один ко многим»** (*one-to-many*) соединяет одну строку с одной стороны со многими строками с другой. У одного клиента может быть много кредитов; один кредит принадлежит ровно одному клиенту. Записывается так: `customers 1 — ∞ loans`. Внешний ключ всегда стоит на стороне **«многие»**: каждый кредит хранит свой `customer_id`, а клиент не хранит списка кредитов.
+
+```pic
+{"id": "w01d1-pic4", "title": "Один клиент — много кредитов", "caption": "У всех четырёх кредитов Gulbahor Sobirova записано 3473. Ключ хранит сторона **«многие»**: `loans` хранит клиента, а строка клиента свои кредиты не перечисляет.", "tables": [{"name": "loans", "cols": ["loan_id", "customer_id", "status"], "rows": [[1, 3473, "active"], [634, 3473, "closed"], [2733, 3473, "written_off"], [2926, 3473, "closed"]], "pk": "loan_id", "fk": ["customer_id"]}, {"name": "customers", "cols": ["customer_id", "first_name", "last_name"], "rows": [[3473, "Gulbahor", "Sobirova"]], "pk": "customer_id"}], "links": [{"from": ["loans", 0, "customer_id"], "to": ["customers", 0, "customer_id"]}, {"from": ["loans", 1, "customer_id"], "to": ["customers", 0, "customer_id"]}, {"from": ["loans", 2, "customer_id"], "to": ["customers", 0, "customer_id"]}, {"from": ["loans", 3, "customer_id"], "to": ["customers", 0, "customer_id"]}]}
+```
 
 **Как пишется.** Кредиты клиента 3473 — это строки `loans`, в которых записано 3473:
 

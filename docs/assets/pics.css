@@ -1,0 +1,87 @@
+/* Pictures of tables (pics.js): real rows, the keys circled, arrows from a foreign key to its row */
+.markdown-section figure.pic { margin: 1.4em 0 1.6em; padding: 1em 1.1em .9em; border: 1px solid var(--line, #e2e8f0); border-radius: 16px;
+  background: #fbfdfd; font-family: var(--sans, system-ui); }
+.pic-title { font-weight: 700; font-size: .95em; color: var(--ink, #0f172a); margin-bottom: .8em; line-height: 1.4; }
+.pic-body { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px 40px; }
+.pic-stack .pic-body { flex-direction: column; gap: 22px; }
+.pic-links { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; overflow: visible; }
+.pic-t { position: relative; z-index: 1; }
+/* the two cells of a link: one colour per target row */
+.markdown-section .pic td.lt-a { background: #99f6e4 !important; color: #134e4a; font-weight: 800; }
+.markdown-section .pic td.lt-b { background: #fde68a !important; color: #78350f; font-weight: 800; }
+.markdown-section .pic td.lt-c { background: #ddd6fe !important; color: #4c1d95; font-weight: 800; }
+.markdown-section .pic td.lt-d { background: #fecdd3 !important; color: #881337; font-weight: 800; }
+.markdown-section .pic td.lt-e { background: #bae6fd !important; color: #0c4a6e; font-weight: 800; }
+.pic-links path { fill: none; stroke: var(--brand, #0f766e); stroke-width: 2; stroke-linecap: round; }
+.pic-links marker path { fill: var(--brand, #0f766e); stroke: none; }
+.pic-linklabel { width: fit-content; margin: 0 auto; padding: 1px 7px; border-radius: 999px; background: #fff; border: 1.5px solid var(--brand, #0f766e);
+  color: var(--brand-d, #115e59); font: 700 11px/1.5 var(--mono, ui-monospace, monospace); }
+.pic-t { max-width: 100%; }
+.pic-tname { display: flex; align-items: center; gap: .5em; margin: 0 0 .35em 2px; }
+.markdown-section .pic-tname code { padding: 0; background: none; color: var(--brand-d, #115e59); font: 700 12.5px var(--mono, ui-monospace, monospace); }
+.pic-label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted, #64748b); }
+.markdown-section .pic table { display: table; width: auto; margin: 0; border-collapse: separate; border-spacing: 0; overflow: visible;
+  font: 13px/1.35 var(--mono, ui-monospace, monospace); }
+.markdown-section .pic tr, .markdown-section .pic tr:nth-child(2n) { background: none; border: 0; }
+.markdown-section .pic th, .markdown-section .pic td { padding: 6px 11px; border: 0; border-bottom: 1px solid var(--line, #e2e8f0); text-align: left;
+  white-space: nowrap; background: #fff; color: var(--ink, #0f172a); }
+.markdown-section .pic th { background: #f1f5f9; color: var(--muted, #475569); font-weight: 700; }
+/* the circled key column: a ring round the whole column, from its name to its last row */
+.markdown-section .pic th.pk, .markdown-section .pic td.pk { background: #f0fdfa; color: #115e59; font-weight: 700;
+  box-shadow: inset 2.5px 0 0 var(--brand, #0f766e), inset -2.5px 0 0 var(--brand, #0f766e); }
+.markdown-section .pic thead tr:last-child th.pk { border-radius: 12px 12px 0 0;
+  box-shadow: inset 2.5px 0 0 var(--brand, #0f766e), inset -2.5px 0 0 var(--brand, #0f766e), inset 0 2.5px 0 var(--brand, #0f766e); }
+.markdown-section .pic tr.last td.pk { border-radius: 0 0 12px 12px; border-bottom-color: transparent;
+  box-shadow: inset 2.5px 0 0 var(--brand, #0f766e), inset -2.5px 0 0 var(--brand, #0f766e), inset 0 -2.5px 0 var(--brand, #0f766e); }
+.markdown-section .pic th.fk, .markdown-section .pic td.fk { background: #fffbeb; color: #92400e; font-weight: 700;
+  box-shadow: inset 2px 0 0 #d97706, inset -2px 0 0 #d97706; }
+.markdown-section .pic thead tr:last-child th.fk { border-radius: 12px 12px 0 0; box-shadow: inset 2px 0 0 #d97706, inset -2px 0 0 #d97706, inset 0 2px 0 #d97706; }
+.markdown-section .pic tr.last td.fk { border-radius: 0 0 12px 12px; border-bottom-color: transparent;
+  box-shadow: inset 2px 0 0 #d97706, inset -2px 0 0 #d97706, inset 0 -2px 0 #d97706; }
+/* any other circled column (tags), violet */
+.markdown-section .pic th.mk, .markdown-section .pic td.mk { background: #faf5ff; color: #6b21a8; font-weight: 700;
+  box-shadow: inset 2px 0 0 #9333ea, inset -2px 0 0 #9333ea; }
+.markdown-section .pic thead tr:last-child th.mk { border-radius: 12px 12px 0 0; box-shadow: inset 2px 0 0 #9333ea, inset -2px 0 0 #9333ea, inset 0 2px 0 #9333ea; }
+.markdown-section .pic tr.last td.mk { border-radius: 0 0 12px 12px; border-bottom-color: transparent;
+  box-shadow: inset 2px 0 0 #9333ea, inset -2px 0 0 #9333ea, inset 0 -2px 0 #9333ea; }
+.markdown-section .pic .pic-tag.mk { color: #7e22ce; }
+.markdown-section .pic th.new, .markdown-section .pic td.new { background: #f5f3ff; color: #5b21b6; font-weight: 700; }
+.markdown-section .pic tr.pic-tags th { padding: 0 4px 5px; background: none; border: 0; box-shadow: none; text-align: center; }
+.pic-tag { font: 800 10px/1.2 var(--sans, system-ui) !important; letter-spacing: .05em; text-transform: uppercase; }
+.markdown-section .pic tr.pic-tags th { white-space: normal; vertical-align: bottom; }
+.markdown-section .pic .pic-tag svg { vertical-align: -2px; margin-right: 3px; }
+.markdown-section .pic .pic-tag.pk { color: var(--brand, #0f766e); }
+.markdown-section .pic .pic-tag.fk { color: #b45309; }
+.markdown-section .pic .pic-tag.new { color: #6d28d9; }
+/* rows: coloured by group or match, kept or dropped by a filter; one cell pointed at */
+.markdown-section .pic tr.tone-a td { background: #ccfbf1; }
+.markdown-section .pic tr.tone-b td { background: #fef3c7; }
+.markdown-section .pic tr.tone-c td { background: #ede9fe; }
+.markdown-section .pic tr.tone-d td { background: #ffe4e6; }
+.markdown-section .pic tr.tone-e td { background: #e0f2fe; }
+.markdown-section .pic tr.keep td { background: #dcfce7; }
+.markdown-section .pic tr.drop td { color: #94a3b8; text-decoration: line-through; background: #fff; }
+.markdown-section .pic td.hot { background: #fde68a !important; font-weight: 800; }
+.pic-null { color: #94a3b8; font-style: italic; }
+.markdown-section .pic tr.pic-more td { color: var(--muted, #64748b); font: italic 12px var(--sans, system-ui); text-align: center; border-bottom: 0; background: none; }
+/* a step between two tables: the code that turns one into the next */
+.pic-via { display: flex; flex-direction: column; align-items: center; gap: 6px; align-self: center; }
+.markdown-section .pic-via code { font-size: 12px; white-space: nowrap; }
+.pic-via-arrow { position: relative; width: 46px; height: 2px; background: var(--brand, #0f766e); }
+.pic-via-arrow::after { content: ""; position: absolute; right: -2px; top: -5px; border: 6px solid transparent; border-left: 8px solid var(--brand, #0f766e); border-right: 0; }
+.pic-stack .pic-via, .pic-stack .pic-via-arrow { align-self: flex-start; }
+.pic-stack .pic-via { flex-direction: row; margin-left: 12px; }
+.pic-stack .pic-via-arrow, .pic-stack .pic-via-arrow::after { transform: none; }
+.pic-stack .pic-via-arrow { width: 2px; height: 26px; }
+.pic-stack .pic-via-arrow::after { right: -5px; top: auto; bottom: -3px; border: 6px solid transparent; border-top: 8px solid var(--brand, #0f766e); border-bottom: 0; }
+.markdown-section figure.pic figcaption { margin-top: .9em; font-size: .88em; line-height: 1.5; color: var(--muted, #475569); }
+@media (max-width: 640px) {
+  .markdown-section figure.pic { padding: .8em .55em .75em; margin-left: -6px; margin-right: -6px; }
+  .pic-body { gap: 14px; flex-direction: column; }
+  .pic-via { flex-direction: row; align-self: flex-start; margin-left: 12px; }
+  .pic-via-arrow { width: 2px; height: 26px; }
+  .pic-via-arrow::after { right: -5px; top: auto; bottom: -3px; border: 6px solid transparent; border-top: 8px solid var(--brand, #0f766e); border-bottom: 0; }
+  .pic-t { overflow-x: auto; }
+  .markdown-section .pic th, .markdown-section .pic td { padding: 5px 6px; font-size: 11px; }
+  .pic-tag { font-size: 9px !important; letter-spacing: .02em; }
+}

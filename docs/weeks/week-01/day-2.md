@@ -55,6 +55,10 @@ LIMIT 5;
 
 **What it is.** **SELECT** (*выбрать*) lists the columns you want, separated by commas, in the order you want them. `SELECT *` means every column. `SELECT COUNT(*)` returns one number: how many rows there are.
 
+```pic
+{"id": "w01d2-pic1", "title": "SELECT keeps the columns you name", "caption": "Every row stays; only the two named columns come out, in the order you wrote them.", "tables": [{"id": "src", "name": "loans", "cols": ["loan_id", "customer_id", "principal", "status"], "rows": [[1, 3473, "31 150 000", "active"], [2, 4570, "40 060 000", "active"], [3, 1397, "1 590 000", "closed"]], "tags": {"loan_id": "✓", "status": "✓"}}, {"id": "res", "name": "result", "cols": ["loan_id", "status"], "rows": [[1, "active"], [2, "active"], [3, "closed"]], "via": "SELECT loan_id, status"}]}
+```
+
 **How to write it.**
 
 ```sql
@@ -139,6 +143,10 @@ SELECT DISTINCT channel, status FROM applications;
 
 **What it is.** **ORDER BY** (*сортировка*) sorts the result by one or more columns. `ASC` means smallest first and is the default. `DESC` means biggest first.
 
+```pic
+{"id": "w01d2-pic2", "title": "ORDER BY changes only the order", "caption": "The same five loans, biggest principal first. Each loan keeps its colour, so you can follow it.", "tables": [{"id": "src", "name": "loans", "cols": ["loan_id", "principal"], "rows": [[1, "31 150 000"], [2, "40 060 000"], [3, "1 590 000"], [4, "2 520 000"], [5, "25 590 000"]], "tone": ["a", "b", "c", "d", "e"]}, {"id": "res", "name": "result", "cols": ["loan_id", "principal"], "rows": [[2, "40 060 000"], [1, "31 150 000"], [5, "25 590 000"], [4, "2 520 000"], [3, "1 590 000"]], "tone": ["b", "a", "e", "d", "c"], "via": "ORDER BY principal DESC"}]}
+```
+
 **How to write it.**
 
 ```sql
@@ -189,6 +197,10 @@ SELECT application_id, requested_amount FROM applications ORDER BY requested_amo
 ### WHERE — keep only the rows you want
 
 **What it is.** **WHERE** (*условие*) keeps the rows for which a **condition** is true and drops the rest. A condition compares a column with a value. Text values go in single quotes: `'default'`.
+
+```pic
+{"id": "w01d2-pic3", "title": "WHERE keeps the rows that pass the test", "caption": "Each row is asked: is `status` equal to `'active'`? Green rows say yes and stay; struck-through rows say no and are dropped.", "tables": [{"id": "src", "name": "loans", "cols": ["loan_id", "principal", "status"], "rows": [[1, "31 150 000", "active"], [2, "40 060 000", "active"], [3, "1 590 000", "closed"], [4, "2 520 000", "active"], [5, "25 590 000", "active"], [6, "4 720 000", "closed"]], "keep": [0, 1, 3, 4], "drop": [2, 5]}, {"id": "res", "name": "result", "cols": ["loan_id", "principal", "status"], "rows": [[1, "31 150 000", "active"], [2, "40 060 000", "active"], [4, "2 520 000", "active"], [5, "25 590 000", "active"]], "via": "WHERE status = 'active'"}]}
+```
 
 **How to write it.**
 

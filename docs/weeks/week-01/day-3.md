@@ -141,6 +141,10 @@ INSERT INTO my_loans_demo VALUES (1, 999999);   -- customer 999999 does not exis
 
 **What it is.** A **composite key** (*составной ключ*) is a primary key made of two or more columns. Each column alone may repeat; the **pair** must not.
 
+```pic
+{"id": "w01d3-pic2", "title": "Two columns, one key", "caption": "`loan_id` repeats (1, 1) and `installment_no` repeats (1, 1); the **pair** — (1, 1), (1, 2), (2, 1), (2, 2) — is different on every row.", "tables": [{"name": "installments", "cols": ["loan_id", "installment_no", "due_date"], "pk": ["loan_id", "installment_no"], "rows": [[1, 1, "2025-04-28"], [1, 2, "2025-05-28"], [2, 1, "2026-01-05"], [2, 2, "2026-02-05"]], "tone": ["a", "a", "b", "b"], "more": "… 24 months per loan"}]}
+```
+
 **How to write it.** A separate line at the end: `PRIMARY KEY (column1, column2)`.
 
 ```sql
@@ -241,19 +245,11 @@ The customer, the product's rate and the branch's phone are repeated on every ro
 
 **What it is.** A table is in **first normal form** (1NF) when every cell holds **one value** and no fact is repeated across columns (`inst1_…`, `inst2_…` is a **repeating group**).
 
-**How to write it.** Before — instalments as columns:
+**How to write it.** Before and after:
 
-| loan_id | inst1_due | inst2_due | inst3_due |
-|---|---|---|---|
-| 1 | 2025-04-28 | 2025-05-28 | 2025-06-28 |
-
-After — instalments as rows, the `installments` table:
-
-| loan_id | installment_no | due_date |
-|---|---|---|
-| 1 | 1 | 2025-04-28 |
-| 1 | 2 | 2025-05-28 |
-| 1 | 3 | 2025-06-28 |
+```pic
+{"id": "w01d3-pic1", "title": "A repeating group becomes rows", "caption": "Before: one column per instalment, so a 24-month loan needs 24 columns and a new term needs a new column. After: one row per instalment; the pair `loan_id` + `installment_no` names each row.", "tables": [{"id": "wide", "name": "before", "cols": ["loan_id", "inst1_due", "inst2_due", "…"], "rows": [[1, "2025-04-28", "2025-05-28", "…"]], "tags": {"inst1_due": "1", "inst2_due": "2", "…": "3 … 24"}}, {"id": "long", "name": "installments", "cols": ["loan_id", "installment_no", "due_date"], "rows": [[1, 1, "2025-04-28"], [1, 2, "2025-05-28"], [1, 3, "2025-06-28"]], "pk": ["loan_id", "installment_no"], "via": "one row per instalment"}]}
+```
 
 A 48-month Auto loan needs 48 rows, a 3-month BNPL loan 3 — no empty columns, no limit.
 
