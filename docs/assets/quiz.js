@@ -65,7 +65,7 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
       var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       var wd = d.getDay();
       if (days[key]) { n++; }
-      else if (wd === 0 || wd === 6) { /* weekend: neutral */ }
+      else if (window.ALSched && window.ALSched.studyDay(key) !== null ? !window.ALSched.studyDay(key) : (wd === 0 || wd === 6)) { /* not a study day (schedule.js; without it the weekend): neutral */ }
       else if (first) { /* today not done yet: the streak is still alive */ }
       else { break; }
       first = false;

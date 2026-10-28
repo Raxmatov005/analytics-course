@@ -5,7 +5,7 @@ schedule.json says the days (its "_about" explains the fields); with no "start" 
 walks the same calendar and is the real lock: it refuses a hand-in outside its day, and its /reopen gives one homework a
 later last day, which GET /reopened tells this page. Dates are Tashkent dates (UTC+5) whatever her device's time zone.
 ?preview=1 (on any page) shows every lesson in this browser, for the mentor; ?preview=0 ends it.
-window.ALSched: ready (a promise), on(), state(id) "soon" | "open" | "closed", opens(id), lastDay(id), nice(iso),
+window.ALSched: ready (a promise), on(), studyDay(iso) (true / false, null with no schedule), state(id) "soon" | "open" | "closed", opens(id), lastDay(id), nice(iso),
 idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2. */
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev', PREVIEW = 'al.preview';
@@ -22,11 +22,15 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
   function dayAfter(iso, n) { return new Date(Date.parse(iso + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10); }
   function today() { return new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 10); }
   /* the same walk as worker.js lessonDates */
+  var file = null;   // schedule.json as read
+  /* a day with a lesson: Monday to Friday, or every day with "weekends": true; never an "off" day */
+  function study(iso) {
+    var w = new Date(iso + 'T12:00:00Z').getUTCDay();
+    return (file && file.weekends || (w !== 0 && w !== 6)) && !(file && (file.off || []).indexOf(iso) >= 0);
+  }
   function walk(s) {
     if (!s || !s.start || !s.order) return null;
-    var off = {}, fixed = s.dates || {}, out = {}, d = s.start;
-    (s.off || []).forEach(function (x) { off[x] = 1; });
-    function study(iso) { var w = new Date(iso + 'T12:00:00Z').getUTCDay(); return w !== 0 && w !== 6 && !off[iso]; }
+    var fixed = s.dates || {}, out = {}, d = s.start;
     while (!study(d)) d = dayAfter(d, 1);
     s.order.forEach(function (id) {
       if (fixed[id]) { out[id] = fixed[id]; return; }
@@ -84,18 +88,19 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
         .then(function (j) { if (!done) { done = true; clearTimeout(t); res(j.reopen || {}); } })
         .catch(function () { if (!done) { done = true; clearTimeout(t); res({}); } });
     })
-  ]).then(function (res) { dates = walk(res[0]); due = (res[0] && res[0].due) || {}; reopen = res[1]; });
+  ]).then(function (res) { file = res[0]; dates = walk(res[0]); due = (res[0] && res[0].due) || {}; reopen = res[1]; });
 
   window.ALSched = { ready: ready, on: on, state: state, opens: function (id) { return dates && dates[id]; }, lastDay: lastDay,
-    nice: nice, idOf: idOf, weekOpen: weekOpen, today: today };
+    nice: nice, idOf: idOf, weekOpen: weekOpen, today: today,
+    studyDay: function (iso) { return on() ? study(iso) : null; } };
 
   /* ---------- a lesson that has not opened: only when it opens ---------- */
   function lockedPage(id) {
     var cur = current(), link = cur ? (window.ALLang ? window.ALLang.link('#/' + pathOf(cur)) : '#/' + pathOf(cur)) : null;
     return '<div class="sch-lock"><span class="sch-lock-ico">' + LOCK + '</span>' +
       '<h1>' + T('Opens ', 'Откроется ') + nice(dates[id]) + T(' at 00:00', ' в 00:00') + '</h1>' +
-      '<p>' + T('One lesson opens each study day, Monday to Friday, at 00:00 (Tashkent time). Each homework can be handed in until 23:59 on the day it is due.',
-        'Каждый учебный день, с понедельника по пятницу, в 00:00 (по Ташкенту) открывается один урок. Каждое домашнее задание можно сдать до 23:59 дня, когда его срок.') + '</p>' +
+      '<p>' + T('One lesson opens each study day' + (file && file.weekends ? '' : ', Monday to Friday,') + ' at 00:00 (Tashkent time). Each homework can be handed in until 23:59 on the day it is due.',
+        'Каждый учебный день' + (file && file.weekends ? '' : ', с понедельника по пятницу,') + ' в 00:00 (по Ташкенту) открывается один урок. Каждое домашнее задание можно сдать до 23:59 дня, когда его срок.') + '</p>' +
       (link ? '<p><a class="sch-go" href="' + link + '">' + T('Go to today’s lesson →', 'К сегодняшнему уроку →') + '</a></p>' : '') + '</div>';
   }
 

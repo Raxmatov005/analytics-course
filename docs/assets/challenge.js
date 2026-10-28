@@ -65,7 +65,7 @@ once solved or given up; that change fires "al:change" on document.
     for (var i = 0; i < 400; i++) {
       var k = dayKey(d), wd = d.getDay();
       if (days[k]) n++;
-      else if (wd === 0 || wd === 6) { /* weekend: neutral */ }
+      else if (window.ALSched && window.ALSched.studyDay(k) !== null ? !window.ALSched.studyDay(k) : (wd === 0 || wd === 6)) { /* not a study day (schedule.js; without it the weekend): neutral */ }
       else if (first) { /* today not solved yet */ }
       else break;
       first = false;

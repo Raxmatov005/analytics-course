@@ -7,7 +7,7 @@
 ## Start here
 
 1. **[Practice day](practice.md)** — 30 minutes, nothing counts. You run a query, answer in a box, let the site check it, hand it in and try the quiz once.
-2. **[Day 0 — where do you stand?](weeks/week-00/day-0.md)** — five short self-tests and your plan. Score 80 %+ on a module and you skip that week (you still do its Friday checkpoint).
+2. **[Day 0 — where do you stand?](weeks/week-00/day-0.md)** — five short self-tests and your plan. Score 80 %+ on a module and you skip that week (you still do its checkpoint, Day 5).
 3. **[Week 1 · Day 1](weeks/week-01/day-1.md)** — the real work starts: how a company keeps its data.
 
 > 💡 **Key idea.** You learn by doing. Every section of a day gives you something to do — a box to answer in, a query to run, a game, a video that stops to ask — and the site tells you at once whether you are right.
@@ -35,7 +35,7 @@ Every day page has the same route. Under its title, **Today's route** shows the 
 | **Day quiz** | pass with **80 %** — retry as often as you like | passed: the day is done |
 | **Daily challenge** | one harder bonus question, with its own editor on SQL days | solved |
 
-Fridays (Day 5) are checkpoints: the checkpoint's parts (A, B, C) and one 📎 hand-in box take the place of Learn → Homework; the Day quiz and the Daily challenge stay. Week 8 · Days 3–5 are the capstone, with a route of their own. On a day with no new homework, its Homework section says which earlier homework is due.
+Day 5 of every week is the checkpoint: the checkpoint's parts (A, B, C) and one 📎 hand-in box take the place of Learn → Homework; the Day quiz and the Daily challenge stay. Week 8 · Days 3–5 are the capstone, with a route of their own. On a day with no new homework, its Homework section says which earlier homework is due.
 
 > ⚠️ **Watch out.** Answer before you look. A ❌ never shows the answer — it means *look again*. On written answers you see the model only after you write yours and tap **Compare**.
 
@@ -61,7 +61,7 @@ Fridays (Day 5) are checkpoints: the checkpoint's parts (A, B, C) and one 📎 h
 
 ## The 8 weeks
 
-| Week | You become able to… | Friday |
+| Week | You become able to… | Checkpoint (Day 5) |
 |---|---|---|
 | [0](weeks/week-00/day-0.md) | know where you stand | your personal plan |
 | [1](weeks/week-01/day-1.md) | read a company's data model and query one table | design a schema + 20 queries |
