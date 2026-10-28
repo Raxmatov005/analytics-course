@@ -6,6 +6,8 @@ no longer knows is dropped. Used by the hand-in box (sqlrun.js) and the feedback
   ALSignIn.card(opts)             an element: Name, PIN, Sign in; opts.lead (the line above), opts.done() after success
   ALSignIn.line()                 "Signed in as … · sign out" (HTML) or ''
   ALSignIn.dropKey()              after a 401: the key is no longer valid
+  ALSignIn.mentor()               true when the mentor signed in here (his name + PIN from /mentor): every lesson is
+                                  shown (schedule.js preview) and the hand-in boxes show a note instead of a form
 A browser that has no key opens on a full-screen sign-in (the "door", below); after sign-in it never asks again there.
 Every change fires the document event "al-signin", so the boxes on the page redraw. */
 (function () {
@@ -18,6 +20,7 @@ Every change fires the document event "al-signin", so the boxes on the page redr
   function key() { return get(WK); }
   function who() { return get(WHO); }
   function dropKey() { put(WK, null); put(WHO, null); changed(); }
+  function mentor() { return get('al.mentor') === '1' && get('al.preview') === '1'; }
 
   /* a key from the bot's ?wk= link has no name yet: ask once per page load; a key the bot no longer knows is dropped */
   var asked = false;
@@ -33,6 +36,13 @@ Every change fires the document event "al-signin", so the boxes on the page redr
 
   function card(opts) {
     opts = opts || {};
+    if (mentor()) {   // the mentor reads everything here; her boxes take nothing from him
+      var note = document.createElement('div');
+      note.className = 'si-card si-mentor';
+      note.innerHTML = '<div class="si-sub">' + T('Mentor view: hand-in and feedback boxes are for the learner — nothing typed here is sent.',
+        'Режим ментора: поля сдачи и отзыва — для ученицы, отсюда ничего не отправляется.') + '</div>';
+      return note;
+    }
     var el = document.createElement('div');
     el.className = 'si-card';
     el.innerHTML = '<div class="si-h">' + (opts.title || '🔑 ' + T('Sign in to send your work', 'Войдите, чтобы отправлять работы')) + '</div>' +
@@ -53,7 +63,10 @@ Every change fires the document event "al-signin", so the boxes on the page redr
         .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); })
         .then(function (x) {
           go.disabled = false;
-          if (x.status === 200 && x.j.key) {
+          if (x.status === 200 && x.j.mentor) {   // the mentor: every lesson, in this browser, until "Sign out"
+            put('al.mentor', '1'); put('al.preview', '1'); put(WHO, x.j.name || name);
+            location.reload();
+          } else if (x.status === 200 && x.j.key) {
             put(WK, x.j.key); put(WHO, x.j.name || name); asked = true;
             msg.textContent = '';
             if (opts.done) opts.done();
@@ -108,7 +121,7 @@ Every change fires the document event "al-signin", so the boxes on the page redr
   document.addEventListener('al-signin', drawDoor);
   window.addEventListener('hashchange', function () { if (door) drawDoor(); });   // the EN | RU switch redraws it in the other language
 
-  window.ALSignIn = { key: key, who: who, card: card, line: line, dropKey: dropKey };
+  window.ALSignIn = { key: key, who: who, card: card, line: line, dropKey: dropKey, mentor: mentor };
   window.$docsify = window.$docsify || {};
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.doneEach(refresh);

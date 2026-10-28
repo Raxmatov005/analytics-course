@@ -17,6 +17,7 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
   }
   var q = /[?&]preview=([01])/.exec(location.hash);
   if (q) ls(PREVIEW, q[1] === '1' ? '1' : null);
+  if (q && q[1] === '0' && ls('al.mentor') === '1') { ls('al.mentor', null); ls('al.who', null); }   // the mentor signs out
   var preview = ls(PREVIEW) === '1';
 
   function dayAfter(iso, n) { return new Date(Date.parse(iso + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10); }
@@ -175,8 +176,18 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
     if (!preview || document.querySelector('.sch-preview')) return;
     var b = document.createElement('div');
     b.className = 'sch-preview';
-    b.innerHTML = T('Mentor preview: every lesson is shown in this browser. ', 'Просмотр ментора: в этом браузере видны все уроки. ') +
-      '<a href="#/?preview=0">' + T('End preview', 'Выйти из просмотра') + '</a>';
+    var him = ls('al.mentor') === '1' && ls('al.who');   // signed in with his name + PIN (signin.js)
+    b.innerHTML = (him
+      ? T('Signed in as mentor ', 'Вы вошли как ментор ') + '<b></b>' + T(': every lesson is shown. ', ': видны все уроки. ')
+      : T('Mentor preview: every lesson is shown in this browser. ', 'Просмотр ментора: в этом браузере видны все уроки. ')) +
+      '<a href="#/?preview=0">' + (him ? T('Sign out', 'Выйти') : T('End preview', 'Выйти из просмотра')) + '</a>';
+    if (him) b.querySelector('b').textContent = him;
+    b.querySelector('a').onclick = function (e) {   // a hash change alone left the preview on until a reload
+      e.preventDefault();
+      ls(PREVIEW, null);
+      if (ls('al.mentor') === '1') { ls('al.mentor', null); ls('al.who', null); }
+      location.hash = '#/'; location.reload();
+    };
     document.body.appendChild(b);
   }
 
