@@ -357,7 +357,7 @@ On the small table, Rows `product`:
 
 The Average of per-loan ratios weights a 6-million loan like a 10-million one. The ratio of sums weights each loan by its size.
 
-On `tblLoans`, with Tuesday's `rate` column: a calculated field `run_rate = outstanding * rate / 12` by product adds up to **4 491 202 901** soum of interest a month — the same as Tuesday's `SUMPRODUCT`. **Sheets:** Values → Add → *Calculated field*.
+On `tblLoans`, with Tuesday's `rate` column: a calculated field `run_rate = outstanding * rate / 12` would multiply Σ outstanding by Σ rate (for SME, 781 loans × 0.26) — trillions, and no error. outstanding × rate has to be worked out loan by loan, so it belongs in a calculated **column** on `tblLoans`, `=[@outstanding]*[@rate]/12`; Sum of that column by product adds up to **4 491 202 901** soum of interest a month — the same as Tuesday's `SUMPRODUCT`. **Sheets:** Values → Add → *Calculated field*.
 
 **When you use it.**
 - A rate for a group: collected ÷ due, outstanding ÷ principal, interest ÷ outstanding.
@@ -487,7 +487,7 @@ On `tblLoans`, the product pivot at `A20`: `=GETPIVOTDATA("outstanding", $A$20)`
 **Your turn.** Complete the tile: the outstanding of Auto loans, read from the pivot at `A20`.
 
 ```game
-{"type": "cloze", "id": "w04d4-g6", "code": true, "title": "A tile that reads the pivot", "text": "=GETPIVOTDATA({{0}}, {{1}}, {{2}}, {{3}})", "blanks": [["\"outstanding\""], ["$A$20"], ["\"product\""], ["\"Auto loan\""]], "distractors": ["\"Sum of outstanding\"", "B22", "tblLoans[product]"]}
+{"type": "cloze", "id": "w04d4-g6", "code": true, "title": "A tile that reads the pivot", "text": "=GETPIVOTDATA({{0}}, {{1}}, {{2}}, {{3}})", "blanks": [["\"outstanding\"", "\"Sum of outstanding\""], ["$A$20"], ["\"product\""], ["\"Auto loan\""]], "distractors": ["tblLoans[outstanding]", "\"A20\"", "tblLoans[product]"]}
 ```
 
 ### Which chart for which question
@@ -686,18 +686,18 @@ One pivot, one slicer, one chart, from the tools above: *"For each product, what
 | Source | tblLoans | (a Table, so Refresh picks up new rows) |
 | Rows | product | GROUP BY product |
 | Columns | bucket | the cross-tab |
-| Values | loan_id — Count, Show Values As % of Row Total | each product's loans spread over the buckets |
+| Values | loan_id — Count, left as numbers; then loan_id again — Count, Show Values As % of Row Total (Excel names it Count of loan_id2) | the numbers feed the check; the % copy is each product's loans spread over the buckets |
 | Filters | status = (All) |   |
 | Slicer | region, connected to this pivot only |   |
 | Chart | 100 % stacked bar, 90+ in red, the rest grey; title linked to a cell |   |
-| Check | `=GETPIVOTDATA("loan_id", $A$3)` next to `=COUNTA(tblLoans[loan_id])` | → 7 828 = 7 828 |
+| Check | `=GETPIVOTDATA("Count of loan_id", $A$3)` (the plain count) next to `=COUNTA(tblLoans[loan_id])` | → 7 828 = 7 828 |
 
 Read the `90+` column: SME **3.7 %**, Consumer 3.2 %, Micro 2.8 %, BNPL 2.7 %, Auto 2.6 %. Click **Fergana** on the slicer and every share is recomputed for Fergana's loans; the check cell shows the Grand Total is no longer 7 828 — the page is filtered, and it says so.
 
 **Put the steps of the page in order.**
 
 ```game
-{"type": "order", "id": "w04d4-g7", "title": "Build the page, in order", "items": ["Say the question and the grain (one row of tblLoans = one loan)", "Insert a PivotTable from tblLoans", "Drag product to Rows, bucket to Columns, Count of loan_id to Values", "Show Values As → % of Row Total; number format 0.0% in Value Field Settings", "Insert a slicer on region and connect it with Report Connections", "Insert a 100 % stacked bar; 90+ in red; finding title", "Add the check cell: GETPIVOTDATA total = COUNTA(tblLoans[loan_id])"]}
+{"type": "order", "id": "w04d4-g7", "title": "Build the page, in order", "items": ["Say the question and the grain (one row of tblLoans = one loan)", "Insert a PivotTable from tblLoans", "Drag product to Rows, bucket to Columns, Count of loan_id to Values", "Show Values As → % of Row Total; number format 0.0% in Value Field Settings", "Read the 90+ shares; insert a 100 % stacked bar, 90+ in red, with a finding title that quotes one"], "why": "Each step needs the one before: the grain decides the source, the fields need a pivot, Show Values As changes the counts you dragged in, and the finding title quotes a share. (The slicer and the check cell can be added at any point after the pivot, so they are not in this game.)"}
 ```
 
 ### Depth (optional)
@@ -811,10 +811,10 @@ File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P11, sheet `Charts` 
 {"id": "w04d4-p6", "kind": "number", "answer": 114, "dp": 0, "unit": "loans", "explain": "114 SME loans in July–September 2026, 37 677 910 000 (all products: 1 086 loans). The P4 pivot re-ranks under the filter — Fergana Central jumps to first (5.91 bn of SME outstanding). Clear both with the slicer's corner icon: a page left filtered is Monday's most common 'the numbers are wrong' call. Put the pivot's Grand Total next to the Table's SUM — equal means unfiltered."}
 ```
 
-**P7.** *(a calculated field)* With Tuesday's `rate` column on `tblLoans`, add `run_rate = outstanding * rate / 12` and show it by product. Then try `avg_ticket = principal / loan_id` — what happens, and what is the fix? *In the box: SME's run_rate, in soum a month.*
+**P7.** *(a calculated field)* With Tuesday's `rate` column on `tblLoans`, first try a calculated field `run_rate = outstanding * rate / 12` by product and see why its numbers are far too big. Then add `run_rate` as a calculated **column** on `tblLoans` (`=[@outstanding]*[@rate]/12`) and show Sum of `run_rate` by product. Last, try the calculated field `avg_ticket = principal / loan_id` — what happens, and what is the fix? *In the box: SME's Sum of run_rate from the column, in soum a month.*
 
 ```task
-{"id": "w04d4-p7", "kind": "number", "answer": 2727680419, "dp": 0, "unit": "UZS a month", "explain": "SME 2 727 680 419 · Auto 1 153 685 427 · Consumer 576 373 333 · Micro 33 463 723 · BNPL 0 — total 4 491 202 901, Tuesday's SUMPRODUCT. principal / loan_id divides the sum of principal by the sum of the ids — nonsense without an error. Fix: a column of 1s and principal / one, or just Average of principal in Values. Calculated fields see sums, never counts."}
+{"id": "w04d4-p7", "kind": "number", "answer": 2727680419, "dp": 0, "unit": "UZS a month", "explain": "SME 2 727 680 419 · Auto 1 153 685 427 · Consumer 576 373 333 · Micro 33 463 723 · BNPL 0 — total 4 491 202 901, Tuesday's SUMPRODUCT. The calculated field outstanding * rate / 12 gives Σ outstanding × Σ rate ÷ 12 instead — 2.13 trillion for SME, because Σ rate there is 781 × 0.26 = 203. principal / loan_id divides the sum of principal by the sum of the ids — nonsense without an error. Fix: a column of 1s and principal / one, or just Average of principal in Values. Calculated fields see sums, never counts."}
 ```
 
 **P8.** *(double counting)* Bring `principal` onto each instalment (a lookup from `tblLoans` in a new column of `tblInstallments`, or yesterday's merge), then pivot that table: Rows `product`, Values Sum of `principal`. Compare the SME row with the same pivot on `tblLoans`. *In the box: SME's principal as it should be, from `tblLoans`, in soum.*
@@ -853,10 +853,10 @@ File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P11, sheet `Charts` 
 {"id": "w04d4-p15", "kind": "multi", "options": ["(1) columns from 24 bn", "(2) a pie of 8 regions", "(3) loans and outstanding on two axes", "(4) the sorted bar from zero with a finding title"], "answer": [0, 1, 2], "explain": "(1) truncated axis: Tashkent Central's column looks about 7 times Samarkand Central's for a 16 % gap. (2) eight angles cannot be ranked; Termez's 5.1 % and Nukus's 6.4 % look alike. (3) the crossing of count and money is an artefact of the two scales. (4) is the honest one."}
 ```
 
-**P14.** *(sparklines)* A pivot of `monthly_disbursements.csv` with products in Rows and 2026 months in Columns (Sum of amount), a sparkline per row with high and low points, same axis for all. Which product is most volatile, and which looks volatile only because its axis is its own? *In the box: the most volatile product.*
+**P14.** *(sparklines)* A pivot of `monthly_disbursements.csv` with products in Rows and the months January–September 2026 in Columns (Sum of amount), a sparkline per row with high and low points, same axis for all. Which product swings by the most money between its lowest and its highest month, and which looks volatile only because its axis is its own? *In the box: the product with the biggest swing in soum.*
 
 ```task
-{"id": "w04d4-p10", "kind": "choice", "options": ["Micro loan", "Buy now pay later", "Consumer loan", "Auto loan", "Small business loan"], "answer": 4, "explain": "SME swings 6.0 → 15.4 bn (Feb → Jul) — the most volatile and the biggest. With Same for All Sparklines, Micro (0.20–0.35 bn) and BNPL (0.19–0.33) flatten to a line; each on its own axis they look as jagged as SME. Auto 1.8–6.2 bn is the second mover. State in the header whether the sparklines compare shape only or size too."}
+{"id": "w04d4-p10", "kind": "choice", "options": ["Micro loan", "Buy now pay later", "Consumer loan", "Auto loan", "Small business loan"], "answer": 4, "explain": "SME swings 6.0 → 15.4 bn (Feb → Jul), 9.4 bn — the biggest swing in soum and the biggest product. With Same for All Sparklines, Micro (0.20–0.35 bn) and BNPL (0.19–0.33) flatten to a line; each on its own axis they look as jagged as SME. Auto 1.8–6.2 bn is the second mover — and, for its size, the most jagged (3.4 times from its low to its high, SME 2.6 times). State in the header whether the sparklines compare shape only or size too."}
 ```
 
 **P15.** *(SQL → pivot)* Build this query as a pivot: `SELECT region, COUNT(*) FROM loans WHERE status = 'active' GROUP BY region HAVING COUNT(*) > 300`. *In the box: how many regions remain.*

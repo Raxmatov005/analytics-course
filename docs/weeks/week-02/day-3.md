@@ -177,7 +177,7 @@ Applications arrive from 08:00 to 21:59; the busiest hour is 15:00 with 1 089 ap
 **Your turn.** What is the earliest hour of the day at which an application arrives? (Two digits, as `SUBSTR` returns it.)
 
 ```task
-{"id": "w02d3-l6", "kind": "text", "answer": ["08", "8"], "hint": "MIN(SUBSTR(applied_at, 12, 2)) FROM applications.", "model": "'08' — applications run from 08:00 to 21:59. The text '08' sorts before '15' because both have two digits."}
+{"id": "w02d3-l6", "kind": "text", "answer": ["08", "8", "08:00", "8:00"], "hint": "MIN(SUBSTR(applied_at, 12, 2)) FROM applications.", "model": "'08' — applications run from 08:00 to 21:59. The text '08' sorts before '15' because both have two digits."}
 ```
 
 ### REPLACE — swap one text for another
@@ -489,7 +489,7 @@ Loan 1 was paid out on 2025-03-28, 552 days before the as-of date. `julianday` c
 **Your turn.** What does `date('2026-10-01', '-30 days')` return?
 
 ```task
-{"id": "w02d3-l16", "kind": "text", "answer": ["2026-09-01"], "hint": "September has 30 days.", "model": "'2026-09-01'. Tomorrow's FPD30 uses exactly this date: the base is loans whose first instalment fell due on or before it."}
+{"id": "w02d3-l16", "kind": "text", "answer": ["2026-09-01", "01.09.2026", "1 September 2026"], "hint": "September has 30 days.", "model": "'2026-09-01'. Tomorrow's FPD30 uses exactly this date: the base is loans whose first instalment fell due on or before it."}
 ```
 
 ### Filtering a period — the half-open range

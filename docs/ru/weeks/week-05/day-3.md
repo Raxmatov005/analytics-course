@@ -709,7 +709,7 @@ loans["bucket_fn"] = loans["dpd"].apply(dpd_bucket)
 **Ваша очередь.**
 
 ```game
-{"type": "build", "id": "w05d3-g4", "title": "Векторный итог", "q": "Восстановите total_due для каждого платежа по графику без apply.", "tokens": ["inst[\"total\"] =", "inst[\"principal_due\"]", "+", "inst[\"interest_due\"]"], "distractors": [".apply(", "axis=1", "for r in inst"]}
+{"type": "build", "id": "w05d3-g4", "title": "Векторный итог", "q": "Восстановите total_due для каждого платежа по графику без apply.", "tokens": ["inst[\"total\"] =", "inst[\"principal_due\"]", "+", "inst[\"interest_due\"]"], "alts": [["inst[\"total\"] =", "inst[\"interest_due\"]", "+", "inst[\"principal_due\"]"]], "distractors": [".apply(", "axis=1", "for r in inst"]}
 ```
 
 ### assert — конвейер, который проверяет сам себя :id=assert--the-pipeline-that-checks-itself

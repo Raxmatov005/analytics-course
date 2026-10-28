@@ -709,7 +709,7 @@ The box shows `(True, True)`: both ways rebuild `total_due` on all 92 193 instal
 **Your turn.**
 
 ```game
-{"type": "build", "id": "w05d3-g4", "title": "The vectorised total", "q": "Rebuild total_due on every instalment without apply.", "tokens": ["inst[\"total\"] =", "inst[\"principal_due\"]", "+", "inst[\"interest_due\"]"], "distractors": [".apply(", "axis=1", "for r in inst"]}
+{"type": "build", "id": "w05d3-g4", "title": "The vectorised total", "q": "Rebuild total_due on every instalment without apply.", "tokens": ["inst[\"total\"] =", "inst[\"principal_due\"]", "+", "inst[\"interest_due\"]"], "alts": [["inst[\"total\"] =", "inst[\"interest_due\"]", "+", "inst[\"principal_due\"]"]], "distractors": [".apply(", "axis=1", "for r in inst"]}
 ```
 
 ### assert — the pipeline that checks itself

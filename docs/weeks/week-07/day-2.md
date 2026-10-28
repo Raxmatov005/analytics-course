@@ -543,7 +543,7 @@ B is better in both periods. But 47 % of A's users come from the high-converting
 
 > ⚠️ **Watch out.** With a ramp-up, never pool the periods. Analyse only the period with the final split, or compare within each period and combine those comparisons.
 
-**Your turn.**
+**Your turn.** How do you read the table above?
 
 ```task
 {"id": "w07d2-l11", "kind": "choice", "options": ["B is worse: trust the total", "B is better in each period; the total is distorted because A has far more users from the high-converting week", "The data are wrong", "Average the two periods' rates"], "answer": 1, "explain": "The arms have different mixes of periods. Comparisons inside each period are fair; the pooled total is not. Fix the design (no pooling across splits) rather than the arithmetic."}
@@ -583,7 +583,7 @@ Here: row two. A screen change is cheap to reverse; FPD is a two-month-late sign
 **Your turn.** Tap every line of this readout that would not survive review.
 
 ```game
-{"type": "bug", "id": "w07d2-g2", "title": "Three lines that would not survive Jasur", "q": "The dashboard's readout of the offer-screen test. Tap every line that is wrong.", "code": "Design: user-level 50/50 hash split, 1–28 August, primary = signed within 7 days.\nSanity: 13 845 vs 14 129 rows, overall SRM p = 0.09 — the split is fine.\nPrimary: 9.37 % vs 8.28 %, two-proportion z-test, two-sided.\nGuardrail: FPD difference not significant (p = 0.23) — passed.\nSegments: affluent +1.7 points, p = 0.047 — target affluent users first.\nNext: decision memo for Kamola and Nilufar.", "answer": [1, 3, 4], "why": "Rows are not users and the SRM must be checked by slice (iOS week 4 was 60/40); a guardrail test with 23 % power is unresolved, not passed; affluent is the best of seven segments before Holm (0.28 after)."}
+{"type": "bug", "id": "w07d2-g2", "title": "Three lines that would not survive Jasur", "q": "The dashboard's readout of the offer-screen test. Tap every line that is wrong.", "code": "Design: user-level 50/50 hash split, 1–28 August, primary = signed within 7 days.\nSanity: 13 845 vs 14 129 rows, overall SRM p = 0.09 — the split is fine.\nPrimary on the cleaned users: 8.86 % vs 7.98 %, +0.88 points (95 % CI +0.16 to +1.60), two-proportion z-test, two-sided.\nGuardrail: FPD difference not significant (p = 0.23) — passed.\nSegments: affluent +1.7 points, p = 0.047 — target affluent users first.\nNext: decision memo for Kamola and Nilufar.", "answer": [1, 3, 4], "why": "Rows are not users and the SRM must be checked by slice (iOS week 4 was 60/40); a guardrail test with 23 % power is unresolved, not passed; affluent is the best of seven segments before Holm (0.28 after)."}
 ```
 
 ### What to do when the result is flat
@@ -789,7 +789,7 @@ Answer each question in its box. The Python boxes run here and see `users`, `eve
 {"id": "w07d2-p15", "kind": "choice", "options": ["Extend the test: p is not below 0.05", "A precise flat result: the interval excludes the +1.0 MDE, so there is no effect worth having — do not ship for conversion", "The text works a little: ship it", "The test is broken"], "answer": 1, "explain": "The interval is narrow and its upper end (+0.5) is below the MDE: the test could have seen +1.0 and did not. That is a finding, not a failure. Extending is for wide intervals that still include the MDE."}
 ```
 
-> 🚀 **Stretch (optional, +5 XP).** **P15.** *(putting it together — the money)* Redo Day 1's unit economics with today's numbers (conversion, average principal per arm, FPD per arm; interest = 9.856 % of principal, i.e. 266 662 ÷ 2 705 586 as on Nur's Micro book; LGD 60 %). Profit per 1 000 viewers per arm; B's break-even FPD; B's profit if its FPD were at the upper end of the CI.
+> 🚀 **Stretch (optional, +5 XP).** **P15.** *(putting it together — the money)* Redo Day 1's unit economics with today's numbers (conversion, average principal per arm, FPD per arm; interest = 9.856 % of principal, i.e. 266 662 ÷ 2 705 586 as on Nur's Micro book; LGD 60 %). Profit per 1 000 viewers per arm; B's break-even FPD; B's profit if its FPD were at the upper end of the CI. In the box: B's break-even FPD in %, to 2 decimals.
 
 ```task
 {"id": "w07d2-p11", "kind": "number", "answer": 2.45, "dp": 2, "unit": "%", "hint": "Enter B's break-even FPD in % (A's profit per 1 000 viewers = B's, solved for B's FPD).", "xp": 2, "model": "A: conversion 7.98 %, principal 2 563 847 → I = 252 692, L = 1 538 308, FPD 1.51 % → 225 638 per loan → 17 996 742 per 1 000 viewers. B: 8.86 %, 2 494 675 → I = 245 875, L = 1 496 805, FPD 2.23 % → 207 004 per loan → 18 339 646 (+1.9 %). Break-even FPD for B: 2.45 %, i.e. +0.94 points over A (smaller than Day 1's +1.25 because B's loans are slightly smaller). At the CI's upper end (A + 1.94 = 3.45 %): 16 454 966, 8.6 % below A. Expected gain small and positive; the bad case is bigger than the good one — exactly why the rollout is staged."}

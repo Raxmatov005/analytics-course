@@ -856,6 +856,8 @@ SELECT COUNT(*) FROM payments WHERE loan_id = 1;
 
 </details>
 
+How many rows does the join on `loan_id` return for loan 1?
+
 ```task
 {"id": "w02d4-l13", "kind": "number", "answer": 432, "dp": 0, "unit": "rows", "hint": "Count the instalments and the payments of loan 1 separately, then multiply.", "model": "24 × 18 = 432. Two child tables joined through their parent's key fan out; join a child to a child only on the key that links them directly (installment_id)."}
 ```

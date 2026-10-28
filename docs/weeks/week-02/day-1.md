@@ -564,6 +564,8 @@ Every loan has exactly one customer (many-to-one), so the inner join neither dro
 
 </details>
 
+Why does the join return exactly as many rows as `loans`?
+
 ```task
 {"id": "w02d1-p1", "kind": "choice", "options": ["Every loan finds exactly one customer: the join is many-to-one from loans", "JOIN removes duplicate rows", "customers has exactly as many rows as loans", "An INNER JOIN always returns the row count of the first table"], "answer": 0, "explain": "customers has 6 040 rows, loans 7 828; the join keeps 7 828 because each loan's customer_id finds one customer. A loan pointing at a missing customer would have vanished, and the count would be lower.", "xp": 1}
 ```
@@ -690,6 +692,8 @@ WHERE ca.action_id IS NULL;
 70 of the 100 staff: the 60 loan officers and the 10 branch managers. Every one of the 30 collectors has actions. The LEFT version puts the complete list (`staff`) in `FROM` — easier to read.
 
 </details>
+
+How many staff members have no collections action at all?
 
 ```task
 {"id": "w02d1-l2", "kind": "number", "answer": 70, "dp": 0, "unit": "staff", "hint": "RIGHT keeps every staff member; count the rows whose action side is NULL.", "model": "70: the 60 loan officers and 10 branch managers. Collectors are the only staff who log collections actions, and all 30 of them have some."}

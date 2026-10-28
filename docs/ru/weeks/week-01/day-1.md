@@ -67,10 +67,16 @@ SELECT * FROM customers LIMIT 3;
 | Как называется строка | «строка 17», и она сдвигается при сортировке | **первичный ключ**, который не меняется |
 | Как связаны два листа | копирование, ВПР | **внешние ключи** |
 
-**Ваша очередь.** В таблице `installments` одна строка — это…
+Тот же вопрос для другой таблицы. `installments` — это **график ежемесячных платежей** по каждому кредиту: сколько и когда клиент должен заплатить. Вот её первые четыре строки:
+
+```pic
+{"id": "w01d1-pic5", "title": "installments: первые строки", "caption": "Посмотрите на `loan_id` и `due_date`: в каждой строке тот же кредит, с шагом в один месяц.", "tables": [{"name": "installments", "cols": ["installment_id", "loan_id", "due_date"], "rows": [[1, 1, "2025-04-28"], [2, 1, "2025-05-28"], [3, 1, "2025-06-28"], [4, 1, "2025-07-28"]], "pk": "installment_id", "fk": ["loan_id"], "tags": {"loan_id": "тот же кредит"}, "more": "… и так далее, месяц за месяцем"}]}
+```
+
+**Ваша очередь.** В таблице `installments` (график ежемесячных платежей) одна строка — это…
 
 ```task
-{"id": "w01d1-l1", "kind": "choice", "options": ["один кредит", "один плановый ежемесячный платёж по одному кредиту", "один реально полученный платёж", "один клиент"], "answer": 1, "explain": "installments — это график: одна строка на каждый запланированный ежемесячный платёж. У кредита 1 их 24. То, что реально пришло, лежит в payments."}
+{"id": "w01d1-l1", "kind": "choice", "options": ["один кредит", "один плановый ежемесячный платёж по одному кредиту", "один реально полученный платёж", "один клиент"], "answer": 1, "explain": "installments — это график: одна строка на каждый запланированный ежемесячный платёж, поэтому loan_id повторяется. Кредит 1 выдан на 24 месяца — у него здесь 24 строки (четыре выше — первые из них). То, что реально пришло, хранится в другой таблице — payments."}
 ```
 
 ### Типы данных — один вид значений в столбце :id=data-types-one-kind-of-value-per-column
@@ -351,7 +357,7 @@ SELECT application_id, customer_id, applied_at, status FROM applications WHERE a
 
 ```sqllab
 {"id": "w01d1-lab", "title": "Ваша первая таблица", "intro": "Мадина хочет короткий список филиалов для тренировки. Создайте его, заполните, исправьте — и посмотрите, как он появится в разделе **«Ваши таблицы»** панели «База данных».", "steps": [
-  {"say": "Создайте пустую таблицу `my_branches` с тремя столбцами: `branch_id` (целое число и первичный ключ), `name` и `region` (текст).", "hint": "CREATE TABLE my_branches (branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT);", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'my_branches'", "want": 1},
+  {"say": "Создайте пустую таблицу `my_branches` с тремя столбцами: `branch_id` (целое число и первичный ключ), `name` и `region` (текст). (Если в базе осталась `my_branches` из SQL-песочницы, сначала выполните `DROP TABLE my_branches;`.)", "hint": "CREATE TABLE my_branches (branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT);", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'my_branches'", "want": 1},
   {"say": "Добавьте три филиала с идентификаторами 1, 2 и 3 — в Tashkent, Samarkand и Bukhara (в Fergana пока ни одного).", "hint": "INSERT INTO my_branches (branch_id, name, region) VALUES\n  (1, 'Chilonzor', 'Tashkent'),\n  (2, 'Registan', 'Samarkand'),\n  (3, 'Old Town', 'Bukhara');", "expect": "SELECT COUNT(*) FROM my_branches", "want": 3},
   {"say": "Филиал 3 переехал: поменяйте его `region` на 'Fergana'. Измените только эту строку.", "hint": "UPDATE my_branches SET region = 'Fergana' WHERE branch_id = 3;", "expect": "SELECT COUNT(*) FROM my_branches WHERE region = 'Fergana'", "want": 1},
   {"say": "Филиал в Fergana закрылся. Удалите эту одну строку, затем посмотрите, что осталось: `SELECT * FROM my_branches;`.", "hint": "DELETE FROM my_branches WHERE region = 'Fergana';\nSELECT * FROM my_branches;", "expect": "SELECT COUNT(*) * 10 + COALESCE(SUM(region = 'Fergana'), 0) FROM my_branches", "want": 20}],

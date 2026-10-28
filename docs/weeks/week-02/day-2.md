@@ -145,7 +145,7 @@ Loans run from 300 000 to 599 060 000 UZS. The first was paid out on 2 January 2
 **Your turn.** On which date was the latest payment made? (`payments.paid_at`)
 
 ```task
-{"id": "w02d2-l4", "kind": "text", "answer": ["2026-11-24"], "hint": "MAX(paid_at) FROM payments.", "model": "2026-11-24 — almost two months after the as-of date 2026-10-01. A payment from the future: P7 comes back to it."}
+{"id": "w02d2-l4", "kind": "text", "answer": ["2026-11-24", "24.11.2026", "24 November 2026", "November 24, 2026", "2026-11-24 00:00:00"], "hint": "MAX(paid_at) FROM payments.", "model": "2026-11-24 — almost two months after the as-of date 2026-10-01. A payment from the future: P7 comes back to it."}
 ```
 
 ### GROUP BY one column — one row per group
@@ -659,6 +659,8 @@ GROUP BY a.channel, p.name ORDER BY a.channel, applications DESC;
 5 rows: app → Micro 5 006; branch → Consumer 4 204, SME 1 354, Auto 665; partner → BNPL 2 771. A combination that never occurs gets no row: the app sells only Micro loans and partners only BNPL.
 
 </details>
+
+How many rows does your P10 query return?
 
 ```task
 {"id": "w02d2-l10", "kind": "number", "answer": 5, "dp": 0, "unit": "rows", "hint": "Count the rows of your result.", "model": "5 rows. GROUP BY returns only the combinations that occur: each channel sells its own products (app → Micro, partner → BNPL, branch → Consumer, SME, Auto)."}

@@ -395,7 +395,7 @@ ORDER BY mob;
 
 > ⚠️ **Watch out.** A cell where some loans are not yet old enough is not "nobody was late" — it is "not measured yet". Keep only instalments whose 30 days are over (the `WHERE` in `inst`), and leave a cell blank when not every loan of the cohort is observed (P10).
 
-**Your turn.** At MOB 1 this table must equal week 2's FPD30 (first payment 30+ days late). Why does the rate at MOB 3 **have** to be at least the rate at MOB 2?
+**Your turn.** At MOB 1 this table applies week 2's FPD30 rule (first payment 30+ days late) to these loans. Why does the rate at MOB 3 **have** to be at least the rate at MOB 2?
 
 ```task
 {"id": "w03d3-l7", "kind": "choice", "options": ["Because later instalments are larger", "Because ever30 is a running MAX: once a loan is late it stays counted, and the same loans are observed at every MOB", "Because 2025 was a bad year", "It does not have to — a curve can fall"], "answer": 1, "explain": "With the same loans in every column, a running MAX can only stay or rise. A curve that falls means the denominator changed (different loans at different MOBs) or the query is wrong."}
@@ -714,7 +714,7 @@ Section 1's vintage chain with `cohort` added to `base` and to the `GROUP BY`. W
 **P9 — name it.** Which cohort is worst at MOB 3? Write it as `YYYY-MM`.
 
 ```task
-{"id": "w03d3-p8b", "kind": "text", "answer": ["2025-10", "2025-10 cohort", "october 2025", "oct 2025"], "model": "2025-10: 15 of 217 loans ever 30+ by MOB 3 = 6.91 %. Next: 2025-09 (5.70 %), 2025-03 (5.59 %).", "xp": 1}
+{"id": "w03d3-p8b", "kind": "text", "answer": ["2025-10", "2025-10 cohort", "october 2025", "oct 2025", "10.2025", "2025.10"], "model": "2025-10: 15 of 217 loans ever 30+ by MOB 3 = 6.91 %. Next: 2025-09 (5.70 %), 2025-03 (5.59 %).", "xp": 1}
 ```
 
 **P10.** *(the vintage table — observable cells)* Pivot P9 to wide (MOB 1..6 as columns, `SUM(CASE WHEN installment_no = k THEN ever30 END) / SUM(installment_no = k)`), and make a cell **NULL when not every loan of the cohort is observable** at that MOB. Which cells go blank?

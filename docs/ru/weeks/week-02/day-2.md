@@ -145,7 +145,7 @@ FROM loans;
 **Ваша очередь.** Какого числа был сделан самый поздний платёж? (`payments.paid_at`)
 
 ```task
-{"id": "w02d2-l4", "kind": "text", "answer": ["2026-11-24"], "hint": "MAX(paid_at) FROM payments.", "model": "2026-11-24 — почти через два месяца после отчётной даты 2026-10-01. Платёж из будущего: к нему вернётся P7."}
+{"id": "w02d2-l4", "kind": "text", "answer": ["2026-11-24", "24.11.2026", "24 November 2026", "November 24, 2026", "2026-11-24 00:00:00", "24 ноября 2026"], "hint": "MAX(paid_at) FROM payments.", "model": "2026-11-24 — почти через два месяца после отчётной даты 2026-10-01. Платёж из будущего: к нему вернётся P7."}
 ```
 
 ### GROUP BY по одному столбцу — одна строка на группу :id=group-by-one-column-one-row-per-group
@@ -662,6 +662,8 @@ GROUP BY a.channel, p.name ORDER BY a.channel, applications DESC;
 5 строк: app → Micro 5 006; branch → Consumer 4 204, SME 1 354, Auto 665; partner → BNPL 2 771. Сочетание, которого нет в данных, не получает строки: приложение продаёт только микрокредиты, а партнёры — только BNPL.
 
 </details>
+
+Сколько строк возвращает ваш запрос из P10?
 
 ```task
 {"id": "w02d2-l10", "kind": "number", "answer": 5, "dp": 0, "unit": "строк", "hint": "Посчитайте строки результата.", "model": "5 строк. GROUP BY возвращает только встречающиеся сочетания: каждый канал продаёт свои продукты (app → Micro, partner → BNPL, branch → Consumer, SME, Auto)."}

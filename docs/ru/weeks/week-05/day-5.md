@@ -73,7 +73,7 @@ by_prod.sort_values("disbursed", ascending=False)
 > 💡 **Главное.** Агрегируйте и соединяйте в SQL на зерне базы данных; формируйте, отсекайте, проверяйте и рисуйте в pandas. Заключительная ячейка просит обосновать именно это разделение на примере ваших разделов — замечайте раздел за разделом, какой инструмент сделал работу короче или безопаснее.
 
 ```game
-{"type": "match", "id": "w05d5-g1", "title": "SQL-близнец → идиома pandas", "pairs": [["COUNT(*) / SUM(COUNT(*)) OVER ()", "value_counts(normalize=True)"], ["AVG() OVER (ROWS 2 PRECEDING)", "rolling(3).mean()"], ["LAG(x, 12)", "pct_change(12)"], ["RANK()", "rank(method=\"min\")"], ["ORDER BY … LIMIT 3", "nlargest(3, col)"], ["CASE WHEN income < …", "pd.cut(..., right=False)"], ["FULL OUTER JOIN", "merge(how=\"outer\")"]]}
+{"type": "match", "id": "w05d5-g1", "title": "SQL-близнец → идиома pandas", "pairs": [["COUNT(*) / SUM(COUNT(*)) OVER ()", "value_counts(normalize=True)"], ["AVG() OVER (ROWS 2 PRECEDING)", "rolling(3).mean()"], ["x / LAG(x, 12) - 1", "pct_change(12)"], ["RANK()", "rank(method=\"min\")"], ["ORDER BY … LIMIT 3", "nlargest(3, col)"], ["CASE WHEN income < …", "pd.cut(..., right=False)"], ["FULL OUTER JOIN", "merge(how=\"outer\")"]]}
 ```
 
 > ⚠️ **Осторожно.** Типичные ошибки этой недели стоят балла за число каждая: `how="inner"` по умолчанию там, где имелся в виду `LEFT JOIN`; `fillna(0)` на денежном столбце, который должен остаться NaN; `between` по datetime; `pd.cut` с первой границей 0; суммирование `principal` после присоединения платежей по графику к кредитам (Σ principal ×24.7, размножение строк с недели 2 — `validate="m:1"` бы это поймал); график, чей заголовок называет график.

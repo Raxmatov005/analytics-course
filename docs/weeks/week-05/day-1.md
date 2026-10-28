@@ -970,7 +970,7 @@ annuity(31_150_000, 0.30, 24)     # 1741700 — loan 1
 ```
 
 ```game
-{"type": "build", "id": "w05d1-g4", "title": "Build the annuity payment", "q": "Assemble Nur Finance's monthly payment, with r = annual_rate / 12 already computed.", "tokens": ["pay =", "principal", "*", "r", "/", "(1 - (1 + r) ** -term)"], "distractors": ["(1 + r) ** term", "+ interest"]}
+{"type": "build", "id": "w05d1-g4", "title": "Build the annuity payment", "q": "Assemble Nur Finance's monthly payment, with r = annual_rate / 12 already computed.", "tokens": ["pay =", "principal", "*", "r", "/", "(1 - (1 + r) ** -term)"], "alts": [["pay =", "r", "*", "principal", "/", "(1 - (1 + r) ** -term)"]], "distractors": ["(1 + r) ** term", "+ interest"]}
 ```
 
 **Check against three real loans** (`loans.principal`, `annual_rate`, `term_months`, `monthly_payment` from `nur.db`; the same three head `loans_status.csv`):

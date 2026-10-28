@@ -89,7 +89,7 @@ Dividing by n gives about 2 860 instead of 3 543 — 20 % too small at n = 5. Di
 
 > ⚠️ **Watch out.** `np.std(x)` and `np.var(x)` default to ddof = 0, the population formula; pandas' `.std()` uses ddof = 1. Pass `ddof=1` to numpy in every sample calculation.
 
-**Your turn.** At n = 5, the variance divided by n is on average what share of the true variance?
+**Your turn.** At n = 5, the variance divided by n is on average what share of the true variance? Give it as a decimal (like 0.5), not in %.
 
 ```task
 {"id": "w06d2-l2", "kind": "number", "answer": 0.8, "dp": 2, "unit": "of the true variance", "hint": "The factor is (n − 1) / n.", "model": "(5 − 1) / 5 = 0.8 — the experiment's 2 862 / 3 543 ≈ 0.81. That is why a sample variance divides by n − 1."}
@@ -173,7 +173,7 @@ A 392-loan mean principal moves by about 5.7 m from sample to sample — the siz
 
 > ⚠️ **Watch out.** An interval built with the sd instead of the SE is as wide as the data — √n times too wide. The sd is about loans; the SE is about your number.
 
-**Your turn.** The SE of the branch FPD rate, 34 FPDs in 3 263 loans, in percentage points?
+**Your turn.** The SE of the branch FPD rate, 34 FPDs in 3 263 loans, in percentage points, to 2 decimals?
 
 ```task
 {"id": "w06d2-l4", "kind": "number", "answer": 0.18, "dp": 2, "unit": "points", "hint": "p̂ = 34 / 3 263; SE = √(p̂ (1 − p̂) / n), then × 100.", "model": "p̂ = 1.04 %; √(0.01042 × 0.98958 / 3 263) = 0.00178 = 0.18 points — smaller than the app's 0.26, because the branch has more loans."}
@@ -290,7 +290,7 @@ On the notebook's 50 loans the t interval is 23.90–31.07 m, and the true Consu
 | width vs the other | narrower | 15 % wider at n = 10, 2.5 % at n = 50 |
 | use it | practically never | always, for a mean |
 
-**Your turn.** 400 loans: mean principal 51.7 m, s = 112.6 m, t(0.975, 399) = 1.966. The half-width of the 95 % t interval, in m soum?
+**Your turn.** 400 loans: mean principal 51.7 m, s = 112.6 m, t(0.975, 399) = 1.966. The half-width of the 95 % t interval, in m soum, to 2 decimals?
 
 ```task
 {"id": "w06d2-l7", "kind": "number", "answer": 11.07, "dp": 2, "unit": "m soum", "hint": "SE = 112.6 / √400; half-width = 1.966 × SE.", "model": "SE = 112.6 / 20 = 5.63 m; 1.966 × 5.63 = 11.07 m, so the interval is about 40.6–62.8 m."}
@@ -325,7 +325,7 @@ The app: 1.18–2.22 %. Two FPDs in 150 loans: −0.50 to 3.17 % — a negative 
 
 > ⚠️ **Watch out.** For a rate near 0 % — FPD, fraud, default — on a few hundred loans, Wald is too narrow, can go negative and collapses to zero width at 0 events. Default to Wilson (next).
 
-**Your turn.** The upper limit of the Wald 95 % interval for the branch FPD rate, 34 / 3 263, in %?
+**Your turn.** The upper limit of the Wald 95 % interval for the branch FPD rate, 34 / 3 263, in %, to 2 decimals?
 
 ```task
 {"id": "w06d2-l8", "kind": "number", "answer": 1.39, "dp": 2, "unit": "%", "hint": "wald(34, 3263), then × 100.", "model": "p̂ = 1.04 %, SE 0.18 points, half-width 0.35: 0.69–1.39 %."}
@@ -389,7 +389,7 @@ A "95 %" Wald interval on a branch-month of 400 loans is really an 88 % interval
 
 > ⚠️ **Watch out.** Two overlapping intervals are not a test of the difference. App (1.26–2.30 %) and branch (0.75–1.45 %) overlap, yet the Newcombe interval of their difference, 0.05 to 1.33 points, does not contain zero. Compare two rates with an interval for the difference — or tomorrow's test.
 
-**Your turn.** The upper limit of the Wilson 95 % interval for the partner FPD rate, 16 / 1 425, in %?
+**Your turn.** The upper limit of the Wilson 95 % interval for the partner FPD rate, 16 / 1 425, in %, to 2 decimals?
 
 ```task
 {"id": "w06d2-l9", "kind": "number", "answer": 1.82, "dp": 2, "unit": "%", "hint": "wilson(16, 1425), then × 100.", "model": "Partner: 1.12 %, Wilson 0.69–1.82 % (Wald 0.58–1.67 %). Wilson sits higher and is wider above the estimate than below."}
@@ -555,7 +555,7 @@ Default to a 95 % level and say so. Use 90 % only when a team agreed to it in ad
 Put the steps from a table to an honest number in order:
 
 ```game
-{"type": "order", "id": "w06d2-g5", "title": "From a sample to an honest number", "items": ["Say what the population is — the book or the process", "Compute the point estimate from the sample", "Compute its standard error", "Choose the interval that fits the estimate (t, Wilson, bootstrap)", "Build the 95 % interval", "Report the estimate with n and the interval, read the right way"], "why": "Each step uses the one before: no SE without an estimate, no interval without the right SE, no honest sentence without n and the interval."}
+{"type": "order", "id": "w06d2-g5", "title": "From a sample to an honest number", "items": ["Say what the population is — the book or the process", "Compute the point estimate from the sample", "Choose the interval that fits the estimate (t, Wilson, bootstrap)", "Build the 95 % interval — from the standard error, or by resampling", "Report the estimate with n and the interval, read the right way"], "why": "Each step uses the one before: the kind of estimate (a mean, a rate, a median) decides which interval fits, the interval is built by that method, and an honest sentence needs n and the interval."}
 ```
 
 Flip through the words of the day:
@@ -866,13 +866,13 @@ Graded on (20 points): (a) the numbers — FPD, n, rate, Wilson and bootstrap li
 
 **Check your table here before you hand in.** The grade counts are A 10 / 1 667, B 30 / 3 084, C 44 / 2 034, D 7 / 314 (the `wilson` function from section 1 works).
 
-**H1.** The upper limit of grade D's Wilson 95 % interval, in %?
+**H1.** The upper limit of grade D's Wilson 95 % interval, in %, to 2 decimals?
 
 ```task
 {"id": "w06d2-hw1", "kind": "number", "answer": 4.53, "dp": 2, "unit": "%", "hint": "wilson(7, 314) — then × 100.", "model": "Grade D: 7 / 314 = 2.23 %, Wilson 1.08–4.53 % — the widest interval of all seven rows."}
 ```
 
-**H2.** The lower limit of grade A's Wilson 95 % interval, in %?
+**H2.** The lower limit of grade A's Wilson 95 % interval, in %, to 2 decimals?
 
 ```task
 {"id": "w06d2-hw2", "kind": "number", "answer": 0.33, "dp": 2, "unit": "%", "hint": "wilson(10, 1667) — then × 100.", "model": "Grade A: 10 / 1 667 = 0.60 %, Wilson 0.33–1.10 %. A's and C's intervals (1.62–2.89 %) do not overlap: the scorecard orders FPD."}

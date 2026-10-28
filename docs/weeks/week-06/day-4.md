@@ -533,7 +533,7 @@ Detecting FPD falling from 1.28 % to 1.00 % needs 22 481 loans in each arm; with
 **Your turn.** Fill in the formula.
 
 ```game
-{"type": "cloze", "id": "w06d4-g2", "title": "Loans per arm", "text": "n per arm = 2 · ( ( {{0}} + {{1}} ) / {{2}} )²", "blanks": [["z₁₋α/₂ (1.960)"], ["z₁₋β (0.842)"], ["Cohen's h"]], "distractors": ["the p-value", "σ / √n"], "why": "α and power set the two z values; the effect size h sits in the denominator, so halving the effect quadruples n."}
+{"type": "cloze", "id": "w06d4-g2", "title": "Loans per arm", "text": "n per arm = 2 · ( ( {{0}} + {{1}} ) / {{2}} )²", "blanks": [["z₁₋α/₂ (1.960)", "z₁₋β (0.842)"], ["z₁₋β (0.842)", "z₁₋α/₂ (1.960)"], ["Cohen's h"]], "distractors": ["the p-value", "σ / √n"], "why": "α and power set the two z values; the effect size h sits in the denominator, so halving the effect quadruples n."}
 ```
 
 ### MDE and the power curve — what can this test see?
@@ -570,7 +570,7 @@ With 1 000 loans per arm the SMS must cut FPD from 1.28 % to 0.26 % — by 80 % 
 
 > 💡 **Key idea.** If the MDE is larger than any effect the change could plausibly have, the test cannot succeed. A test with 9 % power is not a cheap test; it is a test whose "no effect" answer is already written.
 
-**Your turn.** With 5 000 loans per arm, how low must the SMS arm's FPD rate fall to be detected (α 5 %, power 80 %)? Use `mde_rate`, answer in %.
+**Your turn.** With 5 000 loans per arm, how low must the SMS arm's FPD rate fall to be detected (α 5 %, power 80 %)? Use `mde_rate`, answer in % to 2 decimals.
 
 ```task
 {"id": "w06d4-l9", "kind": "number", "answer": 0.73, "dp": 2, "unit": "%", "hint": "100 * mde_rate(0.0128, 5000)", "model": "0.73 % — a 43 % cut from 1.28 %. Still far more than an SMS reminder is likely to achieve."}
@@ -615,7 +615,7 @@ Auto and SME differ by 0.04 standard deviations — significant only because the
 
 > ⚠️ **Watch out.** "Highly significant" is not "large". Report the difference in the business's units (days, points, soum, RR) with its interval; the p-value only says it is probably not chance.
 
-**Your turn.** Grade C payments average +1.05 days late, grade B −0.31; the pooled standard deviation is 6.44 days. What is Cohen's d (C minus B)?
+**Your turn.** Grade C payments average +1.05 days late, grade B −0.31; the pooled standard deviation is 6.44 days. What is Cohen's d (C minus B), to 2 decimals?
 
 ```task
 {"id": "w06d4-l10", "kind": "number", "answer": 0.21, "dp": 2, "unit": "standard deviations", "hint": "(1.05 − (−0.31)) / 6.44", "model": "1.36 / 6.44 = 0.21 — a small effect, though with 38 238 payments its p-value is essentially 0."}
@@ -1016,7 +1016,7 @@ None today: **Checkpoint 6 is tomorrow** (intervals on Nur data, the test-choice
 {"id": "w06d4-hw1", "kind": "number", "answer": 22481, "dp": 0, "unit": "loans per arm", "hint": "h = 2·asin√0.0128 − 2·asin√0.010 = 0.02642; n = 2 · ((1.960 + 0.842) / h)².", "model": "2 · (2.802 / 0.02642)² = 22 480.8 → 22 481 per arm, 44 962 in total — 11 years of Nur's new loans."}
 ```
 
-**H2.** And the power of 1 000 vs 1 000 for the same effect, in %?
+**H2.** And the power of 1 000 vs 1 000 for the same effect, in %, to 1 decimal?
 
 ```task
 {"id": "w06d4-hw2", "kind": "number", "answer": 9.1, "dp": 1, "unit": "%", "hint": "Φ(h·√(n/2) − 1.96) + Φ(−h·√(n/2) − 1.96) with n = 1 000.", "model": "h·√500 = 0.591 → Φ(−1.369) ≈ 0.091: the test misses a real 1.28 → 1.00 % effect 91 times in 100."}

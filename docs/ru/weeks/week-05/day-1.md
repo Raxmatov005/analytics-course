@@ -970,7 +970,7 @@ annuity(31_150_000, 0.30, 24)     # 1741700 — кредит 1
 ```
 
 ```game
-{"type": "build", "id": "w05d1-g4", "title": "Соберите аннуитетный платёж", "q": "Соберите ежемесячный платёж Nur Finance; r = annual_rate / 12 уже посчитан.", "tokens": ["pay =", "principal", "*", "r", "/", "(1 - (1 + r) ** -term)"], "distractors": ["(1 + r) ** term", "+ interest"]}
+{"type": "build", "id": "w05d1-g4", "title": "Соберите аннуитетный платёж", "q": "Соберите ежемесячный платёж Nur Finance; r = annual_rate / 12 уже посчитан.", "tokens": ["pay =", "principal", "*", "r", "/", "(1 - (1 + r) ** -term)"], "alts": [["pay =", "r", "*", "principal", "/", "(1 - (1 + r) ** -term)"]], "distractors": ["(1 + r) ** term", "+ interest"]}
 ```
 
 **Проверка на трёх реальных кредитах** (`loans.principal`, `annual_rate`, `term_months`, `monthly_payment` из `nur.db`; те же три открывают `loans_status.csv`):

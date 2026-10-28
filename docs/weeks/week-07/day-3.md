@@ -564,7 +564,7 @@ Week 4's one-pager already had every idea; Power BI gives each one a home that s
 
 Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a short log of what you clicked — it becomes your HW 7.2 notes. Under each question, type the number (or word) your visual shows: the box checks it and then shows the model answer.
 
-**P1.** *(Get Data · Table view)* Load `v_loan_status`, `v_portfolio_monthly`, `v_payments_clean` through *Transform data*. Report the row count of each in Table view and the totals of `outstanding`, `disbursed_amount` and `amount`.
+**P1.** *(Get Data · Table view)* Load `v_loan_status`, `v_portfolio_monthly`, `v_payments_clean` through *Transform data*. Report the row count of each in Table view and the totals of `outstanding`, `disbursed_amount` and `amount`. In the box: Σ disbursed_amount of v_portfolio_monthly (all 34 months).
 
 ```task
 {"id": "w07d3-p1", "kind": "number", "answer": 404783280000, "dp": 0, "unit": "soum", "hint": "Enter Σ disbursed_amount of v_portfolio_monthly (all 34 months).", "model": "7 828 · 1 700 · 52 850 rows. Σ outstanding 208 723 504 430; Σ disbursed_amount (all 34 months) 404 783 280 000 (2024 86 522 990 000 · 2025 155 927 230 000 · 2026 162 333 060 000); Σ amount 255 114 772 176 — the week-3 checks, unchanged. If a count is short, Power Query probably dropped a header or split a row; if a total is off, look for a column typed as Text (it will not sum) or Decimal with rounding."}
@@ -576,19 +576,19 @@ Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a shor
 {"id": "w07d3-p12", "kind": "choice", "options": ["DirectQuery is always better", "The board reads month-end and as-of numbers once a week; Import is faster, supports all DAX, and a scheduled refresh keeps it current enough — DirectQuery would make every visual wait for the database", "Import cannot read SQL Server", "DirectQuery cannot show cards"], "answer": 1, "explain": "Live data matter for an operations screen, not for a board pack. Import with a daily refresh gives the same numbers, faster, with every DAX function; DirectQuery is for tables too big to copy or data that must be current to the minute."}
 ```
 
-**P3.** *(Power Query — profile)* Profile `v_loan_status` in Power Query (Column quality / distribution / profile, on the entire data set). How many distinct buckets, how many loans with zero outstanding, the largest outstanding and its loan? What changes if the profile stays on the first 1 000 rows?
+**P3.** *(Power Query — profile)* Profile `v_loan_status` in Power Query (Column quality / distribution / profile, on the entire data set). How many distinct buckets, how many loans with zero outstanding, the largest outstanding and its loan? What changes if the profile stays on the first 1 000 rows? In the box: the number of loans with outstanding = 0.
 
 ```task
 {"id": "w07d3-p2", "kind": "number", "answer": 4419, "dp": 0, "unit": "loans", "hint": "Enter the number of loans with outstanding = 0.", "model": "5 buckets (0 · 1-30 · 31-60 · 61-90 · 90+); 4 419 loans with outstanding = 0 (closed, written off, or fully due — 7 828 − 3 409); maximum 586 068 714, loan 4597 (SME, Bukhara Central). On the first 1 000 rows the profile shows only what those loans have (947 in bucket 0, 32 in 90+) — a profile is a sample until you tell it not to be."}
 ```
 
-**P4.** *(Merge)* Merge `v_payments_clean` with `v_loan_status` on `loan_id` (Left Outer), expanding only `product` and `branch_name`. Check the row count, then relate payments to `products` and show **collected in September 2026 by product**.
+**P4.** *(Merge)* Merge `v_payments_clean` with `v_loan_status` on `loan_id` (Left Outer), expanding only `product` and `branch_name`. Check the row count, then relate payments to `products` and show **collected in September 2026 by product**. In the box: SME's collected amount, paid_at in September 2026.
 
 ```task
 {"id": "w07d3-p4", "kind": "number", "answer": 9865366314, "dp": 0, "unit": "soum", "hint": "Enter SME's collected amount, paid_at in September 2026.", "model": "Still 52 850 rows, no blanks (every payment's loan exists). Collected (paid_at in September 2026, Collected Amount = SUM(v_payments_clean[amount])): SME 9 865 366 314 · AUTO 2 988 980 257 · CONS 2 872 046 580 · MICRO 344 950 525 · BNPL 267 479 531 — total 16 338 823 207. A row count above 52 850 would mean the right-hand table had duplicate loan_ids: a merge is only a lookup when the other side is unique."}
 ```
 
-**P5.** *(star schema · cardinality)* Build every relationship in the README. Then a table visual by `products[code]` with `Outstanding` and `Disbursed Count = COUNTROWS(v_loan_status)`. What does the Model view's diagram look like, and what does each line's "1" and "*" mean?
+**P5.** *(star schema · cardinality)* Build every relationship in the README. Then a table visual by `products[code]` with `Outstanding` and `Disbursed Count = COUNTROWS(v_loan_status)`. What does the Model view's diagram look like, and what does each line's "1" and "*" mean? In the box: Disbursed Count for MICRO.
 
 ```task
 {"id": "w07d3-p5", "kind": "number", "answer": 2669, "dp": 0, "unit": "loans", "hint": "Enter Disbursed Count for MICRO.", "model": "SME 125 892 942 411 / 781 · AUTO 57 684 271 333 / 391 · CONS 23 054 933 316 / 2 418 · BNPL 1 135 251 000 / 1 569 · MICRO 956 106 370 / 2 669 (total 7 828). The diagram: five dimensions around seven facts, every line with 1 at the dimension and * at the fact, a single arrow pointing to the fact; no line between two facts. \"1\" = each key appears once there; \"\" = many rows per key."}
@@ -600,7 +600,7 @@ Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a shor
 {"id": "w07d3-p6", "kind": "choice", "options": ["A missing (or inactive) relationship: no filter can travel from products to the payments", "A wrong grain: a merge duplicated the payments", "Keys that do not match", "The measure lacks DIVIDE"], "answer": 0, "explain": "Every product shows the same number — 255 114 772 176, the grand total — because no filter can travel from products to the payments. \"The same value in every row\" is the signature of a missing (or inactive) relationship; \"a total bigger than it should be\" is the signature of a wrong grain (Company corner); \"(Blank)\" as a category is the signature of keys that do not match (P7)."}
 ```
 
-**P7.** *(keys that do not match)* Relate `customers_clean` to `v_loan_status` and show `Outstanding` by `customers_clean[segment]`. Explain the extra row, then fix it with `customer_id_map.csv` in Power Query.
+**P7.** *(keys that do not match)* Relate `customers_clean` to `v_loan_status` and show `Outstanding` by `customers_clean[segment]`. Explain the extra row, then fix it with `customer_id_map.csv` in Power Query. In the box: the outstanding of the (Blank) row, before the fix.
 
 ```task
 {"id": "w07d3-p8", "kind": "number", "answer": 1563976162, "dp": 0, "unit": "soum", "hint": "Enter the outstanding of the (Blank) row, before the fix.", "model": "A (Blank) row with 1 563 976 162 — 48 loans (week 4's 40 removed duplicates) whose customer_id is no longer in the dimension. Fix: merge v_loan_status with customer_id_map on customer_id (Left Outer), add a column customer_id_master ?? customer_id (M's \"if null, use\"), relate that column instead. After: affluent 44 253 773 349 · mass 118 769 279 493 · sme 45 700 451 588, no blank, total still 208 723 504 430. The blank row is a data-quality finding — report it, do not hide it with a visual-level filter."}
@@ -618,13 +618,13 @@ Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a shor
 {"id": "w07d3-p14", "kind": "number", "answer": 313, "dp": 0, "unit": "loans", "hint": "The USERELATIONSHIP measure in the 2026-05 row.", "model": "313 by first due date, against 377 disbursed in May (the active relationship). A loan disbursed late in a month has its first instalment due the next month — the two dates answer two different questions."}
 ```
 
-**P10.** *(date table)* Mark `dim_date` as the date table and set the sort orders. Then `Disbursed Amount = SUM(v_loan_status[principal])` by `dim_date[year_month]` for 2026. Report January, August and September.
+**P10.** *(date table)* Mark `dim_date` as the date table and set the sort orders. Then `Disbursed Amount = SUM(v_loan_status[principal])` by `dim_date[year_month]` for 2026. Report January, August and September. In the box: Disbursed Amount for August 2026.
 
 ```task
 {"id": "w07d3-p7", "kind": "number", "answer": 22290210000, "dp": 0, "unit": "soum", "hint": "Enter Disbursed Amount for August 2026.", "model": "January 17 452 370 000 (287 loans) · August 22 290 210 000 (358) · September 17 015 490 000 (361); October shows 852 760 000 (21 loans, one day). If you see the months in the order 2026-01, 2026-02… you sorted right; if a visual by month_name starts with April, the sort-by column is missing."}
 ```
 
-**P11.** *(data types · sort by column)* Load the four other facts and the five dimensions (`data/powerbi/README.md`). Which file needs a type you would not guess, and which column of `dim_date` must be sorted by another?
+**P11.** *(data types · sort by column)* Load the four other facts and the five dimensions (`data/powerbi/README.md`). Which file needs a type you would not guess, and by which `dim_date` column do you sort `month_name` (Sort by column)?
 
 ```task
 {"id": "w07d3-p3", "kind": "text", "answer": ["month", "dim_date[month]", "the month column", "month number"], "hint": "Type the column you sort month_name by.", "model": "Row counts: fct_installments 92 193, fct_first_instalment 7 099, fct_applications 14 000, fct_collections_actions 9 361, dim_date 1 461, products 5, branches 10, customers_clean 6 000, staff_collectors 30. Watch fct_applications: applied_at has a time, the relationship uses applied_date (Date); fct_first_instalment[vintage] (\"2026-07\") should stay Text. Sort month_name by month and year_month by month_start."}
@@ -642,13 +642,13 @@ Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a shor
 {"id": "w07d3-p9", "kind": "choice", "options": ["3.12 % — the measure: a ratio of sums of money", "3.51 % — the average of is_par30 on all loans", "2.85 % — the average of is_par30 on loans with outstanding", "All three: they are the same idea"], "answer": 0, "explain": "Measure: 3.12 % (6 507 526 953 / 208 723 504 430). Average of the flag on all loans: 3.51 % (275 / 7 828 — a count share, and it includes closed loans); on loans with outstanding: 2.85 % (97 / 3 409). PAR30 is a share of money, so only the ratio of sums is right; the averages answer other questions (\"what share of loans is 30+ late?\"). Ratios are measures."}
 ```
 
-**P14.** *(putting it together — grain)* Grain detective. In Power Query, merge `fct_installments` with `v_loan_status` and expand `outstanding` onto the instalments. Load it as a test table and sum `outstanding`. What happened?
+**P14.** *(putting it together — grain)* Grain detective. In Power Query, merge `fct_installments` with `v_loan_status` and expand `outstanding` onto the instalments. Load it as a test table and sum `outstanding`. What happened? In the box: Σ outstanding of the test table.
 
 ```task
 {"id": "w07d3-p10", "kind": "number", "answer": 6186108589284, "dp": 0, "unit": "soum", "hint": "Enter Σ outstanding of the test table.", "model": "6 186 108 589 284 — 29.6 times the book. Each loan's outstanding was copied onto each of its instalments (11.8 per loan on average) and then summed. The model's answer is never to bring a loan-level number down to a finer grain; both facts relate to the same dimensions instead (Company corner). Delete the test table."}
 ```
 
-> 🚀 **Stretch (optional, +5 XP).** **P15.** *(Get Data — Folder)* The Folder connector. With pandas, split `v_portfolio_monthly.csv` into three files by year in a new folder (`pm_2024.csv`, `pm_2025.csv`, `pm_2026.csv`). In Power BI: Get data → Folder → *Combine & Transform*. Check rows and the disbursed total, then add a fourth file and refresh. (Or, instead: connect to your SQL Server `nur` database and load the three views by SQL statement.)
+> 🚀 **Stretch (optional, +5 XP).** **P15.** *(Get Data — Folder)* The Folder connector. With pandas, split `v_portfolio_monthly.csv` into three files by year in a new folder (`pm_2024.csv`, `pm_2025.csv`, `pm_2026.csv`). In Power BI: Get data → Folder → *Combine & Transform*. Check rows and the disbursed total, then add a fourth file and refresh. (Or, instead: connect to your SQL Server `nur` database and load the three views by SQL statement.) In the box: the rows after Combine & Transform (three files).
 
 ```task
 {"id": "w07d3-p11", "kind": "number", "answer": 1700, "dp": 0, "unit": "rows", "hint": "Enter the rows after Combine & Transform (three files).", "xp": 2, "model": "Rows 600 + 600 + 500 = 1 700, Σ disbursed_amount 404 783 280 000 — the same as the single file; Power BI adds a Source.Name column with the file name. A fourth file dropped into the folder appears after Refresh with no change to the report — that is exactly what Bekzod's monthly paste should have been. (SQL Server: the same totals; SELECT … FROM v_loan_status in Advanced options puts the query text in the M step Sql.Database(…, [Query = \"…\"]).)"}

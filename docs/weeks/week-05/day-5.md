@@ -72,7 +72,7 @@ Three cells per section, not thirty: the reviewer reads the finding, checks the 
 > 💡 **Key idea.** Aggregate and join in SQL at the database's grain; shape, cut, check and chart in pandas. The closing cell asks you to argue exactly this split with your own sections as evidence — notice, section by section, which tool made the work shorter or safer.
 
 ```game
-{"type": "match", "id": "w05d5-g1", "title": "SQL twin → pandas idiom", "pairs": [["COUNT(*) / SUM(COUNT(*)) OVER ()", "value_counts(normalize=True)"], ["AVG() OVER (ROWS 2 PRECEDING)", "rolling(3).mean()"], ["LAG(x, 12)", "pct_change(12)"], ["RANK()", "rank(method=\"min\")"], ["ORDER BY … LIMIT 3", "nlargest(3, col)"], ["CASE WHEN income < …", "pd.cut(..., right=False)"], ["FULL OUTER JOIN", "merge(how=\"outer\")"]]}
+{"type": "match", "id": "w05d5-g1", "title": "SQL twin → pandas idiom", "pairs": [["COUNT(*) / SUM(COUNT(*)) OVER ()", "value_counts(normalize=True)"], ["AVG() OVER (ROWS 2 PRECEDING)", "rolling(3).mean()"], ["x / LAG(x, 12) - 1", "pct_change(12)"], ["RANK()", "rank(method=\"min\")"], ["ORDER BY … LIMIT 3", "nlargest(3, col)"], ["CASE WHEN income < …", "pd.cut(..., right=False)"], ["FULL OUTER JOIN", "merge(how=\"outer\")"]]}
 ```
 
 > ⚠️ **Watch out.** The common mistakes from this week each cost the number point: the default `how="inner"` where a `LEFT JOIN` was meant; `fillna(0)` on a money column that should stay NaN; `between` on a datetime; `pd.cut` with the first edge at 0; summing `principal` after merging instalments onto loans (Σ principal ×24.7, the week-2 fan-out — `validate="m:1"` would have caught it); a chart whose title names the chart.

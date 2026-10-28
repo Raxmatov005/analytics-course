@@ -304,7 +304,7 @@ App and branch applicants arrive with the same scores (p = 0.22); among approved
 
 > ⚠️ **Watch out.** Welch on principal by channel gives t = −43, p ≈ 0 — and means nothing. App loans are all Micro, partner loans all BNPL, branch loans Auto, Consumer and SME: channel and product are **confounded** (*смешаны*), and no test separates them. Nilufar's FPD gap is also a Micro-vs-other-products gap.
 
-**Your turn.** Approved loans: app mean 683.16 (sd 51.70, n = 2 598), branch mean 679.80 (sd 53.07, n = 3 491). Compute Welch's t from these summaries.
+**Your turn.** Approved loans: app mean 683.16 (sd 51.70, n = 2 598), branch mean 679.80 (sd 53.07, n = 3 491). Compute Welch's t from these summaries, to 2 decimals.
 
 ```task
 {"id": "w06d3-l5", "kind": "number", "answer": 2.48, "dp": 2, "unit": "Welch t", "hint": "SE = √(51.70² / 2 598 + 53.07² / 3 491); t = (683.16 − 679.80) / SE.", "model": "SE = √(1.029 + 0.807) = 1.355; t = 3.36 / 1.355 = 2.48 — the approved-loan result in the table above."}
@@ -373,7 +373,7 @@ print([round(v, 3) for v in one_prop_z(25, 2322, 0.015)])   # [-1.678, 0.093]
 
 > ⚠️ **Watch out.** The test's SE uses **p₀**, the rate H₀ claims. Yesterday's confidence interval used p̂. Mixing them gives a slightly wrong z — and a test that disagrees with its own H₀.
 
-**Your turn.** Grade C was priced for an FPD30 of 1.5 %. It shows 44 FPDs in 2 034 loans. What is z?
+**Your turn.** Grade C was priced for an FPD30 of 1.5 %. It shows 44 FPDs in 2 034 loans. What is z, to 2 decimals?
 
 ```task
 {"id": "w06d3-l7", "kind": "number", "answer": 2.46, "dp": 2, "unit": "z", "hint": "p̂ = 44 / 2 034; SE = √(0.015 × 0.985 / 2 034); z = (p̂ − 0.015) / SE.", "model": "p̂ = 2.16 %, SE = 0.270 points, z = (2.163 − 1.5) / 0.270 = 2.46, p = 0.014 — grade C runs above the 1.5 % its price assumed."}
@@ -496,7 +496,7 @@ The two do not contradict each other. The z-test answers a narrower question —
 
 > ⚠️ **Watch out.** χ² needs expected counts of about 5 or more in every cell (else Fisher's exact test, Day 4). And scipy applies **Yates' correction** on a 2 × 2 table by default (p = 0.042 here instead of 0.032) — name the version you report.
 
-**Your turn.** Under independence, how many FPDs would the partner channel be expected to have?
+**Your turn.** Under independence, how many FPDs would the partner channel be expected to have, to 1 decimal?
 
 ```task
 {"id": "w06d3-l9", "kind": "number", "answer": 18.3, "dp": 1, "unit": "expected FPDs", "hint": "Row total × column total / grand total: 1 425 partner loans × 91 FPDs / 7 099 loans.", "model": "1 425 × 91 / 7 099 = 18.3 — the FPDs partner would have if FPD did not depend on channel. It observed 16."}
@@ -564,7 +564,7 @@ The app's FPD is 0.66 points higher (95 % CI +0.05 to +1.33), 1.63 times the bra
 
 > ⚠️ **Watch out.** The same p-value can sit on a huge or a trivial effect; n decides which. p = 10⁻⁶⁹ on 52 850 rows says "clearly visible", not "important".
 
-**Your turn.** Grade C has 44 FPDs in 2 034 loans, grade A 10 in 1 667. How many extra FPDs per 1 000 loans does grade C have?
+**Your turn.** Grade C has 44 FPDs in 2 034 loans, grade A 10 in 1 667. How many extra FPDs per 1 000 loans does grade C have, to 1 decimal?
 
 ```task
 {"id": "w06d3-l11", "kind": "number", "answer": 15.6, "dp": 1, "unit": "extra FPDs per 1 000 loans", "hint": "(44 / 2 034 − 10 / 1 667) × 1 000.", "model": "2.16 % − 0.60 % = 1.56 points = 15.6 extra FPDs per 1 000 grade C loans, compared with grade A (RR 3.6)."}
@@ -632,7 +632,7 @@ Read it with the day's questions: H₀ holds the "=", the test is two-sided beca
 **The steps of a test, in order:**
 
 ```game
-{"type": "order", "id": "w06d3-g1", "title": "The steps of a test", "items": ["Write the question in business words", "State H₀ and H₁ — one- or two-sided", "Fix α before looking at the result", "Choose the test from the outcome type, the groups and the pairing", "Compute the test statistic and its p-value", "Compare p with α and decide", "Report the effect size with its confidence interval"], "why": "α and the sidedness are fixed before the data speak; the effect size is what the decision is about."}
+{"type": "order", "id": "w06d3-g1", "title": "The steps of a test", "items": ["Write the question in business words", "State H₀ and H₁ (one- or two-sided) and fix α — before looking at the result", "Choose the test from the outcome type, the groups and the pairing", "Compute the test statistic and its p-value", "Compare p with α and decide", "Report the effect size with its confidence interval"], "why": "α and the sidedness are fixed before the data speak; the effect size is what the decision is about."}
 ```
 
 **Which test answers which question?**
@@ -775,7 +775,7 @@ A false alarm (type I) becomes rarer — 1 in 100 instead of 1 in 20 when there 
 
 </details>
 
-**P4.** *(one-sided vs two-sided)* For app vs branch, the one-sided p-value. When would Nilufar be allowed to quote it?
+**P4.** *(one-sided vs two-sided)* For app vs branch, the one-sided p-value, to 4 decimals. When would Nilufar be allowed to quote it?
 
 ```task
 {"id": "w06d3-p3", "kind": "number", "answer": 0.0159, "dp": 4, "unit": "one-sided p", "hint": "One-sided 'app is higher' takes only the upper tail: half the two-sided 0.0318, or 1 − Φ(2.147).", "model": "1 − Φ(2.147) = 0.0159. Quotable only if the committee had agreed in advance that a better app channel would change nothing — Bekzod's question came after looking at the dashboard, so the honest number is the two-sided 0.032."}

@@ -38,7 +38,11 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
   }
   function norm(s) { return String(s).toLowerCase().replace(/[\s ]+/g, ' ').replace(/[.;]+$/, '').trim(); }
   function parseNum(s) {
-    var t = String(s).replace(/[\s ,]/g, '').replace('%', '');
+    var t = String(s).replace(/[\s ']/g, '').replace(/%$/, '');
+    if (t.indexOf(',') >= 0) {   // a decimal comma ("70,5") or thousands commas ("7,828"), as task.js reads them
+      if (t.indexOf('.') < 0 && /^[+-]?\d+,\d+$/.test(t) && (!/,\d{3}$/.test(t) || /^[+-]?0,/.test(t))) t = t.replace(',', '.');
+      else t = t.replace(/,/g, '');
+    }
     return t === '' ? NaN : Number(t);
   }
 

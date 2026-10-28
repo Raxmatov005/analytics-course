@@ -64,7 +64,7 @@ One sentence of this A0 write-up would lose points — tap it:
 
 - **Data.** `loans` — one row per loan (7 828), grouped by product (`code`).
 - **Do.** For each of the five products: n, mean, sd (ddof = 1), the 95 % t interval, and the half-width as % of the mean.
-- **Answer.** Which product's average do you know least precisely, and why — n or sd?
+- **Answer.** Which product's average do you know least precisely, and why — n or sd? In the box: that product's half-width as % of its mean, to 2 decimals.
 - **Taught in.** Day 2, "Confidence interval for a mean — t, not z".
 
 ```task
@@ -101,7 +101,7 @@ a1 = pd.DataFrame(rows, columns=["product", "n", "mean", "sd", "ci_lo", "ci_hi",
 
 - **Data.** `apps` — one row per application; keep the **decided** ones (status ≠ `cancelled`, 12 183 rows).
 - **Do.** Approved = status starting with `approved`. Per channel: approved, decided, the rate and its Wilson 95 % interval.
-- **Answer.** Do the app and branch intervals overlap, and what does that say about the gap?
+- **Answer.** Do the app and branch intervals overlap, and what does that say about the gap? In the box: the app's lower Wilson limit, in % to 2 decimals.
 - **Taught in.** Day 2, "The Wilson interval — the right default for a rate" and the Worked example.
 
 ```task
@@ -135,7 +135,7 @@ a2[["wilson_lo", "wilson_hi"]] = [proportion_confint(k, n, method="wilson") for 
 
 - **Data.** `x` — the 52 850 clean payments; late = paid after the due date. The segment is the customer's (`customers.segment`, reached through `loans.customer_id`).
 - **Do.** A two-proportion z-test (or χ² on the 2 × 2), sme vs mass, on payments. Then the loan-level check: any late payment per loan, same test.
-- **Answer.** p, the difference in points, the relative risk — and one sentence on what the grain (payments, not loans) does to the test.
+- **Answer.** p, the difference in points, the relative risk — and one sentence on what the grain (payments, not loans) does to the test. In the box: z on payments, sme first, to 2 decimals.
 - **Taught in.** Day 3, "Test for two proportions — z", and Day 3 P12 (payments vs loans).
 
 ```task
@@ -171,7 +171,7 @@ stats.chi2_contingency(t, correction=False)[:2]
 
 - **Data.** `x` — the clean payments of Consumer loans (`code == "CONS"`), grade B and grade C.
 - **Do.** First the shape of days late per grade: median, mean, skew, share paid late — and one sentence on why not a t-test. Then a two-sided Mann–Whitney U test, grade B first.
-- **Answer.** The p-value and the probability of superiority U / (n₁·n₂).
+- **Answer.** The p-value and the probability of superiority U / (n₁·n₂). In the box: U / (n₁·n₂), to 3 decimals.
 - **Taught in.** Day 4, "Mann–Whitney U — two independent groups by ranks", and Day 4 P2.
 
 ```task

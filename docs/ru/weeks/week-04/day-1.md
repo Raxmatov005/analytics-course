@@ -286,7 +286,7 @@ Fergana  | 2026-09 | 34
 **Ваша очередь.** Остаток долга активных кредитов с просрочкой больше 30 дней.
 
 ```game
-{"type": "cloze", "id": "w04d1-g2", "code": true, "title": "Заполните SUMIFS: остаток долга активных кредитов с просрочкой больше 30 дней", "text": "=SUMIFS({{0}}, tblLoans[status], {{1}}, tblLoans[dpd], {{2}})", "blanks": [["tblLoans[outstanding]"], ["\"active\""], ["\">30\""]], "distractors": ["tblLoans[status]", ">30", "\"=active\"", "\"active*\""]}
+{"type": "cloze", "id": "w04d1-g2", "code": true, "title": "Заполните SUMIFS: остаток долга активных кредитов с просрочкой больше 30 дней", "text": "=SUMIFS({{0}}, tblLoans[status], {{1}}, tblLoans[dpd], {{2}})", "blanks": [["tblLoans[outstanding]"], ["\"active\""], ["\">30\""]], "distractors": ["tblLoans[status]", ">30", "\"<>active\"", "\">=30\""]}
 ```
 
 ### Подстановочные знаки в критериях — `*` и `?` :id=wildcards-in-criteria-and-

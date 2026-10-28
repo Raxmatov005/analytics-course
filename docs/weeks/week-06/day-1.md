@@ -116,7 +116,7 @@ Events that cannot happen together — "app" and "branch" for the same loan — 
 
 > ⚠️ **Watch out.** P(A or D) is P(A) + P(D) only when A and D cannot overlap. 33.96 % + 1.28 % counts the 41 app FPDs twice; subtract P(A ∩ D).
 
-**Your turn.** Branch loans: 3 263 of the 7 099, and 34 of them are FPDs. What is P(branch ∪ FPD), in %?
+**Your turn.** Branch loans: 3 263 of the 7 099, and 34 of them are FPDs. What is P(branch ∪ FPD), in %, to 2 decimals?
 
 ```task
 {"id": "w06d1-l2", "kind": "number", "answer": 46.77, "dp": 2, "unit": "%", "hint": "P(branch) + P(FPD) − P(branch ∩ FPD): (3 263 + 91 − 34) / 7 099.", "model": "(3 263 + 91 − 34) / 7 099 = 3 320 / 7 099 = 46.77 %. The 34 branch FPDs are in both counts, so they are subtracted once."}
@@ -148,7 +148,7 @@ Same 41 loans, two denominators: 1.70 % of app loans have an FPD, and 45.1 % of 
 
 > ⚠️ **Watch out.** P(D | A) and P(A | D) share a numerator (the 41 loans) and nothing else. Before you say a percentage out loud, say its denominator: "of app loans…" (2 411) or "of FPDs…" (91).
 
-**Your turn.** What is P(FPD | branch), in %? (34 FPDs among 3 263 branch loans.)
+**Your turn.** What is P(FPD | branch), in %, to 2 decimals? (34 FPDs among 3 263 branch loans.)
 
 ```task
 {"id": "w06d1-l3", "kind": "number", "answer": 1.04, "dp": 2, "unit": "%", "hint": "Divide by the condition: the branch loans.", "model": "34 / 3 263 = 1.04 % — the FPD rate of a branch loan. 34 / 91 = 37.4 % would be P(branch | FPD), a different question."}
@@ -212,7 +212,7 @@ The book's 1.28 % is three pieces, one per channel: 0.58 + 0.48 + 0.23 points.
 
 > ⚠️ **Watch out.** The groups must not overlap and must cover everyone. Channels do; "app" and "grade C" do not — an app loan of grade C would be counted twice.
 
-**Your turn.** Next month is planned as 50 % app and 50 % branch loans. What FPD rate should you expect, in %?
+**Your turn.** Next month is planned as 50 % app and 50 % branch loans. What FPD rate should you expect, in %, to 2 decimals?
 
 ```task
 {"id": "w06d1-l5", "kind": "number", "answer": 1.37, "dp": 2, "unit": "%", "hint": "0.5 × P(FPD | app) + 0.5 × P(FPD | branch).", "model": "0.5 × 1.70 % + 0.5 × 1.04 % = 1.37 % — the new weights move the book rate up from 1.28 %."}
@@ -265,7 +265,7 @@ print(round(tp / (tp + fp), 3))
 **Your turn.** Fill in Bayes' rule by tapping the pieces into place.
 
 ```game
-{"type": "cloze", "id": "w06d1-g1", "title": "Bayes' rule, piece by piece", "text": "P(fraud | flag) = {{0}} · {{1}} / ( P(flag | fraud) · P(fraud) + {{2}} · {{3}} )", "blanks": [["P(flag | fraud)"], ["P(fraud)"], ["P(flag | honest)"], ["P(honest)"]], "distractors": ["P(fraud | flag)", "P(honest | flag)"], "why": "Numerator: the flagged fraudsters. Denominator: everyone flagged — fraudsters plus honest people caught by the false-positive rate."}
+{"type": "cloze", "id": "w06d1-g1", "title": "Bayes' rule, piece by piece", "text": "P(fraud | flag) = {{0}} · {{1}} / ( P(flag | fraud) · P(fraud) + {{2}} · {{3}} )", "blanks": [["P(flag | fraud)", "P(fraud)"], ["P(fraud)", "P(flag | fraud)"], ["P(flag | honest)", "P(honest)"], ["P(honest)", "P(flag | honest)"]], "distractors": ["P(fraud | flag)", "P(honest | flag)"], "why": "Numerator: the flagged fraudsters. Denominator: everyone flagged — fraudsters plus honest people caught by the false-positive rate."}
 ```
 
 ### Random variables, expected value and variance
@@ -391,7 +391,7 @@ The model expects 842.9 empty hours and 850 were observed; the data's mean and v
 
 > ⚠️ **Watch out.** Check that the mean is close to the variance before you use Poisson. When events come in bursts (a marketing SMS, a holiday), the variance is far bigger and the Poisson understates the busy hours.
 
-**Your turn.** With λ = 1.4376, what share of hours should have exactly 3 applications, in %?
+**Your turn.** With λ = 1.4376, what share of hours should have exactly 3 applications, in %, to 1 decimal?
 
 ```task
 {"id": "w06d1-l7", "kind": "number", "answer": 11.8, "dp": 1, "unit": "%", "hint": "e^(−λ) · λ³ / 3!  — or pois(3, lam) in the box above.", "model": "e^(−1.4376) × 1.4376³ / 6 = 0.1176 → 11.8 % of hours; × 3 549 hours = 417.4, against 420 observed."}
@@ -420,7 +420,7 @@ The model says 21.8 % of gaps last more than an hour; the data say 21.7 %.
 
 > ⚠️ **Watch out.** Memorylessness fits arrivals from many independent people. It does not fit things on a schedule: payments cluster at the due date, so the time to the next payment is not exponential.
 
-**Your turn.** What share of gaps does the model put above 90 minutes, in %?
+**Your turn.** What share of gaps does the model put above 90 minutes, in %, to 1 decimal?
 
 ```task
 {"id": "w06d1-l8", "kind": "number", "answer": 10.1, "dp": 1, "unit": "%", "hint": "e^(−90 / 39.34).", "model": "e^(−90 / 39.34) = 0.1015 → 10.1 %; the data show 10.5 %."}
@@ -457,7 +457,7 @@ Each 10-minute block holds between 2 197 and 2 491 applications; a perfectly fla
 - A "know only the range" model.
 - `random.random()` is U(0, 1): the first subsection used it to decide which loans default.
 
-**Your turn.** What share of applications does U(0, 60) put in the last 10 minutes of an hour, in %?
+**Your turn.** What share of applications does U(0, 60) put in the last 10 minutes of an hour, in %, to 1 decimal?
 
 ```task
 {"id": "w06d1-l9", "kind": "number", "answer": 16.7, "dp": 1, "unit": "%", "hint": "(d − c) / (b − a) = (60 − 50) / 60.", "model": "10 / 60 = 16.7 %. The data show 2 197 / 14 000 = 15.7 % — slightly fewer applications at the end of the hour."}
@@ -870,7 +870,7 @@ for n in (50, 50_000):
 **P2.** *(events: complement, AND, OR)* From the 7 099 loans in FPD scope: P(not FPD), P(partner), P(partner ∩ FPD), P(partner ∪ FPD). Check the union rule numerically.
 
 ```task
-{"id": "w06d1-p1", "kind": "python", "starter": "n = 7099; fpd = 91; partner = 1425; both = 16\n# print P(not FPD), P(partner), P(partner ∩ FPD), P(partner ∪ FPD), each rounded to 4 decimals\nprint(round(1 - fpd / n, 4))\n", "answer": 0.2121, "dp": 4, "model": "print(round(1 - fpd / n, 4), round(partner / n, 4), round(both / n, 4), round((partner + fpd - both) / n, 4))\n# 0.9872 0.2007 0.0023 0.2121 — the union subtracts the 16 loans that are both"}
+{"id": "w06d1-p1", "kind": "python", "starter": "n = 7099; fpd = 91; partner = 1425; both = 16\n# print P(not FPD), P(partner), P(partner ∩ FPD), P(partner ∪ FPD), each rounded to 4 decimals\nprint(round(1 - fpd / n, 4))\n", "answer": 0.2113, "dp": 4, "model": "print(round(1 - fpd / n, 4), round(partner / n, 4), round(both / n, 4), round((partner + fpd - both) / n, 4))\n# 0.9872 0.2007 0.0023 0.2113 — the union subtracts the 16 loans that are both"}
 ```
 
 <details><summary>Answer</summary>
@@ -908,7 +908,7 @@ P(branch) · P(FPD) = 0.4596 × 0.0128 = **0.59 %** — if channel did not matte
 
 </details>
 
-**P5.** *(law of total probability)* A month is planned as 100 app, 250 branch and 50 partner loans. From the three channel rates (app 41 / 2 411, branch 34 / 3 263, partner 16 / 1 425), what FPD rate should you expect, in %?
+**P5.** *(law of total probability)* A month is planned as 100 app, 250 branch and 50 partner loans. From the three channel rates (app 41 / 2 411, branch 34 / 3 263, partner 16 / 1 425), what FPD rate should you expect, in %, to 2 decimals?
 
 ```task
 {"id": "w06d1-p13", "kind": "number", "answer": 1.22, "dp": 2, "unit": "%", "hint": "Σ (channel's share of the month) × (channel's FPD rate) — the shares are 100/400, 250/400, 50/400.", "model": "(100 × 1.70 % + 250 × 1.04 % + 50 × 1.12 %) / 400 = 1.22 % — 4.9 FPDs expected in 400 loans. A branch-heavy month is safer than the book's 1.28 %."}
@@ -1009,7 +1009,7 @@ Excel: `=POISSON.DIST(0, 1.4376, FALSE)`, `=1 - POISSON.DIST(4, 1.4376, TRUE)`. 
 
 </details>
 
-**P11.** *(exponential)* No application has arrived for 30 minutes. By the exponential model (mean gap 39.34 minutes), what is the chance that the wait goes on for at least 60 more minutes, in %?
+**P11.** *(exponential)* No application has arrived for 30 minutes. By the exponential model (mean gap 39.34 minutes), what is the chance that the wait goes on for at least 60 more minutes, in %, to 1 decimal?
 
 ```task
 {"id": "w06d1-p14", "kind": "number", "answer": 21.8, "dp": 1, "unit": "%", "hint": "Memoryless: the 30 quiet minutes do not count. P(gap > 60).", "model": "e^(−60 / 39.34) = 21.8 %, the same as for a fresh gap. Check: P(gap > 90) / P(gap > 30) = 0.1015 / 0.4665 = 0.2176."}
@@ -1045,7 +1045,7 @@ Data **51.8 %**, model **50 %**. Close to flat, slightly front-loaded: 1.8 point
 
 </details>
 
-**P14.** *(the 68-95-99.7 rule)* An applicant scores 520. How many sds from the mean is that (μ 659.6, σ 59.5)? Is it inside or outside the band that holds 95 % of applicants?
+**P14.** *(the 68-95-99.7 rule)* An applicant scores 520. How many sds from the mean is that (μ 659.6, σ 59.5), to 2 decimals? Is it inside or outside the band that holds 95 % of applicants?
 
 ```task
 {"id": "w06d1-p16", "kind": "number", "answer": -2.35, "dp": 2, "unit": "sd", "hint": "z = (x − μ) / σ, then compare with ±2.", "model": "(520 − 659.6) / 59.5 = −2.35: outside the ±2 sd band, so among the lowest 2.5 % — about 1 applicant in 100 scores lower (Φ(−2.35) = 0.94 %)."}
@@ -1186,13 +1186,13 @@ Graded on (20 points): (a) all eight assert cells pass after *Restart & Run All*
 {"id": "w06d1-hw1", "kind": "number", "answer": 12, "dp": 0, "unit": "FPDs", "hint": "The smallest k with P(X ≥ k) ≤ 1 % — and P(X ≥ k) is sf(k − 1).", "model": "P(X ≥ 11) = 1.55 %, P(X ≥ 12) = 0.62 % → 12. At alpha = 0.05 the same function returns 10."}
 ```
 
-**H2.** What share of applicants does `share_between(600, 700, 659.6, 59.5)` put between 600 and 700, in %?
+**H2.** What share of applicants does `share_between(600, 700, 659.6, 59.5)` put between 600 and 700, in %, to 1 decimal?
 
 ```task
 {"id": "w06d1-hw2", "kind": "number", "answer": 59.3, "dp": 1, "unit": "%", "hint": "NormalDist(mu, sigma).cdf(b) − NormalDist(mu, sigma).cdf(a), or stats.norm.cdf in the notebook.", "model": "Φ((700 − 659.6) / 59.5) − Φ((600 − 659.6) / 59.5) = 0.7514 − 0.1582 = 59.3 %. Compare it with the data's share in the notebook."}
 ```
 
-**H3.** And `bayes_posterior(0.0062, 0.90, 0.05)` — the vendor's rule — in %?
+**H3.** And `bayes_posterior(0.0062, 0.90, 0.05)` — the vendor's rule — in %, to 1 decimal?
 
 ```task
 {"id": "w06d1-hw3", "kind": "number", "answer": 10.1, "dp": 1, "unit": "%", "hint": "sensitivity × prior / (sensitivity × prior + false-positive rate × (1 − prior)).", "model": "0.90 × 0.0062 / (0.90 × 0.0062 + 0.05 × 0.9938) = 10.1 % — nine flags in ten are honest people."}

@@ -44,7 +44,12 @@ once solved or given up; that change fires "al:change" on document.
 
   function canon(raw, type, dp) {
     if (type === 'number') {
-      var t = String(raw).replace(/[\s ,]/g, '').replace('%', '');
+      var s = raw;
+      var t = String(s).replace(/[\s ']/g, '').replace(/%$/, '');
+      if (t.indexOf(',') >= 0) {   // a decimal comma ("70,5") or thousands commas ("7,828"), as task.js reads them
+        if (t.indexOf('.') < 0 && /^[+-]?\d+,\d+$/.test(t) && (!/,\d{3}$/.test(t) || /^[+-]?0,/.test(t))) t = t.replace(',', '.');
+        else t = t.replace(/,/g, '');
+      }
       if (t === '' || isNaN(Number(t))) return null;
       return Number(t).toFixed(dp || 0);
     }

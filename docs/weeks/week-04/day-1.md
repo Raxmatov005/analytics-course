@@ -286,7 +286,7 @@ On the real data: `=COUNTIFS(tblLoans[status], "active", tblLoans[dpd], ">0")` â
 **Your turn.** Outstanding of active loans more than 30 days late.
 
 ```game
-{"type": "cloze", "id": "w04d1-g2", "code": true, "title": "Fill the SUMIFS: outstanding of active loans more than 30 days late", "text": "=SUMIFS({{0}}, tblLoans[status], {{1}}, tblLoans[dpd], {{2}})", "blanks": [["tblLoans[outstanding]"], ["\"active\""], ["\">30\""]], "distractors": ["tblLoans[status]", ">30", "\"=active\"", "\"active*\""]}
+{"type": "cloze", "id": "w04d1-g2", "code": true, "title": "Fill the SUMIFS: outstanding of active loans more than 30 days late", "text": "=SUMIFS({{0}}, tblLoans[status], {{1}}, tblLoans[dpd], {{2}})", "blanks": [["tblLoans[outstanding]"], ["\"active\""], ["\">30\""]], "distractors": ["tblLoans[status]", ">30", "\"<>active\"", "\">=30\""]}
 ```
 
 ### Wildcards in criteria â€” `*` and `?`

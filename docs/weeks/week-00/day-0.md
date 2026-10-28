@@ -94,7 +94,7 @@ Use this tiny table for questions 3–8. It is called `loans`.
 **Q1.** Cell `B2` holds a price, `E1` holds a VAT rate you want to reuse when you copy the formula down. Write the formula for `C2` so that copying it down keeps pointing at `E1`.
 
 ```task
-{"id": "w00d0-xl1", "kind": "text", "answer": ["=B2*$E$1", "=B2*E$1", "=$E$1*B2", "=E$1*B2", "B2*$E$1", "B2*E$1", "=B2 * $E$1", "=B2 * E$1"], "model": "=B2*$E$1 — the $ signs make E1 an absolute reference, so copying down keeps pointing at E1. =B2*E$1 also works: only the row needs locking."}
+{"id": "w00d0-xl1", "kind": "text", "answer": ["=B2*$E$1", "=B2*E$1", "=$E$1*B2", "=E$1*B2", "B2*$E$1", "B2*E$1", "=B2 * $E$1", "=B2 * E$1", "=$E$1 * B2", "=E$1 * B2", "$E$1*B2", "E$1*B2"], "model": "=B2*$E$1 — the $ signs make E1 an absolute reference, so copying down keeps pointing at E1. =B2*E$1 also works: only the row needs locking."}
 ```
 
 **Q2.** ✍ What does `=VLOOKUP(A2, Products!A:C, 3, FALSE)` do, word by word? What does `FALSE` change?

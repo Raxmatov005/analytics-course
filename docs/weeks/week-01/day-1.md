@@ -67,10 +67,16 @@ SELECT * FROM customers LIMIT 3;
 | How a row is named | "row 17", which moves when you sort | a **primary key** that never changes |
 | How two sheets connect | copy-paste, VLOOKUP | **foreign keys** |
 
-**Your turn.** In the table `installments`, one row is…
+The same question for another table. `installments` is the **monthly payment schedule** of every loan: what the customer is due to pay, and when. Here are its first four rows:
+
+```pic
+{"id": "w01d1-pic5", "title": "installments: the first rows", "caption": "Look at `loan_id` and `due_date`: the same loan on every row, one month apart.", "tables": [{"name": "installments", "cols": ["installment_id", "loan_id", "due_date"], "rows": [[1, 1, "2025-04-28"], [2, 1, "2025-05-28"], [3, 1, "2025-06-28"], [4, 1, "2025-07-28"]], "pk": "installment_id", "fk": ["loan_id"], "tags": {"loan_id": "the same loan"}, "more": "… and so on, month by month"}]}
+```
+
+**Your turn.** In the table `installments` (the monthly payment schedule), one row is…
 
 ```task
-{"id": "w01d1-l1", "kind": "choice", "options": ["one loan", "one scheduled monthly payment of one loan", "one payment that was actually received", "one customer"], "answer": 1, "explain": "installments is the schedule: one row per planned monthly payment. Loan 1 has 24 of them. What actually came in lives in payments."}
+{"id": "w01d1-l1", "kind": "choice", "options": ["one loan", "one scheduled monthly payment of one loan", "one payment that was actually received", "one customer"], "answer": 1, "explain": "installments is the schedule: one row per planned monthly payment, so loan_id repeats. Loan 1 runs 24 months, so it has 24 rows here (the four above are its first). What actually came in lives in another table, payments."}
 ```
 
 ### Data types — one kind of value per column
@@ -351,7 +357,7 @@ What each step's **💡 Show me** gives you, read in one line:
 
 ```sqllab
 {"id": "w01d1-lab", "title": "Your first table", "intro": "Madina wants a short list of branches to practise on. Build it, fill it, fix it — and watch it appear under **Your tables** in the Database panel.", "steps": [
-  {"say": "Create an empty table `my_branches` with three columns: `branch_id` (a whole number and the primary key), `name` and `region` (text).", "hint": "CREATE TABLE my_branches (branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT);", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'my_branches'", "want": 1},
+  {"say": "Create an empty table `my_branches` with three columns: `branch_id` (a whole number and the primary key), `name` and `region` (text). (If a `my_branches` from the SQL playground is still there, run `DROP TABLE my_branches;` first.)", "hint": "CREATE TABLE my_branches (branch_id INTEGER PRIMARY KEY, name TEXT, region TEXT);", "expect": "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'my_branches'", "want": 1},
   {"say": "Insert three branches with ids 1, 2 and 3 — in Tashkent, Samarkand and Bukhara (none in Fergana yet).", "hint": "INSERT INTO my_branches (branch_id, name, region) VALUES\n  (1, 'Chilonzor', 'Tashkent'),\n  (2, 'Registan', 'Samarkand'),\n  (3, 'Old Town', 'Bukhara');", "expect": "SELECT COUNT(*) FROM my_branches", "want": 3},
   {"say": "Branch 3 moved: change its `region` to 'Fergana'. Change only that row.", "hint": "UPDATE my_branches SET region = 'Fergana' WHERE branch_id = 3;", "expect": "SELECT COUNT(*) FROM my_branches WHERE region = 'Fergana'", "want": 1},
   {"say": "The Fergana branch closed. Delete that one row, then look at what is left with `SELECT * FROM my_branches;`.", "hint": "DELETE FROM my_branches WHERE region = 'Fergana';\nSELECT * FROM my_branches;", "expect": "SELECT COUNT(*) * 10 + COALESCE(SUM(region = 'Fergana'), 0) FROM my_branches", "want": 20}],

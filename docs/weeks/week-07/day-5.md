@@ -65,7 +65,7 @@ Ten minutes before the notebook: six quick checks that wake up Days 1–4. Answe
 {"id": "w07d5-p5", "kind": "number", "answer": 162333060000, "dp": 0, "unit": "soum", "model": "162 333 060 000 — October has only one day of data (21 loans, 852 760 000) because the as-of date is 1 October."}
 ```
 
-**W6.** Conversion goes from 8.0 % to 8.9 %. What is the relative lift, in %?
+**W6.** Conversion goes from 8.0 % to 8.9 %. What is the relative lift, in %, to 2 decimals?
 
 ```task
 {"id": "w07d5-p6", "kind": "number", "answer": 11.25, "dp": 2, "unit": "%", "model": "+0.9 points absolute, +11.25 % relative (0.9 / 8.0). Always say which: \"+11 %\" and \"+0.9 %\" are different claims."}
@@ -280,7 +280,7 @@ Interaction new vs returning: z = −0.82, **p = 0.41**.
 {"id": "w07d5-k3", "kind": "number", "answer": 1.05, "dp": 2, "unit": "points", "model": "+1.05 points (7.70 % → 8.75 %), p = 0.025."}
 ```
 
-**K4.** B's FPD on the loans of clean regional users, in %.
+**K4.** B's FPD on the loans of clean regional users, in %, to 2 decimals.
 
 ```task
 {"id": "w07d5-k4", "kind": "number", "answer": 2.2, "dp": 2, "unit": "%", "model": "B 14 / 636 = 2.20 % (A 6 / 575 = 1.04 %)."}

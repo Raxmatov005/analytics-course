@@ -920,7 +920,7 @@ Why the *oldest* unpaid, not the latest? Because that is how the debt ages. The 
 | 90+ | over 90 | **non-performing** (NPL) in most regulations | legal, write-off process |
 
 ```game
-{"type": "sort", "id": "w01d3-g4", "title": "Which bucket?", "q": "Put each loan's DPD into its bucket.", "groups": {"0 · current": ["DPD 0"], "1–30": ["DPD 5", "DPD 30"], "31–60": ["DPD 31", "DPD 60"], "61–90": ["DPD 75", "DPD 90"], "90+ · non-performing": ["DPD 91", "DPD 400"]}}
+{"type": "sort", "id": "w01d3-g4", "title": "Which bucket?", "q": "Put each loan's DPD into its bucket.", "groups": {"0 · current": ["DPD 0"], "1–30": ["DPD 5", "DPD 30"], "31–60": ["DPD 31", "DPD 60"], "61–90": ["DPD 75", "DPD 90"], "90+ (over 90) · non-performing": ["DPD 91", "DPD 400"]}}
 ```
 
 Nur Finance as of 2026-10-01 (you will compute this yourself next week, on Week 2 · Day 3; today just read the shape): 413 loans have at least one matured instalment that is not fully paid; by bucket **14 / 124 / 25 / 16 / 234** for 0 (due today) / 1–30 / 31–60 / 61–90 / 90+. Bucket 0 means DPD 0 (nothing late); this list holds only the 14 DPD-0 loans whose instalment falls due today — counted over the whole book, bucket 0 is 7 429 loans (7 828 − 399 late), as Week 8 shows. The 90+ pile is big because the dataset keeps written-off loans in `loans` with their unpaid schedules: 234 = 190 `written_off` + 44 `default` — the status column and the DPD computation agree, which is the first check you run on any portfolio report.

@@ -215,7 +215,7 @@ A Consumer loan leaves 860 241 soum: 15.6 % of its income, or 31.9 soum for ever
 **Your turn.**
 
 ```game
-{"type": "cloze", "id": "w08d2-g1", "title": "Net contribution of one loan", "text": "net = (1 − {{0}}) × interest − {{1}} − PD × {{2}} × EAD − {{3}} − servicing", "code": false, "blanks": [["PD"], ["cost of funds"], ["LGD"], ["acquisition"]], "distractors": ["FPD", "principal", "approval rate", "CAC ÷ LTV"]}
+{"type": "cloze", "id": "w08d2-g1", "title": "Net contribution of one loan", "text": "net = (1 − {{0}}) × interest − {{1}} − PD × {{2}} × EAD − {{3}} − servicing", "code": false, "blanks": [["PD"], ["cost of funds", "acquisition"], ["LGD"], ["acquisition", "cost of funds"]], "distractors": ["FPD", "principal", "approval rate", "CAC ÷ LTV"]}
 ```
 
 ### Break-even — the value at which a loan stops paying
@@ -318,7 +318,7 @@ A Micro loan earns 17 429 soum a month before acquisition, so its 60 000 CAC is 
 
 > ⚠️ **Watch out.** Use the contribution **before** acquisition. Subtracting the CAC twice — once in the contribution and again in the payback — makes every channel look worse.
 
-**Your turn.** A Consumer loan sold through the app instead (CAC 60 000), same 87 741 a month. Payback in months?
+**Your turn.** A Consumer loan sold through the app instead (CAC 60 000), same 87 741 a month. Payback in months, to 1 decimal?
 
 ```task
 {"id": "w08d2-l7", "kind": "number", "answer": 0.7, "dp": 1, "unit": "months", "hint": "60 000 ÷ 87 741.", "model": "60 000 ÷ 87 741 = 0.7 months — the channel, not the product, decides most of the payback."}
@@ -600,7 +600,7 @@ ue.head()
 {"id": "w08d2-p3b", "kind": "choice", "options": ["SME per loan and per soum", "SME per loan (18.6 m), AUTO per soum (72.9 per 1 000)", "AUTO per loan, CONS per soum", "MICRO per soum — it has the highest rate"], "answer": 1, "explain": "Per loan: SME (18.6 m) and AUTO (15.8 m). Per soum: AUTO (72.9), then SME (60.3), CONS (31.9); MICRO barely positive (6.8); BNPL loses 108 soum per 1 000 lent. SME alone is about 64 % of the five products' 2026 contribution (5.68 of 8.85 bn). The ranking of SME/AUTO/CONS above MICRO/BNPL survives any reasonable change of the cost figures; the exact numbers do not."}
 ```
 
-**P5.** *(break-even)* BNPL charges the customer 0 %. Partners (shops) usually pay the lender a **merchant fee** for each sale financed; it is not in our data. What fee, as a percentage of principal, makes an average BNPL loan break even? (From P4: net −449 053 on an average principal of 4 170 880.)
+**P5.** *(break-even)* BNPL charges the customer 0 %. Partners (shops) usually pay the lender a **merchant fee** for each sale financed; it is not in our data. What fee, as a percentage of principal, makes an average BNPL loan break even, to 1 decimal? (From P4: net −449 053 on an average principal of 4 170 880.)
 
 ```task
 {"id": "w08d2-p4", "kind": "number", "answer": 10.8, "dp": 1, "unit": "% of principal", "hint": "The fee has to cover the loss: −net ÷ principal.", "model": "Fee* = 449 053 ÷ 4 170 880 = 10.8 % of principal. Below it, BNPL loses money on every loan; above it, it earns. The question goes to Finance / the partnerships team: \"What do our partner agreements pay per financed sale, and are they the same for 3, 6 and 12 months?\" (a 12-month BNPL costs four times the funding of a 3-month one). Until that answer exists, \"Nilufar wants less BNPL\" has no money behind it either way — say exactly that."}

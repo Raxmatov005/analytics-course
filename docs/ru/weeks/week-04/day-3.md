@@ -917,7 +917,7 @@ M: = Table.Combine(
 **Расставьте шаги по порядку.**
 
 ```game
-{"type": "order", "id": "w04d3-g7", "title": "Расставьте конвейер платежей по порядку", "items": ["Source: из текстового/CSV-файла", "Promoted Headers", "Changed Type", "Trim method", "Lowercase method", "Замена bank transfer → transfer", "Remove Duplicates по installment_id, paid_at, amount", "Закрыть и загрузить как payments_clean"], "why": "Сначала типы, затем починка текста, чтобы шаг дубликатов сравнивал уже очищенные значения; загрузка последней."}
+{"type": "order", "id": "w04d3-g7", "title": "Расставьте конвейер платежей по порядку", "items": ["Source: из текстового/CSV-файла", "Promoted Headers", "Changed Type", "Trim и lowercase для method", "Замена bank transfer → transfer", "Закрыть и загрузить как payments_clean"], "why": "Сначала заголовки, затем типы. Trim и lowercase идут до Replace Values: с «Match entire cell» замена находит только точный текст bank transfer, и Bank Transfer или bank transfer с пробелом в конце проскочили бы мимо. Загрузка последней. (Шаг дубликатов не читает method, поэтому его здесь нет: он мог бы стоять где угодно после Changed Type.)"}
 ```
 
 ### Глубже (по желанию) :id=depth-optional
@@ -1222,7 +1222,7 @@ M: = Table.Combine(
 | **2026-09** | **3 305** | **16 987 977 718** | **15 982 118 926** | **94.1 %** |
 
 ```game
-{"type": "order", "id": "w04d3-g5", "title": "Расставьте конвейер уровня сбора по порядку", "items": ["Отфильтровать payments_clean: paid_at <= 2026-10-01", "Group By installment_id: paid = Sum(amount)", "Слить с installments (Left Outer по installment_id)", "Заменить null в paid на 0", "Добавить due_month = начало месяца (due_date)", "Group By due_month: Σ total_due, Σ paid", "rate = paid ÷ due"], "why": "Обрезайте по дате отсчёта до суммирования, сохраняйте каждый платёж по графику в соединении и делите суммы — никогда не усредняйте ставки."}
+{"type": "order", "id": "w04d3-g5", "title": "Расставьте конвейер уровня сбора по порядку", "items": ["Отфильтровать payments_clean: paid_at <= 2026-10-01", "Group By installment_id: paid = Sum(amount)", "Слить с installments (Left Outer по installment_id), null в paid → 0", "Group By due_month (начало месяца due_date): Σ total_due, Σ paid", "rate = paid ÷ due"], "why": "Обрезайте по дате отсчёта до суммирования, сохраняйте каждый платёж по графику в соединении и делите суммы — никогда не усредняйте доли."}
 ```
 
 **Моё число: 94.1 %** за сентябрь 2026 — совпадает с SQL третьей недели, как и должно быть: те же строки, то же правило, другой инструмент. Три альтернативы дают другие числа, и каждая — допустимое *другое* определение, а не ошибка, — если оно записано:

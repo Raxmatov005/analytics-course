@@ -504,7 +504,7 @@ With the dates in A3#, `B3 =COUNTIFS(tblLoans[disbursed_at], ">="&A3#, tblLoans[
 **Your turn.** What is the last date in the spill of `=DATE(2026, SEQUENCE(10), 1)`?
 
 ```task
-{"id": "w04d2-l10", "kind": "text", "answer": ["2026-10-01", "01.10.2026", "1 October 2026"], "model": "2026-10-01 — SEQUENCE(10) gives months 1 to 10, so the last row is DATE(2026, 10, 1)."}
+{"id": "w04d2-l10", "kind": "text", "answer": ["2026-10-01", "01.10.2026", "1.10.2026", "10/1/2026", "1/10/2026", "01/10/2026", "1 October 2026"], "model": "2026-10-01 — SEQUENCE(10) gives months 1 to 10, so the last row is DATE(2026, 10, 1)."}
 ```
 
 ### Data validation — a dropdown the reader picks from

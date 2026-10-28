@@ -905,7 +905,7 @@ Read the result with the checklist from the top of the page: spaces 0, case 0, s
 **Put the steps in order.**
 
 ```game
-{"type": "order", "id": "w04d3-g7", "title": "Order the payments pipeline", "items": ["Source: From Text/CSV", "Promoted Headers", "Changed Type", "Trim method", "Lowercase method", "Replace bank transfer → transfer", "Remove Duplicates on installment_id, paid_at, amount", "Close & Load as payments_clean"], "why": "Types first, then text repairs, so the duplicate step compares cleaned values; load last."}
+{"type": "order", "id": "w04d3-g7", "title": "Order the payments pipeline", "items": ["Source: From Text/CSV", "Promoted Headers", "Changed Type", "Trim and lowercase method", "Replace bank transfer → transfer", "Close & Load as payments_clean"], "why": "Headers, then types. Trim and lowercase come before Replace Values: with Match entire cell it only finds the exact text bank transfer, so a Bank Transfer or a bank transfer with a trailing space would slip through. Load last. (The duplicate step does not read method, so it is left out here: it could sit anywhere after Changed Type.)"}
 ```
 
 ### Depth (optional)
@@ -1210,7 +1210,7 @@ Four numbers from your own `cleaning.xlsx` that are not printed above — a ✓ 
 | **2026-09** | **3 305** | **16 987 977 718** | **15 982 118 926** | **94.1 %** |
 
 ```game
-{"type": "order", "id": "w04d3-g5", "title": "Put the collection-rate pipeline in order", "items": ["Filter payments_clean to paid_at <= 2026-10-01", "Group By installment_id: paid = Sum(amount)", "Merge into installments (Left Outer on installment_id)", "Replace null paid with 0", "Add due_month = Start of Month(due_date)", "Group By due_month: Σ total_due, Σ paid", "rate = paid ÷ due"], "why": "Cut at the as-of before summing, keep every instalment in the join, and divide sums — never average rates."}
+{"type": "order", "id": "w04d3-g5", "title": "Put the collection-rate pipeline in order", "items": ["Filter payments_clean to paid_at <= 2026-10-01", "Group By installment_id: paid = Sum(amount)", "Merge into installments (Left Outer on installment_id), null paid → 0", "Group By due_month (Start of Month of due_date): Σ total_due, Σ paid", "rate = paid ÷ due"], "why": "Cut at the as-of before summing, keep every instalment in the join, and divide sums — never average rates."}
 ```
 
 **My number: 94.1 %** for September 2026 — identical to week 3's SQL, as it must be: same rows, same rule, different tool. Three alternatives give different numbers, and each is a defensible *other* definition, not an error — as long as it is written down:
