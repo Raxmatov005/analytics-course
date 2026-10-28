@@ -3,7 +3,7 @@
   --brand: #0f766e; --brand-d: #115e59; --brand-l: #99f6e4; --brand-xl: #f0fdfa;
   /* text on white: ink 17:1, body 10:1, muted 7.6:1, faint 4.8:1 — all pass WCAG AA; faint is for placeholders and hints only */
   --ink: #0f172a; --body: #334155; --muted: #475569; --faint: #64748b;
-  --line: #e5e7eb; --bg: #f3f5f8; --card: #fff; --ok: #16a34a; --bad: #dc2626; --hot: #ea580c;
+  --line: #e5e7eb; --bg: #f3f5f8; --card: #fff; --ok: #15803d; --bad: #dc2626; --hot: #ea580c;
   --r: 16px; --sh: 0 1px 2px rgba(15, 23, 42, .04), 0 6px 20px rgba(15, 23, 42, .06);
   --sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
@@ -184,6 +184,7 @@ body { background: var(--bg); color: var(--body); font-family: var(--sans); -web
 .sq-task { padding: 1em 1.3em 1.1em; border-top: 1px solid var(--line); }
 .sq-task:first-of-type { border-top: 0; }
 .sq-task-q { display: flex; gap: .6em; align-items: flex-start; padding: 0 0 .65em; color: var(--ink); line-height: 1.5; }
+.sq-task-q > span:not(.sq-state):not(.sq-opt):not(.sq-chip) { min-width: 0; overflow-wrap: anywhere; }   /* a long name (approved_not_disbursed) pushed the state chip out of a phone card */
 .sq-task-q b { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 2.2em; height: 1.75em; padding: 0 .45em; border-radius: 8px; background: #f1f5f9; color: var(--ink); font-size: .85em; }
 .sq-task.ok .sq-task-q, .sq-task.bad .sq-task-q { background: none; }
 .sq-task.ok .sq-task-q b { background: #dcfce7; color: #166534; }
@@ -783,6 +784,16 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
   overflow: hidden; pointer-events: none; color: var(--ink, #0f172a); box-sizing: border-box; }
 .markdown-section pre.hi-back::after { content: none; }
 textarea.sq-edit.hi-on { position: relative; overflow-y: hidden; background: transparent; color: transparent; -webkit-text-fill-color: transparent; caret-color: var(--ink, #0f172a); }
+/* ---------- "Continue where you stopped" on the home page (sync.js) ---------- */
+.markdown-section a.al-continue { display: flex; flex-direction: column; gap: .15em; margin: 0 0 1.5em; padding: .95em 1.15em; border-radius: 16px;
+  background: var(--brand-xl); border: 1px solid #99f6e4; border-bottom: 1px solid #99f6e4; text-decoration: none; }
+.markdown-section a.al-continue:hover { border-color: var(--brand); }
+.al-continue-k { font: 800 .74em var(--sans); letter-spacing: .07em; text-transform: uppercase; color: var(--brand-d); }
+.al-continue-k::after { content: " →"; }
+.al-continue-t { font-weight: 700; color: var(--ink); line-height: 1.35; }
+.al-continue-s { font-size: .9em; font-weight: 500; color: var(--muted); }
+.al-continue-s:empty { display: none; }
+
 /* dark:skip */
 /* one palette for the boxes she types in and the code examples, light or dark with the page (dark.css sets the dark
    values: the founder's DBeaver look); plain SQL names (columns) take the column colour */

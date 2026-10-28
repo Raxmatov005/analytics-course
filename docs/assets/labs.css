@@ -114,7 +114,7 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
 .gx-line { display: flex; align-items: stretch; width: 100%; padding: 0; margin: 0; border: 0; border-bottom: 1px solid #f1f0fb; background: none; text-align: left; cursor: pointer; font-family: var(--mono, monospace); -webkit-tap-highlight-color: transparent; }
 .gx-line:last-child { border-bottom: 0; }
 .gx-line:hover { background: var(--g-l, #ede9fe); }
-.gx-ln { flex: none; width: 2.6em; padding: .45em .6em; text-align: right; font-size: .8em; color: var(--faint, #94a3b8); background: #f5f3ff; user-select: none; }
+.gx-ln { flex: none; width: 2.6em; padding: .45em .6em; text-align: right; font-size: .8em; color: var(--muted, #475569); background: #f5f3ff; user-select: none; }
 .markdown-section .gx-line code { flex: 1; min-width: 0; padding: .45em .8em; background: none; color: var(--ink, #0f172a); font-size: .86em; white-space: pre-wrap; overflow-wrap: anywhere; }
 .gx-line.gx-done { background: #fef2f2; cursor: default; box-shadow: inset 4px 0 0 var(--bad, #dc2626); }
 .gx-line.gx-done .gx-ln { background: #fee2e2; color: #991b1b; font-weight: 800; }
@@ -155,8 +155,17 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
 .sch-note { display: flex; gap: .6em; align-items: flex-start; margin: 0 0 1.2em; padding: .8em 1em; border-radius: 12px;
   background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: .92em; line-height: 1.5; font-family: var(--sans, system-ui); }
 .sch-note svg { flex: none; margin-top: .1em; width: 18px; height: 18px; }
-.sch-preview { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 60; padding: .5em .9em; border-radius: 999px;
-  background: #1e293b; color: #f8fafc; font: 600 13px var(--sans, system-ui); box-shadow: 0 6px 20px rgba(0, 0, 0, .25); white-space: nowrap; }
+/* the mentor bar wraps inside the room between the menu button (left) and the Database button (right); a phone gets
+   the short words (2026-10-28: it ran off the left edge and over the page) */
+.sch-preview { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 60; padding: .5em .9em; border-radius: 16px;
+  background: #1e293b; color: #f8fafc; font: 600 13px/1.35 var(--sans, system-ui); box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+  width: max-content; max-width: min(560px, calc(100vw - 190px)); box-sizing: border-box; text-align: center; white-space: normal; }
+.sch-preview .sch-pv-short { display: none; }
+@media (max-width: 768px) {
+  .sch-preview { font-size: 12px; padding: .45em .8em; max-width: calc(100vw - 150px); }
+  .sch-preview .sch-pv-long { display: none; }
+  .sch-preview .sch-pv-short { display: inline; }
+}
 .sch-preview a { color: #5eead4 !important; }
 .sq-ws-closed { color: #9a3412; font-weight: 600; }
 

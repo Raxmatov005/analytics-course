@@ -105,10 +105,13 @@ def dark_decls(body, root=False):
             out.append(f"{prop.strip()}: var(--brand-text){' !important' if '!important' in val else ''}")
             continue
         if not COLOR.search(val) or "var(--" in val and not COLOR.search(re.sub(r"var\([^)]*\)", "", val)):
+            # nothing to turn (background: none, border: 0, var(--card)): kept as it is, so this rule still outranks
+            # the dark twin of a broader rule, as it does on the light page (.si-door .si-card over .si-card)
+            if not prop.strip().startswith("--"):
+                out.append(f"{prop.strip()}: {val.strip()}")
             continue
         new = COLOR.sub(lambda m: turn(m.group(0), k), re.sub(r"var\((--[\w-]+),\s*([^)]+)\)", r"var(\1)", val))
-        if new.strip() != val.strip():
-            out.append(f"{prop.strip()}: {new.strip()}")
+        out.append(f"{prop.strip()}: {new.strip()}")   # every colour line, turned or not: the same cascade as the light page
     return out
 
 

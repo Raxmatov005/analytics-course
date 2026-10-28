@@ -177,9 +177,10 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
     var b = document.createElement('div');
     b.className = 'sch-preview';
     var him = ls('al.mentor') === '1' && ls('al.who');   // signed in with his name + PIN (signin.js)
-    b.innerHTML = (him
-      ? T('Signed in as mentor ', 'Вы вошли как ментор ') + '<b></b>' + T(': every lesson is shown. ', ': видны все уроки. ')
-      : T('Mentor preview: every lesson is shown in this browser. ', 'Просмотр ментора: в этом браузере видны все уроки. ')) +
+    var L = function (t) { return '<span class="sch-pv-long">' + t + '</span>'; }, S = function (t) { return '<span class="sch-pv-short">' + t + '</span>'; };
+    b.innerHTML = (him   // the long words on a computer, the short ones on a phone (labs.css)
+      ? L(T('Signed in as mentor ', 'Вы вошли как ментор ')) + S(T('Mentor ', 'Ментор ')) + '<b></b>' + L(T(': every lesson is shown.', ': видны все уроки.')) + ' · '
+      : L(T('Mentor preview: every lesson is shown in this browser.', 'Просмотр ментора: в этом браузере видны все уроки.')) + S(T('Mentor preview', 'Просмотр ментора')) + ' · ') +
       '<a href="#/?preview=0">' + (him ? T('Sign out', 'Выйти') : T('End preview', 'Выйти из просмотра')) + '</a>';
     if (him) b.querySelector('b').textContent = him;
     b.querySelector('a').onclick = function (e) {   // a hash change alone left the preview on until a reload

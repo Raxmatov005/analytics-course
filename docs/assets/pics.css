@@ -62,7 +62,7 @@
 .markdown-section .pic tr.keep td { background: #dcfce7; }
 .markdown-section .pic tr.drop td { color: #94a3b8; text-decoration: line-through; background: #fff; }
 .markdown-section .pic td.hot { background: #fde68a !important; font-weight: 800; }
-.pic-null { color: #94a3b8; font-style: italic; }
+.pic-null { color: #64748b; font-style: italic; }
 .markdown-section .pic tr.pic-more td { color: var(--muted, #64748b); font: italic 12px var(--sans, system-ui); text-align: center; border-bottom: 0; background: none; }
 /* a step between two tables: the code that turns one into the next */
 .pic-via { display: flex; flex-direction: column; align-items: center; gap: 6px; align-self: center; }
