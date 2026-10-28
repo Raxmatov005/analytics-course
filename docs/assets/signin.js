@@ -6,6 +6,7 @@ no longer knows is dropped. Used by the hand-in box (sqlrun.js) and the feedback
   ALSignIn.card(opts)             an element: Name, PIN, Sign in; opts.lead (the line above), opts.done() after success
   ALSignIn.line()                 "Signed in as … · sign out" (HTML) or ''
   ALSignIn.dropKey()              after a 401: the key is no longer valid
+A browser that has no key opens on a full-screen sign-in (the "door", below); after sign-in it never asks again there.
 Every change fires the document event "al-signin", so the boxes on the page redraw. */
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev', WK = 'al.wk', WHO = 'al.who';
@@ -34,7 +35,7 @@ Every change fires the document event "al-signin", so the boxes on the page redr
     opts = opts || {};
     var el = document.createElement('div');
     el.className = 'si-card';
-    el.innerHTML = '<div class="si-h">🔑 ' + T('Sign in to send your work', 'Войдите, чтобы отправлять работы') + '</div>' +
+    el.innerHTML = '<div class="si-h">' + (opts.title || '🔑 ' + T('Sign in to send your work', 'Войдите, чтобы отправлять работы')) + '</div>' +
       '<div class="si-sub">' + (opts.lead || T('Once on this device — with the name and PIN your mentor gave you. Your work stays saved here meanwhile.',
         'Один раз на этом устройстве — с именем и PIN-кодом, которые дал ментор. Ваша работа пока сохранена здесь.')) + '</div>' +
       '<form class="si-row" autocomplete="on">' +
@@ -64,7 +65,10 @@ Every change fires the document event "al-signin", so the boxes on the page redr
             msg.textContent = T('Wrong name or PIN — check them with your mentor.', 'Неверное имя или PIN-код — уточните у ментора.');
           }
         })
-        .catch(function () { go.disabled = false; msg.textContent = T('No connection — try again in a minute.', 'Нет подключения — попробуйте через минуту.'); });
+        .catch(function () {
+          go.disabled = false; msg.textContent = T('No connection — try again in a minute.', 'Нет подключения — попробуйте через минуту.');
+          if (opts.fail) opts.fail();
+        });
     };
     return el;
   }
@@ -78,7 +82,36 @@ Every change fires the document event "al-signin", so the boxes on the page redr
     if (e.target.closest && e.target.closest('.si-out')) dropKey();
   });
 
+  /* ---------- the door (the founder, 2026-10-28): a browser that does not know her yet opens on a sign-in screen; once
+     signed in it remembers her and never asks again, until "sign out". A link from the bot (?wk=, taken by sqlrun.js
+     before this runs) has signed her in already, and the mentor's ?preview=1 (schedule.js) skips the door. With no
+     connection to the bot the door offers to go on without signing in, so a dead line never locks her out of reading. ---------- */
+  var door = null, away = false;
+  function preview() { return get('al.preview') === '1' || /[?&]preview=1/.test(location.hash); }
+  function drawDoor() {
+    if (key() || preview() || away) { if (door) { door.remove(); door = null; document.documentElement.classList.remove('si-door-on'); } return; }
+    if (!door) { door = document.createElement('div'); door.className = 'si-door'; door.setAttribute('role', 'dialog'); door.setAttribute('aria-modal', 'true'); document.body.appendChild(door); }
+    document.documentElement.classList.add('si-door-on');
+    door.innerHTML = '<div class="si-door-box"><div class="si-door-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></div>' +
+      '<div class="si-door-t">' + T('Welcome to Analytics Learning', 'Добро пожаловать в Analytics Learning') + '</div>' +
+      '<div class="si-door-s">' + T('Sign in once on this device with the name and PIN your mentor gave you. Next time the course will know it is you.',
+        'Войдите один раз на этом устройстве с именем и PIN-кодом от ментора. В следующий раз курс сам узнает вас.') + '</div>' +
+      '<div class="si-door-slot"></div><div class="si-door-away" hidden><button type="button">' +
+      T('No connection: continue without signing in', 'Нет связи: продолжить без входа') + '</button></div></div>';
+    door.querySelector('.si-door-slot').appendChild(card({ title: T('Sign in', 'Вход'), lead: ' ',
+      fail: function () { door.querySelector('.si-door-away').hidden = false; } }));
+    door.querySelector('.si-door-away button').onclick = function () { away = true; drawDoor(); };
+    var nm = door.querySelector('.si-name');
+    if (nm && !nm.value) nm.focus();
+  }
+  document.addEventListener('al-signin', drawDoor);
+  window.addEventListener('hashchange', function () { if (door) drawDoor(); });   // the EN | RU switch redraws it in the other language
+
   window.ALSignIn = { key: key, who: who, card: card, line: line, dropKey: dropKey };
   window.$docsify = window.$docsify || {};
-  window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) { hook.doneEach(refresh); });
+  window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
+    hook.doneEach(refresh);
+    hook.ready(drawDoor);
+  });
 })();

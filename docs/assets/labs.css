@@ -159,3 +159,19 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
   background: #1e293b; color: #f8fafc; font: 600 13px var(--sans, system-ui); box-shadow: 0 6px 20px rgba(0, 0, 0, .25); white-space: nowrap; }
 .sch-preview a { color: #5eead4 !important; }
 .sq-ws-closed { color: #9a3412; font-weight: 600; }
+
+/* ---------- the door (signin.js): the first visit on a device opens on a sign-in screen ---------- */
+.si-door-on body { overflow: hidden; }
+.si-door { position: fixed; inset: 0; z-index: 34; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: var(--bg, #f8fafc); overflow-y: auto; font-family: var(--sans, system-ui); }
+.si-door-box { width: 100%; max-width: 420px; padding: 1.6em 1.4em 1.3em; border-radius: 20px; background: var(--card, #fff);
+  border: 1px solid var(--line, #e2e8f0); box-shadow: 0 18px 48px rgba(15, 23, 42, .10); }
+.si-door-ico { display: inline-flex; width: 54px; height: 54px; align-items: center; justify-content: center; border-radius: 16px;
+  background: var(--brand-xl, #f0fdfa); color: var(--brand, #0f766e); }
+.si-door-t { margin: .7em 0 .25em; font-size: 1.35em; font-weight: 800; line-height: 1.25; color: var(--ink, #0f172a); }
+.si-door-s { color: var(--muted, #64748b); font-size: .95em; line-height: 1.5; }
+.si-door .si-card { margin: 1em 0 0; background: none; border: 0; padding: 0; }
+.si-door .si-card .si-sub { display: none; }
+.si-door .si-card .si-h { margin-bottom: .55em; }
+.si-door-away { margin-top: .9em; }
+.si-door-away button { border: 0; background: none; padding: 0; font: inherit; font-size: .88em; color: var(--brand, #0f766e); text-decoration: underline; cursor: pointer; }
