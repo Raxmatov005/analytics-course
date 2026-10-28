@@ -339,13 +339,13 @@ Five rows; the shares add to 100. SME holds 60.3 % of the 208 723 504 430 outsta
 
 **What it is.** The **frame** (*рамка окна*) is the part of the window that the aggregate actually reads, counted from the current row. You set it with `ROWS BETWEEN <start> AND <end>`.
 
-```text
-UNBOUNDED PRECEDING   the first row of the window
-n PRECEDING           n rows before the current one
-CURRENT ROW           the current row
-n FOLLOWING           n rows after the current one
-UNBOUNDED FOLLOWING   the last row of the window
-```
+| Bound | Which row |
+|---|---|
+| `UNBOUNDED PRECEDING` | the first row of the window |
+| `n PRECEDING` | n rows before the current one |
+| `CURRENT ROW` | the current row |
+| `n FOLLOWING` | n rows after the current one |
+| `UNBOUNDED FOLLOWING` | the last row of the window |
 
 **How to write it.** A running total with the frame spelled out:
 
@@ -399,11 +399,18 @@ ORDER BY disbursed_at, loan_id;
 ```
 
 ```text
-month    disbursed   frame of the 3-month average
-2026-06  16.1 bn     ┐
-2026-07  20.7 bn     │ ← frame for 2026-08: Jun + Jul + Aug, / 3 = 19.7 bn
-2026-08  22.3 bn     ┘
-2026-09  17.0 bn       (next row: the frame moves down one month)
+month    disbursed
+2026-06  16.1 bn  ┐
+2026-07  20.7 bn  │ ← frame
+2026-08  22.3 bn  ┘   for 2026-08
+2026-09  17.0 bn
+
+frame of the 3-month average
+for 2026-08:
+Jun + Jul + Aug, / 3 = 19.7 bn
+
+next row: the frame moves down
+one month
 ```
 
 **How to write it.** Monthly disbursement first, then the average over it. `WITH m AS (…)` names a result so the next `SELECT` can read it like a table — Day 3 teaches it; read it as "first make `m`, then query it".
@@ -442,8 +449,21 @@ ORDER BY month;
 **What it is.** A query is worked out in a fixed order. Windows are computed late: after `WHERE`, `GROUP BY` and `HAVING`. So a window may appear in `SELECT` and in `ORDER BY`, but not in `WHERE`, `GROUP BY` or `HAVING` — when those run, the window does not exist yet.
 
 ```text
-FROM / JOIN → WHERE → GROUP BY → HAVING → windows → SELECT → ORDER BY → LIMIT
-                ✗         ✗         ✗        ✓         ✓          ✓
+FROM / JOIN
+   ▼
+WHERE         ✗
+   ▼
+GROUP BY      ✗
+   ▼
+HAVING        ✗
+   ▼
+windows       ✓
+   ▼
+SELECT        ✓
+   ▼
+ORDER BY      ✓
+   ▼
+LIMIT
 ```
 
 **How to write it.** To filter on a window, compute it inside a query in brackets — a **derived table** — and filter outside:

@@ -189,9 +189,27 @@ The first insert adds three rows: loan 1 appears twice and instalment number 1 a
 ```text
 customers ─┐
 products  ─┤
-branches  ─┼─1──∞─▶ applications ─1──0..1─▶ loans ─1──∞─▶ installments ─1──∞─▶ payments
-staff     ─┘ (officer)                        │
-                                              └─1──∞─▶ collections_actions ◀─∞──1─ staff (collector)
+branches  ─┤
+staff     ─┤ (officer)
+           │
+           │ 1──∞
+           ▼
+applications
+   │
+   │ 1──0..1
+   ▼
+loans
+   ├─1──∞─▶ installments
+   │          │
+   │          │ 1──∞
+   │          ▼
+   │        payments
+   │
+   └─1──∞─▶ collections_actions
+                  ▲
+                  │ ∞──1
+            staff (collector)
+
 branches ─1──∞─▶ staff
 ```
 

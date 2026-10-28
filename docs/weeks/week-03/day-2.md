@@ -342,15 +342,14 @@ WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY … ORDE
 
 **What it is.** A **roll rate** (*миграция между корзинами*) is the share of loans that moved from one DPD bucket at one date to another bucket at the next date. Stack the snapshots one under another — one row per loan per date — and `LAG(bucket)` puts the previous date's bucket on the same row.
 
-```text
-loan  asof        bucket      LAG(bucket) OVER (PARTITION BY loan ORDER BY asof)
-7     2026-09-01  1-30        NULL
-7     2026-10-01  31-60       1-30     → rolled forward
-8     2026-09-01  1-30        NULL
-8     2026-10-01  0           1-30     → cured
-9     2026-09-01  0           NULL
-9     2026-10-01  1-30        0        → new late loan
-```
+| loan | asof | bucket | `LAG(bucket) OVER (PARTITION BY loan ORDER BY asof)` |
+|---|---|---|---|
+| 7 | 2026-09-01 | 1-30 | NULL |
+| 7 | 2026-10-01 | 31-60 | 1-30 → rolled forward |
+| 8 | 2026-09-01 | 1-30 | NULL |
+| 8 | 2026-10-01 | 0 | 1-30 → cured |
+| 9 | 2026-09-01 | 0 | NULL |
+| 9 | 2026-10-01 | 1-30 | 0 → new late loan |
 
 **How to write it.** Week 2's DPD rule, computed at two as-of dates at once, then `LAG`, then a count per from × to:
 

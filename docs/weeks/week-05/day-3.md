@@ -345,7 +345,7 @@ both = pay.merge(loans[["loan_id", "product", "region"]], on="loan_id", how="lef
 print([c for c in both.columns if c[:7] in ("product", "region_")])
 ```
 
-```text
+```output
 7828 0.2738
 ['product_x', 'region_x', 'product_y', 'region_y']
 ```

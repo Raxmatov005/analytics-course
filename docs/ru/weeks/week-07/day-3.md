@@ -23,8 +23,23 @@
 **Как пишется.** Процесс сборки, всегда в таком порядке:
 
 ```text
-получить данные  →  преобразовать (Power Query)  →  модель (связи)  →  меры (DAX)        →  визуалы         →  публикация
-  CSV, SQL            типы, очистка                   звезда            Outstanding, PAR30    карточки, линии     Service, PDF
+получить данные
+  CSV, SQL
+   ▼
+преобразовать (Power Query)
+  типы, очистка
+   ▼
+модель (связи)
+  звезда
+   ▼
+меры (DAX)
+  Outstanding, PAR30
+   ▼
+визуалы
+  карточки, линии
+   ▼
+публикация
+  Service, PDF
 ```
 
 | Инструмент | Кто делает / лицензия | Чем известен |
@@ -126,12 +141,31 @@
 
 ```
 let
-    Source   = Csv.Document(File.Contents("C:\...\data\powerbi\v_loan_status.csv"), [Delimiter = ",", Encoding = 65001]),   // файл
-    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),                                                    // первая строка = заголовки
-    Typed    = Table.TransformColumnTypes(Promoted, {{"loan_id", Int64.Type}, {"disbursed_at", type date},                  // типы
-                   {"principal", Int64.Type}, {"outstanding", Int64.Type}, {"dpd", Int64.Type}, {"bucket", type text}})
+  // файл
+  Source = Csv.Document(
+    File.Contents(
+      "C:\...\data\powerbi\v_loan_status.csv"
+    ),
+    [Delimiter = ",", Encoding = 65001]
+  ),
+  // первая строка = заголовки
+  Promoted = Table.PromoteHeaders(
+    Source, [PromoteAllScalars = true]
+  ),
+  // типы
+  Typed = Table.TransformColumnTypes(
+    Promoted, {
+      {"loan_id", Int64.Type},
+      {"disbursed_at", type date},
+      {"principal", Int64.Type},
+      {"outstanding", Int64.Type},
+      {"dpd", Int64.Type},
+      {"bucket", type text}
+    }
+  )
 in
-    Typed                                                                                                                   // последний шаг — это таблица
+  // последний шаг — это таблица
+  Typed
 ```
 
 **Когда применять.** Для каждой таблицы, до того как она попадёт в модель. M формирует таблицы **до** загрузки; DAX (завтра) считает числа **после**.
@@ -188,13 +222,13 @@ in
 **Как пишется.** Наша модель, нарисованная так, как её показывает вкладка Model:
 
 ```text
-              dim_date (1 461 день)
-                     │ 1
-                     ▼ *
-products (5) ──1──▶ v_loan_status (7 828 кредитов) ◀──1── branches (10)
-                     ▲ *
-                     │ 1
-              customers_clean (6 000)
+v_loan_status (7 828 кредитов)
+   ▲ *
+   │
+   ├─1── dim_date (1 461 день)
+   ├─1── products (5)
+   ├─1── branches (10)
+   └─1── customers_clean (6 000)
 ```
 
 | факт (гранулярность) | строк | измерения |
@@ -257,8 +291,18 @@ products (5) ──1──▶ v_loan_status (7 828 кредитов) ◀──1�
 **Как пишется.** Двойной щелчок по линии связи → *Cross filter direction* → **Single**. На вкладке Model у линии одна стрелка, направленная на факт.
 
 ```text
-single:  products ──▶ v_loan_status            срез по продукту фильтрует кредиты; кредиты не фильтруют продукты
-both:    products ◀─▶ v_loan_status ◀─▶ customers_clean ...   срез по сегменту теперь фильтрует продукты, а за ними все остальные факты
+single:
+  products ──▶ v_loan_status
+  срез по продукту фильтрует
+  кредиты; кредиты не фильтруют
+  продукты
+
+both:
+  products ◀─▶ v_loan_status
+    ◀─▶ customers_clean ...
+  срез по сегменту теперь фильтрует
+  продукты, а за ними все остальные
+  факты
 ```
 
 **Когда применять.** Single везде. Если поставить `customers_clean ↔ v_loan_status` в Both, срез по сегменту «sme» отфильтрует `products` и `branches` до тех, которыми пользуются клиенты sme, а через них `fct_installments` — до *всех* кредитов этих продуктов, а не до кредитов клиентов sme. Числа выглядят правдоподобно и неверны.

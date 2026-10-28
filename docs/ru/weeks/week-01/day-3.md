@@ -188,9 +188,27 @@ INSERT INTO my_schedule_demo VALUES (1, 2, '2025-06-28');
 ```text
 customers ─┐
 products  ─┤
-branches  ─┼─1──∞─▶ applications ─1──0..1─▶ loans ─1──∞─▶ installments ─1──∞─▶ payments
-staff     ─┘ (officer)                        │
-                                              └─1──∞─▶ collections_actions ◀─∞──1─ staff (collector)
+branches  ─┤
+staff     ─┤ (officer)
+           │
+           │ 1──∞
+           ▼
+applications
+   │
+   │ 1──0..1
+   ▼
+loans
+   ├─1──∞─▶ installments
+   │          │
+   │          │ 1──∞
+   │          ▼
+   │        payments
+   │
+   └─1──∞─▶ collections_actions
+                  ▲
+                  │ ∞──1
+            staff (collector)
+
 branches ─1──∞─▶ staff
 ```
 

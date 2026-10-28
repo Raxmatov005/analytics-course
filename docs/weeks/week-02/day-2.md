@@ -375,8 +375,19 @@ Tashkent Central 435, Tashkent North 428, Tashkent South 416 — the three Tashk
 **What it is.** The database does not run a query top to bottom as you write it. It runs the clauses in this order:
 
 ```text
-FROM / JOIN  →  WHERE   →  GROUP BY   →  HAVING      →  SELECT           →  ORDER BY  →  LIMIT
-which rows      keep rows   make groups   keep groups    compute columns     sort         cut
+FROM / JOIN   which rows
+   ▼
+WHERE         keep rows
+   ▼
+GROUP BY      make groups
+   ▼
+HAVING        keep groups
+   ▼
+SELECT        compute columns
+   ▼
+ORDER BY      sort
+   ▼
+LIMIT         cut
 ```
 
 **How to read it.** Each clause sees only what the clauses before it produced:

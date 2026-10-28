@@ -63,8 +63,14 @@ An average SME loan brings 92 835 258 soum of interest, an Auto loan 90 816 842,
 **How to write it.**
 
 ```text
-cost of funds per loan = Σ over instalments (balance owed before instalment k) × 0.18 ÷ 12
-balance before k        = principal − principal repaid in instalments 1 … k−1
+cost of funds per loan
+  = Σ over instalments
+    (balance owed before
+     instalment k) × 0.18 ÷ 12
+
+balance before k
+  = principal − principal repaid
+    in instalments 1 … k−1
 ```
 
 ```sql
@@ -219,8 +225,11 @@ A Consumer loan leaves 860 241 soum: 15.6 % of its income, or 31.9 soum for ever
 **How to write it.** Set net = 0 and solve for the input. For PD:
 
 ```text
-net(PD) = (1 − PD) × I − CoF − PD × LGD × EAD − acq − serv = 0
-PD*     = (I − CoF − acq − serv) ÷ (I + LGD × EAD)
+net(PD) = (1 − PD) × I − CoF
+          − PD × LGD × EAD
+          − acq − serv = 0
+PD* = (I − CoF − acq − serv)
+      ÷ (I + LGD × EAD)
 ```
 
 ```python
@@ -287,7 +296,9 @@ From a base of 860 241 soum, four points of funding cost take 759 411; a 10 % lo
 **How to write it.**
 
 ```text
-payback (months) = CAC ÷ (contribution before acquisition ÷ term in months)
+payback (months)
+  = CAC ÷ (contribution before
+    acquisition ÷ term in months)
 ```
 
 ```python
@@ -405,13 +416,12 @@ print("Assumptions: funding 18 %, LGD 60 %, acquisition and servicing per channe
 
 **How to write it.**
 
-```text
-answer      Grow SME and Auto; renegotiate BNPL's merchant fee or slow it.
-reasons     SME and Auto earn 60–73 soum per 1 000 lent; BNPL loses 108.
-            A new Micro customer pays back the acquisition on the first loan.
-evidence    the per-product table, the sensitivity, the LTV — one chart each
-assumptions funding 18 %, LGD 60 %, acquisition and servicing per channel (ours)
-```
+| Line | What it says |
+|---|---|
+| answer | Grow SME and Auto; renegotiate BNPL's merchant fee or slow it. |
+| reasons | SME and Auto earn 60–73 soum per 1 000 lent; BNPL loses 108. A new Micro customer pays back the acquisition on the first loan. |
+| evidence | the per-product table, the sensitivity, the LTV — one chart each |
+| assumptions | funding 18 %, LGD 60 %, acquisition and servicing per channel (ours) |
 
 Four rules: the answer in the first sentence; titles that are sentences with a number (not *"Unit economics by product"* but *"SME and Auto earn 60–73 soum per 1 000 lent; BNPL loses 108"*); one chart per message; numbers rounded to what matters, with units, the decision in bold.
 

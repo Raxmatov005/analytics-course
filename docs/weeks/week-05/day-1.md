@@ -148,7 +148,7 @@ outstanding = 208_723_504_430
 print(f"Outstanding: {outstanding:,} soum = {outstanding / 1e9:.1f} bn; PAR30 {0.0312:.2%}")
 ```
 
-```text
+```output
 transfer
 2025-03 10
 True
@@ -305,7 +305,7 @@ print(counts, len(counts), "card" in counts)
 {"id": "w05d1-pic2", "title": "A dict is a two-column lookup table", "caption": "You find a value by its key, not by a position: `counts[\"card\"]` → 17612. Assigning to a new key adds a row (green); assigning to a key that is already there would replace its value.", "tables": [{"id": "before", "name": "counts", "cols": ["key", "value"], "rows": [["\"card\"", 17612], ["\"payme\"", 8897]], "tags": {"key": "look up by"}}, {"id": "after", "name": "counts", "cols": ["key", "value"], "rows": [["\"card\"", 17612], ["\"payme\"", 8897], ["\"cash\"", 8788]], "keep": [2], "via": "counts[\"cash\"] = 8788"}]}
 ```
 
-```text
+```output
 0.24
 no such product
 {'card': 17612, 'payme': 8897, 'cash': 8788} 3 True
@@ -637,8 +637,11 @@ Traceback (most recent call last):
   Cell In[7], line 4
     approval_rate(0, 0)
   Cell In[7], line 2, in approval_rate
-    return round(100 * approved / total, 1)      ← the line of YOUR code where it broke
-ZeroDivisionError: division by zero              ← the LAST line: what went wrong — read it first
+    return round(100 * approved / total, 1)
+↑ the line of YOUR code where it broke
+ZeroDivisionError: division by zero
+↑ the LAST line: what went wrong —
+  read it first
 ```
 
 The last line names the error: a division by a total of zero. The line above it points at `return round(100 * approved / total, 1)`, inside `approval_rate`.
@@ -945,7 +948,11 @@ Section 9 of the notebook uses 6 and 8 together on `payments_dirty.csv` (five cl
 Every instalment in `installments` (92 193 rows) was produced by one formula. An **annuity** (*аннуитет*) loan pays the same amount every month; inside that amount the **interest** part shrinks and the **principal** part grows as the balance falls:
 
 ```
-payment = P × r / (1 − (1 + r)^−n)        P = principal, r = annual_rate / 12, n = term in months
+payment = P × r / (1 − (1 + r)^−n)
+
+P = principal
+r = annual_rate / 12
+n = term in months
 ```
 
 Nur Finance rounds the payment to the nearest **100 soum** (`round(x, -2)`), and zero-rate BNPL simply divides `P / n`. In Python:
@@ -973,17 +980,16 @@ annuity(31_150_000, 0.30, 24)     # 1741700 — loan 1
 
 Run over all 7 828 loans, `annuity()` equals `monthly_payment` for **7 828** — the rounding rule is the whole difference between "approximately right" (590 matches with `int()`, 579 with `round()`) and exactly right. When a company's number does not match your formula, the gap is almost always a rounding or day-count convention; find it, write it down, and then your function *is* the definition.
 
-**Principal vs interest over the schedule** — loan 1, the first six of 24 rows, each month `interest = round(balance × r)`, `principal_part = payment − interest`:
+**Principal vs interest over the schedule** — loan 1, the first six of 24 rows, each month `interest = round(balance × r)`, `principal_part = payment − interest` (the payment is 1 741 700 every month):
 
-```
-n  payment    interest  principal  balance after
-1  1 741 700   778 750    962 950   30 187 050
-2  1 741 700   754 676    987 024   29 200 026
-3  1 741 700   730 001  1 011 699   28 188 327
-4  1 741 700   704 708  1 036 992   27 151 335
-5  1 741 700   678 783  1 062 917   26 088 418
-6  1 741 700   652 210  1 089 490   24 998 928
-```
+| n | interest | principal | balance after |
+|--:|--:|--:|--:|
+| 1 | 778 750 | 962 950 | 30 187 050 |
+| 2 | 754 676 | 987 024 | 29 200 026 |
+| 3 | 730 001 | 1 011 699 | 28 188 327 |
+| 4 | 704 708 | 1 036 992 | 27 151 335 |
+| 5 | 678 783 | 1 062 917 | 26 088 418 |
+| 6 | 652 210 | 1 089 490 | 24 998 928 |
 
 These are exactly `installments` rows 1–6 for `loan_id = 1` (`interest_due` 778 750, `principal_due` 962 950 …). The 24th row pays 1 741 193 — a little less, because the balance is cleared rather than overpaid; the principal parts sum to 31 150 000 and the interest parts to 10 650 293 (34 % on top of the principal over two years).
 

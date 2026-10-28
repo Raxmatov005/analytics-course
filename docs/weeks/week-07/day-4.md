@@ -97,12 +97,21 @@ Avg Ticket for the whole book: 404 783 280 000 ÷ 7 828 = 51 709 668 soum. A mea
 
 ```text
 cell "Bukhara Central × SME"
-  filter 1: branches[branch_name] = "Bukhara Central"    ← the row
-  filter 2: products[code] = "SME"                         ← the column
+  filter 1:
+    branches[branch_name]
+      = "Bukhara Central"
+    ← the row
+  filter 2:
+    products[code] = "SME"
+    ← the column
   (+ every slicer on the page)
-        │ relationships carry both to v_loan_status
+        │
+        │ relationships carry both
+        │ to v_loan_status
         ▼
-  SUM ( v_loan_status[outstanding] ) over Bukhara's SME loans  =  10 343 220 604
+  SUM ( v_loan_status[outstanding] )
+  over Bukhara's SME loans
+  = 10 343 220 604
 ```
 
 The total row has only the column filter; the grand total has none.
@@ -513,17 +522,17 @@ Use it: Format → Title → **fx** → Field value → `Dynamic Title`.
 
 One card, every concept of the section:
 
-```text
-measure vs column   → PAR30 % is a measure; par30_outstanding is not needed — CALCULATE does it
-first measures      → Outstanding = SUM ( … ); DIVIDE for the ratio
-filter context      → each matrix cell: branch × product (+ slicers)
-CALCULATE           → Outstanding DPD30+ = CALCULATE ( [Outstanding], dpd > 30 )
-ALL                 → a share of the whole book next to it
-time intelligence   → the PAR30 trend uses dim_date; balances use Month-End
-VAR, RANKX          → the worst branch named by rank
-visuals             → a card top-left, a matrix with PAR30 Colour, a drill-through to the branch
-publish, RLS        → a PDF for the board; each manager sees her branch
-```
+| Concept | On this card |
+|---|---|
+| measure vs column | PAR30 % is a measure; par30_outstanding is not needed — CALCULATE does it |
+| first measures | `Outstanding = SUM ( … )`; DIVIDE for the ratio |
+| filter context | each matrix cell: branch × product (+ slicers) |
+| CALCULATE | `Outstanding DPD30+ = CALCULATE ( [Outstanding], dpd > 30 )` |
+| ALL | a share of the whole book next to it |
+| time intelligence | the PAR30 trend uses dim_date; balances use Month-End |
+| VAR, RANKX | the worst branch named by rank |
+| visuals | a card top-left, a matrix with PAR30 Colour, a drill-through to the branch |
+| publish, RLS | a PDF for the board; each manager sees her branch |
 
 The worked example below builds exactly this card and its next question.
 

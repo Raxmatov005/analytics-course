@@ -119,9 +119,15 @@ SELECT * FROM my_v_paid_monthly WHERE month >= '2026-07' AND month < '2026-10';
 Three rows. September 2026: 3 158 payments, 16 338 823 207 collected — without a word about duplicates in this view, because the inner view removed them. Section 2's `v_loan_status` is built the same way.
 
 ```text
-payments ──▶ v_payments_clean ──▶ my_v_paid_monthly
- (raw)        dedup + clean         monthly totals
-                     └──────────▶ v_loan_status (section 2)
+payments (raw)
+   │
+   ▼
+v_payments_clean
+   │ dedup + clean
+   ├──▶ my_v_paid_monthly
+   │      monthly totals
+   └──▶ v_loan_status
+          (section 2)
 ```
 
 **When you use it.**

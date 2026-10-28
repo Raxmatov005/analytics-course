@@ -77,8 +77,15 @@ WHERE channel = 'app' AND status <> 'cancelled'
 **How to write it.** Each factor's denominator is the previous factor's numerator, so the product cancels down to the total:
 
 ```text
-amount disbursed  =  applications  ×  approved ÷ applications  ×  loans ÷ approved  ×  amount ÷ loans
-                     (how many ask)   (approval rate)             (take-up)            (average ticket)
+amount disbursed
+  =  applications
+       (how many ask)
+  ×  approved ÷ applications
+       (approval rate)
+  ×  loans ÷ approved
+       (take-up)
+  ×  amount ÷ loans
+       (average ticket)
 ```
 
 On the applications made in September 2026:
@@ -269,7 +276,12 @@ FROM steps ORDER BY k;
 **How to write it.**
 
 ```text
-retention(N) = customers whose 2nd loan is disbursed ≤ N months after their 1st  ÷  customers whose 1st loan is in the group
+retention(N) =
+  customers whose 2nd loan is
+  disbursed ≤ N months after their 1st
+  ÷
+  customers whose 1st loan is in
+  the group
 ```
 
 Customers whose first loan was disbursed in January 2025, N = 6 months:
@@ -903,22 +915,20 @@ None today. **HW 8.1** (your CV draft and a one-page portfolio index) is set tom
 
 Disbursement is the product team's North Star; the **board's** is net income. Its tree, with the owner of each branch (see [Who does what](company/roles.md)):
 
-```
-NET INCOME (before tax)                                                      — CFO / Finance (FP&A)
-├── + interest income  = average portfolio × yield                            — Finance
-│     ├── average portfolio  ← disbursements − repayments − write-offs         — Portfolio manager (Bekzod)
-│     │     └── disbursements = active customers × application rate × approval × take-up × ticket
-│     │           ├── active customers, application rate, take-up              — Product (Kamola), marketing, branch managers
-│     │           ├── approval rate                                            — Risk (Nilufar): scorecard and cut-off
-│     │           └── average ticket                                           — Portfolio manager: product limits, mix
-│     └── yield  ← annual rate, term mix, prepayments, fees                    — Product + Finance (pricing)
-├── − cost of funds  = average portfolio × funding rate                       — Treasury / Finance
-├── − cost of risk   = provisions (expected loss) + write-offs − recoveries   — Risk + Collections
-│     ├── PD   ← approval policy, grade mix, FPD (the leading signal), roll rates   — Risk (Nilufar)
-│     ├── LGD  ← cure rate, recoveries, restructuring                         — Collections (Sevara)
-│     └── EAD  ← ticket, term, amortisation                                   — Portfolio manager
-└── − operating expenses  ← acquisition cost per loan (by channel), servicing, collections staff, IT   — Finance, Operations
-```
+- **NET INCOME (before tax)** — *CFO / Finance (FP&A)*
+  - **+ interest income** = average portfolio × yield — *Finance*
+    - average portfolio ← disbursements − repayments − write-offs — *Portfolio manager (Bekzod)*
+      - disbursements = active customers × application rate × approval × take-up × ticket
+        - active customers, application rate, take-up — *Product (Kamola), marketing, branch managers*
+        - approval rate — *Risk (Nilufar): scorecard and cut-off*
+        - average ticket — *Portfolio manager: product limits, mix*
+    - yield ← annual rate, term mix, prepayments, fees — *Product + Finance (pricing)*
+  - **− cost of funds** = average portfolio × funding rate — *Treasury / Finance*
+  - **− cost of risk** = provisions (expected loss) + write-offs − recoveries — *Risk + Collections*
+    - PD ← approval policy, grade mix, FPD (the leading signal), roll rates — *Risk (Nilufar)*
+    - LGD ← cure rate, recoveries, restructuring — *Collections (Sevara)*
+    - EAD ← ticket, term, amortisation — *Portfolio manager*
+  - **− operating expenses** ← acquisition cost per loan (by channel), servicing, collections staff, IT — *Finance, Operations*
 
 What the tree is for: **every request you get is a node on it.** Kamola's funnel is the left end of disbursements; Nilufar's FPD is the leading edge of PD; Sevara's cure rate is LGD; Timur's dashboard is the tree drawn as pages. When a number at the top moves, you walk down until one child explains the change — exactly the log decomposition of P2, one level at a time.
 

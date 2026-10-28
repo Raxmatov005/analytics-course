@@ -36,11 +36,23 @@ The Python boxes on this page run here, in the page, in one shared namespace —
 From July to September the rate fell 4.7 points — with nothing changed. A screen that adds 0.9 points would be lost in that swing. An **A/B test** (*A/B-тест*) removes the calendar: over the same days, a random half of users sees the current screen and the other half the new one.
 
 ```text
-before/after   August:     screen A + August's calendar      →  67.9 %
-               September:  screen B + September's calendar   →  ?      two things changed
+before/after
+  August:
+    screen A + August's calendar
+    → 67.9 %
+  September:
+    screen B + September's calendar
+    → ?
+  two things changed
 
-A/B test       1–28 Aug, random half:  screen A + the same days  →  rate A
-               1–28 Aug, other half:   screen B + the same days  →  rate B   one thing changed
+A/B test
+  1–28 Aug, random half:
+    screen A + the same days
+    → rate A
+  1–28 Aug, other half:
+    screen B + the same days
+    → rate B
+  one thing changed
 ```
 
 The current screen is the **control** (A, *контрольная группа*); the new one is the **treatment** (B, *тестовая группа*). Because a coin decides who sees what, the two halves are alike in device, region, salary day and mood. A difference beyond chance is caused by the screen.
@@ -63,11 +75,11 @@ The current screen is the **control** (A, *контрольная группа*)
 
 **How to write it.**
 
-```text
-If we <change>,                       → show the monthly payment in large type and one "Get the money" button
-then <metric> will <go up / down>,    → conversion from first offer view to signed contract within 7 days goes up
-because <mechanism>.                  → a clear monthly payment removes hesitation at the moment of decision
-```
+| Template | Example |
+|---|---|
+| `If we <change>,` | show the monthly payment in large type and one "Get the money" button |
+| `then <metric> will <go up / down>,` | conversion from first offer view to signed contract within 7 days goes up |
+| `because <mechanism>.` | a clear monthly payment removes hesitation at the moment of decision |
 
 **When you use it.**
 - At the start of every test. The metric in the hypothesis becomes the primary metric (next subsection).
@@ -456,17 +468,16 @@ Daily looks turn a 5 % promise into 27 %: more than one null test in four "wins"
 
 **How to write it.** One page, eight lines:
 
-```text
-1. Hypothesis        change → mechanism → measurable consequence
-2. Primary metric    numerator, denominator, window — and the code that computes it
-3. Guardrails        each with its definition and the threshold that stops a ship
-4. Unit and split    unit of randomisation; hash, salt, shares
-5. Sample size       baseline, MDE (absolute and relative), α, power, method → n per arm → days → dates
-6. Checks            A/A result; SRM alarm rule; novelty plan (daily lift, excluded days)
-7. Analysis plan     test, CI method, exclusions, segments (named, with the correction), the end date
-8. Decision rule     ship / do not ship / extend — written as conditions on the numbers
-
-```
+| Line | What goes in it |
+|---|---|
+| 1. Hypothesis | change → mechanism → measurable consequence |
+| 2. Primary metric | numerator, denominator, window — and the code that computes it |
+| 3. Guardrails | each with its definition and the threshold that stops a ship |
+| 4. Unit and split | unit of randomisation; hash, salt, shares |
+| 5. Sample size | baseline, MDE (absolute and relative), α, power, method → n per arm → days → dates |
+| 6. Checks | A/A result; SRM alarm rule; novelty plan (daily lift, excluded days) |
+| 7. Analysis plan | test, CI method, exclusions, segments (named, with the correction), the end date |
+| 8. Decision rule | ship / do not ship / extend — written as conditions on the numbers |
 
 The decision rule for the offer screen: *ship if the primary is significant at 5 % and the FPD difference's upper 95 % bound is below +1.25 points.* HW 7.1 is this page.
 
@@ -484,18 +495,18 @@ The decision rule for the offer screen: *ship if the primary is significant at 5
 
 One test, every decision of this section, in the order you make them:
 
-```text
-confounding   → a concurrent random split, not September vs August
-hypothesis    → monthly payment + one button → more viewers sign within 7 days
-metrics       → primary: signed ≤ 7 days ÷ assigned · secondary: funnel steps · guardrail: FPD (+1.25 pt max)
-unit          → the user, assigned at the first offer view
-MDE           → +0.9 pt (8.0 → 8.9 %, +11 %)
-sample size   → 14 983 per arm → 30 days → 28 days chosen (power 77 %), 1–28 August
-assignment    → sha256("offer_screen_v2" + user_id) mod 2
-checks        → A/A in July passed · SRM alarm at p < 0.001 · daily lift chart for novelty
-peeking       → one look, on 28 August
-plan          → all of the above, dated, before 1 August
-```
+| Decision | In this test |
+|---|---|
+| confounding | a concurrent random split, not September vs August |
+| hypothesis | monthly payment + one button → more viewers sign within 7 days |
+| metrics | primary: signed ≤ 7 days ÷ assigned · secondary: funnel steps · guardrail: FPD (+1.25 pt max) |
+| unit | the user, assigned at the first offer view |
+| MDE | +0.9 pt (8.0 → 8.9 %, +11 %) |
+| sample size | 14 983 per arm → 30 days → 28 days chosen (power 77 %), 1–28 August |
+| assignment | `sha256("offer_screen_v2" + user_id) mod 2` |
+| checks | A/A in July passed · SRM alarm at p < 0.001 · daily lift chart for novelty |
+| peeking | one look, on 28 August |
+| plan | all of the above, dated, before 1 August |
 
 **Your turn.** Each problem below is prevented by one decision. Match them.
 
@@ -726,8 +737,18 @@ In e-commerce a conversion win is almost always money. In lending it is money **
 **A simple unit-economics formula** (per 1 000 offer viewers). Week 6's expected loss, EL = PD × LGD × EAD, with three simplifications for a short Micro loan: a loan with a first-payment default is treated as defaulted (PD ≈ FPD), EAD ≈ the principal, and every other loan pays its interest in full.
 
 ```
-profit per 1 000 viewers = 1 000 × conversion × [ (1 − FPD) × I − FPD × LGD × P ]
-Nur Micro: P = 2 705 586 average principal · I = 266 662 interest over the life of a repaid loan · LGD = 60 % → loss L = 1 623 352
+profit per 1 000 viewers
+  = 1 000 × conversion
+    × [ (1 − FPD) × I − FPD × LGD × P ]
+
+Nur Micro:
+  P = 2 705 586
+    average principal
+  I = 266 662
+    interest over the life of a
+    repaid loan
+  LGD = 60 %
+  → loss L = 1 623 352
 ```
 
 | Scenario | conversion | FPD | profit per loan | profit per 1 000 viewers |
@@ -740,7 +761,12 @@ Nur Micro: P = 2 705 586 average principal · I = 266 662 interest over the life
 **Break-even FPD for B** — solve profit_B = profit_A for FPD_B:
 
 ```
-FPD_B* = ( I − (conv_A / conv_B) × (I − FPD_A × (I + L)) ) / (I + L)  =  2.95 %     → B may raise FPD by at most +1.25 points
+FPD_B* = ( I − (conv_A / conv_B)
+           × (I − FPD_A × (I + L)) )
+         / (I + L)
+       = 2.95 %
+→ B may raise FPD by at most
+  +1.25 points
 ```
 
 So **+0.9 points of conversion is worth +1.25 points of FPD** on Micro loans — and not more. Two lessons for the design: (1) the guardrail needs a **number** (the stop threshold is break-even, written in the pre-registration), not "FPD should not get worse"; (2) the guardrail test will be weak — about 1 100 loans per arm, FPD around 2 % — so the decision will rest on the **confidence interval's upper bound** compared with +1.25, not on a p-value. A risky change gets a staged rollout and an FPD watch even after "ship".

@@ -22,14 +22,14 @@ A capstone is one large request handled from start to finish. The six subsection
 
 **How to write it.** Rewrite the request into six lines before you open the data:
 
-```text
-Decision      what will someone do differently after reading you?   e.g. set 2027 lending limits per product
-Question      the request as one sentence with a question mark
-As of         the date your numbers describe                          e.g. 2026-10-01
-Audience      who is in the room, and what each of them owns
-Deliverables  what they receive, in which format, by when
-Out of scope  what you will not answer this time
-```
+| Line | What it holds | Example |
+|---|---|---|
+| Decision | what will someone do differently after reading you? | set 2027 lending limits per product |
+| Question | the request as one sentence with a question mark | |
+| As of | the date your numbers describe | 2026-10-01 |
+| Audience | who is in the room, and what each of them owns | |
+| Deliverables | what they receive, in which format, by when | |
+| Out of scope | what you will not answer this time | |
 
 Then check the as-of date against the data itself:
 
@@ -64,12 +64,20 @@ Applications, loans and app events end on 1 October 2026 — the as-of date. Pay
 **How to write it.**
 
 ```text
-Where do we grow, where do we stop, what do we change?
-├── 1. Where is the money made?        → contribution per product
-├── 2. Where did we grow, and how?     → growth by product / channel / region; count vs ticket
-├── 3. Where is the risk?              → FPD, vintages, PAR30
-├── 4. Where do we lose value?         → app funnel leaks, collections coverage
-└── 5. What would change the answer?   → the assumptions, the deep-dive
+Where do we grow, where do we stop,
+what do we change?
+├── 1. Where is the money made?
+│      → contribution per product
+├── 2. Where did we grow, and how?
+│      → growth by product / channel /
+│        region; count vs ticket
+├── 3. Where is the risk?
+│      → FPD, vintages, PAR30
+├── 4. Where do we lose value?
+│      → app funnel leaks,
+│        collections coverage
+└── 5. What would change the answer?
+       → the assumptions, the deep-dive
 ```
 
 When a branch splits a number, MECE has a test you can run: the parts must add back to the whole.
@@ -189,9 +197,14 @@ WHERE l.disbursed_at >= '2026-01-01' AND l.disbursed_at < '2026-10-01';
 **How to write it.**
 
 ```text
-finding = number + comparison + so-what
-        = "Disbursements grew 45.6 % in Jan–Sep 2026" + "against Jan–Sep 2025, and the count grew 40.3 %"
-          + "so the growth is more borrowers, not a few large loans"
+finding = number + comparison
+          + so-what
+  = "Disbursements grew 45.6 %
+     in Jan–Sep 2026"
+  + "against Jan–Sep 2025, and the
+     count grew 40.3 %"
+  + "so the growth is more borrowers,
+     not a few large loans"
 ```
 
 ```sql
@@ -366,13 +379,34 @@ Time box it: if a cut has not produced a message in 30 minutes, write down what 
 An **issue tree** (*дерево проблем*) breaks the question into sub-questions that are **mutually exclusive and collectively exhaustive** (MECE): no overlaps, no gaps. Each leaf is a question one table can answer. One possible start (make it yours):
 
 ```
-Where do we grow, where do we stop, what do we change?
-├── 1. Where is the money made?            → unit economics per product (Q5), contribution 2026, sensitivity
-├── 2. Where did we grow, and how?         → product / channel / region growth; new vs repeat; ticket vs count (Q1)
-├── 3. Where is the risk?                  → FPD and vintages by channel, grade, product; PAR30 by region (Q2)
-│     └── is the risk where the growth is? → growth × PAR30 by region / product
-├── 4. Do we lose value in the process?    → app funnel leaks, signed-not-disbursed (Q4); collections coverage (Q3)
-└── 5. What would change the answer?       → assumptions (funding rate, costs, PD of young products), the deep-dive (Q6)
+Where do we grow, where do we stop,
+what do we change?
+├── 1. Where is the money made?
+│      → unit economics per product
+│        (Q5), contribution 2026,
+│        sensitivity
+├── 2. Where did we grow, and how?
+│      → product / channel / region
+│        growth; new vs repeat;
+│        ticket vs count (Q1)
+├── 3. Where is the risk?
+│      → FPD and vintages by channel,
+│        grade, product; PAR30 by
+│        region (Q2)
+│      └── is the risk where the
+│          growth is?
+│            → growth × PAR30 by
+│              region / product
+├── 4. Do we lose value in the
+│      process?
+│      → app funnel leaks,
+│        signed-not-disbursed (Q4);
+│        collections coverage (Q3)
+└── 5. What would change the answer?
+       → assumptions (funding rate,
+         costs, PD of young
+         products), the deep-dive
+         (Q6)
 ```
 
 For every branch write one **hypothesis** before you look ("SME grows fastest and earns most per soum") and the **test** that could break it ("unless its matured default rate is much higher"). A hypothesis you can not break is an opinion. Save it as `issue_tree.md` (it goes in with Friday's hand-in), with a **definitions block**: outstanding, PAR30, NPL90, FPD30 (maturity rule), approval rate (denominator), collection rate, active customer, funnel step, repeat borrowing, net contribution — one line each, the same as the course's unless you say why.

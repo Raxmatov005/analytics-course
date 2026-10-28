@@ -48,7 +48,7 @@ print(type(small).__name__, type(col).__name__)
 print(col.sum(), col.max(), small.columns.tolist(), small.index.tolist())
 ```
 
-```text
+```output
 DataFrame Series
 72800000 40060000 ['loan_id', 'product', 'principal'] [0, 1, 2]
 ```
@@ -145,7 +145,7 @@ loans.head()        # the first 5 rows; head(10) for ten, tail() for the last 5
 loans.info()             # dtype and non-null count per column
 ```
 
-```text
+```output
 RangeIndex: 7828 entries, 0 to 7827
  #   Column        Non-Null Count  Dtype
  0   loan_id       7828 non-null   int64

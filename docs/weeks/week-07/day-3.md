@@ -23,8 +23,23 @@
 **How it looks.** The build process, always in this order:
 
 ```text
-get data  →  transform (Power Query)  →  model (relationships)  →  measures (DAX)  →  visuals  →  publish
-  CSV, SQL      types, cleaning            the star                  Outstanding, PAR30   cards, lines   Service, PDF
+get data
+  CSV, SQL
+   ▼
+transform (Power Query)
+  types, cleaning
+   ▼
+model (relationships)
+  the star
+   ▼
+measures (DAX)
+  Outstanding, PAR30
+   ▼
+visuals
+  cards, lines
+   ▼
+publish
+  Service, PDF
 ```
 
 | Tool | Who makes it / licence | Known for |
@@ -126,12 +141,31 @@ What the clicks wrote, in *Advanced Editor*:
 
 ```
 let
-    Source   = Csv.Document(File.Contents("C:\...\data\powerbi\v_loan_status.csv"), [Delimiter = ",", Encoding = 65001]),   // the file
-    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),                                                    // first row = headers
-    Typed    = Table.TransformColumnTypes(Promoted, {{"loan_id", Int64.Type}, {"disbursed_at", type date},                  // the types
-                   {"principal", Int64.Type}, {"outstanding", Int64.Type}, {"dpd", Int64.Type}, {"bucket", type text}})
+  // the file
+  Source = Csv.Document(
+    File.Contents(
+      "C:\...\data\powerbi\v_loan_status.csv"
+    ),
+    [Delimiter = ",", Encoding = 65001]
+  ),
+  // first row = headers
+  Promoted = Table.PromoteHeaders(
+    Source, [PromoteAllScalars = true]
+  ),
+  // the types
+  Typed = Table.TransformColumnTypes(
+    Promoted, {
+      {"loan_id", Int64.Type},
+      {"disbursed_at", type date},
+      {"principal", Int64.Type},
+      {"outstanding", Int64.Type},
+      {"dpd", Int64.Type},
+      {"bucket", type text}
+    }
+  )
 in
-    Typed                                                                                                                   // the last step is the table
+  // the last step is the table
+  Typed
 ```
 
 **When you use it.** For every table, before it enters the model. M shapes tables **before** they are loaded; DAX (tomorrow) calculates numbers **after**.
@@ -188,13 +222,13 @@ Rows stay 52 850 — one per payment — because `loan_id` is unique in `v_loan_
 **How to write it.** Our model, drawn the way the Model view shows it:
 
 ```text
-              dim_date (1 461 days)
-                     │ 1
-                     ▼ *
-products (5) ──1──▶ v_loan_status (7 828 loans) ◀──1── branches (10)
-                     ▲ *
-                     │ 1
-              customers_clean (6 000)
+v_loan_status (7 828 loans)
+   ▲ *
+   │
+   ├─1── dim_date (1 461 days)
+   ├─1── products (5)
+   ├─1── branches (10)
+   └─1── customers_clean (6 000)
 ```
 
 | fact (grain) | rows | dimensions it uses |
@@ -257,8 +291,16 @@ Dimensions: `dim_date` (1 461 days), `products` (5), `branches` (10), `customers
 **How to write it.** Double-click a relationship line → *Cross filter direction* → **Single**. In the Model view the line carries one arrow, pointing at the fact.
 
 ```text
-single:  products ──▶ v_loan_status            a product slicer filters loans; loans do not filter products
-both:    products ◀─▶ v_loan_status ◀─▶ customers_clean ...   a segment slicer now filters products, then every other fact
+single:
+  products ──▶ v_loan_status
+  a product slicer filters loans;
+  loans do not filter products
+
+both:
+  products ◀─▶ v_loan_status
+    ◀─▶ customers_clean ...
+  a segment slicer now filters
+  products, then every other fact
 ```
 
 **When you use it.** Single everywhere. With `customers_clean ↔ v_loan_status` set to Both, a segment slicer on "sme" filters `products` and `branches` to those sme customers use, and through them `fct_installments` to *every* loan of those products — not to sme customers' loans. The numbers look plausible and are wrong.

@@ -377,8 +377,15 @@ The repetition is correct: "one row per instalment, with its loan's details" is 
 **The path.** Two tables that have no key between them are joined **through** the tables that connect them. `customers` and `products` share no key, so "which products do Tashkent customers take?" cannot join them directly. The join map from Week 1 shows the way:
 
 ```text
-customers ──customer_id──▶ loans ──product_id──▶ products
-   (who)                 (the loan)              (what)
+customers           (who)
+   │
+   │ customer_id
+   ▼
+loans               (the loan)
+   │
+   │ product_id
+   ▼
+products            (what)
 ```
 
 Each arrow is one `JOIN … ON` with that key. `loans` is the bridge: it points to both.
@@ -403,7 +410,19 @@ ORDER BY loans DESC;
 **A path through a table you do not display.** "Who was the loan officer for loan 1?" The officer is stored on the **application**, not on the loan, and the officer's branch on `staff`:
 
 ```text
-loans ──application_id──▶ applications ──officer_id──▶ staff ──branch_id──▶ branches
+loans
+   │
+   │ application_id
+   ▼
+applications
+   │
+   │ officer_id
+   ▼
+staff
+   │
+   │ branch_id
+   ▼
+branches
 ```
 
 ```sql

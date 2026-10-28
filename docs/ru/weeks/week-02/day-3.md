@@ -153,7 +153,12 @@ GROUP BY LENGTH(phone);
 
 ```text
 2026-09-27 14:05:00
-1234567890123456789      → SUBSTR(applied_at, 1, 10) = '2026-09-27'   SUBSTR(applied_at, 12, 2) = '14'
+1234567890123456789
+
+→ SUBSTR(applied_at, 1, 10)
+    = '2026-09-27'
+→ SUBSTR(applied_at, 12, 2)
+    = '14'
 ```
 
 ```sql

@@ -120,14 +120,19 @@ SELECT * FROM dim_date WHERE date_key = '2026-09-01';
 **How to write it.** The picture:
 
 ```text
-                        dim_date
-                       (date_key)
-                           │
-  dim_customer ────── fact_loans ────── dim_product
-  (customer_id)     principal, term     (product_id)
-                      │          │
-                dim_branch    dim_staff
-                (branch_id)   (officer_id → staff_id)
+fact_loans
+principal, term
+   │
+   ├── dim_date
+   │     (date_key)
+   ├── dim_customer
+   │     (customer_id)
+   ├── dim_product
+   │     (product_id)
+   ├── dim_branch
+   │     (branch_id)
+   └── dim_staff
+         (officer_id → staff_id)
 ```
 
 Every question becomes one sentence: *"sum a measure of the fact, grouped by an attribute of a dimension"* — disbursed principal (`fact_loans`) by region (`dim_branch`) by month (`dim_date`).

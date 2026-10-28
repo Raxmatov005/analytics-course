@@ -467,8 +467,14 @@ Testing once at the end gives a false positive about 5 % of the time (the notebo
 **What it is.** **Power** (*мощность критерия*) = P(the test rejects H₀ | the effect is real) = 1 − β. It is fixed before any data exist, by five inputs: **α**, the **power** you want, the **baseline** rate, the **effect** you want to detect and **n**. Convention: plan for 80 % power at α = 5 %. For two rates the effect is measured by **Cohen's h** = 2·arcsin√p₁ − 2·arcsin√p₂, and the loans needed **per arm** are:
 
 ```
-n per arm = 2 · ( (z for α/2 + z for the power) / h )²
-FPD 1.28 % → 1.00 %:  h = 0.02642;   n = 2 · ((1.960 + 0.842) / 0.02642)² = 22 481
+n per arm
+  = 2 · ( (z for α/2
+           + z for the power) / h )²
+
+FPD 1.28 % → 1.00 %:
+  h = 0.02642
+  n = 2 · ((1.960 + 0.842) / 0.02642)²
+    = 22 481
 ```
 
 **How to write it.** One calculator for the whole page — sample size, power and (next subsection) MDE:

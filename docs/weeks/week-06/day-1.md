@@ -229,7 +229,10 @@ The book's 1.28 % is three pieces, one per channel: 0.58 + 0.48 + 0.23 points.
 **How to write it.** In words: the flagged fraudsters divided by everyone flagged.
 
 ```text
-P(fraud | flag) = P(flag | fraud) · P(fraud) / [ P(flag | fraud) · P(fraud) + P(flag | honest) · P(honest) ]
+P(fraud | flag) =
+  P(flag | fraud) · P(fraud)
+  / [ P(flag | fraud) · P(fraud)
+    + P(flag | honest) · P(honest) ]
 ```
 
 The easy way is **natural frequencies**: imagine 10 000 applicants. A vendor's rule catches 90 % of fraudsters (the **sensitivity**) and flags 5 % of honest applicants (the **false-positive rate**). Our base rate for first-payment fraud — a loan that never paid a single soum of its first instalment — is 44 of 7 099 = 0.62 %.

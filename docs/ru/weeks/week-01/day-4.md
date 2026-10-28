@@ -120,14 +120,19 @@ SELECT * FROM dim_date WHERE date_key = '2026-09-01';
 **Как пишется.** Схема:
 
 ```text
-                        dim_date
-                       (date_key)
-                           │
-  dim_customer ────── fact_loans ────── dim_product
-  (customer_id)     principal, term     (product_id)
-                      │          │
-                dim_branch    dim_staff
-                (branch_id)   (officer_id → staff_id)
+fact_loans
+principal, term
+   │
+   ├── dim_date
+   │     (date_key)
+   ├── dim_customer
+   │     (customer_id)
+   ├── dim_product
+   │     (product_id)
+   ├── dim_branch
+   │     (branch_id)
+   └── dim_staff
+         (officer_id → staff_id)
 ```
 
 Любой вопрос становится одним предложением: *«сложи меру факта, сгруппировав по атрибуту измерения»* — выданный основной долг (`fact_loans`) по региону (`dim_branch`) по месяцу (`dim_date`).

@@ -378,8 +378,15 @@ JOIN installments i ON i.loan_id = l.loan_id;              -- 92 193, а не 7 
 **Путь.** Две таблицы без общего ключа соединяют **через** таблицы, которые их связывают. У `customers` и `products` нет общего ключа, поэтому вопрос «какие продукты берут клиенты из Ташкента?» не может соединить их напрямую. Карта соединений из Недели 1 показывает дорогу:
 
 ```text
-customers ──customer_id──▶ loans ──product_id──▶ products
-   (кто)                   (кредит)              (что)
+customers           (кто)
+   │
+   │ customer_id
+   ▼
+loans               (кредит)
+   │
+   │ product_id
+   ▼
+products            (что)
 ```
 
 Каждая стрелка — один `JOIN … ON` с этим ключом. `loans` — мост: он указывает на обе таблицы.
@@ -404,7 +411,19 @@ ORDER BY loans DESC;
 **Путь через таблицу, которую вы не выводите.** «Кто был кредитным инспектором по кредиту 1?» Инспектор записан в **заявке**, а не в кредите, а филиал инспектора — в `staff`:
 
 ```text
-loans ──application_id──▶ applications ──officer_id──▶ staff ──branch_id──▶ branches
+loans
+   │
+   │ application_id
+   ▼
+applications
+   │
+   │ officer_id
+   ▼
+staff
+   │
+   │ branch_id
+   ▼
+branches
 ```
 
 ```sql

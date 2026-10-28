@@ -70,12 +70,12 @@ Three methods carry most of the interview. Learn them here, in the course's shap
 
 **How to write it.** One sentence per letter; the result carries a number you can prove:
 
-```text
-S  Bekzod's outstanding did not match Finance's ledger.
-T  Find the difference before the month-end pack went out.
-A  Reconciled payments to instalments; found rows identical in instalment, date and amount; built a clean view.
-R  25 duplicate rows, 58 397 800 soum counted twice; every report since uses the clean payments.
-```
+| Letter | Sentence |
+|---|---|
+| S | Bekzod's outstanding did not match Finance's ledger. |
+| T | Find the difference before the month-end pack went out. |
+| A | Reconciled payments to instalments; found rows identical in instalment, date and amount; built a clean view. |
+| R | 25 duplicate rows, 58 397 800 soum counted twice; every report since uses the clean payments. |
 
 The R line comes from a query, not from memory:
 

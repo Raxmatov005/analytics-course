@@ -48,7 +48,7 @@ print(type(small).__name__, type(col).__name__)
 print(col.sum(), col.max(), small.columns.tolist(), small.index.tolist())
 ```
 
-```text
+```output
 DataFrame Series
 72800000 40060000 ['loan_id', 'product', 'principal'] [0, 1, 2]
 ```
@@ -145,7 +145,7 @@ loans.head()        # первые 5 строк; head(10) — десять, tail
 loans.info()             # dtype и число непустых значений по каждому столбцу
 ```
 
-```text
+```output
 RangeIndex: 7828 entries, 0 to 7827
  #   Column        Non-Null Count  Dtype
  0   loan_id       7828 non-null   int64

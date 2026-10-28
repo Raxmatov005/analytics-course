@@ -491,8 +491,13 @@ print(seg.round(3))
 Nothing survives Holm, and every lift is positive and close to the total. "Affluent +1.7, p = 0.047" is the most extreme of seven, before correction. The interaction test compares two lifts:
 
 ```text
-z = (lift₁ − lift₂) / √(var₁ + var₂)      var = pA(1 − pA)/nA + pB(1 − pB)/nB of each segment
-new +0.85 vs returning +0.96:  z = −0.15,  p = 0.88   → no evidence that the lift differs
+z = (lift₁ − lift₂) / √(var₁ + var₂)
+var of each segment
+  = pA(1 − pA)/nA + pB(1 − pB)/nB
+
+new +0.85 vs returning +0.96:
+  z = −0.15,  p = 0.88
+  → no evidence that the lift differs
 ```
 
 **When you use it.** Only for segments named in the plan, always with the correction. "Significant in Android, not in iOS" does not mean the screen works only on Android: iOS has a fifth of the users, so its test is weaker.
@@ -550,15 +555,14 @@ B is better in both periods. But 47 % of A's users come from the high-converting
 
 **How to write it.**
 
-```text
-1. compared      users who saw the new screen vs the current one
-2. effect + CI   8.86 % vs 7.98 %: +0.88 points (95 % CI +0.16 to +1.60); relative +11 % (+2 % to +21 %)
-3. test          two-sided two-proportion z-test, z = 2.41, p = 0.016
-4. population    22 906 users after removing 300 users in both arms, the mis-assigned iOS week and the three novelty days
-5. decision      the new screen converts better at α = 5 % — ship in stages, because the FPD guardrail is unresolved
-6. in money      about 9 more contracts per 1 000 viewers
-
-```
+| Line | What it says |
+|---|---|
+| 1. compared | users who saw the new screen vs the current one |
+| 2. effect + CI | 8.86 % vs 7.98 %: +0.88 points (95 % CI +0.16 to +1.60); relative +11 % (+2 % to +21 %) |
+| 3. test | two-sided two-proportion z-test, z = 2.41, p = 0.016 |
+| 4. population | 22 906 users after removing 300 users in both arms, the mis-assigned iOS week and the three novelty days |
+| 5. decision | the new screen converts better at α = 5 % — ship in stages, because the FPD guardrail is unresolved |
+| 6. in money | about 9 more contracts per 1 000 viewers |
 
 The decision follows from the evidence by fixed rules:
 

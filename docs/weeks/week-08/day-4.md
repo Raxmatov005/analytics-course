@@ -67,11 +67,19 @@ Bekzod's book is 208 723 504 430 soum. Nilufar's approval rate for 2026 is 70.4 
 **How to write it.**
 
 ```text
-                 governing thought
-   "Grow X and Y, slow Z until …, change A — worth about N"
-          /                  |                  \
-     key line 1          key line 2          key line 3        ← the reasons, one sentence each
-     evidence            evidence            evidence          ← one chart + one table each
+governing thought
+  "Grow X and Y, slow Z until …,
+   change A — worth about N"
+   │
+   ├── key line 1
+   │     evidence
+   ├── key line 2
+   │     evidence
+   └── key line 3
+         evidence
+
+key line: the reasons, one sentence each
+evidence: one chart + one table each
 ```
 
 On the capstone: *"Grow branch lending and repeat app loans, slow BNPL and the riskiest region until they are explained, and move collections effort to the first month of delinquency."* It names products, a region and a process, and every part can be checked against a number.
@@ -95,13 +103,15 @@ On the capstone: *"Grow branch lending and repeat app loans, slow BNPL and the r
 **How to write it.**
 
 ```text
-key line = what + number + comparison + so what
-
-1. Money    "Per 1 000 soum lent, Auto (73) and SME (60) earn most; BNPL loses 108."
-2. Risk     "Our fastest-growing region, Nukus (+90 %), carries the highest PAR30, 6.8 %."
-3. Process  "Only 13 of 124 early-late loans were contacted in September; almost all effort went to loans already lost."
-
+key line = what + number
+  + comparison + so what
 ```
+
+| Key line | Example |
+|---|---|
+| 1. Money | "Per 1 000 soum lent, Auto (73) and SME (60) earn most; BNPL loses 108." |
+| 2. Risk | "Our fastest-growing region, Nukus (+90 %), carries the highest PAR30, 6.8 %." |
+| 3. Process | "Only 13 of 124 early-late loans were contacted in September; almost all effort went to loans already lost." |
 
 The three key lines map to the three parts of the governing thought: what to grow, what to slow, what to change.
 
@@ -123,14 +133,14 @@ The three key lines map to the three parts of the governing thought: what to gro
 
 **How to write it.** Ten lines, in the order of the analytical deck from Day 2:
 
-```text
-1  title         2026 portfolio review — where to grow, where to slow, what to change (as of 1 October 2026)
-2  summary       the governing thought + three bullets
-3  context       Disbursements grew 46 % in January–September; the book stands at 208.7 bn with PAR30 at 3.1 %
-4–8  findings    one key line each, as a sentence with a number
-9  recommend.    Five changes, owners and what they are worth
-10 risks         What could make us wrong, and what we analyse next
-```
+| # | Part | Content |
+|---|---|---|
+| 1 | title | 2026 portfolio review — where to grow, where to slow, what to change (as of 1 October 2026) |
+| 2 | summary | the governing thought + three bullets |
+| 3 | context | Disbursements grew 46 % in January–September; the book stands at 208.7 bn with PAR30 at 3.1 % |
+| 4–8 | findings | one key line each, as a sentence with a number |
+| 9 | recommend. | Five changes, owners and what they are worth |
+| 10 | risks | What could make us wrong, and what we analyse next |
 
 **When you use it.**
 - Before you open PowerPoint: a weak title is cheap to fix as a line, expensive as a finished slide.
@@ -199,17 +209,30 @@ Nukus sits alone in the top-right corner: +89.7 % growth and 6.8 % PAR30. Namang
 **How to write it.** Draw the page as boxes, each with its question, before you build anything:
 
 ```text
-┌───────────────┬───────────────┬───────────────┬───────────────┐
-│ Outstanding   │ Disbursed     │ Growth vs     │ Average       │   ← cards: "how big?", "how fast?"
-│ 208.7 bn      │ Jan–Sep 2026  │ Jan–Sep 2025  │ ticket        │
-├───────────────┴───────────────┼───────────────┴───────────────┤
-│ Disbursed by month, 2025 vs   │ Disbursed by product, sorted, │   ← "when?" and "what?"
-│ 2026 (line)                   │ with growth %                 │
-├───────────────────────────────┼───────────────────────────────┤
-│ Region table: disbursed,      │ Mix: share of each product    │   ← "where?" and "which mix?"
-│ growth %, PAR30               │                               │
-└───────────────────────────────┴───────────────────────────────┘
-  slicers: product · channel · region · period        as of 2026-10-01 · definitions in tooltips
+cards: "how big?", "how fast?"
+┌─────────────────┬─────────────────┐
+│ Outstanding     │ Disbursed       │
+│ 208.7 bn        │ Jan–Sep 2026    │
+├─────────────────┼─────────────────┤
+│ Growth vs       │ Average         │
+│ Jan–Sep 2025    │ ticket          │
+└─────────────────┴─────────────────┘
+"when?" and "what?"
+┌─────────────────┬─────────────────┐
+│ Disbursed by    │ Disbursed by    │
+│ month, 2025 vs  │ product, sorted,│
+│ 2026 (line)     │ with growth %   │
+└─────────────────┴─────────────────┘
+"where?" and "which mix?"
+┌─────────────────┬─────────────────┐
+│ Region table:   │ Mix: share of   │
+│ disbursed,      │ each product    │
+│ growth %, PAR30 │                 │
+└─────────────────┴─────────────────┘
+slicers: product · channel · region ·
+period
+as of 2026-10-01 · definitions in
+tooltips
 ```
 
 The top row's four cards, from one query:

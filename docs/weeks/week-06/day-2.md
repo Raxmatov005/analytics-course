@@ -143,8 +143,12 @@ Five samples from one book give five different means; each misses 51.71 m by 2.8
 **How to write it.**
 
 ```text
-SE of a mean       = s / √n                (sd of the data ÷ square root of the sample size)
-SE of a proportion = √( p̂ (1 − p̂) / n )
+SE of a mean
+  = s / √n
+  (sd of the data ÷ square root
+   of the sample size)
+SE of a proportion
+  = √( p̂ (1 − p̂) / n )
 ```
 
 ```python
@@ -334,8 +338,11 @@ The app: 1.18–2.22 %. Two FPDs in 150 loans: −0.50 to 3.17 % — a negative 
 **How to write it.**
 
 ```text
-centre     = (p̂ + z²/2n) / (1 + z²/n)
-half-width = z √( p̂(1 − p̂)/n + z²/4n² ) / (1 + z²/n)
+centre
+  = (p̂ + z²/2n) / (1 + z²/n)
+half-width
+  = z √( p̂(1 − p̂)/n + z²/4n² )
+    / (1 + z²/n)
 ```
 
 ```python
@@ -363,11 +370,12 @@ print("app − branch", [round(100 * v, 2) for v in newcombe(41, 2411, 34, 3263)
 
 App **1.26–2.30 %**, branch **0.75–1.45 %**, partner **0.69–1.82 %**; 2 in 150 → 0.37–4.73 %; 0 in 120 → 0–3.10 %. The app's interval reaches 0.44 points below 1.70 and 0.60 above: the right shape for a rate near zero. Excel has no Wilson function — with k in B1, n in B2, z in B3 (`=NORM.S.INV(0.975)`):
 
-```
-lower: =(B1/B2 + B3^2/(2*B2) - B3*SQRT(B1/B2*(1-B1/B2)/B2 + B3^2/(4*B2^2))) / (1 + B3^2/B2)
-upper: same with + before B3*SQRT
-Clopper–Pearson: =BETA.INV(0.025, B1, B2-B1+1)  and  =BETA.INV(0.975, B1+1, B2-B1)
-```
+| Bound | Excel |
+|---|---|
+| Wilson, lower | `=(B1/B2 + B3^2/(2*B2) - B3*SQRT(B1/B2*(1-B1/B2)/B2 + B3^2/(4*B2^2))) / (1 + B3^2/B2)` |
+| Wilson, upper | the same with `+` before `B3*SQRT` |
+| Clopper–Pearson, lower | `=BETA.INV(0.025, B1, B2-B1+1)` |
+| Clopper–Pearson, upper | `=BETA.INV(0.975, B1+1, B2-B1)` |
 
 **When you use it.** Every rate, at any n — FPD, approval rate, PAR30. Clopper–Pearson when an auditor or a regulator wants 95 % guaranteed. For a **difference** of two rates, combine the two Wilson intervals (**Newcombe**): app − branch = 0.66 points, 95 % CI **0.05 to 1.33** points. Coverage of a "95 %" interval at the true rate 1.28 % (20 000 samples each, `proportion_confint(k, n, method=...)`, `default_rng(2026)`):
 
@@ -433,8 +441,13 @@ One run: **96 of the 100** intervals contain the true 51.71 m. With 100 interval
 **How to write it.**
 
 ```text
-for a rate:   n = z² · p(1 − p) / E²     p = your best guess; 0.5 if you have none (the worst case)
-for a mean:   n = (z · σ / E)²          σ = from history or a pilot
+for a rate:
+  n = z² · p(1 − p) / E²
+  p = your best guess; 0.5 if you
+  have none (the worst case)
+for a mean:
+  n = (z · σ / E)²
+  σ = from history or a pilot
 always round up
 ```
 

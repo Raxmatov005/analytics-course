@@ -44,9 +44,14 @@ Three channels, three FPD counts: app 41 of 2 411 loans (1.70 %), branch 34 of 3
 **How to write it.**
 
 ```text
-H₀: p_app = p_branch        "nothing is going on" — H₀ always holds the "="
-H₁: p_app ≠ p_branch        what you claim if H₀ falls
-decision: reject H₀   or   fail to reject H₀       — never "accept H₀"
+H₀: p_app = p_branch
+  "nothing is going on" —
+  H₀ always holds the "="
+H₁: p_app ≠ p_branch
+  what you claim if H₀ falls
+decision: reject H₀
+  or fail to reject H₀
+  — never "accept H₀"
 ```
 
 A test works like a trial:
@@ -381,8 +386,15 @@ print([round(v, 3) for v in one_prop_z(25, 2322, 0.015)])   # [-1.678, 0.093]
 **How to write it.**
 
 ```text
-pooled p = (k₁ + k₂) / (n₁ + n₂)      SE = √( p(1 − p) (1/n₁ + 1/n₂) )      z = (p̂₁ − p̂₂) / SE
-app vs branch: pooled = 75 / 5 674 = 1.322 %;  SE = 0.307 points;  z = (1.700 − 1.042) / 0.307 = 2.147
+pooled p = (k₁ + k₂) / (n₁ + n₂)
+SE = √( p(1 − p) (1/n₁ + 1/n₂) )
+z = (p̂₁ − p̂₂) / SE
+
+app vs branch:
+  pooled = 75 / 5 674 = 1.322 %
+  SE = 0.307 points
+  z = (1.700 − 1.042) / 0.307
+    = 2.147
 ```
 
 ```python
@@ -565,9 +577,13 @@ The app's FPD is 0.66 points higher (95 % CI +0.05 to +1.33), 1.63 times the bra
 **How to write it.** The template, then reading what scipy returns:
 
 ```text
-[Group A] had [estimate] vs [estimate] for [group B] (difference [d], 95 % CI [lo, hi]);
-a [named test] gives [statistic] = [value], p = [value];
-[conclusion at the α chosen in advance], [effect in business units].
+[Group A] had [estimate] vs [estimate]
+for [group B]
+(difference [d], 95 % CI [lo, hi]);
+a [named test] gives
+[statistic] = [value], p = [value];
+[conclusion at the α chosen in advance],
+[effect in business units].
 ```
 
 ```python

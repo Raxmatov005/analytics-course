@@ -97,12 +97,21 @@ Avg Ticket       = DIVIDE ( [Disbursed Amount], [Disbursed Count] )
 
 ```text
 ячейка «Bukhara Central × SME»
-  фильтр 1: branches[branch_name] = "Bukhara Central"    ← строка
-  фильтр 2: products[code] = "SME"                         ← столбец
+  фильтр 1:
+    branches[branch_name]
+      = "Bukhara Central"
+    ← строка
+  фильтр 2:
+    products[code] = "SME"
+    ← столбец
   (+ каждый срез на странице)
-        │ связи несут оба фильтра к v_loan_status
+        │
+        │ связи несут оба фильтра
+        │ к v_loan_status
         ▼
-  SUM ( v_loan_status[outstanding] ) по кредитам SME Бухары  =  10 343 220 604
+  SUM ( v_loan_status[outstanding] )
+  по кредитам SME Бухары
+  = 10 343 220 604
 ```
 
 У строки итогов есть только фильтр столбца; у общего итога — никаких.
@@ -514,17 +523,17 @@ Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all 
 
 Одна карточка, все понятия раздела:
 
-```text
-мера или столбец      → PAR30 % — мера; par30_outstanding не нужен — это делает CALCULATE
-первые меры           → Outstanding = SUM ( … ); DIVIDE для отношения
-контекст фильтра      → каждая ячейка матрицы: филиал × продукт (+ срезы)
-CALCULATE             → Outstanding DPD30+ = CALCULATE ( [Outstanding], dpd > 30 )
-ALL                   → рядом — доля от всего портфеля
-логика времени        → тренд PAR30 использует dim_date; остатки — Month-End
-VAR, RANKX            → худший филиал назван по рангу
-визуалы               → карточка слева вверху, матрица с PAR30 Colour, детализация до филиала
-публикация, RLS       → PDF для правления; каждый управляющий видит свой филиал
-```
+| Понятие | На этой карточке |
+|---|---|
+| мера или столбец | PAR30 % — мера; par30_outstanding не нужен — это делает CALCULATE |
+| первые меры | `Outstanding = SUM ( … )`; DIVIDE для отношения |
+| контекст фильтра | каждая ячейка матрицы: филиал × продукт (+ срезы) |
+| CALCULATE | `Outstanding DPD30+ = CALCULATE ( [Outstanding], dpd > 30 )` |
+| ALL | рядом — доля от всего портфеля |
+| логика времени | тренд PAR30 использует dim_date; остатки — Month-End |
+| VAR, RANKX | худший филиал назван по рангу |
+| визуалы | карточка слева вверху, матрица с PAR30 Colour, детализация до филиала |
+| публикация, RLS | PDF для правления; каждый управляющий видит свой филиал |
 
 Разбор примера ниже строит ровно эту карточку и её следующий вопрос.
 
