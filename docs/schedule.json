@@ -1,7 +1,7 @@
 {
   "_about": "The course calendar (assets/schedule.js on the site, worker.js in the bot). One lesson per study day, Monday to Friday, in 'order'; each opens at 00:00 Tashkent time and its homework closes at 23:59 on its due day: the same day, or the later lesson 'due' names (the plan's due days). 'start' = the first study day (YYYY-MM-DD); null = no schedule, everything open. 'dates' pins a lesson to its own day outside the walk (Day 0 on the Friday before). 'off' = days without a lesson: every later lesson moves one study day on. The practice day is never scheduled.",
   "start": "2026-11-02",
-  "dates": {"W0D0": "2026-10-28"},
+  "dates": {"W0D0": "2026-10-28", "W1D1": "2026-10-28"},
   "off": [],
   "due": {
     "W1D1": "W1D3", "W1D2": "W1D4", "W1D4": "W1D5", "W2D1": "W2D3", "W2D3": "W2D5", "W3D1": "W3D3", "W3D4": "W3D5", "W4D1": "W4D3",
