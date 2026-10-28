@@ -541,7 +541,7 @@ body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
    keep their columns: they are drawn narrow enough for a phone instead. */
 .markdown-section pre[data-lang="sql"] > code, .markdown-section pre[data-lang="python"] > code, .markdown-section pre[data-lang="dax"] > code,
 .markdown-section pre[data-lang="markdown"] > code, .markdown-section pre[data-lang="bash"] > code,
-.markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang="output"] > code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang="output"] > code, .markdown-section pre[data-lang="powerquery"] > code { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 480px) {   /* a phone holds 41 characters of a text picture at 12 px: they are drawn 40 wide */
   .markdown-section pre[data-lang="text"] > code, .markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang=""] > code { font-size: 12px; padding: .9em; }
 }
@@ -558,6 +558,7 @@ body.reading-down #sq-db-btn { transform: translateY(160%); opacity: 0; pointer-
 .markdown-section table:not(.sq-table):not(.gx-table) td, .markdown-section table:not(.sq-table):not(.gx-table) th { min-width: 4em; max-width: 17em; padding-left: .6em; padding-right: .6em; }
 /* five columns or more: a smaller font, so they fit the column on a computer (a phone scrolls them inside the table) */
 .markdown-section table:not(.sq-table):not(.gx-table):has(tr > :nth-child(5)) { font-size: .85em; }
+.markdown-section table:not(.sq-table):not(.gx-table):has(tr > :nth-child(5)) code { overflow-wrap: anywhere; }
 /* code in a table cell wraps at its spaces inside the cell (the cell stops at 17em); a nowrap code ran over the next column */
 .markdown-section table code { overflow-wrap: break-word; white-space: normal; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
@@ -666,6 +667,9 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
 .tk-opt.wrong { border-color: var(--bad); background: #fef2f2; }
 .tk-opt.wrong .tk-letter { background: var(--bad); border-color: var(--bad); color: #fff; }
 .tk-otext code { font-size: .85em; }
+/* a long code answer wraps inside its button instead of pushing the page sideways on a phone (2026-10-28) */
+.tk-opts { grid-template-columns: minmax(0, 1fr); }
+.tk-otext { min-width: 0; overflow-wrap: anywhere; }
 .tk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6em; margin-top: .85em; }
 .tk-btn { font: 700 .95em var(--sans); line-height: 1.2; border: 0; border-radius: 11px; padding: .62em 1.25em; background: var(--brand); color: #fff; cursor: pointer; box-shadow: 0 2px 0 var(--brand-d); }
 .tk-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }

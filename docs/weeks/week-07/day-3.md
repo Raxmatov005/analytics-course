@@ -139,7 +139,7 @@ publish
 
 What the clicks wrote, in *Advanced Editor*:
 
-```
+```powerquery
 let
   // the file
   Source = Csv.Document(

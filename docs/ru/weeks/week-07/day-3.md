@@ -139,7 +139,7 @@
 
 Что записали щелчки, в *Advanced Editor*:
 
-```
+```powerquery
 let
   // файл
   Source = Csv.Document(

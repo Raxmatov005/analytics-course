@@ -591,10 +591,13 @@ print(rows[0]["channel"], rows[0]["status"], rows[0]["requested_amount"], type(r
 
 The first two rows of `rows`, five of their keys:
 
-| `rows[i]` | `"channel"` | `"product"` | `"requested_amount"` | `"credit_score"` | `"status"` |
-|---|---|---|---|---|---|
-| 0 | `"branch"` | `"Auto loan"` | `"322610000"` | `"658"` | `"rejected"` |
-| 1 | `"branch"` | `"Consumer loan"` | `"31150000"` | `"631"` | `"approved"` |
+| key | `rows[0]` | `rows[1]` |
+|---|---|---|
+| `"channel"` | `"branch"` | `"branch"` |
+| `"product"` | `"Auto loan"` | `"Consumer loan"` |
+| `"requested_amount"` | `"322610000"` | `"31150000"` |
+| `"credit_score"` | `"658"` | `"631"` |
+| `"status"` | `"rejected"` | `"approved"` |
 
 ```text
 14000 7828
@@ -632,7 +635,7 @@ def approval_rate(approved, total):
 approval_rate(0, 0)          # a channel with no applications
 ```
 
-```text
+```output
 Traceback (most recent call last):
   Cell In[7], line 4
     approval_rate(0, 0)
