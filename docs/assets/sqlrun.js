@@ -370,6 +370,7 @@ Work in progress is kept in localStorage "al.sql". */
     ta.style.height = '';
     if (!ta.offsetParent) return;
     ta._w = ta.clientWidth;
+    if (window.ALHi) ALHi.paint(ta);   // the coloured copy behind the box (codehi.js)
     if (ta.scrollHeight > ta.clientHeight + 1) ta.style.height = ta.scrollHeight + 'px';
   }
   window.ALGrow = grow;

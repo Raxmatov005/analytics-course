@@ -12,6 +12,7 @@ games). Types:
   cloze   {"type":"cloze","title":"…","text":"SELECT {{0}} FROM loans WHERE {{1}};","blanks":[["COUNT(*)"],["status = 'active'"]],
            "distractors":["SUM(*)"]}                                                    tap a token: it fills the next gap; tap a filled gap to empty it
   build   {"type":"build","title":"…","q":"…","tokens":["SELECT","COUNT(*)","FROM","loans"],"distractors":["GROUP BY"]}   tap the tokens in order
+          optional "alts": [["…the same pieces in another order that is just as right…"]] (a + b and b + a)
   bug     {"type":"bug","title":"…","q":"…","code":"line 1\nline 2\n…","answer":[2],"why":"…"}   tap the wrong line(s) (0-based)
 Every game box (.gx) is an "al-block" and gets "al-done" once it has been won (best stars kept); a win fires "al:change".
 */
@@ -126,7 +127,8 @@ Every game box (.gx) is an "al-block" and gets "al-done" once it has been won (b
         if (!sel.term || !sel.mean) return;
         var a = sel.term, c = sel.mean;
         a.classList.remove('gx-sel'); c.classList.remove('gx-sel'); sel = { term: null, mean: null };
-        if (a.dataset.i === c.dataset.i) {
+        var pa = g.pairs[Number(a.dataset.i)], pc = g.pairs[Number(c.dataset.i)];
+        if (a.dataset.i === c.dataset.i || pa[1] === pc[1] || pa[0] === pc[0]) {   // by text: two equal meanings are both right
           var k = made++ % 6;
           [a, c].forEach(function (x) { x.classList.add('gx-done', 'gx-p' + k); x.insertAdjacentHTML('afterbegin', '<i class="gx-num">' + made + '</i>'); });
           ui.step();
@@ -314,16 +316,18 @@ Every game box (.gx) is an "al-block" and gets "al-done" once it has been won (b
     return a.reduce(function (s, t, i) { return s + (i && !/^[,);.]/.test(t) && !/[(.]$/.test(a[i - 1]) ? ' ' : '') + t; }, '');
   }
   function build(box, g) {
-    var want = g.tokens || [], pool = shuffle(want.concat(g.distractors || []), seedOf(g.id)), next = 0;
+    var want = g.tokens || [], pool = shuffle(want.concat(g.distractors || []), seedOf(g.id)), next = 0, built = [];
+    var seqs = [want].concat((g.alts || []).filter(function (s) { return s.length === want.length; }));
     var ui = frame(box, g, want.length, '<div class="gx-codeline"><code class="gx-built"></code><span class="gx-caret"></span></div>' +
       '<div class="gx-pool">' + pool.map(function (t) { return '<button type="button" class="gx-it gx-tok">' + esc(t) + '</button>'; }).join('') + '</div>');
     var out = box.querySelector('.gx-built');
     box.querySelectorAll('.gx-pool .gx-it').forEach(function (b) {
       b.onclick = function () {
-        if (b.textContent === want[next]) {
-          next++; out.textContent = joinCode(want.slice(0, next)); b.remove();
+        var t = b.textContent, so = built.join('\u0001');
+        if (seqs.some(function (s) { return s[next] === t && s.slice(0, next).join('\u0001') === so; })) {   // any accepted order
+          built.push(t); next++; out.textContent = joinCode(built); b.remove();
           ui.step();
-        } else ui.slip([b], next ? T('Not that one — what comes after “' + want[next - 1] + '”?', 'Не этот — что идёт после «' + want[next - 1] + '»?')
+        } else ui.slip([b], next ? T('Not that one — what comes after “' + built[next - 1] + '”?', 'Не этот — что идёт после «' + built[next - 1] + '»?')
           : T('Not that one — how does it start?', 'Не этот — с чего всё начинается?'));
       };
     });

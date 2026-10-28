@@ -774,3 +774,20 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
 }
 /* on phones the EN | RU switch sits over the title's first line: give the title room on the right */
 @media (max-width: 768px) { .markdown-section > h1:first-child, .markdown-section > h1:first-of-type { padding-right: 104px; } }
+
+/* ---------- colours in code (codehi.js, 2026-10-28): VS Code's light theme, in examples and in the boxes she types in ---------- */
+.hi-wrap { position: relative; }
+.markdown-section pre.hi-back { position: absolute; inset: 0; margin: 0; border: 0; border-radius: 0; background: none; max-width: none;
+  overflow: hidden; pointer-events: none; color: var(--ink, #0f172a); box-sizing: border-box; }
+.markdown-section pre.hi-back::after { content: none; }
+textarea.sq-edit.hi-on { position: relative; overflow-y: hidden; background: transparent; color: transparent; -webkit-text-fill-color: transparent; caret-color: var(--ink, #0f172a); }
+textarea.sq-edit.hi-on::placeholder { color: #94a3b8; -webkit-text-fill-color: #94a3b8; }
+textarea.sq-edit.hi-on::selection { background: rgba(37, 99, 235, .22); }
+.markdown-section .token.comment, .markdown-section .token.prolog { color: #008000; font-style: italic; }
+.markdown-section .token.keyword, .markdown-section .token.boolean, .markdown-section .token.important { color: #0000ff; }
+.markdown-section .token.function, .markdown-section .token.decorator { color: #795e26; }
+.markdown-section .token.string, .markdown-section .token.triple-quoted-string, .markdown-section .token.char { color: #a31515; }
+.markdown-section .token.number { color: #098658; }
+.markdown-section .token.property, .markdown-section .token.variable, .markdown-section .token.identifier { color: #001080; }
+.markdown-section .token.builtin, .markdown-section .token.class-name { color: #267f99; }
+.markdown-section .token.operator, .markdown-section .token.punctuation { color: #383a42; background: none; }
