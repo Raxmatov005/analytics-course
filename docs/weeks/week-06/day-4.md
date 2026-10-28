@@ -274,7 +274,7 @@ A gap of 0.66 points or more appeared in about 3.3 % of 10 000 shuffles, so p �
 **Your turn.** Put the steps in order.
 
 ```game
-{"id": "w06d4-g5", "type": "order", "title": "Steps of a permutation test", "items": ["Compute the statistic on the real labels", "Shuffle the labels at random", "Recompute the statistic on the shuffled labels", "Repeat the shuffle 10 000 times", "p = share of shuffles at least as extreme as the real statistic"], "why": "The shuffles build the world where H₀ is true; the p-value asks how often that world produces your result."}
+{"id": "w06d4-g5", "type": "order", "title": "Steps of a permutation test", "items": ["Compute the statistic on the real labels", "Shuffle the labels at random", "Recompute the statistic on the shuffled labels", "Repeat the shuffle 10 000 times", "p = share of shuffles at least as extreme as the real statistic"], "why": "The shuffles build the world where H₀ is true; the p-value asks how often that world produces your result.", "alts": [["Shuffle the labels at random", "Recompute the statistic on the shuffled labels", "Repeat the shuffle 10 000 times", "Compute the statistic on the real labels", "p = share of shuffles at least as extreme as the real statistic"]]}
 ```
 
 ### The bootstrap as a test — is zero in the interval?

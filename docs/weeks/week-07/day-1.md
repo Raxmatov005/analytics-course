@@ -488,7 +488,7 @@ The decision rule for the offer screen: *ship if the primary is significant at 5
 **Your turn.**
 
 ```game
-{"type": "order", "id": "w07d1-g1", "title": "The design document, in order", "items": ["Hypothesis: change → mechanism → consequence", "Primary metric: one number, exact definition", "Guardrails: what must not get worse", "Unit of randomisation", "MDE, α, power → sample size → duration", "Analysis plan: test, exclusions, segments, stopping rule"], "why": "Each decision constrains the next: the metric fixes the unit, the unit and the MDE fix n, n fixes the dates — all written before any data."}
+{"type": "order", "id": "w07d1-g1", "title": "The design document, in order", "items": ["Hypothesis: change → mechanism → consequence", "Primary metric: one number, exact definition", "Guardrails: what must not get worse", "Unit of randomisation", "MDE, α, power → sample size → duration", "Analysis plan: test, exclusions, segments, stopping rule"], "why": "Each decision constrains the next: the metric fixes the unit, the unit and the MDE fix n, n fixes the dates — all written before any data.", "alts": [["Hypothesis: change → mechanism → consequence", "Primary metric: one number, exact definition", "Unit of randomisation", "Guardrails: what must not get worse", "MDE, α, power → sample size → duration", "Analysis plan: test, exclusions, segments, stopping rule"]]}
 ```
 
 ### Putting it together

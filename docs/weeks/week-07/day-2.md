@@ -635,7 +635,7 @@ The verdict "B converts better" survives every version. The size Kamola can prom
 **Your turn.** Put the analysis in order.
 
 ```game
-{"type": "order", "id": "w07d2-g1", "title": "The order of an analysis", "items": ["Is the experiment sound? Rows = users, SRM by slice, the hash, novelty", "The primary result with its confidence interval", "Secondary metrics and guardrails", "Pre-registered segments, with a correction", "The decision: ship, stage, don't, or extend"], "why": "A result read before the sanity checks is a number from a possibly broken machine."}
+{"type": "order", "id": "w07d2-g1", "title": "The order of an analysis", "items": ["Is the experiment sound? Rows = users, SRM by slice, the hash, novelty", "The primary result with its confidence interval", "Secondary metrics and guardrails", "Pre-registered segments, with a correction", "The decision: ship, stage, don't, or extend"], "why": "A result read before the sanity checks is a number from a possibly broken machine.", "alts": [["Is the experiment sound? Rows = users, SRM by slice, the hash, novelty", "The primary result with its confidence interval", "Pre-registered segments, with a correction", "Secondary metrics and guardrails", "The decision: ship, stage, don't, or extend"]]}
 ```
 
 ### Depth (optional)

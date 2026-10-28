@@ -4,6 +4,7 @@ with 1–3 stars (no slips = 3, one or two = 2, more = 1); the best stars stay i
 games). Types:
   match   {"type":"match","title":"…","pairs":[["term","meaning"],…]}                 tap a term and its meaning (either side first)
   order   {"type":"order","title":"…","items":["first","second",…]}                     tap the items in the right order
+          optional "alts": [["…the same items in another order that is just as right…"]]
   sort    {"type":"sort","title":"…","groups":{"Group A":["x","y"],"Group B":["z"]}}    tap an item, then its group
   pick    {"type":"pick","title":"…","q":"…","columns":["a","b"],"rows":[[…]],"answer":["a"],"why":"…"}   tap the right column(s)
   connect {"type":"connect","title":"…","left":{"name":"loans","cols":[…]},"right":{"name":"customers","cols":[…]},
@@ -141,12 +142,15 @@ Every game box (.gx) is an "al-block" and gets "al-done" once it has been won (b
     var mixed = shuffle(g.items, seedOf(g.id));
     var ui = frame(box, g, g.items.length, '<ol class="gx-slots">' + g.items.map(function () { return '<li></li>'; }).join('') + '</ol>' +
       '<div class="gx-pool">' + mixed.map(function (t) { return '<button type="button" class="gx-it">' + esc(t) + '</button>'; }).join('') + '</div>');
-    var slots = box.querySelectorAll('.gx-slots li'), next = 0;
+    var slots = box.querySelectorAll('.gx-slots li'), next = 0, placed = [];
+    var seqs = [g.items].concat((g.alts || []).filter(function (s) { return s.length === g.items.length; }));
     slots[0].classList.add('gx-next');
     box.querySelectorAll('.gx-pool .gx-it').forEach(function (b) {
       b.onclick = function () {
-        if (b.textContent === g.items[next]) {
-          slots[next].textContent = b.textContent; slots[next].classList.remove('gx-next'); slots[next].classList.add('gx-filled');
+        var t = b.textContent, so = placed.join('\u0001');
+        if (seqs.some(function (s) { return s[next] === t && s.slice(0, next).join('\u0001') === so; })) {   // any accepted order
+          placed.push(t);
+          slots[next].textContent = t; slots[next].classList.remove('gx-next'); slots[next].classList.add('gx-filled');
           b.remove(); next++;
           if (slots[next]) slots[next].classList.add('gx-next');
           ui.step();
