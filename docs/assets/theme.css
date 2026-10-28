@@ -775,7 +775,7 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
 /* on phones the EN | RU switch sits over the title's first line: give the title room on the right */
 @media (max-width: 768px) { .markdown-section > h1:first-child, .markdown-section > h1:first-of-type { padding-right: 104px; } }
 
-/* ---------- colours in code (codehi.js, 2026-10-28): VS Code's light theme, in examples and in the boxes she types in ---------- */
+/* ---------- colours in code (codehi.js, 2026-10-28): a dark SQL editor's look, in examples and in the boxes she types in ---------- */
 .hi-wrap { position: relative; }
 .markdown-section pre.hi-back { position: absolute; inset: 0; margin: 0; border: 0; border-radius: 0; background: none; max-width: none;
   overflow: hidden; pointer-events: none; color: var(--ink, #0f172a); box-sizing: border-box; }
@@ -783,11 +783,34 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
 textarea.sq-edit.hi-on { position: relative; overflow-y: hidden; background: transparent; color: transparent; -webkit-text-fill-color: transparent; caret-color: var(--ink, #0f172a); }
 textarea.sq-edit.hi-on::placeholder { color: #94a3b8; -webkit-text-fill-color: #94a3b8; }
 textarea.sq-edit.hi-on::selection { background: rgba(37, 99, 235, .22); }
-.markdown-section .token.comment, .markdown-section .token.prolog { color: #008000; font-style: italic; }
-.markdown-section .token.keyword, .markdown-section .token.boolean, .markdown-section .token.important { color: #0000ff; }
-.markdown-section .token.function, .markdown-section .token.decorator { color: #795e26; }
-.markdown-section .token.string, .markdown-section .token.triple-quoted-string, .markdown-section .token.char { color: #a31515; }
-.markdown-section .token.number { color: #098658; }
-.markdown-section .token.property, .markdown-section .token.variable, .markdown-section .token.identifier { color: #001080; }
-.markdown-section .token.builtin, .markdown-section .token.class-name { color: #267f99; }
-.markdown-section .token.operator, .markdown-section .token.punctuation { color: #383a42; background: none; }
+/* the dark SQL editor look (the founder's DBeaver screenshot): one ground and palette for the boxes she types in and
+   for the code examples; plain SQL names (columns) take the teal text colour */
+:root { --code-bg: #2b2b2b; --code-line: #3c3f41; --code-text: #d4d4d4; --code-col: #2fc1c6; }
+textarea.sq-edit:not(.sq-text):not(.hi-on), .markdown-section .hi-wrap { background: var(--code-bg) !important; }   /* a coloured box stays see-through: its copy is behind it */
+textarea.sq-edit:not(.sq-text) { color: var(--code-text); caret-color: #f5f5f5; }
+textarea.sq-edit:not(.sq-text)::placeholder { color: #8a8f94; -webkit-text-fill-color: #8a8f94; }
+textarea.sq-edit.hi-on { caret-color: #f5f5f5; }
+textarea.sq-edit.hi-on::selection { background: rgba(120, 160, 255, .38); }
+.markdown-section pre.hi-back { color: var(--code-text); }
+.markdown-section pre.hi-back.lang-sql { color: var(--code-col); }
+.markdown-section pre[data-lang="sql"], .markdown-section pre[data-lang="python"], .markdown-section pre[data-lang="dax"],
+.markdown-section pre[data-lang="excel"], .markdown-section pre[data-lang="powerquery"], .markdown-section pre[data-lang="bash"] {
+  background: var(--code-bg); border-color: var(--code-line); }
+.markdown-section pre[data-lang="sql"] > code, .markdown-section pre[data-lang="python"] > code, .markdown-section pre[data-lang="dax"] > code,
+.markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang="powerquery"] > code, .markdown-section pre[data-lang="bash"] > code {
+  color: var(--code-text); background: none; }
+.markdown-section pre[data-lang="sql"] > code { color: var(--code-col); }
+.markdown-section pre[data-lang]::after { color: #8a8f94; }
+.markdown-section .token.comment, .markdown-section .token.prolog { color: #808a90; font-style: italic; }
+.markdown-section .token.keyword, .markdown-section .token.boolean, .markdown-section .token.important { color: #7fa8e0; font-weight: 700; }
+.markdown-section .token.table-name { color: #c39ae6; font-style: italic; }
+.markdown-section .token.alias { color: #5fd8e3; font-style: italic; }
+.markdown-section .token.function { color: var(--code-col); }
+.markdown-section .lang-python .token.function, .markdown-section pre[data-lang="python"] .token.function { color: #e2d58a; }
+.markdown-section .token.decorator { color: #e2d58a; }
+.markdown-section .token.string, .markdown-section .token.triple-quoted-string, .markdown-section .token.char { color: #9fcf7f; }
+.markdown-section .token.number { color: #f0f0f0; }
+.markdown-section .token.property, .markdown-section .token.identifier { color: var(--code-col); }
+.markdown-section .token.variable { color: #c39ae6; }
+.markdown-section .token.builtin, .markdown-section .token.class-name { color: #4ec9b0; }
+.markdown-section .token.operator, .markdown-section .token.punctuation { color: #d4d4d4; background: none; }

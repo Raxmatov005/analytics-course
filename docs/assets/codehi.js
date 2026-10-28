@@ -25,7 +25,7 @@ Static code blocks are coloured by Docsify's Prism; this file adds the grammars 
       wrap.style.backgroundColor = cs.backgroundColor;
       ta.parentNode.insertBefore(wrap, ta);
       back = document.createElement('pre');
-      back.className = 'hi-back';
+      back.className = 'hi-back lang-' + lang;
       back.setAttribute('aria-hidden', 'true');
       wrap.appendChild(back);
       wrap.appendChild(ta);
@@ -51,6 +51,18 @@ Static code blocks are coloured by Docsify's Prism; this file adds the grammars 
   /* grammars for the course's other code blocks, defined before Docsify renders a page */
   function grammars() {
     if (!window.Prism || Prism.languages.dax) return;
+    /* SQL as a SQL editor shows it: the name after AS is an alias, the name after FROM / JOIN / WITH / INTO / UPDATE /
+       TABLE (or before "AS (" in a WITH list) is a table; every other plain name is a column (the text colour) */
+    Prism.languages.insertBefore('sql', 'keyword', {
+      'table-name': [
+        { pattern: /(\b(?:FROM|JOIN|INTO|UPDATE|TABLE|EXISTS|WITH)\s+)(?!(?:IF|NOT|SELECT|RECURSIVE)\b)[A-Za-z_][\w.]*/i, lookbehind: true },
+        { pattern: /\b[A-Za-z_]\w*(?=\s+AS\s*\()/i }
+      ],
+      alias: {
+        pattern: /(\bAS\s+)(?!(?:INTEGER|INT|TEXT|REAL|NUMERIC|DATE|DATETIME|VARCHAR|NVARCHAR|CHAR|DECIMAL|FLOAT|BIGINT|BOOLEAN|DOUBLE)\b)[A-Za-z_]\w*/i,
+        lookbehind: true
+      }
+    });
     Prism.languages.dax = {
       comment: /\/\/.*|--.*|\/\*[\s\S]*?\*\//,
       string: /"(?:[^"]|"")*"/,
