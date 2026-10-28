@@ -136,3 +136,26 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
 .si-out { border: 0; background: none; padding: 0; font: inherit; color: var(--brand, #0f766e); text-decoration: underline; cursor: pointer; }
 .sq-ws-foot .sq-ws-sign { flex-basis: 100%; }
 .fb-card .si-card { background: #fff; border-color: #c7d2fe; }
+
+/* ---------- the course calendar (schedule.js): lessons not open yet are out of sight ---------- */
+.sch-hide { display: none !important; }
+.sch-wait .sidebar-nav a[href*="weeks/week-"], .sch-wait .pagination-item { visibility: hidden; }
+.sch-lock { max-width: 34em; margin: 12vh auto 2em; padding: 2em 1.6em; text-align: center; border-radius: 18px; background: var(--card, #fff);
+  border: 1px solid var(--line, #e2e8f0); box-shadow: 0 10px 30px rgba(15, 23, 42, .06); font-family: var(--sans, system-ui); }
+.sch-lock-ico { display: inline-flex; width: 56px; height: 56px; align-items: center; justify-content: center; border-radius: 50%;
+  background: var(--brand-xl, #f0fdfa); color: var(--brand, #0f766e); }
+.sch-lock-ico svg { width: 28px; height: 28px; }
+.markdown-section .sch-lock h1 { margin: .6em 0 .4em; font-size: 1.6em; border: 0; padding: 0; }
+.sch-lock p { color: var(--muted, #64748b); line-height: 1.55; margin: .4em 0; }
+.sch-lock .sch-go { display: inline-block; margin-top: .8em; padding: .65em 1.1em; border-radius: 12px; background: var(--brand, #0f766e); color: #fff !important;
+  font-weight: 700; text-decoration: none !important; }
+.sidebar-nav li.sch-next { display: flex; align-items: center; gap: .5em; margin: 1em 0 1.4em; padding: .7em .8em; border-radius: 12px;
+  background: var(--brand-xl, #f0fdfa); color: var(--brand-d, #115e59); font-size: .85em; font-weight: 600; line-height: 1.35; list-style: none; }
+.sidebar-nav li.sch-next svg { flex: none; width: 18px; height: 18px; }
+.sch-note { display: flex; gap: .6em; align-items: flex-start; margin: 0 0 1.2em; padding: .8em 1em; border-radius: 12px;
+  background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: .92em; line-height: 1.5; font-family: var(--sans, system-ui); }
+.sch-note svg { flex: none; margin-top: .1em; width: 18px; height: 18px; }
+.sch-preview { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 60; padding: .5em .9em; border-radius: 999px;
+  background: #1e293b; color: #f8fafc; font: 600 13px var(--sans, system-ui); box-shadow: 0 6px 20px rgba(0, 0, 0, .25); white-space: nowrap; }
+.sch-preview a { color: #5eead4 !important; }
+.sq-ws-closed { color: #9a3412; font-weight: 600; }

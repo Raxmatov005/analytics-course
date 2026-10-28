@@ -1,7 +1,7 @@
 /* The course map (Docsify plugin): every week is a level on one path, its Friday checkpoint the "boss".
 It draws into <div id="al-map"> on map.md. Weeks and day titles come from _sidebar.md, so the map follows the menu;
 finished days and challenges from this browser (quiz.js, challenge.js), checkpoint results from progress.json.
-Nothing is locked for real: a dimmed week can still be opened, the lock only shows where she is on the path. */
+A dimmed week only shows where she is on the path; with the calendar on (schedule.js) the days not open yet are left out. */
 (function () {
   var ICON = {
     check: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
@@ -42,9 +42,23 @@ Nothing is locked for real: a dimmed week can still be opened, the lock only sho
     el.setAttribute('data-done', '1');
     Promise.all([
       fetch(window.ALLang ? window.ALLang.file('_sidebar.md') : '_sidebar.md', { cache: 'no-store' }).then(function (x) { return x.text(); }),
-      fetch('progress.json', { cache: 'no-store' }).then(function (x) { return x.json(); })
+      fetch('progress.json', { cache: 'no-store' }).then(function (x) { return x.json(); }),
+      window.ALSched ? window.ALSched.ready : null
     ]).then(function (res) {
-      var weeks = parseSidebar(res[0]), p = res[1], by = {};
+      var weeks = parseSidebar(res[0]), p = res[1], by = {}, S = window.ALSched;
+      /* the calendar (schedule.js): days not open yet are left out; the next week shows only as a locked level with its date */
+      if (S && S.on()) {
+        var teaser = false;
+        weeks = weeks.filter(function (wk) {
+          var all = wk.days, sid = function (d) { return S.idOf(d.href); };
+          wk.days = all.filter(function (d) { return S.state(sid(d)) !== 'soon'; });
+          if (wk.days.length) return true;
+          if (teaser || !all.length) return false;
+          teaser = true;
+          wk.opens = S.opens(sid(all[0]));
+          return true;
+        });
+      }
       p.items.forEach(function (it) { by[it.id] = it; });
       var quizzes = window.ALQuiz ? window.ALQuiz.state().quizzes : {};
       var chal = window.ALChallenge ? window.ALChallenge.state() : { challenges: {}, lucky: {} };
@@ -54,6 +68,11 @@ Nothing is locked for real: a dimmed week can still be opened, the lock only sho
         var done = wk.days.filter(function (d) { return quizzes[d.id] && quizzes[d.id].passedOn; }).length;
         var cp = by['cp' + wk.n] || (wk.n === 8 ? by.capstone : null);
         var cpPct = cp && cp.earned != null ? 100 * cp.earned / cp.max : null;
+        if (wk.opens) {   // the next week, not open yet: its level and the day it opens, nothing more
+          html += '<div class="mweek ahead"><div class="mnode">' + icon('lock', 22) + '</div><div class="mcard"><div class="mhead"><span class="mlevel">' +
+            T('Level ', 'Уровень ') + wk.n + '</span><span class="mtitle">' + T('Opens ', 'Откроется ') + esc(S.nice(wk.opens)) + T(' at 00:00', ' в 00:00') + '</span></div></div></div>';
+          return;
+        }
         var cleared = done === wk.days.length && (wk.n === 0 || (cpPct != null && cpPct >= 70));
         var state = cleared ? 'cleared' : hereSet ? 'ahead' : 'here';
         var dots = wk.days.map(function (d) {

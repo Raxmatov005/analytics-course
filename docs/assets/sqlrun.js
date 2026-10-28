@@ -502,10 +502,14 @@ Work in progress is kept in localStorage "al.sql". */
       box.classList.toggle('al-done', fin);
       if (wasDone !== null && wasDone !== fin) changed();
       wasDone = fin;
-      btn.disabled = tried < need;
+      /* the calendar (schedule.js): after 23:59 on its day the box stays for practice, but Submit is closed (the bot refuses too) */
+      var S = window.ALSched, day = S && S.on() && S.opens(spec.lesson) ? S.lastDay(spec.lesson) : null, shut = !!day && S.state(spec.lesson) === 'closed';
+      btn.disabled = tried < need || shut;
       state.innerHTML = '<b>' + okN + ' / ' + need + '</b>' + T(' done', ' готово') + (m.submitted ? T(' · ✅ submitted ', ' · ✅ сдано ') + esc(m.submitted) : '') +
-        (tried < need ? T(' · Submit opens once every task has an answer', ' · Кнопка «Сдать» откроется, когда у каждого задания будет ответ')
-          : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть') : '');
+        (shut ? ' · <span class="sq-ws-closed">' + T('🔒 Closed on ', '🔒 Закрыто ') + esc(S.nice(day)) + T(' at 23:59 — your mentor can reopen it', ' в 23:59 — ментор может открыть снова') + '</span>'
+          : (tried < need ? T(' · Submit opens once every task has an answer', ' · Кнопка «Сдать» откроется, когда у каждого задания будет ответ')
+          : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть') : '') +
+          (day ? ' · ' + (day === S.today() ? T('closes today at 23:59', 'закрывается сегодня в 23:59') : T('closes ', 'закрывается ') + esc(S.nice(day)) + T(' at 23:59', ' в 23:59')) : ''));
       sign();
     }
     box.querySelector('.sq-submit').onclick = function () {
@@ -545,6 +549,11 @@ Work in progress is kept in localStorage "al.sql". */
             sign(T('You were signed out — sign in again, then tap 📤 Submit. Your work is still saved here.',
               'Вы вышли из аккаунта — войдите снова и нажмите «📤 Сдать». Ваша работа сохранена здесь.'));
             btn.disabled = false;
+          } else if (x.status === 403) {
+            state.innerHTML = '<span class="sq-ws-closed">' + (x.j.error === 'closed'
+              ? T('🔒 This homework closed at 23:59 on its day, so it was not sent. If something got in the way, write to your mentor: they can reopen it.',
+                '🔒 Это задание закрылось в 23:59 своего дня, поэтому оно не отправлено. Если что-то помешало, напишите ментору: он может открыть его снова.')
+              : T('This lesson has not opened yet.', 'Этот урок ещё не открылся.')) + '</span>';
           } else {
             state.innerHTML = T('Could not submit', 'Не удалось сдать') + ' (' + esc(x.j.error || x.status) + '). ' + T('Try again in a minute.', 'Попробуйте снова через минуту.');
             btn.disabled = false;

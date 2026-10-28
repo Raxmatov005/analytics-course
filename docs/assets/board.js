@@ -275,7 +275,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
       html += '<h2 id="points">' + T('Points by week', 'Баллы по неделям') + '</h2>';
       for (var w = 0; w <= 8; w++) {
         var its = p.items.filter(function (it) { return it.week === w; });
-        if (!its.length) continue;
+        if (!its.length || (window.ALSched && !window.ALSched.weekOpen(w))) continue;   // a week not open yet (schedule.js) is left out
         var sumMax = 0, sumGot = 0;
         html += '<table class="pts"><thead><tr><th>' + (w === 0 ? T('Day 0', 'День 0') : T('Week ', 'Неделя ') + w) + '</th><th>' + T('Max', 'Макс.') + '</th><th>' +
           T('Earned', 'Получено') + '</th><th>' + T('Feedback', 'Отзыв') + '</th></tr></thead><tbody>';
