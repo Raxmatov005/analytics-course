@@ -20,6 +20,10 @@ The Python boxes on this page run here, in the page, in one shared namespace —
 
 **What it is.** **Confounding** (*смешение факторов*) means two things change at once, so you cannot tell which one moved the number. A **before/after comparison** (*сравнение до/после*) is always confounded: between August and September the screen changes, and so does the calendar — salary days, school fees, a marketing push, an app release, the approval policy, the mix of new and returning users.
 
+```pic
+{"id": "w07d1-pic1", "title": "With nothing changed, the rate still moves", "caption": "Nur's app approval rate by month of application, 2026, with no screen change at all: up to 71.4 % in July, down to 66.7 % in September — a swing of 4.7 points that would swallow a +0.9-point effect.", "chart": {"type": "intervals", "rows": [{"label": "June", "lo": 69.1, "mid": 69.1, "hi": 69.1}, {"label": "July", "lo": 71.4, "mid": 71.4, "hi": 71.4}, {"label": "August", "lo": 67.9, "mid": 67.9, "hi": 67.9}, {"label": "September", "lo": 66.7, "mid": 66.7, "hi": 66.7}], "min": 64, "max": 74, "unit": " %"}}
+```
+
 **How to see it.** Nur's own app channel, with **no** screen change at all, moved like this in 2026:
 
 | applied in | app applications | decided | approved | approval rate |
@@ -167,6 +171,10 @@ print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}"
 
 **What it is.** The **sample size** (*объём выборки*) per arm comes from four inputs. The **duration** is that sample divided by your daily traffic, rounded up to whole weeks.
 
+```pic
+{"id": "w07d1-pic3", "title": "Halve the effect, quadruple the test", "caption": "Days the test needs at 1 000 offer viewers a day, for each MDE on top of 8.0 %. The plan's **+0.9 points** takes 30 days; +0.4 would take 148 — five months.", "chart": {"type": "bars", "labels": ["+0.4", "+0.5", "+0.9", "+1.2", "+1.6"], "values": [148, 95, 30, 17, 10], "hl": [2], "show": true, "note": "x: MDE, points · y: days at 1 000 viewers a day"}}
+```
+
 **How to write it.**
 
 ```python
@@ -238,6 +246,10 @@ Kamola's choice: **28 days**, about 14 000 per arm. That buys an MDE of +0.93 po
 ### Randomisation and assignment — hashing the user id
 
 **What it is.** **Randomisation** (*рандомизация*) decides each user's arm by chance. Production systems do not store a coin flip; they **compute** it. A **hash function** (*хеш-функция*) turns the text `salt + user_id` into a huge number; its remainder mod 2 is the arm.
+
+```pic
+{"id": "w07d1-pic2", "title": "The arm is computed: hash the salt and the id, take the remainder", "caption": "With the A/A test's salt, an even hash goes to A and an odd one to B: B, A, A, B, A, A, as the service logged them. Change the salt and the same users are drawn again — the highlighted cells changed arm.", "tables": [{"id": "aa", "name": "aa_users", "cols": ["user_id", "hash % 2", "variant"], "rows": [[925601, 1, "B"], [665666, 0, "A"], [652995, 0, "A"], [774155, 1, "B"], [376261, 0, "A"], [859393, 0, "A"]], "new": ["hash % 2"]}, {"id": "v2", "name": "result", "cols": ["user_id", "variant"], "rows": [[925601, "B"], [665666, "B"], [652995, "B"], [774155, "B"], [376261, "B"], [859393, "A"]], "cells": [[1, "variant"], [2, "variant"], [4, "variant"]], "via": "salt = offer_screen_v2"}]}
+```
 
 **How to write it.**
 

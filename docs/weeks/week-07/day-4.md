@@ -78,6 +78,10 @@ Avg Ticket for the whole book: 404 783 280 000 ÷ 7 828 = 51 709 668 soum. A mea
 
 **What it is.** A measure has no value of its own — only a value **in a cell**. The cell's filters are its filter context: the slicers on the page, the visual's row and column, page and report filters. Relationships carry them from the dimensions to the fact. Then the measure runs over the rows that are left.
 
+```pic
+{"id": "w07d4-pic1", "title": "A cell's filters keep some rows; the measure sums those", "caption": "The cell \"Bukhara Central × SME\": the row filter and the column filter reach `v_loan_status` through the relationships. Green rows pass both, struck-through rows fail one; `SUM` over all 59 green loans gives the cell's number.", "tables": [{"id": "f", "name": "v_loan_status", "cols": ["branch_name", "product", "outstanding"], "rows": [["Bukhara Central", "AUTO", "312 219 576"], ["Bukhara Central", "SME", "20 361 906"], ["Bukhara Central", "SME", "432 365 031"], ["Termez Central", "SME", "270 179 178"], ["Bukhara Central", "SME", "227 514 450"], ["Termez Central", "AUTO", "164 572 698"]], "tags": {"branch_name": "row", "product": "column"}, "keep": [1, 2, 4], "drop": [0, 3, 5], "more": "… 7 828 loans"}, {"id": "c", "name": "cell", "cols": ["loans", "Outstanding"], "rows": [[59, "10 343 220 604"]], "new": ["Outstanding"], "via": "SUM over the green rows"}], "stack": true}
+```
+
 **How to read it.** A matrix: rows `branches[branch_name]`, columns `products[code]`, value `Outstanding`.
 
 | | AUTO | SME | Total |
@@ -187,6 +191,10 @@ DIVIDE (
 -- no slicer: SME 60.32 % · AUTO 27.64 % · CONS 11.05 % · BNPL 0.54 % · MICRO 0.46 % · total 100 %
 ```
 
+```pic
+{"id": "w07d4-pic2", "title": "ALL removes the row's filter from the denominator", "caption": "Each row's own outstanding over the same row with the product filter removed: the denominator column is the whole book in every row, 208.7 bn, and the shares add up to 100 %.", "tables": [{"name": "products × Outstanding", "cols": ["code", "bn", "ALL(products)", "share"], "rows": [["SME", "125.9", "208.7", "60.32 %"], ["AUTO", "57.7", "208.7", "27.64 %"], ["CONS", "23.1", "208.7", "11.05 %"], ["BNPL", "1.1", "208.7", "0.54 %"], ["MICRO", "1.0", "208.7", "0.46 %"]], "new": ["ALL(products)", "share"], "cells": [[0, "share"]]}]}
+```
+
 **When you use it.** Any "share of" or "% of total": name the denominator first ("of this branch", "of the whole book", "of what the user selected"), then pick the function.
 
 > ⚠️ **Watch out.** `CROSSFILTER ( …, BOTH )` inside one measure is how you get bidirectional filtering for one calculation — never by switching the model's relationship to Both.
@@ -231,6 +239,10 @@ September 2026: 17.0 bn disbursed, 16.2 % more than September 2025 but 23.7 % le
 ### Balances over time — semi-additive measures
 
 **What it is.** A **flow** (disbursed, collected) adds up over time. A **balance** (outstanding) does not: the book at the end of the year is the last month's balance, not the sum of twelve. A measure that sums over everything except time and takes the **last period** is **semi-additive** (*полуаддитивная мера*).
+
+```pic
+{"id": "w07d4-pic3", "title": "A year's balance is its last month, not the sum of twelve", "caption": "Month-end outstanding of 2026 from `v_portfolio_monthly`, bn soum. `Outstanding Month-End` for the year shows the last bar, October's 196.4 bn; a plain `SUM` adds all ten bars into 1 808.1 bn — a book that never existed.", "chart": {"type": "bars", "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"], "values": [151.8, 154.1, 164.0, 171.7, 179.7, 184.6, 193.7, 203.8, 208.2, 196.4], "hl": [9], "show": true, "note": "y: month-end outstanding, bn soum, 2026"}}
+```
 
 **How to write it.**
 

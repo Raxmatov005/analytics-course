@@ -82,7 +82,7 @@
   .pic-via-arrow { width: 2px; height: 26px; }
   .pic-via-arrow::after { right: -5px; top: auto; bottom: -3px; border: 6px solid transparent; border-top: 8px solid var(--brand, #0f766e); border-bottom: 0; }
   .pic-t { overflow-x: auto; }
-  .markdown-section .pic th, .markdown-section .pic td { padding: 5px 6px; font-size: 11px; }
+  .markdown-section .pic th, .markdown-section .pic td { padding: 5px 5px; font-size: 10.5px; }
   .pic-tag { font-size: 9px !important; letter-spacing: .02em; }
 }
 

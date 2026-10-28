@@ -54,6 +54,10 @@ An average SME loan brings 92 835 258 soum of interest, an Auto loan 90 816 842,
 
 **What it is.** **Cost of funds** (*стоимость фондирования*) is what Nur pays its own lenders for the money while it is out with the borrower. It is charged on the **balance still owed**, which falls with every instalment. Our assumption: **18 % a year**, 1.5 % a month.
 
+```pic
+{"id": "w08d2-pic1", "title": "Funding is paid on a balance that falls every month", "caption": "Loan 8, a 6-month Micro loan of 3 360 000: the balance owed before each instalment. At 1.5 % a month on these balances, funding costs 181 445 soum; on the full principal for all six months it would be 302 400.", "chart": {"type": "bars", "labels": ["1", "2", "3", "4", "5", "6"], "values": [3360000, 2847000, 2316045, 1766507, 1197735, 609056], "show": true, "note": "x: instalment · y: balance owed before it, soum"}}
+```
+
 **How to write it.**
 
 ```text
@@ -163,6 +167,10 @@ An Auto loan costs 1 354 604 soum to sell and service, SME 1 058 067, Consumer 8
 ### Contribution margin per loan — what one loan leaves behind
 
 **What it is.** The **contribution** (*маржинальный доход*) of a loan is revenue minus every cost the loan itself causes: funding, expected loss, acquisition and servicing. **Contribution margin** is that contribution as a share of revenue. It is before overheads (head office, rent), tax and capital.
+
+```pic
+{"id": "w08d2-pic2", "title": "What one Consumer loan leaves behind", "caption": "An average Consumer loan, soum: the income (1 − PD) × interest, then the four costs it causes — funding, expected loss, acquisition, servicing. What is left, 860 241 (amber), is the contribution: 15.6 % of the income.", "chart": {"type": "bars", "labels": ["income", "funds", "loss", "acq.", "serv.", "left"], "values": [5514207, 3417348, 413293, 450000, 373325, 860241], "tone": ["a", "d", "d", "d", "d", "b"], "show": true, "note": "y: soum per average Consumer loan"}}
+```
 
 **How to write it.**
 

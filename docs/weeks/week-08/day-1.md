@@ -118,6 +118,10 @@ FROM m;
 
 **What it is.** A **funnel** (*воронка*) is an ordered list of steps and the number of units that reached each one. A lender's funnel ends at money coming back: **visit → application → approval → disbursement → repayment**. **Step conversion** (*конверсия шага*) = reached this step ÷ reached the previous step. **Conversion from the top** = reached this step ÷ reached step 1.
 
+```pic
+{"id": "w08d1-pic1", "title": "The funnel narrows at every step down to money that comes back", "caption": "App sessions opened January–June 2026: 1 252 visits, 854 applications, 719 approvals, 659 loans paid out and 549 first instalments paid on time — 43.8 % of the top.", "chart": {"type": "bars", "labels": ["visit", "apply", "appr.", "loan", "repaid"], "values": [1252, 854, 719, 659, 549], "hl": [4], "show": true, "note": "y: app sessions, Jan–Jun 2026"}}
+```
+
 **How to write it.** One row per unit with a 0/1 flag per step, then one sum per step:
 
 ```sql
@@ -241,6 +245,10 @@ FROM steps ORDER BY k;
 
 **What it is.** **Retention** (*удержание*) is the share of a group that comes back after a time N. A social app counts people who open it again on day 7. A lender counts borrowers who take **another loan**: retention at N months = customers with a second loan within N months of the first ÷ customers in the group.
 
+```pic
+{"id": "w08d1-pic2", "title": "Retention asks: did the second loan come within N months?", "caption": "Customers whose first loan is in January 2025, N = 6. Green rows came back in time; customer 18 missed by eight days, 93 never came back. All 141 count in the denominator: 38 came back, **27.0 %**.", "tables": [{"name": "pairs", "cols": ["customer_id", "first_at", "second_at", "back_6m"], "rows": [[18, "2025-01-01", "2025-07-09", 0], [93, "2025-01-01", null, 0], [530, "2025-01-01", "2025-01-11", 1], [5671, "2025-01-01", "2026-04-08", 0], [1520, "2025-01-02", "2025-05-21", 1]], "new": ["back_6m"], "keep": [2, 4], "more": "… 141 customers"}]}
+```
+
 **How to write it.**
 
 ```text
@@ -288,6 +296,10 @@ WHERE first_at >= '2025-01-01' AND first_at < '2025-02-01';
 ### Cohort by month — grouping people by when they started
 
 **What it is.** A **cohort** (*когорта*) is a group of customers who started in the same period. For a lender, "started" means the first loan, so the **cohort month** is the month of the customer's first disbursement. It never changes, however many loans follow.
+
+```pic
+{"id": "w08d1-pic3", "title": "The cohort is the month of the first loan, on every later loan too", "caption": "Two customers, three loans each. Customer 245's second loan came in February, but every row keeps the cohort of the first loan: 2025-01. Same colour, same customer.", "tables": [{"name": "loans", "cols": ["customer_id", "disbursed_at", "n", "cohort"], "rows": [[18, "2025-01-01", 1, "2025-01"], [18, "2025-07-09", 2, "2025-01"], [18, "2025-12-08", 3, "2025-01"], [245, "2025-01-31", 1, "2025-01"], [245, "2025-02-18", 2, "2025-01"], [245, "2025-05-29", 3, "2025-01"]], "new": ["n", "cohort"], "tone": ["a", "a", "a", "b", "b", "b"], "more": "… 18 has a 4th loan"}]}
+```
 
 **How to write it.**
 

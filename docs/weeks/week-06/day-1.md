@@ -208,6 +208,10 @@ The book's 1.28 % is three pieces, one per channel: 0.58 + 0.48 + 0.23 points.
 
 **What it is.** **Bayes' rule** (*формула Байеса*) turns a conditional round: from P(flag | fraud) — how often a fraudster is flagged — to **P(fraud | flag)** — how often a flag is a fraudster. The answer depends heavily on the **base rate** (*базовая частота*): how common fraud is before any flag.
 
+```pic
+{"id": "w06d1-pic1", "title": "Of 553 flags, only 56 are fraudsters", "caption": "Of 10 000 applicants, the rule flags 56 of the 62 fraudsters (red) and 497 honest people (blue). Fraud is rare, so the honest flags outnumber the true ones about nine to one.", "chart": {"type": "bars", "labels": ["fraud", "honest"], "values": [56, 497], "tone": ["d", "e"], "show": true, "note": "y: flagged applicants, of 10 000"}}
+```
+
 **How to write it.** In words: the flagged fraudsters divided by everyone flagged.
 
 ```text
@@ -287,6 +291,10 @@ Four rules you will use all week: E[aX + b] = a·E[X] + b; Var(aX + b) = a²·Va
 ### Bernoulli and binomial — defaults in a batch
 
 **What it is.** A **Bernoulli** variable (*распределение Бернулли*) is one yes/no trial: 1 with probability p, 0 otherwise; E = p, Var = p(1 − p). The **binomial** (*биномиальное распределение*) **X ~ Bin(n, p)** counts the yeses in n **independent** Bernoulli trials with the same p — the FPDs among 400 loans.
+
+```pic
+{"id": "w06d1-pic2", "title": "FPDs in a batch of 400 loans: about 5, rarely 10", "caption": "The exact Bin(400, 1.28 %) probabilities: the bars pile up around the mean of 5.13 FPDs. The dark bar is the tail, **10 or more** FPDs: 3.57 % of months.", "chart": {"type": "bars", "labels": ["0–1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"], "values": [3.55, 7.72, 13.3, 17.14, 17.63, 15.07, 11.01, 7.03, 3.97, 3.57], "hl": [9], "marks": [{"at": 4.13, "label": "mean 5.13"}], "note": "x: FPDs among 400 loans · y: probability"}}
+```
 
 **How to write it.** P(X = k) = C(n, k) · p^k · (1 − p)^(n − k): the number of orders C(n, k) times the probability of one order. E[X] = n·p, Var(X) = n·p·(1 − p). The helpers `pmf`, `cdf`, `at_least` are in the first box.
 
@@ -462,6 +470,10 @@ The **QQ plot** (*квантиль-квантильный график*) puts th
 ### The 68-95-99.7 rule — one, two, three sds
 
 **What it is.** For any normal, about **68 %** of values lie within ±1 sd of the mean, **95 %** within ±2 sd (±1.96 sd exactly), and **99.7 %** within ±3 sd. It is the quickest check of "is this value unusual?".
+
+```pic
+{"id": "w06d1-pic3", "title": "Two thirds of applicants within one sd, 95 % within two", "caption": "Applicants' credit scores in bands of one sd around the mean 659.6 (σ = 59.5). The two teal bars hold **68.0 %** of the 13 612 scored applicants; add the two amber bars and it is **95.4 %**.", "chart": {"type": "bars", "labels": ["<−2", "−2…−1", "−1…0", "0…1", "1…2", ">2"], "values": [2.4, 13.85, 33.41, 34.54, 13.63, 2.17], "tone": [null, "b", "a", "a", "b", null], "marks": [{"at": 2.5, "label": "mean 659.6"}], "note": "x: sds from the mean · y: share of applicants"}}
+```
 
 **How to write it.** The rule comes from N(0, 1); the box checks it on the applicants' scores (`mu`, `sd` from the box above).
 

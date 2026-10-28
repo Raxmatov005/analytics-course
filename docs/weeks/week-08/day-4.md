@@ -233,6 +233,10 @@ Outstanding 208 723 504 430 soum top-left; 161 480 300 000 disbursed in January�
 
 **What it is.** An **annotation** is text on the chart that states the point: the number that matters, labelled where the eye already is. Numbers on slides are **rounded to what can be said aloud** — "208.7 bn", not 208 723 504 430 — with a unit and a comparison.
 
+```pic
+{"id": "w08d4-pic1", "title": "Round to what can be said aloud — without changing the message", "caption": "Twelve digits become three, with a unit. The last row keeps the difference: \"1.7 against 1.0\", never \"about 1 % both\".", "tables": [{"name": "say()", "cols": ["exact", "said aloud"], "new": ["said aloud"], "rows": [["208 723 504 430", "208.7 bn soum"], ["161 480 300 000", "161.5 bn soum"], ["3.1178 %", "PAR30 3.1 %"], ["1.70 % vs 1.04 %", "1.7 against 1.0"]]}]}
+```
+
 **How to write it.**
 
 ```python

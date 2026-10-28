@@ -89,6 +89,10 @@ Dividing by n gives about 2 860 instead of 3 543 — 20 % too small at n = 5. Di
 
 **What it is.** **Sampling error** (*ошибка выборки*) is the gap between an estimate and the parameter: x̄ − μ. It comes from *which* units happened to land in the sample. It is not a mistake. Every sample has one, and another sample has another.
 
+```pic
+{"id": "w06d2-pic1", "title": "Five samples, five means, one true mean", "caption": "Every 20th loan, starting at loans 1 to 5: 392 loans each. Each dot misses the book's 51.71 m — by 2.8 to 8.5 million soum — and in real work you see only one of them.", "chart": {"type": "intervals", "rows": [{"label": "from loan 1", "lo": 48.29, "mid": 48.29, "hi": 48.29}, {"label": "from loan 2", "lo": 58.11, "mid": 58.11, "hi": 58.11}, {"label": "from loan 3", "lo": 48.89, "mid": 48.89, "hi": 48.89}, {"label": "from loan 4", "lo": 60.16, "mid": 60.16, "hi": 60.16}, {"label": "from loan 5", "lo": 56.03, "mid": 56.03, "hi": 56.03}], "ref": {"at": 51.71, "label": "μ = 51.71 m"}, "min": 40, "max": 65, "unit": " m"}}
+```
+
 **How to write it.** Sampling error = estimate − parameter. Here we know μ, so we can see the errors. Five samples of 392 loans each — every 20th loan, starting at loan 1, 2, 3, 4 and 5 (a **systematic sample**):
 
 ```python
@@ -265,6 +269,10 @@ On the notebook's 50 loans the t interval is 23.90–31.07 m, and the true Consu
 
 **What it is.** The **Wald interval** is the textbook interval for a rate: p̂ ± 1.96 × √(p̂ (1 − p̂) / n). It assumes the rate's sampling distribution is a symmetric bell. Near 0 % it is not: a rate cannot go below zero but can go far above.
 
+```pic
+{"id": "w06d2-pic2", "title": "Near 0 %, the Wald interval breaks", "caption": "On 41 FPDs in 2 411 app loans Wald is fine — Wilson sits close. On 2 FPDs in 150 loans it reaches below zero, and on 0 in 120 it shrinks to a point at zero: the two red rows.", "chart": {"type": "intervals", "rows": [{"label": "app, Wald", "lo": 1.18, "mid": 1.7, "hi": 2.22, "miss": false}, {"label": "app, Wilson", "lo": 1.26, "mid": 1.7, "hi": 2.3, "miss": false}, {"label": "2/150, Wald", "lo": -0.5, "mid": 1.33, "hi": 3.17, "miss": true}, {"label": "0/120, Wald", "lo": 0, "mid": 0, "hi": 0, "miss": true}], "ref": {"at": 0, "label": "0 %"}, "min": -1, "max": 3.5, "unit": " %"}}
+```
+
 **How to write it.**
 
 ```python
@@ -351,6 +359,10 @@ A "95 %" Wald interval on a branch-month of 400 loans is really an 88 % interval
 ### What 95 % means — and what it does not
 
 **What it is.** 95 % is a property of the **procedure** (*уровень доверия*, confidence level): if you repeated the sampling many times, 95 % of the intervals built this way would contain the true value. This one interval either contains it or not.
+
+```pic
+{"id": "w06d2-pic3", "title": "19 of 20 intervals catch the true mean", "caption": "20 samples of 400 loans drawn by computer (seed 2026), each with its 95 % t interval for the mean principal. 19 cover the true 51.71 m; one, in red, misses — the 5 % the method allows.", "chart": {"type": "intervals", "rows": [{"label": "sample 1", "lo": 36.77, "mid": 46.89, "hi": 57.01, "miss": false}, {"label": "sample 2", "lo": 34.41, "mid": 43.66, "hi": 52.92, "miss": false}, {"label": "sample 3", "lo": 48.35, "mid": 60.68, "hi": 73.01, "miss": false}, {"label": "sample 4", "lo": 34.65, "mid": 44.44, "hi": 54.23, "miss": false}, {"label": "sample 5", "lo": 35.96, "mid": 46.43, "hi": 56.9, "miss": false}, {"label": "sample 6", "lo": 39.02, "mid": 49.98, "hi": 60.94, "miss": false}, {"label": "sample 7", "lo": 51.9, "mid": 64.88, "hi": 77.85, "miss": true}, {"label": "sample 8", "lo": 41.63, "mid": 52.95, "hi": 64.27, "miss": false}, {"label": "sample 9", "lo": 44.48, "mid": 55.55, "hi": 66.63, "miss": false}, {"label": "sample 10", "lo": 40.59, "mid": 51.98, "hi": 63.37, "miss": false}, {"label": "sample 11", "lo": 41.42, "mid": 53.1, "hi": 64.79, "miss": false}, {"label": "sample 12", "lo": 35.33, "mid": 45.43, "hi": 55.54, "miss": false}, {"label": "sample 13", "lo": 48.48, "mid": 60.93, "hi": 73.37, "miss": false}, {"label": "sample 14", "lo": 44.84, "mid": 56.52, "hi": 68.2, "miss": false}, {"label": "sample 15", "lo": 43.61, "mid": 54.85, "hi": 66.1, "miss": false}, {"label": "sample 16", "lo": 38.13, "mid": 49.0, "hi": 59.86, "miss": false}, {"label": "sample 17", "lo": 39.47, "mid": 50.19, "hi": 60.9, "miss": false}, {"label": "sample 18", "lo": 38.97, "mid": 50.53, "hi": 62.08, "miss": false}, {"label": "sample 19", "lo": 33.3, "mid": 43.07, "hi": 52.84, "miss": false}, {"label": "sample 20", "lo": 32.63, "mid": 42.35, "hi": 52.08, "miss": false}], "ref": {"at": 51.71, "label": "μ = 51.71 m"}, "min": 30, "max": 80, "unit": " m"}}
+```
 
 **How to write it.** Run the procedure 100 times and count the hits:
 

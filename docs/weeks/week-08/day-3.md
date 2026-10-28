@@ -101,6 +101,10 @@ Branch 1 403 loans, app 1 036 and partner 591 add up to the 3 030 loans of the t
 
 **What it is.** A **sanity check** (*проверка на здравый смысл*) is a quick test that the data and your query are right before you build on them. Two kinds: **health checks** on the tables (row counts, duplicate keys, empty columns, dates after the as-of date) and **control totals** — numbers the company already trusts, which you must reproduce.
 
+```pic
+{"id": "w08d3-pic1", "title": "A duplicate row looks like a payment and pays twice", "caption": "Loan 18's payments: row 52869 repeats row 110 field for field — the same instalment, day and amount. Left in, instalment 174 is paid twice. `payments` has 25 such rows; drop them before any sum.", "tables": [{"name": "payments", "cols": ["payment_id", "installment_id", "paid_at", "amount"], "rows": [[109, 173, "2025-04-28", "663 300"], [110, 174, "2025-05-28", "663 300"], [111, 175, "2025-06-26", "663 300"], [52869, 174, "2025-05-28", "663 300"]], "tone": [null, "d", null, "d"], "drop": [3], "more": "… 52 875 rows"}]}
+```
+
 **How to write it.** One query, one row, every check a column:
 
 ```sql
@@ -135,6 +139,10 @@ SELECT (SELECT COUNT(*) FROM loans)                                   AS loans,
 ### The analysis plan — which table, which grain, which metric
 
 **What it is.** An **analysis plan** gives each leaf of the tree five things: the **table(s)**, the **grain** (what one row is), the **metric** (its definition card from Day 1), the **cut** (by what) and the **comparison** (against what). The grain is the trap: a join to a "many" table changes what one row is.
+
+```pic
+{"id": "w08d3-pic2", "title": "After a join to a \"many\" table, one row is no longer a loan", "caption": "Two 3-month loans become six rows, and each principal is copied onto every instalment. Summed there, January–September 2026 gives 4.15 trillion soum on 36 408 rows instead of 161.48 bn on 3 030 loans.", "tables": [{"id": "l", "name": "loans", "cols": ["loan_id", "principal"], "rows": [[3, "1 590 000"], [4, "2 520 000"]], "tone": ["a", "b"]}, {"id": "j", "name": "result", "cols": ["loan_id", "installment_no", "principal"], "rows": [[3, 1, "1 590 000"], [3, 2, "1 590 000"], [3, 3, "1 590 000"], [4, 1, "2 520 000"], [4, 2, "2 520 000"], [4, 3, "2 520 000"]], "tone": ["a", "a", "a", "b", "b", "b"], "via": "JOIN installments"}]}
+```
 
 **How to write it.**
 

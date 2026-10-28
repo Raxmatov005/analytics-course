@@ -22,6 +22,10 @@ An analysis has a fixed order, and it is the order of the readout: **(1) is the 
 
 **What it is.** The analysis table has **one row per unit of randomisation** — here, per user — with the arm, the user's attributes and one column per outcome. The export arrives at three different grains: `users` (one row per assignment), `events` (one row per app event), `loans` (one row per signed loan). Your first job is to fold them into one row per user.
 
+```pic
+{"id": "w07d2-pic1", "title": "A user in both arms leaves both arms", "caption": "User 265913 was assigned to B on 1 August and to A on 4 August: both screens. Both rows go (struck through), as do the rows of the other 299 users assigned twice; everyone else keeps one row.", "tables": [{"name": "users", "cols": ["user_id", "assigned_at", "variant"], "rows": [[844122, "2026-08-01", "B"], [639643, "2026-08-01", "B"], [564185, "2026-08-01", "A"], [265913, "2026-08-01", "B"], [265913, "2026-08-04", "A"]], "keep": [0, 1, 2], "drop": [3, 4], "more": "… 27 974 rows, 27 674 users"}]}
+```
+
 **How to write it.**
 
 ```python
@@ -293,6 +297,10 @@ Conversion: 915 of 11 472 in A (7.98 %), 1 013 of 11 434 in B (8.86 %); z = 2.41
 
 **What it is.** The p-value says *whether*; the **confidence interval** (*доверительный интервал*) says *how much*. Report the lift two ways: **absolute** (points, B − A) and **relative** (%, B ÷ A − 1), each with its 95 % interval.
 
+```pic
+{"id": "w07d2-pic2", "title": "Two arms, two intervals — and the difference has its own", "caption": "Conversion of the clean users with 95 % Wilson intervals: A 915 / 11 472 = 7.98 %, B 1 013 / 11 434 = 8.86 %. The two intervals almost touch, yet the interval of the difference, **+0.16 to +1.60** points, leaves zero out: compare the difference, not the overlap.", "chart": {"type": "intervals", "rows": [{"label": "A, control", "lo": 7.49, "mid": 7.98, "hi": 8.49}, {"label": "B, treatment", "lo": 8.35, "mid": 8.86, "hi": 9.39}], "min": 7, "max": 10, "unit": " %"}}
+```
+
 **How to write it.**
 
 ```python
@@ -462,6 +470,10 @@ new +0.85 vs returning +0.96:  z = −0.15,  p = 0.88   → no evidence that the
 ### Simpson's paradox — when the total and the segments disagree
 
 **What it is.** **Simpson's paradox** (*парадокс Симпсона*): B wins in every segment and loses in the total — or the reverse. It happens when the arms have **different mixes** of segments that convert differently. In an A/B test the usual cause is a split that changed during the test (a 90/10 ramp-up, then 50/50), or a slice removed from one arm only.
+
+```pic
+{"id": "w07d2-pic3", "title": "B wins both periods and loses the total", "caption": "A ramp-up sent 90 % of week 1's users to A, and week 1 converts better. B is ahead inside each period (highlighted), but 47 % of A's users come from week 1 against 9 % of B's, so A's total is pulled up.", "tables": [{"id": "per", "name": "simpson", "cols": ["period", "variant", "conv / users", "rate"], "rows": [["week 1", "A", "90 / 900", "10.0 %"], ["week 1", "B", "11 / 100", "11.0 %"], ["weeks 2–4", "A", "50 / 1 000", "5.0 %"], ["weeks 2–4", "B", "55 / 1 000", "5.5 %"]], "tone": ["a", "a", "b", "b"], "cells": [[1, "rate"], [3, "rate"]]}, {"id": "tot", "name": "total", "cols": ["variant", "conv / users", "rate"], "rows": [["A", "140 / 1 900", "7.37 %"], ["B", "66 / 1 100", "6.00 %"]], "cells": [[0, "rate"]], "via": "add the periods up"}]}
+```
 
 **How to write it.** A ramp-up: week 1 sends 10 % to B, weeks 2–4 split 50/50, and week 1 users convert better.
 

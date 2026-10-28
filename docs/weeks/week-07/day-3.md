@@ -275,6 +275,10 @@ both:    products ◀─▶ v_loan_status ◀─▶ customers_clean ...   a segm
 
 **What it is.** Between two tables only **one active** path may exist. A second relationship — say a second date column — is created **inactive** (*неактивная связь*): drawn dashed, ignored by visuals, used only by a measure that asks for it with `USERELATIONSHIP`.
 
+```pic
+{"id": "w07d3-pic1", "title": "One loan, two dates, two months", "caption": "Loan 4900 counts in June on the solid line (disbursed) and in July on the dashed one (first due); the other three count in July and in August. Colour = the month the dashed line puts each loan in.", "tables": [{"name": "fct_first_instalment", "cols": ["loan_id", "disbursed_at", "first_due_date"], "rows": [[4900, "2026-06-30", "2026-07-30"], [4475, "2026-07-01", "2026-08-01"], [533, "2026-07-31", "2026-08-31"], [5290, "2026-07-31", "2026-08-31"]], "tags": {"disbursed_at": "active", "first_due_date": "inactive"}, "tone": ["a", "b", "b", "b"], "more": "… 7 099 loans"}]}
+```
+
 **How to write it.** `fct_first_instalment` has two dates: `disbursed_at` (active, solid line) and `first_due_date`.
 1. Model view → drag `dim_date[date]` onto `fct_first_instalment[first_due_date]`. Power BI creates it dashed.
 2. A measure that uses the dashed line:
@@ -383,6 +387,10 @@ August 2026: 11 loans were disbursed and are already in scope, but 367 loans had
 ### Calculated column vs measure — a first look
 
 **What it is.** Two ways to add a calculation. A **calculated column** (*вычисляемый столбец*) is computed once per row at refresh and stored. A **measure** (*мера*) is computed when a visual asks, once per cell, after the filters.
+
+```pic
+{"id": "w07d3-pic2", "title": "The column is stored per loan; the measure is a ratio of sums", "caption": "`par30_outstanding` is computed once for each loan: its outstanding when it is more than 30 days late, else 0 — only the third row here (loan 57). The measure `PAR30 %` adds the columns up after the filters and divides: 3.12 % of the whole book.", "tables": [{"id": "ls", "name": "v_loan_status", "cols": ["dpd", "outstanding", "par30_outstanding"], "rows": [[0, "9 593 064", 0], [0, "22 246 389", 0], [46, "10 525 656", "10 525 656"], [0, "1 708 700", 0]], "new": ["par30_outstanding"], "cells": [[2, "par30_outstanding"]], "more": "… 7 828 loans"}, {"id": "card", "name": "PAR30 %", "label": "measure", "cols": ["SUM(par30)", "Outstanding", "PAR30 %"], "rows": [["6.51 bn", "208.72 bn", "3.12 %"]], "new": ["PAR30 %"], "via": "DIVIDE(SUM, SUM)"}], "stack": true}
+```
 
 **How to write it.**
 

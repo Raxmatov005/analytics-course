@@ -84,6 +84,10 @@ Both products pay one day early in the middle (median −1), and both have a thi
 
 **What it is.** The **Mann–Whitney U test** (*U-критерий Манна–Уитни*, also called the Wilcoxon rank-sum test) pools both groups, ranks every value and checks whether one group's ranks are systematically higher. **U** counts the pairs — one value from each group — in which the A value is larger (a tie counts ½). **U / (n₁·n₂)** is the probability that a random A beats a random B. H₀: that probability is ½.
 
+```pic
+{"id": "w06d4-pic1", "title": "Pool, sort, rank: A holds ranks 2, 5 and 7", "caption": "A = [2, 5, 9] in teal, B = [1, 3, 4, 7] in amber, sorted together. A's ranks add up to 14, so U = 14 − 3·4/2 = **8**: A wins 8 of the 12 pairs.", "chart": {"type": "bars", "labels": ["1", "2", "3", "4", "5", "6", "7"], "values": [1, 2, 3, 4, 5, 7, 9], "tone": ["b", "a", "b", "b", "a", "b", "a"], "show": true, "note": "x: rank · y: value"}}
+```
+
 **How to write it.** U = (sum of A's ranks) − n₁·(n₁ + 1) / 2. On a tiny example, A = [2, 5, 9] and B = [1, 3, 4, 7]:
 
 | value | 1 | 2 | 3 | 4 | 5 | 7 | 9 |
@@ -252,6 +256,10 @@ A gap of 0.66 points or more appeared in about 3.3 % of 10 000 shuffles, so p �
 ### The bootstrap as a test — is zero in the interval?
 
 **What it is.** The **bootstrap** (Day 2) resamples each group with replacement and recomputes the difference each time. As a test: build the 95 % interval of the difference and check whether **0** is inside. Zero outside → significant at 5 %.
+
+```pic
+{"id": "w06d4-pic2", "title": "Zero outside the interval: significant. Inside: not", "caption": "Bootstrap 95 % intervals for the FPD gap in points, 10 000 resamples each (seed 2026). App − branch runs from +0.05 to +1.30 and leaves zero out; partner − branch runs from −0.55 to +0.76 and holds it.", "chart": {"type": "intervals", "rows": [{"label": "app − branch", "lo": 0.05, "mid": 0.66, "hi": 1.3}, {"label": "partner − br", "lo": -0.55, "mid": 0.08, "hi": 0.76}], "ref": {"at": 0, "label": "zero"}, "min": -1, "max": 1.5, "unit": " pt"}}
+```
 
 **How to write it.** Resample each group → difference → repeat 10 000 times → 2.5th and 97.5th percentiles.
 
@@ -471,6 +479,10 @@ Detecting FPD falling from 1.28 % to 1.00 % needs 22 481 loans in each arm; with
 ### MDE and the power curve — what can this test see?
 
 **What it is.** Turn the sample-size question round. With n fixed, the **minimum detectable effect** (*минимальный детектируемый эффект*, MDE) is the smallest true change the test detects with 80 % power. The **power curve** shows power against n for one effect.
+
+```pic
+{"id": "w06d4-pic3", "title": "Power grows with n — far faster for a frequent metric", "caption": "Power to detect the SMS effect, by loans per arm (α 5 %). Teal: FPD30 falling from 1.28 % to 1.00 % — only 46.4 % with 10 000 per arm. Amber: \"late at all\" falling from 13.3 % to 10.7 % — 73.9 % already at 2 000.", "chart": {"type": "bars", "labels": ["2 000", "2 000", "5 000", "5 000", "10 000", "10 000", "30 000", "30 000"], "values": [13.3, 73.9, 26.2, 98.4, 46.4, 100.0, 89.9, 100.0], "tone": ["a", "b", "a", "b", "a", "b", "a", "b"], "show": true, "unit": "%", "note": "x: loans per arm · teal FPD30 · amber late at all"}}
+```
 
 **How to write it.** `mde_rate` and `power_at` from the calculator:
 

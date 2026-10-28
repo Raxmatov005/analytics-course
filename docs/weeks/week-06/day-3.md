@@ -122,6 +122,10 @@ print(np.mean(np.abs(diff) >= 41/2411 - 34/3263))          # 0.0321 — the shar
 
 If both channels had the same FPD rate, a gap of 0.66 points or more, in either direction, would appear in about 3.2 % of samples of this size: p = 0.032.
 
+```pic
+{"id": "w06d3-pic1", "title": "The p-value is the tail of the H₀ world", "caption": "100 000 samples in which both channels share one FPD rate (seed 2026). Gaps at least as far from zero as the real 0.66 points, either way — the dark bars and the 30 samples beyond the edges — are 3.2 % of them: **p = 0.032**.", "chart": {"type": "bars", "labels": ["−0.99", "−0.77", "−0.55", "−0.33", "−0.11", "0.11", "0.33", "0.55", "0.77", "0.99"], "values": [0.17, 1.39, 6.09, 16.21, 26.58, 26.37, 15.64, 5.91, 1.4, 0.21], "hl": [0, 1, 8, 9], "marks": [{"at": 1.5, "label": "−0.66"}, {"at": 7.5, "label": "+0.66"}], "note": "x: gap app − branch, points · y: share of the H₀ samples"}}
+```
+
 **When you use it.**
 - To decide (next subsection: compare p with α).
 - To say how surprising the data are under H₀ — never how likely H₀ is.
@@ -399,6 +403,10 @@ In Excel, one row per channel and four formula cells:
 ### Chi-square test of independence
 
 **What it is.** The **chi-square test of independence** (*критерий хи-квадрат Пирсона*) asks whether two categorical variables are related. It compares the counts in a **contingency table** (*таблица сопряжённости*) with the counts you would expect if they were independent.
+
+```pic
+{"id": "w06d3-pic2", "title": "Chi-square compares what you saw with what independence expects", "caption": "If FPD did not depend on the channel, each channel would get its share of the 91 FPDs: expected = loans × 91 / 7 099. The app's 41 against an expected 30.9 is the biggest part of χ² = 5.11, which adds up every cell of the table.", "tables": [{"id": "obs", "name": "crosstab", "label": "observed", "cols": ["channel", "loans", "FPD"], "rows": [["app", "2 411", 41], ["branch", "3 263", 34], ["partner", "1 425", 16]]}, {"id": "res", "name": "result", "cols": ["channel", "FPD", "expected", "(O−E)²/E"], "rows": [["app", 41, "30.9", "3.30"], ["branch", 34, "41.8", "1.46"]], "new": ["expected", "(O−E)²/E"], "cells": [[0, "FPD"], [0, "(O−E)²/E"]], "more": "… partner: the same sum", "via": "expected = loans × 91 / 7 099"}]}
+```
 
 **How to write it.** In words: expected count = row total × column total / grand total; χ² = Σ (observed − expected)² / expected; degrees of freedom = (rows − 1)(columns − 1).
 

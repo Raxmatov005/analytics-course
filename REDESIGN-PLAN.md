@@ -119,7 +119,7 @@ A small figure drawn from the course database: the primary key circled and label
 the two cells of a link in one colour (an arrow joins the rows when the tables sit side by side), rows a filter keeps
 (green) or drops (struck through), rows coloured by group, a step label between a table and the next ("WHERE …").
 The format is at the top of `docs/assets/pics.js`. Keep each table to 3–4 short columns: it must fit a 375 px phone.
-Week 1 has eleven (EN + RU); the other weeks are next.
+Every lesson day of Weeks 1–8 has pictures (87 per language, 2026-10-28); checkpoint days have none, and no picture shows the answer to a task on its page.
 
 ### Callouts (plain Markdown, styled by the renderer)
 `> 💡 **Key idea.** …` · `> ⚠️ **Watch out.** …` · `> 🎯 **Interview version.** …` ·
@@ -187,4 +187,4 @@ video questions asked at the end of each part (no retiming needed).
 
 Done 2026-10-28: the course calendar (`docs/schedule.json`, `assets/schedule.js`, the bot refuses late hand-ins:
 lessons open at 00:00 Tashkent, homework closes at 23:59 on its due day, lessons not open yet are hidden; off until
-"start" is set) and the `pic` pictures for Week 1.
+"start" is set) and the `pic` pictures for Weeks 1–8 (tables, plus "bars" and "intervals" charts).
