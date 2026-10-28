@@ -41,11 +41,11 @@
 
 **Как пишется.** У каждой функции поиска одни и те же три части:
 
-```text
-what      the key in this row                 B2  ("Micro loan")
-where     the column to search for the key    E2:E4
-return    the column to bring back            F2:F4
-```
+| Часть | Что это | Пример |
+|---|---|---|
+| what | the key in this row | B2 ("Micro loan") |
+| where | the column to search for the key | E2:E4 |
+| return | the column to bring back | F2:F4 |
 
 Картинка — таблица кредитов с добавленной найденной ставкой:
 
@@ -81,17 +81,16 @@ return    the column to bring back            F2:F4
 
 **Как пишется.**
 
-```excel
-=VLOOKUP(what, where, column_number, FALSE)
-=VLOOKUP(B2, $E$2:$F$4, 2, FALSE)          what = this row's product · where = the whole rates table
-                                            2 = its 2nd column · FALSE = exact match
-```
+| Формула | Примечание |
+|---|---|
+| `=VLOOKUP(what, where, column_number, FALSE)` |   |
+| `=VLOOKUP(B2, $E$2:$F$4, 2, FALSE)` | what = this row's product · where = the whole rates table · 2 = its 2nd column · FALSE = exact match |
 
 На маленькой таблице она возвращает 0.42, 0.24, `#N/A`, 0.42. На настоящей книге:
 
-```excel
-=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)     → 0.30 for a Consumer loan
-```
+| Формула | Даёт |
+|---|---|
+| `=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)` | 0.30 for a Consumer loan |
 
 Четыре ловушки, каждая из которых где-то уже дала неверное число правлению:
 
@@ -122,20 +121,20 @@ return    the column to bring back            F2:F4
 
 **Как пишется.**
 
-```excel
-=MATCH(what, one_column, 0)                    0 = exact match → a position (1, 2, 3 …)
-=INDEX(one_column, position)                   the value at that position
-=INDEX(return_column, MATCH(what, key_column, 0))
-```
+| Формула | Примечание |
+|---|---|
+| `=MATCH(what, one_column, 0)` | 0 = exact match → a position (1, 2, 3 …) |
+| `=INDEX(one_column, position)` | the value at that position |
+| `=INDEX(return_column, MATCH(what, key_column, 0))` |   |
 
 На маленькой таблице: `=MATCH("Auto loan", E2:E4, 0)` → **2**; `=INDEX(F2:F4, 2)` → **0.24**. Вместе: `=INDEX($F$2:$F$4, MATCH(B3, $E$2:$E$4, 0))` → 0.24.
 
 На настоящей книге:
 
-```excel
-=INDEX(Lookup!$C$3:$C$7, MATCH([@product], Lookup!$A$3:$A$7, 0))     → the rate
-=INDEX(Lookup!$A$3:$A$7, MATCH("SME", Lookup!$B$3:$B$7, 0))           → "Small business loan" (looking left)
-```
+| Формула | Даёт |
+|---|---|
+| `=INDEX(Lookup!$C$3:$C$7, MATCH([@product], Lookup!$A$3:$A$7, 0))` | the rate |
+| `=INDEX(Lookup!$A$3:$A$7, MATCH("SME", Lookup!$B$3:$B$7, 0))` | "Small business loan" (looking left) |
 
 `SME` стоит на позиции 5 в столбце `code`, поэтому `INDEX` берёт позицию 5 столбца `product`, который находится **левее** `code`.
 
@@ -184,10 +183,10 @@ return    the column to bring back            F2:F4
 
 На настоящей книге:
 
-```excel
-=XLOOKUP([@product], Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)              exact by default; #N/A if missing
-=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], "not found")
-```
+| Формула | Примечание |
+|---|---|
+| `=XLOOKUP([@product], Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` | exact by default; #N/A if missing |
+| `=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], "not found")` |   |
 
 Если в `B1` стоит 2167, вторая формула возвращает **Dilnoza Abdullaeva**; если 99999 — `not found`.
 
@@ -214,10 +213,16 @@ return    the column to bring back            F2:F4
 
 **Как пишется.**
 
-```excel
-match_mode   0 exact (default) · -1 exact or next smaller · 1 exact or next larger · 2 wildcard
-=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)       the empty 4th argument: no not-found text
-```
+| match_mode | Что значит |
+|---|---|
+| 0 | exact (default) |
+| -1 | exact or next smaller |
+| 1 | exact or next larger |
+| 2 | wildcard |
+
+| Формула | Примечание |
+|---|---|
+| `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` | the empty 4th argument: no not-found text |
 
 Таблица диапазонов на `Lookup` и что получают три значения dpd:
 
@@ -252,10 +257,14 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 
 **Как пишется.**
 
-```excel
-search_mode   1 first to last (default) · -1 last to first
-=XLOOKUP(4567, tblPayments[loan_id], tblPayments[paid_at], , 0, -1)      the bottom row of loan 4567
-```
+| search_mode | Что значит |
+|---|---|
+| 1 | first to last (default) |
+| -1 | last to first |
+
+| Формула | Примечание |
+|---|---|
+| `=XLOOKUP(4567, tblPayments[loan_id], tblPayments[paid_at], , 0, -1)` | the bottom row of loan 4567 |
 
 У кредита 4567 три строки платежей: 2026-04-07, 2026-05-06, 2026-06-09. Сверху формула вернула бы 2026-04-07; снизу она возвращает **2026-06-09** (формат ячейки `yyyy-mm-dd`).
 
@@ -277,12 +286,11 @@ search_mode   1 first to last (default) · -1 last to first
 
 **Как пишется.** Три способа, лучший первым:
 
-```excel
-1. helper key column    [@loan_id]&"|"&[@installment_no]   in the lookup table, then an exact lookup on it
-2. glue inside          =XLOOKUP(k1&"|"&k2, col1&"|"&col2, return_column)
-3. classic array        =INDEX(return_column, MATCH(1, (col1=k1)*(col2=k2), 0))    old Excel: Ctrl+Shift+Enter
-
-```
+| Способ | Как пишется | Примечание |
+|---|---|---|
+| 1. helper key column | `[@loan_id]&"\|"&[@installment_no]` | in the lookup table, then an exact lookup on it |
+| 2. glue inside | `=XLOOKUP(k1&"\|"&k2, col1&"\|"&col2, return_column)` |   |
+| 3. classic array | `=INDEX(return_column, MATCH(1, (col1=k1)*(col2=k2), 0))` | old Excel: Ctrl+Shift+Enter |
 
 `"|"` разделяет `1`&`12` и `11`&`2`: `1|12` и `11|2` — разные ключи, а `112` и `112` — нет. На маленькой таблице платежей по графику:
 
@@ -317,10 +325,10 @@ search_mode   1 first to last (default) · -1 last to first
 
 **Как пишется.**
 
-```excel
-=IFERROR(formula, value_if_error)
-=IFERROR(INDEX($F$2:$F$4, MATCH(B4, $E$2:$E$4, 0)), "not found")      → "not found" for Car lease
-```
+| Формула | Даёт |
+|---|---|
+| `=IFERROR(formula, value_if_error)` |   |
+| `=IFERROR(INDEX($F$2:$F$4, MATCH(B4, $E$2:$E$4, 0)), "not found")` | `"not found"` for Car lease |
 
 На настоящей книге: `=IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[loan_id], 0)), "not found")` возвращает то же, что поиск кредита через XLOOKUP выше, — `not found` для 99999.
 
@@ -347,10 +355,10 @@ search_mode   1 first to last (default) · -1 last to first
 
 **Как пишется.**
 
-```excel
-A3:   =UNIQUE(tblLoans[branch])         one formula → 10 cells, A3:A12
-B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, however long
-```
+| Ячейка | Формула | Примечание |
+|---|---|---|
+| A3 | `=UNIQUE(tblLoans[branch])` | one formula → 10 cells, A3:A12 |
+| B3 | `=ROWS(A3#)` | → 10 · # = all of A3's spill, however long |
 
 | | A |
 |---|---|
@@ -379,11 +387,11 @@ B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, howev
 
 **Как пишется.**
 
-```excel
-=UNIQUE(range)
-=UNIQUE(tblLoans[region])          → 8 rows, one per region
-=ROWS(UNIQUE(tblLoans[branch]))    → 10   a count of distinct values
-```
+| Формула | Даёт | Примечание |
+|---|---|---|
+| `=UNIQUE(range)` |   |   |
+| `=UNIQUE(tblLoans[region])` | 8 rows | one per region |
+| `=ROWS(UNIQUE(tblLoans[branch]))` | 10 | a count of distinct values |
 
 На маленькой таблице кредитов: `=UNIQUE(B2:B5)` → `Micro loan`, `Auto loan`, `Car lease` — три строки, Micro один раз.
 
@@ -413,8 +421,13 @@ B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, howev
 ```excel
 =FILTER(range, condition, [if_empty])
 =FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late loans")
-         rows      AND = multiply: (a)*(b)                       text when nothing matches
 ```
+
+| Часть | Что это |
+|---|---|
+| `tblLoans` | rows |
+| `(a)*(b)` | AND = multiply |
+| `"no late loans"` | text when nothing matches |
 
 Условия — это столбцы из TRUE/FALSE. **Перемножайте** их для AND, **складывайте** для OR: `(a)+(b)`.
 
@@ -446,12 +459,12 @@ B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, howev
 
 **Как пишется.**
 
-```excel
-=SORT(range, [column_number], [order])        order: 1 ascending (default), -1 descending
-=SORTBY(range, by_range, [order])
-=SORT(FILTER(tblLoans, …), 12, -1)            by the 12th column of tblLoans (dpd), worst first
-=SORTBY(tblLoans[loan_id], tblLoans[outstanding], -1)
-```
+| Формула | Примечание |
+|---|---|
+| `=SORT(range, [column_number], [order])` | order: 1 ascending (default), -1 descending |
+| `=SORTBY(range, by_range, [order])` |   |
+| `=SORT(FILTER(tblLoans, …), 12, -1)` | by the 12th column of tblLoans (dpd), worst first |
+| `=SORTBY(tblLoans[loan_id], tblLoans[outstanding], -1)` |   |
 
 На маленькой таблице кредитов: `=SORTBY(A2:A5, C2:C5, -1)` → 102, 103, 101, 104 (по остатку 200, 90, 4, 2).
 
@@ -476,11 +489,11 @@ B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, howev
 
 **Как пишется.**
 
-```excel
-=SEQUENCE(rows, [columns], [start], [step])
-=SEQUENCE(5)                       → 1, 2, 3, 4, 5
-=DATE(2026, SEQUENCE(10), 1)       → 2026-01-01, 2026-02-01, … 2026-10-01
-```
+| Формула | Даёт |
+|---|---|
+| `=SEQUENCE(rows, [columns], [start], [step])` |   |
+| `=SEQUENCE(5)` | 1, 2, 3, 4, 5 |
+| `=DATE(2026, SEQUENCE(10), 1)` | 2026-01-01, 2026-02-01, … 2026-10-01 |
 
 С датами в A3# формула `B3 =COUNTIFS(tblLoans[disbursed_at], ">="&A3#, tblLoans[disbursed_at], "<"&EDATE(A3#, 1))` разливает по одному числу на месяц. В январе 2026 года — **287** кредитов.
 
@@ -501,9 +514,21 @@ B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, howev
 **Как пишется.**
 
 ```text
-Select B1 → Data → Data Validation → Allow: List → Source: =Helper!$A$2#
-Helper!A2:   =SORT(UNIQUE(tblLoans[branch]))          the list, spilled on a helper sheet
-Sheets:      Data → Data validation → Dropdown (from a range) → Helper!A2:A11
+Select B1
+  → Data
+  → Data Validation
+  → Allow: List
+  → Source: =Helper!$A$2#
+
+Helper!A2:
+  =SORT(UNIQUE(tblLoans[branch]))
+  the list, spilled on a helper sheet
+
+Sheets:
+  Data
+  → Data validation
+  → Dropdown (from a range)
+  → Helper!A2:A11
 ```
 
 Затем каждая формула читает `$B$1`:
@@ -541,9 +566,9 @@ Sheets:      Data → Data validation → Dropdown (from a range) → Helper!A2:
 
 Правило с формулой, строка за строкой. Выделите A2:M7829 и напишите правило для **первой строки** выделения:
 
-```excel
-=$M2="90+"          $M = always column M (bucket) · 2 = the row moves with each row
-```
+| Правило | Что значит |
+|---|---|
+| `=$M2="90+"` | $M = always column M (bucket) · 2 = the row moves with each row |
 
 | Ячейка | Правило, которое применяет Excel | Читает |
 |---|---|---|
@@ -646,11 +671,11 @@ Sheets:      Data → Data validation → Dropdown (from a range) → Helper!A2:
 
 Вопрос Севары одним блоком: *«просроченные кредиты выбранного мной филиала, худшие первыми, у каждого — ставка его продукта»*.
 
-```excel
-B1:  dropdown — Data Validation, List, source =Helper!$A$2#   (Helper!A2: =SORT(UNIQUE(tblLoans[branch])))
-A6:  =SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late loans"), 12, -1)
-N6:  =XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)
-```
+| Ячейка | Что в ней |
+|---|---|
+| B1 | dropdown — Data Validation, List, source `=Helper!$A$2#` (Helper!A2: `=SORT(UNIQUE(tblLoans[branch]))`) |
+| A6 | `=SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late loans"), 12, -1)` |
+| N6 | `=XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` |
 
 1. **UNIQUE** + **SORT** строят список филиалов; **проверка данных** превращает `B1` в выпадающий список.
 2. **FILTER** оставляет строки этого филиала с dpd > 0 — два условия перемножены для AND.
@@ -733,10 +758,10 @@ A6:  =SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late 
    Два условия перемножены (AND); столбец 12 = `dpd`; `-1` = худшие первыми.
 5. **Формулы над разливом (`A6#`).**
 
-```excel
-A2  "Late loans"   B2  =IF(A6="no late loans", 0, COUNTA(INDEX(A6#, , 1)))     count of filtered rows
-C2  "Outstanding"  D2  =SUM(INDEX(A6#, , 11))                                   11th column = outstanding
-```
+| Подпись | Формула | Примечание |
+|---|---|---|
+| A2 "Late loans" | B2 `=IF(A6="no late loans", 0, COUNTA(INDEX(A6#, , 1)))` | count of filtered rows |
+| C2 "Outstanding" | D2 `=SUM(INDEX(A6#, , 11))` | 11th column = outstanding |
 
    Выберите **Tashkent South**: B2 → **59** просроченных кредитов, D2 → **1 566 587 839** — остаток долга *только просроченных кредитов*. Вся книга филиала (`=SUMIFS(tblLoans[outstanding], tblLoans[branch], $B$1)`) — **26 787 392 136**. Поставьте на лист оба числа с подписями: «сумма» у Севары — это просроченные деньги, а у Бекзода — вся книга. Первая строка — худший кредит филиала: кредит 7339, 902 DPD, списан; 39 из 59 находятся в 90+, так что живой объём работы — 20 кредитов. Защита через `IF` важна: без совпадений A6 показывает `no late loans`, и голый `COUNTA` сказал бы 1.
 6. **XLOOKUP — ставка.** `N6` = `=XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` (столбец 4 = product) разливает по ставке на строку. `IFERROR` не нужен: каждый продукт есть на `Lookup`, а если однажды его не окажется, `#N/A` — правильный сигнал.
@@ -745,15 +770,15 @@ C2  "Outstanding"  D2  =SUM(INDEX(A6#, , 11))                                   
 
 **Excel ↔ Sheets.** Тот же лист в Google Sheets — `FILTER` принимает условия отдельными аргументами, третий аргумент `SORT` — TRUE/FALSE, а `ARRAYFORMULA` заполняет столбец ставок:
 
-```
-B1   dropdown  — Data validation → Dropdown (from a range) → Helper!A2:A11, where Helper!A2 = SORT(UNIQUE(Loans!E2:E))
-B2   =COUNTA(A6:A)                                            rows in the spill (blank tail ignored by COUNTA)
-D2   =SUM(K6:K)                                               outstanding column of the spill
-A5   =Loans!A1:M1                                             header row
-A6   =SORT(FILTER(Loans!A2:M, Loans!E2:E=B1, Loans!L2:L>0), 12, FALSE)
-N6   =ARRAYFORMULA(IF(D6:D="", "", XLOOKUP(D6:D, Lookup!A3:A7, Lookup!C3:C7)))     rate per filtered row
-Format → Conditional formatting → Custom formula is  =$M6="90+"  on A6:N
-```
+| Ячейка | Что в ней | Примечание |
+|---|---|---|
+| B1 | dropdown — Data validation → Dropdown (from a range) → Helper!A2:A11, where Helper!A2 = `SORT(UNIQUE(Loans!E2:E))` |   |
+| B2 | `=COUNTA(A6:A)` | rows in the spill (blank tail ignored by COUNTA) |
+| D2 | `=SUM(K6:K)` | outstanding column of the spill |
+| A5 | `=Loans!A1:M1` | header row |
+| A6 | `=SORT(FILTER(Loans!A2:M, Loans!E2:E=B1, Loans!L2:L>0), 12, FALSE)` |   |
+| N6 | `=ARRAYFORMULA(IF(D6:D="", "", XLOOKUP(D6:D, Lookup!A3:A7, Lookup!C3:C7)))` | rate per filtered row |
+| A6:N | Format → Conditional formatting → Custom formula is `=$M6="90+"` |   |
 
 `IF(D6:D="", "", …)` оставляет столбец ставок пустым ниже разлива — без этого `ARRAYFORMULA` заполнит 1 000 строк значениями `#N/A`.
 
@@ -907,14 +932,14 @@ Format → Conditional formatting → Custom formula is  =$M6="90+"  on A6:N
 
 На второй неделе DPD и корзины считались в SQL; на третьей они оказались в представлении; сегодня **таблица** корзин переезжает в `Lookup!A10:C15`, а **правило** корзин становится одним приближённым поиском — то же разделение определения и данных, но в Excel.
 
-```
-Loans, new column   lk_bucket  =XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)
-Summary sheet       A3:A7      0 · 1-30 · 31-60 · 61-90 · 90+  (text — '0)
-                    B3         =COUNTIFS(tblLoans[lk_bucket], A3)
-                    C3         =SUMIFS(tblLoans[outstanding], tblLoans[lk_bucket], A3)
-                    D3         =C3/SUM($C$3:$C$7)                    → 0.00%
-                    B8, C8     =SUM(B3:B7), =SUM(C3:C7)             → 7 828 · 208 723 504 430
-```
+| Лист | Столбец / ячейка | Что в ней |
+|---|---|---|
+| Loans, new column | lk_bucket | `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` |
+| Summary sheet | A3:A7 | 0 · 1-30 · 31-60 · 61-90 · 90+ (text — '0) |
+|   | B3 | `=COUNTIFS(tblLoans[lk_bucket], A3)` |
+|   | C3 | `=SUMIFS(tblLoans[outstanding], tblLoans[lk_bucket], A3)` |
+|   | D3 | `=C3/SUM($C$3:$C$7)` → 0.00% |
+|   | B8, C8 | `=SUM(B3:B7)`, `=SUM(C3:C7)` → 7 828 · 208 723 504 430 |
 
 | bucket | loans | outstanding | share of outstanding |
 |---|---|---|---|

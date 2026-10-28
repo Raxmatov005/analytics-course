@@ -121,19 +121,19 @@
 
 <details><summary>Model answer</summary>
 
-```
-Source                 From Text/CSV → customers_dirty.csv
-Promoted Headers
-Changed Type           customer_id, monthly_income → Whole Number (blanks become null); birth_date, registered_at → Date; phone → Text
-Trim names             select first_name, last_name → Transform → Format → Trim
-Capitalize names       → Format → Capitalize Each Word
-Flag bad birth dates   Add Column → Custom: birth_date_invalid = [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)
-Clean birth date       Add Column → Conditional: birth_date_clean = if birth_date_invalid = true then null else [birth_date]
-Age                    Add Column → Custom: age = if [birth_date_clean] = null then null else Date.Year(#date(2026,10,1)) - Date.Year([birth_date_clean]) - (if Date.DayOfYear(#date(2026,10,1)) < Date.DayOfYear([birth_date_clean]) then 1 else 0)
-Sort                   registered_at ascending   (so Remove Duplicates keeps the original, not the later copy)
-Remove duplicates      select phone, birth_date → Remove Rows → Remove Duplicates          6 040 → 6 000
-Close & Load To        Table customers_clean
-```
+| Step | How | Note |
+|---|---|---|
+| Source | From Text/CSV → customers_dirty.csv |   |
+| Promoted Headers |   |   |
+| Changed Type | customer_id, monthly_income → Whole Number (blanks become null); birth_date, registered_at → Date; phone → Text |   |
+| Trim names | select first_name, last_name → Transform → Format → Trim |   |
+| Capitalize names | → Format → Capitalize Each Word |   |
+| Flag bad birth dates | Add Column → Custom: `birth_date_invalid = [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)` |   |
+| Clean birth date | Add Column → Conditional: `birth_date_clean = if birth_date_invalid = true then null else [birth_date]` |   |
+| Age | Add Column → Custom: `age = if [birth_date_clean] = null then null else Date.Year(#date(2026,10,1)) - Date.Year([birth_date_clean]) - (if Date.DayOfYear(#date(2026,10,1)) < Date.DayOfYear([birth_date_clean]) then 1 else 0)` |   |
+| Sort | registered_at ascending | (so Remove Duplicates keeps the original, not the later copy) |
+| Remove duplicates | select phone, birth_date → Remove Rows → Remove Duplicates | 6 040 → 6 000 |
+| Close & Load To | Table customers_clean |   |
 
 Checks on `Checks`: `=ROWS(customers_clean)` → **6 000**; `=COUNTIFS(customers_clean[birth_date_invalid], TRUE)` → **7**; `=MAX(customers_clean[customer_id])` → 6 000 (no id above 6 000 survives — every duplicate was the *later* registration; if you get 6 0xx you did not sort first); `=COUNTBLANK(customers_clean[monthly_income])` → 354 (the raw file has 356; two blanks belonged to removed duplicates — and 0 if you typed blanks as 0: wrong — a zero income is a statement, a blank is a gap); `=ROWS(UNIQUE(customers_clean[phone]))` → 5 997; `=COUNTIFS(customers_clean[first_name], "*Bobur*")` returns the same whether or not a space followed. Namesakes 823/1197 and 2460/5562 are both present. Average age of valid rows 45.2.
 
@@ -147,21 +147,16 @@ Change-log lines (5 of the 10): *Trimmed and capitalised first_name/last_name �
 
 <details><summary>Model answer</summary>
 
-```
-payments_clean
-  Source → Promoted Headers → Changed Type (ids, amount → Whole Number; paid_at → Date; method, product, region → Text)
-  Trim method → lowercase method → Replace Values "bank transfer" → "transfer" (entire cell)
-  Sort payment_id ascending → Remove Duplicates on installment_id, paid_at, amount           52 875 → 52 850
-  Add Column → Custom: is_forward_dated = [paid_at] > #date(2026,10,1)
-  Close & Load To → Table
-
-paid_by_installment  (reference payments_clean)
-  Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount), first_paid = Min(paid_at)   → Connection only
-
-installments_paid
-  Source installments.csv → types → Merge Queries paid_by_installment, Left Outer on installment_id → expand paid, first_paid
-  → Replace null → 0 in paid → Add Column → Date → Month → Start of Month (due_date) as due_month → Close & Load To → Table
-```
+| Query | Steps | Note |
+|---|---|---|
+| payments_clean | Source → Promoted Headers → Changed Type (ids, amount → Whole Number; paid_at → Date; method, product, region → Text) |   |
+|   | Trim method → lowercase method → Replace Values "bank transfer" → "transfer" (entire cell) |   |
+|   | Sort payment_id ascending → Remove Duplicates on installment_id, paid_at, amount | 52 875 → 52 850 |
+|   | Add Column → Custom: `is_forward_dated = [paid_at] > #date(2026,10,1)` |   |
+|   | Close & Load To → Table |   |
+| paid_by_installment (reference payments_clean) | Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount), first_paid = Min(paid_at) | → Connection only |
+| installments_paid | Source installments.csv → types → Merge Queries paid_by_installment, Left Outer on installment_id → expand paid, first_paid |   |
+|   | → Replace null → 0 in paid → Add Column → Date → Month → Start of Month (due_date) as due_month → Close & Load To → Table |   |
 
 Checks: `=ROWS(payments_clean)` → **52 850**; `=SUM(payments_clean[amount])` → **255 114 772 176**; `=ROWS(UNIQUE(payments_clean[method]))` → **5**; counts card 17 612 · payme 8 897 · cash 8 788 · click 8 786 · transfer 8 767; `=COUNTIFS(payments_clean[is_forward_dated], TRUE)` → **24** (Σ 53 438 947); `=ROWS(installments_paid)` → **92 193** (Left Outer kept every instalment); `=COUNTIFS(installments_paid[due_date], "<="&DATE(2026,10,1), …)` with `paid < total_due` via `SUMPRODUCT` → **1 784**; instalments with `paid > total_due` → **0** (it was 25 before the dedup — the duplicates were the only over-payments).
 

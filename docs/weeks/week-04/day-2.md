@@ -41,11 +41,11 @@ On the real workbook the second table is `Lookup!A3:F7`: `product`, `code`, `ann
 
 **How to write it.** Every lookup function has the same three parts:
 
-```text
-what      the key in this row                 B2  ("Micro loan")
-where     the column to search for the key    E2:E4
-return    the column to bring back            F2:F4
-```
+| Part | Means | Example |
+|---|---|---|
+| what | the key in this row | B2 ("Micro loan") |
+| where | the column to search for the key | E2:E4 |
+| return | the column to bring back | F2:F4 |
 
 The picture — the loans table with the looked-up rate added:
 
@@ -81,17 +81,16 @@ On the real workbook, a `rate` column on `tblLoans` keeps all **7 828** rows: ea
 
 **How to write it.**
 
-```excel
-=VLOOKUP(what, where, column_number, FALSE)
-=VLOOKUP(B2, $E$2:$F$4, 2, FALSE)          what = this row's product · where = the whole rates table
-                                            2 = its 2nd column · FALSE = exact match
-```
+| Formula | Note |
+|---|---|
+| `=VLOOKUP(what, where, column_number, FALSE)` |   |
+| `=VLOOKUP(B2, $E$2:$F$4, 2, FALSE)` | what = this row's product · where = the whole rates table · 2 = its 2nd column · FALSE = exact match |
 
 On the small table it returns 0.42, 0.24, `#N/A`, 0.42. On the real workbook:
 
-```excel
-=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)     → 0.30 for a Consumer loan
-```
+| Formula | Gives |
+|---|---|
+| `=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)` | 0.30 for a Consumer loan |
 
 The four traps, each of which has produced a wrong board number somewhere:
 
@@ -122,20 +121,20 @@ The four traps, each of which has produced a wrong board number somewhere:
 
 **How to write it.**
 
-```excel
-=MATCH(what, one_column, 0)                    0 = exact match → a position (1, 2, 3 …)
-=INDEX(one_column, position)                   the value at that position
-=INDEX(return_column, MATCH(what, key_column, 0))
-```
+| Formula | Note |
+|---|---|
+| `=MATCH(what, one_column, 0)` | 0 = exact match → a position (1, 2, 3 …) |
+| `=INDEX(one_column, position)` | the value at that position |
+| `=INDEX(return_column, MATCH(what, key_column, 0))` |   |
 
 On the small table: `=MATCH("Auto loan", E2:E4, 0)` → **2**; `=INDEX(F2:F4, 2)` → **0.24**. Together: `=INDEX($F$2:$F$4, MATCH(B3, $E$2:$E$4, 0))` → 0.24.
 
 On the real workbook:
 
-```excel
-=INDEX(Lookup!$C$3:$C$7, MATCH([@product], Lookup!$A$3:$A$7, 0))     → the rate
-=INDEX(Lookup!$A$3:$A$7, MATCH("SME", Lookup!$B$3:$B$7, 0))           → "Small business loan" (looking left)
-```
+| Formula | Gives |
+|---|---|
+| `=INDEX(Lookup!$C$3:$C$7, MATCH([@product], Lookup!$A$3:$A$7, 0))` | the rate |
+| `=INDEX(Lookup!$A$3:$A$7, MATCH("SME", Lookup!$B$3:$B$7, 0))` | "Small business loan" (looking left) |
 
 `SME` is in position 5 of the `code` column, so `INDEX` takes position 5 of the `product` column, which sits to the **left** of `code`.
 
@@ -184,10 +183,10 @@ On the small table it returns 0.42, 0.24, `not found`, 0.42 — row 103 reads `n
 
 On the real workbook:
 
-```excel
-=XLOOKUP([@product], Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)              exact by default; #N/A if missing
-=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], "not found")
-```
+| Formula | Note |
+|---|---|
+| `=XLOOKUP([@product], Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` | exact by default; #N/A if missing |
+| `=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], "not found")` |   |
 
 With 2167 in `B1` the second formula returns **Dilnoza Abdullaeva**; with 99999 it returns `not found`.
 
@@ -214,10 +213,16 @@ With 2167 in `B1` the second formula returns **Dilnoza Abdullaeva**; with 99999 
 
 **How to write it.**
 
-```excel
-match_mode   0 exact (default) · -1 exact or next smaller · 1 exact or next larger · 2 wildcard
-=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)       the empty 4th argument: no not-found text
-```
+| match_mode | Means |
+|---|---|
+| 0 | exact (default) |
+| -1 | exact or next smaller |
+| 1 | exact or next larger |
+| 2 | wildcard |
+
+| Formula | Note |
+|---|---|
+| `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` | the empty 4th argument: no not-found text |
 
 The band table on `Lookup` and what three dpd values get:
 
@@ -252,10 +257,14 @@ Wildcard: `=XLOOKUP("Small*", Lookup!$A$3:$A$7, Lookup!$C$3:$C$7, , 2)` → **0.
 
 **How to write it.**
 
-```excel
-search_mode   1 first to last (default) · -1 last to first
-=XLOOKUP(4567, tblPayments[loan_id], tblPayments[paid_at], , 0, -1)      the bottom row of loan 4567
-```
+| search_mode | Means |
+|---|---|
+| 1 | first to last (default) |
+| -1 | last to first |
+
+| Formula | Note |
+|---|---|
+| `=XLOOKUP(4567, tblPayments[loan_id], tblPayments[paid_at], , 0, -1)` | the bottom row of loan 4567 |
 
 Loan 4567 has three payment rows: 2026-04-07, 2026-05-06, 2026-06-09. From the top the formula would return 2026-04-07; from the bottom it returns **2026-06-09** (format the cell `yyyy-mm-dd`).
 
@@ -277,12 +286,11 @@ Loan 4567 has three payment rows: 2026-04-07, 2026-05-06, 2026-06-09. From the t
 
 **How to write it.** Three ways, best first:
 
-```excel
-1. helper key column    [@loan_id]&"|"&[@installment_no]   in the lookup table, then an exact lookup on it
-2. glue inside          =XLOOKUP(k1&"|"&k2, col1&"|"&col2, return_column)
-3. classic array        =INDEX(return_column, MATCH(1, (col1=k1)*(col2=k2), 0))    old Excel: Ctrl+Shift+Enter
-
-```
+| Way | Written | Note |
+|---|---|---|
+| 1. helper key column | `[@loan_id]&"\|"&[@installment_no]` | in the lookup table, then an exact lookup on it |
+| 2. glue inside | `=XLOOKUP(k1&"\|"&k2, col1&"\|"&col2, return_column)` |   |
+| 3. classic array | `=INDEX(return_column, MATCH(1, (col1=k1)*(col2=k2), 0))` | old Excel: Ctrl+Shift+Enter |
 
 The `"|"` keeps `1`&`12` and `11`&`2` apart: `1|12` and `11|2` are different keys, `112` and `112` are not. On a tiny instalments table:
 
@@ -317,10 +325,10 @@ On the real workbook: `=XLOOKUP(1&"|"&3, tblInstallments[loan_id]&"|"&tblInstall
 
 **How to write it.**
 
-```excel
-=IFERROR(formula, value_if_error)
-=IFERROR(INDEX($F$2:$F$4, MATCH(B4, $E$2:$E$4, 0)), "not found")      → "not found" for Car lease
-```
+| Formula | Gives |
+|---|---|
+| `=IFERROR(formula, value_if_error)` |   |
+| `=IFERROR(INDEX($F$2:$F$4, MATCH(B4, $E$2:$E$4, 0)), "not found")` | `"not found"` for Car lease |
 
 On the real workbook: `=IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[loan_id], 0)), "not found")` returns the same as the XLOOKUP loan finder above — `not found` for 99999.
 
@@ -347,10 +355,10 @@ On the real workbook: `=IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[l
 
 **How to write it.**
 
-```excel
-A3:   =UNIQUE(tblLoans[branch])         one formula → 10 cells, A3:A12
-B3:   =ROWS(A3#)                         → 10     # = all of A3's spill, however long
-```
+| Cell | Formula | Note |
+|---|---|---|
+| A3 | `=UNIQUE(tblLoans[branch])` | one formula → 10 cells, A3:A12 |
+| B3 | `=ROWS(A3#)` | → 10 · # = all of A3's spill, however long |
 
 | | A |
 |---|---|
@@ -379,11 +387,11 @@ If something is in the way, A3 shows **`#SPILL!`** and nothing spills. Clear the
 
 **How to write it.**
 
-```excel
-=UNIQUE(range)
-=UNIQUE(tblLoans[region])          → 8 rows, one per region
-=ROWS(UNIQUE(tblLoans[branch]))    → 10   a count of distinct values
-```
+| Formula | Gives | Note |
+|---|---|---|
+| `=UNIQUE(range)` |   |   |
+| `=UNIQUE(tblLoans[region])` | 8 rows | one per region |
+| `=ROWS(UNIQUE(tblLoans[branch]))` | 10 | a count of distinct values |
 
 On the small loans table: `=UNIQUE(B2:B5)` → `Micro loan`, `Auto loan`, `Car lease` — three rows, Micro once.
 
@@ -413,8 +421,13 @@ On the small loans table: `=UNIQUE(B2:B5)` → `Micro loan`, `Auto loan`, `Car l
 ```excel
 =FILTER(range, condition, [if_empty])
 =FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late loans")
-         rows      AND = multiply: (a)*(b)                       text when nothing matches
 ```
+
+| Part | Means |
+|---|---|
+| `tblLoans` | rows |
+| `(a)*(b)` | AND = multiply |
+| `"no late loans"` | text when nothing matches |
 
 Conditions are columns of TRUE/FALSE. **Multiply** them for AND, **add** them for OR: `(a)+(b)`.
 
@@ -446,12 +459,12 @@ On the real workbook: `=FILTER(tblLoans[loan_id], (tblLoans[branch]="Termez Cent
 
 **How to write it.**
 
-```excel
-=SORT(range, [column_number], [order])        order: 1 ascending (default), -1 descending
-=SORTBY(range, by_range, [order])
-=SORT(FILTER(tblLoans, …), 12, -1)            by the 12th column of tblLoans (dpd), worst first
-=SORTBY(tblLoans[loan_id], tblLoans[outstanding], -1)
-```
+| Formula | Note |
+|---|---|
+| `=SORT(range, [column_number], [order])` | order: 1 ascending (default), -1 descending |
+| `=SORTBY(range, by_range, [order])` |   |
+| `=SORT(FILTER(tblLoans, …), 12, -1)` | by the 12th column of tblLoans (dpd), worst first |
+| `=SORTBY(tblLoans[loan_id], tblLoans[outstanding], -1)` |   |
 
 On the small loans table: `=SORTBY(A2:A5, C2:C5, -1)` → 102, 103, 101, 104 (by outstanding 200, 90, 4, 2).
 
@@ -476,11 +489,11 @@ On the real workbook: `=SORTBY(tblLoans[loan_id], tblLoans[outstanding], -1)` st
 
 **How to write it.**
 
-```excel
-=SEQUENCE(rows, [columns], [start], [step])
-=SEQUENCE(5)                       → 1, 2, 3, 4, 5
-=DATE(2026, SEQUENCE(10), 1)       → 2026-01-01, 2026-02-01, … 2026-10-01
-```
+| Formula | Gives |
+|---|---|
+| `=SEQUENCE(rows, [columns], [start], [step])` |   |
+| `=SEQUENCE(5)` | 1, 2, 3, 4, 5 |
+| `=DATE(2026, SEQUENCE(10), 1)` | 2026-01-01, 2026-02-01, … 2026-10-01 |
 
 With the dates in A3#, `B3 =COUNTIFS(tblLoans[disbursed_at], ">="&A3#, tblLoans[disbursed_at], "<"&EDATE(A3#, 1))` spills one count per month. January 2026 has **287** loans.
 
@@ -501,9 +514,21 @@ With the dates in A3#, `B3 =COUNTIFS(tblLoans[disbursed_at], ">="&A3#, tblLoans[
 **How to write it.**
 
 ```text
-Select B1 → Data → Data Validation → Allow: List → Source: =Helper!$A$2#
-Helper!A2:   =SORT(UNIQUE(tblLoans[branch]))          the list, spilled on a helper sheet
-Sheets:      Data → Data validation → Dropdown (from a range) → Helper!A2:A11
+Select B1
+  → Data
+  → Data Validation
+  → Allow: List
+  → Source: =Helper!$A$2#
+
+Helper!A2:
+  =SORT(UNIQUE(tblLoans[branch]))
+  the list, spilled on a helper sheet
+
+Sheets:
+  Data
+  → Data validation
+  → Dropdown (from a range)
+  → Helper!A2:A11
 ```
 
 Then every formula reads `$B$1`:
@@ -541,9 +566,9 @@ Pick **Tashkent South** → **59** late loans; pick **Termez Central** → 22.
 
 The formula rule, row by row. Select A2:M7829 and write the rule for the **first row** of the selection:
 
-```excel
-=$M2="90+"          $M = always column M (bucket) · 2 = the row moves with each row
-```
+| Rule | Means |
+|---|---|
+| `=$M2="90+"` | $M = always column M (bucket) · 2 = the row moves with each row |
 
 | Cell | The rule Excel applies | Reads |
 |---|---|---|
@@ -646,11 +671,11 @@ Add `=$M2="61-90"` (orange), `=$M2="31-60"` (yellow), `=$M2="1-30"` (light yello
 
 Sevara's question in one block: *"the late loans of the branch I pick, worst first, each with its product's rate"*.
 
-```excel
-B1:  dropdown — Data Validation, List, source =Helper!$A$2#   (Helper!A2: =SORT(UNIQUE(tblLoans[branch])))
-A6:  =SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late loans"), 12, -1)
-N6:  =XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)
-```
+| Cell | Holds |
+|---|---|
+| B1 | dropdown — Data Validation, List, source `=Helper!$A$2#` (Helper!A2: `=SORT(UNIQUE(tblLoans[branch]))`) |
+| A6 | `=SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late loans"), 12, -1)` |
+| N6 | `=XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` |
 
 1. **UNIQUE** + **SORT** make the branch list; **data validation** turns `B1` into a dropdown.
 2. **FILTER** keeps the rows of that branch with dpd > 0 — two conditions multiplied for AND.
@@ -733,10 +758,10 @@ A6:  =SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late 
    Two conditions multiplied (AND); column 12 = `dpd`; `-1` = worst first.
 5. **Formulas on the spill (`A6#`).**
 
-```excel
-A2  "Late loans"   B2  =IF(A6="no late loans", 0, COUNTA(INDEX(A6#, , 1)))     count of filtered rows
-C2  "Outstanding"  D2  =SUM(INDEX(A6#, , 11))                                   11th column = outstanding
-```
+| Label | Formula | Note |
+|---|---|---|
+| A2 "Late loans" | B2 `=IF(A6="no late loans", 0, COUNTA(INDEX(A6#, , 1)))` | count of filtered rows |
+| C2 "Outstanding" | D2 `=SUM(INDEX(A6#, , 11))` | 11th column = outstanding |
 
    Pick **Tashkent South**: B2 → **59** late loans, D2 → **1 566 587 839** — the outstanding *of the late loans only*. The branch's whole book (`=SUMIFS(tblLoans[outstanding], tblLoans[branch], $B$1)`) is **26 787 392 136**. Put both on the sheet with their labels: Sevara's "the money" means the late money, Bekzod's means the book. The first row is the branch's worst loan — loan 7339 at 902 DPD, written off; 39 of the 59 are 90+, so the live caseload is 20 loans. The `IF` guard matters: with no match, A6 shows `no late loans` and a bare `COUNTA` would say 1.
 6. **XLOOKUP — the rate.** `N6` = `=XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` (column 4 = product) spills one rate per row. No `IFERROR`: every product exists on `Lookup`, and if one day it does not, `#N/A` is the right signal.
@@ -745,15 +770,15 @@ C2  "Outstanding"  D2  =SUM(INDEX(A6#, , 11))                                   
 
 **Excel ↔ Sheets.** The same sheet in Google Sheets — `FILTER` takes the conditions as separate arguments, `SORT`'s third argument is TRUE/FALSE, and `ARRAYFORMULA` fills the rate column:
 
-```
-B1   dropdown  — Data validation → Dropdown (from a range) → Helper!A2:A11, where Helper!A2 = SORT(UNIQUE(Loans!E2:E))
-B2   =COUNTA(A6:A)                                            rows in the spill (blank tail ignored by COUNTA)
-D2   =SUM(K6:K)                                               outstanding column of the spill
-A5   =Loans!A1:M1                                             header row
-A6   =SORT(FILTER(Loans!A2:M, Loans!E2:E=B1, Loans!L2:L>0), 12, FALSE)
-N6   =ARRAYFORMULA(IF(D6:D="", "", XLOOKUP(D6:D, Lookup!A3:A7, Lookup!C3:C7)))     rate per filtered row
-Format → Conditional formatting → Custom formula is  =$M6="90+"  on A6:N
-```
+| Cell | Holds | Note |
+|---|---|---|
+| B1 | dropdown — Data validation → Dropdown (from a range) → Helper!A2:A11, where Helper!A2 = `SORT(UNIQUE(Loans!E2:E))` |   |
+| B2 | `=COUNTA(A6:A)` | rows in the spill (blank tail ignored by COUNTA) |
+| D2 | `=SUM(K6:K)` | outstanding column of the spill |
+| A5 | `=Loans!A1:M1` | header row |
+| A6 | `=SORT(FILTER(Loans!A2:M, Loans!E2:E=B1, Loans!L2:L>0), 12, FALSE)` |   |
+| N6 | `=ARRAYFORMULA(IF(D6:D="", "", XLOOKUP(D6:D, Lookup!A3:A7, Lookup!C3:C7)))` | rate per filtered row |
+| A6:N | Format → Conditional formatting → Custom formula is `=$M6="90+"` |   |
 
 `IF(D6:D="", "", …)` keeps the rate column blank below the spill — without it `ARRAYFORMULA` fills 1 000 rows of `#N/A`.
 
@@ -907,14 +932,14 @@ No new homework. **HW 4.1** (yesterday's functions pack) is due tomorrow — add
 
 Week 2 computed DPD and buckets in SQL; week 3 put them in a view; today the bucket **table** moves to `Lookup!A10:C15` and the bucket **rule** becomes one approximate lookup — the same separation of definition and data, in Excel.
 
-```
-Loans, new column   lk_bucket  =XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)
-Summary sheet       A3:A7      0 · 1-30 · 31-60 · 61-90 · 90+  (text — '0)
-                    B3         =COUNTIFS(tblLoans[lk_bucket], A3)
-                    C3         =SUMIFS(tblLoans[outstanding], tblLoans[lk_bucket], A3)
-                    D3         =C3/SUM($C$3:$C$7)                    → 0.00%
-                    B8, C8     =SUM(B3:B7), =SUM(C3:C7)             → 7 828 · 208 723 504 430
-```
+| Sheet | Column / cell | Holds |
+|---|---|---|
+| Loans, new column | lk_bucket | `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` |
+| Summary sheet | A3:A7 | 0 · 1-30 · 31-60 · 61-90 · 90+ (text — '0) |
+|   | B3 | `=COUNTIFS(tblLoans[lk_bucket], A3)` |
+|   | C3 | `=SUMIFS(tblLoans[outstanding], tblLoans[lk_bucket], A3)` |
+|   | D3 | `=C3/SUM($C$3:$C$7)` → 0.00% |
+|   | B8, C8 | `=SUM(B3:B7)`, `=SUM(C3:C7)` → 7 828 · 208 723 504 430 |
 
 | bucket | loans | outstanding | share of outstanding |
 |---|---|---|---|

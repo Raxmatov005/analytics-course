@@ -60,13 +60,13 @@ Week 1's rule holds in Excel: **raw stays raw**. Never clean the only copy. Clea
 
 **How to write it.** One formula per kind, on the raw sheet, before you change anything:
 
-```excel
-=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041))))     stray spaces → 18
-=SUMPRODUCT(--EXACT(C2:C6041, LOWER(C2:C6041)))         written all lower case → 40
-=ROWS(UNIQUE(F2:F52876))                                distinct raw methods (Payments)
-=COUNTBLANK(I2:I6041)                                   blanks in monthly_income → 356
-=SUMPRODUCT(--ISTEXT(E2:E6041))                         dates stored as text → must be 0
-```
+| Formula | Finds |
+|---|---|
+| `=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041))))` | stray spaces → 18 |
+| `=SUMPRODUCT(--EXACT(C2:C6041, LOWER(C2:C6041)))` | written all lower case → 40 |
+| `=ROWS(UNIQUE(F2:F52876))` | distinct raw methods (Payments) |
+| `=COUNTBLANK(I2:I6041)` | blanks in monthly_income → 356 |
+| `=SUMPRODUCT(--ISTEXT(E2:E6041))` | dates stored as text → must be 0 |
 
 **When you use it.**
 - First thing with any new file: count each kind, write the counts down. They become your change log.
@@ -88,10 +88,15 @@ Week 1's rule holds in Excel: **raw stays raw**. Never clean the only copy. Clea
 Ctrl+H
   Find what:     bank transfer
   Replace with:  transfer
-  Options ▸  Match case                    off: card also finds Card and CARD
-             Match entire cell contents    on:  card does not find discard
-             Within: Sheet / Workbook
-  Replace All  →  "We made 27 replacements"   ← write this number down
+  Options ▸
+    Match case
+      off: card also finds Card and CARD
+    Match entire cell contents
+      on:  card does not find discard
+    Within: Sheet / Workbook
+  Replace All
+    →  "We made 27 replacements"
+    ← write this number down
 ```
 
 The picture — `method` before and after:
@@ -123,11 +128,16 @@ On a copy of `Payments` the run reports **27** replacements: the 27 `bank transf
 **How to write it.**
 
 ```text
-select applied_at → Data → Text to Columns
-  Step 1  Delimited                      (or Fixed width)
+select applied_at
+  → Data → Text to Columns
+  Step 1  Delimited
+          (or Fixed width)
   Step 2  Delimiter: Space
-  Step 3  column 1 → Date: YMD           column 2 → General
-          Destination: an EMPTY column   (the split overwrites the columns to the right)
+  Step 3  column 1 → Date: YMD
+          column 2 → General
+          Destination: an EMPTY column
+          (the split overwrites the
+          columns to the right)
 ```
 
 | applied_at (before) | → date | → time |
@@ -155,12 +165,11 @@ On `applications.csv` the 14 000 `applied_at` values become a date column and a 
 
 **How to write it.**
 
-```text
-B: first_name   H (new column)
-MALIKA          Malika        ← you type this one example
-Yulduz␣         Yulduz        ← Ctrl+E fills the rest
-Nodir           Nodir
-```
+| B: first_name | H (new column) |   |
+|---|---|---|
+| MALIKA | Malika | ← you type this one example |
+| Yulduz␣ | Yulduz | ← Ctrl+E fills the rest |
+| Nodir | Nodir |   |
 
 On `Customers`, typing `Malika` next to row 6001 and pressing Ctrl+E fills all 6 040 rows with a capitalised first name. No formula is left behind.
 
@@ -188,16 +197,15 @@ On `Customers`, typing `Malika` next to row 6001 and pressing Ctrl+E fills all 6
 
 **How to write it.**
 
-```excel
-=TRIM(B2)                                        "Yulduz "  → "Yulduz"
-=CLEAN(B2)                                       removes line breaks and tabs
-=SUBSTITUTE(text, old, new)                      every "old" inside text becomes "new"
-=LOWER(TRIM(F2))                                 "CASH "  → "cash";  "PayMe" → "payme"
-=SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer")              one synonym
-=SUBSTITUTE(SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer"), "pay me", "payme")
-                                                 nested: the inner result goes into the outer one
-=TRIM(CLEAN(SUBSTITUTE(B2, CHAR(160), " ")))     non-breaking spaces (CHAR 160) survive TRIM
-```
+| Formula | Does |
+|---|---|
+| `=TRIM(B2)` | `"Yulduz "` → `"Yulduz"` |
+| `=CLEAN(B2)` | removes line breaks and tabs |
+| `=SUBSTITUTE(text, old, new)` | every "old" inside text becomes "new" |
+| `=LOWER(TRIM(F2))` | `"CASH "` → `"cash"`; `"PayMe"` → `"payme"` |
+| `=SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer")` | one synonym |
+| `=SUBSTITUTE(SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer"), "pay me", "payme")` | nested: the inner result goes into the outer one |
+| `=TRIM(CLEAN(SUBSTITUTE(B2, CHAR(160), " ")))` | non-breaking spaces (CHAR 160) survive TRIM |
 
 The picture — `method`, step by step:
 
@@ -228,12 +236,12 @@ On `Payments`: 10 distinct raw methods. After the full formula, `=ROWS(UNIQUE(�
 
 **How to write it.**
 
-```excel
-=ISNUMBER(E2)                    TRUE = a real date, FALSE = text
-=DATEVALUE(E2)                   "1981-08-15" → 29813 (format the cell as a date → 1981-08-15)
-=VALUE(E2)                       the same
-=SUMPRODUCT(--ISTEXT(E2:E6041))  text dates in the whole column — must be 0
-```
+| Formula | Note |
+|---|---|
+| `=ISNUMBER(E2)` | TRUE = a real date, FALSE = text |
+| `=DATEVALUE(E2)` | "1981-08-15" → 29813 (format the cell as a date → 1981-08-15) |
+| `=VALUE(E2)` | the same |
+| `=SUMPRODUCT(--ISTEXT(E2:E6041))` | text dates in the whole column — must be 0 |
 
 How Excel reads typed text depends on the **locale** (the Windows regional setting):
 
@@ -268,8 +276,15 @@ Only ISO `yyyy-mm-dd` reads the same everywhere. Our CSVs use it.
 
 ```excel
 =LOWER(TRIM(B2)) & "|" & LOWER(TRIM(C2)) & "|" & TEXT(E2, "yyyy-mm-dd")
- first_name         sep    last_name         sep    birth_date as text
 ```
+
+| Part | Means |
+|---|---|
+| `LOWER(TRIM(B2))` | first_name |
+| `"\|"` | sep |
+| `LOWER(TRIM(C2))` | last_name |
+| `"\|"` | sep |
+| `TEXT(E2, "yyyy-mm-dd")` | birth_date as text |
 
 | customer_id | key |
 |---|---|
@@ -302,11 +317,11 @@ Only ISO `yyyy-mm-dd` reads the same everywhere. Our CSVs use it.
 
 **How to write it.**
 
-```excel
-L2  key    =LOWER(TRIM(B2))&"|"&LOWER(TRIM(C2))&"|"&TEXT(E2,"yyyy-mm-dd")
-M2  n      =COUNTIFS($L$2:$L$6041, L2)        the whole column: how many share the key
-N2  rank   =COUNTIFS($L$2:L2, L2)             a growing range: pinned start, free end
-```
+| Cell | Column | Formula | Note |
+|---|---|---|---|
+| L2 | key | `=LOWER(TRIM(B2))&"\|"&LOWER(TRIM(C2))&"\|"&TEXT(E2,"yyyy-mm-dd")` |   |
+| M2 | n | `=COUNTIFS($L$2:$L$6041, L2)` | the whole column: how many share the key |
+| N2 | rank | `=COUNTIFS($L$2:L2, L2)` | a growing range: pinned start, free end |
 
 | customer_id | key | n | rank |
 |---|---|---|---|
@@ -336,10 +351,17 @@ Filter `n > 1` to see the groups, `rank = 2` to see the extra rows. On `Payments
 **How to write it.**
 
 ```text
-select the table → Data → Remove Duplicates
-  ☑ installment_id   ☑ paid_at   ☑ amount     ← the columns that define "the same"
-  ☐ payment_id ☐ method …                      ← leave out what always differs
-  OK → "25 duplicate values found and removed; 52 850 unique values remain"
+select the table
+  → Data → Remove Duplicates
+  ☑ installment_id
+  ☑ paid_at
+  ☑ amount
+    ← the columns that define "the same"
+  ☐ payment_id ☐ method …
+    ← leave out what always differs
+  OK → "25 duplicate values found
+        and removed; 52 850 unique
+        values remain"
 ```
 
 | payment_id | installment_id | paid_at | amount | kept? |
@@ -375,22 +397,30 @@ Why it lies, on `Customers`:
 **How to write it.**
 
 ```text
-Data → Get Data → From File → From Text/CSV → payments_dirty.csv → Transform Data
-                                                                        │
-   Power Query editor ─────────────────────────────────────────────────┘
-     preview of the rows            Applied Steps (right pane)
-                                      Source
-                                      Promoted Headers
-                                      Changed Type
-                                      … one step per click …
-   Home → Close & Load  →  a Table on a new sheet
+Data → Get Data → From File
+  → From Text/CSV
+  → payments_dirty.csv
+  → Transform Data
+     │
+     ▼
+Power Query editor
+  preview of the rows
+  Applied Steps (right pane)
+    Source
+    Promoted Headers
+    Changed Type
+    … one step per click …
+  Home → Close & Load
+    → a Table on a new sheet
 ```
 
 Each step is one line of **M**, the query language, shown in the formula bar — a shape, not to type:
 
 ```text
-= Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
-  function          previous step        the condition
+= Table.SelectRows(       function
+    #"Changed Type",      previous step
+    each [paid_at]        the condition
+      <= #date(2026, 10, 1))
 ```
 
 You do not need to write M. You need to read it enough to see what a step does. Right-click a step → *Rename* so the pane reads like a change log: `Trim method`, `bank transfer → transfer`, `Drop 25 duplicates`.
@@ -414,8 +444,15 @@ You do not need to write M. You need to read it enough to see what a step does. 
 **How to write it.**
 
 ```text
-click the type icon in the column header (ABC / 123 / calendar) → choose
-M: = Table.TransformColumnTypes(#"Promoted Headers", {{"paid_at", type date}, {"amount", Int64.Type}, {"phone", type text}})
+click the type icon in the column
+header (ABC / 123 / calendar)
+  → choose
+
+M: = Table.TransformColumnTypes(
+  #"Promoted Headers",
+  {{"paid_at", type date},
+   {"amount", Int64.Type},
+   {"phone", type text}})
 ```
 
 | column | wrong guess | right type | why |
@@ -443,8 +480,15 @@ M: = Table.TransformColumnTypes(#"Promoted Headers", {{"paid_at", type date}, {"
 **How to write it.**
 
 ```text
-paid_at header ▾ → Date Filters → Before… / On or before… → 2026-10-01
-M: = Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
+paid_at header ▾
+  → Date Filters
+  → Before… / On or before…
+  → 2026-10-01
+
+M: = Table.SelectRows(
+  #"Changed Type",
+  each [paid_at]
+    <= #date(2026, 10, 1))
 ```
 
 | paid_at | kept by `<= 2026-10-01`? |
@@ -474,9 +518,21 @@ M: = Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
 **How to write it.**
 
 ```text
-select applied_at → Home → Split Column → By Delimiter → Space → At the left-most delimiter
-M: = Table.SplitColumn(#"Changed Type", "applied_at", Splitter.SplitTextByEachDelimiter({" "}), {"applied_at.1", "applied_at.2"})
-then Change Type: applied_at.1 → Date, applied_at.2 → Time
+select applied_at
+  → Home → Split Column
+  → By Delimiter → Space
+  → At the left-most delimiter
+
+M: = Table.SplitColumn(
+  #"Changed Type",
+  "applied_at",
+  Splitter.SplitTextByEachDelimiter(
+    {" "}),
+  {"applied_at.1", "applied_at.2"})
+
+then Change Type:
+  applied_at.1 → Date,
+  applied_at.2 → Time
 ```
 
 | applied_at | applied_at.1 | applied_at.2 |
@@ -500,11 +556,27 @@ then Change Type: applied_at.1 → Date, applied_at.2 → Time
 **How to write it.**
 
 ```text
-select method → Transform → Format → Trim                M: Table.TransformColumns(…, {{"method", Text.Trim}})
-select method → Transform → Format → lowercase           M: Text.Lower
-select method → Transform → Replace Values
-     Value To Find: bank transfer   Replace With: transfer
-     Advanced ▸ ☑ Match entire cell contents              M: Table.ReplaceValue(…, "bank transfer", "transfer", Replacer.ReplaceValue, {"method"})
+select method → Transform
+  → Format → Trim
+
+  M: Table.TransformColumns(…,
+       {{"method", Text.Trim}})
+
+select method → Transform
+  → Format → lowercase
+  M: Text.Lower
+
+select method → Transform
+  → Replace Values
+     Value To Find: bank transfer
+     Replace With: transfer
+     Advanced ▸
+       ☑ Match entire cell contents
+
+  M: Table.ReplaceValue(…,
+       "bank transfer", "transfer",
+       Replacer.ReplaceValue,
+       {"method"})
 ```
 
 | method (raw) | after Trim + lowercase + Replace |
@@ -532,8 +604,15 @@ select method → Transform → Replace Values
 **How to write it.**
 
 ```text
-Ctrl+click installment_id, paid_at, amount → Home → Remove Rows → Remove Duplicates
-M: = Table.Distinct(#"Replaced Value", {"installment_id", "paid_at", "amount"})
+Ctrl+click installment_id,
+  paid_at, amount
+  → Home → Remove Rows
+  → Remove Duplicates
+
+M: = Table.Distinct(
+  #"Replaced Value",
+  {"installment_id", "paid_at",
+   "amount"})
 ```
 
 On `payments_dirty.csv`: 52 875 → **52 850** rows, 25 removed, Σ amount down by 58 397 800. Rename the step `Drop 25 duplicates`.
@@ -559,8 +638,15 @@ On `payments_dirty.csv`: 52 875 → **52 850** rows, 25 removed, Σ amount down 
 ```text
 Add Column → Custom Column
   name:     birth_date_invalid
-  formula:  [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)
-M: = Table.AddColumn(#"Removed Duplicates", "birth_date_invalid", each [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1))
+  formula:
+    [birth_date] > #date(2026,10,1)
+    or [birth_date] < #date(1920,1,1)
+
+M: = Table.AddColumn(
+  #"Removed Duplicates",
+  "birth_date_invalid",
+  each [birth_date] > #date(2026,10,1)
+    or [birth_date] < #date(1920,1,1))
 ```
 
 | customer_id | birth_date | birth_date_invalid |
@@ -590,7 +676,14 @@ Transform → Group By → Advanced
   group by:  method
   new column: payments = Count Rows
   new column: amount   = Sum of amount
-M: = Table.Group(#"Removed Duplicates", {"method"}, {{"payments", each Table.RowCount(_)}, {"amount", each List.Sum([amount])}})
+
+M: = Table.Group(
+  #"Removed Duplicates",
+  {"method"},
+  {{"payments",
+    each Table.RowCount(_)},
+   {"amount",
+    each List.Sum([amount])}})
 ```
 
 | method (3 rows in) | | method | payments | amount |
@@ -622,9 +715,17 @@ The same in Sheets, with `QUERY` — SQL as a function, column letters instead o
 **How to write it.**
 
 ```text
-select the label column (region) → Transform → Unpivot Columns ▾ → Unpivot Other Columns
-M: = Table.UnpivotOtherColumns(#"Changed Type", {"region"}, "Attribute", "Value")
-then rename Attribute → bucket, Value → outstanding
+select the label column (region)
+  → Transform
+  → Unpivot Columns ▾
+  → Unpivot Other Columns
+
+M: = Table.UnpivotOtherColumns(
+  #"Changed Type", {"region"},
+  "Attribute", "Value")
+
+then rename Attribute → bucket,
+  Value → outstanding
 ```
 
 ```pic
@@ -655,11 +756,20 @@ Rows after unpivot = label rows × value columns: 2 × 2 = 4.
 
 ```text
 Home → Merge Queries (as New)
-  top table:    installments        click installment_id
-  bottom table: paid_by_installment click installment_id
+  top table:    installments
+    click installment_id
+  bottom table: paid_by_installment
+    click installment_id
   Join Kind:    Left Outer
-→ a new column of nested tables → click its expand icon → tick paid
-M: = Table.NestedJoin(installments, {"installment_id"}, paid_by_installment, {"installment_id"}, "paid", JoinKind.LeftOuter)
+→ a new column of nested tables
+  → click its expand icon
+  → tick paid
+
+M: = Table.NestedJoin(
+  installments, {"installment_id"},
+  paid_by_installment,
+  {"installment_id"},
+  "paid", JoinKind.LeftOuter)
 ```
 
 | Join Kind | SQL | keeps |
@@ -692,8 +802,13 @@ On the data: `installments` (92 193 rows) Left Outer `paid_by_installment` → s
 **How to write it.**
 
 ```text
-Home → Append Queries (as New) → Two tables / Three or more → pick the queries
-M: = Table.Combine({payments_tashkent, payments_other})
+Home → Append Queries (as New)
+  → Two tables / Three or more
+  → pick the queries
+
+M: = Table.Combine(
+  {payments_tashkent,
+   payments_other})
 ```
 
 | query 1 | | query 2 | | appended |
@@ -723,11 +838,21 @@ M: = Table.Combine({payments_tashkent, payments_other})
 
 ```text
 Home → Close & Load To…
-  ◉ Table, New worksheet          → a Table you can SUM, chart, pivot      (like CREATE TABLE AS)
-  ◉ Only Create Connection        → no sheet; other queries can use it      (like CREATE VIEW)
+  ◉ Table, New worksheet
+    → a Table you can SUM, chart,
+      pivot
+      (like CREATE TABLE AS)
+  ◉ Only Create Connection
+    → no sheet; other queries can
+      use it
+      (like CREATE VIEW)
   ☐ Add this data to the Data Model
-Data → Refresh All                → every query re-reads its Source and re-runs
-Data → Queries & Connections → right-click → Properties → Refresh data when opening the file
+Data → Refresh All
+  → every query re-reads its Source
+    and re-runs
+Data → Queries & Connections
+  → right-click → Properties
+  → Refresh data when opening the file
 ```
 
 `payments_clean` loads as a 52 850-row Table. Next Monday you save the new export over `payments_dirty.csv`, press Refresh All, and the Table, its formulas and its pivots update.
@@ -763,17 +888,17 @@ Data → Queries & Connections → right-click → Properties → Refresh data w
 
 Next Monday's payments file, cleaned in one query. Each step is a subsection of this page:
 
-```text
-Source                    From Text/CSV → payments_dirty.csv             Power Query: load
-Promoted Headers
-Changed Type              ids, amount → Whole Number; paid_at → Date      Change Type
-Trim method               Transform → Format → Trim                       text steps (TRIM)
-Lowercase method          Transform → Format → lowercase                  text steps (LOWER)
-bank transfer → transfer  Replace Values, match entire cell               text steps (SUBSTITUTE)
-Drop 25 duplicates        installment_id + paid_at + amount               Remove Duplicates (checked with COUNTIFS first)
-is_forward_dated          Custom Column [paid_at] > #date(2026,10,1)      Add Column
-Close & Load To           Table payments_clean                            Close & Load; Refresh next Monday
-```
+| Step | Done with | Section |
+|---|---|---|
+| Source | From Text/CSV → payments_dirty.csv | Power Query: load |
+| Promoted Headers |   |   |
+| Changed Type | ids, amount → Whole Number; paid_at → Date | Change Type |
+| Trim method | Transform → Format → Trim | text steps (TRIM) |
+| Lowercase method | Transform → Format → lowercase | text steps (LOWER) |
+| bank transfer → transfer | Replace Values, match entire cell | text steps (SUBSTITUTE) |
+| Drop 25 duplicates | installment_id + paid_at + amount | Remove Duplicates (checked with COUNTIFS first) |
+| is_forward_dated | Custom Column `[paid_at] > #date(2026,10,1)` | Add Column |
+| Close & Load To | Table payments_clean | Close & Load; Refresh next Monday |
 
 Read the result with the checklist from the top of the page: spaces 0, case 0, synonyms 0 — `UNIQUE(method)` gives 5; duplicates 0 — 52 850 rows; the 24 forward-dated rows kept and flagged. Section 2 builds exactly this.
 
@@ -872,16 +997,16 @@ Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly id
 
 **Step 5 — build it once in Power Query** (the worked pipeline for `payments_dirty.csv`; `Customers` is HW 4.2). Each line is one step from Learn — **Change Type**, the **text steps**, **Remove Duplicates**, **Close & Load**:
 
-```text
-Source               From Text/CSV → data/excel/payments_dirty.csv
-Promoted Headers
-Changed Type         payment_id, loan_id, installment_id, amount → Whole Number; paid_at → Date; method, product, region → Text
-Trim method          Transform → Format → Trim        (select method first)
-Lowercase method     Transform → Format → lowercase
-bank transfer → transfer   Replace Values, match entire cell
-Drop duplicates      select installment_id, paid_at, amount → Remove Duplicates          52 875 → 52 850
-Close & Load To      Table "payments_clean" on a new sheet
-```
+| Step | How | Note |
+|---|---|---|
+| Source | From Text/CSV → data/excel/payments_dirty.csv |   |
+| Promoted Headers |   |   |
+| Changed Type | payment_id, loan_id, installment_id, amount → Whole Number; paid_at → Date; method, product, region → Text |   |
+| Trim method | Transform → Format → Trim | (select method first) |
+| Lowercase method | Transform → Format → lowercase |   |
+| bank transfer → transfer | Replace Values, match entire cell |   |
+| Drop duplicates | select installment_id, paid_at, amount → Remove Duplicates | 52 875 → 52 850 |
+| Close & Load To | Table "payments_clean" on a new sheet |   |
 
 <details><summary>Checks after loading</summary>
 
@@ -1071,13 +1196,11 @@ Four numbers from your own `cleaning.xlsx` that are not printed above — a ✓ 
 
 **Definition (ours):** for instalments **due in the month** (`due_date` in the month, half-open), collected = payments on those instalments with `paid_at <= 2026-10-01` from `payments_clean` (duplicates removed, forward-dated rows excluded by the as-of filter); rate = Σ collected ÷ Σ `total_due`.
 
-```
-Query  paid_by_installment   payments_clean → Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount)
-Query  installments_paid     installments.csv → Merge paid_by_installment (Left Outer, installment_id) → expand paid → Replace null → 0
-                             → Add Column → Date → Month → Start of Month (from due_date) as due_month
-Query  collection_by_month   installments_paid → Group By due_month: due = Sum(total_due), paid = Sum(paid), instalments = Count Rows
-                             → Add Column → Custom: rate = [paid] / [due]      → Close & Load
-```
+| Query | Steps |
+|---|---|
+| paid_by_installment | payments_clean → Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount) |
+| installments_paid | installments.csv → Merge paid_by_installment (Left Outer, installment_id) → expand paid → Replace null → 0 → Add Column → Date → Month → Start of Month (from due_date) as due_month |
+| collection_by_month | installments_paid → Group By due_month: due = Sum(total_due), paid = Sum(paid), instalments = Count Rows → Add Column → Custom: `rate = [paid] / [due]` → Close & Load |
 
 | due month | instalments | due | collected (by 2026-10-01) | rate |
 |---|---|---|---|---|

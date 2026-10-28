@@ -37,9 +37,13 @@ A **PivotTable** (*сводная таблица*) groups and aggregates a table
 
 ```text
 PivotTable Fields
-  [x] product  [x] outstanding  [ ] region  [ ] status …     the source table's columns
-  Filters: (empty)                Columns: (empty)
-  Rows:    product                Values:  Sum of outstanding
+  [x] product  [x] outstanding
+  [ ] region   [ ] status …
+    the source table's columns
+  Filters: (empty)
+  Columns: (empty)
+  Rows:    product
+  Values:  Sum of outstanding
 ```
 
 The picture — six source rows become three pivot rows and a total:
@@ -74,11 +78,11 @@ On `tblLoans`, the same drag gives five product rows and a **Grand Total of 208 
 
 **How to write it.**
 
-```text
-Rows:    product                     → GROUP BY product
-Values:  outstanding  (Sum)          → SUM(outstanding)
-         loan_id      (Count)        → COUNT(*)        drag a field to Values twice to see it twice
-```
+| Area | Field | SQL |
+|---|---|---|
+| Rows | product | `GROUP BY product` |
+| Values | outstanding (Sum) | `SUM(outstanding)` |
+|   | loan_id (Count) | `COUNT(*)` — drag a field to Values twice to see it twice |
 
 On the small table, `product` in Rows and both values:
 
@@ -115,12 +119,12 @@ On `tblLoans`, Rows `product`, Values Sum of `outstanding` and Count of `loan_id
 
 **How to write it.**
 
-```text
-Filters: status = active             → WHERE status = 'active'
-Rows:    product                     → GROUP BY product,
-Columns: region                      →          region   (as a cross-tab)
-Values:  outstanding  (Sum)
-```
+| Area | Field | SQL |
+|---|---|---|
+| Filters | status = active | `WHERE status = 'active'` |
+| Rows | product | `GROUP BY product,` |
+| Columns | region | `region` (as a cross-tab) |
+| Values | outstanding (Sum) |   |
 
 On the small table, Rows `product`, Columns `region`, no filter:
 
@@ -283,10 +287,22 @@ On `tblLoans`, `disbursed_at` grouped by **Years** and **Quarters**, Values Sum 
 **How to write it.**
 
 ```text
-Click a pivot → PivotTable Analyze → Insert Slicer → tick region → OK
-Click a pivot → PivotTable Analyze → Insert Timeline → tick disbursed_at → OK
-Right-click the slicer → Report Connections → tick every pivot it must filter
-Clear: the funnel-with-a-cross icon in the slicer's corner
+Click a pivot
+  → PivotTable Analyze
+  → Insert Slicer
+  → tick region → OK
+
+Click a pivot
+  → PivotTable Analyze
+  → Insert Timeline
+  → tick disbursed_at → OK
+
+Right-click the slicer
+  → Report Connections
+  → tick every pivot it must filter
+
+Clear: the funnel-with-a-cross icon
+  in the slicer's corner
 ```
 
 On the small table, the product pivot with a `region` slicer set to **Fergana**:
@@ -320,10 +336,15 @@ On `tblLoans`, the product pivot with the region slicer on **Fergana**: Grand To
 **How to write it.**
 
 ```text
-PivotTable Analyze → Fields, Items & Sets → Calculated Field
+PivotTable Analyze
+  → Fields, Items & Sets
+  → Calculated Field
   Name:     share_left
-  Formula:  = outstanding / principal          field names; each one means "the SUM of this field in this row"
-  → Add → OK, then format it 0.0% in Value Field Settings
+  Formula:  = outstanding / principal
+    field names; each one means
+    "the SUM of this field in this row"
+  → Add → OK, then format it 0.0%
+    in Value Field Settings
 ```
 
 On the small table, Rows `product`:
@@ -414,12 +435,12 @@ On `tblApplications`: *Count of application_id* = **14 000**, *Count of credit_s
 
 **How to write it.**
 
-```text
-Right-click the pivot → Refresh                     one pivot
-Data → Refresh All (Ctrl+Alt+F5)                    every query, then every pivot
-PivotTable Analyze → Change Data Source → tblLoans  build on the Table, never on A1:M7829
-Value Field Settings → Number Format → #,##0         the format that survives a refresh
-```
+| Click | Does |
+|---|---|
+| Right-click the pivot → Refresh | one pivot |
+| Data → Refresh All (Ctrl+Alt+F5) | every query, then every pivot |
+| PivotTable Analyze → Change Data Source → tblLoans | build on the Table, never on A1:M7829 |
+| Value Field Settings → Number Format → `#,##0` | the format that survives a refresh |
 
 Picture: Friday's refresh adds 120 loans to `tblLoans`.
 
@@ -448,10 +469,10 @@ The layout for a reader, set once: Design → Report Layout → **Tabular Form**
 
 **How to write it.**
 
-```excel
-=GETPIVOTDATA("outstanding", $A$20)                                   data field, any cell of the pivot → the Grand Total
-=GETPIVOTDATA("outstanding", $A$20, "product", "Small business loan") + a field and an item → one cell
-```
+| Formula | Gives |
+|---|---|
+| `=GETPIVOTDATA("outstanding", $A$20)` | data field, any cell of the pivot → the Grand Total |
+| `=GETPIVOTDATA("outstanding", $A$20, "product", "Small business loan")` | + a field and an item → one cell |
 
 Type `=` and click a value cell of the pivot: Excel writes the formula for you. On the small table's product pivot, `=GETPIVOTDATA("outstanding", $A$3, "product", "SME")` → **450**.
 
@@ -581,12 +602,24 @@ On one combo, the count line falls and the money line climbs, and they cross nea
 **How to write it.**
 
 ```text
-Chart Design → Add Chart Element → Data Labels / Axis Titles
-Format Axis → Number → #,##0,,,  (billions)          Format Axis → Bounds → Minimum 0
-Click the legend → Delete                            (one series needs no legend)
-Insert → Sparklines → Line → data range B5:K5 → location L5 → tick High Point, Low Point
-Sparkline → Axis → Same for All Sparklines           (otherwise each row has its own scale)
-Sheets:  =SPARKLINE(B5:K5, {"charttype","column"})
+Chart Design → Add Chart Element
+  → Data Labels / Axis Titles
+Format Axis → Number → #,##0,,,
+  (billions)
+Format Axis → Bounds → Minimum 0
+Click the legend → Delete
+  (one series needs no legend)
+Insert → Sparklines → Line
+  → data range B5:K5
+  → location L5
+  → tick High Point, Low Point
+Sparkline → Axis
+  → Same for All Sparklines
+  (otherwise each row has its own
+  scale)
+
+Sheets:
+=SPARKLINE(B5:K5,{"charttype","column"})
 ```
 
 The checklist, ten lines:
@@ -648,16 +681,16 @@ What a pivot cannot do: a `JOIN` (merge first in Power Query, or add a lookup co
 
 One pivot, one slicer, one chart, from the tools above: *"For each product, what share of its loans is 90+ — and does it change by region?"*
 
-```text
-Source:   tblLoans                                  (a Table, so Refresh picks up new rows)
-Rows:     product                                   GROUP BY product
-Columns:  bucket                                    the cross-tab
-Values:   loan_id — Count, Show Values As % of Row Total     each product's loans spread over the buckets
-Filters:  status = (All)
-Slicer:   region, connected to this pivot only
-Chart:    100 % stacked bar, 90+ in red, the rest grey; title linked to a cell
-Check:    =GETPIVOTDATA("loan_id", $A$3) next to =COUNTA(tblLoans[loan_id]) → 7 828 = 7 828
-```
+| Part | Setting | Note |
+|---|---|---|
+| Source | tblLoans | (a Table, so Refresh picks up new rows) |
+| Rows | product | GROUP BY product |
+| Columns | bucket | the cross-tab |
+| Values | loan_id — Count, Show Values As % of Row Total | each product's loans spread over the buckets |
+| Filters | status = (All) |   |
+| Slicer | region, connected to this pivot only |   |
+| Chart | 100 % stacked bar, 90+ in red, the rest grey; title linked to a cell |   |
+| Check | `=GETPIVOTDATA("loan_id", $A$3)` next to `=COUNTA(tblLoans[loan_id])` | → 7 828 = 7 828 |
 
 Read the `90+` column: SME **3.7 %**, Consumer 3.2 %, Micro 2.8 %, BNPL 2.7 %, Auto 2.6 %. Click **Fergana** on the slicer and every share is recomputed for Fergana's loans; the check cell shows the Grand Total is no longer 7 828 — the page is filtered, and it says so.
 
@@ -728,10 +761,8 @@ Read the `90+` column: SME **3.7 %**, Consumer 3.2 %, Micro 2.8 %, BNPL 2.7 %, A
 
 Sheets: Insert → Pivot table on `Loans`, Rows `product`, Values `outstanding` (SUM) and `outstanding` *Show as % of grand total*, `loan_id` (COUNTA); sort by SUM of outstanding descending; Insert → Chart → Bar from the pivot range; Data → Add a slicer on `region`. The keyboard alternative, one cell:
 
-```
-=QUERY(Loans!A1:M,
-  "select D, sum(K), count(A) where K > 0 or K = 0 group by D order by sum(K) desc
-   label D 'product', sum(K) 'outstanding', count(A) 'loans'", 1)
+```excel
+=QUERY(Loans!A1:M, "select D, sum(K), count(A) where K > 0 or K = 0 group by D order by sum(K) desc label D 'product', sum(K) 'outstanding', count(A) 'loans'", 1)
 ```
 
 and a share column beside it, `=B2/SUM(B$2:B$6)`. `QUERY` output is a plain range: a chart on it refreshes with the data, a slicer does not filter it — use the pivot when the page needs the slicer, `QUERY` when it needs a shape the pivot cannot make.
@@ -879,17 +910,45 @@ No new homework. **HW 4.2** (the cleaning pipeline) is due tomorrow with the che
 Week 3 Day 4 defined the **six tiles** on the first page of a lending dashboard and computed them from Timur's views. Today the same six, in Excel, on one sheet — the board's version of the dashboard, and the proof that the two agree.
 
 ```
- A          B          C          D          E          F          G …  L
-1  Nur Finance — portfolio as of 1 Oct 2026                         source · refreshed
-3  OUTSTANDING   DISBURSED MTD   PAR30      NPL90      FPD30 Jul-26   COLLECTION Sep-26
-4  208.7 bn      0.85 bn · 21    3.12 %     2.55 %     1.09 %         94.1 %
-5  principal due after as-of · 1 day; Sep 17.0 bn / 361 · >30 DPD ÷ total · >90 DPD, 234 loans · 4 of 367 · paid by as-of ÷ due
-8  ┌ bar: outstanding by product ──────────┐   ┌ line: disbursements by month, 3-mo avg ┐
-24 └──────────────────────────────────────┘   └────────────────────────────────────────┘
-26 ┌ stacked: late loans by product × bucket ┐  ┌ bar: top-5 branches + Others ───────────┐
-41 └──────────────────────────────────────┘   └────────────────────────────────────────┘
-43 Findings — five sentences
-49 Definitions — DPD · de-dup rule · as-of · October excluded · UZS
+1    Nur Finance — portfolio as of
+     1 Oct 2026
+     source · refreshed
+
+3-4  OUTSTANDING        208.7 bn
+5    principal due after as-of
+
+3-4  DISBURSED MTD      0.85 bn · 21
+5    1 day; Sep 17.0 bn / 361
+
+3-4  PAR30              3.12 %
+5    >30 DPD ÷ total
+
+3-4  NPL90              2.55 %
+5    >90 DPD, 234 loans
+
+3-4  FPD30 Jul-26       1.09 %
+5    4 of 367
+
+3-4  COLLECTION Sep-26  94.1 %
+5    paid by as-of ÷ due
+
+8    ┌ bar: outstanding by product ┐
+24   └─────────────────────────────┘
+
+8    ┌ line: disbursements by month,
+       3-mo avg ┐
+24   └─────────────────────────────┘
+
+26   ┌ stacked: late loans by
+       product × bucket ┐
+41   └─────────────────────────────┘
+
+26   ┌ bar: top-5 branches + Others ┐
+41   └─────────────────────────────┘
+
+43   Findings — five sentences
+49   Definitions — DPD · de-dup rule
+     · as-of · October excluded · UZS
 ```
 
 Sheet `OnePager`, landscape, fits on one printed page (Page Layout → Width 1 page). Layout, top to bottom: **row 1** title and as-of (`="Nur Finance — portfolio as of "&TEXT(Lookup!B17,"d mmm yyyy")`); **rows 3–6** the six tiles in a 6 × 1 strip (big number, small definition under it); **rows 8–24** four charts in a 2 × 2 grid (bar by product · line by month · stacked buckets · top-5 bar); **rows 26–30** a footnote with the definitions and sources; pivots on a separate `Data` sheet, referenced by `GETPIVOTDATA` or `SUMIFS`.

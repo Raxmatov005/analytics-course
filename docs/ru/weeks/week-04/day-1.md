@@ -43,13 +43,22 @@
 **Как пишется.** Одни и те же четыре числа дважды. Слева — отчёт, который кто-то набрал вручную; справа — таблица.
 
 ```text
-NOT A TABLE (a typed report)                 A TABLE (what formulas need)
-+---------- Tashkent (merged) ----------+    region   | month   | loans
-| Aug 2026     | Sep 2026               |    Tashkent | 2026-08 | 132
-| 132          | 134                    |    Tashkent | 2026-09 | 134
-+---------- Fergana (merged) -----------+    Fergana  | 2026-08 | 38
-| 38           | 34                     |    Fergana  | 2026-09 | 34
-| Total 338                             |
+NOT A TABLE (a typed report)
+
++-------- Tashkent (merged) --------+
+| Aug 2026     | Sep 2026           |
+| 132          | 134                |
++-------- Fergana (merged) ---------+
+| 38           | 34                 |
+| Total 338                         |
+
+A TABLE (what formulas need)
+
+region   | month   | loans
+Tashkent | 2026-08 | 132
+Tashkent | 2026-09 | 134
+Fergana  | 2026-08 | 38
+Fergana  | 2026-09 | 34
 ```
 
 Левый блок нельзя отфильтровать, отсортировать или просуммировать по региону: регион сидит в объединённой ячейке над числами, а итог — среди них. Правый блок отвечает на любой вопрос одной формулой. Лист `Loans` устроен именно так: 7 828 строк, по одной на кредит, 13 столбцов, одна строка заголовков.
@@ -72,11 +81,11 @@ NOT A TABLE (a typed report)                 A TABLE (what formulas need)
 
 **Как пишется.**
 
-```excel
-=SUM(tblLoans[outstanding])          tblLoans = the Table name · [outstanding] = the column
-=COUNTA(tblLoans[loan_id])           the whole loan_id column
-=[@dpd]                              inside the Table: "this row's dpd" (a calculated column)
-```
+| Формула | Что значит |
+|---|---|
+| `=SUM(tblLoans[outstanding])` | tblLoans = the Table name · [outstanding] = the column |
+| `=COUNTA(tblLoans[loan_id])` | the whole loan_id column |
+| `=[@dpd]` | inside the Table: "this row's dpd" (a calculated column) |
 
 `=SUM(tblLoans[outstanding])` возвращает **208 723 504 430** — остаток долга всех 7 828 кредитов. `=COUNTA(tblLoans[loan_id])` возвращает 7 828. Таблицы нашей книги уже названы: `tblLoans`, `tblPayments`, `tblCustomers`, `tblApplications`, `tblInstallments` (Конструктор таблицы → Имя таблицы).
 
@@ -115,12 +124,12 @@ NOT A TABLE (a typed report)                 A TABLE (what formulas need)
 
 **Как пишется.** `$` ставится перед той частью, которая не должна двигаться:
 
-```text
-A3      both move        copied 1 right, 1 down → B4
-$A$3    nothing moves    copied anywhere        → $A$3
-$A3     column pinned    copied 1 right, 1 down → $A4
-B$2     row pinned       copied 1 right, 1 down → C$2
-```
+| Запись | Что значит | Копия | Даёт |
+|---|---|---|---|
+| `A3` | both move | 1 right, 1 down | `B4` |
+| `$A$3` | nothing moves | anywhere | `$A$3` |
+| `$A3` | column pinned | 1 right, 1 down | `$A4` |
+| `B$2` | row pinned | 1 right, 1 down | `C$2` |
 
 Картинка: одна формула введена в B3 и протянута вправо и вниз. В столбце A две суммы кредита, в строке 2 две годовые ставки; каждая ячейка — проценты за год.
 
@@ -161,13 +170,13 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 | 5 | 80 |
 | 6 | 100 |
 
-```excel
-=SUM(A2:A6)          → 300     text and empty cells are skipped
-=AVERAGE(A2:A6)      → 100     300 ÷ 3 numbers — the empty cell and "n/a" are not in it
-=COUNT(A2:A6)        → 3       numbers only
-=COUNTA(A2:A6)       → 4       anything that is not empty, "n/a" included
-=COUNTBLANK(A2:A6)   → 1
-```
+| Формула | Даёт | Почему |
+|---|---|---|
+| `=SUM(A2:A6)` | 300 | text and empty cells are skipped |
+| `=AVERAGE(A2:A6)` | 100 | 300 ÷ 3 numbers — the empty cell and "n/a" are not in it |
+| `=COUNT(A2:A6)` | 3 | numbers only |
+| `=COUNTA(A2:A6)` | 4 | anything that is not empty, "n/a" included |
+| `=COUNTBLANK(A2:A6)` | 1 |   |
 
 На настоящих данных: `=COUNTA(tblCustomers[customer_id])` → **6 040** клиентов. `=COUNT(tblCustomers[monthly_income])` → **5 684** — клиенты, у которых доход известен. `=AVERAGE(tblCustomers[monthly_income])` → **15 245 933** сума, среднее этих 5 684 доходов. `=AVERAGE(tblLoans[principal])` → **51 709 668**, средний чек.
 
@@ -199,31 +208,31 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-=SUMIFS(sum_range, criteria_range, criterion)        sum_range FIRST: the column to add up
-=COUNTIFS(criteria_range, criterion)                 no sum_range: it counts rows
-=AVERAGEIFS(average_range, criteria_range, criterion)
-=MAXIFS(max_range, criteria_range, criterion)        MINIFS the same
-```
+| Формула | Примечание |
+|---|---|
+| `=SUMIFS(sum_range, criteria_range, criterion)` | sum_range FIRST: the column to add up |
+| `=COUNTIFS(criteria_range, criterion)` | no sum_range: it counts rows |
+| `=AVERAGEIFS(average_range, criteria_range, criterion)` |   |
+| `=MAXIFS(max_range, criteria_range, criterion)` | MINIFS the same |
 
 Критерий — это **текст в кавычках** с оператором внутри: `"active"` (равно), `">0"`, `"<=30"`, `"<>closed"` (не равно). На маленькой таблице:
 
-```excel
-=COUNTIFS(C2:C6, "active")             → 3      rows 101, 102, 104
-=SUMIFS(F2:F6, C2:C6, "active")        → 180    100 + 50 + 30
-=AVERAGEIFS(F2:F6, C2:C6, "active")    → 60     180 ÷ 3
-=MAXIFS(E2:E6, C2:C6, "active")        → 45     the most-late active loan
-=COUNTIFS(E2:E6, ">0")                 → 3      rows 102, 103, 104
-```
+| Формула | Даёт | Почему |
+|---|---|---|
+| `=COUNTIFS(C2:C6, "active")` | 3 | rows 101, 102, 104 |
+| `=SUMIFS(F2:F6, C2:C6, "active")` | 180 | 100 + 50 + 30 |
+| `=AVERAGEIFS(F2:F6, C2:C6, "active")` | 60 | 180 ÷ 3 |
+| `=MAXIFS(E2:E6, C2:C6, "active")` | 45 | the most-late active loan |
+| `=COUNTIFS(E2:E6, ">0")` | 3 | rows 102, 103, 104 |
 
 На настоящих данных:
 
-```excel
-=COUNTIFS(tblLoans[status], "active")                                      → 3 352
-=SUMIFS(tblLoans[outstanding], tblLoans[status], "active")                 → 203 404 028 903
-=AVERAGEIFS(tblLoans[principal], tblLoans[product], "Small business loan") → 308 728 745
-=MAXIFS(tblLoans[dpd], tblLoans[status], "active")                         → 89
-```
+| Формула | Даёт |
+|---|---|
+| `=COUNTIFS(tblLoans[status], "active")` | 3 352 |
+| `=SUMIFS(tblLoans[outstanding], tblLoans[status], "active")` | 203 404 028 903 |
+| `=AVERAGEIFS(tblLoans[principal], tblLoans[product], "Small business loan")` | 308 728 745 |
+| `=MAXIFS(tblLoans[dpd], tblLoans[status], "active")` | 89 |
 
 3 352 активных кредита несут 203 404 028 903 из 208 723 504 430 остатка долга. Ни один активный кредит не просрочен больше чем на 89 дней — после 90 кредит переходит в `default`.
 
@@ -255,10 +264,10 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 На маленькой таблице — активные **и** просроченные:
 
-```excel
-=COUNTIFS(C2:C6, "active", E2:E6, ">0")              → 2     rows 102 and 104
-=SUMIFS(F2:F6, C2:C6, "active", E2:E6, ">0")         → 80    50 + 30
-```
+| Формула | Даёт | Почему |
+|---|---|---|
+| `=COUNTIFS(C2:C6, "active", E2:E6, ">0")` | 2 | rows 102 and 104 |
+| `=SUMIFS(F2:F6, C2:C6, "active", E2:E6, ">0")` | 80 | 50 + 30 |
 
 На настоящих данных: `=COUNTIFS(tblLoans[status], "active", tblLoans[dpd], ">0")` → **151** активный кредит с просрочкой. `=SUMIFS(tblLoans[outstanding], tblLoans[region], "Tashkent", tblLoans[bucket], "90+")` → **1 920 943 970** — деньги Ташкента с просрочкой больше 90 дней.
 
@@ -286,13 +295,13 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-"approved*"      starts with approved      LIKE 'approved%'
-"*Central"       ends with Central         LIKE '%Central'
-"*loan*"         contains loan             LIKE '%loan%'
-"<>*loan"        does not end with loan    NOT LIKE '%loan'
-"20??"           four characters starting with 20
-```
+| Критерий | Что подходит | В SQL |
+|---|---|---|
+| `"approved*"` | starts with approved | `LIKE 'approved%'` |
+| `"*Central"` | ends with Central | `LIKE '%Central'` |
+| `"*loan*"` | contains loan | `LIKE '%loan%'` |
+| `"<>*loan"` | does not end with loan | `NOT LIKE '%loan'` |
+| `"20??"` | four characters starting with 20 |   |
 
 На маленькой таблице: `=COUNTIFS(B2:B6, "Tashkent*")` → **3** (строки 101, 103, 104); `=SUMIFS(F2:F6, B2:B6, "Tashkent*")` → **170**.
 
@@ -316,27 +325,27 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-">="&DATE(2026,9,1)          the text ">=" joined to the number of 1 Sep 2026
-"<"&DATE(2026,10,1)          before 1 Oct 2026
-">="&$B$1                    joined to a date typed in B1
-"<"&EDATE($B$1, 1)           before the same day one month after B1
-```
+| Критерий | Что значит |
+|---|---|
+| `">="&DATE(2026,9,1)` | the text ">=" joined to the number of 1 Sep 2026 |
+| `"<"&DATE(2026,10,1)` | before 1 Oct 2026 |
+| `">="&$B$1` | joined to a date typed in B1 |
+| `"<"&EDATE($B$1, 1)` | before the same day one month after B1 |
 
 Период — это две пары на **одном** столбце, **полуоткрытый фильтр** со второй недели: от первого дня до первого дня следующего периода, не включая его. На маленькой таблице, сентябрь 2026:
 
-```excel
-=COUNTIFS(D2:D6, ">="&DATE(2026,9,1), D2:D6, "<"&DATE(2026,10,1))     → 2   rows 102 and 104
-```
+| Формула | Даёт | Почему |
+|---|---|---|
+| `=COUNTIFS(D2:D6, ">="&DATE(2026,9,1), D2:D6, "<"&DATE(2026,10,1))` | 2 | rows 102 and 104 |
 
 Строка 105 (1 октября) не попадает: `"<"` исключает первый день следующего месяца.
 
 На настоящих данных:
 
-```excel
-=COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1))   → 361
-=SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,1,1))                          → 162 333 060 000
-```
+| Формула | Даёт |
+|---|---|
+| `=COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1))` | 361 |
+| `=SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,1,1))` | 162 333 060 000 |
 
 В сентябре 2026 выдан 361 кредит. В 2026 году по дату отсчёта выдано 162 333 060 000 сумов — 3 051 кредит.
 
@@ -358,11 +367,11 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-=SUMPRODUCT((condition) * sum_column)        sum where the condition is TRUE
-=SUMPRODUCT(--(condition))                   count: -- turns TRUE/FALSE into 1/0
-=SUMPRODUCT(column1, column2)                Σ column1 × column2, row by row
-```
+| Формула | Что делает |
+|---|---|
+| `=SUMPRODUCT((condition) * sum_column)` | sum where the condition is TRUE |
+| `=SUMPRODUCT(--(condition))` | count: -- turns TRUE/FALSE into 1/0 |
+| `=SUMPRODUCT(column1, column2)` | Σ column1 × column2, row by row |
 
 На маленькой таблице: `=SUMPRODUCT((E2:E6>30)*F2:F6)` → **70** — строки 103 (40) и 104 (30).
 
@@ -384,10 +393,10 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-=IF(test, value_if_true, value_if_false)
-=IF([@dpd]>0, "late", "current")         in a calculated column of tblLoans
-```
+| Формула | Примечание |
+|---|---|
+| `=IF(test, value_if_true, value_if_false)` |   |
+| `=IF([@dpd]>0, "late", "current")` | in a calculated column of tblLoans |
 
 На маленькой таблице: `=IF(E2>0, "late", "current")`, протянутая вниз, даёт `current`, `late`, `late`, `late`, `current`.
 
@@ -475,10 +484,10 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-=A2 & " " & B2                         value, a space in quotes, value
-=TEXTJOIN(", ", TRUE, range)           separator, TRUE = skip empty cells, the range
-```
+| Формула | Что значит |
+|---|---|
+| `=A2 & " " & B2` | value, a space in quotes, value |
+| `=TEXTJOIN(", ", TRUE, range)` | separator, TRUE = skip empty cells, the range |
 
 На маленькой таблице: `=B2&" · "&C2` → `Tashkent South · active`.
 
@@ -502,13 +511,13 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-=TRIM(text)          "Yulduz "   → "Yulduz"
-=UPPER(text)         "jalilova"  → "JALILOVA"
-=LOWER(text)         "CASH"      → "cash"
-=PROPER(text)        "MALIKA"    → "Malika"
-=LEN(text)           "Yulduz "   → 7   (the trailing space counts)
-```
+| Формула | Текст | Даёт |
+|---|---|---|
+| `=TRIM(text)` | `"Yulduz "` | `"Yulduz"` |
+| `=UPPER(text)` | `"jalilova"` | `"JALILOVA"` |
+| `=LOWER(text)` | `"CASH"` | `"cash"` |
+| `=PROPER(text)` | `"MALIKA"` | `"Malika"` |
+| `=LEN(text)` | `"Yulduz "` | 7 (the trailing space counts) |
 
 Вместе — очистка второй недели в одной ячейке: `=PROPER(TRIM([@first_name]))&" "&PROPER(TRIM([@last_name]))`. Клиент 6001 (`MALIKA`, `jalilova`) становится `Malika Jalilova`.
 
@@ -538,19 +547,19 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-=LEFT(text, n)                    "Tashkent South", 8      → "Tashkent"
-=RIGHT(text, n)                   "Tashkent South", 5      → "South"
-=MID(text, start, n)              "+998902031105", 5, 2    → "90"
-=SEARCH(find, text)               " ", "Tashkent South"    → 9
-```
+| Формула | Пример | Даёт |
+|---|---|---|
+| `=LEFT(text, n)` | `"Tashkent South", 8` | `"Tashkent"` |
+| `=RIGHT(text, n)` | `"Tashkent South", 5` | `"South"` |
+| `=MID(text, start, n)` | `"+998902031105", 5, 2` | `"90"` |
+| `=SEARCH(find, text)` | `" ", "Tashkent South"` | 9 |
 
 Когда длина меняется от строки к строке, пусть место разреза найдёт `SEARCH`:
 
-```excel
-=LEFT([@branch], SEARCH(" ", [@branch]) - 1)       the word before the space → "Tashkent", "Fergana", …
-=MID([@branch], SEARCH(" ", [@branch]) + 1, 50)    everything after the space → "South", "Central", …
-```
+| Формула | Даёт |
+|---|---|
+| `=LEFT([@branch], SEARCH(" ", [@branch]) - 1)` | the word before the space → "Tashkent", "Fergana", … |
+| `=MID([@branch], SEARCH(" ", [@branch]) + 1, 50)` | everything after the space → "South", "Central", … |
 
 На маленькой таблице первая формула даёт `Tashkent`, `Fergana`, `Tashkent`, `Tashkent`, `Fergana`; вторая — `South`, `Central`, `North`, `South`, `Central`.
 
@@ -572,13 +581,13 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```excel
-=TEXT(value, "format code")
-=TEXT([@disbursed_at], "yyyy-mm")       2026-09-08 → "2026-09"
-=TEXT([@disbursed_at], "yyyy-mm-dd")    → "2026-09-08"
-=TEXT(208723504430, "#,##0")            → "208,723,504,430"
-=TEXT(0.0312, "0.0%")                   → "3.1%"
-```
+| Формула | Даёт |
+|---|---|
+| `=TEXT(value, "format code")` |   |
+| `=TEXT([@disbursed_at], "yyyy-mm")` | 2026-09-08 → `"2026-09"` |
+| `=TEXT([@disbursed_at], "yyyy-mm-dd")` | `"2026-09-08"` |
+| `=TEXT(208723504430, "#,##0")` | `"208,723,504,430"` |
+| `=TEXT(0.0312, "0.0%")` | `"3.1%"` |
 
 На настоящих данных столбец `month` = `=TEXT([@disbursed_at], "yyyy-mm")` в `tblLoans` даёт 34 подписи месяцев, с 2024-01 по 2026-10. `=COUNTIFS(tblLoans[month], "2026-09")` → **361**, столько же, сколько по критериям дат.
 
@@ -632,10 +641,10 @@ B$2     row pinned       copied 1 right, 1 down → C$2
 
 **Как пишется.**
 
-```text
-English Excel:  =SUMIFS(tblLoans[outstanding], tblLoans[status], "active")
-Russian Excel:  =СУММЕСЛИМН(tblLoans[outstanding]; tblLoans[status]; "active")
-```
+| Excel | Формула |
+|---|---|
+| English Excel | `=SUMIFS(tblLoans[outstanding], tblLoans[status], "active")` |
+| Russian Excel | `=СУММЕСЛИМН(tblLoans[outstanding]; tblLoans[status]; "active")` |
 
 **Когда применять.** Когда на экране коллеги или в русском учебнике вы видите русские имена. Если можете, переключите Office на английский (Файл → Параметры → Язык): на собеседованиях и в большинстве учебников используют английские имена.
 
@@ -700,16 +709,10 @@ Russian Excel:  =СУММЕСЛИМН(tblLoans[outstanding]; tblLoans[status]; "
 Одна ячейка-заголовок для Бекзода из пяти инструментов этого дня: *«September 2026: 361 loans, 17,015,490,000 soum, 134 of them in Tashkent.»*
 
 ```excel
-="September 2026: "
- & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1))
- & " loans, "
- & TEXT(SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1)), "#,##0")
- & " soum, "
- & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1), tblLoans[region], "Tashkent")
- & " of them in Tashkent."
+="September 2026: " & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1)) & " loans, " & TEXT(SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1)), "#,##0") & " soum, " & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1), tblLoans[region], "Tashkent") & " of them in Tashkent."
 ```
 
-Части, строка за строкой:
+Части по порядку:
 
 1. Текст в кавычках, склеенный через **`&`**.
 2. **COUNTIFS** с **полуоткрытым фильтром по датам** — 361 кредит.
@@ -774,9 +777,10 @@ B3:  =SUMIFS(tblLoans[outstanding], tblLoans[region], $A3, tblLoans[bucket], B$2
 4. **SUM для итогов и контрольная ячейка.**
 
 ```excel
-G3:  =SUM(B3:F3)          row total
-B11: =SUM(B3:B10)         column total
-G11: =SUM(G3:G10)         → must be 208 723 504 430
+G3:  =SUM(B3:F3)    row total
+B11: =SUM(B3:B10)   column total
+G11: =SUM(G3:G10)
+     → must be 208 723 504 430
 ```
 
    G11 = **208 723 504 430**: общий итог сходится с `=SUM(tblLoans[outstanding])`. Если нет — регион написан с ошибкой или в подписи лишний пробел; проверьте подписи через `ISTEXT` и `LEN`. Ещё две проверки: строка Tashkent = 81 679 738 071 (39.1 % — `=G3/$G$11` в формате `0.0%`, **абсолютная ссылка** на итог); столбец `90+` = 5 319 475 527 (числитель NPL90, 2.55 %).
@@ -981,13 +985,13 @@ G11: =SUM(G3:G10)         → must be 208 723 504 430
 
 Лист `Approval`: каналы в A3:A5 (`app`, `branch`, `partner`), затем:
 
-```
-B3 applications    =COUNTIFS(tblApplications[channel], $A3)
-C3 approved        =COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "approved*")
-D3 decided         =COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "<>cancelled")
-E3 rate, all       =C3/B3        → 0.0%
-F3 rate, decided   =C3/D3        → 0.0%
-```
+| Ячейка | Столбец | Формула |
+|---|---|---|
+| B3 | applications | `=COUNTIFS(tblApplications[channel], $A3)` |
+| C3 | approved | `=COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "approved*")` |
+| D3 | decided | `=COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "<>cancelled")` |
+| E3 | rate, all | `=C3/B3` → 0.0% |
+| F3 | rate, decided | `=C3/D3` → 0.0% |
 
 | channel | applications | approved | decided | rate (all) | rate (decided) |
 |---|---|---|---|---|---|

@@ -60,13 +60,13 @@
 
 **Как пишется.** По одной формуле на вид, на сыром листе, до того как вы что-либо меняете:
 
-```excel
-=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041))))     лишние пробелы → 18
-=SUMPRODUCT(--EXACT(C2:C6041, LOWER(C2:C6041)))         написано целиком строчными → 40
-=ROWS(UNIQUE(F2:F52876))                                различные сырые способы оплаты (Payments)
-=COUNTBLANK(I2:I6041)                                   пропуски в monthly_income → 356
-=SUMPRODUCT(--ISTEXT(E2:E6041))                         даты, хранящиеся как текст → должно быть 0
-```
+| Формула | Что находит |
+|---|---|
+| `=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041))))` | лишние пробелы → 18 |
+| `=SUMPRODUCT(--EXACT(C2:C6041, LOWER(C2:C6041)))` | написано целиком строчными → 40 |
+| `=ROWS(UNIQUE(F2:F52876))` | различные сырые способы оплаты (Payments) |
+| `=COUNTBLANK(I2:I6041)` | пропуски в monthly_income → 356 |
+| `=SUMPRODUCT(--ISTEXT(E2:E6041))` | даты, хранящиеся как текст → должно быть 0 |
 
 **Когда применять.**
 - Первым делом с любым новым файлом: посчитайте каждый вид и запишите числа. Они станут вашим журналом изменений.
@@ -88,10 +88,15 @@
 Ctrl+H
   Найти:           bank transfer
   Заменить на:     transfer
-  Параметры ▸  Учитывать регистр        выкл.: card находит и Card, и CARD
-               Ячейка целиком           вкл.: card не находит discard
-               Искать: на листе / в книге
-  Заменить все  →  «Произведено замен: 27»   ← запишите это число
+  Параметры ▸
+    Учитывать регистр
+      выкл.: card находит и Card, и CARD
+    Ячейка целиком
+      вкл.: card не находит discard
+    Искать: на листе / в книге
+  Заменить все
+    →  «Произведено замен: 27»
+    ← запишите это число
 ```
 
 Картинка — `method` до и после:
@@ -123,11 +128,16 @@ Ctrl+H
 **Как пишется.**
 
 ```text
-выделите applied_at → Данные → Текст по столбцам
-  Шаг 1  С разделителями                (или Фиксированной ширины)
+выделите applied_at
+  → Данные → Текст по столбцам
+  Шаг 1  С разделителями
+         (или Фиксированной ширины)
   Шаг 2  Разделитель: пробел
-  Шаг 3  столбец 1 → Дата: ГМД (YMD)    столбец 2 → Общий
-         Поместить в: ПУСТОЙ столбец    (разбиение перезаписывает столбцы справа)
+  Шаг 3  столбец 1 → Дата: ГМД (YMD)
+         столбец 2 → Общий
+         Поместить в: ПУСТОЙ столбец
+         (разбиение перезаписывает
+         столбцы справа)
 ```
 
 | applied_at (до) | → дата | → время |
@@ -155,12 +165,11 @@ Ctrl+H
 
 **Как пишется.**
 
-```text
-B: first_name   H (новый столбец)
-MALIKA          Malika        ← вы вводите один пример
-Yulduz␣         Yulduz        ← Ctrl+E заполняет остальное
-Nodir           Nodir
-```
+| B: first_name | H (новый столбец) |   |
+|---|---|---|
+| MALIKA | Malika | ← вы вводите один пример |
+| Yulduz␣ | Yulduz | ← Ctrl+E заполняет остальное |
+| Nodir | Nodir |   |
 
 На `Customers` ввод `Malika` рядом со строкой 6001 и Ctrl+E заполняют все 6 040 строк именем с заглавной буквы. Никакой формулы не остаётся.
 
@@ -188,16 +197,15 @@ Nodir           Nodir
 
 **Как пишется.**
 
-```excel
-=TRIM(B2)                                        "Yulduz "  → "Yulduz"
-=CLEAN(B2)                                       убирает переносы строк и табуляции
-=SUBSTITUTE(text, old, new)                      каждое "old" внутри text становится "new"
-=LOWER(TRIM(F2))                                 "CASH "  → "cash";  "PayMe" → "payme"
-=SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer")              один синоним
-=SUBSTITUTE(SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer"), "pay me", "payme")
-                                                 вложенная: результат внутренней идёт во внешнюю
-=TRIM(CLEAN(SUBSTITUTE(B2, CHAR(160), " ")))     неразрывные пробелы (CHAR 160) переживают TRIM
-```
+| Формула | Что делает |
+|---|---|
+| `=TRIM(B2)` | `"Yulduz "` → `"Yulduz"` |
+| `=CLEAN(B2)` | убирает переносы строк и табуляции |
+| `=SUBSTITUTE(text, old, new)` | каждое "old" внутри text становится "new" |
+| `=LOWER(TRIM(F2))` | `"CASH "` → `"cash"`; `"PayMe"` → `"payme"` |
+| `=SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer")` | один синоним |
+| `=SUBSTITUTE(SUBSTITUTE(LOWER(TRIM(F2)), "bank transfer", "transfer"), "pay me", "payme")` | вложенная: результат внутренней идёт во внешнюю |
+| `=TRIM(CLEAN(SUBSTITUTE(B2, CHAR(160), " ")))` | неразрывные пробелы (CHAR 160) переживают TRIM |
 
 Картинка — `method` шаг за шагом:
 
@@ -228,12 +236,12 @@ Nodir           Nodir
 
 **Как пишется.**
 
-```excel
-=ISNUMBER(E2)                    TRUE = настоящая дата, FALSE = текст
-=DATEVALUE(E2)                   "1981-08-15" → 29813 (формат ячейки «дата» → 1981-08-15)
-=VALUE(E2)                       то же самое
-=SUMPRODUCT(--ISTEXT(E2:E6041))  текстовые даты во всём столбце — должно быть 0
-```
+| Формула | Примечание |
+|---|---|
+| `=ISNUMBER(E2)` | TRUE = настоящая дата, FALSE = текст |
+| `=DATEVALUE(E2)` | "1981-08-15" → 29813 (формат ячейки «дата» → 1981-08-15) |
+| `=VALUE(E2)` | то же самое |
+| `=SUMPRODUCT(--ISTEXT(E2:E6041))` | текстовые даты во всём столбце — должно быть 0 |
 
 Как Excel читает введённый текст, зависит от **локали** (региональной настройки Windows):
 
@@ -268,8 +276,15 @@ Nodir           Nodir
 
 ```excel
 =LOWER(TRIM(B2)) & "|" & LOWER(TRIM(C2)) & "|" & TEXT(E2, "yyyy-mm-dd")
- first_name         разд.  last_name         разд.  birth_date как текст
 ```
+
+| Часть | Что это |
+|---|---|
+| `LOWER(TRIM(B2))` | first_name |
+| `"\|"` | разд. |
+| `LOWER(TRIM(C2))` | last_name |
+| `"\|"` | разд. |
+| `TEXT(E2, "yyyy-mm-dd")` | birth_date как текст |
 
 | customer_id | ключ |
 |---|---|
@@ -302,11 +317,11 @@ Nodir           Nodir
 
 **Как пишется.**
 
-```excel
-L2  key    =LOWER(TRIM(B2))&"|"&LOWER(TRIM(C2))&"|"&TEXT(E2,"yyyy-mm-dd")
-M2  n      =COUNTIFS($L$2:$L$6041, L2)        весь столбец: сколько строк с этим ключом
-N2  rank   =COUNTIFS($L$2:L2, L2)             растущий диапазон: начало закреплено, конец свободен
-```
+| Ячейка | Столбец | Формула | Примечание |
+|---|---|---|---|
+| L2 | key | `=LOWER(TRIM(B2))&"\|"&LOWER(TRIM(C2))&"\|"&TEXT(E2,"yyyy-mm-dd")` |   |
+| M2 | n | `=COUNTIFS($L$2:$L$6041, L2)` | весь столбец: сколько строк с этим ключом |
+| N2 | rank | `=COUNTIFS($L$2:L2, L2)` | растущий диапазон: начало закреплено, конец свободен |
 
 | customer_id | ключ | n | rank |
 |---|---|---|---|
@@ -336,10 +351,20 @@ N2  rank   =COUNTIFS($L$2:L2, L2)             растущий диапазон:
 **Как пишется.**
 
 ```text
-выделите таблицу → Данные → Удалить дубликаты
-  ☑ installment_id   ☑ paid_at   ☑ amount     ← столбцы, которые определяют «то же самое»
-  ☐ payment_id ☐ method …                      ← не отмечайте то, что всегда различается
-  OK → «Найдено и удалено повторяющихся значений: 25; осталось уникальных значений: 52 850»
+выделите таблицу
+  → Данные → Удалить дубликаты
+  ☑ installment_id
+  ☑ paid_at
+  ☑ amount
+    ← столбцы, которые определяют
+      «то же самое»
+  ☐ payment_id ☐ method …
+    ← не отмечайте то, что всегда
+      различается
+  OK → «Найдено и удалено
+        повторяющихся значений: 25;
+        осталось уникальных
+        значений: 52 850»
 ```
 
 | payment_id | installment_id | paid_at | amount | остаётся? |
@@ -375,22 +400,31 @@ N2  rank   =COUNTIFS($L$2:L2, L2)             растущий диапазон:
 **Как пишется.**
 
 ```text
-Данные → Получить данные → Из файла → Из текстового/CSV-файла → payments_dirty.csv → Преобразовать данные
-                                                                        │
-   Редактор Power Query ───────────────────────────────────────────────┘
-     предпросмотр строк             Примененные шаги (панель справа)
-                                      Source
-                                      Promoted Headers
-                                      Changed Type
-                                      … по шагу на каждый щелчок …
-   Главная → Закрыть и загрузить  →  таблица на новом листе
+Данные → Получить данные
+  → Из файла
+  → Из текстового/CSV-файла
+  → payments_dirty.csv
+  → Преобразовать данные
+     │
+     ▼
+Редактор Power Query
+  предпросмотр строк
+  Примененные шаги (панель справа)
+    Source
+    Promoted Headers
+    Changed Type
+    … по шагу на каждый щелчок …
+  Главная → Закрыть и загрузить
+    → таблица на новом листе
 ```
 
 Каждый шаг — одна строка на **M**, языке запросов, она видна в строке формул — это схема, вводить её не нужно:
 
 ```text
-= Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
-  функция           предыдущий шаг       условие
+= Table.SelectRows(       функция
+    #"Changed Type",      предыдущий шаг
+    each [paid_at]        условие
+      <= #date(2026, 10, 1))
 ```
 
 Писать на M не нужно. Нужно читать его настолько, чтобы видеть, что делает шаг. Правый щелчок по шагу → *Переименовать*, чтобы панель читалась как журнал изменений: `Trim method`, `bank transfer → transfer`, `Drop 25 duplicates`.
@@ -414,8 +448,15 @@ N2  rank   =COUNTIFS($L$2:L2, L2)             растущий диапазон:
 **Как пишется.**
 
 ```text
-щёлкните значок типа в заголовке столбца (ABC / 123 / календарь) → выберите
-M: = Table.TransformColumnTypes(#"Promoted Headers", {{"paid_at", type date}, {"amount", Int64.Type}, {"phone", type text}})
+щёлкните значок типа в заголовке
+столбца (ABC / 123 / календарь)
+  → выберите
+
+M: = Table.TransformColumnTypes(
+  #"Promoted Headers",
+  {{"paid_at", type date},
+   {"amount", Int64.Type},
+   {"phone", type text}})
 ```
 
 | столбец | неверная догадка | верный тип | почему |
@@ -443,8 +484,15 @@ M: = Table.TransformColumnTypes(#"Promoted Headers", {{"paid_at", type date}, {"
 **Как пишется.**
 
 ```text
-заголовок paid_at ▾ → Фильтры дат → До… / В или до… → 2026-10-01
-M: = Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
+заголовок paid_at ▾
+  → Фильтры дат
+  → До… / В или до…
+  → 2026-10-01
+
+M: = Table.SelectRows(
+  #"Changed Type",
+  each [paid_at]
+    <= #date(2026, 10, 1))
 ```
 
 | paid_at | остаётся при `<= 2026-10-01`? |
@@ -474,9 +522,21 @@ M: = Table.SelectRows(#"Changed Type", each [paid_at] <= #date(2026, 10, 1))
 **Как пишется.**
 
 ```text
-выделите applied_at → Главная → Разделить столбец → По разделителю → Пробел → По крайнему левому разделителю
-M: = Table.SplitColumn(#"Changed Type", "applied_at", Splitter.SplitTextByEachDelimiter({" "}), {"applied_at.1", "applied_at.2"})
-затем изменение типа: applied_at.1 → Дата, applied_at.2 → Время
+выделите applied_at
+  → Главная → Разделить столбец
+  → По разделителю → Пробел
+  → По крайнему левому разделителю
+
+M: = Table.SplitColumn(
+  #"Changed Type",
+  "applied_at",
+  Splitter.SplitTextByEachDelimiter(
+    {" "}),
+  {"applied_at.1", "applied_at.2"})
+
+затем изменение типа:
+  applied_at.1 → Дата,
+  applied_at.2 → Время
 ```
 
 | applied_at | applied_at.1 | applied_at.2 |
@@ -500,11 +560,28 @@ M: = Table.SplitColumn(#"Changed Type", "applied_at", Splitter.SplitTextByEachDe
 **Как пишется.**
 
 ```text
-выделите method → Преобразование → Формат → Обрезать              M: Table.TransformColumns(…, {{"method", Text.Trim}})
-выделите method → Преобразование → Формат → нижний регистр         M: Text.Lower
-выделите method → Преобразование → Замена значений
-     Значение для поиска: bank transfer   Заменить на: transfer
-     Дополнительно ▸ ☑ Сравнивать содержимое ячейки целиком     M: Table.ReplaceValue(…, "bank transfer", "transfer", Replacer.ReplaceValue, {"method"})
+выделите method → Преобразование
+  → Формат → Обрезать
+
+  M: Table.TransformColumns(…,
+       {{"method", Text.Trim}})
+
+выделите method → Преобразование
+  → Формат → нижний регистр
+  M: Text.Lower
+
+выделите method → Преобразование
+  → Замена значений
+     Значение для поиска: bank transfer
+     Заменить на: transfer
+     Дополнительно ▸
+       ☑ Сравнивать содержимое ячейки
+         целиком
+
+  M: Table.ReplaceValue(…,
+       "bank transfer", "transfer",
+       Replacer.ReplaceValue,
+       {"method"})
 ```
 
 | method (сырое) | после Trim + нижний регистр + замены |
@@ -532,8 +609,15 @@ M: = Table.SplitColumn(#"Changed Type", "applied_at", Splitter.SplitTextByEachDe
 **Как пишется.**
 
 ```text
-Ctrl+щелчок по installment_id, paid_at, amount → Главная → Удалить строки → Удалить дубликаты
-M: = Table.Distinct(#"Replaced Value", {"installment_id", "paid_at", "amount"})
+Ctrl+щелчок по installment_id,
+  paid_at, amount
+  → Главная → Удалить строки
+  → Удалить дубликаты
+
+M: = Table.Distinct(
+  #"Replaced Value",
+  {"installment_id", "paid_at",
+   "amount"})
 ```
 
 На `payments_dirty.csv`: 52 875 → **52 850** строк, удалено 25, Σ amount уменьшилась на 58 397 800. Переименуйте шаг в `Drop 25 duplicates`.
@@ -557,10 +641,18 @@ M: = Table.Distinct(#"Replaced Value", {"installment_id", "paid_at", "amount"})
 **Как пишется.**
 
 ```text
-Добавление столбца → Настраиваемый столбец
+Добавление столбца
+  → Настраиваемый столбец
   имя:      birth_date_invalid
-  формула:  [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)
-M: = Table.AddColumn(#"Removed Duplicates", "birth_date_invalid", each [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1))
+  формула:
+    [birth_date] > #date(2026,10,1)
+    or [birth_date] < #date(1920,1,1)
+
+M: = Table.AddColumn(
+  #"Removed Duplicates",
+  "birth_date_invalid",
+  each [birth_date] > #date(2026,10,1)
+    or [birth_date] < #date(1920,1,1))
 ```
 
 | customer_id | birth_date | birth_date_invalid |
@@ -586,11 +678,21 @@ M: = Table.AddColumn(#"Removed Duplicates", "birth_date_invalid", each [birth_da
 **Как пишется.**
 
 ```text
-Преобразование → Группировать по → Подробнее
+Преобразование → Группировать по
+  → Подробнее
   группировать по:  method
-  новый столбец: payments = Количество строк
-  новый столбец: amount   = Сумма по amount
-M: = Table.Group(#"Removed Duplicates", {"method"}, {{"payments", each Table.RowCount(_)}, {"amount", each List.Sum([amount])}})
+  новый столбец:
+    payments = Количество строк
+  новый столбец:
+    amount   = Сумма по amount
+
+M: = Table.Group(
+  #"Removed Duplicates",
+  {"method"},
+  {{"payments",
+    each Table.RowCount(_)},
+   {"amount",
+    each List.Sum([amount])}})
 ```
 
 | method (3 строки на входе) | | method | payments | amount |
@@ -622,9 +724,18 @@ M: = Table.Group(#"Removed Duplicates", {"method"}, {{"payments", each Table.Row
 **Как пишется.**
 
 ```text
-выделите столбец подписей (region) → Преобразование → Отменить свёртывание столбцов ▾ → Отменить свёртывание других столбцов
-M: = Table.UnpivotOtherColumns(#"Changed Type", {"region"}, "Attribute", "Value")
-затем переименуйте Attribute → bucket, Value → outstanding
+выделите столбец подписей (region)
+  → Преобразование
+  → Отменить свёртывание столбцов ▾
+  → Отменить свёртывание других столбцов
+
+M: = Table.UnpivotOtherColumns(
+  #"Changed Type", {"region"},
+  "Attribute", "Value")
+
+затем переименуйте
+  Attribute → bucket,
+  Value → outstanding
 ```
 
 ```pic
@@ -655,11 +766,21 @@ M: = Table.UnpivotOtherColumns(#"Changed Type", {"region"}, "Attribute", "Value"
 
 ```text
 Главная → Объединить запросы (как новый)
-  верхняя таблица: installments          щёлкните installment_id
-  нижняя таблица:  paid_by_installment   щёлкните installment_id
-  Тип соединения:  Внешнее левое (Left Outer)
-→ новый столбец вложенных таблиц → щёлкните значок развёртывания → отметьте paid
-M: = Table.NestedJoin(installments, {"installment_id"}, paid_by_installment, {"installment_id"}, "paid", JoinKind.LeftOuter)
+  верхняя таблица: installments
+    щёлкните installment_id
+  нижняя таблица:  paid_by_installment
+    щёлкните installment_id
+  Тип соединения:  Внешнее левое
+    (Left Outer)
+→ новый столбец вложенных таблиц
+  → щёлкните значок развёртывания
+  → отметьте paid
+
+M: = Table.NestedJoin(
+  installments, {"installment_id"},
+  paid_by_installment,
+  {"installment_id"},
+  "paid", JoinKind.LeftOuter)
 ```
 
 | Тип соединения | SQL | оставляет |
@@ -692,8 +813,13 @@ M: = Table.NestedJoin(installments, {"installment_id"}, paid_by_installment, {"i
 **Как пишется.**
 
 ```text
-Главная → Добавить запросы (как новый) → Две таблицы / Три таблицы и более → выберите запросы
-M: = Table.Combine({payments_tashkent, payments_other})
+Главная → Добавить запросы (как новый)
+  → Две таблицы / Три таблицы и более
+  → выберите запросы
+
+M: = Table.Combine(
+  {payments_tashkent,
+   payments_other})
 ```
 
 | запрос 1 | | запрос 2 | | результат |
@@ -723,11 +849,22 @@ M: = Table.Combine({payments_tashkent, payments_other})
 
 ```text
 Главная → Закрыть и загрузить в…
-  ◉ Таблица, Новый лист              → таблица, которую можно суммировать, строить диаграмму и сводную   (как CREATE TABLE AS)
-  ◉ Только создать подключение       → без листа; запрос могут использовать другие запросы             (как CREATE VIEW)
+  ◉ Таблица, Новый лист
+    → таблица, которую можно
+      суммировать, строить диаграмму
+      и сводную
+      (как CREATE TABLE AS)
+  ◉ Только создать подключение
+    → без листа; запрос могут
+      использовать другие запросы
+      (как CREATE VIEW)
   ☐ Добавить эти данные в модель данных
-Данные → Обновить все                → каждый запрос перечитывает свой Source и выполняется заново
-Данные → Запросы и подключения → правый щелчок → Свойства → Обновлять при открытии файла
+Данные → Обновить все
+  → каждый запрос перечитывает свой
+    Source и выполняется заново
+Данные → Запросы и подключения
+  → правый щелчок → Свойства
+  → Обновлять при открытии файла
 ```
 
 `payments_clean` загружается как таблица из 52 850 строк. В следующий понедельник вы сохраняете новую выгрузку поверх `payments_dirty.csv`, нажимаете «Обновить все» — и таблица, её формулы и сводные обновляются.
@@ -763,17 +900,17 @@ M: = Table.Combine({payments_tashkent, payments_other})
 
 Платёжный файл следующего понедельника, очищенный одним запросом. Каждый шаг — подраздел этой страницы:
 
-```text
-Source                    From Text/CSV → payments_dirty.csv             Power Query: загрузка
-Promoted Headers
-Changed Type              ids, amount → Whole Number; paid_at → Date      изменение типа
-Trim method               Transform → Format → Trim                       текстовые шаги (TRIM)
-Lowercase method          Transform → Format → lowercase                  текстовые шаги (LOWER)
-bank transfer → transfer  Replace Values, match entire cell               текстовые шаги (SUBSTITUTE)
-Drop 25 duplicates        installment_id + paid_at + amount               удалить дубликаты (сначала проверено через COUNTIFS)
-is_forward_dated          Custom Column [paid_at] > #date(2026,10,1)      добавление столбца
-Close & Load To           Table payments_clean                            закрыть и загрузить; обновить в следующий понедельник
-```
+| Шаг | Чем сделан | Раздел |
+|---|---|---|
+| Source | From Text/CSV → payments_dirty.csv | Power Query: загрузка |
+| Promoted Headers |   |   |
+| Changed Type | ids, amount → Whole Number; paid_at → Date | изменение типа |
+| Trim method | Transform → Format → Trim | текстовые шаги (TRIM) |
+| Lowercase method | Transform → Format → lowercase | текстовые шаги (LOWER) |
+| bank transfer → transfer | Replace Values, match entire cell | текстовые шаги (SUBSTITUTE) |
+| Drop 25 duplicates | installment_id + paid_at + amount | удалить дубликаты (сначала проверено через COUNTIFS) |
+| is_forward_dated | Custom Column `[paid_at] > #date(2026,10,1)` | добавление столбца |
+| Close & Load To | Table payments_clean | закрыть и загрузить; обновить в следующий понедельник |
 
 Прочитайте результат по чек-листу из начала страницы: пробелы 0, регистр 0, синонимы 0 — `UNIQUE(method)` даёт 5; дубликаты 0 — 52 850 строк; 24 строки с датой в будущем оставлены и помечены флагом. Раздел 2 строит ровно это.
 
@@ -872,16 +1009,16 @@ Close & Load To           Table payments_clean                            зак
 
 **Шаг 5 — постройте это один раз в Power Query** (разобранный конвейер для `payments_dirty.csv`; `Customers` — HW 4.2). Каждая строка — шаг из раздела «Изучение»: **изменение типа**, **текстовые шаги**, **удаление дубликатов**, **закрыть и загрузить**:
 
-```text
-Source               From Text/CSV → data/excel/payments_dirty.csv
-Promoted Headers
-Changed Type         payment_id, loan_id, installment_id, amount → Whole Number; paid_at → Date; method, product, region → Text
-Trim method          Transform → Format → Trim        (select method first)
-Lowercase method     Transform → Format → lowercase
-bank transfer → transfer   Replace Values, match entire cell
-Drop duplicates      select installment_id, paid_at, amount → Remove Duplicates          52 875 → 52 850
-Close & Load To      Table "payments_clean" on a new sheet
-```
+| Шаг | Как | Примечание |
+|---|---|---|
+| Source | From Text/CSV → data/excel/payments_dirty.csv |   |
+| Promoted Headers |   |   |
+| Changed Type | payment_id, loan_id, installment_id, amount → Whole Number; paid_at → Date; method, product, region → Text |   |
+| Trim method | Transform → Format → Trim | (select method first) |
+| Lowercase method | Transform → Format → lowercase |   |
+| bank transfer → transfer | Replace Values, match entire cell |   |
+| Drop duplicates | select installment_id, paid_at, amount → Remove Duplicates | 52 875 → 52 850 |
+| Close & Load To | Table "payments_clean" on a new sheet |   |
 
 <details><summary>Проверка после загрузки</summary>
 
@@ -1071,13 +1208,11 @@ Close & Load To      Table "payments_clean" on a new sheet
 
 **Определение (наше):** для платежей по графику, **наступающих в месяце** (`due_date` в месяце, полуоткрыто), собрано = оплаты по этим платежам по графику с `paid_at <= 2026-10-01` из `payments_clean` (дубликаты удалены, строки с датой в будущем исключены фильтром даты отсчёта); ставка = Σ собрано ÷ Σ `total_due`.
 
-```
-Query  paid_by_installment   payments_clean → Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount)
-Query  installments_paid     installments.csv → Merge paid_by_installment (Left Outer, installment_id) → expand paid → Replace null → 0
-                             → Add Column → Date → Month → Start of Month (from due_date) as due_month
-Query  collection_by_month   installments_paid → Group By due_month: due = Sum(total_due), paid = Sum(paid), instalments = Count Rows
-                             → Add Column → Custom: rate = [paid] / [due]      → Close & Load
-```
+| Запрос | Шаги |
+|---|---|
+| paid_by_installment | payments_clean → Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount) |
+| installments_paid | installments.csv → Merge paid_by_installment (Left Outer, installment_id) → expand paid → Replace null → 0 → Add Column → Date → Month → Start of Month (from due_date) as due_month |
+| collection_by_month | installments_paid → Group By due_month: due = Sum(total_due), paid = Sum(paid), instalments = Count Rows → Add Column → Custom: `rate = [paid] / [due]` → Close & Load |
 
 | due month | instalments | due | collected (by 2026-10-01) | rate |
 |---|---|---|---|---|

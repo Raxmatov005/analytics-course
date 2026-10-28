@@ -43,13 +43,22 @@ Open `data/excel/nur_week4_start.xlsx` (built from `nur.db`; `data/excel/README.
 **How to write it.** The same four numbers, twice. On the left, a report someone typed; on the right, a table.
 
 ```text
-NOT A TABLE (a typed report)                 A TABLE (what formulas need)
-+---------- Tashkent (merged) ----------+    region   | month   | loans
-| Aug 2026     | Sep 2026               |    Tashkent | 2026-08 | 132
-| 132          | 134                    |    Tashkent | 2026-09 | 134
-+---------- Fergana (merged) -----------+    Fergana  | 2026-08 | 38
-| 38           | 34                     |    Fergana  | 2026-09 | 34
-| Total 338                             |
+NOT A TABLE (a typed report)
+
++-------- Tashkent (merged) --------+
+| Aug 2026     | Sep 2026           |
+| 132          | 134                |
++-------- Fergana (merged) ---------+
+| 38           | 34                 |
+| Total 338                         |
+
+A TABLE (what formulas need)
+
+region   | month   | loans
+Tashkent | 2026-08 | 132
+Tashkent | 2026-09 | 134
+Fergana  | 2026-08 | 38
+Fergana  | 2026-09 | 34
 ```
 
 The left block cannot be filtered, sorted or summed by region: the region sits in a merged cell above the numbers, and the total sits among them. The right block answers any question with one formula. The `Loans` sheet is built this way: 7 828 rows, one per loan, 13 columns, one header row.
@@ -72,11 +81,11 @@ The left block cannot be filtered, sorted or summed by region: the region sits i
 
 **How to write it.**
 
-```excel
-=SUM(tblLoans[outstanding])          tblLoans = the Table name · [outstanding] = the column
-=COUNTA(tblLoans[loan_id])           the whole loan_id column
-=[@dpd]                              inside the Table: "this row's dpd" (a calculated column)
-```
+| Formula | Means |
+|---|---|
+| `=SUM(tblLoans[outstanding])` | tblLoans = the Table name · [outstanding] = the column |
+| `=COUNTA(tblLoans[loan_id])` | the whole loan_id column |
+| `=[@dpd]` | inside the Table: "this row's dpd" (a calculated column) |
 
 `=SUM(tblLoans[outstanding])` returns **208 723 504 430** — the outstanding of all 7 828 loans. `=COUNTA(tblLoans[loan_id])` returns 7 828. Our workbook's Tables are already named: `tblLoans`, `tblPayments`, `tblCustomers`, `tblApplications`, `tblInstallments` (Table Design → Table Name).
 
@@ -115,12 +124,12 @@ A Table gives four things a plain range does not:
 
 **How to write it.** The `$` goes in front of the part that must not move:
 
-```text
-A3      both move        copied 1 right, 1 down → B4
-$A$3    nothing moves    copied anywhere        → $A$3
-$A3     column pinned    copied 1 right, 1 down → $A4
-B$2     row pinned       copied 1 right, 1 down → C$2
-```
+| Written | Meaning | Copied | Gives |
+|---|---|---|---|
+| `A3` | both move | 1 right, 1 down | `B4` |
+| `$A$3` | nothing moves | anywhere | `$A$3` |
+| `$A3` | column pinned | 1 right, 1 down | `$A4` |
+| `B$2` | row pinned | 1 right, 1 down | `C$2` |
 
 The picture: one formula typed in B3, then filled right and down. Column A holds two loan amounts, row 2 two annual rates; each cell is a year's interest.
 
@@ -161,13 +170,13 @@ On the real data: the as-of date 2026-10-01 sits in `Lookup!B17`. Add to `tblLoa
 | 5 | 80 |
 | 6 | 100 |
 
-```excel
-=SUM(A2:A6)          → 300     text and empty cells are skipped
-=AVERAGE(A2:A6)      → 100     300 ÷ 3 numbers — the empty cell and "n/a" are not in it
-=COUNT(A2:A6)        → 3       numbers only
-=COUNTA(A2:A6)       → 4       anything that is not empty, "n/a" included
-=COUNTBLANK(A2:A6)   → 1
-```
+| Formula | Gives | Why |
+|---|---|---|
+| `=SUM(A2:A6)` | 300 | text and empty cells are skipped |
+| `=AVERAGE(A2:A6)` | 100 | 300 ÷ 3 numbers — the empty cell and "n/a" are not in it |
+| `=COUNT(A2:A6)` | 3 | numbers only |
+| `=COUNTA(A2:A6)` | 4 | anything that is not empty, "n/a" included |
+| `=COUNTBLANK(A2:A6)` | 1 |   |
 
 On the real data: `=COUNTA(tblCustomers[customer_id])` → **6 040** customers. `=COUNT(tblCustomers[monthly_income])` → **5 684** — the customers with an income on file. `=AVERAGE(tblCustomers[monthly_income])` → **15 245 933** soum, the average of those 5 684 incomes. `=AVERAGE(tblLoans[principal])` → **51 709 668**, the average ticket.
 
@@ -199,31 +208,31 @@ On the real data: `=COUNTA(tblCustomers[customer_id])` → **6 040** customers. 
 
 **How to write it.**
 
-```excel
-=SUMIFS(sum_range, criteria_range, criterion)        sum_range FIRST: the column to add up
-=COUNTIFS(criteria_range, criterion)                 no sum_range: it counts rows
-=AVERAGEIFS(average_range, criteria_range, criterion)
-=MAXIFS(max_range, criteria_range, criterion)        MINIFS the same
-```
+| Formula | Note |
+|---|---|
+| `=SUMIFS(sum_range, criteria_range, criterion)` | sum_range FIRST: the column to add up |
+| `=COUNTIFS(criteria_range, criterion)` | no sum_range: it counts rows |
+| `=AVERAGEIFS(average_range, criteria_range, criterion)` |   |
+| `=MAXIFS(max_range, criteria_range, criterion)` | MINIFS the same |
 
 The criterion is **text in quotes**, with the operator inside: `"active"` (equals), `">0"`, `"<=30"`, `"<>closed"` (not equal). On the small table:
 
-```excel
-=COUNTIFS(C2:C6, "active")             → 3      rows 101, 102, 104
-=SUMIFS(F2:F6, C2:C6, "active")        → 180    100 + 50 + 30
-=AVERAGEIFS(F2:F6, C2:C6, "active")    → 60     180 ÷ 3
-=MAXIFS(E2:E6, C2:C6, "active")        → 45     the most-late active loan
-=COUNTIFS(E2:E6, ">0")                 → 3      rows 102, 103, 104
-```
+| Formula | Gives | Why |
+|---|---|---|
+| `=COUNTIFS(C2:C6, "active")` | 3 | rows 101, 102, 104 |
+| `=SUMIFS(F2:F6, C2:C6, "active")` | 180 | 100 + 50 + 30 |
+| `=AVERAGEIFS(F2:F6, C2:C6, "active")` | 60 | 180 ÷ 3 |
+| `=MAXIFS(E2:E6, C2:C6, "active")` | 45 | the most-late active loan |
+| `=COUNTIFS(E2:E6, ">0")` | 3 | rows 102, 103, 104 |
 
 On the real data:
 
-```excel
-=COUNTIFS(tblLoans[status], "active")                                      → 3 352
-=SUMIFS(tblLoans[outstanding], tblLoans[status], "active")                 → 203 404 028 903
-=AVERAGEIFS(tblLoans[principal], tblLoans[product], "Small business loan") → 308 728 745
-=MAXIFS(tblLoans[dpd], tblLoans[status], "active")                         → 89
-```
+| Formula | Gives |
+|---|---|
+| `=COUNTIFS(tblLoans[status], "active")` | 3 352 |
+| `=SUMIFS(tblLoans[outstanding], tblLoans[status], "active")` | 203 404 028 903 |
+| `=AVERAGEIFS(tblLoans[principal], tblLoans[product], "Small business loan")` | 308 728 745 |
+| `=MAXIFS(tblLoans[dpd], tblLoans[status], "active")` | 89 |
 
 3 352 active loans carry 203 404 028 903 of the 208 723 504 430 outstanding. No active loan is more than 89 days late — past 90 a loan moves to `default`.
 
@@ -255,10 +264,10 @@ On the real data:
 
 On the small table — active **and** late:
 
-```excel
-=COUNTIFS(C2:C6, "active", E2:E6, ">0")              → 2     rows 102 and 104
-=SUMIFS(F2:F6, C2:C6, "active", E2:E6, ">0")         → 80    50 + 30
-```
+| Formula | Gives | Why |
+|---|---|---|
+| `=COUNTIFS(C2:C6, "active", E2:E6, ">0")` | 2 | rows 102 and 104 |
+| `=SUMIFS(F2:F6, C2:C6, "active", E2:E6, ">0")` | 80 | 50 + 30 |
 
 On the real data: `=COUNTIFS(tblLoans[status], "active", tblLoans[dpd], ">0")` → **151** active loans that are late. `=SUMIFS(tblLoans[outstanding], tblLoans[region], "Tashkent", tblLoans[bucket], "90+")` → **1 920 943 970**, the Tashkent money more than 90 days late.
 
@@ -286,13 +295,13 @@ On the real data: `=COUNTIFS(tblLoans[status], "active", tblLoans[dpd], ">0")` �
 
 **How to write it.**
 
-```excel
-"approved*"      starts with approved      LIKE 'approved%'
-"*Central"       ends with Central         LIKE '%Central'
-"*loan*"         contains loan             LIKE '%loan%'
-"<>*loan"        does not end with loan    NOT LIKE '%loan'
-"20??"           four characters starting with 20
-```
+| Criterion | Matches | In SQL |
+|---|---|---|
+| `"approved*"` | starts with approved | `LIKE 'approved%'` |
+| `"*Central"` | ends with Central | `LIKE '%Central'` |
+| `"*loan*"` | contains loan | `LIKE '%loan%'` |
+| `"<>*loan"` | does not end with loan | `NOT LIKE '%loan'` |
+| `"20??"` | four characters starting with 20 |   |
 
 On the small table: `=COUNTIFS(B2:B6, "Tashkent*")` → **3** (rows 101, 103, 104); `=SUMIFS(F2:F6, B2:B6, "Tashkent*")` → **170**.
 
@@ -316,27 +325,27 @@ On the real data: `=COUNTIFS(tblApplications[status], "approved*")` → **8 595*
 
 **How to write it.**
 
-```excel
-">="&DATE(2026,9,1)          the text ">=" joined to the number of 1 Sep 2026
-"<"&DATE(2026,10,1)          before 1 Oct 2026
-">="&$B$1                    joined to a date typed in B1
-"<"&EDATE($B$1, 1)           before the same day one month after B1
-```
+| Criterion | Means |
+|---|---|
+| `">="&DATE(2026,9,1)` | the text ">=" joined to the number of 1 Sep 2026 |
+| `"<"&DATE(2026,10,1)` | before 1 Oct 2026 |
+| `">="&$B$1` | joined to a date typed in B1 |
+| `"<"&EDATE($B$1, 1)` | before the same day one month after B1 |
 
 A period is two pairs on the **same** column — the **half-open filter** from week 2: from the first day, up to but not including the next period's first day. On the small table, September 2026:
 
-```excel
-=COUNTIFS(D2:D6, ">="&DATE(2026,9,1), D2:D6, "<"&DATE(2026,10,1))     → 2   rows 102 and 104
-```
+| Formula | Gives | Why |
+|---|---|---|
+| `=COUNTIFS(D2:D6, ">="&DATE(2026,9,1), D2:D6, "<"&DATE(2026,10,1))` | 2 | rows 102 and 104 |
 
 Row 105 (1 October) is outside: `"<"` excludes the first day of the next month.
 
 On the real data:
 
-```excel
-=COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1))   → 361
-=SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,1,1))                          → 162 333 060 000
-```
+| Formula | Gives |
+|---|---|
+| `=COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1))` | 361 |
+| `=SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,1,1))` | 162 333 060 000 |
 
 361 loans were disbursed in September 2026. 162 333 060 000 soum was lent in 2026 through the as-of date, in 3 051 loans.
 
@@ -358,11 +367,11 @@ On the real data:
 
 **How to write it.**
 
-```excel
-=SUMPRODUCT((condition) * sum_column)        sum where the condition is TRUE
-=SUMPRODUCT(--(condition))                   count: -- turns TRUE/FALSE into 1/0
-=SUMPRODUCT(column1, column2)                Σ column1 × column2, row by row
-```
+| Formula | Does |
+|---|---|
+| `=SUMPRODUCT((condition) * sum_column)` | sum where the condition is TRUE |
+| `=SUMPRODUCT(--(condition))` | count: -- turns TRUE/FALSE into 1/0 |
+| `=SUMPRODUCT(column1, column2)` | Σ column1 × column2, row by row |
 
 On the small table: `=SUMPRODUCT((E2:E6>30)*F2:F6)` → **70** — rows 103 (40) and 104 (30).
 
@@ -384,10 +393,10 @@ On the real data: `=SUMPRODUCT((tblLoans[dpd]>30)*tblLoans[outstanding])` → **
 
 **How to write it.**
 
-```excel
-=IF(test, value_if_true, value_if_false)
-=IF([@dpd]>0, "late", "current")         in a calculated column of tblLoans
-```
+| Formula | Note |
+|---|---|
+| `=IF(test, value_if_true, value_if_false)` |   |
+| `=IF([@dpd]>0, "late", "current")` | in a calculated column of tblLoans |
 
 On the small table: `=IF(E2>0, "late", "current")` filled down gives `current`, `late`, `late`, `late`, `current`.
 
@@ -475,10 +484,10 @@ On the small table the `IFS` gives `0`, `1-30`, `90+`, `31-60`, `0`. On `Loans` 
 
 **How to write it.**
 
-```excel
-=A2 & " " & B2                         value, a space in quotes, value
-=TEXTJOIN(", ", TRUE, range)           separator, TRUE = skip empty cells, the range
-```
+| Formula | Means |
+|---|---|
+| `=A2 & " " & B2` | value, a space in quotes, value |
+| `=TEXTJOIN(", ", TRUE, range)` | separator, TRUE = skip empty cells, the range |
 
 On the small table: `=B2&" · "&C2` → `Tashkent South · active`.
 
@@ -502,13 +511,13 @@ On the real data, in `tblLoans`: `=[@branch]&" / "&[@product]` for loan 1 → `T
 
 **How to write it.**
 
-```excel
-=TRIM(text)          "Yulduz "   → "Yulduz"
-=UPPER(text)         "jalilova"  → "JALILOVA"
-=LOWER(text)         "CASH"      → "cash"
-=PROPER(text)        "MALIKA"    → "Malika"
-=LEN(text)           "Yulduz "   → 7   (the trailing space counts)
-```
+| Formula | Text | Gives |
+|---|---|---|
+| `=TRIM(text)` | `"Yulduz "` | `"Yulduz"` |
+| `=UPPER(text)` | `"jalilova"` | `"JALILOVA"` |
+| `=LOWER(text)` | `"CASH"` | `"cash"` |
+| `=PROPER(text)` | `"MALIKA"` | `"Malika"` |
+| `=LEN(text)` | `"Yulduz "` | 7 (the trailing space counts) |
 
 Combined, week 2's cleaning in one cell: `=PROPER(TRIM([@first_name]))&" "&PROPER(TRIM([@last_name]))`. Customer 6001 (`MALIKA`, `jalilova`) becomes `Malika Jalilova`.
 
@@ -538,19 +547,19 @@ On the real data: `=SUMPRODUCT(--(LEN(tblCustomers[first_name])<>LEN(TRIM(tblCus
 
 **How to write it.**
 
-```excel
-=LEFT(text, n)                    "Tashkent South", 8      → "Tashkent"
-=RIGHT(text, n)                   "Tashkent South", 5      → "South"
-=MID(text, start, n)              "+998902031105", 5, 2    → "90"
-=SEARCH(find, text)               " ", "Tashkent South"    → 9
-```
+| Formula | Example | Gives |
+|---|---|---|
+| `=LEFT(text, n)` | `"Tashkent South", 8` | `"Tashkent"` |
+| `=RIGHT(text, n)` | `"Tashkent South", 5` | `"South"` |
+| `=MID(text, start, n)` | `"+998902031105", 5, 2` | `"90"` |
+| `=SEARCH(find, text)` | `" ", "Tashkent South"` | 9 |
 
 When the length changes from row to row, let `SEARCH` find the cut:
 
-```excel
-=LEFT([@branch], SEARCH(" ", [@branch]) - 1)       the word before the space → "Tashkent", "Fergana", …
-=MID([@branch], SEARCH(" ", [@branch]) + 1, 50)    everything after the space → "South", "Central", …
-```
+| Formula | Gives |
+|---|---|
+| `=LEFT([@branch], SEARCH(" ", [@branch]) - 1)` | the word before the space → "Tashkent", "Fergana", … |
+| `=MID([@branch], SEARCH(" ", [@branch]) + 1, 50)` | everything after the space → "South", "Central", … |
 
 On the small table, the first formula gives `Tashkent`, `Fergana`, `Tashkent`, `Tashkent`, `Fergana`; the second gives `South`, `Central`, `North`, `South`, `Central`.
 
@@ -572,13 +581,13 @@ On the small table, the first formula gives `Tashkent`, `Fergana`, `Tashkent`, `
 
 **How to write it.**
 
-```excel
-=TEXT(value, "format code")
-=TEXT([@disbursed_at], "yyyy-mm")       2026-09-08 → "2026-09"
-=TEXT([@disbursed_at], "yyyy-mm-dd")    → "2026-09-08"
-=TEXT(208723504430, "#,##0")            → "208,723,504,430"
-=TEXT(0.0312, "0.0%")                   → "3.1%"
-```
+| Formula | Gives |
+|---|---|
+| `=TEXT(value, "format code")` |   |
+| `=TEXT([@disbursed_at], "yyyy-mm")` | 2026-09-08 → `"2026-09"` |
+| `=TEXT([@disbursed_at], "yyyy-mm-dd")` | `"2026-09-08"` |
+| `=TEXT(208723504430, "#,##0")` | `"208,723,504,430"` |
+| `=TEXT(0.0312, "0.0%")` | `"3.1%"` |
 
 On the real data, a `month` column `=TEXT([@disbursed_at], "yyyy-mm")` in `tblLoans` gives 34 month labels, 2024-01 to 2026-10. `=COUNTIFS(tblLoans[month], "2026-09")` → **361**, the same as the date-criteria count.
 
@@ -632,10 +641,10 @@ The cell that shows `209 bn` still holds 208 723 504 430. A check `=G11=SUM(tblL
 
 **How to write it.**
 
-```text
-English Excel:  =SUMIFS(tblLoans[outstanding], tblLoans[status], "active")
-Russian Excel:  =СУММЕСЛИМН(tblLoans[outstanding]; tblLoans[status]; "active")
-```
+| Excel | Formula |
+|---|---|
+| English Excel | `=SUMIFS(tblLoans[outstanding], tblLoans[status], "active")` |
+| Russian Excel | `=СУММЕСЛИМН(tblLoans[outstanding]; tblLoans[status]; "active")` |
 
 **When you use it.** When a colleague's screen or a Russian tutorial shows the Russian names. Switch Office to English if you can (File → Options → Language): every interview and most tutorials use the English names.
 
@@ -700,16 +709,10 @@ Sheets has the same functions (`SUMIFS`, `COUNTIFS`, `IFS`, `MAXIFS`, `TEXTJOIN`
 One title cell for Bekzod, built from five of today's tools: *"September 2026: 361 loans, 17,015,490,000 soum, 134 of them in Tashkent."*
 
 ```excel
-="September 2026: "
- & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1))
- & " loans, "
- & TEXT(SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1)), "#,##0")
- & " soum, "
- & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1), tblLoans[region], "Tashkent")
- & " of them in Tashkent."
+="September 2026: " & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1)) & " loans, " & TEXT(SUMIFS(tblLoans[principal], tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1)), "#,##0") & " soum, " & COUNTIFS(tblLoans[disbursed_at], ">="&DATE(2026,9,1), tblLoans[disbursed_at], "<"&DATE(2026,10,1), tblLoans[region], "Tashkent") & " of them in Tashkent."
 ```
 
-The parts, line by line:
+The parts, in order:
 
 1. Text in quotes, joined with **`&`**.
 2. **COUNTIFS** with a **half-open date filter** — 361 loans.
@@ -774,9 +777,10 @@ B3:  =SUMIFS(tblLoans[outstanding], tblLoans[region], $A3, tblLoans[bucket], B$2
 4. **SUM for the totals, and a check cell.**
 
 ```excel
-G3:  =SUM(B3:F3)          row total
-B11: =SUM(B3:B10)         column total
-G11: =SUM(G3:G10)         → must be 208 723 504 430
+G3:  =SUM(B3:F3)    row total
+B11: =SUM(B3:B10)   column total
+G11: =SUM(G3:G10)
+     → must be 208 723 504 430
 ```
 
    G11 = **208 723 504 430**: the grand total ties to `=SUM(tblLoans[outstanding])`. If not, a region is misspelt or a label carries a stray space — check the labels with `ISTEXT` and `LEN`. Then two more checks: the Tashkent row = 81 679 738 071 (39.1 % — `=G3/$G$11` formatted `0.0%`, an **absolute reference** to the total); the `90+` column = 5 319 475 527 (the NPL90 numerator, 2.55 %).
@@ -981,13 +985,13 @@ Week 2's **approval rate by channel** (*уровень одобрения по �
 
 Sheet `Approval`: channels in A3:A5 (`app`, `branch`, `partner`), then:
 
-```
-B3 applications    =COUNTIFS(tblApplications[channel], $A3)
-C3 approved        =COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "approved*")
-D3 decided         =COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "<>cancelled")
-E3 rate, all       =C3/B3        → 0.0%
-F3 rate, decided   =C3/D3        → 0.0%
-```
+| Cell | Column | Formula |
+|---|---|---|
+| B3 | applications | `=COUNTIFS(tblApplications[channel], $A3)` |
+| C3 | approved | `=COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "approved*")` |
+| D3 | decided | `=COUNTIFS(tblApplications[channel], $A3, tblApplications[status], "<>cancelled")` |
+| E3 | rate, all | `=C3/B3` → 0.0% |
+| F3 | rate, decided | `=C3/D3` → 0.0% |
 
 | channel | applications | approved | decided | rate (all) | rate (decided) |
 |---|---|---|---|---|---|
