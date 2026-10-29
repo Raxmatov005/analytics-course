@@ -63,9 +63,15 @@
   - [Day 3: capstone I — brief and analysis](weeks/week-08/day-3.md)
   - [Day 4: capstone II — dashboard and story](weeks/week-08/day-4.md)
   - [Day 5: presentation, mock interview, what next](weeks/week-08/day-5.md)
+- **Week 9 — Credit risk models**
+  - [Day 1: correlation and regression](weeks/week-09/day-1.md)
+  - [Day 2: logistic regression and the scorecard](weeks/week-09/day-2.md)
+  - [Day 3: ROC, AUC, Gini, KS](weeks/week-09/day-3.md)
+  - [Day 4: the cut-off and PSI](weeks/week-09/day-4.md)
+  - [Day 5: checkpoint — the scorecard review](weeks/week-09/day-5.md)
 
 - **Company & metrics**
   - [Glossary](company/glossary.md)
   - [Who does what](company/roles.md)
-  - [Interview bank: 30 questions](company/interview.md)
+  - [Interview bank: 35 questions](company/interview.md)
 

@@ -1,6 +1,6 @@
-# The interview bank — 30 questions with model answers
+# The interview bank — 35 questions with model answers
 
-Thirty questions an analyst interview at a bank or lending company asks, grouped as the interviews are: **lending & metrics (10), SQL (6), Excel/BI (4), statistics & A/B (6), behavioural and case (4)**. Every question has an answer box. Use it like a flash card: answer **out loud** in 60–90 seconds, write the skeleton of that answer in the box (25 words or more), tap **Compare**, then tick the rubric lines you covered. The numbers are Nur Finance's (synthetic data, as of 2026-10-01) — in a real interview, use them as *"in my portfolio project, on a 7 800-loan book…"*. Every SQL answer runs on `data/raw/nur.db` and shows its real result.
+Thirty-five questions an analyst interview at a bank or lending company asks, grouped as the interviews are: **lending & metrics (10), SQL (6), Excel/BI (4), statistics & A/B (6), behavioural and case (4), credit risk (5)**. Every question has an answer box. Use it like a flash card: answer **out loud** in 60–90 seconds, write the skeleton of that answer in the box (25 words or more), tap **Compare**, then tick the rubric lines you covered. The numbers are Nur Finance's (synthetic data, as of 2026-10-01) — in a real interview, use them as *"in my portfolio project, on a 7 800-loan book…"*. Every SQL answer runs on `data/raw/nur.db` and shows its real result.
 
 How a good answer is built: **definition → how you compute it → a number → a trap or a company difference.** The fourth part is what the interviewer remembers.
 
@@ -351,6 +351,40 @@ Four things to say: clean payments (a duplicated payment would count twice towar
 
 ```task
 {"id": "interview-e4", "kind": "free", "min": 25, "model": "\"Imagine the new screen did nothing. Even then, two groups of customers would never convert exactly equally — there is always some noise. The p-value says how often noise alone would produce a difference as big as the one we saw. Ours is 1.6 %: noise would do it rarely, so we are fairly confident the screen really helps. It does not tell us how much it helps — for that we have the range: between 0.2 and 1.6 more contracts per 100 viewers. And it does not say the screen is safe for risk — that is a separate check.\" No formulas, one example, the size and the limit.", "rubric": ["no formulas: imagine the change did nothing — how often would noise give a gap this big?", "gives the number and what it means", "adds the size of the effect (a range) and what the p-value does not say"]}
+```
+
+---
+
+## F. Credit risk
+
+**F1.** **What do AUC, Gini and KS tell you about a scorecard?**
+
+```task
+{"id": "interview-f1", "kind": "free", "min": 25, "model": "All three measure ranking — how well the score puts bad loans below good ones — not accuracy. AUC: the chance that a random good loan scores higher than a random bad one (ties half); 0.5 is a coin. Gini = 2 × AUC − 1, the number credit teams quote; application scorecards are often 0.4–0.6. KS: the largest gap between the cumulative share of bads and of goods, with the score where it happens. \"In my portfolio project, on 7 615 scored loans with 223 bads: AUC 0.689, Gini 0.377, KS 0.34 at score 658 — it ranks, but weakly.\" The traps: the direction (if a higher score means safer, roc_auc_score(bad, score) gives one minus the AUC), AUC read as \"68 % accurate\", and a Gini given without its number of bads.", "rubric": ["AUC as the chance a random good outscores a random bad; Gini = 2 × AUC − 1; KS as the largest gap between the two cumulative curves", "a number with its n and bads, compared with a usual range (Gini 0.4–0.6)", "a trap: the direction of the score, AUC is not accuracy, or a Gini without its bads"]}
+```
+
+**F2.** **How do you choose an approval cut-off?**
+
+```task
+{"id": "interview-f2", "kind": "free", "min": 25, "model": "First the trade-off table: for each cut-off, the share approved, their bad rate and the bads avoided. Then money, loan by loan, from the unit economics: interest for a good loan; for a bad one no interest and a loss of LGD × EAD; for both the cost of funds, acquisition and servicing. The profit-maximising cut-off is where the band you drop stops losing money — its bad rate falls below the product's break-even PD — not where the bad rate is lowest. \"In my project, Consumer loans break even at a PD of 7.8 %: grade C, at 5.7 % bad, still paid and only grade D, at 9.6 %, lost money — so Consumer's line sits at 600, while Micro, whose break-even is 4.2 %, needs a stricter one.\" Then the cost: who is refused (the swap-out set), what the business loses, and a rollout — the safe part at once, the rest as a challenger. One cut-off per product: a thin-margin product needs a stricter line.", "rubric": ["the trade-off: approval share against bad rate and bads avoided", "money per loan (interest, cost of funds, LGD × EAD, acquisition, servicing): drop a band while its bad rate is above the break-even PD", "the swap-out set and a rollout (champion / challenger), or one cut-off per product"]}
+```
+
+**F3.** **What is a PSI, and what do you do when it is high?**
+
+```task
+{"id": "interview-f3", "kind": "free", "min": 25, "model": "The population stability index compares today's distribution of scores with the development sample's, band by band: PSI = Σ (actual share − expected share) × ln(actual ÷ expected). Usual reading: below 0.1 stable, 0.1–0.25 watch, above 0.25 act (it varies by company). It is measured on applicants — what the scorecard sees — because approved loans have passed the decision and move with the policy too. \"In my project, applicants in 2026 against 2024: PSI 0.0037 — stable; the approved loans moved more, which is a change in decisions, not in applicants.\" When it is high: CSI per characteristic to find what moved (a channel, a campaign, a product, income); check the Gini and the calibration on recent mature loans; if the ranking holds, recalibrate or move the cut-off; if it does not, rebuild. A PSI says nothing about ranking, and one small month is noisy.", "rubric": ["the formula band by band, and the thresholds 0.1 and 0.25", "measured on applicants, not on approved loans, and why", "what you do: CSI per characteristic, check the Gini on mature loans, then recalibrate, move the cut-off or rebuild"]}
+```
+
+**F4.** **How do you validate a scorecard out of time — and what is the trap?**
+
+```task
+{"id": "interview-f4", "kind": "free", "min": 25, "model": "Score loans from a later period than the ones the model was built on and compute the Gini and the KS on them, next to the development figures. The trap is maturity: young loans have not had time to go bad, so a recent period has fewer bads, a lower bad rate and a noisy Gini. \"In my project, the most recent year's Gini came out lower than the older loans' — but on a few dozen bads, all from loans of its first months, with a bootstrap interval several times wider: no evidence of decay yet.\" So compare loans of the same age (bad within the first 12 months on book, for each vintage), put an interval on every Gini, and say how many bads it rests on. A second trap: after a cut-off change the validation only sees the approved loans, and the same score looks weaker on them — compare the same score range in both periods.", "rubric": ["a later period than development, Gini and KS next to the development figures", "maturity: compare loans of the same age, and give every Gini its bads and an interval", "a number or the second trap: after a cut-off change, the approved loans alone make the score look weaker"]}
+```
+
+**F5.** **What is a champion / challenger test, and how would you run one for a new cut-off?**
+
+```task
+{"id": "interview-f5", "kind": "free", "min": 25, "model": "The champion is the current policy; the challenger is the new one, run on a random share of new applications at the same time, so season, marketing and the economy hit both arms alike. Before it starts: the metric (profit per applicant, the bad rate by vintage at six months, the approval rate), a guardrail read early (FPD30), the share and the length from a power calculation, and the stopping rule — no peeking at the primary metric. \"For an app product I would keep today's line as the champion and run a stricter one as the challenger on half of new applications for six months.\" Both arms are read on loans of the same age. A bonus: the champion keeps approving some applicants the challenger refuses, so it keeps telling you what the refused would have done — the data a later rebuild needs.", "rubric": ["champion = the current policy, challenger = the new one on a random share at the same time", "fixed in advance: the metric, a guardrail, the size and length, the stopping rule; both read on loans of the same age", "a concrete example, or why the champion arm keeps measuring what the challenger refuses"]}
 ```
 
 ---

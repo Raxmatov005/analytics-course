@@ -412,6 +412,10 @@ body.db-on #sq-db-shade { opacity: 1; pointer-events: auto; }
 .gx-no { animation: gx-shake .38s; border-color: var(--bad) !important; background: #fef2f2 !important; }
 @keyframes gx-shake { 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
 .gx-match { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: .55em; }
+/* a long word ("Несбалансированные") may break inside its button on a phone instead of pushing the button and its
+   number out of the column (2026-10-30); the pair number a shade deeper, so its white digit reads */
+.gx-match .gx-it { overflow-wrap: anywhere; min-width: 0; }
+.gx-it.gx-done .gx-num { background: color-mix(in srgb, var(--c) 70%, #000); }
 .gx-col { display: flex; flex-direction: column; gap: .45em; }
 .gx-term { justify-content: center; text-align: center; }
 .markdown-section ol.gx-slots { list-style: none; counter-reset: s; margin: 0 0 .8em; padding: 0; display: grid; gap: .4em; }

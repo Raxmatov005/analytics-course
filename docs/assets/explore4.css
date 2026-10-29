@@ -1,0 +1,77 @@
+/* Styles for explore4.js (light; dark twins come from scripts/make_dark_css.py; dark hand rules inside dark:skip). */
+.xp4-svg { display: block; width: 100%; height: auto; margin: .2em 0 .4em; overflow: visible; }
+.xp4-svg .xp-ax { font-size: 11px; }
+.xp4-axl { font-weight: 700; }
+.xp4-nudge { margin-top: -.35em; }
+.xp4-nudge .xp-btn { min-width: 3.2em; padding: .4em .7em; font-variant-numeric: tabular-nums; }
+.xp-roc .xp-say b, .xp-cutoff .xp-say b, .xp-psi .xp-say b, .xp-roc .xp-stats b, .xp-psi .xp-stats b { white-space: nowrap; }
+
+/* lines and marks shared by the three pictures */
+.xp4-axis { stroke: #94a3b8; stroke-width: 1.5; }
+.xp4-tick { stroke: #94a3b8; stroke-width: 1; }
+.xp4-cut { stroke: #0f172a; stroke-width: 1.6; stroke-dasharray: 4 3; }
+.xp4-pt { fill: #f59e0b; stroke: #ffffff; stroke-width: 2; }
+.xp4-curve { fill: none; stroke: #0369a1; stroke-width: 2.4; stroke-linejoin: round; }
+
+/* roc: the two distributions, the 2x2, the curve */
+.xp4-zone { fill: #64748b; fill-opacity: .13; }
+.xp4-good { fill: #0284c7; fill-opacity: .22; stroke: #0284c7; stroke-width: 1.4; }
+.xp4-bad { fill: #e11d48; fill-opacity: .22; stroke: #e11d48; stroke-width: 1.6; }
+.xp4-frame { fill: none; stroke: #cbd5e1; stroke-width: 1.2; }
+.xp4-diag { stroke: #94a3b8; stroke-width: 1.2; stroke-dasharray: 5 4; }
+.xp4-auc { fill: #0284c7; fill-opacity: .16; }
+.xp4-auct { font: 800 15px var(--sans); fill: #075985; }
+.xp4-ks { stroke: #d97706; stroke-width: 2.4; stroke-dasharray: 4 2; }
+.xp4-kst { font: 800 12px var(--sans); fill: #b45309; }
+.xp4-tab { margin-top: .2em; }
+.xp4-leg .xl4-bad::before { background: #e11d48; border-radius: 3px; }
+.xp4-leg .xl4-good::before { background: #0284c7; border-radius: 3px; }
+.xp4-leg .xl4-zone::before { background: #64748b; opacity: .35; border-radius: 3px; }
+.xp4-leg .xl4-base::before { background: #94a3b8; border-radius: 3px; }
+.xp4-leg .xl4-now::before { background: #0369a1; border-radius: 3px; }
+
+/* cutoff: the profit curve and the six numbers */
+.xp4-all { stroke: #64748b; stroke-width: 1.3; stroke-dasharray: 6 4; }
+.xp4-allt { fill: #475569; }
+.xp4-zero { stroke: #e11d48; stroke-width: 1; stroke-dasharray: 2 3; }
+.xp4-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: .45em; margin: .3em 0 .8em; }
+.xp4-grid > div { min-width: 0; padding: .5em .65em; border-radius: 12px; background: var(--x-xl); border: 1px solid #bae6fd; }
+.xp4-grid span { display: block; font-size: .78em; color: var(--body); line-height: 1.3; overflow-wrap: anywhere; }
+.xp4-grid b { display: block; font-size: 1.25em; font-weight: 800; color: var(--x-d); font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; }
+.xp4-grid i { display: block; font-style: normal; font-size: .76em; color: var(--muted); overflow-wrap: anywhere; }
+@media (max-width: 560px) { .xp4-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* psi: the two years' shares per band */
+.xp4-base { fill: #94a3b8; }
+.xp4-now { fill: #0369a1; }
+.xp4-term { font: 700 10.5px var(--sans); fill: #475569; }
+.xp4-term.hot { fill: #c2410c; }
+.xp-psi .xp-big-v .xp2-chip { font-size: .5em; vertical-align: .35em; }
+
+/* on a phone the 400-wide pictures shrink to about 300 px: the words in them grow back */
+@media (max-width: 520px) {
+  .xp4-svg .xp-ax { font-size: 14px; }
+  .xp4-roc .xp-ax { font-size: 13px; }
+  .xp4-kst { font-size: 14px; }
+  .xp4-auct { font-size: 17px; }
+  .xp4-term { font-size: 12.5px; }
+}
+
+/* dark:skip */
+/* by hand for the dark page (the generator lightens every fill as if it were text, and keeps pale lines pale) */
+html[data-theme="dark"] .xp .xp4-cut { stroke: #e6edf3; }
+html[data-theme="dark"] .xp .xp4-pt { stroke: var(--card); }
+html[data-theme="dark"] .xp .xp4-frame { stroke: #3a4452; }
+html[data-theme="dark"] .xp .xp4-curve { stroke: #5bbce8; }
+html[data-theme="dark"] .xp .xp4-good { fill: #38a7e0; stroke: #5bbce8; }
+html[data-theme="dark"] .xp .xp4-bad { fill: #eb718b; stroke: #eb718b; }
+html[data-theme="dark"] .xp .xp4-auc { fill: #38a7e0; fill-opacity: .22; }
+html[data-theme="dark"] .xp .xp4-auct { fill: #88cbee; }
+html[data-theme="dark"] .xp .xp4-zone { fill: #94a3b8; fill-opacity: .14; }
+html[data-theme="dark"] .xp .xp4-now { fill: #38a7e0; }
+html[data-theme="dark"] .xp .xp4-base { fill: #64748b; }
+html[data-theme="dark"] .xp .xp4-leg .xl4-good::before, html[data-theme="dark"] .xp .xp4-leg .xl4-now::before { background: #38a7e0; }
+html[data-theme="dark"] .xp .xp4-leg .xl4-bad::before { background: #eb718b; }
+html[data-theme="dark"] .xp .xp4-leg .xl4-base::before { background: #64748b; }
+html[data-theme="dark"] .xp .xp4-leg .xl4-zone::before { background: #94a3b8; }
+/* dark:end */

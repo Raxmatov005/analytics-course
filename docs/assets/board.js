@@ -233,8 +233,8 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     ]).then(function (res) {
       var p = res[0], r = res[1];
       var xp = xpOf(p, r), lv = levelOf(xp, r);
-      var maxXp = p.items.reduce(function (s, it) { return s + it.max; }, 0) + 41 * r.xpPerQuizDay +
-        (window.ALChallenge ? window.ALChallenge.maxXp() : 374);  // 40 challenges on a perfect streak, lucky days doubled
+      var maxXp = p.items.reduce(function (s, it) { return s + it.max; }, 0) + 46 * r.xpPerQuizDay +
+        (window.ALChallenge ? window.ALChallenge.maxXp() : 374);  // 45 challenges on a perfect streak, lucky days doubled
       var span = lv.next ? lv.next.from - lv.cur.from : 1;
       var into = lv.next ? (xp - lv.cur.from) / span : 1;
       var done = window.ALQuiz ? window.ALQuiz.doneCount() : 0, streak = window.ALQuiz ? window.ALQuiz.streak() : 0;
@@ -250,10 +250,10 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
       var cSolved = window.ALChallenge ? window.ALChallenge.solved() : 0, cStreak = window.ALChallenge ? window.ALChallenge.streak() : 0;
       var cXp = window.ALChallenge ? window.ALChallenge.xp() : 0, inXp = p.quizDays || 0;
       html += '<div class="stats">' +
-        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / 41</b><span>' + T('days finished · ' + inXp + ' already in your XP',
+        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / 46</b><span>' + T('days finished · ' + inXp + ' already in your XP',
           'дней завершено · ' + inXp + ' уже в вашем XP') + '</span></div>' +
         '<div class="stat">' + icon('flame', 22) + '<b>' + streak + '</b><span>' + T('day streak', plural(streak, 'день подряд', 'дня подряд', 'дней подряд')) + '</span></div>' +
-        (window.ALChallenge ? '<div class="stat">' + icon('target', 22) + '<b>' + cSolved + ' / 40</b><span>' +
+        (window.ALChallenge ? '<div class="stat">' + icon('target', 22) + '<b>' + cSolved + ' / 45</b><span>' +
           T('challenges solved · streak ' + cStreak + ' · ' + cXp + ' XP earned, ' + (p.challengeXp || 0) + ' already in your XP',
             'задач решено · серия ' + cStreak + ' · заработано ' + cXp + ' XP, ' + (p.challengeXp || 0) + ' уже в вашем XP') + '</span></div>' : '') +
         '<div class="stat">' + icon('zap', 22) + '<b>' + (p.stretch || 0) + '</b><span>' + T('stretch tasks done', 'задач «со звёздочкой» выполнено') + '</span></div></div>' +

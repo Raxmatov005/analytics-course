@@ -118,7 +118,7 @@ html[data-theme="dark"] .gm-tb-name { color: #b897eb; }
 html[data-theme="dark"] .gm-lines line { stroke: #9cf1d7; }
 html[data-theme="dark"] .gm-again { border: 0; background: transparent; color: #a073e6; }
 
-/* ---------- theme.css (564 rules) ---------- */
+/* ---------- theme.css (565 rules) ---------- */
 html[data-theme="dark"] body { background: var(--bg); color: var(--body); }
 html[data-theme="dark"] .content { background: var(--bg); }
 html[data-theme="dark"] .markdown-section { background: var(--card); border: 1px solid #333941; border-radius: 22px; }
@@ -369,6 +369,7 @@ html[data-theme="dark"] .gx-num { border-radius: 50%; }
 html[data-theme="dark"] .gx-it.gx-done, html[data-theme="dark"] .gx-colbtn.gx-done { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, #161c22); }
 html[data-theme="dark"] .gx-it.gx-done .gx-num { background: var(--c); color: #ffffff; }
 html[data-theme="dark"] .gx-no { border-color: var(--bad) !important; background: #2d1515 !important; }
+html[data-theme="dark"] .gx-it.gx-done .gx-num { background: color-mix(in srgb, var(--c) 70%, #333333); }
 html[data-theme="dark"] .markdown-section .gx-slots li { border: 2px dashed #322d4b; border-radius: 12px; color: var(--ink); }
 html[data-theme="dark"] .gx-slots li::before { border-radius: 50%; background: #1c1a2b; color: var(--muted); }
 html[data-theme="dark"] .markdown-section .gx-slots li.gx-next { border-color: #312464; background: #1a122c; }
@@ -974,6 +975,70 @@ html[data-theme="dark"] .xp2-chip { border-radius: 999px; }
 html[data-theme="dark"] .xp2-chip.ok { background: #1a3623; color: #afeec7; }
 html[data-theme="dark"] .xp2-chip.warn { background: #3a2b18; color: #f0ab95; }
 html[data-theme="dark"] .xp2-chip.bad { background: #341717; color: #ec9494; }
+
+/* ---------- explore3.css (30 rules) ---------- */
+html[data-theme="dark"] .xp3-grid { stroke: #e2e8f0; }
+html[data-theme="dark"] .xp3-frame { fill: #f8fafc; stroke: #e2e8f0; }
+html[data-theme="dark"] .xp-logit .xp-big-k small { color: var(--muted); }
+html[data-theme="dark"] .xp3-dot { fill: #88cbee; }
+html[data-theme="dark"] .xp3-now { stroke: #d0d9ee; }
+html[data-theme="dark"] .xp3-start { stroke: #94a3b8; }
+html[data-theme="dark"] .xp3-pt { outline: none; }
+html[data-theme="dark"] .xp3-hit { fill: transparent; }
+html[data-theme="dark"] .xp3-d { stroke: #ffffff; }
+html[data-theme="dark"] .xp3-t0 { fill: #74c6eb; }
+html[data-theme="dark"] .xp3-t1 { fill: #ebbd70; }
+html[data-theme="dark"] .xp3-t2 { fill: #8b5cf6; }
+html[data-theme="dark"] .xp3-t3 { fill: #87eee2; }
+html[data-theme="dark"] .xp3-typo { fill: #eb718b; }
+html[data-theme="dark"] .xp3-d.on, html[data-theme="dark"] .xp3-pt:focus .xp3-d { stroke: #d0d9ee; }
+html[data-theme="dark"] .xp3-ghost { fill: none; stroke: #94a3b8; }
+html[data-theme="dark"] .xp3-move { stroke: #94a3b8; }
+html[data-theme="dark"] .xp-legend .xl3-0::before { background: #0ea5e9; }
+html[data-theme="dark"] .xp-legend .xl3-1::before { background: #f59e0b; }
+html[data-theme="dark"] .xp-legend .xl3-2::before { background: #8b5cf6; }
+html[data-theme="dark"] .xp-legend .xl3-3::before { background: #14b8a6; }
+html[data-theme="dark"] .xp-legend .xl3-start::before, html[data-theme="dark"] .xp-legend .xl3-now::before { border-radius: 0; background: none; border-top: 2px dashed #525a64; }
+html[data-theme="dark"] .xp-legend .xl3-now::before { border-top: 2.5px solid #0f172a; }
+html[data-theme="dark"] .xp3-band { fill: #ebbd70; stroke: #edb97e; }
+html[data-theme="dark"] .xp3-curve { fill: none; stroke: #98d1f0; }
+html[data-theme="dark"] .xp3-mark { stroke: #a5afbe; }
+html[data-theme="dark"] .xp3-mk { fill: #eb718b; stroke: #ffffff; }
+html[data-theme="dark"] .xp3-mt { fill: #ee859e; }
+html[data-theme="dark"] .xp-legend .xl3-band::before { background: #f59e0b; }
+html[data-theme="dark"] .xp-logit .xp-legend .xl3-now::before { border-top-color: #0369a1; }
+
+/* ---------- explore4.css (30 rules) ---------- */
+html[data-theme="dark"] .xp4-axis { stroke: #94a3b8; }
+html[data-theme="dark"] .xp4-tick { stroke: #94a3b8; }
+html[data-theme="dark"] .xp4-cut { stroke: #d0d9ee; }
+html[data-theme="dark"] .xp4-pt { fill: #ebbd70; stroke: #ffffff; }
+html[data-theme="dark"] .xp4-curve { fill: none; stroke: #98d1f0; }
+html[data-theme="dark"] .xp4-zone { fill: #a5afbe; }
+html[data-theme="dark"] .xp4-good { fill: #88cbee; stroke: #88cbee; }
+html[data-theme="dark"] .xp4-bad { fill: #eb718b; stroke: #eb718b; }
+html[data-theme="dark"] .xp4-frame { fill: none; stroke: #cbd5e1; }
+html[data-theme="dark"] .xp4-diag { stroke: #94a3b8; }
+html[data-theme="dark"] .xp4-auc { fill: #88cbee; }
+html[data-theme="dark"] .xp4-auct { fill: #a3d6f2; }
+html[data-theme="dark"] .xp4-ks { stroke: #edb97e; }
+html[data-theme="dark"] .xp4-kst { fill: #efb78d; }
+html[data-theme="dark"] .xp4-leg .xl4-bad::before { background: #e11d48; border-radius: 3px; }
+html[data-theme="dark"] .xp4-leg .xl4-good::before { background: #0284c7; border-radius: 3px; }
+html[data-theme="dark"] .xp4-leg .xl4-zone::before { background: #64748b; border-radius: 3px; }
+html[data-theme="dark"] .xp4-leg .xl4-base::before { background: #484d55; border-radius: 3px; }
+html[data-theme="dark"] .xp4-leg .xl4-now::before { background: #0369a1; border-radius: 3px; }
+html[data-theme="dark"] .xp4-all { stroke: #a5afbe; }
+html[data-theme="dark"] .xp4-allt { fill: #b5bfcd; }
+html[data-theme="dark"] .xp4-zero { stroke: #eb718b; }
+html[data-theme="dark"] .xp4-grid > div { border-radius: 12px; background: var(--x-xl); border: 1px solid #234d63; }
+html[data-theme="dark"] .xp4-grid span { color: var(--body); }
+html[data-theme="dark"] .xp4-grid b { color: var(--x-d); }
+html[data-theme="dark"] .xp4-grid i { color: var(--muted); }
+html[data-theme="dark"] .xp4-base { fill: #94a3b8; }
+html[data-theme="dark"] .xp4-now { fill: #98d1f0; }
+html[data-theme="dark"] .xp4-term { fill: #b5bfcd; }
+html[data-theme="dark"] .xp4-term.hot { fill: #eea486; }
 
 /* ---------- by hand (scripts/dark_manual.css): last, so it wins ---------- */
 /* ---------- dark mode, by hand (copied first into docs/assets/dark.css by scripts/make_dark_css.py) ----------

@@ -20,7 +20,7 @@ Start with the cards: read the term, say its meaning out loud, flip, and mark **
 - **Outstanding balance / exposure** (*остаток долга*) — principal not yet repaid. The **portfolio** is the sum of outstanding over all live loans. (W2, W3)
 - **Portfolio** (*портфель*) — all loans currently outstanding, taken together; sliced by product, branch, vintage, grade.
 - **Vintage / cohort** (*винтаж, когорта*) — the loans disbursed in the same month, followed over time. Vintage curves compare months at the same age. (W3, W8)
-- **Risk grade / score** (*скоринговый балл*) — the model's estimate of the borrower's risk at decision time; A–D here.
+- **Risk grade / score** (*скоринговый балл*) — the model's estimate of the borrower's risk at decision time; A–D here, as bands of the score. (W9)
 
 ## Delinquency
 
@@ -55,6 +55,32 @@ Start with the cards: read the term, say its meaning out loud, flip, and mark **
 - **Retention / churn** (*удержание / отток*) — share of a cohort still active after N months; churn is the opposite. (W8)
 - **DAU / MAU** — daily / monthly active users; the ratio is "stickiness".
 - **NPS** — net promoter score, promoters − detractors.
+
+## Credit risk models
+
+- **Correlation** (*корреляция*) — how closely two numbers move together, from −1 to +1; 0 means no straight-line relation. It is not causation. (W9 D1)
+- **Pearson r / Spearman ρ** (*коэффициент корреляции Пирсона / Спирмена*) — Pearson measures a straight-line relation on the values (principal and monthly payment: r = 0.90); Spearman does the same on the ranks, so it suits skewed data and any relation that only rises or only falls. (W9 D1)
+- **Linear regression** (*линейная регрессия*) — the straight line y = intercept + slope × x that makes the squared vertical distances from the points as small as possible (least squares); with several predictors, one slope per predictor. (W9 D1)
+- **Slope / intercept** (*наклон / свободный член*) — the slope is how much y changes for one unit of x (soum of payment per soum of principal); the intercept is y at x = 0, often outside the data and meaningless on its own. (W9 D1)
+- **R²** (*коэффициент детерминации*) — the share of the variation in y the model explains, from 0 to 1; with one predictor it equals r². A high R² proves neither a cause nor a good prediction outside the data. (W9 D1)
+- **Residual** (*остаток*) — actual minus predicted, for one row. A residual plot with a pattern says the line misses something. (W9 D1)
+- **Logistic regression** (*логистическая регрессия*) — a model for a yes/no outcome: a straight line in the log-odds, turned into a probability between 0 and 1 by the S-shaped logistic curve. Each coefficient, exponentiated, is an odds ratio. (W9 D2)
+- **Odds / log-odds** (*шансы / логарифм шансов*) — odds = p ÷ (1 − p): a 2.99 % bad rate is odds of about 1 to 32; log-odds = ln(odds), the scale on which logistic regression is a straight line. (W9 D2)
+- **Scorecard** (*скоринговая карта*) — a model turned into points: each characteristic adds points, and the total score ranks applicants (here, higher = safer). **[varies]** the scale (300–850, 0–1 000) and its direction. (W9 D2)
+- **PDO — points to double the odds** — how many points of score double the odds of a good loan (often 20); with a base score at base odds it fixes the scorecard's scale. (W9 D2)
+- **Calibration** (*калибровка*) — whether predicted probabilities match observed rates: in a band where the model says 4 %, about 4 % should go bad. A model can rank well and still be badly calibrated. (W9 D2)
+- **Confusion matrix** (*матрица ошибок*) — at one cut-off, the 2 × 2 count of the decision (refused / approved) against the outcome (bad / good); here "bad" is the positive class. (W9 D3)
+- **ROC curve** (*ROC-кривая*) — the true-positive rate (share of bads refused) against the false-positive rate (share of goods refused), one point per cut-off. (W9 D3)
+- **AUC — area under the ROC curve** — the chance that a random good loan scores higher than a random bad one, ties counted half: 0.5 is a coin, 1 is perfect. It is about pairs, not about the share of loans classified right. (W9 D3)
+- **Gini** (*коэффициент Джини*) — 2 × AUC − 1, from 0 (a coin) to 1 (perfect): the number credit teams quote. Application scorecards are often 0.4–0.6 **[varies]**. Always give it with its number of bads. (W9 D3)
+- **KS — Kolmogorov–Smirnov statistic** — the largest gap between the cumulative share of bads and the cumulative share of goods across the scores, with the score where it happens. (W9 D3)
+- **Lift / gains** (*лифт / кривая выигрыша*) — lift: how many times more bads the worst-scored X % of loans hold than an average X % would; gains: the share of all bads caught as you refuse more of the lowest scores. (W9 D3)
+- **Out-of-time validation** (*проверка вне периода*) — testing a model on loans from a later period than the ones it was built on. Compare loans of the same age: young loans have not had time to go bad. (W9 D3)
+- **Cut-off** (*порог отсечения*) — the score below which an application is refused ("approve score ≥ c"). It trades approvals against the bad rate; the best one is set with money, not with the bad rate alone. (W9 D4)
+- **Swap set** (*swap-набор*) — the applicants whose decision changes when the cut-off or the model changes: **swap-out** (approved before, refused now) and **swap-in** (refused before, approved now). (W9 D4)
+- **PSI — population stability index** (*индекс стабильности популяции*) — Σ (actual share − expected share) × ln(actual ÷ expected) over the score bands: below 0.1 stable, 0.1–0.25 watch, above 0.25 act **[varies]**. Measured on applicants, not on approved loans. (W9 D4)
+- **CSI — characteristic stability index** — the PSI formula on one input of the model (income band, product, age), to find which characteristic moved. (W9 D4)
+- **Champion / challenger** (*чемпион / претендент*) — the current model or policy (champion) keeps most applicants while a new one (challenger) runs on a random share; both are read on loans of the same age before the challenger may replace it. (W9 D4)
 
 ## Data words
 

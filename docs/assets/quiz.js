@@ -18,7 +18,7 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
 */
 (function () {
   var KEY = 'al.v1';
-  var TOTAL_DAYS = 41;
+  var TOTAL_DAYS = 46;   // 41 + Week 9 (credit risk), 2026-10-29
 
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY)) || { quizzes: {} }; }

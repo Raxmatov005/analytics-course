@@ -72,6 +72,7 @@ Day 5 of every week is the checkpoint: the checkpoint's parts (A, B, C) and one 
 | [6](weeks/week-06/day-1.md) | reason with statistics: distributions, intervals, tests, power | CI homework + test-choice quiz |
 | [7](weeks/week-07/day-1.md) | run an A/B test and build a Power BI dashboard | A/B notebook + 3-page dashboard |
 | [8](weeks/week-08/day-1.md) | think in product metrics and present a story | capstone + mock interview |
+| [9](weeks/week-09/day-1.md) | judge a credit scorecard and place the approval cut-off | the scorecard review |
 
 Running through all eight weeks: the **Company & metrics** track — the loan lifecycle, DPD / FPD / SPD / TPD, portfolio metrics, product metrics, and who does what in a lending company. [Glossary](company/glossary.md) · [Who does what](company/roles.md).
 
@@ -163,7 +164,19 @@ Data for the week: `data/ab/` (the experiment), `data/powerbi/` (model tables + 
 | 4 | [Capstone II: dashboard and story](weeks/week-08/day-4.md) | — |
 | 5 | [Presentation day, the mock interview, and what next](weeks/week-08/day-5.md) | Capstone + mock interview |
 
-Before any interview: the [interview bank](company/interview.md) — 30 questions with model answers.
+## Week 9 — Credit risk models
+
+The lending specialisation, after the capstone: Nilufar asks whether the scorecard built two years ago still works, and whether the approval cut-off sits in the right place.
+
+| Day | Page | Homework |
+|---|---|---|
+| 1 | [Correlation and linear regression: what moves the monthly payment?](weeks/week-09/day-1.md) | HW 9.1 (due D3) |
+| 2 | [Logistic regression and the scorecard: from a score to a probability of going bad](weeks/week-09/day-2.md) | HW 9.2 (due D4) |
+| 3 | [Is the scorecard any good? ROC, AUC, Gini, KS](weeks/week-09/day-3.md) | HW 9.3 (due D5) |
+| 4 | [The cut-off and watching the model: approval vs bad rate, profit, PSI](weeks/week-09/day-4.md) | HW 9.4 (due D5) |
+| 5 | [Checkpoint: the scorecard review for the risk committee](weeks/week-09/day-5.md) | Checkpoint 9 |
+
+Before any interview: the [interview bank](company/interview.md) — 35 questions with model answers.
 
 ## Tools (free)
 
