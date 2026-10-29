@@ -404,6 +404,12 @@ A "95 %" Wald interval on a branch-month of 400 loans is really an 88 % interval
 
 ### What 95 % means — and what it does not
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d2-x2", "type": "intervals", "title": "A hundred intervals, one true rate", "predict": {"q": "The true FPD rate is 1.28 %. You draw **100 samples** of 400 loans and build a 95 % interval from each. How many of the 100 intervals contain the true rate?", "options": ["all 100 — that is what 95 % confident means", "exactly 95, every time", "about 95 — one run 93, the next 98", "about half"], "answer": 2, "why": "95 % is the method's long-run catch rate. One run of 100 lands near 95 — anything from about 90 to 99 is normal — and no single interval can tell you whether it is one of the misses."}, "p": 0.012818706860121144, "ns": [50, 100, 200, 400, 800, 1600, 3200], "start": {"n": 400, "conf": 95, "wald": 0}, "challenges": [{"id": "c1", "text": "With the page's **Wilson** interval at n = 400 and 95 %, draw **500 intervals** or more: about **5 in 100** miss (between 2.5 % and 7.5 %).", "when": {"n": ["=", 400], "conf": ["=", 95], "wald": ["=", 0], "drawn": [">=", 500], "missShare": ["between", 0.025, 0.075]}}, {"id": "c2", "text": "Same n, drop to **80 %** and draw 200 or more: narrower intervals — and now about **1 in 5** misses.", "when": {"n": ["=", 400], "conf": ["=", 80], "drawn": [">=", 200], "missShare": [">=", 0.12]}}, {"id": "c3", "text": "Make the intervals **half as wide** as at n = 400 and draw 100 there. How many loans did it take?", "when": {"drawn": [">=", 100], "wratio": ["between", 0.45, 0.55]}}, {"id": "c4", "text": "Switch to the textbook **Wald** interval at **n = 100**, 95 %, and draw 200: far more than 5 in 100 miss.", "when": {"wald": ["=", 1], "n": ["=", 100], "conf": ["=", 95], "drawn": [">=", 200], "missShare": [">=", 0.15]}}]}
+```
+
 **What it is.** 95 % is a property of the **procedure** (*уровень доверия*, confidence level): if you repeated the sampling many times, 95 % of the intervals built this way would contain the true value. This one interval either contains it or not.
 
 ```pic

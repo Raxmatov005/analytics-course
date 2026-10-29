@@ -62,3 +62,11 @@ html[data-theme="dark"] .xp-grid .fn { fill: var(--card); }
 html[data-theme="dark"] .xp-legend .xl-tn::before { background: #343d4a; }
 html[data-theme="dark"] .xp-legend .xl-fn::before { background: var(--card); }
 html[data-theme="dark"] .xp-pop rect { fill: #6b7a8f; }
+/* explorers (explore.js, logic): the legend's swatches match the lightened dots */
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s0::before { background: color-mix(in srgb, var(--s0) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s1::before { background: color-mix(in srgb, var(--s1) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s2::before { background: color-mix(in srgb, var(--s2) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s3::before { background: color-mix(in srgb, var(--s3) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-off::before { background: color-mix(in srgb, var(--s0) 55%, #ffffff); }
+/* explorers (explore.js, normal): the real scores' bars stay quiet on a dark page, under the bright bell */
+html[data-theme="dark"] .xp-nm-bars rect { fill: #3b4552; }

@@ -317,6 +317,12 @@ Four rules you will use all week: E[aX + b] = a·E[X] + b; Var(aX + b) = a²·Va
 
 ### Bernoulli and binomial — defaults in a batch
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d1-x2", "type": "binomial", "title": "A month of 400 loans, again and again", "predict": {"q": "Last October Nilufar saw **7** FPDs in a batch of 400 loans and called a meeting. If every loan has the usual 1.28 % chance, how often does a month bring **7 or more**?", "options": ["almost never — under 1 % of months", "about 1 month in 20", "about 1 month in 4", "about every second month"], "answer": 2, "why": "P(X ≥ 7) = 25.6 %: a quarter of perfectly ordinary months reach 7. Expect 5.1, but give or take 2.25 — so 7 is noise, not a signal. Run the batches and watch the orange tail."}, "p": 0.012818706860121144, "start": {"n": 400, "k": 7}, "challenges": [{"id": "c1", "text": "Run **200 batches** or more at n = 400: their average lands within **0.3** of n · p = 5.13.", "when": {"n": ["=", 400], "batches": [">=", 200], "avgErr": ["<", 0.3]}}, {"id": "c2", "text": "Find Nilufar's wall number: slide the alarm to the **smallest** count that rings in **under 5 %** of months (watch the exact share).", "when": {"n": ["=", 400], "tail": ["<", 0.05], "tailPrev": [">=", 0.05]}}, {"id": "c3", "text": "Make the spread **twice** as wide — an sd of 4.5 FPDs instead of 2.25 — by changing only the batch size. How many loans does it take?", "when": {"sd": ["between", 4.45, 4.55]}}]}
+```
+
 **What it is.** A **Bernoulli** variable (*распределение Бернулли*) is one yes/no trial: 1 with probability p, 0 otherwise; E = p, Var = p(1 − p). The **binomial** (*биномиальное распределение*) **X ~ Bin(n, p)** counts the yeses in n **independent** Bernoulli trials with the same p — the FPDs among 400 loans.
 
 ```pic
@@ -520,6 +526,12 @@ The **QQ plot** (*квантиль-квантильный график*) puts th
 
 ### The 68-95-99.7 rule — one, two, three sds
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d1-x3", "type": "normal", "title": "Shares under the bell", "predict": {"q": "Applicants' scores: mean 659.6, sd 59.5. The bank refuses everyone below **540** — about **2 sd** under the mean. What share of applicants is that?", "options": ["about 5 %", "about 2.5 %", "about 16 %", "about 0.3 %"], "answer": 1, "why": "About 95 % of a bell lies within ±2 sd, so 5 % lies outside — but split between the two tails: only about 2 % sit below 540 (the bell says 2.2 %, the real applicants 2.3 %), and as many above 779."}, "mu": 659.6, "sd": 59.5, "from": 424, "counts": [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 1, 2, 2, 2, 1, 2, 3, 1, 1, 0, 0, 4, 1, 2, 3, 3, 2, 5, 2, 2, 2, 5, 2, 3, 1, 1, 3, 3, 8, 1, 6, 7, 2, 7, 3, 8, 3, 7, 2, 3, 11, 9, 2, 7, 9, 1, 8, 5, 5, 3, 5, 7, 16, 6, 10, 6, 9, 10, 16, 11, 16, 15, 12, 18, 15, 18, 17, 9, 19, 12, 22, 15, 12, 14, 16, 7, 23, 12, 17, 19, 20, 10, 17, 25, 21, 25, 20, 24, 27, 29, 21, 27, 29, 33, 33, 29, 32, 30, 40, 35, 37, 35, 43, 36, 50, 45, 33, 44, 43, 56, 34, 31, 45, 61, 61, 51, 58, 45, 54, 47, 64, 63, 57, 47, 42, 57, 59, 67, 56, 68, 62, 60, 65, 59, 74, 54, 73, 68, 68, 84, 70, 87, 79, 79, 84, 75, 71, 64, 88, 79, 73, 94, 79, 87, 73, 66, 90, 81, 84, 75, 85, 77, 67, 83, 82, 72, 77, 91, 93, 85, 93, 92, 106, 93, 109, 98, 98, 89, 98, 84, 58, 77, 82, 84, 92, 87, 97, 81, 85, 84, 92, 114, 92, 77, 100, 90, 81, 90, 93, 86, 77, 99, 74, 97, 98, 91, 84, 85, 86, 84, 70, 70, 96, 70, 73, 74, 80, 87, 81, 64, 63, 70, 80, 78, 82, 72, 72, 63, 80, 71, 66, 79, 61, 65, 58, 45, 55, 60, 54, 60, 65, 56, 51, 53, 52, 65, 48, 50, 39, 46, 52, 41, 44, 44, 43, 59, 51, 30, 33, 50, 42, 35, 29, 36, 40, 34, 27, 30, 30, 27, 33, 24, 35, 43, 30, 25, 32, 25, 25, 34, 21, 21, 20, 18, 26, 18, 23, 20, 13, 22, 21, 16, 17, 12, 15, 12, 13, 18, 14, 19, 9, 16, 19, 11, 11, 15, 11, 9, 6, 5, 9, 10, 7, 8, 5, 4, 6, 5, 12, 4, 5, 5, 4, 7, 6, 2, 3, 3, 4, 4, 4, 3, 4, 3, 6, 3, 2, 1, 6, 0, 2, 0, 3, 4, 2, 2, 0, 3, 2, 1, 1, 0, 1, 1, 3, 0, 1, 1, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 8], "start": {"mode": "band", "k": 1, "cut": 540}, "challenges": [{"id": "c1", "text": "Find the band that holds **95 %** of applicants. How many sds wide is it — exactly 2?", "when": {"inside": ["between", 0.945, 0.955]}}, {"id": "c2", "text": "Widen the band until only **3 applicants in 1 000** are left outside (99.7 % inside).", "when": {"inside": [">=", 0.997]}}, {"id": "c3", "text": "Switch to the cut-off and find the score with **15.8 %** of applicants below it — the lesson's number from the normal model. How many sds from the mean is it?", "when": {"below": ["between", 0.15, 0.17]}}]}
+```
+
 **What it is.** For any normal, about **68 %** of values lie within ±1 sd of the mean, **95 %** within ±2 sd (±1.96 sd exactly), and **99.7 %** within ±3 sd. It is the quickest check of "is this value unusual?".
 
 ```pic
@@ -560,6 +572,12 @@ print(round(NormalDist().inv_cdf(0.975), 2))
 ```
 
 ### Mean, median and mode — the centre of data
+
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d1-x4", "type": "median", "title": "One loan against the middle", "unit": "m", "label": "11 real loans: Bukhara Central, March 2025, in m soum.", "predict": {"q": "Bukhara Central's 11 loans of March 2025: mean **5.70 m**, median **3.50 m**. Their biggest loan, 22.42 m, grows to **400 m**. What does the median do?", "options": ["it grows a lot, like the mean", "it grows a little", "it does not move at all", "it falls"], "answer": 2, "why": "The median is the loan in the middle of the line — the 6th of 11. The biggest loan was above it and stays above it however big it gets, so the median stays at 3.50 m while the mean jumps to about 40 m."}, "loans": [[0.65, "MICRO"], [1.89, "MICRO"], [2.3, "BNPL"], [3.1, "MICRO"], [3.37, "MICRO"], [3.5, "BNPL"], [4.98, "MICRO"], [6.58, "CONS"], [6.74, "CONS"], [7.21, "BNPL"], [22.42, "CONS"]], "max": 600, "start": {"sel": 10}, "challenges": [{"id": "c1", "text": "Move **one** loan until the mean is **more than twice** the median.", "when": {"ratio": [">", 2]}}, {"id": "c2", "text": "**Double** the mean (to about 11.4 m) while the median **does not move at all**.", "when": {"meanX": [">=", 2], "medMove": ["<", 0.0001]}}, {"id": "c3", "text": "Now move the **median**: pick a small loan and push it far up. How far does the median go?", "when": {"medMove": [">", 0.0001]}}]}
+```
 
 **What it is.** Three ways to say "a typical value" of a data column:
 - the **mean** (*среднее арифметическое*) — the sum divided by the count;

@@ -189,6 +189,12 @@ print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}"
 
 ### Sample size and duration — each input
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w07d1-x1", "type": "abplan", "title": "Plan Kamola's test: users and days", "predict": {"q": "Kamola's screen: today 8.0 % of users sign within 7 days, and she wants to see **+0.9 points** (8.9 %), with α 5 % and 80 % power. About **1 000** users a day see the offer, split 50/50. How long must the test run?", "options": ["about a week", "about a month", "about three months", "about a year"], "why": "14 983 users per arm, 29 966 in all: **30 days** of traffic. The MDE drives it: halve the lift you want to see and the test runs about four times as long. Try it below.", "answer": 1}, "start": {"base": 0.08, "mde": 0.009, "traffic": 1000, "split": 0.5}, "alpha": 0.05, "power": 0.8, "trafficLabel": "Offer viewers a day", "challenges": [{"id": "c1", "text": "Kamola wants the answer in **two weeks** (14 days) at 1 000 viewers a day. Move only the **MDE**: what is the smallest lift a 14-day test can see?", "when": {"days": ["<=", 14], "mde": ["<", 0.0137]}, "only": ["mde"]}, {"id": "c2", "text": "Now go the other way: **halve** the plan's MDE, to **+0.45** points. Twice as long — or more?", "when": {"mde": ["=", 0.0045]}, "only": ["mde"]}, {"id": "c3", "text": "A cautious launch: only **10 %** of users see the new screen (a 90 / 10 split). Keep the rest as planned: how long now?", "when": {"split": ["=", 0.1]}, "only": ["split"]}]}
+```
+
 **What it is.** The **sample size** (*объём выборки*) per arm comes from four inputs. The **duration** is that sample divided by your daily traffic, rounded up to whole weeks.
 
 ```pic

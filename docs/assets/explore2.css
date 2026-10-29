@@ -1,0 +1,151 @@
+/* Styles for the explorer types in explore2.js (light; dark twins come from scripts/make_dark_css.py). */
+.xp2-svg { display: block; width: 100%; height: auto; margin: .2em 0 .3em; overflow: visible; }
+.xp-sl-v small { font-weight: 600; color: var(--muted); }
+.xp-big-k small { color: var(--muted); }
+.xp-btn:disabled { opacity: .45; cursor: default; }
+.xp2-lab { font: 700 11px var(--sans); fill: var(--ink); }
+.xp2-axis { stroke: var(--line); stroke-width: 1.5; }
+.xp2-obs { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+/* a number never breaks across lines ("14 983" is written with plain spaces) */
+.xp-pvalue .xp-say b, .xp-errors .xp-say b, .xp-power .xp-say b, .xp-peeking .xp-say b, .xp-abplan .xp-say b, .xp-srm .xp-say b,
+.xp-power .xp-stats b, .xp-abplan .xp-stats b { white-space: nowrap; }
+
+/* on a phone the 400-wide pictures shrink to about 300 px: the words in them grow back */
+.xp2-svg .xp-ax { font-size: 11px; }
+@media (max-width: 520px) {
+  .xp2-svg .xp-ax, .xp2-svg .xp-empty { font-size: 13px; }
+  .xp2-lab, .xp2-in { font-size: 13px; }
+  .xp2-svg .xp2-zl { font-size: 12px; }
+}
+
+/* two numbers side by side (simulated vs formula p, read once vs peeking) */
+.xp2-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5em; margin-bottom: .7em; }
+.xp2-duo > div { min-width: 0; padding: .55em .75em; border-radius: 14px; background: var(--x-xl); border: 1px solid #bae6fd; }
+.xp2-duo > div.xp2-hot { background: #fff7ed; border-color: #fed7aa; }
+.xp2-duo span { display: block; font-size: .8em; color: var(--body); line-height: 1.35; }
+.xp2-duo b { display: block; font-size: 1.5em; font-weight: 800; color: var(--x-d); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.xp2-duo .xp2-hot b { color: #c2410c; }
+.xp2-duo i { display: block; font-style: normal; font-size: .78em; color: var(--muted); }
+
+/* pvalue: the no-effect world */
+.xp2-bar { fill: #38bdf8; }
+.xp2-tail { fill: #e11d48; }
+.xp2-curve { fill: none; stroke: #0f172a; stroke-width: 1.6; stroke-opacity: .55; }
+
+/* legends: dots as in explore.js; lines for the curves */
+.xp2-leg .xl2-bar::before { background: #38bdf8; border-radius: 3px; }
+.xp2-leg .xl2-tail::before { background: #e11d48; border-radius: 3px; }
+.xp2-leg .xl2-curve::before, .xp2-leg .xl2-h0::before, .xp2-leg .xl2-h1::before { height: 0; width: 1.2em; border-radius: 0; background: none; border-top: 2px solid #334155; vertical-align: .25em; }
+.xp2-leg .xl2-h0::before { border-top-color: #64748b; }
+.xp2-leg .xl2-h1::before { border-top-color: #0284c7; }
+.xp2-leg .xl2-fa::before { background: #f59e0b; }
+.xp2-leg .xl2-qn::before { background: #e2e8f0; }
+.xp2-leg .xl2-hit::before { background: #0284c7; }
+.xp2-leg .xl2-miss::before { background: #fff; box-shadow: inset 0 0 0 2px #e11d48; }
+.xp2-leg .xl2-al::before { background: #f59e0b; border-radius: 3px; }
+.xp2-leg .xl2-pw::before { background: #7dd3fc; border-radius: 3px; }
+.xp2-leg .xl2-zone::before { background: #fed7aa; border-radius: 3px; }
+.xp2-leg .xl2-win::before { background: #f59e0b; }
+.xp2-leg .xl2-end::before { background: #fff; box-shadow: inset 0 0 0 2px #e11d48; }
+.xp2-leg .xl2-b95::before { background: #86efac; border-radius: 3px; }
+.xp2-leg .xl2-b999::before { background: #dcfce7; border-radius: 3px; }
+
+/* errors: two worlds, a dot per study, the 2×2 */
+.xp2-seg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .4em; margin-bottom: .45em; }
+.xp2-seg button { font: 700 .9em var(--sans); padding: .55em .7em; border-radius: 10px; border: 2px solid var(--line); background: var(--card); color: var(--body); cursor: pointer; min-width: 0; }
+.xp2-seg button.on { border-color: var(--x); background: var(--x-l); color: var(--x-d); }
+.xp2-world { margin: 0 0 .7em; font-size: .86em; }
+.xp2-panel { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.xp2-panel.on { stroke: var(--x); stroke-width: 2; }
+.xp2-svg .fa { fill: #f59e0b; }
+.xp2-svg .qn { fill: #e2e8f0; }
+.xp2-svg .hit { fill: #0284c7; }
+.xp2-svg .miss { fill: var(--card); stroke: #e11d48; stroke-width: 1.8; }
+.xp2-tab { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr) minmax(0, 1fr); gap: 4px; margin: .5em 0 .7em; font-size: .86em; }
+.xp2-tab > div { min-width: 0; padding: .45em .55em; border-radius: 10px; overflow-wrap: anywhere; }
+.xp2-th { font-weight: 700; color: var(--muted); font-size: .92em; align-self: end; }
+.xp2-rh { font-weight: 700; color: var(--body); align-self: center; line-height: 1.3; }
+.xp2-rh small { display: block; font-weight: 600; color: var(--muted); }
+.xp2-tab b { font-size: 1.3em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.xp2-tab span { color: var(--body); font-variant-numeric: tabular-nums; }
+.xp2-tab small { display: block; color: var(--muted); font-size: .86em; line-height: 1.3; }
+.xp2-tab .t-fa { background: #fff7ed; border: 1px solid #fed7aa; }
+.xp2-tab .t-hit { background: #f0f9ff; border: 1px solid #bae6fd; }
+.xp2-tab .t-qn { background: #f8fafc; border: 1px solid var(--line); }
+.xp2-tab .t-miss { background: #fff1f2; border: 1px solid #fecdd3; }
+@media (max-width: 520px) {   /* a phone: the row names get their own line above their two cells */
+  .xp2-tab { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .xp2-tab > .xp2-th:first-child { display: none; }
+  .xp2-tab > .xp2-rh { grid-column: 1 / -1; padding: .35em .2em 0; }
+  .xp2-rh small { display: inline; margin-left: .3em; }
+}
+
+/* power: two sampling distributions and the cut-off */
+.xp2-pw { fill: #0284c7; fill-opacity: .28; }
+.xp2-al { fill: #f59e0b; fill-opacity: .6; }
+.xp2-h0 { fill: none; stroke: #64748b; stroke-width: 2; }
+.xp2-h1 { fill: none; stroke: #0284c7; stroke-width: 2.2; }
+.xp2-cut { stroke: #e11d48; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.xp2-cutl { fill: #be123c; font-weight: 700; }
+.xp2-h1l { fill: #0369a1; }
+
+/* peeking: z month by month */
+.xp2-zone { fill: #f59e0b; fill-opacity: .14; }
+.xp2-zl { fill: #c2410c; font-size: 10px; }
+.xp2-look { stroke: var(--line); stroke-width: 1.5; }
+.xp2-path { fill: none; stroke: #94a3b8; stroke-width: 1.2; stroke-opacity: .6; }
+.xp2-wpath { fill: none; stroke: #f59e0b; stroke-width: 2.2; }
+.xp2-wdot { fill: #f59e0b; }
+.xp2-edot { fill: none; stroke: #e11d48; stroke-width: 2; }
+
+/* abplan: a week per square */
+.xp2-wk { fill: var(--x-l); }
+.xp2-wk.on { fill: var(--x); }
+.xp2-more:empty { display: none; }
+.xp2-more { margin: -.1em 0 .5em; color: #9a3412; font-weight: 600; }
+
+/* srm: the split, then where chance alone would put it */
+.xp2-pre { margin-bottom: .6em; }
+.xp2-pre .xp-btn small { font-weight: 600; opacity: .8; }
+.xp2-ra { fill: #64748b; }
+.xp2-rb { fill: #0369a1; }
+.xp2-mid { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.xp2-in { font: 700 11px var(--sans); fill: #fff; }
+.xp2-b999 { fill: #22c55e; fill-opacity: .16; }
+.xp2-b95 { fill: #22c55e; fill-opacity: .42; }
+.xp2-tick { stroke: var(--faint); stroke-width: 1; }
+.xp2-mk { stroke-width: 2.5; }
+.xp2-mk.ok, .xp2-mkd.ok { stroke: #15803d; fill: #15803d; }
+.xp2-mk.warn, .xp2-mkd.warn { stroke: #ea580c; fill: #ea580c; }
+.xp2-mk.bad, .xp2-mkd.bad { stroke: #dc2626; fill: #dc2626; }
+.xp2-chip { display: inline-block; margin-left: .35em; padding: .05em .55em; border-radius: 999px; font-size: .85em; font-weight: 700; vertical-align: .05em; }
+.xp2-chip.ok { background: #dcfce7; color: #166534; }
+.xp2-chip.warn { background: #ffedd5; color: #9a3412; }
+.xp2-chip.bad { background: #fee2e2; color: #991b1b; }
+
+/* dark:skip */
+/* by hand for the dark page (the generator lightens every fill as if it were text, and leaves pale marks pale) */
+html[data-theme="dark"] .xp .xp2-svg .qn { fill: #343d4a; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-qn::before { background: #343d4a; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-miss::before, html[data-theme="dark"] .xp .xp2-leg .xl2-end::before { background: var(--card); }
+html[data-theme="dark"] .xp .xp2-leg .xl2-curve::before { border-top-color: #c9d1d9; }
+html[data-theme="dark"] .xp .xp2-curve { stroke: #e6edf3; stroke-opacity: .6; }
+html[data-theme="dark"] .xp .xp2-path { stroke: #6b7a8f; stroke-opacity: .7; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-zone::before { background: #5c3d17; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-b95::before { background: #2f7a4a; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-b999::before { background: #1e3b2a; }
+html[data-theme="dark"] .xp .xp2-ra { fill: #64748b; }
+html[data-theme="dark"] .xp .xp2-rb { fill: #0369a1; }
+html[data-theme="dark"] .xp .xp2-wk { fill: var(--x-l); }
+html[data-theme="dark"] .xp .xp2-pw { fill-opacity: .4; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-pw::before { background: #3d6378; }
+html[data-theme="dark"] .xp .xp2-wk.on { fill: color-mix(in srgb, var(--x) 55%, #ffffff); }
+/* the legend keys in the same lightened colours as the marks they name */
+html[data-theme="dark"] .xp .xp2-leg .xl2-bar::before { background: #5bbce8; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-tail::before { background: #eb718b; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-fa::before, html[data-theme="dark"] .xp .xp2-leg .xl2-win::before, html[data-theme="dark"] .xp .xp2-leg .xl2-al::before { background: #ebbd70; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-hit::before { background: #88cbee; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-miss::before, html[data-theme="dark"] .xp .xp2-leg .xl2-end::before { box-shadow: inset 0 0 0 2px #eb718b; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-h0::before { border-top-color: #a5afbe; }
+html[data-theme="dark"] .xp .xp2-leg .xl2-h1::before { border-top-color: #88cbee; }
+/* dark:end */

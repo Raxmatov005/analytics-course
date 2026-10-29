@@ -427,6 +427,12 @@ Bukhara's p = 0.020 looks "significant" alone; tested as one of ten, every corre
 
 ### Peeking — multiple comparisons in time
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d4-x2", "type": "peeking", "title": "Peek every month, win by accident", "predict": {"q": "An SMS that does **nothing**, tested for 12 months. One analyst reads the result once, at month 12. Another looks every month and stops at the first p < 0.05. How often does the second one declare a “winner”?", "options": ["5 % — every look is a 5 % test", "about 20 %", "about 46 % — that is 1 − 0.95¹²", "60 % — 12 looks × 5 %"], "why": "Every look is one more chance for a wandering p to dip below 0.05, so the false wins climb — to about **21 %**. Not 46 %: the twelve looks share most of their loans, so they are not twelve independent tests. Run the experiments below.", "answer": 1}, "start": {"p": 0.1334, "perMonth": 150, "months": 12, "looks": 12}, "challenges": [{"id": "c1", "text": "Run at least **200** experiments. Read once at month 12, do the false wins stay near **5 %**?", "when": {"runs": [">=", 200], "once": ["between", 0.025, 0.08]}}, {"id": "c2", "text": "Now the peeker, **every month**: with 200 or more experiments, the false wins climb above **15 %**.", "when": {"runs": [">=", 200], "looks": ["=", 12], "peek": [">", 0.15]}}, {"id": "c3", "text": "Peek less: with only **2 looks** (months 6 and 12) and at least **300** experiments, keep the false wins under **10 %**. Still above 5 %?", "when": {"runs": [">=", 300], "looks": ["=", 2], "peek": ["<", 0.1]}}]}
+```
+
 **What it is.** **Peeking** (*подглядывание*) is testing a running experiment again and again as data arrive, and stopping at the first p < 0.05. Each look is another test, so the false-alarm rate grows like in the previous subsection.
 
 **How to write it.** Simulate an SMS that does **nothing**: both arms 13.34 % late, 150 loans per arm per month, 12 months, 20 000 runs.
@@ -463,6 +469,12 @@ Testing once at the end gives a false positive about 5 % of the time (the notebo
 
 
 ### Power and sample size
+
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d4-x1", "type": "power", "title": "How many loans does a test need?", "predict": {"q": "To see the SMS cut FPD from **1.28 %** to **1.00 %** with 80 % power, a test needs 22 481 loans per arm. If the effect were only **half** as big (1.28 % → 1.14 %), it would need about…", "options": ["the same 22 481", "twice as many: about 45 000", "four times as many: about 90 000", "half as many: about 11 000"], "why": "n grows like 1 / effect²: half the effect needs about four times the loans (here 95 658, ×4.3). Small effects on rare outcomes are expensive — see it on the curves below.", "answer": 2}, "start": {"p1": 0.0128, "p2": 0.01, "n": 2000, "alpha": 0.05}, "power": 0.8, "p2Label": "True FPD with the SMS (without it: 1.28 %)", "axisLabel": "How much lower the SMS arm's FPD comes out, points — one curve per world", "challenges": [{"id": "c1", "text": "Keep the lesson's effect (1.28 % → 1.00 %) and α = 5 %. Move only **n** until the power reaches **80 %**. Does your n match the lesson's number?", "when": {"power": [">=", 0.8], "n": ["<=", 23000]}, "only": ["n"]}, {"id": "c2", "text": "Now **halve** the effect: the SMS arm at **1.14 %**. Find the **smallest** n that gives 80 % again — how many times more loans is that?", "when": {"p2": ["=", 0.0114], "power": [">=", 0.8], "n": ["<=", 100000]}, "only": ["n", "p2"]}, {"id": "c3", "text": "Back to Jasur's **2 000** loans per arm and α = 5 %: move only the SMS arm's FPD. What is the **highest** rate it can keep and still be seen 80 % of the time — how big a cut is that?", "when": {"n": ["=", 2000], "power": [">=", 0.8], "p2": [">=", 0.0047]}, "only": ["p2"]}]}
+```
 
 **What it is.** **Power** (*мощность критерия*) = P(the test rejects H₀ | the effect is real) = 1 − β. It is fixed before any data exist, by five inputs: **α**, the **power** you want, the **baseline** rate, the **effect** you want to detect and **n**. Convention: plan for 80 % power at α = 5 %. For two rates the effect is measured by **Cohen's h** = 2·arcsin√p₁ − 2·arcsin√p₂, and the loans needed **per arm** are:
 

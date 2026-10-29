@@ -88,6 +88,12 @@ The analysis table, first rows:
 
 ### Sanity check 1 — the sample ratio, overall and by slice
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w07d2-x1", "type": "srm", "title": "Is this split chance?", "predict": {"q": "Overall, **13 545** users landed in A and **13 829** in B. Inside them is one slice — iOS users of week 4 — that went **537 / 822**. The automatic SRM alarm fires at p < 0.001. Which one sets it off?", "options": ["both", "only the overall split — it has 20 times the users", "only the iOS week-4 slice", "neither — both are within chance"], "why": "The overall split is 50.5 / 49.5 of 27 374 users: p = 0.086, within chance — the broken cell is averaged away. The slice is 60.5 / 39.5: p ≈ 10⁻¹⁴, a split chance does not make. What decides is the imbalance **and** the number of users, together.", "answer": 2}, "start": {"a": 13545, "b": 13829}, "alarm": 0.001, "presets": [{"label": "All users", "a": 13545, "b": 13829}, {"label": "iOS, week 4", "a": 537, "b": 822}], "challenges": [{"id": "c1", "text": "At our **27 374** users, move only **B's share**: what is the smallest imbalance that trips the **p < 0.001** alarm?", "when": {"p": ["<", 0.001], "dev": ["between", 0.0095, 0.0105]}, "only": ["share"]}, {"id": "c2", "text": "A “tiny” **50.5 / 49.5** split: keep it and add users. How many before the alarm fires?", "when": {"dev": ["between", 0.0045, 0.0055], "p": ["<", 0.001]}}, {"id": "c3", "text": "Now the other way: find a split of **55 / 45** or worse that the check still calls chance (**p above 0.05**).", "when": {"dev": [">=", 0.0499], "p": [">", 0.05]}}]}
+```
+
 **What it is.** Day 1's **SRM** check, now on real data — overall **and by slice**. A slice is a part of the users that the software treats differently: a device, a release week, a day.
 
 **How to write it.**

@@ -899,3 +899,87 @@ textarea.sq-edit.hi-on { caret-color: var(--code-caret); }
 .xp-btn.xp-ghost { background: var(--x-l); color: var(--x-d); }
 .xp-stats { display: flex; flex-wrap: wrap; gap: .3em 1.2em; margin-top: .5em; font-size: .9em; color: var(--body); font-variant-numeric: tabular-nums; }
 .xp-stats b { color: var(--ink); }
+/* explorers, shared by logic, normal and intervals: a row of pill buttons, one of them on (.xp-tg) */
+.xp-tg { display: flex; flex-wrap: wrap; align-items: center; gap: .35em; margin: 0 0 .75em; }
+.xp-tg-l { flex-basis: 100%; font-size: .92em; color: var(--body); }
+.xp-tg button { font: 700 .86em var(--sans); padding: .45em .85em; border-radius: 999px; border: 1.5px solid #bae6fd; background: var(--card); color: var(--x-d); cursor: pointer; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.xp-tg button:hover { border-color: #7dd3fc; }
+.xp-tg button.on { background: var(--x); border-color: var(--x); color: #fff; }
+/* logic (W1D2, AND / OR / NOT): the query as code with tappable words; the applications as dots by product and status */
+.xp-logic { --s0: #0284c7; --s1: #f59e0b; --s2: #94a3b8; --s3: #be123c; }
+.xp-lg-code { font: 13px/1.85 var(--mono); background: var(--code-bg); color: var(--code-text); border: 1px solid var(--code-line); border-radius: 12px; padding: .55em .75em; margin-bottom: .35em; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .xp-lg-code { font-size: 12px; padding: .5em .6em; } }
+.xp-lg-where { display: flex; flex-wrap: wrap; align-items: center; gap: .15em .4em; }
+.xp-lg-kw { color: var(--tk-kw); font-weight: 700; }
+.xp-lg-fn { color: var(--tk-fn); }
+.xp-lg-str { color: var(--tk-str); }
+.xp-lg-num { color: var(--tk-num); }
+.xp-lg-c { display: inline-block; max-width: 100%; box-sizing: border-box; padding: 0 .45em; border-radius: 8px; background: var(--x-xl); border: 1px solid #bae6fd; }
+.xp-lg-c i { font: 800 10px var(--sans); font-style: normal; color: var(--x-d); margin-right: .45em; }
+.xp-lg-op, .xp-lg-not { font: 700 12.5px/1.5 var(--mono); padding: .1em .55em; border-radius: 8px; cursor: pointer; background: var(--card); color: var(--tk-kw); }
+.xp-lg-op { border: 1.5px solid var(--x); }
+.xp-lg-not { border: 1.5px dashed #cbd5e1; color: #94a3b8; font-weight: 600; }
+.xp-lg-not.on { border: 1.5px solid var(--x); color: var(--tk-kw); font-weight: 700; }
+.xp-lg-br { font-weight: 800; font-size: 1.2em; color: var(--x-d); }
+.xp-lg-br[hidden] { display: none; }
+.xp-lg-hint { font-size: .82em; color: var(--faint); margin-bottom: .7em; }
+.xp-lg-read { font-size: .9em; line-height: 1.55; color: var(--body); margin-bottom: .75em; }
+.xp-lg-read code, .xp-logic .xp-say code { overflow-wrap: anywhere; }
+.xp-lg-dots { display: block; width: 100%; max-width: 520px; margin: 0 auto; }
+.xp-lg-band { margin-bottom: .5em; }
+.xp-lg-bh { display: flex; justify-content: space-between; gap: .6em; margin-bottom: .2em; font-size: .78em; font-weight: 700; color: var(--body); font-variant-numeric: tabular-nums; }
+.xp-lg-bh b { color: var(--x-d); }
+.xp-lg-band svg { display: block; width: 100%; height: auto; }
+.xp-lg-dots g { transition: opacity .2s ease; }
+.xp-lg-dots g.off { opacity: .16; }
+.xp-lg-s0 { fill: var(--s0); }
+.xp-lg-s1 { fill: var(--s1); }
+.xp-lg-s2 { fill: var(--s2); }
+.xp-lg-s3 { fill: var(--s3); }
+.xp-legend .xl-s0::before { background: var(--s0); }
+.xp-legend .xl-s1::before { background: var(--s1); }
+.xp-legend .xl-s2::before { background: var(--s2); }
+.xp-legend .xl-s3::before { background: var(--s3); }
+.xp-legend .xl-off::before { background: var(--s0); opacity: .25; }
+/* binomial (W6D1, Bernoulli and binomial): the batches' histogram, the alarm tail in orange, the exact bars as outlines */
+.xp-bn rect.xp-bn-tail { fill: #f59e0b; }
+.xp-bn rect.xp-bn-ex { fill: none; stroke: #0f172a; stroke-width: 1.3; }
+.xp-bn-alarm { stroke: #e11d48; stroke-width: 1.6; stroke-dasharray: 5 3; }
+.xp-bn-al { fill: #be123c; font-weight: 700; }
+/* normal (W6D1, the 68-95-99.7 rule): the real scores as bars, the bell as a line, the share shaded under it */
+.xp-nm { display: block; width: 100%; height: auto; }
+.xp-nm-bars rect { fill: #cbd5e1; }
+.xp-nm-bell { fill: none; stroke: #0f172a; stroke-width: 2; }
+.xp-nm-band .xp-nm-area { fill: rgba(13, 148, 136, .4); }
+.xp-nm-cut .xp-nm-area { fill: rgba(245, 158, 11, .5); }
+.xp-nm-edge { stroke: #334155; stroke-width: 1.3; stroke-dasharray: 4 3; }
+.xp-nm-el { font-weight: 700; fill: #0f172a; }
+.xp-nm-tick { stroke: #94a3b8; }
+.xp-nm-sd { fill: #94a3b8; }
+/* median (W6D1, mean, median and mode): loans as dots on a line, the mean (red) and the median (blue) as markers */
+.xp-md { display: block; width: 100%; height: auto; }
+.xp-md-axis { stroke: #94a3b8; stroke-width: 1.2; }
+.xp-md-tick { stroke: #94a3b8; }
+.xp-md-dot { fill: #38bdf8; stroke: #0369a1; stroke-width: 1.2; }
+.xp-md-dot.on { fill: #f59e0b; stroke: #b45309; stroke-width: 2; }
+.xp-md-hit { fill: transparent; cursor: pointer; }
+.xp-md-mean { stroke: #e11d48; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.xp-md-med { stroke: #0369a1; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.xp-md-meanm { fill: #e11d48; }
+.xp-md-medm { fill: #0369a1; }
+.xp-md-lab { font: 700 11px var(--sans); }
+.xp-md-meanm-t { fill: #be123c; }
+.xp-md-medm-t { fill: #075985; }
+.xp-md-pick { display: flex; flex-wrap: wrap; align-items: center; gap: .45em; margin-bottom: .5em; font-size: .92em; color: var(--body); }
+.xp-md-which { flex: 1 1 9em; min-width: 0; text-align: center; }
+.xp-md-nav { font: 700 1.15em/1 var(--sans); width: 2.3em; height: 2.3em; border-radius: 10px; border: 1.5px solid #bae6fd; background: var(--card); color: var(--x-d); cursor: pointer; }
+.xp-md-nav:hover { border-color: #7dd3fc; }
+/* intervals (W6D2, what 95 % means): one line per sample's interval, misses in red, the true rate as a line */
+.xp-ci { display: block; width: 100%; height: auto; }
+.xp-ci-hit { stroke: #38bdf8; stroke-width: 1.3; fill: #38bdf8; }
+.xp-ci-miss { stroke: #e11d48; stroke-width: 1.6; fill: #e11d48; }
+.xp-ci-true { stroke: #0f172a; stroke-width: 1.6; }
+.xp-ci-zero { stroke: #94a3b8; stroke-dasharray: 2 3; }
+.xp-ci-tl { font-weight: 700; fill: #0f172a; }
+/* the five pictures' axis words on a phone: the pictures shrink, so their words are drawn larger */
+@media (max-width: 480px) { .xp-bn .xp-ax, .xp-nm .xp-ax, .xp-md .xp-ax, .xp-ci .xp-ax, .xp-md-lab { font-size: 14px; } .xp-bn .xp-empty, .xp-ci .xp-empty { font-size: 17px; } }

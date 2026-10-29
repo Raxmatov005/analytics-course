@@ -369,6 +369,12 @@ The box shows the last count: 13 612 applications have a score. Run the first li
 
 ### AND, OR, NOT — combining conditions, with brackets
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w01d2-x1", "type": "logic", "title": "The bracket trap, live", "predict": {"q": "With brackets, `product_id = 5 AND (status = 'approved' OR status = 'approved_not_disbursed')` finds **854** SME applications we said yes to. Take the brackets away — the same words, in the same order. Now it finds…", "options": ["854 — brackets only make it easier to read", "fewer than 854", "more than 854", "nothing: SQL refuses to run it"], "answer": 2, "why": "AND binds tighter than OR, so the database reads `(product_id = 5 AND status = 'approved') OR status = 'approved_not_disbursed'`: the not-disbursed approvals of **every** product slip in — 1 469 rows, and no error. The dots below show which ones."}, "products": ["MICRO", "CONS", "BNPL", "AUTO", "SME"], "statuses": ["approved", "approved_not_disbursed", "cancelled", "rejected"], "counts": [[2693, 222, 732, 1359], [2451, 225, 509, 1019], [1588, 127, 340, 716], [394, 41, 74, 156], [791, 63, 162, 338]], "conds": [{"sql": "product_id = 5", "p": 4}, {"sql": "status = 'approved'", "s": 0}, {"sql": "status = 'approved_not_disbursed'", "s": 1}], "per": 20, "start": {"not": [0, 0, 0], "op": ["AND", "OR"], "br": 0}, "challenges": [{"id": "c1", "text": "Fix it: Bekzod's question — SME applications we said yes to — exactly **854**.", "when": {"n": ["=", 854]}}, {"id": "c2", "text": "Write the database's own reading with brackets, `(A AND B) OR C`: the same **1 469**. The brackets only say out loud what AND does anyway.", "when": {"n": ["=", 1469], "br": ["=", 1]}}, {"id": "c3", "text": "Both kinds of yes for **every product except SME**: exactly **7 741**. One NOT does it — but where?", "when": {"n": ["=", 7741]}}, {"id": "c4", "text": "Make the query find **0** applications. (Can one row have two statuses?)", "when": {"n": ["=", 0]}}]}
+```
+
 **What it is.** **AND** keeps a row when **both** conditions are true. **OR** keeps it when **at least one** is true. **NOT** turns a condition around: `NOT IN`, `NOT LIKE`, `IS NOT NULL`, `NOT (…)`. **AND binds tighter than OR** — like multiplication before addition.
 
 **How to write it.** SME applications that we said yes to:

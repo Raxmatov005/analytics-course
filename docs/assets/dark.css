@@ -118,7 +118,7 @@ html[data-theme="dark"] .gm-tb-name { color: #b897eb; }
 html[data-theme="dark"] .gm-lines line { stroke: #9cf1d7; }
 html[data-theme="dark"] .gm-again { border: 0; background: transparent; color: #a073e6; }
 
-/* ---------- theme.css (504 rules) ---------- */
+/* ---------- theme.css (564 rules) ---------- */
 html[data-theme="dark"] body { background: var(--bg); color: var(--body); }
 html[data-theme="dark"] .content { background: var(--bg); }
 html[data-theme="dark"] .markdown-section { background: var(--card); border: 1px solid #333941; border-radius: 22px; }
@@ -623,6 +623,66 @@ html[data-theme="dark"] .xp-btn:hover { background: var(--x-d); }
 html[data-theme="dark"] .xp-btn.xp-ghost { background: var(--x-l); color: var(--x-d); }
 html[data-theme="dark"] .xp-stats { color: var(--body); }
 html[data-theme="dark"] .xp-stats b { color: var(--ink); }
+html[data-theme="dark"] .xp-tg-l { color: var(--body); }
+html[data-theme="dark"] .xp-tg button { border-radius: 999px; border: 1.5px solid #234d63; background: var(--card); color: var(--x-d); }
+html[data-theme="dark"] .xp-tg button:hover { border-color: #2a5f78; }
+html[data-theme="dark"] .xp-tg button.on { background: var(--x); border-color: var(--x); color: #ffffff; }
+html[data-theme="dark"] .xp-lg-code { background: var(--code-bg); color: var(--code-text); border: 1px solid var(--code-line); border-radius: 12px; }
+html[data-theme="dark"] .xp-lg-kw { color: var(--tk-kw); }
+html[data-theme="dark"] .xp-lg-fn { color: var(--tk-fn); }
+html[data-theme="dark"] .xp-lg-str { color: var(--tk-str); }
+html[data-theme="dark"] .xp-lg-num { color: var(--tk-num); }
+html[data-theme="dark"] .xp-lg-c { border-radius: 8px; background: var(--x-xl); border: 1px solid #234d63; }
+html[data-theme="dark"] .xp-lg-c i { color: var(--x-d); }
+html[data-theme="dark"] .xp-lg-op, html[data-theme="dark"] .xp-lg-not { border-radius: 8px; background: var(--card); color: var(--tk-kw); }
+html[data-theme="dark"] .xp-lg-op { border: 1.5px solid var(--x); }
+html[data-theme="dark"] .xp-lg-not { border: 1.5px dashed #3c454f; color: #94a3b8; }
+html[data-theme="dark"] .xp-lg-not.on { border: 1.5px solid var(--x); color: var(--tk-kw); }
+html[data-theme="dark"] .xp-lg-br { color: var(--x-d); }
+html[data-theme="dark"] .xp-lg-hint { color: var(--faint); }
+html[data-theme="dark"] .xp-lg-read { color: var(--body); }
+html[data-theme="dark"] .xp-lg-bh { color: var(--body); }
+html[data-theme="dark"] .xp-lg-bh b { color: var(--x-d); }
+html[data-theme="dark"] .xp-lg-s0 { fill: color-mix(in srgb, var(--s0) 55%, #ffffff); }
+html[data-theme="dark"] .xp-lg-s1 { fill: color-mix(in srgb, var(--s1) 55%, #ffffff); }
+html[data-theme="dark"] .xp-lg-s2 { fill: color-mix(in srgb, var(--s2) 55%, #ffffff); }
+html[data-theme="dark"] .xp-lg-s3 { fill: color-mix(in srgb, var(--s3) 55%, #ffffff); }
+html[data-theme="dark"] .xp-legend .xl-s0::before { background: var(--s0); }
+html[data-theme="dark"] .xp-legend .xl-s1::before { background: var(--s1); }
+html[data-theme="dark"] .xp-legend .xl-s2::before { background: var(--s2); }
+html[data-theme="dark"] .xp-legend .xl-s3::before { background: var(--s3); }
+html[data-theme="dark"] .xp-legend .xl-off::before { background: var(--s0); }
+html[data-theme="dark"] .xp-bn rect.xp-bn-tail { fill: #ebbd70; }
+html[data-theme="dark"] .xp-bn rect.xp-bn-ex { fill: none; stroke: #d0d9ee; }
+html[data-theme="dark"] .xp-bn-alarm { stroke: #eb718b; }
+html[data-theme="dark"] .xp-bn-al { fill: #ee859e; }
+html[data-theme="dark"] .xp-nm-bars rect { fill: #cbd5e1; }
+html[data-theme="dark"] .xp-nm-bell { fill: none; stroke: #d0d9ee; }
+html[data-theme="dark"] .xp-nm-band .xp-nm-area { fill: rgba(153, 240, 233, 0.4); }
+html[data-theme="dark"] .xp-nm-cut .xp-nm-area { fill: rgba(235, 189, 112, 0.5); }
+html[data-theme="dark"] .xp-nm-edge { stroke: #bec9d8; }
+html[data-theme="dark"] .xp-nm-el { fill: #d0d9ee; }
+html[data-theme="dark"] .xp-nm-tick { stroke: #94a3b8; }
+html[data-theme="dark"] .xp-nm-sd { fill: #94a3b8; }
+html[data-theme="dark"] .xp-md-axis { stroke: #94a3b8; }
+html[data-theme="dark"] .xp-md-tick { stroke: #94a3b8; }
+html[data-theme="dark"] .xp-md-dot { fill: #5bbce8; stroke: #98d1f0; }
+html[data-theme="dark"] .xp-md-dot.on { fill: #ebbd70; stroke: #efb78d; }
+html[data-theme="dark"] .xp-md-hit { fill: transparent; }
+html[data-theme="dark"] .xp-md-mean { stroke: #eb718b; }
+html[data-theme="dark"] .xp-md-med { stroke: #98d1f0; }
+html[data-theme="dark"] .xp-md-meanm { fill: #eb718b; }
+html[data-theme="dark"] .xp-md-medm { fill: #98d1f0; }
+html[data-theme="dark"] .xp-md-meanm-t { fill: #ee859e; }
+html[data-theme="dark"] .xp-md-medm-t { fill: #a3d6f2; }
+html[data-theme="dark"] .xp-md-pick { color: var(--body); }
+html[data-theme="dark"] .xp-md-nav { border-radius: 10px; border: 1.5px solid #234d63; background: var(--card); color: var(--x-d); }
+html[data-theme="dark"] .xp-md-nav:hover { border-color: #2a5f78; }
+html[data-theme="dark"] .xp-ci-hit { stroke: #5bbce8; fill: #5bbce8; }
+html[data-theme="dark"] .xp-ci-miss { stroke: #eb718b; fill: #eb718b; }
+html[data-theme="dark"] .xp-ci-true { stroke: #d0d9ee; }
+html[data-theme="dark"] .xp-ci-zero { stroke: #94a3b8; }
+html[data-theme="dark"] .xp-ci-tl { fill: #d0d9ee; }
 
 /* ---------- labs.css (98 rules) ---------- */
 html[data-theme="dark"] .sq-box.sq-ed .sq-top { background: var(--brand-xl, #f0fdfa); }
@@ -833,6 +893,88 @@ html[data-theme="dark"] .markdown-section .py-trace { border-left-width: 1px; bo
 html[data-theme="dark"] .py-trace summary { color: var(--muted); }
 html[data-theme="dark"] .py-trace .py-stdout { color: #eaa2a2; }
 
+/* ---------- explore2.css (80 rules) ---------- */
+html[data-theme="dark"] .xp-sl-v small { color: var(--muted); }
+html[data-theme="dark"] .xp-big-k small { color: var(--muted); }
+html[data-theme="dark"] .xp2-lab { fill: var(--ink); }
+html[data-theme="dark"] .xp2-axis { stroke: var(--line); }
+html[data-theme="dark"] .xp2-obs { stroke: var(--ink); }
+html[data-theme="dark"] .xp2-duo > div { border-radius: 14px; background: var(--x-xl); border: 1px solid #234d63; }
+html[data-theme="dark"] .xp2-duo > div.xp2-hot { background: #312414; border-color: #694924; }
+html[data-theme="dark"] .xp2-duo span { color: var(--body); }
+html[data-theme="dark"] .xp2-duo b { color: var(--x-d); }
+html[data-theme="dark"] .xp2-duo .xp2-hot b { color: #eea486; }
+html[data-theme="dark"] .xp2-duo i { color: var(--muted); }
+html[data-theme="dark"] .xp2-bar { fill: #5bbce8; }
+html[data-theme="dark"] .xp2-tail { fill: #eb718b; }
+html[data-theme="dark"] .xp2-curve { fill: none; stroke: #d0d9ee; }
+html[data-theme="dark"] .xp2-leg .xl2-bar::before { background: #38bdf8; border-radius: 3px; }
+html[data-theme="dark"] .xp2-leg .xl2-tail::before { background: #e11d48; border-radius: 3px; }
+html[data-theme="dark"] .xp2-leg .xl2-curve::before, html[data-theme="dark"] .xp2-leg .xl2-h0::before, html[data-theme="dark"] .xp2-leg .xl2-h1::before { border-radius: 0; background: none; border-top: 2px solid #334155; }
+html[data-theme="dark"] .xp2-leg .xl2-h0::before { border-top-color: #64748b; }
+html[data-theme="dark"] .xp2-leg .xl2-h1::before { border-top-color: #0284c7; }
+html[data-theme="dark"] .xp2-leg .xl2-fa::before { background: #f59e0b; }
+html[data-theme="dark"] .xp2-leg .xl2-qn::before { background: #24292f; }
+html[data-theme="dark"] .xp2-leg .xl2-hit::before { background: #0284c7; }
+html[data-theme="dark"] .xp2-leg .xl2-miss::before { background: #161c22; }
+html[data-theme="dark"] .xp2-leg .xl2-al::before { background: #f59e0b; border-radius: 3px; }
+html[data-theme="dark"] .xp2-leg .xl2-pw::before { background: #274b5c; border-radius: 3px; }
+html[data-theme="dark"] .xp2-leg .xl2-zone::before { background: #4b371f; border-radius: 3px; }
+html[data-theme="dark"] .xp2-leg .xl2-win::before { background: #f59e0b; }
+html[data-theme="dark"] .xp2-leg .xl2-end::before { background: #161c22; }
+html[data-theme="dark"] .xp2-leg .xl2-b95::before { background: #2d593d; border-radius: 3px; }
+html[data-theme="dark"] .xp2-leg .xl2-b999::before { background: #1a3623; border-radius: 3px; }
+html[data-theme="dark"] .xp2-seg button { border-radius: 10px; border: 2px solid var(--line); background: var(--card); color: var(--body); }
+html[data-theme="dark"] .xp2-seg button.on { border-color: var(--x); background: var(--x-l); color: var(--x-d); }
+html[data-theme="dark"] .xp2-panel { fill: none; stroke: var(--line); }
+html[data-theme="dark"] .xp2-panel.on { stroke: color-mix(in srgb, var(--x) 55%, #ffffff); }
+html[data-theme="dark"] .xp2-svg .fa { fill: #ebbd70; }
+html[data-theme="dark"] .xp2-svg .qn { fill: #e2e8f0; }
+html[data-theme="dark"] .xp2-svg .hit { fill: #88cbee; }
+html[data-theme="dark"] .xp2-svg .miss { fill: var(--card); stroke: #eb718b; }
+html[data-theme="dark"] .xp2-tab > div { border-radius: 10px; }
+html[data-theme="dark"] .xp2-th { color: var(--muted); }
+html[data-theme="dark"] .xp2-rh { color: var(--body); }
+html[data-theme="dark"] .xp2-rh small { color: var(--muted); }
+html[data-theme="dark"] .xp2-tab b { color: var(--ink); }
+html[data-theme="dark"] .xp2-tab span { color: var(--body); }
+html[data-theme="dark"] .xp2-tab small { color: var(--muted); }
+html[data-theme="dark"] .xp2-tab .t-fa { background: #312414; border: 1px solid #694924; }
+html[data-theme="dark"] .xp2-tab .t-hit { background: #13242f; border: 1px solid #234d63; }
+html[data-theme="dark"] .xp2-tab .t-qn { background: #1b2025; border: 1px solid var(--line); }
+html[data-theme="dark"] .xp2-tab .t-miss { background: #2f1315; border: 1px solid #5c2028; }
+html[data-theme="dark"] .xp2-pw { fill: #88cbee; }
+html[data-theme="dark"] .xp2-al { fill: #ebbd70; }
+html[data-theme="dark"] .xp2-h0 { fill: none; stroke: #a5afbe; }
+html[data-theme="dark"] .xp2-h1 { fill: none; stroke: #88cbee; }
+html[data-theme="dark"] .xp2-cut { stroke: #eb718b; }
+html[data-theme="dark"] .xp2-cutl { fill: #ee859e; }
+html[data-theme="dark"] .xp2-h1l { fill: #98d1f0; }
+html[data-theme="dark"] .xp2-zone { fill: #ebbd70; }
+html[data-theme="dark"] .xp2-zl { fill: #eea486; }
+html[data-theme="dark"] .xp2-look { stroke: var(--line); }
+html[data-theme="dark"] .xp2-path { fill: none; stroke: #94a3b8; }
+html[data-theme="dark"] .xp2-wpath { fill: none; stroke: #ebbd70; }
+html[data-theme="dark"] .xp2-wdot { fill: #ebbd70; }
+html[data-theme="dark"] .xp2-edot { fill: none; stroke: #eb718b; }
+html[data-theme="dark"] .xp2-wk { fill: color-mix(in srgb, var(--x-l) 55%, #ffffff); }
+html[data-theme="dark"] .xp2-wk.on { fill: color-mix(in srgb, var(--x) 55%, #ffffff); }
+html[data-theme="dark"] .xp2-more { color: #f0ab95; }
+html[data-theme="dark"] .xp2-ra { fill: #a5afbe; }
+html[data-theme="dark"] .xp2-rb { fill: #98d1f0; }
+html[data-theme="dark"] .xp2-mid { stroke: var(--ink); }
+html[data-theme="dark"] .xp2-in { fill: #ffffff; }
+html[data-theme="dark"] .xp2-b999 { fill: #7ee9a5; }
+html[data-theme="dark"] .xp2-b95 { fill: #7ee9a5; }
+html[data-theme="dark"] .xp2-tick { stroke: var(--faint); }
+html[data-theme="dark"] .xp2-mk.ok, html[data-theme="dark"] .xp2-mkd.ok { stroke: #a0efbe; fill: #a0efbe; }
+html[data-theme="dark"] .xp2-mk.warn, html[data-theme="dark"] .xp2-mkd.warn { stroke: #eb9d74; fill: #eb9d74; }
+html[data-theme="dark"] .xp2-mk.bad, html[data-theme="dark"] .xp2-mkd.bad { stroke: #e87171; fill: #e87171; }
+html[data-theme="dark"] .xp2-chip { border-radius: 999px; }
+html[data-theme="dark"] .xp2-chip.ok { background: #1a3623; color: #afeec7; }
+html[data-theme="dark"] .xp2-chip.warn { background: #3a2b18; color: #f0ab95; }
+html[data-theme="dark"] .xp2-chip.bad { background: #341717; color: #ec9494; }
+
 /* ---------- by hand (scripts/dark_manual.css): last, so it wins ---------- */
 /* ---------- dark mode, by hand (copied first into docs/assets/dark.css by scripts/make_dark_css.py) ----------
    html[data-theme="dark"] is set before the page draws (index.html <head>), from the switch (theme.js) or, until she
@@ -898,3 +1040,11 @@ html[data-theme="dark"] .xp-grid .fn { fill: var(--card); }
 html[data-theme="dark"] .xp-legend .xl-tn::before { background: #343d4a; }
 html[data-theme="dark"] .xp-legend .xl-fn::before { background: var(--card); }
 html[data-theme="dark"] .xp-pop rect { fill: #6b7a8f; }
+/* explorers (explore.js, logic): the legend's swatches match the lightened dots */
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s0::before { background: color-mix(in srgb, var(--s0) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s1::before { background: color-mix(in srgb, var(--s1) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s2::before { background: color-mix(in srgb, var(--s2) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-s3::before { background: color-mix(in srgb, var(--s3) 55%, #ffffff); }
+html[data-theme="dark"] .xp-logic .xp-legend .xl-off::before { background: color-mix(in srgb, var(--s0) 55%, #ffffff); }
+/* explorers (explore.js, normal): the real scores' bars stay quiet on a dark page, under the bright bell */
+html[data-theme="dark"] .xp-nm-bars rect { fill: #3b4552; }

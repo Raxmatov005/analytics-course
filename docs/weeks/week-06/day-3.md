@@ -114,6 +114,12 @@ The gap is 0.66 points and the noise is 0.307 points, so the gap is 2.15 noise-u
 
 ### The p-value — one right definition, three wrong ones
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d3-x1", "type": "pvalue", "title": "Build the no-effect world yourself", "predict": {"q": "App vs branch: z = 2.15 and **p = 0.032**. What does that 0.032 mean?", "options": ["a 3.2 % chance that the two channels have the same rate", "a 3.2 % chance that the gap is pure luck", "if the rates were equal, 3.2 % of samples would show a gap this big", "the app's rate is 3.2 % higher than branch's"], "why": "The p-value is computed **inside the H₀ world**: it assumes the channels are equal and asks how often such a world makes a gap like ours. It is not the chance that H₀ is true, not the chance of luck, and not the size of the effect. Build that world below and count.", "answer": 2}, "start": {"kA": 41, "nA": 2411, "kB": 34, "nB": 3263}, "kRange": [30, 55], "kLabel": "Late first payments in the app (of 2 411)", "histLabel": "The gap **app − branch** in the no-effect world, points", "challenges": [{"id": "c1", "text": "At the lesson's numbers, draw at least **1 000** samples. Does the simulated p land within **0.01** of the formula's 0.032?", "when": {"sims": [">=", 1000], "perr": ["<", 0.01]}, "only": []}, {"id": "c2", "text": "Take late payers away from the app, one at a time, until the gap is **no longer significant** (p of 0.05 or more). How many do you have to take away?", "when": {"pf": [">=", 0.05], "k": [">=", 39]}, "only": ["k"]}, {"id": "c3", "text": "Back at 41, keep both rates but give each channel **twice** the loans. Push p **below 0.01** — with the very same 0.66-point gap.", "when": {"scale": ["=", 2], "pf": ["<", 0.01]}, "only": ["s"]}]}
+```
+
 **What it is.** The **p-value** (*p-значение*) is *the probability, computed assuming H₀ is true, of getting a test statistic at least as extreme as the one observed.* Small p: data like ours would be rare in the H₀ world.
 
 | The p-value says | The p-value does **not** say |
@@ -155,6 +161,12 @@ If both channels had the same FPD rate, a gap of 0.66 points or more, in either 
 ```
 
 ### α, type I and type II errors, power
+
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d3-x2", "type": "errors", "title": "False alarms and misses, counted", "predict": {"q": "Suppose the app really is worse: its true FPD is **1.70 %**, branch's **1.04 %** — exactly the gap we saw. Nilufar's study is repeated on fresh loans, the same sizes, α = 5 %. How often does the test find the difference?", "options": ["almost always — about 95 % of the time", "about 80 % of the time", "a bit more than half the time", "about 5 % of the time"], "why": "A real effect exactly as big as the one we saw sits right at the edge of “significant”: it clears the bar only about **57 %** of the time. The other 43 % are type II errors — a real deterioration missed. Run the tests below and count.", "answer": 2}, "start": {"kA": 41, "nA": 2411, "kB": 34, "nB": 3263, "alpha": 0.05}, "names": ["app", "branch"], "worlds": ["No real difference", "A real difference"], "challenges": [{"id": "c1", "text": "In the world with **no real difference**, run at least **300** tests at α = 5 %. Do the false alarms come out near **5 %**?", "when": {"n0": [">=", 300], "alpha": ["=", 0.05], "fa": ["between", 0.03, 0.07]}}, {"id": "c2", "text": "Switch to **a real difference** and run at least **200** tests at α = 5 %. Count the misses: how often does a real effect slip through?", "when": {"n1": [">=", 200], "alpha": ["=", 0.05]}}, {"id": "c3", "text": "With tests in both worlds, make α **1 %**. Watch the trade: fewer false alarms — and how many more misses?", "when": {"alpha": ["=", 0.01], "n0": [">=", 100], "n1": [">=", 100]}}]}
+```
 
 **What it is.** The **significance level** α (*уровень значимости*) is the false-alarm rate you accept, chosen **before** you see the data — 5 % by convention. You reject H₀ when p < α. Two mistakes are possible:
 
