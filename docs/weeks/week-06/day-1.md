@@ -220,6 +220,12 @@ The book's 1.28 % is three pieces, one per channel: 0.58 + 0.48 + 0.23 points.
 
 ### Bayes and the base-rate trap
 
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w06d1-x1", "type": "bayes", "title": "Who is behind a flag?", "predict": {"q": "The rule catches **90 %** of fraudsters and wrongly flags **5 %** of honest applicants. Fraud is rare: **0.62 %** of applicants. When the rule flags someone, how likely is it that they really are a fraudster?", "options": ["about 90 %", "about 50 %", "about 10 %", "about 5 %"], "why": "Fraud is so rare that the few real fraudsters are swamped by 5 % of the many honest people: 56 true flags against 497 false ones. Move the sliders and watch it happen.", "answer": 2}, "start": {"base": 0.0062, "sens": 0.9, "fpr": 0.05}, "challenges": [{"id": "c1", "text": "Keep the rule as it is (90 % and 5 %) and find the **base rate** at which a flag is right **about half the time**.", "when": {"ppv": ["between", 0.45, 0.6]}, "only": ["base"]}, {"id": "c2", "text": "Back at our base rate (0.62 %), move **only the false-positive rate** until **most flags are real fraud** (over 50 %).", "when": {"ppv": [">", 0.5]}, "only": ["fpr"]}, {"id": "c3", "text": "Make the rule catch **every** fraudster (sensitivity 100 %), nothing else. Does P(fraud | flag) jump?", "when": {"sens": [">=", 0.995]}, "only": ["sens"]}]}
+```
+
 **What it is.** **Bayes' rule** (*формула Байеса*) turns a conditional round: from P(flag | fraud) — how often a fraudster is flagged — to **P(fraud | flag)** — how often a flag is a fraudster. The answer depends heavily on the **base rate** (*базовая частота*): how common fraud is before any flag.
 
 ```pic
@@ -255,6 +261,7 @@ print(round(tp / (tp + fp), 3))
 | total | **553** | 9 447 | 10 000 |
 
 553 flags, and 56 of them are fraudsters: P(fraud | flag) = 56 / 553 = **10.1 %** — nine flags in ten are honest people. The rule is accurate; fraud is rare; that is the **base-rate trap**.
+
 
 **When you use it.**
 - Any screening rule, scorecard cut-off or alert: "when it fires, how often is it right?"

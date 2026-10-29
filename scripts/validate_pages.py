@@ -13,7 +13,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS = os.path.join(ROOT, "docs")
-JSON_LANGS = {"quiz", "challenge", "sqltask", "game", "task", "check", "videoquiz", "sqllab"}   # sqlplay holds SQL, not JSON
+JSON_LANGS = {"quiz", "challenge", "sqltask", "game", "task", "check", "videoquiz", "sqllab", "explore"}   # sqlplay holds SQL, not JSON
 FENCE = re.compile(r"^(```|~~~)([\w-]*)[^\n]*\n(.*?)^\1[ \t]*$", re.S | re.M)
 
 

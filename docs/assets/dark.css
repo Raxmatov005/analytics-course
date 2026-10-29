@@ -118,7 +118,7 @@ html[data-theme="dark"] .gm-tb-name { color: #b897eb; }
 html[data-theme="dark"] .gm-lines line { stroke: #9cf1d7; }
 html[data-theme="dark"] .gm-again { border: 0; background: transparent; color: #a073e6; }
 
-/* ---------- theme.css (452 rules) ---------- */
+/* ---------- theme.css (504 rules) ---------- */
 html[data-theme="dark"] body { background: var(--bg); color: var(--body); }
 html[data-theme="dark"] .content { background: var(--bg); }
 html[data-theme="dark"] .markdown-section { background: var(--card); border: 1px solid #333941; border-radius: 22px; }
@@ -571,6 +571,58 @@ html[data-theme="dark"] .markdown-section a.al-continue:hover { border-color: va
 html[data-theme="dark"] .al-continue-k { color: var(--brand-text); }
 html[data-theme="dark"] .al-continue-t { color: var(--ink); }
 html[data-theme="dark"] .al-continue-s { color: var(--muted); }
+html[data-theme="dark"] .xp { --x-d: #a3d6f2; --x-l: #172935; --x-xl: #13242f; border-radius: 20px; background: #161c22; border: 1px solid #234d63; }
+html[data-theme="dark"] .xp-icon { border-radius: 12px; background: var(--x-l); color: color-mix(in srgb, var(--x) 55%, #ffffff); }
+html[data-theme="dark"] .xp-kicker { color: color-mix(in srgb, var(--x) 55%, #ffffff); }
+html[data-theme="dark"] .xp-title { color: var(--ink); }
+html[data-theme="dark"] .xp-score { color: var(--muted); background: var(--x-l); border-radius: 999px; }
+html[data-theme="dark"] .xp-score b { color: var(--x-d); }
+html[data-theme="dark"] .xp-step { border-top: 1px dashed #234d63; }
+html[data-theme="dark"] .xp-step-k { color: var(--x-d); }
+html[data-theme="dark"] .xp-q { color: var(--ink); }
+html[data-theme="dark"] .xp-opt { border-radius: 12px; border: 2px solid var(--line); background: #161c22; color: var(--ink); }
+html[data-theme="dark"] .xp-opt:hover:not(:disabled) { border-color: #2a5f78; }
+html[data-theme="dark"] .xp-opt.right { border-color: var(--ok); background: #172d1e; }
+html[data-theme="dark"] .xp-opt.wrong { border-color: var(--bad); background: #2d1515; }
+html[data-theme="dark"] .xp-verdict { color: var(--body); }
+html[data-theme="dark"] .xp-verdict.ok b { color: #afeec7; }
+html[data-theme="dark"] .xp-verdict.bad b { color: #f0ab95; }
+html[data-theme="dark"] .xp-sl { color: var(--body); }
+html[data-theme="dark"] .xp-sl-v { color: var(--x-d); }
+html[data-theme="dark"] .xp-sl input { accent-color: color-mix(in srgb, var(--x) 55%, #ffffff); }
+html[data-theme="dark"] .xp-big { border-radius: 14px; background: var(--x-xl); border: 1px solid #234d63; }
+html[data-theme="dark"] .xp-big-k { color: var(--body); }
+html[data-theme="dark"] .xp-big-v { color: var(--x-d); }
+html[data-theme="dark"] .xp-grid .tn { fill: #e2e8f0; stroke: none; }
+html[data-theme="dark"] .xp-grid .tp { fill: #eb718b; stroke: none; }
+html[data-theme="dark"] .xp-grid .fn { fill: #ffffff; stroke: #eb718b; }
+html[data-theme="dark"] .xp-grid .fp { fill: #ebbd70; stroke: none; }
+html[data-theme="dark"] .xp-legend { color: var(--muted); }
+html[data-theme="dark"] .xp-legend span::before { border-radius: 50%; }
+html[data-theme="dark"] .xp-legend .xl-tp::before { background: #e11d48; }
+html[data-theme="dark"] .xp-legend .xl-fn::before { background: #161c22; }
+html[data-theme="dark"] .xp-legend .xl-fp::before { background: #f59e0b; }
+html[data-theme="dark"] .xp-legend .xl-tn::before { background: #24292f; }
+html[data-theme="dark"] .xp-say { color: var(--body); }
+html[data-theme="dark"] .xp-note { color: var(--faint); }
+html[data-theme="dark"] .markdown-section .xp-list li { border-radius: 12px; background: #1b2025; border: 1px solid var(--line); color: var(--body); }
+html[data-theme="dark"] .markdown-section .xp-list li.ok { background: #172d1e; border-color: #295f3c; }
+html[data-theme="dark"] .xp-tick { border-radius: 50%; border: 2px solid #3c454f; }
+html[data-theme="dark"] .xp-list li.ok .xp-tick { border-color: var(--ok); background: var(--ok); }
+html[data-theme="dark"] .xp-done-msg { border-radius: 12px; background: #172d1e; color: #afeec7; }
+html[data-theme="dark"] .xp-mini-k { color: var(--muted); }
+html[data-theme="dark"] .xp-pop rect { fill: #94a3b8; }
+html[data-theme="dark"] .xp-pop rect.xp-over { fill: #ebbd70; }
+html[data-theme="dark"] .xp-hist rect { fill: #5bbce8; }
+html[data-theme="dark"] .xp-bell { fill: none; stroke: #eb718b; }
+html[data-theme="dark"] .xp-mu { stroke: #d0d9ee; }
+html[data-theme="dark"] .xp-ax { fill: #a5afbe; }
+html[data-theme="dark"] .xp-empty { fill: #94a3b8; }
+html[data-theme="dark"] .xp-btn { border-radius: 10px; border: 0; background: var(--x); color: #ffffff; }
+html[data-theme="dark"] .xp-btn:hover { background: var(--x-d); }
+html[data-theme="dark"] .xp-btn.xp-ghost { background: var(--x-l); color: var(--x-d); }
+html[data-theme="dark"] .xp-stats { color: var(--body); }
+html[data-theme="dark"] .xp-stats b { color: var(--ink); }
 
 /* ---------- labs.css (98 rules) ---------- */
 html[data-theme="dark"] .sq-box.sq-ed .sq-top { background: var(--brand-xl, #f0fdfa); }
@@ -840,3 +892,9 @@ html[data-theme="dark"] .markdown-section .pic td.hot { background: #5a4a10 !imp
 html[data-theme="dark"] .markdown-section .pic tr.tone-a td, html[data-theme="dark"] .markdown-section .pic tr.tone-b td { color: var(--ink); }
 html[data-theme="dark"] .markdown-section .pic tr.tone-a td.new, html[data-theme="dark"] .markdown-section .pic tr.tone-b td.new { color: #ddd0ff; }
 html[data-theme="dark"] .pic-null { color: #b3bdc9; }
+/* explorers (explore.js): the quiet dots stay quiet on a dark page, so red and orange stand out */
+html[data-theme="dark"] .xp-grid .tn { fill: #343d4a; }
+html[data-theme="dark"] .xp-grid .fn { fill: var(--card); }
+html[data-theme="dark"] .xp-legend .xl-tn::before { background: #343d4a; }
+html[data-theme="dark"] .xp-legend .xl-fn::before { background: var(--card); }
+html[data-theme="dark"] .xp-pop rect { fill: #6b7a8f; }

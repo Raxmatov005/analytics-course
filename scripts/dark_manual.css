@@ -56,3 +56,9 @@ html[data-theme="dark"] .markdown-section .pic td.hot { background: #5a4a10 !imp
 html[data-theme="dark"] .markdown-section .pic tr.tone-a td, html[data-theme="dark"] .markdown-section .pic tr.tone-b td { color: var(--ink); }
 html[data-theme="dark"] .markdown-section .pic tr.tone-a td.new, html[data-theme="dark"] .markdown-section .pic tr.tone-b td.new { color: #ddd0ff; }
 html[data-theme="dark"] .pic-null { color: #b3bdc9; }
+/* explorers (explore.js): the quiet dots stay quiet on a dark page, so red and orange stand out */
+html[data-theme="dark"] .xp-grid .tn { fill: #343d4a; }
+html[data-theme="dark"] .xp-grid .fn { fill: var(--card); }
+html[data-theme="dark"] .xp-legend .xl-tn::before { background: #343d4a; }
+html[data-theme="dark"] .xp-legend .xl-fn::before { background: var(--card); }
+html[data-theme="dark"] .xp-pop rect { fill: #6b7a8f; }

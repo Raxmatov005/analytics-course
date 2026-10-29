@@ -831,3 +831,71 @@ textarea.sq-edit.hi-on { caret-color: var(--code-caret); }
 .markdown-section .token.builtin, .markdown-section .token.class-name { color: var(--tk-builtin); }
 .markdown-section .token.operator, .markdown-section .token.punctuation { color: var(--tk-punct); background: none; }
 /* dark:end */
+
+/* ---------- explorers (explore.js, 2026-10-29): predict, play, challenges — maths you can touch ---------- */
+.xp { --x: #0369a1; --x-d: #075985; --x-l: #e0f2fe; --x-xl: #f0f9ff; position: relative; margin: 1.8em 0; padding: 1.15em 1.2em 1.1em; border-radius: 20px;
+  background: #fff; border: 1px solid #bae6fd; box-shadow: var(--sh); font-family: var(--sans); }
+.xp-head { display: flex; align-items: center; gap: .8em; }
+.xp-head > div:nth-child(2) { flex: 1; min-width: 0; }
+.xp-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: var(--x-l); color: var(--x); }
+.xp-kicker { font-size: .72em; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--x); }
+.xp-title { font-weight: 800; font-size: 1.12em; color: var(--ink); line-height: 1.3; }
+.xp-score { flex: none; font-weight: 700; color: var(--muted); font-size: .95em; background: var(--x-l); border-radius: 999px; padding: .25em .75em; }
+.xp-score b { color: var(--x-d); font-size: 1.15em; }
+.xp-step { margin-top: 1em; padding-top: .9em; border-top: 1px dashed #bae6fd; }
+.xp-step-k { font-size: .74em; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--x-d); margin-bottom: .5em; }
+.xp-q { color: var(--ink); font-weight: 600; line-height: 1.5; margin-bottom: .6em; }
+.xp-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .5em; }
+.xp-opt { font: inherit; font-size: .95em; text-align: left; padding: .6em .8em; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
+.xp-opt:hover:not(:disabled) { border-color: #7dd3fc; }
+.xp-opt:disabled { cursor: default; }
+.xp-opt.right { border-color: var(--ok); background: #f0fdf4; }
+.xp-opt.wrong { border-color: var(--bad); background: #fef2f2; }
+.xp-verdict { margin-top: .6em; font-size: .93em; line-height: 1.55; color: var(--body); }
+.xp-verdict:empty { display: none; }
+.xp-verdict.ok b { color: #166534; }
+.xp-verdict.bad b { color: #9a3412; }
+.xp-ctrl { display: grid; gap: .55em; margin-bottom: .8em; }
+.xp-sl { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "l v" "r r"; gap: .15em .8em; align-items: center; font-size: .92em; color: var(--body); }
+.xp-sl-l { grid-area: l; min-width: 0; }
+.xp-sl-v { grid-area: v; font-weight: 800; color: var(--x-d); font-variant-numeric: tabular-nums; }
+.xp-sl input { grid-area: r; width: 100%; accent-color: var(--x); margin: 0; height: 28px; }
+.xp-big { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3em .8em; padding: .7em .9em; border-radius: 14px; background: var(--x-xl); border: 1px solid #bae6fd; margin-bottom: .8em; }
+.xp-big-k { font-size: .9em; color: var(--body); }
+.xp-big-v { font-size: 1.7em; font-weight: 800; color: var(--x-d); font-variant-numeric: tabular-nums; }
+.xp-grid { display: block; width: 100%; height: auto; max-width: 520px; margin: 0 auto; }
+.xp-grid circle { transition: fill .25s ease, stroke .25s ease; stroke-width: 1.4; }
+.xp-grid .tn { fill: #e2e8f0; stroke: none; }
+.xp-grid .tp { fill: #e11d48; stroke: none; }
+.xp-grid .fn { fill: #fff; stroke: #e11d48; }
+.xp-grid .fp { fill: #f59e0b; stroke: none; }
+.xp-legend { display: flex; flex-wrap: wrap; gap: .3em 1em; justify-content: center; margin: .5em 0; font-size: .82em; color: var(--muted); }
+.xp-legend span::before { content: ""; display: inline-block; width: .8em; height: .8em; border-radius: 50%; margin-right: .35em; vertical-align: -.05em; }
+.xp-legend .xl-tp::before { background: #e11d48; }
+.xp-legend .xl-fn::before { background: #fff; box-shadow: inset 0 0 0 2px #e11d48; }
+.xp-legend .xl-fp::before { background: #f59e0b; }
+.xp-legend .xl-tn::before { background: #e2e8f0; }
+.xp-say { font-size: .95em; line-height: 1.6; color: var(--body); }
+.xp-note { font-size: .8em; color: var(--faint); margin-top: .3em; }
+.xp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .45em; }
+.markdown-section .xp-list li { display: flex; gap: .6em; align-items: flex-start; margin: 0; padding: .55em .7em; border-radius: 12px; background: #f8fafc; border: 1px solid var(--line); color: var(--body); font-size: .94em; line-height: 1.5; }
+.markdown-section .xp-list li.ok { background: #f0fdf4; border-color: #bbf7d0; }
+.xp-tick { flex: none; width: 1.3em; height: 1.3em; border-radius: 50%; border: 2px solid #cbd5e1; margin-top: .1em; box-sizing: border-box; }
+.xp-list li.ok .xp-tick { border-color: var(--ok); background: var(--ok); box-shadow: inset 0 0 0 3px #fff; }
+.xp-done-msg { margin-top: .7em; padding: .6em .8em; border-radius: 12px; background: #f0fdf4; color: #166534; font-weight: 700; font-size: .93em; }
+.xp-popbox { margin-bottom: .6em; }
+.xp-mini-k { font-size: .82em; font-weight: 700; color: var(--muted); margin: .2em 0 .3em; }
+.xp-pop, .xp-hist { display: block; width: 100%; height: auto; }
+.xp-pop rect { fill: #94a3b8; }
+.xp-pop rect.xp-over { fill: #f59e0b; }
+.xp-hist rect { fill: #38bdf8; }
+.xp-bell { fill: none; stroke: #e11d48; stroke-width: 2.5; }
+.xp-mu { stroke: #0f172a; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.xp-ax { font: 10px var(--sans); fill: #64748b; }
+.xp-empty { font: 13px var(--sans); fill: #94a3b8; }
+.xp-btns { display: flex; flex-wrap: wrap; gap: .45em; margin: .2em 0 .8em; }
+.xp-btn { font: 700 .9em var(--sans); padding: .55em .95em; border-radius: 10px; border: 0; background: var(--x); color: #fff; cursor: pointer; }
+.xp-btn:hover { background: var(--x-d); }
+.xp-btn.xp-ghost { background: var(--x-l); color: var(--x-d); }
+.xp-stats { display: flex; flex-wrap: wrap; gap: .3em 1.2em; margin-top: .5em; font-size: .9em; color: var(--body); font-variant-numeric: tabular-nums; }
+.xp-stats b { color: var(--ink); }
