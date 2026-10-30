@@ -798,3 +798,206 @@ A bonus for the curious: one harder question on today's topic. Solve it for XP t
 ```
 
 <!-- challenge:end -->
+
+---
+
+## Going further — a data dictionary (optional, 25 min)
+
+> STORY **Thursday, 17:30.** Timur, with the three views open in Power BI. *"Next week three new people get this model. The first will ask what `closed_at` NULL means, the second whether `outstanding` includes interest, the third why `payments` has ten methods. I do not want to answer each of them in a meeting. Write it down once — every table, every column — a **data dictionary**. And do not type the column list by hand: the database already knows it."*
+
+### What a data dictionary is — one line per column
+
+**What it is.** A **data dictionary** (*словарь данных*) is the document that says what every table and column means, so nobody has to read the SQL. Per **table**: the **grain** (what one row is), the key, the row count and where the data comes from. Per **column**: the type, the meaning in one sentence, the allowed values, an example, and who owns the meaning.
+
+**How to write it.** The header of the `loans` table, then four of its column lines:
+
+```text
+loans — one loan that was paid out
+key     loan_id (unique, never NULL)
+rows    7 828, as of 2026-10-01
+source  loans table, data engineer
+owner   Bekzod (portfolio)
+```
+
+| column · type | meaning | allowed · example |
+|---|---|---|
+| `loan_id` INTEGER | one loan; the key | unique · `2242` |
+| `status` TEXT | where the loan is in its life | `active`, `closed`, `default`, `written_off` |
+| `closed_at` TEXT, a date | the day the loan was closed | NULL while not closed · `2026-06-26` |
+| `annual_rate` REAL | the yearly rate as a share | `0.42` = 42 %; `0` for BNPL |
+
+With these four lines a new analyst can filter loans without asking. `closed_at` is NULL on 3 601 loans, and the line says why: 3 586 of them are active, default or written-off loans that are not closed. The other 15 are closed loans with no date, the gap Week 2 Day 5 found — the dictionary line is where that caveat lives.
+
+**When you use it.**
+- A new colleague or a Power BI user asks what a column means: the answer is a link, not a meeting.
+- Before you trust a column in a report: read its NULL rule and its allowed values.
+- An auditor asks how a reported number is defined: the definition is already written.
+
+> ⚠️ **Watch out.** A line that says what a column *should* hold, not what it *does* hold, misleads. `payments.method` should hold 5 methods; the table holds 10 spellings. Write the allowed values, then check them against the data (the next two subsections).
+
+**Your turn.** Match each column to its dictionary line.
+
+```game
+{"type": "match", "id": "w03d4-x1", "title": "Column and meaning", "pairs": [["loans.status", "active / closed / default / written_off"], ["loans.closed_at", "the closing day; NULL while the loan is not closed"], ["loans.annual_rate", "0.42 means 42 % a year; 0 for BNPL"], ["applications.credit_score", "the score at the decision, 424–850; NULL = no score"], ["payments.installment_id", "the scheduled instalment this money pays"], ["loans.principal", "the amount lent, in soum, before interest"]]}
+```
+
+### The skeleton from the database — sqlite_master and pragma_table_info
+
+**What it is.** The database already knows its tables and columns. **`sqlite_master`** (*системный каталог*) is SQLite's own list of every table, view and index, with the SQL that created it. **`pragma_table_info('name')`** lists the columns of one table or view: position, name, type, and whether it is part of a declared primary key. A dictionary starts from these two, so no column is forgotten.
+
+**How to write it.**
+
+```sql
+-- every table and view in your practice copy
+-- SQL Server: SELECT TABLE_NAME, TABLE_TYPE
+-- FROM INFORMATION_SCHEMA.TABLES
+SELECT type, name
+FROM sqlite_master
+WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'
+ORDER BY type, name;
+```
+
+An untouched copy has 11 tables, `app_events` to `staff`. The views and tables you made today (`v_payments_clean`, `t_written_off` and the rest) appear in the list too.
+
+```sql
+-- the skeleton of one table: one row per column
+SELECT cid, name, type, '' AS meaning
+FROM pragma_table_info('loans');
+```
+
+13 rows, `loan_id` to `closed_at`, with an empty `meaning` for you to fill. The whole database in one query — a join of the catalogue to each table's columns:
+
+```sql
+-- every column of every table: the full skeleton
+-- SQL Server: INFORMATION_SCHEMA.COLUMNS
+SELECT m.name AS tbl, p.name AS col, p.type
+FROM sqlite_master m, pragma_table_info(m.name) p
+WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
+ORDER BY m.name, p.cid;
+```
+
+86 rows in an untouched copy: the 86 columns of the 11 tables, from `app_events.event_id` to `staff.hired_on`. The full dictionary has 86 column lines to fill; your own tables add their rows.
+
+**When you use it.**
+- Starting a dictionary: the skeleton lists every column, so none is missed.
+- After a change upstream: run it again; a new or renamed column shows up at once.
+
+> ⚠️ **Watch out.** The skeleton gives names and types, never meaning. Its `pk` column is 0 everywhere here, because the course tables were loaded without declared keys (section 1, Indexes). The key comes from profiling, next; the meaning comes from the people who own the data.
+
+**Your turn.** `pragma_table_info` works on a view too. Run it on `v_loan_status` from section 2. Some of its columns come back with an **empty type**, because they are computed in the view and SQLite cannot name their type — so only the dictionary can. How many?
+
+```task
+{"id": "w03d4-x2", "kind": "number", "answer": 5, "dp": 0, "unit": "columns", "hint": "SELECT name, type FROM pragma_table_info('v_loan_status') — no rows back means the view is not in your copy yet: run section 2's CREATE VIEW box first.", "model": "5 of the view's 16 columns have an empty type: outstanding, dpd, bucket, unpaid_instalments and overdue_amount — each a COALESCE or a CASE. days_on_book says INT because of its CAST; the copied columns keep the type of loans. Those five are exactly the lines a reader needs most."}
+```
+
+### Profiling a column — the numbers behind each line
+
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w03d4-x3", "type": "profile", "title": "Profile a column, fill its line", "asOf": "2026-10-01", "predict": {"q": "`loans.loan_id` runs from 1 to **7 917**. How many loans are in the table?", "options": ["7 917 — the largest id is the count", "Maybe fewer: only `COUNT(*)` can tell — and it says 7 828", "Exactly 7 917, because ids never skip a number", "More than 7 917"], "answer": 1, "why": "An id is a label, not a counter: 89 numbers between 1 and 7 917 were never used. Profiling counts the rows instead of trusting the largest label — pick `loan_id` below and see the rows, the distinct values and MAX side by side."}, "tables": [{"name": "loans", "rows": 7828, "grain": "one loan that was paid out", "cols": [{"c": "loan_id", "t": "INTEGER", "d": 7828, "n": 0, "lo": 1, "hi": 7917, "m": "one loan that was paid out; the key", "note": "89 numbers between 1 and 7 917 are never used: the maximum is a label, not a count."}, {"c": "application_id", "t": "INTEGER", "d": 7828, "n": 0, "lo": 2, "hi": 14000, "m": "the application the loan came from", "note": "Also one value per row: every loan has its own application. A second key candidate — the dictionary names which one is the key."}, {"c": "customer_id", "t": "INTEGER", "d": 4335, "n": 0, "lo": 1, "hi": 6038, "m": "the borrower, in customers", "note": "4 335 borrowers for 7 828 loans: many customers came back for another loan."}, {"c": "product_id", "t": "INTEGER", "d": 5, "n": 0, "lo": 1, "hi": 5, "m": "the product, in products", "v": [[1, 2669], [2, 2418], [3, 1569], [5, 781], [4, 391]]}, {"c": "branch_id", "t": "INTEGER", "d": 10, "n": 0, "lo": 1, "hi": 10, "m": "the office that issued the loan", "v": [[3, 1012], [2, 1007], [1, 1001], [6, 906], [4, 862], [7, 715], [8, 700], [5, 650], [9, 492], [10, 483]]}, {"c": "disbursed_at", "t": "TEXT", "d": 999, "n": 0, "lo": "2024-01-02", "hi": "2026-10-01", "m": "the day the money was paid out"}, {"c": "principal", "t": "INTEGER", "d": 3575, "n": 0, "lo": 300000, "hi": 599060000, "m": "the amount lent, in soum, before interest"}, {"c": "term_months", "t": "INTEGER", "d": 7, "n": 0, "lo": 3, "hi": 48, "m": "the term, in months", "v": [[6, 2483], [3, 1867], [12, 1346], [24, 973], [18, 621], [36, 401], [48, 137]]}, {"c": "annual_rate", "t": "REAL", "d": 5, "n": 0, "lo": 0.0, "hi": 0.42, "m": "the yearly rate as a share: 0.42 = 42 %", "v": [[0.42, 2669], [0.3, 2418], [0.0, 1569], [0.26, 781], [0.24, 391]], "note": "0 is a rate, not a missing value: Buy now pay later lends at 0 %."}, {"c": "monthly_payment", "t": "INTEGER", "d": 5062, "n": 0, "lo": 25800, "hi": 57170000, "m": "the scheduled monthly instalment, in soum"}, {"c": "risk_grade", "t": "TEXT", "d": 4, "n": 0, "lo": "A", "hi": "D", "m": "the risk grade at the decision, A (best) to D", "v": [["B", 3404], ["C", 2264], ["A", 1821], ["D", 339]], "ok": ["A", "B", "C", "D"]}, {"c": "status", "t": "TEXT", "d": 4, "n": 0, "lo": "active", "hi": "written_off", "m": "where the loan is in its life", "v": [["closed", 4242], ["active", 3352], ["written_off", 190], ["default", 44]], "ok": ["active", "closed", "default", "written_off"]}, {"c": "closed_at", "t": "TEXT", "d": 844, "n": 3601, "lo": "2024-04-01", "hi": "2026-10-01", "m": "the day the loan was closed", "note": "NULL means not closed yet: 3 586 active, default and written-off loans. The other 15 NULLs are closed loans with no date (Week 2 Day 5)."}]}, {"name": "payments", "rows": 52875, "grain": "one payment received", "cols": [{"c": "payment_id", "t": "INTEGER", "d": 52875, "n": 0, "lo": 1, "hi": 52875, "m": "one payment received; the key"}, {"c": "loan_id", "t": "INTEGER", "d": 7436, "n": 0, "lo": 1, "hi": 7917, "m": "the loan it pays, in loans"}, {"c": "installment_id", "t": "INTEGER", "d": 52850, "n": 0, "lo": 1, "hi": 92193, "m": "the scheduled instalment it pays", "note": "52 850 values in 52 875 rows — almost a key, not quite: the 25 extra rows are the duplicate payments."}, {"c": "paid_at", "t": "TEXT", "d": 989, "n": 0, "lo": "2024-01-31", "hi": "2026-11-24", "m": "the day the money arrived", "note": "2026-11-24 is after the as-of date: 24 payments are dated after 2026-10-01, and every sum through the as-of leaves them out."}, {"c": "amount", "t": "INTEGER", "d": 6305, "n": 0, "lo": 15531, "hi": 57170000, "m": "the amount paid, in soum"}, {"c": "method", "t": "TEXT", "d": 10, "n": 0, "lo": "CASH ", "hi": "transfer", "m": "how it was paid", "v": [["card", 17564], ["payme", 8870], ["cash", 8760], ["click", 8754], ["transfer", 8747], ["Card", 57], ["Click", 36], ["CASH ", 30], ["PayMe", 30], ["bank transfer", 27]], "ok": ["card", "cash", "click", "payme", "transfer"], "note": "Five methods in ten spellings: `Card`, `Click`, `PayMe`, `CASH ` and `bank transfer` are 180 stray rows. The dictionary lists the five clean values and names the view that delivers them."}]}], "challenges": [{"id": "c1", "text": "Find a **key**: a column with as many distinct values as rows, and no NULL.", "when": {"key": ["=", 1]}}, {"id": "c2", "text": "Find the column where an empty cell is a meaning, not a gap: almost **half** its rows are NULL.", "when": {"nullShare": [">", 0.4]}}, {"id": "c3", "text": "Find a date that breaks the calendar: its maximum is **after the as-of date**.", "when": {"odd": ["=", 1]}}, {"id": "c4", "text": "Find a category whose data holds values its dictionary line does **not allow**.", "when": {"extra": [">", 0]}}]}
+```
+
+**What it is.** **Profiling** (*профилирование данных*) measures what a column really holds: the row count, the number of distinct values, the NULL share, the minimum and the maximum — and, for a category, every value with its count. Each measure fills or checks one part of the dictionary line.
+
+**How to write it.**
+
+```sql
+-- one column, six measures
+-- SQL Server: SUM(CASE WHEN closed_at IS NULL THEN 1 ELSE 0 END)
+SELECT COUNT(*) AS n_rows,
+       COUNT(DISTINCT closed_at) AS n_distinct,
+       SUM(closed_at IS NULL) AS n_null,
+       ROUND(100.0 * SUM(closed_at IS NULL) / COUNT(*), 1) AS null_pct,
+       MIN(closed_at) AS min_value,
+       MAX(closed_at) AS max_value
+FROM loans;
+-- 7 828 · 844 · 3 601 · 46.0 · 2024-04-01 · 2026-10-01
+```
+
+7 828 loans, 844 different closing days, 3 601 empty (46.0 %), the first closing on 1 April 2024 and the last on the as-of date. For a category, list the values with their counts:
+
+```sql
+-- every value of a category, with its rows
+SELECT method, COUNT(*) AS payments
+FROM payments
+GROUP BY method
+ORDER BY payments DESC;
+```
+
+10 rows for 5 methods: `Card`, `Click`, `PayMe`, `CASH ` and `bank transfer` are 180 stray spellings (57 + 36 + 30 + 30 + 27). The dictionary says 5 values and names the view that cleans them, `v_payments_clean`.
+
+| the profile shows | the line says | on our data |
+|---|---|---|
+| distinct = rows, no NULL | a key candidate | `loan_id`: 7 828 of 7 828 |
+| few distinct values | a category: list them | `status`: 4 |
+| a NULL share | what NULL means | `closed_at`: 46.0 % |
+| min and max | the range; impossible values | `paid_at`: up to 2026-11-24 |
+
+**When you use it.**
+- Writing a line: distinct values → key or category; NULL share → the NULL rule; min and max → the range.
+- Before you publish a view: profile its columns. A `COUNT(*)` of 92 193 where 7 828 belongs is a broken grain (P3).
+
+> ⚠️ **Watch out.** `MAX(loan_id)` is 7 917, but there are 7 828 loans: 89 numbers are never used. The largest id is a label, not a count — `COUNT(*)` is the count.
+
+**Your turn.** Profile `customers.monthly_income`. What share of customers has no income recorded?
+
+```task
+{"id": "w03d4-x4", "kind": "number", "answer": 5.9, "dp": 1, "unit": "%", "hint": "ROUND(100.0 * SUM(monthly_income IS NULL) / COUNT(*), 1) FROM customers.", "model": "5.9 %: 356 of 6 040 customers have no monthly income. The line reads: monthly_income — INTEGER, soum per month; NULL = no income recorded (5.9 %); from 2 504 499 to 59 975 806."}
+```
+
+### Keeping it next to the views
+
+**What it is.** A dictionary that lives in someone's head or in an old e-mail goes stale. Keep it **next to the views**: in the same folder as `views.sql` (the `dictionary.md` of HW 3.2), or as a table in the database that every tool can read. Then check it with a query, like any other view.
+
+**How to write it.**
+
+```sql
+-- the dictionary as a table in your practice copy
+DROP TABLE IF EXISTS my_dictionary;
+CREATE TABLE my_dictionary (tbl TEXT, col TEXT, meaning TEXT, allowed TEXT, owner TEXT);
+INSERT INTO my_dictionary VALUES
+  ('loans', 'loan_id', 'one loan that was paid out, the key', 'unique, never NULL', 'data engineer'),
+  ('loans', 'status', 'where the loan is in its life', 'active, closed, default, written_off', 'Bekzod'),
+  ('loans', 'closed_at', 'the day the loan was closed', 'a date, NULL while not closed', 'Bekzod');
+-- which columns of loans have no line yet? an anti-join
+SELECT p.name AS undocumented
+FROM pragma_table_info('loans') p
+LEFT JOIN my_dictionary d ON d.tbl = 'loans' AND d.col = p.name
+WHERE d.col IS NULL;
+```
+
+10 rows: the ten columns of `loans` that have no line yet, `application_id` to `risk_grade`. Each line you add takes one row off the list; zero rows means the table is fully documented. The same check on `v_loan_status` tells you when a new column joins the view.
+
+**When you use it.**
+- Every time a view changes: change the dictionary in the same edit, then run the anti-join.
+- Where the readers are: SQL Server can store a description on the column itself (an extended property called `MS_Description`), and Power BI's model view has a Description box for every column.
+
+> ⚠️ **Watch out.** The view changes and the dictionary does not. A month later the line describes a column that no longer exists. Fix: one edit changes both files, and the anti-join check runs before the view is shared.
+
+**Your turn.**
+
+```game
+{"type": "sort", "id": "w03d4-x5", "title": "True or stale?", "q": "Tap each habit, then whether it keeps the dictionary true or lets it go stale.", "groups": {"Keeps it true": ["The anti-join on pragma_table_info returns no rows", "dictionary.md changed in the same edit as views.sql", "The allowed values checked with a GROUP BY on the data"], "Lets it go stale": ["A Word file e-mailed once in 2024", "Meanings remembered by the analyst who left", "A new view column, the dictionary to be updated later"]}}
+```
+
+### Try it on the real data
+
+**T1.** Build the skeleton of `applications` with `pragma_table_info`, then profile its columns. Exactly one of its 12 columns has NULLs. How many NULLs does it have?
+
+```task
+{"id": "w03d4-x6", "kind": "number", "answer": 388, "dp": 0, "unit": "applications", "hint": "SUM(col IS NULL) for each column of the skeleton — twelve SUMs in one SELECT.", "model": "388 NULLs, all in credit_score: 388 of 14 000 applications (2.8 %) have no score. The other 11 columns are never empty."}
+```
+
+**T2.** Write the dictionary line for `applications.credit_score`: type, meaning, allowed values and range, the NULL rule with its share, and the owner.
+
+```task
+{"id": "w03d4-x7", "kind": "free", "min": 20, "model": "credit_score — INTEGER. The applicant's credit score at the decision. 369 distinct values, from 424 to 850 in this data. NULL on 388 of 14 000 applications (2.8 %) = no score; keep those rows and count them in a note (Week 4 Day 4). Owner: Nilufar (risk), who owns the scoring rules. Example: application 2, score 631.", "rubric": ["Type and a one-sentence meaning", "The range from the profile (424 to 850)", "The NULL rule with its share: 388 of 14 000, 2.8 %", "The owner (risk / Nilufar)"]}
+```
+
+### In one minute
+
+- A **data dictionary** says, per table, the grain, the key, the rows and the source; per column, the type, the meaning, the allowed values, an example and the owner.
+- Start it from the database: `sqlite_master` lists the tables, `pragma_table_info` the columns — 86 lines for the 11 company tables.
+- **Profile** each column: distinct = rows means a key, few values a category, a NULL share needs a rule, and min / max catch impossible values.
+- Keep it next to the views, change both in one edit, and check it with an anti-join.

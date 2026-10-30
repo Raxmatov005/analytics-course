@@ -1052,11 +1052,119 @@ html[data-theme="dark"] .xp4-now { fill: #98d1f0; }
 html[data-theme="dark"] .xp4-term { fill: #b5bfcd; }
 html[data-theme="dark"] .xp4-term.hot { fill: #eea486; }
 
-/* ---------- explore5.css (0 rules) ---------- */
+/* ---------- explore5.css (24 rules) ---------- */
+html[data-theme="dark"] .xp5-gl { stroke: #e2e8f0; }
+html[data-theme="dark"] .xp5-axis { stroke: #94a3b8; }
+html[data-theme="dark"] .xp5-tick { stroke: #94a3b8; }
+html[data-theme="dark"] .xp5-hid { fill: #a5afbe; }
+html[data-theme="dark"] .xp5-fut { fill: #ebbd70; }
+html[data-theme="dark"] .xp5-act { fill: none; stroke: #98d1f0; }
+html[data-theme="dark"] .xp5-d { fill: #98d1f0; }
+html[data-theme="dark"] .xp5-dh { fill: #ffffff; stroke: #98d1f0; }
+html[data-theme="dark"] .xp5-src { fill: none; stroke: #edb97e; }
+html[data-theme="dark"] .xp5-fit { stroke: #edb97e; }
+html[data-theme="dark"] .xp5-fc { fill: none; stroke: #edb97e; }
+html[data-theme="dark"] .xp5-fd { fill: #ebbd70; stroke: #ffffff; }
+html[data-theme="dark"] .xp5-miss { stroke: #eb718b; }
+html[data-theme="dark"] .xp5-band { fill: #ebbd70; stroke: none; }
+html[data-theme="dark"] .xp5-leg .xl5-act::before { background: #0369a1; }
+html[data-theme="dark"] .xp5-leg .xl5-hid::before { background: #161c22; }
+html[data-theme="dark"] .xp5-leg .xl5-fc::before { background: #f59e0b; }
+html[data-theme="dark"] .xp5-leg .xl5-src::before { background: transparent; }
+html[data-theme="dark"] .xp5-leg .xl5-fit::before { background: #d97706; border-radius: 2px; }
+html[data-theme="dark"] .xp5-leg .xl5-band::before { background: #f59e0b; border-radius: 3px; }
+html[data-theme="dark"] .xp5-grid > div { border-radius: 12px; background: var(--x-xl); border: 1px solid #234d63; }
+html[data-theme="dark"] .xp5-grid span { color: var(--body); }
+html[data-theme="dark"] .xp5-grid b { color: var(--x-d); }
+html[data-theme="dark"] .xp5-grid i { color: var(--muted); }
 
-/* ---------- explore6.css (0 rules) ---------- */
+/* ---------- explore6.css (31 rules) ---------- */
+html[data-theme="dark"] .xp6-x { border-radius: 999px; background: #3f381b; color: #f1bb9a; }
+html[data-theme="dark"] .xp6-b1 { fill: #88cbee; }
+html[data-theme="dark"] .xp6-b2 { fill: #edb97e; }
+html[data-theme="dark"] .xp6-b3 { fill: #eb718b; }
+html[data-theme="dark"] .xp6-t1 { fill: #a3d6f2; }
+html[data-theme="dark"] .xp6-t2 { fill: #f1bb9a; }
+html[data-theme="dark"] .xp6-t3 { fill: #ef92ac; }
+html[data-theme="dark"] .xp6-cut { stroke: #d0d9ee; }
+html[data-theme="dark"] .xp6-axis { stroke: #94a3b8; }
+html[data-theme="dark"] .xp6-tick { stroke: #94a3b8; }
+html[data-theme="dark"] .xp6-d1 { fill: #88cbee; }
+html[data-theme="dark"] .xp6-d2 { fill: #edb97e; }
+html[data-theme="dark"] .xp6-d3 { fill: #eb718b; }
+html[data-theme="dark"] .xp6-mv { stroke: #d0d9ee; }
+html[data-theme="dark"] .xp6-pl { fill: #d0d9ee; }
+html[data-theme="dark"] .xp6-leg .xl6-s1::before { background: #0284c7; }
+html[data-theme="dark"] .xp6-leg .xl6-s2::before { background: #d97706; }
+html[data-theme="dark"] .xp6-leg .xl6-s3::before { background: #e11d48; }
+html[data-theme="dark"] .xp6-leg .xl6-mv::before { background: #161c22; }
+html[data-theme="dark"] .xp6-grid > div { border-radius: 12px; background: var(--x-xl); border: 1px solid #234d63; }
+html[data-theme="dark"] .xp6-grid .xp6-g2 { background: #312c14; border-color: #736428; }
+html[data-theme="dark"] .xp6-grid .xp6-g3 { background: #2f1315; border-color: #5c2028; }
+html[data-theme="dark"] .xp6-grid .xp6-gt { background: #1b2025; border-color: #3c454f; }
+html[data-theme="dark"] .xp6-grid span { color: var(--body); }
+html[data-theme="dark"] .xp6-grid b { color: var(--x-d); }
+html[data-theme="dark"] .xp6-grid .xp6-g2 b { color: #f1bb9a; }
+html[data-theme="dark"] .xp6-grid .xp6-g3 b { color: #ef92ac; }
+html[data-theme="dark"] .xp6-grid .xp6-gt b { color: #d0d9ee; }
+html[data-theme="dark"] .xp6-grid i { color: var(--muted); }
+html[data-theme="dark"] .xp6-grid i.xp6-rise { color: #efb78d; }
+html[data-theme="dark"] .xp6-k { color: var(--muted); }
 
-/* ---------- explore7.css (0 rules) ---------- */
+/* ---------- explore7.css (53 rules) ---------- */
+html[data-theme="dark"] .xp7-cols button code, html[data-theme="dark"] .xp-profile .xp-tg button code { background: none; color: inherit; }
+html[data-theme="dark"] .xp7-empty { border-radius: 12px; border: 1.5px dashed #3c454f; color: var(--muted); }
+html[data-theme="dark"] .xp7-grid > div { border-radius: 12px; background: var(--x-xl); border: 1px solid #234d63; }
+html[data-theme="dark"] .xp7-grid > div.hot { background: #312414; border-color: #7b542b; }
+html[data-theme="dark"] .xp7-grid span { color: var(--body); }
+html[data-theme="dark"] .xp7-grid b { color: var(--x-d); }
+html[data-theme="dark"] .xp7-grid > div.hot b { color: #eea486; }
+html[data-theme="dark"] .xp7-grid i { color: var(--muted); }
+html[data-theme="dark"] .xp7-bt { border-radius: 6px; background: #1d2329; }
+html[data-theme="dark"] .xp7-bt i { border-radius: 6px; background: #0284c7; }
+html[data-theme="dark"] .xp7-bar.bad .xp7-bt i { background: #e11d48; }
+html[data-theme="dark"] .xp7-bar.bad .xp7-bl code { color: #ee859e; }
+html[data-theme="dark"] .xp7-bn { color: var(--body); }
+html[data-theme="dark"] .xp7-line { border-radius: 14px; border: 1.5px solid #234d63; background: var(--card); }
+html[data-theme="dark"] .xp7-lh { color: var(--ink); }
+html[data-theme="dark"] .xp7-lh small { color: var(--muted); }
+html[data-theme="dark"] .xp7-dl { border-top: 1px dashed #333c47; }
+html[data-theme="dark"] .xp7-dk { color: var(--muted); }
+html[data-theme="dark"] .xp7-dv { color: var(--ink); }
+html[data-theme="dark"] .xp7-src { border-radius: 999px; }
+html[data-theme="dark"] .xp7-src.p { background: #172935; color: #a3d6f2; }
+html[data-theme="dark"] .xp7-src.o { background: #3f381b; color: #f1bb9a; }
+html[data-theme="dark"] .xp7-warn { color: #eea486; }
+html[data-theme="dark"] .xp7-note { color: var(--body); border-radius: 12px; background: #312c14; border: 1px solid #736428; }
+html[data-theme="dark"] .xp7-head { color: var(--body); }
+html[data-theme="dark"] .xp7-br { color: var(--x-d); }
+html[data-theme="dark"] .xp7-pane { border-radius: 14px; border: 1.5px solid #234d63; background: var(--x-xl); }
+html[data-theme="dark"] .xp7-pk { color: var(--x-d); }
+html[data-theme="dark"] .xp7-file { border-radius: 10px; background: var(--card); border: 1px solid var(--line); }
+html[data-theme="dark"] .xp7-file.w { border-color: #7b542b; background: #312414; }
+html[data-theme="dark"] .xp7-file.s { border-color: #327149; background: #172d1e; }
+html[data-theme="dark"] .xp7-f { color: var(--ink); }
+html[data-theme="dark"] .xp7-fn small { color: var(--muted); }
+html[data-theme="dark"] .xp7-term { background: var(--code-bg); color: var(--code-text); border: 1px solid var(--code-line); border-radius: 12px; }
+html[data-theme="dark"] .xp7-cmd { color: var(--code-text); }
+html[data-theme="dark"] .xp7-out { color: var(--muted); }
+html[data-theme="dark"] .xp7-out.ok { color: #a0efbe; }
+html[data-theme="dark"] .xp7-out.bad { color: #ec8383; }
+html[data-theme="dark"] .xp7-lane { stroke: #e2e8f0; }
+html[data-theme="dark"] .xp7-edge { stroke: #98d1f0; }
+html[data-theme="dark"] .xp7-edge.b { stroke: #edb97e; }
+html[data-theme="dark"] .xp7-dot { fill: #98d1f0; stroke: #ffffff; }
+html[data-theme="dark"] .xp7-dot.b { fill: #edb97e; }
+html[data-theme="dark"] .xp7-dot.m { stroke: #98d1f0; fill: #ffffff; }
+html[data-theme="dark"] .xp7-tag { fill: #f1f5f9; stroke: #cbd5e1; }
+html[data-theme="dark"] .xp7-tag.on { fill: #98d1f0; stroke: #98d1f0; }
+html[data-theme="dark"] .xp7-tagt { fill: #bec9d8; }
+html[data-theme="dark"] .xp7-tagt.on { fill: #ffffff; }
+html[data-theme="dark"] .xp7-log { color: var(--body); }
+html[data-theme="dark"] .xp7-lk { color: var(--muted); }
+html[data-theme="dark"] .xp7-id { color: #efb78d; }
+html[data-theme="dark"] .xp7-ref { color: #98d1f0; }
+html[data-theme="dark"] .xp7-more { color: var(--muted); }
 
 /* ---------- by hand (scripts/dark_manual.css): last, so it wins ---------- */
 /* ---------- dark mode, by hand (copied first into docs/assets/dark.css by scripts/make_dark_css.py) ----------

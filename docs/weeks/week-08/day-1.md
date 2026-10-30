@@ -988,3 +988,330 @@ A bonus for the curious: one harder question on today's topic. Solve it for XP t
 ```
 
 <!-- challenge:end -->
+
+---
+
+## Going further — trends and a simple forecast (optional, 40 min)
+
+> STORY **Monday, 17:00.** Bekzod leans over the desk with Wednesday's board agenda. *"One line is still empty: **what will we disburse next quarter?** Last year the plan for the fourth quarter just copied the fourth quarter of the year before — and we disbursed 52 % more. Can you do better than a guess?"* Madina: *"You can test any guess on months that already happened. Hide the last ones, forecast them from the rest, measure the miss. Then give Bekzod a range, not one number."*
+
+### Growth — month on month and year on year
+
+**What it is.** **Month-on-month growth** (MoM, *рост к предыдущему месяцу*) compares a month with the month before. **Year-on-year growth** (YoY, *рост к прошлому году*) compares it with the same month a year before. YoY is the fair comparison when months differ: the same month has the same number of days, the same holidays and the same season.
+
+**How to write it.**
+
+```text
+MoM = this month ÷ the month before − 1
+YoY = this month ÷ the same month
+      a year before − 1
+```
+
+`LAG(x)` reads the month before and `LAG(x, 12)` the month 12 rows back (W3D2). The last six closed months:
+
+```sql
+-- closed months only: October 2026 has one day so far
+WITH m AS (
+  SELECT strftime('%Y-%m', disbursed_at) AS month,
+         SUM(principal)                  AS disbursed
+  FROM loans
+  WHERE disbursed_at < '2026-10-01'
+  GROUP BY 1),
+g AS (
+  SELECT month, ROUND(disbursed / 1e9, 2) AS bn,
+         -- month on month: the row above
+         ROUND(100.0 * (disbursed - LAG(disbursed) OVER (ORDER BY month))
+               / LAG(disbursed) OVER (ORDER BY month), 1) AS mom_pct,
+         -- year on year: 12 rows above
+         ROUND(100.0 * (disbursed - LAG(disbursed, 12) OVER (ORDER BY month))
+               / LAG(disbursed, 12) OVER (ORDER BY month), 1) AS yoy_pct
+  FROM m)
+-- the display filter outside, so LAG still sees 2025
+SELECT * FROM g WHERE month >= '2026-04' ORDER BY month;
+```
+
+Six rows. Month on month changes sign four times, from −23.7 % (September) to +28.9 % (July). Year on year is positive in every row, from +16.2 % to +114.4 %. The +114.4 % of May says as much about May 2025, a weak month, as about May 2026.
+
+The same in pandas: `pct_change()` for the row above, `shift(12)` for the row 12 above (W5D4).
+
+```python
+import sqlite3
+import pandas as pd
+
+con = sqlite3.connect("data/raw/nur.db")
+m = pd.read_sql("""
+    SELECT strftime('%Y-%m', disbursed_at) AS month,
+           SUM(principal) AS disbursed, COUNT(*) AS loans
+    FROM loans WHERE disbursed_at < '2026-10-01'
+    GROUP BY 1 ORDER BY 1""", con, index_col="month")
+# month on month: the row above
+m["mom_pct"] = (m["disbursed"].pct_change() * 100).round(1)
+# year on year: the row 12 above
+m["yoy_pct"] = ((m["disbursed"] / m["disbursed"].shift(12) - 1) * 100).round(1)
+m.loc["2026-04":]
+```
+
+The same six months and the same two columns, plus the loan count, which the next task needs.
+
+**When you use it.**
+- "Are we growing?" — year on year, month by month.
+- "Did something break last month?" — month on month, read next to year on year.
+
+| | Month on month | Year on year |
+|---|---|---|
+| Compares with | the month before | the same month a year before |
+| Moved by | the season, the days in the month, one big loan | a year of growth, and last year's own noise |
+
+> ⚠️ **Watch out.** October 2026 has one day of loans so far: 21 loans, 0.85 bn. Kept in, it reads −95.0 % month on month. Use closed months only: `disbursed_at < '2026-10-01'`.
+
+**Your turn.** Year-on-year growth of the **number of loans** in September 2026, in %.
+
+```task
+{"id": "w08d1-x1", "kind": "number", "answer": 42.1, "dp": 1, "unit": "%", "hint": "In the pandas box: m[\"loans\"] / m[\"loans\"].shift(12) - 1, on the whole frame; read the 2026-09 row.", "model": "361 loans against 254 in September 2025: +42.1 %. The amount grew only +16.2 %. More loans, and smaller ones: the average ticket fell from 57.7 m to 47.1 m soum."}
+```
+
+### Seasonality — the same months high or low every year
+
+**What it is.** **Seasonality** (*сезонность*) is a pattern that repeats with the calendar: the same months high or low every year. A **seasonal index** (*сезонный индекс*) puts a number on it: the month's average ÷ the average of all months. An index of 1.10 means "usually 10 % above a typical month"; 0.90 means 10 % below.
+
+**How to write it.**
+
+```text
+seasonal index (March)
+  = average of the Marches
+  ÷ average of all months
+```
+
+Nur grows about 47 % a year, so divide out the growth first. Compare each month with **the 12 months around it**: six before, the month itself, five after. Every calendar month is in that window once, so its average carries the level, not the season. Then average the ratios of each calendar month:
+
+```sql
+WITH m AS (
+  SELECT strftime('%Y-%m', disbursed_at) AS month,
+         SUM(principal)                  AS disbursed
+  FROM loans
+  WHERE disbursed_at < '2026-10-01'
+  GROUP BY 1),
+w AS (
+  SELECT month, disbursed,
+         -- the level: the 12 months around this one
+         AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 5 FOLLOWING) AS level,
+         COUNT(*)       OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 5 FOLLOWING) AS months_in
+  FROM m)
+-- one row per calendar month
+SELECT substr(month, 6, 2)              AS mo,
+       COUNT(*)                         AS years,
+       ROUND(MIN(disbursed / level), 2) AS lowest,
+       ROUND(MAX(disbursed / level), 2) AS highest,
+       ROUND(AVG(disbursed / level), 2) AS seasonal_index
+FROM w
+-- full windows only
+WHERE months_in = 12
+GROUP BY mo ORDER BY mo;
+```
+
+| month | lowest | highest | index |
+|---|---|---|---|
+| 01 | 1.03 | 1.08 | 1.06 |
+| 02 | 0.72 | 0.96 | **0.84** |
+| 03 | 1.11 | 1.16 | **1.13** |
+| 04 | 1.04 | 1.07 | 1.05 |
+| 05 (one year) | 0.73 | 0.73 | 0.73 |
+| 06 (one year) | 0.86 | 0.86 | 0.86 |
+| 07 | 1.12 | 1.13 | **1.13** |
+| 08 | 1.00 | 1.30 | 1.15 |
+| 09 | 1.01 | 1.06 | 1.04 |
+| 10 | 0.88 | 1.25 | 1.06 |
+| 11 | 0.99 | 1.23 | 1.11 |
+| 12 | 0.77 | 1.13 | 0.95 |
+
+Only 22 months have a full window, so most calendar months have two years and May and June only one. Two months are high in both years by more than 10 %: March and July. February is low in both. In August, October, November and December the two years disagree by 0.24 to 0.37, so those indexes are noise. The season in the amount is **weak**: a few large SME loans move a single month more than the calendar does. (A library function, statsmodels' `seasonal_decompose`, centres the window exactly; its indexes differ from these by 0.02 at most.)
+
+**When you use it.**
+- Before you call a month bad: was the same month low last year too?
+- Before you choose a seasonal forecast: a weak season adds noise, not accuracy.
+
+> ⚠️ **Watch out.** On a growing series the plain index mixes the growth into the season. January's three values run from 3.9 to 17.5 bn because the company grew, not because of January: its plain index is 0.86, and 1.06 once the growth is divided out. Divide by the level first.
+
+**Your turn.** Run the query on the **number of loans**: replace `SUM(principal)` with `COUNT(*)`. What is February's seasonal index?
+
+```task
+{"id": "w08d1-x2", "kind": "number", "answer": 0.88, "dp": 2, "hint": "One change in the first CTE; read the row mo = 02.", "model": "0.88 (0.85 and 0.92 in its two years): February is low every year. It also has 28 days, 8 % fewer than an average month of 30.4. Per day, February's index is 0.96: most of its dip is the calendar, not the customers. July (1.12) is the only other month more than 0.07 away from 1."}
+```
+
+### Moving average — smoother, and a month late
+
+**What it is.** A **moving average** (*скользящее среднее*, W3D1) replaces each month with the average of it and the months just before. A 3-month average irons out most of the single-month noise. It looks only backwards, so it **lags**: it turns about a month after the real line.
+
+**How to write it.**
+
+```text
+3-month average (September)
+  = (July + August + September) ÷ 3
+```
+
+```sql
+WITH m AS (
+  SELECT strftime('%Y-%m', disbursed_at) AS month,
+         SUM(principal)                  AS disbursed
+  FROM loans
+  WHERE disbursed_at < '2026-10-01'
+  GROUP BY 1),
+a AS (
+  SELECT month, ROUND(disbursed / 1e9, 2) AS bn,
+         -- this month and the two before
+         ROUND(AVG(disbursed) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) / 1e9, 2) AS ma3_bn
+  FROM m)
+SELECT * FROM a WHERE month BETWEEN '2025-07' AND '2025-12' ORDER BY month;
+```
+
+In pandas it is `m["disbursed"].rolling(3).mean()` (W5D4).
+
+| month | bn | 3-month avg | turning point |
+|---|---|---|---|
+| 2025-07 | 14.59 | 11.24 | |
+| 2025-08 | **17.67** | 14.25 | the month's top |
+| 2025-09 | 14.64 | **15.63** | the average's top |
+| 2025-10 | **12.64** | 14.98 | the month's low |
+| 2025-11 | 14.64 | **13.97** | the average's low |
+| 2025-12 | 17.72 | 15.00 | |
+
+The month tops out in August and bottoms out in October; the average does both a month later. It is also much calmer: in 2026 single months moved between −31.8 % and +65.3 % month on month, the 3-month average between −6.4 % and +13.4 %.
+
+**When you use it.**
+- The trend line on a chart: the month in grey, the average in colour (W4D4, W5D4).
+- Not to catch a turn early: the average confirms a turn about a month late.
+
+> ⚠️ **Watch out.** The first two months have no full window: `AVG` over the frame quietly averages one month in January 2024 and two in February. Show `COUNT(*)` over the same frame next to it (W3D1), or leave those months out.
+
+**Your turn.** Show **2026** instead: change the last line to `WHERE month >= '2026-01'`. The month itself tops out in August 2026 (22.29 bn). In which month is the 3-month average highest?
+
+```task
+{"id": "w08d1-x3", "kind": "choice", "options": ["July 2026", "August 2026", "September 2026", "March 2026"], "answer": 2, "explain": "September: 20.0 bn, up from 19.7 — while the month itself fell 23.7 %. The average is still climbing a month after the top. A rising 3-month average does not mean the last month was good: read the month next to it."}
+```
+
+### A simple forecast — and the test that keeps it honest
+
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w08d1-x4", "type": "forecast", "title": "Hide the last months, then forecast them", "predict": {"q": "Hide the last **6 months** (April–September 2026) and forecast them from the 27 months before. Which method misses the disbursed amount by the least?", "options": ["Last month (naive): every month = March 2026", "Same month last year (seasonal naive)", "The average of the last 3 months", "A straight line through the 27 months, continued"], "answer": 3, "why": "The straight line misses by 9.5 % a month on average, naive by 11.8 %, the 3-month average by 12.4 % and seasonal naive by 30.4 %. Nur grows about 47 % a year and its season is weak, so the method that follows the growth wins — and last year's month is a whole year of growth too low."}, "from": "2024-01", "series": [{"label": "Disbursed amount", "unit": "bn", "axis": "bn soum a month", "div": 1000000000, "dp": 2, "values": [3872450000, 4600560000, 6426660000, 5583500000, 5937650000, 6448770000, 8161820000, 7738120000, 8235610000, 10797640000, 11393650000, 7326560000, 10100600000, 9913540000, 12364440000, 12518010000, 8644280000, 10485910000, 14590460000, 17667620000, 14644540000, 12635080000, 14639000000, 17723750000, 17452370000, 11893850000, 19657410000, 17894970000, 18531830000, 16050300000, 20693870000, 22290210000, 17015490000]}, {"label": "Number of loans", "unit": "loans", "axis": "loans a month", "div": 1, "dp": 0, "values": [79, 106, 118, 120, 130, 132, 160, 152, 165, 180, 194, 200, 208, 192, 213, 225, 235, 262, 287, 283, 254, 288, 299, 295, 287, 265, 330, 312, 377, 373, 367, 358, 361]}], "start": {"series": 0, "meth": 0, "h": 6}, "note": "Monthly disbursed amount (`SUM(principal)` by the month of `disbursed_at`) and the number of loans, January 2024 – September 2026: 33 closed months. October 2026 is left out: on the as-of date it has one day.", "challenges": [{"id": "c1", "text": "On the **amount**, find a method that misses the 6 hidden months by **less than 10 %**.", "when": {"series": ["=", 0], "h": ["=", 6], "mape": ["<", 10]}}, {"id": "c2", "text": "Hide only **1 month** and find the method that wins it (rank 1 / 4). Then hide 6 again: where does that method finish?", "when": {"series": ["=", 0], "h": ["=", 1], "rank": ["=", 1]}}, {"id": "c3", "text": "Switch to the **number of loans** and find a method under **6 %** on 6 hidden months. Why is the count easier to forecast than the amount?", "when": {"series": ["=", 1], "h": ["=", 6], "mape": ["<", 6]}}, {"id": "c4", "text": "Show **the next quarter** for the amount, with the method that won the 6-month test and 6 months hidden: that range is your answer to Bekzod.", "when": {"mode": ["=", 1], "series": ["=", 0], "h": ["=", 6], "meth": ["=", 3]}}]}
+```
+
+**What it is.** A **forecast** (*прогноз*) guesses future months from past ones. Four simple methods: **naive** (every month ahead = the last month seen), **seasonal naive** (each month = the same month a year before), **the average of the last 3**, and a **straight-line trend** (the line that passes closest to the past months, continued). The **holdout test** (*проверка на отложенных данных*) hides the last months, forecasts them from the months before and measures the miss: **MAE** is the average miss in soum, **MAPE** the average miss as a % of the actual.
+
+**How to write it.**
+
+```text
+miss = forecast − actual
+MAE  = average of |miss|
+MAPE = average of |miss| ÷ actual
+```
+
+Hide April–September 2026 and let the four methods forecast them from the 27 months before:
+
+```python
+import sqlite3
+import numpy as np
+import pandas as pd
+
+con = sqlite3.connect("data/raw/nur.db")
+m = pd.read_sql("""
+    SELECT strftime('%Y-%m', disbursed_at) AS month,
+           SUM(principal) AS disbursed
+    FROM loans WHERE disbursed_at < '2026-10-01'
+    GROUP BY 1 ORDER BY 1""", con)
+y = m["disbursed"].to_numpy() / 1e9
+# hide the last H months: the test
+H = 6
+train, test = y[:-H], y[-H:]
+n = len(train)
+# the straight line through the training months
+slope, start = np.polyfit(np.arange(n), train, 1)
+forecasts = {
+    "naive": np.repeat(train[-1], H),
+    "seasonal naive": y[n - 12:n - 12 + H],
+    "average of last 3": np.repeat(train[-3:].mean(), H),
+    "straight line": start + slope * np.arange(n, n + H),
+}
+mape = {}
+for name, f in forecasts.items():
+    mae = np.mean(np.abs(f - test))
+    mape[name] = np.mean(np.abs(f - test) / test) * 100
+    print(f"{name:18} MAE {mae:.2f} bn   MAPE {mape[name]:.1f} %")
+```
+
+The straight line wins: it misses by 9.5 % a month on average (1.76 bn). Naive misses by 11.8 %, the average of the last 3 by 12.4 %. Seasonal naive is last with 30.4 %, and all six of its months are too low: last year's month is a year of growth behind.
+
+The winner, fitted on all 33 months and continued three months:
+
+```python
+# needs y and mape from the box above
+slope, start = np.polyfit(np.arange(len(y)), y, 1)
+q4 = start + slope * np.arange(len(y), len(y) + 3)
+total = q4.sum()
+# ± the line's miss on the 6 hidden months
+miss = mape["straight line"] / 100
+print("Oct, Nov, Dec 2026:", q4.round(2))
+print(f"Q4 2026: {total:.1f} bn, range {total * (1 - miss):.1f}–{total * (1 + miss):.1f} bn")
+```
+
+20.50, 20.98 and 21.47 bn: **62.9 bn** for the quarter, with a range of 56.9–68.9 bn. The range is a teaching simplification: ± the miss the method made on the test. A statistical model gives a proper interval, which widens with each month ahead.
+
+**When you use it.**
+- Bekzod's "what will we disburse next quarter?": a tested method, a number and a range.
+- Choosing a method: the smallest miss on hidden months, tested on several months, not one.
+
+| Method | Assumes | Breaks when |
+|---|---|---|
+| naive | next month = this month | the series grows or swings |
+| seasonal naive | next month = a year ago | the business grows (Nur: +47 % a year) |
+| average of the last 3 | next = the recent level | the series trends: it sits behind |
+| straight line | growth goes on at the same pace | growth bends, or a shock arrives |
+
+> ⚠️ **Watch out.** Test on several months, never one. Hide only September 2026 and seasonal naive wins (13.9 %); hide six months and it comes last (30.4 %). One month is luck.
+
+**Your turn.** In the first box set `H = 3` (hide July–September 2026). What is the **smallest** MAPE of the four, in %?
+
+```task
+{"id": "w08d1-x5", "kind": "number", "answer": 12.9, "dp": 1, "unit": "%", "hint": "Change H = 6 to H = 3, run the box and read the smallest MAPE.", "model": "The straight line again: 12.9 %. The average of the last 3 is close behind (13.3 %), then naive (18.7 %) and seasonal naive (21.4 %). On three months the line wins by less than half a point: call it a tie, and trust the longer test more."}
+```
+
+### Try it on the real data
+
+**T1.** Bekzod's quarter is a sum of three months. Hide **July–September 2026**, fit the straight line on the 30 months before and forecast the **quarter's total**. Print the forecast in bn (one decimal), the actual total and the miss in %.
+
+```task
+{"id": "w08d1-x6", "kind": "python", "starter": "import sqlite3\nimport numpy as np\nimport pandas as pd\n\ncon = sqlite3.connect(\"data/raw/nur.db\")\nm = pd.read_sql(\"\"\"\n    SELECT strftime('%Y-%m', disbursed_at) AS month,\n           SUM(principal) AS disbursed\n    FROM loans WHERE disbursed_at < '2026-10-01'\n    GROUP BY 1 ORDER BY 1\"\"\", con)\ny = m[\"disbursed\"].to_numpy() / 1e9\n# hide July-September 2026\ntrain, test = y[:-3], y[-3:]\n# TODO: fit the straight line on train (np.polyfit),\n#       forecast the 3 hidden months, then print\n#       the forecast total, the actual total and the miss in %\n", "answer": 58.0, "dp": 1, "model": "slope, start = np.polyfit(np.arange(len(train)), train, 1)\nf = start + slope * np.arange(len(train), len(train) + 3)\nprint(round(f.sum(), 1), round(test.sum(), 1),\n      round((f.sum() / test.sum() - 1) * 100, 1))\n# 58.0 60.0 -3.3: the quarter is 3.3 % low.\n# Month by month the line missed by 12.9 %:\n# 1.8 and 3.0 bn too low in July and August,\n# 2.8 bn too high in September.\n# In the sum the misses partly cancel:\n# a quarter is easier to forecast than its months."}
+```
+
+A second opinion, built from the first concept. The quarters, each with the same quarter a year before:
+
+```sql
+-- disbursed per quarter, closed quarters only
+WITH q AS (
+  SELECT strftime('%Y', disbursed_at) || 'Q' ||
+         ((CAST(strftime('%m', disbursed_at) AS INTEGER) + 2) / 3) AS quarter,
+         SUM(principal) AS disbursed
+  FROM loans
+  WHERE disbursed_at < '2026-10-01'
+  GROUP BY 1)
+SELECT quarter,
+       ROUND(disbursed / 1e9, 2)                                 AS bn,
+       -- the same quarter a year before: 4 rows above
+       ROUND(LAG(disbursed, 4) OVER (ORDER BY quarter) / 1e9, 2) AS year_before_bn
+FROM q
+ORDER BY quarter;
+```
+
+**T2.** Take the fourth quarter of 2025 and grow it by the year-on-year growth of the last closed quarter (2026Q3 ÷ 2025Q3). What does that give for Q4 2026, in bn?
+
+```task
+{"id": "w08d1-x7", "kind": "number", "answer": 57.6, "dp": 1, "unit": "bn", "hint": "Three numbers from the result: 2025Q4's bn, 2026Q3's bn and 2026Q3's year_before_bn.", "model": "2026Q3 60.00 ÷ 2025Q3 46.90 = +27.9 % a year; 2025Q4 45.00 × 1.279 = 57.6 bn. That is inside the straight line's range (56.9–68.9 bn), near its bottom: the line carries on the growth of all 33 months, this method only the last year's. For Bekzod: \"Q4 2026: 58 to 63 bn by two methods; plan for 57 to 69 bn.\""}
+```
+
+### In one minute
+
+- **Growth:** compare a month with the same month a year before; month on month swings with the calendar and single big loans. Closed months only: October 2026 has one day.
+- **Seasonality** counts only if it repeats. In Nur's amount it is weak: March and July high, February low (partly a 28-day month), the rest flips from year to year.
+- **A 3-month average** smooths the noise and turns about a month after the real line.
+- **A forecast** is tested on hidden months before anyone trusts it. On April–September 2026 the straight line missed by 9.5 %, seasonal naive by 30.4 %. Answer with a range: Q4 2026 ≈ 62.9 bn, 56.9–68.9 bn.

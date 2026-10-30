@@ -82,6 +82,33 @@ Start with the cards: read the term, say its meaning out loud, flip, and mark **
 - **CSI — characteristic stability index** — the PSI formula on one input of the model (income band, product, age), to find which characteristic moved. (W9 D4)
 - **Champion / challenger** (*чемпион / претендент*) — the current model or policy (champion) keeps most applicants while a new one (challenger) runs on a random share; both are read on loans of the same age before the challenger may replace it. (W9 D4)
 
+## Trends and forecasting
+
+- **Month-on-month / year-on-year growth (MoM / YoY)** (*рост к прошлому месяцу / году*) — this period ÷ the one before (or the same period a year before) − 1. YoY is the fair comparison when months differ by season. (W8D1, Going further)
+- **Seasonality / seasonal index** (*сезонность / сезонный индекс*) — a pattern that repeats with the calendar; the index is a month's value ÷ its level around it, averaged over the years. Check it on at least two years before you claim it. (W8D1, Going further)
+- **Moving average** (*скользящее среднее*) — the average of the last n months; it smooths the noise and turns a month late. (W8D1, Going further)
+- **Naive / seasonal naive forecast** (*наивный / сезонный наивный прогноз*) — next month = this month; or = the same month a year before. The baseline any smarter method must beat. (W8D1, Going further)
+- **Holdout test** (*проверка на отложенных данных*) — hide the last months, forecast them with what came before, measure the miss. (W8D1, Going further)
+- **MAE / MAPE** — the average absolute miss, in units / as a % of the actual. (W8D1, Going further)
+
+## IFRS 9 provisions
+
+- **Provision / loss allowance** (*резерв под ожидаемые кредитные убытки*) — the loss the lender expects on the loans it still holds: a stock on the balance sheet (gross loans − provision = net loans); its change in a month, plus write-offs minus recoveries, is that month's charge — the cost of risk. (W8D2, Going further)
+- **IFRS 9 stages** (*стадии по МСФО 9*) — 1 performing (12-month expected loss), 2 significant increase in credit risk (lifetime), 3 credit-impaired (default, PD 100 %). (W8D2, Going further)
+- **SICR and the 30-day backstop** (*значительное увеличение кредитного риска; критерий 30 дней*) — whatever else the bank looks at, more than 30 days past due puts a loan in stage 2; more than 90, in stage 3. (W8D2, Going further)
+- **12-month vs lifetime ECL** (*ОКУ за 12 месяцев и за весь срок*) — the expected loss from defaults in the next year vs until the loan ends. (W8D2, Going further)
+- **Cliff effect** (*эффект обрыва*) — the jump in a loan's provision when it moves from stage 1 to stage 2 and its horizon goes from a year to a lifetime. (W8D2, Going further)
+- **Coverage ratio** (*коэффициент покрытия резервами*) — provision ÷ gross loans, for the book and per stage. (W8D2, Going further)
+
+## Working tools
+
+- **Data dictionary** (*словарь данных*) — per table its grain, key, rows and source; per column its type, meaning, allowed values, an example and its owner. (W3D4, Going further)
+- **Data profiling** (*профилирование данных*) — measuring what a column really holds: rows, distinct values, NULL share, min / max, the values and their counts. (W3D4, Going further)
+- **Scheduler** (*планировщик*) — Task Scheduler on Windows or cron on Linux: starts a script at set times, such as the weekly report every Monday. (W5D4, Going further)
+- **Commit / staging area** (*коммит / область подготовки*) — `git add` puts a change in the staging area; `git commit` saves what is staged as one version with a message. (W5D4, Going further)
+- **Branch / merge** (*ветка / слияние*) — a named line of commits; a merge brings its commits into another branch. (W5D4, Going further)
+- **.gitignore** — the file listing what Git must never keep: data, outputs, passwords. (W5D4, Going further)
+
 ## Data words
 
 - **OLTP / OLAP**, **fact / dimension**, **star schema**, **grain** — see Week 1 Day 4.

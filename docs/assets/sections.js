@@ -113,8 +113,9 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
     var cut = t.split(/\s+[—–-]\s+/)[0];
     return cut.length > 26 ? cut.slice(0, 24).replace(/\s+\S*$/, '') + '…' : cut;
   }
-  /* "(60 min)" / "(15 мин)" / "(30 min, 20 pts)" in the heading → the time chip; the brackets leave the heading text */
-  var TIME = /\s*\((\d[^()]*?(?:min|мин|h\b|ч\b|hours?|час)[^()]*)\)/i;
+  /* "(60 min)" / "(15 мин)" / "(30 min, 20 pts)" / "(optional, 40 min)" in the heading → the time chip; the brackets
+     leave the heading text (a word before the number, like "optional", is already in the frame's label) */
+  var TIME = /\s*\((?:[^()\d]*?,\s*)?(\d[^()]*?(?:min|мин|h\b|ч\b|hours?|час)[^()]*)\)/i;
   function takeTime(h) {
     var found = null, walker = document.createTreeWalker(h, NodeFilter.SHOW_TEXT, null, false), n;
     while ((n = walker.nextNode())) {

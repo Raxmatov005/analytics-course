@@ -826,3 +826,314 @@ A bonus for the curious: one harder question on today's topic. Solve it for XP t
 ```
 
 <!-- challenge:end -->
+
+---
+
+## Going further — IFRS 9 provisions (optional, 40 min)
+
+> STORY **Tuesday, 17:30.** Nilufar from Risk puts last month's risk pack on your desk: one table, three rows — *Stage 1, Stage 2, Stage 3*. *"Finance closes September on Monday and needs our IFRS 9 numbers: the provision by stage, the coverage and the cost of risk. Last month the board asked why the provision jumped when only a few dozen loans were a couple of days later. Rebuild the table from the loan data, so that next time we answer with numbers."*
+
+### Why provisions exist — the balance sheet and the monthly charge
+
+**What it is.** A **provision** (*резерв*; IFRS 9 calls it the *loss allowance*) is the part of the loans Nur does not expect to get back, set aside today for losses that will show later. It lives in two places. On the **balance sheet** it is a stock on one date: gross loans minus the provision = **net loans**. In the **P&L** its movement over a month is a cost, the **provision charge** — the *cost of risk* of section 4 ("Regulators and reporting").
+
+**How to write it.**
+
+```text
+balance sheet, 1 October 2026
+  gross loans     207.00 bn
+− provision         5.75 bn
+= net loans       201.26 bn
+
+P&L, September 2026
+  charge = closing provision
+         − opening provision
+         + written off
+         − recovered
+         = 5.75 − 5.60
+           + 0.48 − 0.03
+         = 0.60 bn
+```
+
+On 1 October the 3 396 loans on Nur's balance sheet owe 207.00 bn, 5.75 bn of it is provided for, and September cost 0.60 bn: the provision grew from 5.60 to 5.75 bn, 0.48 bn of loans more than 180 days late were written off, and 0.03 bn came back on older write-offs. The next three subsections build every one of these numbers from the loan table.
+
+**When you use it.**
+- Every month-end: Finance books the charge, Risk explains it.
+- Reading a lender's accounts: "loans to customers" is shown net of the provision; the "impairment" line of the P&L is the charge.
+
+> ⚠️ **Watch out.** A provision is not cash. Nothing is paid when it is booked: it lowers the value of the loans and the month's profit. Cash moves only when borrowers pay — or do not.
+
+**Your turn.** Suppose October closes with a provision of 6.10 bn, after 0.40 bn was written off and 0.05 bn recovered on old write-offs. October opens with September's closing 5.75 bn. What is October's charge, in bn?
+
+```task
+{"id": "w08d2-x1", "kind": "number", "answer": 0.7, "dp": 2, "unit": "bn soum", "hint": "Closing − opening + written off − recovered.", "model": "6.10 − 5.75 + 0.40 − 0.05 = 0.70 bn. The written-off loans take their provision with them, so the closing provision is lower than the month's real cost; adding the write-off back counts all of it, and money recovered on old write-offs comes off."}
+```
+
+### The three stages — staging the book by days past due
+
+**What it is.** On every reporting date IFRS 9 puts each loan on the balance sheet into one of three **stages** (*стадии*):
+- **Stage 1 — performing.** Its credit risk has not grown much since the loan was made. It carries **12 months** of expected loss.
+- **Stage 2 — significant increase in credit risk** (*SICR*). Its risk has grown a lot. **More than 30 days past due** always counts: it is the standard's **backstop**. It carries **lifetime** expected loss.
+- **Stage 3 — credit-impaired.** The loan is in default: as in week 6, **more than 90 days past due**. It carries lifetime loss with a PD of 100 %.
+
+Our data has no other warning sign, so here the stage comes from DPD alone. That is a teaching simplification: a real lender also moves a loan to stage 2 on a big score drop, a restructuring or a watch list, before it is 30 days late.
+
+**How to write it.** The stage is a CASE on the course's DPD (W3D4), with the course's buckets:
+
+```text
+DPD on the date   bucket   stage
+0                 0        1
+1–30              1-30     1
+31–90             31-60,   2
+                  61-90
+91–180            90+      3
+over 180          written off:
+                  off the balance
+                  sheet (glossary)
+```
+
+The box builds `my_book` in your practice copy: every loan on four dates (1 October 2025, 1 August, 1 September and 1 October 2026) with its DPD, its **balance** — the principal not yet repaid: week 3's `outstanding` plus the principal of the overdue instalments — its stage, and whether it is on the balance sheet that day. Then it stages the September pack. The boxes below read `my_book`, so run this one first.
+
+```sql
+-- my_book: every loan on four month-start dates
+DROP TABLE IF EXISTS my_book;
+CREATE TABLE my_book AS
+WITH rd(d) AS (VALUES ('2025-10-01'), ('2026-08-01'),
+                      ('2026-09-01'), ('2026-10-01')),
+-- payments without the duplicates (W3D4's v_payments_clean)
+pay AS (
+  SELECT installment_id, paid_at, amount,
+         ROW_NUMBER() OVER (PARTITION BY installment_id, paid_at, amount
+                            ORDER BY payment_id) AS rn
+  FROM payments),
+-- on each date: instalments due and not fully paid by then
+unpaid AS (
+  SELECT rd.d, i.loan_id, i.due_date, i.principal_due
+  FROM installments i
+  JOIN rd ON i.due_date <= rd.d
+  LEFT JOIN pay p ON p.installment_id = i.installment_id
+                 AND p.rn = 1 AND p.paid_at <= rd.d
+  GROUP BY rd.d, i.installment_id, i.loan_id, i.due_date,
+           i.principal_due, i.total_due
+  HAVING COALESCE(SUM(p.amount), 0) < i.total_due),
+-- DPD: days since the oldest of them (the course's rule)
+late AS (
+  SELECT d, loan_id,
+         CAST(julianday(d) - julianday(MIN(due_date)) AS INTEGER) AS dpd,
+         SUM(principal_due) AS overdue_principal
+  FROM unpaid GROUP BY d, loan_id),
+-- week 3's outstanding: principal due after the date
+ahead AS (
+  SELECT rd.d, i.loan_id, SUM(i.principal_due) AS outstanding
+  FROM installments i JOIN rd ON i.due_date > rd.d
+  GROUP BY rd.d, i.loan_id),
+snap AS (
+  SELECT rd.d, l.loan_id, p.code AS product, l.status,
+         l.disbursed_at, l.closed_at,
+         COALESCE(t.dpd, 0) AS dpd,
+         -- balance: principal still owed, overdue or not
+         COALESCE(a.outstanding, 0)
+           + COALESCE(t.overdue_principal, 0) AS balance
+  FROM loans l
+  CROSS JOIN rd
+  JOIN products p ON p.product_id = l.product_id
+  LEFT JOIN late t  ON t.loan_id = l.loan_id AND t.d = rd.d
+  LEFT JOIN ahead a ON a.loan_id = l.loan_id AND a.d = rd.d)
+SELECT d, loan_id, product, dpd, balance,
+       CASE WHEN dpd <= 30 THEN 1
+            WHEN dpd <= 90 THEN 2 ELSE 3 END AS stage,
+       -- on the balance sheet: lent, not closed, still owing,
+       -- not yet written off (more than 180 days late)
+       (disbursed_at <= d AND (status <> 'closed' OR closed_at > d)
+        AND balance > 0 AND dpd <= 180) AS on_book
+FROM snap;
+
+-- the September pack: the book on 1 October, by stage
+SELECT stage, COUNT(*) AS loans,
+       ROUND(SUM(balance) / 1e9, 2) AS balance_bn
+FROM my_book
+WHERE d = '2026-10-01' AND on_book
+GROUP BY stage;
+```
+
+3 396 loans owe 207.00 bn on 1 October: 3 312 in stage 1 (202.61 bn, 97.9 % of the money), 40 in stage 2 (1.32 bn, 0.6 %) and 44 in stage 3 (3.07 bn, 1.5 %) — the 3 352 active loans and the 44 in default, while all 190 written-off loans are more than 180 days late and off the balance sheet.
+
+**When you use it.**
+- The first table of every IFRS 9 pack: loans and balance by stage, this month against last.
+- An early warning: stage 2 fills up before stage 3 does.
+
+> ⚠️ **Watch out.** 207.00 bn is not week 3's 208.72 bn "outstanding", and both are right for their question. 208.72 bn is the principal still **scheduled** on every loan, written-off ones included; the balance sheet leaves out the 3.09 bn scheduled on written-off loans and adds the 1.37 bn of principal already **overdue**: 208.72 − 3.09 + 1.37 = 207.00. Say which one a table uses.
+
+**Your turn.** On the reporting date a loan is exactly 30 days past due. Which stage is it in?
+
+```task
+{"id": "w08d2-x2", "kind": "choice", "options": ["Stage 2 — 30 days is the line", "Stage 1 — stage 2 starts at more than 30 days past due", "Stage 3 — it is overdue", "None — a loan gets a stage only when it defaults"], "answer": 1, "explain": "The backstop is **more than** 30 days: `dpd <= 30` stays in stage 1, the same line as the buckets 1–30 and 31–60. Every loan on the balance sheet has a stage, from the day it is made. On 1 October no Nur loan sits exactly at 30: the 111 loans in 1–30 are 1–29 days late."}
+```
+
+### Twelve months or a lifetime — the cliff at 30 days
+
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w08d2-x3", "type": "staging", "title": "Move a loan across the cliff", "predict": {"q": "Loan **6364**, a Consumer loan, still owes **37.45 m** soum and is **29 days** late on 1 October. Two more days without a payment: what happens to the provision Nur holds for it?", "options": ["Nothing — two days change nothing", "It grows by about 10 %", "It doubles", "It becomes about 30 times bigger"], "answer": 3, "why": "At 29 days it is in stage 1: 12 months of loss at the performing PD, 2.65 % × 60 % × 37.45 m = 0.60 m. At 31 days it is in stage 2: lifetime loss at the PD of loans that late, 85.7 % × 60 % × 37.45 m = 19.26 m — ×32. That jump is the cliff."}, "zero": [3201, 197523196027], "late": [[1, 508400], [1, 1139046], [1, 2784812], [1, 37730000], [1, 6141729], [1, 3134700], [1, 2321629], [1, 69415446], [1, 4700000], [1, 4189805], [1, 29636819], [1, 257582364], [1, 114789346], [1, 2651210], [2, 82371157], [2, 64425023], [2, 18321758], [2, 8438641], [2, 3156995], [2, 5633000], [3, 51422885], [3, 13832179], [3, 52956578], [3, 11407808], [3, 3340200], [3, 16727568], [3, 20435220], [3, 1720000], [4, 59849495], [4, 2887114], [4, 6308000], [4, 77350000], [4, 10134354], [4, 37967109], [4, 31266344], [5, 71800914], [5, 4229761], [5, 1457823], [5, 23916745], [5, 3519974], [5, 13324739], [5, 16037827], [6, 511005131], [6, 100207047], [6, 4212044], [6, 16350664], [6, 31890822], [6, 1640481], [7, 2863878], [7, 28218286], [7, 66835856], [7, 94798503], [7, 21057275], [7, 21163122], [7, 530755], [8, 11209446], [8, 24349235], [8, 5350200], [8, 4871801], [8, 5291307], [9, 4866600], [9, 91799552], [9, 23827238], [10, 92162430], [10, 4474905], [10, 26758507], [11, 303248809], [11, 199278639], [11, 1499985], [12, 469147796], [12, 23063182], [12, 16680248], [12, 118026384], [12, 35887205], [13, 49980000], [13, 15462984], [13, 105128563], [13, 2433200], [13, 7502425], [13, 2736407], [16, 2429000], [16, 3388086], [16, 1029869], [16, 21112415], [17, 205181605], [17, 16230585], [17, 2165450], [18, 16326722], [18, 348400], [18, 1600000], [19, 11076328], [19, 3760000], [20, 235748180], [20, 3190000], [20, 9035572], [21, 305873864], [22, 503199], [23, 1009989], [24, 40392324], [25, 4618150], [25, 3879986], [26, 9185256], [26, 261291964], [26, 20384553], [26, 31571796], [27, 4253600], [27, 331133], [28, 15999938], [28, 13557798], [29, 4743166], [29, 37449080], [33, 1098397], [34, 32733284], [35, 137282043], [35, 1226767], [36, 26928626], [36, 3259984], [37, 4719909], [40, 21063565], [41, 13654989], [41, 161944994], [42, 1760000], [46, 15473049], [46, 3262102], [46, 48429710], [47, 11646414], [48, 210864987], [50, 652500], [50, 65762698], [53, 2746150], [57, 24572194], [58, 1583300], [58, 1514192], [60, 7329600], [60, 1096567], [61, 1327719], [64, 1155263], [67, 410290], [67, 2605601], [69, 2698700], [69, 41893474], [70, 49729491], [71, 2490000], [77, 43876328], [79, 5951890], [82, 1667000], [82, 1756150], [83, 19431685], [83, 4359897], [84, 342086684], [89, 1185609], [95, 12317148], [96, 491649767], [96, 38965842], [97, 46259151], [100, 1158022], [103, 715000], [107, 9267919], [107, 986277], [108, 3425872], [112, 9227944], [112, 40912550], [114, 1044926], [116, 596694], [118, 433330000], [118, 2757225], [119, 2700000], [120, 9390850], [122, 4320000], [124, 4889975], [126, 398819284], [128, 1654351], [128, 17108190], [130, 242334649], [134, 5825000], [136, 6728700], [137, 518544], [139, 530846097], [139, 493200], [139, 541546], [143, 34118532], [145, 26791753], [147, 316464100], [151, 1313350], [155, 1615600], [159, 5648386], [162, 23579084], [163, 275227825], [168, 1614914], [168, 14997663], [169, 696600], [171, 22535037], [173, 1900200], [173, 896700], [176, 26571447]], "pick": 110, "pickId": 6364, "start": {"pd1": 0.0265, "pd2": 0.857, "lgd": 0.6}, "challenges": [{"id": "c1", "text": "**The cliff.** Give loan 6364 two more days without a payment, so it is 31 days late. How many times bigger is its provision?", "when": {"sel": ["=", 0], "stage": ["=", 2]}}, {"id": "c2", "text": "**The second step.** Keep going until loan 6364 is in stage 3. Is the jump at 90 days anywhere near the one at 30?", "when": {"sel": ["=", 0], "stage": ["=", 3]}}, {"id": "c3", "text": "**A month with no payments.** Move the 111 loans in 1–30 by 30 days, as if none of them paid in October. By how much does the book's provision grow?", "when": {"sel": ["=", 1], "shift": [">=", 30]}}, {"id": "c4", "text": "**Horizon or risk?** If late loans were no riskier than performing ones, only the horizon would change — 12 months → about 22 months — and the cliff would be about **×1.8**. Lower only stage 2's PD until the cliff is ×1.8 or less: that much is the horizon.", "when": {"cliff": ["<=", 1.85]}, "only": ["pd2"]}]}
+```
+
+**What it is.** The provision of a loan is its **expected credit loss** (*ожидаемые кредитные убытки*, ECL): week 6's PD × LGD × EAD, where the stage sets how far ahead the PD looks.
+- **12-month ECL** (stage 1): PD = the chance of a default within the next 12 months.
+- **Lifetime ECL** (stage 2): PD = the chance of a default at any time until the loan ends.
+- Stage 3: the default has happened, so PD = 100 % and ECL = LGD × balance.
+
+The **cliff** (*эффект обрыва*) is the jump in a loan's provision when it crosses 30 days: its PD switches to a lifetime, and it joins a much riskier group of loans.
+
+**How to write it.**
+
+```text
+ECL = PD × LGD × EAD
+EAD = the balance
+LGD = 60 % (our assumption)
+PD  = stage 1: 12 months
+      stage 2: lifetime
+      stage 3: 100 %
+```
+
+A 12-month PD is measured the way it is defined: take the loans as they stood a year ago and count those in default a year later. The box reads `my_book`.
+
+```sql
+-- a year ago (o) and today (n), loan by loan
+SELECT o.stage AS stage_then,
+       COUNT(*)                 AS loans,
+       SUM(n.dpd > 90)          AS in_90_plus_now,
+       ROUND(100.0 * SUM(n.dpd > 90) / COUNT(*), 2) AS pd_pct
+FROM my_book o
+JOIN my_book n ON n.loan_id = o.loan_id AND n.d = '2026-10-01'
+WHERE o.d = '2025-10-01' AND o.on_book AND o.stage < 3
+GROUP BY o.stage;
+```
+
+Of the 2 154 loans in stage 1 on 1 October 2025, 57 were more than 90 days late a year later — a 12-month PD of **2.65 %**; of the 21 loans in stage 2, 18 were — **85.7 %**.
+
+With LGD 60 %, stage 1 provides 2.65 % × 60 % = 1.59 % of its balance, stage 2 85.7 % × 60 % = 51.4 % and stage 3 60 %: 3.22 + 0.68 + 1.84 = 5.75 bn on 1 October. Stages 1 and 2 together hold 3.90 bn, close to week 6's crude expected loss of 3.60 bn on the performing loans; stage 3 adds the loans already in default.
+
+This is a teaching model, and it says so: one PD per stage, from one cohort (the four quarterly cohorts before it give 2.3–2.9 % for stage 1 and, on only 7–25 loans each, 76–93 % for stage 2). Stage 2's lifetime PD is measured over 12 months: a loan already a month late almost always settles within the year (week 3's roll rates: 70 % of 31–60 rolled on in one month, all of 61–90). A real IFRS 9 model gives each loan its own PD from its score and history, discounts the losses and adjusts the PDs to the economic outlook.
+
+**When you use it.**
+- "Why did the provision jump when only a few loans got later?" — the cliff: at Nur a loan crossing 30 days goes from 1.59 % to 51.4 % provided, ×32.
+- "How much of that is the longer horizon?" If a loan's risk stayed at 2.65 % a year, its lifetime PD over T months would be 1 − (1 − 0.0265)^(T/12). The average soum in stage 1 has 22 months to run: 4.8 %, only ×1.8. The rest of the ×32 is risk: late loans at Nur do default.
+
+| | 12-month ECL | lifetime ECL |
+|---|---|---|
+| Stage | 1 | 2 (3 with PD 100 %) |
+| Defaults it counts | in the next 12 months | until the loan ends |
+| Nur, 1 October | 1.59 % of 202.61 bn | 51.4 % of 1.32 bn |
+
+> ⚠️ **Watch out.** For a loan with less than 12 months to run, 12 months already is its lifetime. Nur's stage-1 Micro loans have 3 months left on average and BNPL 5: for them the switch to lifetime adds nothing, and the whole cliff is risk.
+
+**Your turn.** A stage-1 Auto loan has 30 months to run. If its risk stayed at 2.65 % a year, what would its lifetime PD be (in %, two decimals)?
+
+```task
+{"id": "w08d2-x4", "kind": "number", "answer": 6.49, "dp": 2, "tol": 0.02, "unit": "%", "hint": "1 − (1 − 0.0265)^(30/12).", "model": "1 − 0.9735^2.5 = 1 − 0.9351 = 6.49 % — 2.45 times its 12-month PD, from the longer horizon alone. If this loan moved to stage 2 for a reason other than days late (say, a big score drop), its provision would rise ×2.45 even though nothing else had changed."}
+```
+
+### Coverage and cost of risk — reading the monthly risk pack
+
+**What it is.** Two ratios turn the provision into numbers that compare months and lenders.
+- **Coverage ratio** (*коэффициент покрытия*) = provision ÷ gross loans, for the book and for each stage: how much of every soum owed is provided for.
+- **Cost of risk** = the period's provision charge ÷ the period's average gross loans, **annualised**: what the month's credit losses cost per soum lent, as a yearly rate.
+
+**How to write it.**
+
+```text
+coverage = provision ÷ balance
+
+cost of risk, one month
+  = charge × 12
+    ÷ average balance
+average balance
+  = (opening + closing) ÷ 2
+```
+
+The box prices both ends of September with the PDs and LGD above, finds the loans written off in the month (on the balance sheet on 1 September, more than 180 days late on 1 October) and the money recovered on older write-offs.
+
+```sql
+-- the month: its opening and closing dates
+WITH m(d0, d1) AS (VALUES ('2026-09-01', '2026-10-01')),
+-- the provision on each loan: PD of its stage x LGD 60 % x balance
+prov AS (
+  SELECT d, balance,
+         balance * 0.60 * CASE stage WHEN 1 THEN 0.0265
+                                     WHEN 2 THEN 0.857 ELSE 1.0 END AS ecl
+  FROM my_book WHERE on_book),
+o AS (SELECT SUM(balance) AS gross, SUM(ecl) AS p
+      FROM prov CROSS JOIN m WHERE prov.d = m.d0),
+c AS (SELECT SUM(balance) AS gross, SUM(ecl) AS p
+      FROM prov CROSS JOIN m WHERE prov.d = m.d1),
+-- written off: on the opening book, past 180 days at the close
+w AS (SELECT COALESCE(SUM(a.balance), 0) AS amt
+      FROM my_book a
+      JOIN my_book z ON z.loan_id = a.loan_id
+      CROSS JOIN m
+      WHERE a.d = m.d0 AND a.on_book AND z.d = m.d1 AND z.dpd > 180),
+-- recovered: paid in the month on loans written off before it
+-- (none of the 25 duplicate payments falls here)
+r AS (SELECT COALESCE(SUM(p.amount), 0) AS amt
+      FROM payments p
+      JOIN my_book a ON a.loan_id = p.loan_id
+      CROSS JOIN m
+      WHERE a.d = m.d0 AND a.dpd > 180
+        AND p.paid_at > m.d0 AND p.paid_at <= m.d1)
+SELECT ROUND(o.p / 1e9, 2)    AS opening_bn,
+       ROUND(c.p / 1e9, 2)    AS closing_bn,
+       ROUND(w.amt / 1e9, 2)  AS written_off_bn,
+       ROUND(r.amt / 1e9, 3)  AS recovered_bn,
+       ROUND((c.p - o.p + w.amt - r.amt) / 1e9, 2) AS charge_bn,
+       -- x 12 for a year, over the average book
+       ROUND(100 * 12 * (c.p - o.p + w.amt - r.amt)
+             / ((o.gross + c.gross) / 2), 2) AS cor_pct
+FROM o, c, w, r;
+```
+
+September: the provision went from 5.60 to 5.75 bn, 0.48 bn was written off and 0.028 bn recovered — a charge of 0.60 bn, a cost of risk of **3.50 %** a year on an average book of 205.14 bn.
+
+The pack's stage table on 1 October, with the coverage:
+
+| Stage | Balance | Provision | Coverage |
+|---|---|---|---|
+| 1 | 202.61 bn | 3.22 bn | 1.59 % |
+| 2 | 1.32 bn | 0.68 bn | 51.4 % |
+| 3 | 3.07 bn | 1.84 bn | 60.0 % |
+| **Book** | **207.00 bn** | **5.75 bn** | **2.78 %** |
+
+Stage 1 is 97.9 % of the money and holds 56 % of the provision; stage 3 is 1.5 % of the money and holds 32 %.
+
+**When you use it.**
+- Coverage per stage: is each stage provided for in line with its risk? A stage-3 coverage far below the loss that collections actually see is an auditor's first question.
+- Cost of risk against the margin: at 3.50 % a year, September's credit losses take almost half of the 7.5-point spread between Nur's yield and its funding (week 8, Day 1).
+
+> ⚠️ **Watch out.** A falling provision is not a cheap month. A big write-off takes its provision with it, so the stock can fall in a month that cost a lot. Read the charge, never the change in the stock alone.
+
+**Your turn.** Move the box to August: write `('2026-08-01', '2026-09-01')` in its first line and run it. What was August's cost of risk (in %, two decimals)?
+
+```task
+{"id": "w08d2-x6", "kind": "number", "answer": 4.26, "dp": 2, "tol": 0.01, "unit": "% a year", "hint": "Only the VALUES line changes; read cor_pct.", "model": "4.26 % a year. The provision fell, from 5.98 to 5.60 bn — yet 1.09 bn was written off and 0.014 bn recovered, a charge of 0.70 bn on an average book of 198.34 bn. The stock went down and the month cost more than September's 3.50 %: the trap of the warning above."}
+```
+
+### Try it on the real data
+
+**X1.** *(the stages, a month earlier)* Stage the book on 1 September 2026: change the date in the last SELECT of the `my_book` box. How many loans were in stage 3?
+
+```task
+{"id": "w08d2-x7", "kind": "number", "answer": 37, "dp": 0, "unit": "loans", "hint": "WHERE d = '2026-09-01' AND on_book, grouped by stage.", "model": "37 loans, 2.45 bn. By 1 October 10 of them had passed 180 days and were written off (September's 0.48 bn), 27 were still in stage 3, and 17 loans had joined them — all 17 were in stage 2 on 1 September. Stage 2 is the road into stage 3."}
+```
+
+**X2.** *(coverage by product)* On 1 October, group `my_book` by `product` and divide each product's provision — `SUM(balance * 0.60 * CASE stage WHEN 1 THEN 0.0265 WHEN 2 THEN 0.857 ELSE 1.0 END)` — by its balance. Which product has the highest coverage?
+
+```task
+{"id": "w08d2-x8", "kind": "choice", "options": ["SME — the biggest loans", "AUTO", "CONS", "MICRO", "BNPL"], "answer": 3, "explain": "MICRO 4.68 %, BNPL 3.33 %, CONS 3.00 %, AUTO 2.96 %, SME 2.63 %. Every product gets the same PDs and LGD here, so the order comes only from the stage mix: 5.8 % of Micro's balance is in stages 2 and 3, against 1.8 % of SME's. A real model would add each product's own PD on top."}
+```
+
+### In one minute
+
+- A **provision** is the loss Nur expects on the loans it still holds: on the balance sheet a stock (207.00 bn gross − 5.75 bn = 201.26 bn net); in the P&L its change plus write-offs, less recoveries — 0.60 bn in September.
+- **Stages** by DPD: 0–30 stage 1 (12-month ECL), 31–90 stage 2 (lifetime ECL, the 30-day backstop), 91–180 stage 3 (default, PD 100 %); past 180 days a loan is written off.
+- **The cliff:** a loan crossing 30 days goes from 1.59 % to 51.4 % provided (×32) — only ×1.8 from the longer horizon, the rest because late loans at Nur do default (85.7 % within a year).
+- **The pack:** coverage per stage and in total (2.78 %), and cost of risk = charge × 12 ÷ average book — 3.50 % a year in September, 4.26 % in August while the provision fell.

@@ -84,6 +84,12 @@ def main(sub=""):
                         if len(q1) != len(q2) or any(not same_answer(a.get("answer"), b.get("answer")) or a.get("at") != b.get("at") for a, b in zip(q1, q2)):
                             print(f"EN/RU DIFF  {rel}:{n1} ({l1}) questions/stops")
                             bad += 1
+    # the question bank of the review questions and My mistakes (scripts/build_bank.py) follows the day pages
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import build_bank
+    for p in build_bank.stale():
+        print(f"STALE BANK  {p}: run python -I scripts/build_bank.py")
+        bad += 1
     print("OK" if not bad else f"{bad} problem(s)")
     return 1 if bad else 0
 

@@ -14,11 +14,13 @@
 
 ## How this course works
 
-- **Eight weeks, one page per day, about 3 hours.** Mon–Thu: learn and practise. Fri: a checkpoint or a bigger homework. Weekends are free (or catch-up).
+- **Nine weeks, one page per day, about 3 hours.** One lesson opens each day on your calendar (the menu shows when the next one opens); Day 5 of every week is a checkpoint or a bigger homework.
 - **One dataset for everything:** the Nur Finance database (11 tables, 6,040 customers, 7,828 loans). You will know it like your own flat by week 3.
 - **Skip what you know.** [Day 0](weeks/week-00/day-0.md) decides which weeks you take in full.
 - **The [course map](map.md)** shows where you are; the [progress board](progress.md) shows your XP, level and rewards.
 - **Depth is optional.** Every day links to the exact video minute or deck page if you want more; nothing depends on it. The full map is in [Sources](sources.md).
+- **Going further, also optional.** Some days end with a *Going further* section: one more thing the job uses (trends and forecasting, IFRS 9 provisions, a data dictionary, a weekly report as a script, Git), with its own Explore box and practice. The day counts as done without it.
+- **What you learnt comes back.** From Week 2, every day quiz adds up to three questions from earlier weeks (they do not count toward the pass mark), and [My mistakes](mistakes.md) gathers every question you got wrong, to retry before a checkpoint.
 
 ## How a day works
 

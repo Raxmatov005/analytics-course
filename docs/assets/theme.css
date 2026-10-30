@@ -118,6 +118,8 @@ body { background: var(--bg); color: var(--body); font-family: var(--sans); -web
 .qz-rv-title.qz-rv-title-rev { margin-top: 1.6em; }
 .qz-rv-note { color: var(--muted); font-size: .9em; margin: -.3em 0 .7em !important; }
 .qz-rv-link { font-weight: 700; }
+/* an explorer question's code chip wraps like words: a pre-wrap space kept at the line end painted its chip past the box (W5D4, 375 px) */
+.xp .xp-q code { white-space: normal; }
 /* My mistakes (mistakes.js) */
 .mx-sum { margin: 1.2em 0 1.6em; padding: .9em 1.1em; border-radius: 14px; background: #f5f3ff; border: 1px solid #ddd6fe; color: #3b0764; line-height: 1.5; }
 .mx-sum.mx-none { background: #f0fdf4; border-color: #bbf7d0; color: #14532d; }

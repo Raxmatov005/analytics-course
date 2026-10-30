@@ -186,13 +186,32 @@ Work in progress is kept in localStorage "al.sql". */
     if (m) s = s.slice(0, m.index) + 'SELECT ' + (m[1] || '') + s.slice(m.index + m[0].length).replace(/;\s*$/, '') + ' LIMIT ' + m[2];
     return s;
   }
-  function stripComments(sql) {
-    return sql.replace(/\/\*[\s\S]*?\*\//g, ' ').split('\n').map(function (l) { return l.split('--')[0]; }).join('\n');
+  /* one pass over the text: quoted text ('…', "…", `…`, a doubled quote inside) stays as it is, line and block comments
+     go, and a ";" outside quotes ends a statement (2026-10-30: before, a value like 'a--b' or 'x;y' was cut there) */
+  function scanSql(sql) {
+    var stmts = [], cur = '', q = null;
+    for (var i = 0; i < sql.length; i++) {
+      var c = sql[i], n = sql[i + 1];
+      if (q) {
+        cur += c;
+        if (c === q) { if (n === q) { cur += n; i++; } else q = null; }
+        continue;
+      }
+      if (c === "'" || c === '"' || c === '`') { q = c; cur += c; continue; }
+      if (c === '-' && n === '-') { while (i + 1 < sql.length && sql[i + 1] !== '\n') i++; continue; }
+      if (c === '/' && n === '*') { var e = sql.indexOf('*/', i + 2); i = e < 0 ? sql.length : e + 1; cur += ' '; continue; }
+      if (c === ';') { stmts.push(cur); cur = ''; continue; }
+      cur += c;
+    }
+    stmts.push(cur);
+    return stmts;
   }
+  function stripComments(sql) { return scanSql(sql).join(';'); }
+  function statements(sql) { return scanSql(sql).filter(function (s) { return s.trim(); }); }
   /* run every statement; returns {last: {columns, values} | null, cells, rows, error} */
   function run(db, text, readOnly) {
     var out = { last: null, cells: [], rows: null, error: null, ran: 0 };
-    stripComments(text).split(';').filter(function (s) { return s.trim(); }).forEach(function (stmt) {
+    statements(text).forEach(function (stmt) {
       if (/^\s*(USE|GO)\b/i.test(stmt)) return;
       if (readOnly && /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE)\b/i.test(stmt)) return;
       var tries = [stmt, translate(stmt)], done = false;
@@ -769,7 +788,7 @@ Work in progress is kept in localStorage "al.sql". */
      learns whether she got it without opening the fold. */
   function results(db, text) {
     var list = [];
-    stripComments(text).split(';').filter(function (s) { return s.trim(); }).forEach(function (stmt) {
+    statements(text).forEach(function (stmt) {
       if (!/^\s*(SELECT|WITH)\b/i.test(stmt)) return;
       [stmt, translate(stmt)].some(function (q) {
         try {

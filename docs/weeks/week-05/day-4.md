@@ -933,3 +933,343 @@ A bonus for the curious: one harder question on today's topic. Solve it for XP t
 ```
 
 <!-- challenge:end -->
+
+---
+
+## Going further — automating the weekly report, and Git (optional, 40 min)
+
+> STORY **Thursday, 16:00.** Bekzod stops by with his coffee. *"Every Monday you send me last week's numbers by hand: what we lent, by product, and what came back, against the week before. Next Monday you are on leave. I want them at 9:00 every Monday without you — the same sheets, the same chart, only the dates move."* Jasur, from his desk: *"And put the script in Git. When it breaks in March, I want to see what changed, and when."*
+
+### A report as a script — one date in, the same report out
+
+**What it is.** A **report script** (*скрипт отчёта*) builds the whole report from one **parameter** — the report date — with nothing typed by hand. The SQL runs through `read_sql` with the date in `params=`, pandas shapes the result, and the same checks run every week. Next week only the date changes.
+
+**How to write it.** Bekzod's report: the week before a Monday, and the week before that.
+
+```python
+import sqlite3
+import pandas as pd
+con = sqlite3.connect("../raw/nur.db")
+# loans paid out in [start, stop), by product
+DISBURSED = """
+SELECT p.name AS product, COUNT(*) AS loans, SUM(l.principal) AS disbursed
+FROM loans l JOIN products p ON p.product_id = l.product_id
+WHERE l.disbursed_at >= ? AND l.disbursed_at < ?
+GROUP BY p.name ORDER BY disbursed DESC"""
+# money received in [start, stop), duplicates removed as in week 3
+COLLECTED = """
+SELECT COUNT(*) AS payments, SUM(amount) AS collected
+FROM (SELECT DISTINCT installment_id, paid_at, amount FROM payments)
+WHERE paid_at >= ? AND paid_at < ?"""
+
+def totals(con, start, stop):
+    """One week: loans and money out, payments and money in."""
+    d = pd.read_sql(DISBURSED, con, params=(start, stop))
+    c = pd.read_sql(COLLECTED, con, params=(start, stop))
+    return {"from": start, "loans": d["loans"].sum(), "disbursed": d["disbursed"].sum(),
+            "payments": c["payments"][0], "collected": c["collected"][0]}
+
+def weekly_report(con, report_date):
+    """Bekzod's Monday report: the week before report_date and the week before that."""
+    end = pd.Timestamp(report_date)
+    # a week runs Monday to Sunday, so the report date is a Monday
+    assert end.day_name() == "Monday", "report_date must be a Monday"
+    mon = str((end - pd.Timedelta(days=7)).date())
+    mon_before = str((end - pd.Timedelta(days=14)).date())
+    summary = pd.DataFrame([totals(con, mon, report_date), totals(con, mon_before, mon)],
+                           index=["this week", "last week"])
+    by_product = pd.read_sql(DISBURSED, con, params=(mon, report_date))
+    # the two tables must agree before anything is written
+    assert by_product["loans"].sum() == summary.loc["this week", "loans"]
+    return summary, by_product
+
+REPORT_DATE = "2026-09-28"
+summary, by_product = weekly_report(con, REPORT_DATE)
+summary
+```
+
+| week | from | loans | collected |
+|---|---|---|---|
+| this week | 2026-09-21 | 81 | 3 683 149 376 |
+| last week | 2026-09-14 | 87 | 3 930 504 321 |
+
+Two rows. The week of 21–27 September lent 3 695 090 000 on 81 loans and collected 3 683 149 376 from 760 payments; the week before lent 3 554 960 000 on 87 loans and collected 3 930 504 321 from 751. `by_product` splits the 81 loans: Small business 8 loans for 1 964 920 000, then Auto, Consumer, Micro and Buy now pay later. Next Monday the same lines run as `weekly_report(con, "2026-10-05")`; our practice data stops on 1 October, so on this page try an earlier Monday.
+
+**When you use it.**
+- A report someone needs on a fixed rhythm — weekly, monthly — with the same shape every time.
+- Any number you would otherwise copy from one tool into another by hand.
+
+> ⚠️ **Watch out.** A date typed inside the SQL (`'2026-09-21'`) is a second parameter nobody remembers to change. Every date in the script comes from `report_date`; search the file for `2026` before you hand it over.
+
+**Your turn.** Next Monday the report must cover 28 September to 4 October. What do you change?
+
+```task
+{"id": "w05d4-x1", "kind": "choice", "options": ["Every date inside the two SQL strings", "Only the date passed in: weekly_report(con, \"2026-10-05\")", "The assert, so that the new week passes", "The names of the two weeks in the index"], "answer": 1, "explain": "One parameter in, everything else follows: both weeks, both read_sql calls and the checks are computed from report_date. The laptop version below can even take the date from the calendar."}
+```
+
+### Writing it out — Excel sheets, CSV and a PNG
+
+**What it is.** The report leaves the script as files. **`to_excel`** writes a DataFrame into a workbook; **`pd.ExcelWriter`** puts several of them into one file, one **sheet** each. **`to_csv`** writes a plain-text table that any tool can read, and **`savefig`** writes the chart. Each file name carries the report date, so one week never overwrites another.
+
+**How to write it.** The workbook first — on the laptop:
+
+```python
+# (shape only — not meant to run) on the laptop: one workbook, one sheet per table
+with pd.ExcelWriter(out / f"weekly_{REPORT_DATE}.xlsx") as xw:
+    summary.to_excel(xw, sheet_name="summary")
+    by_product.to_excel(xw, sheet_name="by_product", index=False)
+```
+
+`to_excel` needs the library **openpyxl**. Anaconda has it; the Python on this page does not, so here the box writes the other two files. Run the box above first:
+
+```python
+import matplotlib.pyplot as plt
+from pathlib import Path
+out = Path("reports")
+out.mkdir(exist_ok=True)
+# the by-product table as plain text, for any other tool
+by_product.to_csv(out / f"by_product_{REPORT_DATE}.csv", index=False)
+# the chart: money lent in each of the last 8 weeks
+w = pd.read_sql("""SELECT disbursed_at, principal FROM loans
+                   WHERE disbursed_at >= date(?, '-56 days') AND disbursed_at < ?""",
+                con, params=(REPORT_DATE, REPORT_DATE), parse_dates=["disbursed_at"])
+# one bar per week, each week ending on a Sunday
+weeks = w.resample("W-SUN", on="disbursed_at")["principal"].sum() / 1e9
+# grey bars, the report's own week in blue
+colors = ["#9ca3af"] * (len(weeks) - 1) + ["#1d4ed8"]
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.bar(weeks.index.strftime("%d %b"), weeks.values, color=colors)
+last = f"{weeks.index[-1]:%d %b}"
+ax.set_title(f"Lent per week, bn soum; the week to {last} in blue", loc="left")
+fig.tight_layout()
+fig.savefig(out / f"weekly_{REPORT_DATE}.png", dpi=150)
+# read the CSV back, then list what the folder holds
+print(len(pd.read_csv(out / f"by_product_{REPORT_DATE}.csv")), "rows in the CSV")
+sorted(p.name for p in out.iterdir())
+```
+
+5 rows in the CSV, one per product, and two files in `reports/`: `by_product_2026-09-28.csv` and `weekly_2026-09-28.png`. On the laptop the workbook joins them, with two sheets of 2 and 5 rows. The chart has eight bars, from 3.2 to 6.5 bn a week; the week to 27 September, in blue, lent 3.7 bn, below the eight-week average of 4.5 bn.
+
+| step | on this page | on your laptop |
+|---|---|---|
+| `to_csv`, `savefig` | files in the browser's memory, gone when the page closes | real files in `reports/` |
+| `to_excel` | — (no openpyxl here) | ✔ |
+| read the files back | ✔ (the last lines) | ✔ |
+| `sys.argv`, a schedule, Git | — | ✔ (below) |
+
+**When you use it.**
+- Excel with sheets: a reader who filters and copies, like Bekzod.
+- CSV: another program, or next month's script, reads it.
+- PNG: a slide, an e-mail, a chat message.
+
+> ⚠️ **Watch out.** `to_excel` without `index=False` adds a column of row numbers 0, 1, 2 … that the reader will ask about. Keep the index only where it carries a label, like `this week` / `last week` in `summary`.
+
+**Your turn.** Fill the gaps: two tables, one workbook.
+
+```game
+{"type": "cloze", "id": "w05d4-x2", "title": "Two sheets, one file", "text": "with pd.{{0}}(\"weekly.xlsx\") as xw:\n    summary.{{1}}(xw, {{2}}=\"summary\")\n    by_product.to_excel(xw, sheet_name=\"by_product\", {{3}}=False)", "blanks": [["ExcelWriter"], ["to_excel"], ["sheet_name"], ["index"]], "distractors": ["to_csv", "sheet", "ExcelFile"]}
+```
+
+### Running it every week — Task Scheduler, cron, Power BI
+
+**What it is.** A **scheduler** (*планировщик*) starts a program at set times without you. On Windows it is **Task Scheduler**; on Linux and most servers it is **cron**. The script must then run from top to bottom with nobody at the keyboard: it takes the date from the command line (or from the calendar), writes its files and stops.
+
+**How to write it.** The laptop copy, `weekly_report.py`, ends with a few lines that only run when the file is started as a program:
+
+```python
+# (shape only — not meant to run) the end of weekly_report.py on the laptop
+import sys
+from datetime import date, timedelta
+
+if __name__ == "__main__":
+    # the date from the command line, or the Monday of this week
+    if len(sys.argv) > 1:
+        report_date = sys.argv[1]
+    else:
+        today = date.today()
+        report_date = str(today - timedelta(days=today.weekday()))
+    # paths built from the script's own folder, not from where it was started
+    here = Path(__file__).parent
+    con = sqlite3.connect(here.parent / "raw" / "nur.db")
+    summary, by_product = weekly_report(con, report_date)
+```
+
+Started by hand, or by cron on a server:
+
+```bash
+# by hand, for one Monday
+python weekly_report.py 2026-09-28
+# cron: every Monday at 08:00
+# (add the line with: crontab -e)
+0 8 * * 1 cd /home/you/report && python weekly_report.py
+```
+
+On a Windows PC, Task Scheduler does the same with a form:
+
+1. Start → **Task Scheduler** → **Create Basic Task** → a name, e.g. *Weekly report*.
+2. Trigger: **Weekly**, Monday, 08:00.
+3. Action: **Start a program**. Program: the full path of `python.exe` (in a terminal, `where python` prints it). Arguments: `weekly_report.py`. **Start in**: the folder that holds the script.
+4. Finish. Right-click the task → **Run** once, and look for the new file in `reports/`.
+
+When the report is a published Power BI page rather than a file, the schedule lives in the Power BI Service: the model's **Scheduled refresh** re-reads its sources (up to 8 times a day with Pro), and a database inside the company needs an on-premises data gateway. Week 7 Day 4 shows the steps.
+
+**When you use it.**
+- Task Scheduler: the script runs on your own Windows PC, which must be on at that hour.
+- cron: a server that is always on — the usual home of a team's reports.
+- Power BI scheduled refresh: the report is a published Power BI page, not a file.
+
+> ⚠️ **Watch out.** A scheduler starts the script from another folder, so `"../raw/nur.db"` points nowhere, and the run fails at 08:00 with nobody watching. Build every path from the script's own folder (`Path(__file__).parent`) or fill in **Start in**, then run the task once by hand.
+
+**Your turn.** Match each tool to what it does.
+
+```game
+{"type": "match", "id": "w05d4-x3", "title": "Who runs it on Monday?", "pairs": [["Task Scheduler", "starts a program on a Windows PC at set times"], ["cron", "the same on Linux or a server: one line per job"], ["0 8 * * 1", "every Monday at 08:00, in cron's five fields"], ["Scheduled refresh", "the Power BI Service re-reads a published report's sources"], ["Start in", "the folder Task Scheduler runs the script from"]]}
+```
+
+### Git — working folder, staging area, commit
+
+**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+
+```explore
+{"id": "w05d4-x9", "type": "git", "title": "A Git repository you can click", "predict": {"q": "You changed `weekly_report.py` and ran `git commit -m \"Start the week on Monday\"` — without `git add`. What does Git save?", "options": ["The changed script: a commit saves the folder as it is", "Nothing: a commit saves only what was staged with `git add`", "The script, but without the message", "Git adds the file by itself and saves it"], "answer": 1, "why": "A commit takes the staging area, not the folder. With nothing staged Git answers *no changes added to commit*, and the edit stays only in the folder. Try it below: ✎ edit, then `git commit`, and read Git's answer; then `git add` and commit again."}, "start": {"files": ["weekly_report.py", "README.md"], "branch": "fix-dates", "first": "Add the weekly report script", "edits": {"weekly_report.py": ["Read the report date from the command line", "Start the week on Monday", "Add the collected column", "Name the files after the report date"], "README.md": ["Say how to run the report", "Add the Monday schedule", "List the files the report writes"]}}, "challenges": [{"id": "c1", "text": "Run `git commit` with an edit that is **not staged**, and read Git's answer.", "when": {"emptyTry": ["=", 1]}}, {"id": "c2", "text": "Make **two commits** of your own: ✎ edit → `git add` → `git commit`, twice.", "when": {"mine": [">=", 2]}}, {"id": "c3", "text": "Edit both files and stage both, then take `README.md` back out with `git restore --staged` and **commit only the script**.", "when": {"partial": ["=", 1]}}, {"id": "c4", "text": "Create the branch, commit on it, switch back to `main` and **merge** it in.", "when": {"merged": ["=", 1]}}]}
+```
+
+**What it is.** **Git** (*система контроля версий*) keeps the history of a folder's files. The folder becomes a **repository** (*репозиторий*). Your files live in the **working folder**. `git add` puts a change into the **staging area** — the list of what the next save will hold. `git commit` saves the staged files as one **commit** (*коммит*): a version with an id, an author, a time and a message. The history is the chain of commits.
+
+```text
+working folder   your files on disk
+     │ git add
+     ▼
+staging area     the next commit
+     │ git commit
+     ▼
+history          every saved version
+```
+
+**How to write it.** In a terminal, in the report's folder:
+
+```bash
+# once per project: make the folder a repository
+git init
+# what changed since the last commit
+git status
+# stage two files for the next commit
+git add weekly_report.py README.md
+# save the staged files as one version
+git commit -m "Add the weekly report script"
+# the history, one line per commit
+git log --oneline
+```
+
+Before the `git add`, `git status` lists the two files as *untracked*; after it, under *Changes to be committed*; after the commit it says *nothing to commit, working tree clean*, and `git log --oneline` shows one line: a short id and the message. GitHub Desktop ([Tools at work](tools-at-work.md)) does the same with buttons: ticking a file is `git add`, **Commit to main** is `git commit`.
+
+**When you use it.**
+- Every file you will change again: SQL, notebooks, scripts, the data dictionary.
+- Before a risky change: commit first, so there is a version to go back to.
+
+> ⚠️ **Watch out.** A commit saves only what is staged. Edit a file and commit without `git add`, and Git answers *no changes added to commit* — the edit is still only in the folder. Run `git status` before each commit to see what goes in.
+
+**Your turn.** A good **commit message** says what changed in one short line, as an instruction: *Add …*, *Fix …*, *Start …*. Which one will help Jasur in March?
+
+```task
+{"id": "w05d4-x4", "kind": "choice", "options": ["fix", "changes 2", "Start the week on Monday, not Thursday", "asdfgh"], "answer": 2, "explain": "It says what changed and in which direction, in one line. In March, git log --oneline is a list of these lines: \"fix\" and \"changes 2\" tell him nothing about which commit broke the dates."}
+```
+
+### Branches and merge — try a change without breaking main
+
+**What it is.** A **branch** (*ветка*) is a named line of commits. `main` holds the version that runs every Monday. A new branch, such as `fix-dates`, takes your commits without touching `main`. **`git switch`** moves between branches, and **`git merge`** brings a branch's commits into the one you are on, once they work.
+
+**How to write it.**
+
+```bash
+# a new branch from here, and switch to it
+git switch -c fix-dates
+# change the script, then save it on the branch
+git add weekly_report.py
+git commit -m "Start the week on Monday"
+# back to main, and bring the branch in
+git switch main
+git merge fix-dates
+# merged: the branch name can go
+git branch -d fix-dates
+```
+
+```text
+main       o───o───────────o merge
+                \         /
+fix-dates        o───────o
+```
+
+`git switch -c fix-dates` is `git branch fix-dates` and `git switch fix-dates` in one step. If `main` got no new commit while you worked, the merge is a **fast-forward**: `main` simply moves up to the branch's last commit. If both branches moved, Git makes a **merge commit** with two parents, as in the picture.
+
+**When you use it.**
+- A change you are not sure of, while `main` must keep running every Monday.
+- Two people at once: each works on a branch, and the branches are merged one after the other.
+
+> ⚠️ **Watch out.** If both branches changed the same lines of one file, the merge stops with a **conflict**. Git marks the two versions in the file (`<<<<<<<`, `=======`, `>>>>>>>`) and waits until you keep the right lines, `git add` the file and `git commit`. Small branches merged soon rarely conflict.
+
+**Your turn.** Put a branch's life in order.
+
+```game
+{"type": "order", "id": "w05d4-x5", "title": "A branch, from start to merge", "items": ["git switch -c fix-dates", "Edit weekly_report.py", "git add weekly_report.py", "git commit -m \"Start the week on Monday\"", "git switch main", "git merge fix-dates"]}
+```
+
+### GitHub, push and pull — and what never goes in
+
+**What it is.** **GitHub** keeps a copy of the repository online, called the **remote** (`origin`). **`git push`** sends your new commits to it; **`git pull`** brings the commits others pushed into your folder. A file named **`.gitignore`** lists what Git must never track: data, outputs and passwords.
+
+**How to write it.**
+
+```bash
+# once: connect the folder to an empty GitHub repository
+git remote add origin https://github.com/you/report.git
+git push -u origin main
+# every day: first get the others' commits, then send yours
+git pull
+git push
+```
+
+```text
+# .gitignore: never in the repository
+*.db
+*.xlsx
+*.csv
+reports/
+.env
+```
+
+With this `.gitignore`, `git status` stops listing `nur.db` (9 MB of customer data) and the weekly workbooks. The repository holds the code that makes them, so anyone with the data can run it again. Passwords go in `.env`, which the script reads and Git never sees. The course repository keeps its practice data in Git on purpose — Nur Finance is invented; at work, the data stays out.
+
+**When you use it.**
+- `git push`: at the end of a piece of work, so it is safe off your laptop and others can see it.
+- `git pull`: before you start, so you work on the latest version.
+- `.gitignore`: on day one, before the first `git add`.
+
+> ⚠️ **Watch out.** A password committed once stays in the history, even after a later commit deletes the file — anyone with the repository can read the old version. Change the password at once, and keep secrets in `.env` from the first day.
+
+**Your turn.**
+
+```game
+{"type": "sort", "id": "w05d4-x6", "title": "In Git or kept out?", "q": "Tap each file, then where it belongs.", "groups": {"In the repository": ["weekly_report.py", "README.md", ".gitignore", "views.sql and dictionary.md"], "Kept out by .gitignore": ["nur.db", "reports/weekly_2026-09-28.xlsx", ".env with the database password"]}}
+```
+
+### Try it on the real data
+
+**T1.** Run the report for the Monday before: set `REPORT_DATE = "2026-09-21"` in the first box and run both boxes again. How much was collected in the week of 14–20 September, in millions of soum?
+
+```task
+{"id": "w05d4-x7", "kind": "number", "answer": 3930.5, "dp": 1, "unit": "m", "hint": "summary.loc[\"this week\", \"collected\"] / 1e6 — after the two boxes ran with the new date.", "model": "3 930.5 m: 751 payments brought in 3 930 504 321 soum, while 87 loans for 3 554 960 000 went out. The week after (21–27 September) collected 3 683.1 m, 6.3 % less. Only the date changed; the SQL, the checks and the three files followed by themselves."}
+```
+
+**T2. On your laptop.** Make the report a repository: `git init` in its folder, a `.gitignore`, two commits, then a branch committed on and merged back. Paste what `git log --oneline` prints, and tick what you did.
+
+```task
+{"id": "w05d4-x8", "kind": "free", "min": 8, "model": "e4c1a9b (HEAD -> main) Merge branch 'fix-dates'\n7d20f3e Start the week on Monday\n1b9e044 Say how to run the report\nc35a7d2 Add .gitignore: data, outputs and .env stay out\n9f0b812 Add the weekly report script\n\n(The ids differ on every computer; the shape is what counts: one line per commit, the newest on top, every message saying what changed.)", "rubric": ["git init in the folder that holds weekly_report.py", ".gitignore with *.db, *.xlsx, *.csv, reports/ and .env", "Two commits whose messages say what changed", "A branch committed on and merged into main", "Optional: pushed to GitHub with git push"]}
+```
+
+### In one minute
+
+- A **report script** takes one date, runs its SQL through `read_sql` with `params=`, checks itself with `assert`, and writes the same tables and chart every week.
+- `pd.ExcelWriter` with `to_excel(sheet_name=…)` makes sheets, `to_csv` serves other tools, `savefig` the chart; on the laptop all three land in `reports/` (this page has no openpyxl, so no Excel here).
+- Task Scheduler or cron starts it every Monday; a published Power BI report uses the Service's scheduled refresh.
+- **Git**: edit → `git add` → `git commit`; a branch for each risky change, merged back; `git push` / `git pull` with GitHub; data and passwords stay out through `.gitignore`.

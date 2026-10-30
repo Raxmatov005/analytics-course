@@ -57,7 +57,7 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
     [/(^|[^.\w])math\./, '', 'math', 'import math'],
     [/(^|[^.\w])hashlib\./, '', 'hashlib', 'import hashlib'],
     [/(^|[^.\w])(date|timedelta)\s*\(/, '', 'date', 'from datetime import date, datetime, timedelta'],
-    [/\b(to_excel|read_excel|ExcelWriter)\b/, 'openpyxl', '', '']
+    [/\b(to_excel|read_excel|ExcelWriter)\b/, 'pip:openpyxl', '', '']   // not in Pyodide's own repository: from PyPI
   ];
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
