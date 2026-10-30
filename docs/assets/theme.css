@@ -109,6 +109,25 @@ body { background: var(--bg); color: var(--body); font-family: var(--sans); -web
 .qz-segs span.did { background: var(--brand-l); }
 .qz-segs span.now { background: var(--brand); }
 .qz-qnum { display: none; }
+/* spaced review (quiz.js): a question from an earlier week wears a violet chip, its segment a violet tint */
+.qz-qnum.qz-qnum-rev { display: inline-block; margin-bottom: .7em; padding: .2em .7em; border-radius: 999px; background: #f5f3ff; color: #5b21b6; font-size: .82em; font-weight: 700; }
+.qz-segs span.qz-seg-rev { background: #ede9fe; }
+.qz-segs span.qz-seg-rev.did { background: #c4b5fd; }
+.qz-segs span.qz-seg-rev.now { background: #6d28d9; }
+.qz-sub.qz-sub-rev { color: #5b21b6; }
+.qz-rv-title.qz-rv-title-rev { margin-top: 1.6em; }
+.qz-rv-note { color: var(--muted); font-size: .9em; margin: -.3em 0 .7em !important; }
+.qz-rv-link { font-weight: 700; }
+/* My mistakes (mistakes.js) */
+.mx-sum { margin: 1.2em 0 1.6em; padding: .9em 1.1em; border-radius: 14px; background: #f5f3ff; border: 1px solid #ddd6fe; color: #3b0764; line-height: 1.5; }
+.mx-sum.mx-none { background: #f0fdf4; border-color: #bbf7d0; color: #14532d; }
+.mx-open { margin: -.3em 0 1em !important; font-weight: 700; }
+.mx-where { margin: -.4em 0 1.6em !important; font-size: .92em; }
+.mx-later { margin: .2em 0 2em; padding: .6em .9em; border: 1px solid var(--line, #e5e7eb); border-radius: 12px; }
+.mx-later summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+.mx-later ul { margin: .6em 0 .2em; padding-left: 1.2em; }
+.mx-later li { margin: .35em 0; overflow-wrap: anywhere; }
+.mx-flash { outline: 3px solid #8b5cf6; outline-offset: 4px; border-radius: 12px; transition: outline-color 1.5s; }
 .qz-qtext { font-size: 1.28em; font-weight: 700; color: var(--ink); line-height: 1.45; margin-bottom: 1em; letter-spacing: -.01em; }
 .markdown-section pre.qz-code { margin: 0 0 1.1em; }
 .qz-hint { font-size: .88em; font-weight: 600; color: var(--muted); margin: -.5em 0 .8em; }
@@ -588,6 +607,7 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
 .al-k-check { --k: #16a34a; --k-d: #166534; --k-l: #bbf7d0; --k-xl: #f0fdf4; }
 .al-k-company { --k: #1d4ed8; --k-d: #1e3a8a; --k-l: #bfdbfe; --k-xl: #eff6ff; }
 .al-k-challenge { --k: #b45309; --k-d: #92400e; --k-l: #fde68a; --k-xl: #fffbeb; }
+.al-k-extra { --k: #6d28d9; --k-d: #5b21b6; --k-l: #ddd6fe; --k-xl: #f5f3ff; }
 .al-k-plain { --k: #64748b; --k-d: #334155; --k-l: #e2e8f0; --k-xl: #f8fafc; }
 .al-sec { position: relative; margin: 2.2em 0; border: 1px solid var(--line); border-radius: 20px; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 14px rgba(15, 23, 42, .04); scroll-margin-top: 16px; }
 .al-sec-head { display: flex; gap: .9em; align-items: flex-start; padding: 1.1em 1.3em 1em; border-bottom: 1px solid var(--line); border-radius: 20px 20px 0 0; background: linear-gradient(180deg, var(--k-xl) 0%, #fff 100%); }

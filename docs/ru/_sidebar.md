@@ -1,6 +1,7 @@
 - [С чего начать](/ru/)
 - [Карта курса](ru/map.md)
 - [Прогресс и награды](ru/progress.md)
+- [Мои ошибки](ru/mistakes.md)
 - [Как сдавать домашние задания](ru/homework/how-to-submit.md)
 - [Пробный день: попробуйте распорядок](ru/practice.md)
 - [SQL-песочница](ru/playground.md)

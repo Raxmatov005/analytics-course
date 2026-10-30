@@ -22,7 +22,10 @@ the paragraph's leading code (P3, T4, S2…) or, without one, by its number on t
 
 Every card is an "al-block" and becomes "al-done" once answered (sections.js counts them; see the contract there).
 Results are kept in this browser (localStorage "al.tasks" → {id: {done, ok, value, at}}), one key for a page and its
-Russian copy, since the ids are the same. window.ALTasks = {state(), doneCount(), okCount()} for the progress board. */
+Russian copy, since the ids are the same. window.ALTasks = {state(), doneCount(), okCount()} for the progress board.
+Wrong attempts (2026-10-30, for the mistakes page, mistakes.js): each one adds 1 to the record's "miss" and sets
+"missAt" (ms) — a wrong choice, a "not yet" on a number or text, a self-grade other than Got it, a failed code check.
+A record with only a miss has done: false, so nothing counts it as answered. */
 (function () {
   var KEY = 'al.tasks';
   function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
@@ -31,7 +34,15 @@ Russian copy, since the ids are the same. window.ALTasks = {state(), doneCount()
   function put(id, rec) {
     var s = load();
     rec.at = new Date().toISOString();
+    if (s[id] && s[id].miss) { rec.miss = s[id].miss; rec.missAt = s[id].missAt; }   // the wrong attempts stay counted
     s[id] = rec;
+    save(s);
+  }
+  function missed(id) {
+    var s = load(), r = s[id] || { done: false, ok: false };
+    r.miss = (r.miss || 0) + 1;
+    r.missAt = Date.now();
+    s[id] = r;
     save(s);
   }
   function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
@@ -205,7 +216,7 @@ Russian copy, since the ids are the same. window.ALTasks = {state(), doneCount()
       if (chk) chk.onclick = function () {
         if (!sel.length) return;
         var r = { done: true, ok: sameSet(sel, want), value: multi ? sel.slice().sort() : sel[0] };
-        put(task.id, r); render(r); changed();
+        put(task.id, r); if (!r.ok) missed(task.id); render(r); changed();
       };
       var again = body.querySelector('.tk-again');
       if (again) again.onclick = function () { render(null); mark(card, get(task.id)); };   // the card stays done until she answers again
@@ -240,7 +251,7 @@ Russian copy, since the ids are the same. window.ALTasks = {state(), doneCount()
         if (ok) {
           var r = { done: true, ok: ok, value: val };
           put(task.id, r); render(r); changed();
-        } else render(null, val);
+        } else { missed(task.id); render(null, val); }
       }
       function msg(t) {
         var b = body.querySelector('.tk-say');
@@ -315,7 +326,7 @@ Russian copy, since the ids are the same. window.ALTasks = {state(), doneCount()
       Array.prototype.forEach.call(body.querySelectorAll('.tk-gr'), function (b) {
         b.onclick = function () {
           var g = b.getAttribute('data-g'), r = { done: true, ok: g === 'got', value: { text: text, grade: g, ticks: tickList() } };
-          put(task.id, r); compare(text, g, r.value.ticks); changed();
+          put(task.id, r); if (g !== 'got') missed(task.id); compare(text, g, r.value.ticks); changed();
         };
       });
       body.querySelector('.tk-edit').onclick = function () { write(text); };
@@ -358,7 +369,7 @@ Russian copy, since the ids are the same. window.ALTasks = {state(), doneCount()
     function done(ok, value) {
       var prev = get(task.id);
       if (prev && prev.done && prev.ok && !ok) return;   // a later miss never takes back a check she passed
-      put(task.id, { done: true, ok: ok, value: value }); mark(card, get(task.id)); changed();
+      put(task.id, { done: true, ok: ok, value: value }); if (!ok) missed(task.id); mark(card, get(task.id)); changed();
     }
     function offerModel() {
       if (!task.model || out.querySelector('.tk-show')) return;

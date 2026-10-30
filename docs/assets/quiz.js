@@ -15,14 +15,29 @@ Results are kept in this browser only (localStorage, key "al.v1"). Everything wo
 A Self-check is a ```check block with the same question objects ({"id": "w01d1-sc", "questions": [...]}): a compact
 "Quick check", one question at a time with instant feedback and no pass mark; its score goes to al.v1 → checks[id].
 Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" once passed, a check once finished.
+
+Spaced review (2026-10-30): a day quiz from Week 2 on brings back up to 3 questions from earlier weeks' day quizzes
+(review.json, written by scripts/build_bank.py; ru/review.json on a Russian page). First the ones she still has to fix
+(at most 2, the oldest miss first), then the ones asked least recently, each from a different day. They come after the
+day's own questions, marked "Review", and do not count toward the pass mark.
+
+Misses (2026-10-30): every answer in a day quiz, a review question and a Self-check is noted in al.v1 → miss:
+miss["<quiz or check id>#<question index>"] = {n: times wrong, last: ms of the last miss, fixedAt: ms of the last right
+answer after a miss}; still to fix while fixedAt < last. A question with a "key" (the mistakes page, mistakes.js) is
+noted under that key. Both are times, so sync.js's merge (a number keeps its larger value) stays right across devices.
 */
 (function () {
   var KEY = 'al.v1';
   var TOTAL_DAYS = 46;   // 41 + Week 9 (credit risk), 2026-10-29
 
+  /* games.js, explore.js and challenge.js share al.v1 and may write it first (a game won before any quiz), so the
+     quizzes map is made sure of here: without it every day quiz and the menu ticks stopped drawing (found 2026-10-30) */
   function load() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || { quizzes: {} }; }
-    catch (e) { return { quizzes: {} }; }
+    var s;
+    try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
+    if (!s || typeof s !== 'object') s = {};
+    s.quizzes = s.quizzes || {};
+    return s;
   }
   function save(state) {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private window: nothing to do */ }
@@ -51,6 +66,49 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
   function plural(n, one, few, many) {
     var a = Math.abs(n) % 100, b = a % 10;
     return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many;
+  }
+
+  /* ---------- misses (see the header) ---------- */
+  function noteAnswer(s, key, ok) {
+    s.miss = s.miss || {};
+    var m = s.miss[key], now = Date.now();
+    if (!ok) { m = m || { n: 0 }; m.n = (m.n || 0) + 1; m.last = now; s.miss[key] = m; }
+    else if (m) m.fixedAt = now;
+  }
+  function stillWrong(m) { return !!(m && m.last && !(m.fixedAt > m.last)); }
+
+  /* ---------- spaced review (see the header) ---------- */
+  var banks = {};
+  function bank() {
+    var ru = !!(window.ALLang && window.ALLang.isRu()), k = ru ? 'ru' : 'en';
+    if (!banks[k]) {
+      banks[k] = fetch((ru ? 'ru/' : '') + 'review.json', { cache: 'no-cache' })
+        .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
+    return banks[k];
+  }
+  function weekOf(id) { var m = /^w(\d\d)d\d$/.exec(id || ''); return m ? Number(m[1]) : null; }
+  function dayName(id) {
+    var m = /^w(\d\d)d(\d)$/.exec(id);
+    return m ? T('Week ' + Number(m[1]) + ' · Day ' + m[2], 'Неделя ' + Number(m[1]) + ' · День ' + m[2]) : id;
+  }
+  function pickReview(quizId, b, s, max) {
+    var w = weekOf(quizId);
+    if (w == null || w < 2 || !b || !b.days) return [];
+    var pool = [], miss = s.miss || {}, rev = s.rev || {};
+    Object.keys(b.days).forEach(function (d) {
+      var dw = weekOf(d);
+      if (dw == null || dw < 1 || dw >= w) return;
+      (b.days[d].quiz || []).forEach(function (q, i) {
+        var key = d + '#' + i;
+        pool.push({ key: key, day: d, page: b.days[d].p, q: q, todo: stillWrong(miss[key]), last: (miss[key] || {}).last || 0, asked: rev[key] || 0, r: Math.random() });
+      });
+    });
+    var out = [], used = {};
+    function take(list, upto) { list.forEach(function (x) { if (out.length < upto && !used[x.day]) { out.push(x); used[x.day] = 1; } }); }
+    take(pool.filter(function (x) { return x.todo; }).sort(function (a, c) { return a.last - c.last; }), Math.min(2, max));
+    take(pool.filter(function (x) { return !x.todo; }).sort(function (a, c) { return a.asked - c.asked || a.r - c.r; }), max);
+    return out;
   }
 
   /* the practice day's quiz (id "practice") trains the routine only: no streak, no finished day */
@@ -84,7 +142,9 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
       var s = load();
       return Object.keys(s.quizzes).filter(function (id) { return !isPractice(id) && s.quizzes[id].passedOn; }).length;
     },
-    TOTAL_DAYS: TOTAL_DAYS
+    TOTAL_DAYS: TOTAL_DAYS,
+    miss: function () { return load().miss || {}; },
+    stillWrong: stillWrong
   };
 
   /* ---------- rendering: one question at a time, then a results screen (Khan-style) ---------- */
@@ -181,24 +241,49 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
     pre.parentNode.replaceChild(box, pre);
 
     var run = box.querySelector('.qz-run'), res = box.querySelector('.qz-res'), start = box.querySelector('.qz-start');
-    var backBtn = box.querySelector('.qz-back'), nextBtn = box.querySelector('.qz-next'), cur = 0;
+    var backBtn = box.querySelector('.qz-back'), nextBtn = box.querySelector('.qz-next'), cur = 0, total = n;
     var qs = box.querySelectorAll('.qz-q'), segs = box.querySelectorAll('.qz-segs span');
+    /* spaced review: the bank is fetched now, the questions are chosen when she starts */
+    var revBank = null, picks = [];
+    if (weekOf(quiz.id) >= 2) bank().then(function (b) {
+      revBank = b;
+      var k = pickReview(quiz.id, b, load(), 3).length, sub = box.querySelector('.qz-sub');
+      if (k && sub && !box.querySelector('.qz-sub-rev')) sub.insertAdjacentHTML('afterend', '<div class="qz-sub qz-sub-rev">' +
+        T('+ ' + k + ' review question' + (k > 1 ? 's' : '') + ' from earlier weeks — they do not count toward the pass mark',
+          '+ ' + k + ' ' + plural(k, 'вопрос', 'вопроса', 'вопросов') + ' на повторение из прошлых недель — в зачёт дня не идут') + '</div>');
+    });
+    function addReview() {
+      picks = pickReview(quiz.id, revBank, load(), 3);
+      if (!picks.length) return;
+      var foot = run.querySelector('.qz-foot'), bar = run.querySelector('.qz-segs');
+      picks.forEach(function (x, j) {
+        var h = questionHtml(x.q, n + j, quiz.id, n).replace(/<div class="qz-qnum">[^<]*<\/div>/,
+          '<div class="qz-qnum qz-qnum-rev">' + esc(T('Review ' + (j + 1) + ' of ' + picks.length + ' · from ' + dayName(x.day),
+            'Повторение ' + (j + 1) + ' из ' + picks.length + ' · из урока «' + dayName(x.day) + '»')) + '</div>');
+        foot.insertAdjacentHTML('beforebegin', h.replace('<div class="qz-q"', '<div class="qz-q qz-q-rev"'));
+        bar.insertAdjacentHTML('beforeend', '<span class="qz-seg-rev"></span>');
+      });
+      total = n + picks.length;
+      qs = box.querySelectorAll('.qz-q');
+      segs = box.querySelectorAll('.qz-segs span');
+    }
     function answered(el) {
       return !!el.querySelector('input:checked') || Array.prototype.some.call(el.querySelectorAll('.qz-input'), function (x) { return x.value.trim(); });
     }
     function show() {
       Array.prototype.forEach.call(qs, function (el, i) { el.hidden = i !== cur; });
       Array.prototype.forEach.call(segs, function (s, i) {
-        s.className = i === cur ? 'now' : answered(qs[i]) ? 'did' : '';
+        s.className = (i >= n ? 'qz-seg-rev ' : '') + (i === cur ? 'now' : answered(qs[i]) ? 'did' : '');
       });
-      box.querySelector('.qz-count').textContent = (cur + 1) + ' / ' + n;
+      box.querySelector('.qz-count').textContent = (cur + 1) + ' / ' + total;
       backBtn.style.visibility = cur === 0 ? 'hidden' : 'visible';
-      nextBtn.textContent = cur === n - 1 ? T('Submit answers', 'Отправить ответы') : T('Next', 'Далее');
-      nextBtn.classList.toggle('qz-submit', cur === n - 1);
+      nextBtn.textContent = cur === total - 1 ? T('Submit answers', 'Отправить ответы') : T('Next', 'Далее');
+      nextBtn.classList.toggle('qz-submit', cur === total - 1);
       nextBtn.disabled = !answered(qs[cur]);
     }
     function top() { var r = box.getBoundingClientRect(); if (r.top < 0 || r.top > window.innerHeight * 0.6) box.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     box.querySelector('.qz-go').addEventListener('click', function () {
+      addReview();
       start.hidden = true; run.hidden = false; show();
       var f = qs[0].querySelector('.qz-input'); if (f) f.focus();
     });
@@ -210,15 +295,16 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
     backBtn.addEventListener('click', function () { if (cur > 0) { cur--; show(); top(); } });
     nextBtn.addEventListener('click', function () {
       if (!answered(qs[cur])) return;
-      if (cur < n - 1) { cur++; show(); top(); var f = qs[cur].querySelector('.qz-input'); if (f) f.focus(); return; }
+      if (cur < total - 1) { cur++; show(); top(); var f = qs[cur].querySelector('.qz-input'); if (f) f.focus(); return; }
       finish();
     });
 
     function finish() {
-      var right = 0, rows = '';
+      var right = 0, rows = '', s = load(), now = Date.now();
       quiz.questions.forEach(function (q, i) {
         var el = qs[i], ok = isRight(q, el);
         if (ok) right++;
+        if (!isPractice(quiz.id)) noteAnswer(s, quiz.id + '#' + i, ok);
         rows += '<details class="qz-rv ' + (ok ? 'ok' : 'bad') + '"' + (ok ? '' : ' open') + '><summary>' +
           '<span class="qz-mark">' + (ok ? '✓' : '✕') + '</span><span class="qz-rv-q"><b>' + (i + 1) + '.</b> ' + esc(q.q) + '</span></summary>' +
           '<div class="qz-rv-body">' +
@@ -226,8 +312,23 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
           (ok ? '' : '<div><span class="qz-k">' + T('Right answer', 'Верный ответ') + '</span> ' + esc(rightAnswerText(q)) + '</div>') +
           (q.explain ? '<div class="qz-why">' + esc(q.explain) + '</div>' : '') + '</div></details>';
       });
+      var revRight = 0, revRows = '';
+      picks.forEach(function (x, j) {
+        var el = qs[n + j], ok = isRight(x.q, el);
+        if (ok) revRight++;
+        noteAnswer(s, x.key, ok);
+        s.rev = s.rev || {};
+        s.rev[x.key] = now;
+        var link = '#/' + (window.ALLang && window.ALLang.isRu() ? 'ru/' : '') + x.page + '?id=day-quiz';
+        revRows += '<details class="qz-rv ' + (ok ? 'ok' : 'bad') + '"' + (ok ? '' : ' open') + '><summary>' +
+          '<span class="qz-mark">' + (ok ? '✓' : '✕') + '</span><span class="qz-rv-q"><b>' + esc(dayName(x.day)) + '.</b> ' + esc(x.q.q) + '</span></summary>' +
+          '<div class="qz-rv-body">' +
+          '<div><span class="qz-k">' + T('Your answer', 'Ваш ответ') + '</span> ' + esc(givenText(x.q, el) || '—') + '</div>' +
+          (ok ? '' : '<div><span class="qz-k">' + T('Right answer', 'Верный ответ') + '</span> ' + esc(rightAnswerText(x.q)) + '</div>') +
+          (x.q.explain ? '<div class="qz-why">' + esc(x.q.explain) + '</div>' : '') +
+          '<div><a class="qz-rv-link" href="' + esc(link) + '">' + T('Open that lesson →', 'Открыть тот урок →') + '</a></div></div></details>';
+      });
       var pct = Math.round(100 * right / n), passed = pct >= pass * 100;
-      var s = load();
       var r = s.quizzes[quiz.id] || { best: 0, attempts: 0 };
       r.attempts++;
       r.best = Math.max(r.best, pct);
@@ -256,6 +357,10 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
         '</div>' +
         '<div class="qz-dots">' + quiz.questions.map(function (q, i) { return '<span class="' + (isRight(q, qs[i]) ? 'ok' : 'bad') + '">' + (i + 1) + '</span>'; }).join('') + '</div>' +
         '<div class="qz-rv-title">' + T('Review your answers', 'Разбор ваших ответов') + '</div>' + rows +
+        (picks.length ? '<div class="qz-rv-title qz-rv-title-rev">' + T('Review from earlier weeks · ' + revRight + ' of ' + picks.length + ' right',
+          'Повторение прошлых недель · верно ' + revRight + ' из ' + picks.length) + '</div>' +
+          '<p class="qz-rv-note">' + T('Not counted in today\'s score. A miss goes to My mistakes, to retry before the checkpoint.',
+            'В результат дня не входит. Ошибка попадает в «Мои ошибки» — повторите перед контрольной.') + '</p>' + revRows : '') +
         '<div class="qz-foot"><button type="button" class="qz-btn qz-retry">' + T('Try again', 'Попробовать снова') + '</button></div>';
       res.querySelector('.qz-retry').addEventListener('click', function () { mount(rebuild(quiz, box)); });
       top();
@@ -328,7 +433,9 @@ Both are "al-block"s for the section frames (sections.js): a quiz is "al-done" o
         go.onclick = function () {
           if (!checked) {
             if (!answered()) return;
-            var ok = isRight(q, el);
+            var ok = isRight(q, el), st = load();
+            noteAnswer(st, q.key || (id + '#' + cur), ok);
+            save(st);
             checked = true; marks[cur] = ok; given[cur] = givenText(q, el);
             el.classList.add(ok ? 'qc-ok' : 'qc-bad');
             Array.prototype.forEach.call(el.querySelectorAll('input'), function (x) { x.disabled = true; });

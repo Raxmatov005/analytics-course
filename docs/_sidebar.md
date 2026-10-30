@@ -1,6 +1,7 @@
 - [Start here](/)
 - [Course map](map.md)
 - [Progress & rewards](progress.md)
+- [My mistakes](mistakes.md)
 - [How to submit homework](homework/how-to-submit.md)
 - [Practice day: try the routine](practice.md)
 - [SQL playground](playground.md)
@@ -63,6 +64,7 @@
   - [Day 3: capstone I — brief and analysis](weeks/week-08/day-3.md)
   - [Day 4: capstone II — dashboard and story](weeks/week-08/day-4.md)
   - [Day 5: presentation, mock interview, what next](weeks/week-08/day-5.md)
+
 - **Week 9 — Credit risk models**
   - [Day 1: correlation and regression](weeks/week-09/day-1.md)
   - [Day 2: logistic regression and the scorecard](weeks/week-09/day-2.md)

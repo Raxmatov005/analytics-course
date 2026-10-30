@@ -118,7 +118,7 @@ html[data-theme="dark"] .gm-tb-name { color: #b897eb; }
 html[data-theme="dark"] .gm-lines line { stroke: #9cf1d7; }
 html[data-theme="dark"] .gm-again { border: 0; background: transparent; color: #a073e6; }
 
-/* ---------- theme.css (565 rules) ---------- */
+/* ---------- theme.css (577 rules) ---------- */
 html[data-theme="dark"] body { background: var(--bg); color: var(--body); }
 html[data-theme="dark"] .content { background: var(--bg); }
 html[data-theme="dark"] .markdown-section { background: var(--card); border: 1px solid #333941; border-radius: 22px; }
@@ -183,6 +183,17 @@ html[data-theme="dark"] .qz-count { color: var(--brand-text); }
 html[data-theme="dark"] .qz-segs span { border-radius: 999px; background: #212831; }
 html[data-theme="dark"] .qz-segs span.did { background: var(--brand-l); }
 html[data-theme="dark"] .qz-segs span.now { background: var(--brand); }
+html[data-theme="dark"] .qz-qnum.qz-qnum-rev { border-radius: 999px; background: #17132e; color: #ac86e9; }
+html[data-theme="dark"] .qz-segs span.qz-seg-rev { background: #1b1631; }
+html[data-theme="dark"] .qz-segs span.qz-seg-rev.did { background: #271e46; }
+html[data-theme="dark"] .qz-segs span.qz-seg-rev.now { background: #6d28d9; }
+html[data-theme="dark"] .qz-sub.qz-sub-rev { color: #ac86e9; }
+html[data-theme="dark"] .qz-rv-note { color: var(--muted); }
+html[data-theme="dark"] .mx-sum { border-radius: 14px; background: #17132e; border: 1px solid #2a2059; color: #d6b1f4; }
+html[data-theme="dark"] .mx-sum.mx-none { background: #172d1e; border-color: #295f3c; color: #b9eece; }
+html[data-theme="dark"] .mx-later { border: 1px solid var(--line, #e5e7eb); border-radius: 12px; }
+html[data-theme="dark"] .mx-later summary { color: var(--ink); }
+html[data-theme="dark"] .mx-flash { outline: 3px solid #8b5cf6; outline-offset: 4px; border-radius: 12px; }
 html[data-theme="dark"] .qz-qtext { color: var(--ink); }
 html[data-theme="dark"] .qz-hint { color: var(--muted); }
 html[data-theme="dark"] .qz-opt { border: 2px solid var(--line); border-radius: 14px; background: #161c22; color: var(--ink); }
@@ -450,6 +461,7 @@ html[data-theme="dark"] .al-k-homework { --k-d: #ef92ac; --k-l: #3d1a1e; --k-xl:
 html[data-theme="dark"] .al-k-check { --k-d: #afeec7; --k-l: #22432d; --k-xl: #172d1e; }
 html[data-theme="dark"] .al-k-company { --k-d: #9db1ea; --k-l: #1c2d42; --k-xl: #142030; }
 html[data-theme="dark"] .al-k-challenge { --k-d: #f1bb9a; --k-l: #574d25; --k-xl: #312c14; }
+html[data-theme="dark"] .al-k-extra { --k-d: #ac86e9; --k-l: #1e1939; --k-xl: #17132e; }
 html[data-theme="dark"] .al-k-plain { --k-d: #bec9d8; --k-l: #24292f; --k-xl: #1b2025; }
 html[data-theme="dark"] .al-sec { border: 1px solid var(--line); border-radius: 20px; background: #161c22; }
 html[data-theme="dark"] .al-sec-head { border-bottom: 1px solid var(--line); border-radius: 20px 20px 0 0; background: linear-gradient(180deg, var(--k-xl) 0%, #161c22 100%); }
@@ -1039,6 +1051,12 @@ html[data-theme="dark"] .xp4-base { fill: #94a3b8; }
 html[data-theme="dark"] .xp4-now { fill: #98d1f0; }
 html[data-theme="dark"] .xp4-term { fill: #b5bfcd; }
 html[data-theme="dark"] .xp4-term.hot { fill: #eea486; }
+
+/* ---------- explore5.css (0 rules) ---------- */
+
+/* ---------- explore6.css (0 rules) ---------- */
+
+/* ---------- explore7.css (0 rules) ---------- */
 
 /* ---------- by hand (scripts/dark_manual.css): last, so it wins ---------- */
 /* ---------- dark mode, by hand (copied first into docs/assets/dark.css by scripts/make_dark_css.py) ----------

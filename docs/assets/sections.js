@@ -3,7 +3,9 @@
 On a lesson page (weeks/…/day-N, practice, and their Russian copies under ru/) every "##" section — the h2 and
 everything up to the next h2 — is wrapped in a frame. The frame's kind comes from the heading, English or Russian
 (a Russian heading also keeps the English id, which is read as well): goals, learn, worked, workspace, practice,
-homework, check, company, quiz, challenge, or plain. A frame shows an icon, the heading, one line on what she does
+homework, check, company, quiz, challenge, extra, or plain. An "extra" section ("## Going further — … (optional)",
+"## Дальше по теме — … (по желанию)") is an optional topic: its frame and chip show their state, but it is left out
+of "4 of 6 sections done", so the day never looks unfinished without it. A frame shows an icon, the heading, one line on what she does
 there, the time from "(60 min)" in the heading, and whether it is done.
 
 Done-state contract shared by every engine (task.js, quiz.js, games.js, sqlrun.js, videos.js, pyrun.js, …):
@@ -29,6 +31,7 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
 
   /* ---------- the kinds: first match wins (so "Practice quiz" is a quiz, not practice) ---------- */
   var KINDS = [
+    { k: 'extra', re: /^\s*(\d+\.\s*)?(going further|дальше по теме)\b/i, id: /(^|-)going-further(-|$)/ },
     { k: 'goals', re: /today in (3|three) lines|сегодня в (3|тр[её]х) строк/i, id: /^today-in-3-lines$/ },
     { k: 'quiz', re: /\b(day|practice) quiz\b|тест дня|пробный тест/i, id: /(^|-)(day|practice)-quiz(-|$)/ },
     { k: 'challenge', re: /daily challenge|задача дня/i, id: /(^|-)daily-challenge(-|$)/ },
@@ -45,7 +48,7 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
       goals: T('Today', 'Сегодня'), learn: T('Learn', 'Теория'), worked: T('Worked example', 'Разбор'),
       workspace: T('Workspace', 'Рабочее место'), practice: T('Practice', 'Практика'), homework: T('Homework', 'Домашнее задание'),
       check: T('Quick check', 'Быстрая проверка'), company: T('Company corner', 'Уголок компании'), quiz: T('Day quiz', 'Тест дня'),
-      challenge: T('Daily challenge', 'Задача дня')
+      challenge: T('Daily challenge', 'Задача дня'), extra: T('Going further · optional', 'Дальше по теме · по желанию')
     }[k] || '';
   }
   /* what she does in the section, in one line */
@@ -68,7 +71,9 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
         'Как сегодняшняя тема применяется в кредитной компании — и как о ней спрашивают на собеседовании.'),
       quiz: T('Pass it to mark the day done. Retry as often as you like — your best score counts.',
         'Пройдите его, чтобы завершить день. Пересдавать можно сколько угодно — засчитывается лучший результат.'),
-      challenge: T('One harder bonus question for extra XP. Optional.', 'Один вопрос посложнее за дополнительный XP. По желанию.')
+      challenge: T('One harder bonus question for extra XP. Optional.', 'Один вопрос посложнее за дополнительный XP. По желанию.'),
+      extra: T('One more thing the job uses, with its own practice. Optional: the day counts as done without it.',
+        'Ещё один рабочий инструмент, со своей практикой. По желанию: день засчитывается и без него.')
     }[k] || '';
   }
   var P = {
@@ -82,6 +87,7 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
     company: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>',
     quiz: '<circle cx="12" cy="8" r="6"/><path d="M15.5 12.9L17 22l-5-3-5 3 1.5-9.1"/>',
     challenge: '<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>',
+    extra: '<path d="M12 2l10 5-10 5L2 7z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/>',
     plain: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
   };
@@ -217,7 +223,7 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
         st.textContent = !bl.length ? '' : all ? T('✓ Done', '✓ Готово') : done + ' / ' + bl.length;
         st.title = bl.length ? T(done + ' of ' + bl.length + ' activities done', 'Выполнено ' + done + ' из ' + bl.length) : '';
       }
-      if (bl.length) { tracked++; if (all) finished++; }
+      if (bl.length && f.getAttribute('data-kind') !== 'extra') { tracked++; if (all) finished++; }   // an optional topic is not counted
       var chip = sec.querySelector('.al-chip[data-i="' + i + '"]');
       if (chip) {
         chip.classList.toggle('on', all);
