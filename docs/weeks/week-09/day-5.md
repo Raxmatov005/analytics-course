@@ -1,14 +1,14 @@
 # Week 9 · Day 5 — Checkpoint: the scorecard review for the risk committee
 
-<span class="badge">Performance 75 min</span> <span class="badge">Stability 45 min</span> <span class="badge">Cut-off 75 min</span> <span class="badge">Memo 45 min</span> <span class="badge hw">Checkpoint · reviewed by the mentor</span>
+<span class="badge">Performance 75 min</span> <span class="badge">Stability 45 min</span> <span class="badge">Cut-off 75 min</span> <span class="badge">Memo 45 min</span> <span class="badge hw">Checkpoint · 100 points</span>
 
 > STORY **Friday, 9:00.** Nilufar, Madina and Jasur. Nilufar: *"Our application scorecard was built two years ago. On Monday the risk committee will ask me two things: does it still work, and is our approval cut-off in the right place? I want the answer on one page."* Madina: *"Three parts, in the order the committee reads them: how well the score ranks, whether the people applying have changed, and where the app's cut-off should sit — with its bad rate and its money."* Jasur: *"And every Gini with its number of bads. A Gini on thirty bads is not a Gini on two hundred."*
 
 ## Today in 3 lines
 
-- **Part A — performance:** in `checkpoint.ipynb` (the template is `data/python/week9/checkpoint.ipynb`), the AUC, Gini and KS of the credit score — on all loans, by risk grade, and out of time (older loans against 2026).
-- **Part B — stability:** the PSI of applicants' scores, 2026 against 2024; then the product mix and the approved loans.
-- **Part C — the cut-off:** the table of approval against bad rate, the profit of each cut-off for Micro loans with Week 8 Day 2's unit economics, the loans a new cut-off would refuse — and **the one-page memo** for the committee (`memo.md`).
+- **Part A — performance (30 pts):** in `checkpoint.ipynb` (the template is `data/python/week9/checkpoint.ipynb`), the AUC, Gini and KS of the credit score — on all loans, by risk grade, and out of time (older loans against 2026).
+- **Part B — stability (20 pts):** the PSI of applicants' scores, 2026 against 2024; then the product mix and the approved loans.
+- **Part C — the cut-off (30 pts):** the table of approval against bad rate, the profit of each cut-off for Micro loans with Week 8 Day 2's unit economics, the loans a new cut-off would refuse — and **the one-page memo** for the committee (`memo.md`, Part D, 20 pts).
 
 **Rules.** Open book: this week's pages and notebooks, and [Week 8 · Day 2](weeks/week-08/day-2.md) for the unit economics. Hand in with the **📎 box at the end of this page**: `checkpoint.ipynb` (executed — Kernel → Restart & Run All, then save) and `memo.md`. Data as of **2026-10-01**. The template's loader builds `loans` (7 828 loans: the score at the door, `bad`, the year, the score band and Week 8 Day 2's per-loan economics), `sc` (the 7 615 loans with a score) and `apps` (14 000 applications with the applicant's score and band). Closed: the model answers until you submit.
 
@@ -506,12 +506,12 @@ out.groupby("risk_grade").agg(
 
 ## What the mentor checks and what happens next
 
-| Part | What the mentor checks |
-|---|---|
-| A — performance | AUC, Gini and KS right, with the score's direction right; by grade and out of time, each with its n and bads |
-| B — stability | the PSI on unrounded shares; the traffic light read; applicants against loans explained |
-| C — the cut-off | the trade-off table; the contribution per loan with Week 8's assumptions; the best cut-off; the swap-out set against the break-even; a rollout |
-| D — the memo | the answer first; every number with its n; the definitions on the page; one page |
+| Part | Points | What the mentor checks |
+|---|---|---|
+| A — performance | 30 | AUC, Gini and KS right, with the score's direction right; by grade and out of time, each with its n and bads |
+| B — stability | 20 | the PSI on unrounded shares; the traffic light read; applicants against loans explained |
+| C — the cut-off | 30 | the trade-off table; the contribution per loan with Week 8's assumptions; the best cut-off; the swap-out set against the break-even; a rollout |
+| D — the memo | 20 | the answer first; every number with its n; the definitions on the page; one page |
 
 The mentor reviews the notebook and the memo and writes back part by part in 📤 Homework; anything to redo comes as a short list of tasks, not the whole week. The memo is a portfolio piece: keep it next to your Week 8 capstone, and before an interview at a bank go through the credit-risk questions of the [interview bank](company/interview.md) (F1–F5).
 
@@ -538,7 +538,7 @@ The mentor reviews the notebook and the memo and writes back part by part in �
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W9D5", "lesson": "W9D5", "title": "Checkpoint 9", "why": "This is the review a risk team asks of its analyst every year: does the model still rank, is it scoring the same people, and where should the line sit — each answer with its n, its money and the decision it supports.", "graded": ["Part A — performance: AUC, Gini and KS with the score's direction right; by grade and out of time, each with its n and bads and two sentences", "Part B — stability: the PSI on unrounded shares, the traffic light read, applicants against loans explained", "Part C — the cut-off: the trade-off table, the contribution per loan with Week 8's assumptions, the best cut-off, the swap-out set against the break-even, a rollout", "Part D — the memo: the answer first, every number with its n, the definitions on the page, one page"], "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — executed (Restart & Run All, then save), each task with its output and its two sentences."}, {"id": "memo.md", "file": "memo.md", "text": true, "minLines": 10, "q": "Write `memo.md` here — the one-page memo of Part D."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else (a chart, or a .zip of several files)."}]}
+{"check": "handin-W9D5", "lesson": "W9D5", "title": "Checkpoint 9", "why": "This is the review a risk team asks of its analyst every year: does the model still rank, is it scoring the same people, and where should the line sit — each answer with its n, its money and the decision it supports.", "graded": ["Part A — performance: AUC, Gini and KS with the score's direction right; by grade and out of time, each with its n and bads and two sentences (30)", "Part B — stability: the PSI on unrounded shares, the traffic light read, applicants against loans explained (20)", "Part C — the cut-off: the trade-off table, the contribution per loan with Week 8's assumptions, the best cut-off, the swap-out set against the break-even, a rollout (30)", "Part D — the memo: the answer first, every number with its n, the definitions on the page, one page (20)"], "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — executed (Restart & Run All, then save), each task with its output and its two sentences."}, {"id": "memo.md", "file": "memo.md", "text": true, "minLines": 10, "q": "Write `memo.md` here — the one-page memo of Part D."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else (a chart, or a .zip of several files)."}]}
 ```
 
 ---

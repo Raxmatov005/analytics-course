@@ -292,6 +292,61 @@
       "earned": null,
       "onTime": null,
       "feedback": null
+    },
+    {
+      "id": "hw9.1",
+      "week": 9,
+      "kind": "hw",
+      "title": "HW 9.1 — the payment line for Consumer loans",
+      "title_ru": "HW 9.1 — линия платежа для кредитов Consumer",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw9.2",
+      "week": 9,
+      "kind": "hw",
+      "title": "HW 9.2 — Consumer PD at 600 and 700 + calibration",
+      "title_ru": "HW 9.2 — PD Consumer при 600 и 700 + калибровка",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw9.3",
+      "week": 9,
+      "kind": "hw",
+      "title": "HW 9.3 — AUC, Gini and KS by product and by year",
+      "title_ru": "HW 9.3 — AUC, Джини и KS по продуктам и годам",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "hw9.4",
+      "week": 9,
+      "kind": "hw",
+      "title": "HW 9.4 — the cut-off table + PSI",
+      "title_ru": "HW 9.4 — таблица порогов + PSI",
+      "max": 20,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
+    },
+    {
+      "id": "cp9",
+      "week": 9,
+      "kind": "checkpoint",
+      "title": "Checkpoint 9 — the scorecard review + memo for the committee",
+      "title_ru": "Контрольная 9 — ревью скоркарты + записка для комитета",
+      "max": 100,
+      "earned": null,
+      "onTime": null,
+      "feedback": null
     }
   ],
   "challengeXp": 0,

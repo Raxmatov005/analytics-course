@@ -63,7 +63,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
   function autoBadge(rule, p) {
     var by = {}; p.items.forEach(function (it) { by[it.id] = it; });
     if (rule === 'onTimeWeek') {
-      for (var w = 1; w <= 8; w++) {
+      for (var w = 1; w <= 9; w++) {
         var hw = p.items.filter(function (it) { return it.week === w && it.kind === 'hw'; });
         if (hw.length && hw.every(function (it) { return it.earned != null && it.onTime === true; })) return true;
       }
@@ -93,7 +93,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     }
     if (id === 'perfect') return Object.keys(st.quizzes).some(function (k) { return st.quizzes[k].best === 100; });
     if (id === 'sweep') {
-      for (var w = 1; w <= 8; w++) {
+      for (var w = 1; w <= 9; w++) {
         var all = true;
         for (var d = 1; d <= 5; d++) {
           var q = st.quizzes['w0' + w + 'd' + d];
@@ -273,7 +273,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
         r.deviceBadges.map(function (b) { return badgeCard(b, deviceBadge(b.id), true); }).join('') + '</div>';
 
       html += '<h2 id="points">' + T('Points by week', 'Баллы по неделям') + '</h2>';
-      for (var w = 0; w <= 8; w++) {
+      for (var w = 0; w <= 9; w++) {
         var its = p.items.filter(function (it) { return it.week === w; });
         if (!its.length || (window.ALSched && !window.ALSched.weekOpen(w))) continue;   // a week not open yet (schedule.js) is left out
         var sumMax = 0, sumGot = 0;

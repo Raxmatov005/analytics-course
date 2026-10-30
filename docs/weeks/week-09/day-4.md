@@ -793,7 +793,7 @@ The lowest full month is **July: 654.7**, **7.0 points** below 2024's 661.7, wit
 
 Then compute the PSI of 2026 against 2024 on **ten bins**: the edges are the nine deciles of 2024's scores (`np.quantile(..., [0.1, …, 0.9])`). Write the six-line note for Nilufar in the last cell: the line, its approval and bad rate, its profit, the price of a 2 % target, the PSI, and one trigger to revisit.
 
-This homework is reviewed by the mentor: (a) the query runs on the practice database and returns 13 rows, (b) the five assert cells pass after *Restart & Run All*, (c) the ten-bin PSI is printed with its reading, (d) the note gives the six facts.
+Graded on (20 points): (a) the query runs on the practice database and returns 13 rows (4), (b) the five assert cells pass after *Restart & Run All* (2 points each, 10), (c) the ten-bin PSI is printed with its reading (3), (d) the note gives the six facts (3).
 
 **Check your results here before you hand in:**
 
@@ -824,7 +824,7 @@ This homework is reviewed by the mentor: (a) the query runs on the practice data
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W9D4", "lesson": "W9D4", "title": "HW 9.4", "why": "This is the strategy table a risk committee signs: every line it might choose, what it approves, what it loses and what it earns — and the proof that the applicants it was computed on are still the ones applying.", "graded": ["the query runs and returns the 13 cut-offs with approval, bad rate, bads avoided, goods lost and profit", "the five assert cells pass after Restart & Run All", "the ten-bin PSI is printed with its reading", "the note gives the line, its numbers, the price of a 2 % target, the PSI and a trigger"], "tasks": [{"id": "cutoff_table.sql", "file": "cutoff_table.sql", "text": true, "minLines": 5, "q": "Write `cutoff_table.sql` here — the one query of Part A."}, {"id": "day4_starter.ipynb", "file": "day4_starter.ipynb", "names": ["day4_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day4_starter.ipynb` — executed, with the outputs."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else (the profit chart as a picture, a .zip of several files)."}]}
+{"check": "handin-W9D4", "lesson": "W9D4", "title": "HW 9.4", "why": "This is the strategy table a risk committee signs: every line it might choose, what it approves, what it loses and what it earns — and the proof that the applicants it was computed on are still the ones applying.", "graded": ["the query runs and returns the 13 cut-offs with approval, bad rate, bads avoided, goods lost and profit (4)", "the five assert cells pass after Restart & Run All (10)", "the ten-bin PSI is printed with its reading (3)", "the note gives the line, its numbers, the price of a 2 % target, the PSI and a trigger (3)"], "tasks": [{"id": "cutoff_table.sql", "file": "cutoff_table.sql", "text": true, "minLines": 5, "q": "Write `cutoff_table.sql` here — the one query of Part A."}, {"id": "day4_starter.ipynb", "file": "day4_starter.ipynb", "names": ["day4_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day4_starter.ipynb` — executed, with the outputs."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else (the profit chart as a picture, a .zip of several files)."}]}
 ```
 
 ---

@@ -698,7 +698,7 @@ A 5 % threshold (not 50 %) flags the 948 loans scored below 621 and catches 28.3
 
 **The Consumer PD.** Open `data/python/week9/day2_starter.ipynb`. Part 0 repeats today's model on all scored loans. Then four functions are stubs with assert cells: `sigmoid(z)`, `log_odds(p)`, `fit_logit(x, y)` (Newton's method in numpy) and `log_loss(y, p)`. Then the Consumer part: the bad rate by score band from SQL, the logistic fit on the 2 350 scored Consumer loans, the PD for scores 600 and 700, a calibration table by band, and three sentences for Nilufar in the last cell. **Kernel → Restart & Run All**, then hand in the executed notebook with the 📎 box below.
 
-**What the mentor checks** (this week the homework is reviewed by the mentor, with no points): all four assert cells pass after *Restart & Run All*; the band table comes from SQL; the fit, the two PDs and the calibration table are right; the three sentences give the two PDs, how well the model is calibrated, and one caveat.
+Graded on (20 points): (a) all four assert cells pass after *Restart & Run All* (2 points each, 8), (b) the band table comes from SQL (3), (c) the fit, the two PDs and the calibration table are right (5), (d) the three sentences give the two PDs, how well the model is calibrated, and one caveat (4).
 
 **Check your numbers here before you hand in.**
 
@@ -729,7 +729,7 @@ A 5 % threshold (not 50 %) flags the 948 loans scored below 621 and catches 28.3
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W9D2", "lesson": "W9D2", "title": "HW 9.2", "why": "Day 3 judges the score's ranking and Day 4 sets the cut-off on top of these PDs, so the Consumer fit and its calibration have to be right first.", "graded": ["all four assert cells pass after Restart & Run All", "the band table comes from SQL", "the fit, PD(600), PD(700) and the calibration table are right", "the three sentences give the two PDs, the calibration and one caveat"], "tasks": [{"id": "day2_starter.ipynb", "file": "day2_starter.ipynb", "names": ["day2_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day2_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W9D2", "lesson": "W9D2", "title": "HW 9.2", "why": "Day 3 judges the score's ranking and Day 4 sets the cut-off on top of these PDs, so the Consumer fit and its calibration have to be right first.", "graded": ["all four assert cells pass after Restart & Run All (8)", "the band table comes from SQL (3)", "the fit, PD(600), PD(700) and the calibration table are right (5)", "the three sentences give the two PDs, the calibration and one caveat (4)"], "tasks": [{"id": "day2_starter.ipynb", "file": "day2_starter.ipynb", "names": ["day2_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day2_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
 
 ---

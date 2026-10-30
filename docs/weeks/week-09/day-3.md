@@ -790,7 +790,7 @@ In **25.2 %** of the resamples the newer loans rank as well or better; the 95 % 
 5. `gains_table(frame, groups=10)` — loans, bads, gain and lift per decile (ties broken by `loan_id`).
 6. `validation_table(frame, by)` — loans, bads, AUC, Gini and KS for each value of a column; run it by `product` and by year of disbursal.
 
-This homework is reviewed by the mentor: (a) the six assert cells pass after *Restart & Run All*, (b) every function has a docstring in your words, (c) the two tables are printed, (d) the five sentences give the Gini, the KS with its score, the weakest product, the out-of-time picture and one recommendation.
+Graded on (20 points): (a) the six assert cells pass after *Restart & Run All* (2 points each, 12), (b) every function has a docstring in your words (2), (c) the two tables are printed (2), (d) the five sentences give the Gini, the KS with its score, the weakest product, the out-of-time picture and one recommendation (4).
 
 **Check your results here before you hand in:**
 
@@ -821,7 +821,7 @@ This homework is reviewed by the mentor: (a) the six assert cells pass after *Re
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W9D3", "lesson": "W9D3", "title": "HW 9.3", "why": "Nilufar takes this pack to the risk committee: one table by product and one by year tell her where the scorecard still works and where it does not.", "graded": ["the six assert cells pass after Restart & Run All", "every function has a docstring in your words", "the tables by product and by year are printed", "the five sentences give the Gini and KS, the weakest product, the out-of-time picture and a recommendation"], "tasks": [{"id": "day3_starter.ipynb", "file": "day3_starter.ipynb", "names": ["day3_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day3_starter.ipynb` — executed, with the outputs."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else (the ROC chart as a picture, a .zip of several files)."}]}
+{"check": "handin-W9D3", "lesson": "W9D3", "title": "HW 9.3", "why": "Nilufar takes this pack to the risk committee: one table by product and one by year tell her where the scorecard still works and where it does not.", "graded": ["the six assert cells pass after Restart & Run All (12)", "every function has a docstring in your words (2)", "the tables by product and by year are printed (2)", "the five sentences give the Gini and KS, the weakest product, the out-of-time picture and a recommendation (4)"], "tasks": [{"id": "day3_starter.ipynb", "file": "day3_starter.ipynb", "names": ["day3_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day3_starter.ipynb` — executed, with the outputs."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else (the ROC chart as a picture, a .zip of several files)."}]}
 ```
 
 ---

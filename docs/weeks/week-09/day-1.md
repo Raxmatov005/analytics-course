@@ -863,7 +863,7 @@ On 1 852 six-month loans a Micro loan pays **70.3** thousand soum a month more t
 4. `leverage(x)` — one number per row.
 5. `fit_ols(X, y)` — the coefficients of a multiple regression with `np.linalg.lstsq`.
 
-**What the mentor checks** (this week the homework is reviewed by the mentor, with no points): all five assert cells pass after *Restart & Run All*; every function has a docstring in your words; the Consumer numbers are right; the three sentences give the rule, how well it fits, and where it must not be used.
+Graded on (20 points): (a) all five assert cells pass after *Restart & Run All* (2 points each, 10), (b) every function has a docstring in your words (2), (c) the Consumer numbers are right (4), (d) the three sentences give the rule, how well it fits, and where it must not be used (4).
 
 **Check your numbers here before you hand in.**
 
@@ -894,7 +894,7 @@ On 1 852 six-month loans a Micro loan pays **70.3** thousand soum a month more t
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W9D1", "lesson": "W9D1", "title": "HW 9.1", "why": "The affordability team will use this rule in their pre-screen, so the slope, the fit and the limits all have to be right — and the five functions come back on Day 2 and in the checkpoint.", "graded": ["all five assert cells pass after Restart & Run All", "every function has a docstring in your words", "the Consumer slope, R² and the prediction are right", "the three sentences give the rule, how well it fits and where it must not be used"], "tasks": [{"id": "day1_starter.ipynb", "file": "day1_starter.ipynb", "names": ["day1_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day1_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W9D1", "lesson": "W9D1", "title": "HW 9.1", "why": "The affordability team will use this rule in their pre-screen, so the slope, the fit and the limits all have to be right — and the five functions come back on Day 2 and in the checkpoint.", "graded": ["all five assert cells pass after Restart & Run All (10)", "every function has a docstring in your words (2)", "the Consumer slope, R² and the prediction are right (4)", "the three sentences give the rule, how well it fits and where it must not be used (4)"], "tasks": [{"id": "day1_starter.ipynb", "file": "day1_starter.ipynb", "names": ["day1_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day1_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
 
 ---
