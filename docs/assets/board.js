@@ -155,20 +155,22 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     }).join('');
   }
 
-  /* the voucher chain: each passed checkpoint is worth `ratio` times the previous one; a fail drops it back */
+  /* the voucher chain: each passed checkpoint is worth `ratio` times the previous one; a fail drops it back. An order entry
+     with a third value is a flat voucher of that size (Checkpoint 9, 2026-10-30): the same bonuses, but outside the chain —
+     passing it does not move the chain on and missing it does not step it back. scripts/award.py reads it the same way. */
   function chainOf(r, p) {
     var c = r.chain, by = {}, step = 0, rows = [], earned = 0, nextShown = false;
     p.items.forEach(function (it) { by[it.id] = it; });
     var fullWeeks = p.challengeWeeks || [], ahead = 0;
     c.order.forEach(function (o) {
       var it = by[o[0]], week = o[1], label = o[0] === 'capstone' ? T('Capstone', 'Итоговый проект') : T('Checkpoint ', 'Контрольная ') + o[0].slice(2);
-      var base = c.base * Math.pow(c.ratio, step);
+      var flat = typeof o[2] === 'number', base = flat ? o[2] : c.base * Math.pow(c.ratio, step);
       if (!it || it.earned == null) {
-        // checkpoints not taken yet: what each would be worth if she passes every one before it
-        var proj = c.base * Math.pow(c.ratio, step + ahead);
-        rows.push({ label: label, state: nextShown ? 'later' : 'next', value: Math.round(proj / c.roundTo) * c.roundTo, week: week });
+        // checkpoints not taken yet: what each would be worth if she passes every one before it (a flat one: its own size)
+        var proj = flat ? o[2] : c.base * Math.pow(c.ratio, step + ahead);
+        rows.push({ label: label, state: nextShown ? 'later' : 'next', value: Math.round(proj / c.roundTo) * c.roundTo, week: week, flat: flat });
         nextShown = true;
-        ahead += 1;
+        if (!flat) ahead += 1;
         return;
       }
       var v = pct(it);
@@ -176,11 +178,11 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
         var mult = (v >= 90 ? c.bonus90 : 1) * (fullWeeks.indexOf(week) >= 0 ? 1 + c.fullWeekBonus : 1);
         var val = Math.round(base * mult / c.roundTo) * c.roundTo;
         earned += val;
-        rows.push({ label: label, state: 'won', value: val, pct: v, bonus90: v >= 90, fullWeek: fullWeeks.indexOf(week) >= 0 });
-        step += 1;
+        rows.push({ label: label, state: 'won', value: val, pct: v, bonus90: v >= 90, fullWeek: fullWeeks.indexOf(week) >= 0, flat: flat });
+        if (!flat) step += 1;
       } else {
-        rows.push({ label: label, state: 'missed', value: 0, pct: v });
-        step = Math.max(0, step - c.dropSteps);
+        rows.push({ label: label, state: 'missed', value: 0, pct: v, flat: flat });
+        if (!flat) step = Math.max(0, step - c.dropSteps);
       }
     });
     var spent = (p.spent || []).reduce(function (s, x) { return s + (x.amount || 0); }, 0);
@@ -195,8 +197,11 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
       '<div class="bal"><span>' + T('In your wallet', 'В вашем кошельке') + '</span><b>' + fmt(ch.earned - ch.spent) + T(' soum', ' сум') + '</b></div></div>';
     h += '<div class="chain">' + ch.rows.map(function (row) {
       var tag = row.state === 'won' ? T('Won', 'Выиграно') + (row.bonus90 ? T(' · 90 %+ bonus', ' · бонус за 90 %+') : '') + (row.fullWeek ? T(' · full challenge week +10 %', ' · все задачи недели +10 %') : '')
-        : row.state === 'missed' ? T('Missed (' + Math.round(row.pct) + ' %) — the chain stepped back', 'Не сдано (' + Math.round(row.pct) + ' %) — цепочка откатилась назад')
-        : row.state === 'next' ? T('Next — pass it to win this', 'Следующая — сдайте её, чтобы выиграть эту сумму') : T('If you pass every one before it', 'Если сдадите все предыдущие');
+        : row.state === 'missed' ? (row.flat ? T('Missed (' + Math.round(row.pct) + ' %) — no voucher; the chain stays as it was', 'Не сдано (' + Math.round(row.pct) + ' %) — без ваучера; цепочка не меняется')
+          : T('Missed (' + Math.round(row.pct) + ' %) — the chain stepped back', 'Не сдано (' + Math.round(row.pct) + ' %) — цепочка откатилась назад'))
+        : row.state === 'next' ? T('Next — pass it to win this', 'Следующая — сдайте её, чтобы выиграть эту сумму')
+        : row.flat ? T('A fixed voucher, outside the chain — pass it to win this', 'Фиксированный ваучер вне цепочки — сдайте, чтобы выиграть эту сумму')
+        : T('If you pass every one before it', 'Если сдадите все предыдущие');
       return '<div class="link ' + row.state + '">' + icon(row.state === 'won' ? 'gift' : row.state === 'missed' ? 'lock' : 'target', 22) +
         '<div class="link-body"><div class="link-label">' + esc(row.label) + '</div><div class="link-tag">' + esc(tag) + '</div></div>' +
         '<div class="link-val">' + (row.state === 'missed' ? '—' : (row.state === 'won' ? '' : '≈ ') + fmt(row.value)) + '</div></div>';
@@ -208,6 +213,10 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
       'Пока вы сдаёте контрольные подряд, каждый ваучер стоит в ' + String(c.ratio).replace('.', ',') + ' раза больше предыдущего; 90 %+ добавляет ' +
       b90 + ' %, а неделя, в которой решены все пять задач дня, — ещё ' + bWeek + ' %. Несданная контрольная не даёт ваучера и откатывает цепочку на ' +
       c.dropSteps + ' ' + plural(c.dropSteps, 'звено', 'звена', 'звеньев') + ' назад. Пока вы не дошли до ваучера, его сумма примерная.') + '</p>';
+    c.order.filter(function (o) { return typeof o[2] === 'number'; }).forEach(function (o) {
+      h += '<p class="board-note">' + T('Checkpoint ' + o[0].slice(2) + ' wins a fixed voucher of ' + fmt(o[2]) + ' soum, outside the chain: the same bonuses, and missing it does not step the chain back.',
+        'Контрольная ' + o[0].slice(2) + ' даёт фиксированный ваучер ' + fmt(o[2]) + ' сум вне цепочки: те же бонусы, а если её не сдать, цепочка назад не откатится.') + '</p>';
+    });
     h += '<h3>' + T('What a voucher buys', 'Что можно получить за ваучер') + '</h3><p class="board-note">' +
       T('Spend a voucher now or save several and combine them. Tell your mentor what you choose.',
         'Потратьте ваучер сразу или накопите несколько и объедините их. Скажите ментору, что вы выбрали.') + '</p><ul class="menu">' +

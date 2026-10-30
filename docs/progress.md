@@ -25,7 +25,7 @@ Your level, your XP, the real rewards you are working towards, your badges and e
 - **Homework:** on time = full points possible; one day late = ×0.8; later = ×0.5. Always submit — feedback matters more than points.
 - **Checkpoints:** you need **70 %** to move on without a redo. Below 70 % you get a focused redo list, not a repeat of the week.
 - **After each checkpoint** (Day 5) send a screenshot of this page. Finished days and solved challenges live in your browser; the screenshot is how they join your XP.
-- **Vouchers:** every checkpoint you pass wins a voucher worth 1.5× the previous one; 90 %+ adds 25 %; a week with all five daily challenges adds 10 %. Missing a checkpoint gives no voucher and steps the chain back two links — so the cheapest way to lose money is to skip the work, not to make mistakes in it.
+- **Vouchers:** every checkpoint you pass wins a voucher worth 1.5× the previous one; 90 %+ adds 25 %; a week with all five daily challenges adds 10 %. Missing a checkpoint gives no voucher and steps the chain back two links — so the cheapest way to lose money is to skip the work, not to make mistakes in it. Checkpoint 9 (the credit-risk week) wins a fixed voucher of 200 000 soum outside the chain: the same bonuses, and missing it does not step the chain back.
 - **Daily challenges** are a bonus at the end of each day. Giving up shows the solution but earns no XP.
 - **Lucky days:** one day in every week is a surprise lucky day: its challenge pays double XP. You only find out when you open that day; the [course map](map.md) marks the ones you have found.
 - **Real rewards** are given by your mentor. When a voucher is won, tell them what you want from the menu, or save it for something bigger.

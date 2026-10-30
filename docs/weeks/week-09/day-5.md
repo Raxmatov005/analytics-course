@@ -513,6 +513,8 @@ out.groupby("risk_grade").agg(
 | C — the cut-off | 30 | the trade-off table; the contribution per loan with Week 8's assumptions; the best cut-off; the swap-out set against the break-even; a rollout |
 | D — the memo | 20 | the answer first; every number with its n; the definitions on the page; one page |
 
+**The voucher.** Pass with 70 % or more and Checkpoint 9 wins a fixed voucher of **200 000 soum** — 250 000 at 90 %+, and 10 % more after a week with all five daily challenges. It sits outside the doubling chain, so a miss here does not step the chain back ([Progress & rewards](progress.md)).
+
 The mentor reviews the notebook and the memo and writes back part by part in 📤 Homework; anything to redo comes as a short list of tasks, not the whole week. The memo is a portfolio piece: keep it next to your Week 8 capstone, and before an interview at a bank go through the credit-risk questions of the [interview bank](company/interview.md) (F1–F5).
 
 <details><summary>Week 9 in five sentences (open after submitting)</summary>
