@@ -379,6 +379,21 @@ Work in progress is kept in localStorage "al.sql". */
     ta.rows = Math.max(least, Math.min(30, lines + (least > 1 ? 1 : 0)));
     grow(ta);
   }
+  /* how long a written answer is: "3 lines" counts lines OR sentences, whichever is more — a paragraph of four sentences
+     has no line break, and her HW 1.1 Reflection stayed ❌ Not yet (2026-10-30). A sentence needs two words, so a "1." in
+     front of a numbered answer adds nothing. A code file (.sql, .py) counts its lines only. */
+  function textCount(t, s) {
+    var lines = s.split('\n').filter(function (l) { return l.trim(); }).length;
+    if (/\.(sql|py)$/i.test(t.file || '')) return lines;
+    var said = s.split(/\n|[.!?…]+(?=\s|$)/).filter(function (x) { return (x.match(/[A-Za-z0-9À-ɏЀ-ӿ]+/g) || []).length >= 2; }).length;
+    return Math.max(lines, said);
+  }
+  function textHint(t, n) {
+    var ml = t.minLines || 3, code = /\.(sql|py)$/i.test(t.file || ''), so = !n ? '' : n >= ml ? ' — ' + n + ' ✓' : T(' — ' + n + ' so far', ' — пока ' + n);
+    return code ? T('At least ' + ml + ' lines', 'Не меньше ' + ml + ' ' + plural(ml, 'строки', 'строк', 'строк')) + so + '.'
+      : T('At least ' + ml + (ml === 1 ? ' line or sentence' : ' lines or sentences'),
+        'Не меньше ' + ml + ' ' + plural(ml, 'строки', 'строк', 'строк') + ' или ' + plural(ml, 'предложения', 'предложений', 'предложений')) + so + '.';
+  }
   /* a long line wraps instead of running past the box: on screen, the box grows to its wrapped height; a box that
      shows later (a closed <details>) or changes width is grown again by the observer. pyrun.js uses it too. */
   var watch = window.ResizeObserver ? new ResizeObserver(function (es) {
@@ -472,16 +487,20 @@ Work in progress is kept in localStorage "al.sql". */
       ta.value = mine.code[t.id] || '';
       if (ta.value) setTimeout(function () { fit(ta); }, 0);
       tabKeys(ta);
+      if (t.text && ta.value.trim()) {   // counted again on every load, so an answer saved under the old rule shows its real state
+        var okNow = textCount(t, ta.value) >= (t.minLines || 3);
+        if (mine.ok[t.id] !== okNow) { var st0 = store(); st0.sql[spec.check].ok[t.id] = mine.ok[t.id] = okNow; save(st0); }
+      }
       paint(c, mine.ok[t.id]);
       ta.addEventListener('input', function () {
         var st = store(), m = st.sql[spec.check];
         m.code[t.id] = ta.value;
         fit(ta);
-        if (t.text) m.ok[t.id] = ta.value.trim().split('\n').filter(function (l) { return l.trim(); }).length >= (t.minLines || 3);
+        if (t.text) { var n = textCount(t, ta.value); m.ok[t.id] = n >= (t.minLines || 3); msg.textContent = textHint(t, n); }
         else delete m.ok[t.id];
         save(st); paint(c, m.ok[t.id]); foot();
       });
-      if (t.text) { var ml = t.minLines || 3; msg.textContent = T('At least ' + ml + ' lines.', 'Не меньше ' + ml + ' ' + plural(ml, 'строки', 'строк', 'строк') + '.'); return; }
+      if (t.text) { msg.textContent = textHint(t, textCount(t, ta.value)); return; }
       c.querySelector('.sq-run').onclick = function () {
         out.innerHTML = '<div class="sq-note sq-loading">' + runningText() + '</div>';
         ready().then(function () { out.innerHTML = table(runPlay(ta.value)); })
