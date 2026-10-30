@@ -595,6 +595,7 @@ Work in progress is kept in localStorage "al.sql". */
         .then(function (x) {
           if (x.status === 200) {
             var st = store(); st.sql[spec.check].submitted = new Date().toISOString().slice(0, 10); save(st);
+            document.dispatchEvent(new CustomEvent('al-handin', { detail: { lesson: spec.lesson } }));   // feedback.js sends answers waiting for it
             foot(); btn.disabled = true;
             state.innerHTML = T('✅ Submitted! Your mentor is notified — feedback will appear in 📤 Homework.', '✅ Сдано! Ментор получил уведомление — отзыв появится в 📤 Homework.');
           } else if (x.status === 401) {

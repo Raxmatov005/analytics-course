@@ -6,6 +6,8 @@ practice day. Local-first: it always works, and it is saved on this device the m
   {lesson: {answers, at, sent}}. The card then shows them with "Saved on this device".
 - "Send to your mentor" posts the saved answers to the bot (POST /feedback, as the bot's own answers). Without a key
   that is when the sign-in card (signin.js: name + PIN from the mentor) appears; a refusal (4xx) keeps them on this device and says so.
+  Saved answers also go by themselves (sendSaved): on every page load, after signing in, and after the lesson's hand-in
+  (sqlrun.js fires "al-handin"); until then the card says "⏳ Not sent yet" and why.
 - With a key the card does what it did before: the bot's seven questions (GET /feedback hands them over, so there is
   one list), the homework handed in first, saved with POST /feedback and changeable later, here or in the bot. */
 (function () {
@@ -21,6 +23,40 @@ practice day. Local-first: it always works, and it is saved on this device the m
     var all = allLocal();
     all[lesson] = rec;
     try { localStorage.setItem(LOCAL, JSON.stringify(all)); } catch (e) { /* private window: the answers live until the page closes */ }
+  }
+  /* answers kept on this device go to the mentor by themselves once she is signed in and the lesson's homework is in — on
+     every page load, after signing in and after a hand-in (her Day 1 answers sat here unsent: "Saved on this device —
+     thank you!" read as done, 2026-10-30). One send per lesson at a time; it resolves to 'sent', 'hw' (homework not
+     in yet), 'key' (signed out), 'bad' (refused) or 'net' (no connection). */
+  var sending = {};
+  function sendSaved(lesson) {
+    var loc = getLocal(lesson);
+    if (!loc || !loc.answers || loc.sent || !key()) return Promise.resolve(null);
+    if (!Object.keys(loc.answers).some(function (k) { return loc.answers[k] != null && loc.answers[k] !== ''; })) return Promise.resolve('empty');
+    if (sending[lesson]) return sending[lesson];
+    var what = JSON.stringify(loc.answers);
+    return (sending[lesson] = fetch(WORKER + '/feedback', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: key(), lesson: lesson, answers: loc.answers, source: 'site' }) })
+      .then(function (r) { if (!r.ok) throw r.status; return r.json(); })
+      .then(function () {
+        var now = getLocal(lesson);   // changed while it was on its way: the new answers go next time
+        if (now && JSON.stringify(now.answers) === what) { now.sent = true; now.sentAt = new Date().toISOString(); putLocal(lesson, now); }
+        return 'sent';
+      })
+      .catch(function (e) {
+        if (e === 401 && window.ALSignIn) ALSignIn.dropKey();
+        return e === 409 ? 'hw' : e === 401 ? 'key' : typeof e === 'number' && e >= 400 && e < 500 ? 'bad' : 'net';
+      })
+      .then(function (r) { delete sending[lesson]; return r; }));
+  }
+  function sweep() { Object.keys(allLocal()).forEach(sendSaved); }
+  sweep();
+  document.addEventListener('al-signin', sweep);
+  document.addEventListener('al-handin', function (e) { if (e.detail && e.detail.lesson) sendSaved(e.detail.lesson); });
+  /* what an unsent card says when she is not signed in */
+  function NOT_SENT() {
+    return T('⏳ Not sent yet — saved on this device only. Tap “Send to your mentor” (you sign in once), and it goes.',
+      '⏳ Пока не отправлено — сохранено только на этом устройстве. Нажмите «Отправить ментору» (один раз войдите), и ответы уйдут.');
   }
   /* the same lesson id on the English page and its Russian copy (ru/weeks/… → W1D2) */
   function lessonOf(path) {
@@ -61,8 +97,11 @@ practice day. Local-first: it always works, and it is saved on this device the m
     function note(sub, html) { resting = null; card.innerHTML = head(sub) + '<div class="fb-foot">' + html + '</div>'; }
     function intro() {
       var loc = getLocal(lesson);
-      if (loc && loc.answers) return localSummary(loc.sent ? T('✅ Sent to your mentor · also saved on this device', '✅ Отправлено ментору · сохранено и на этом устройстве')
-        : T('Saved on this device', 'Сохранено на этом устройстве'));
+      if (loc && loc.answers) {
+        if (loc.sent) return localSummary(T('✅ Sent to your mentor · also saved on this device', '✅ Отправлено ментору · сохранено и на этом устройстве'));
+        if (key()) return sendLocal();
+        return localSummary(NOT_SENT());
+      }
       card.innerHTML = head(T('7 quick questions · 2 minutes · saved as you answer · only your mentor reads it', '7 коротких вопросов · 2 минуты · сохраняется сразу · читает только ваш ментор')) +
         '<div class="fb-foot"><button type="button" class="qz-btn fb-open">' + T('Leave feedback', 'Оставить отзыв') + '</button></div>';
       card.querySelector('.fb-open').onclick = function () { if (key()) load(); else local(); };
@@ -89,7 +128,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
       card.querySelector('.fb-change').onclick = local;
       var s = card.querySelector('.fb-send');
       if (s) s.onclick = sendLocal;
-      tail(function () { localSummary(sub); });
+      tail(loc.sent ? function () { localSummary(sub); } : intro);   // signing in on an unsent card sends it
     }
     /* not signed in (or signed out): the sign-in card (signin.js); after it, the saved answers are sent */
     function connect(signedOut) {
@@ -115,26 +154,28 @@ practice day. Local-first: it always works, and it is saved on this device the m
     function sendLocal() {
       var loc = getLocal(lesson);
       if (!loc || !loc.answers) return intro();
+      if (loc.sent) return localSummary(T('✅ Sent to your mentor · also saved on this device', '✅ Отправлено ментору · сохранено и на этом устройстве'));
       if (!key()) return connect();
       note(T('Sending…', 'Отправка…'), '');
-      fetch(WORKER + '/feedback', { method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ key: key(), lesson: lesson, answers: loc.answers, source: 'site' }) })
-        .then(function (r) { if (!r.ok) throw r.status; return r.json(); })
-        .then(function () {
-          loc.sent = true; loc.sentAt = new Date().toISOString(); putLocal(lesson, loc);
-          localSummary(T('✅ Sent — thank you! Your mentor reads every answer.', '✅ Отправлено — спасибо! Ментор читает каждый ответ.'));
-        })
-        .catch(function (e) {
-          if (e === 401) { if (window.ALSignIn) ALSignIn.dropKey(); return connect(true); }
-          if (e === 409) return localSummary(T('First hand in this lesson’s homework (the 📎 box above) — then send these answers. They stay saved on this device.',
-            'Сначала сдайте домашнее задание этого урока (📎 окошко выше) — потом отправьте эти ответы. Они сохранены на этом устройстве.'));
-          localSummary(typeof e === 'number' && e >= 400 && e < 500
-            ? T('The course bot did not accept these answers, so they stay saved on this device. Tell your mentor, or try again later.',
-              'Бот курса не принял эти ответы, поэтому они остаются сохранёнными на этом устройстве. Сообщите ментору или попробуйте позже.')
-            : T('Not sent — no connection to the course bot. Your answers stay saved on this device; try again later.',
-              'Не отправлено — нет связи с ботом курса. Ответы сохранены на этом устройстве; попробуйте позже.'));
-        });
+      sendSaved(lesson).then(function (r) {
+        if (!document.body.contains(card)) return;
+        if (r === 'sent') return localSummary(T('✅ Sent — thank you! Your mentor reads every answer.', '✅ Отправлено — спасибо! Ментор читает каждый ответ.'));
+        if (r === 'key') return connect(true);
+        if (r === 'empty') return localSummary(T('Nothing to send — every question was skipped. Tap “Change my answers” to answer them.',
+          'Нечего отправлять — все вопросы пропущены. Нажмите «Изменить ответы», чтобы ответить.'));
+        if (r === 'hw') return localSummary(T('⏳ Not sent yet — saved on this device. They go to your mentor by themselves once this lesson’s homework is handed in (the 📎 box above).',
+          '⏳ Пока не отправлено — сохранено на этом устройстве. Ответы уйдут ментору сами, как только домашнее задание этого урока будет сдано (📎 окошко выше).'));
+        localSummary(r === 'bad'
+          ? T('⏳ Not sent — the course bot did not accept these answers, so they stay saved on this device. Tell your mentor, or try again later.',
+            '⏳ Не отправлено — бот курса не принял эти ответы, поэтому они остаются сохранёнными на этом устройстве. Сообщите ментору или попробуйте позже.')
+          : T('⏳ Not sent — no connection to the course bot. Your answers stay saved on this device and go by themselves next time you open the course.',
+            '⏳ Не отправлено — нет связи с ботом курса. Ответы сохранены на этом устройстве и уйдут сами, когда вы снова откроете курс.'));
+      });
     }
+    document.addEventListener('al-handin', function (e) {   // the homework just went in: the answers waiting for it go now
+      var loc = getLocal(lesson);
+      if (document.body.contains(card) && e.detail && e.detail.lesson === lesson && loc && loc.answers && !loc.sent) sendLocal();
+    });
 
     /* ---------- through the course bot (a key exists) ---------- */
     function load() {
@@ -208,7 +249,7 @@ practice day. Local-first: it always works, and it is saved on this device the m
       if (cur >= data.steps.length) {
         if (!data.local) return send();
         keepLocal();
-        return localSummary(T('Saved on this device — thank you!', 'Сохранено на этом устройстве — спасибо!'));
+        return key() ? sendLocal() : localSummary(NOT_SENT());
       }
       step();
     }
