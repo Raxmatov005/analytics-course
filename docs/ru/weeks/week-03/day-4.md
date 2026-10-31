@@ -52,7 +52,7 @@ SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;
 {"id": "w03d4-l1", "kind": "choice", "options": ["52 850 — представление сохранило свои строки при создании", "52 851 — представление заново выполняет свой запрос на сегодняшних строках", "Ошибку — представление нужно пересоздавать после каждого изменения", "52 876 — представление считает сырую таблицу"], "answer": 1, "explain": "Представление хранит запрос, а не строки. Каждое чтение выполняет его на текущих данных, поэтому новая оплата там будет (если только она не повторяет более раннюю — тогда её уберёт дедупликация)."}
 ```
 
-> 🎬 **Остались вопросы про представления (VIEW)?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=56724&end=57243)
+> 🎬 **Остались вопросы про представления (VIEW)?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=29107&end=29489)
 
 ### CREATE VIEW и DROP VIEW :id=create-view-and-drop-view
 
@@ -289,9 +289,7 @@ WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);
 {"type": "sort", "id": "w03d4-g2", "title": "Поможет ли индекс?", "q": "У каждого столбца в этих фильтрах есть индекс. Нажмите на фильтр, затем на его место.", "groups": {"Индекс помогает (SEARCH)": ["WHERE installment_id = 59838", "WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01'", "JOIN payments p ON p.installment_id = i.installment_id"], "Индекс не поможет (SCAN)": ["WHERE strftime('%Y-%m', due_date) = '2026-09'", "WHERE LOWER(method) = 'card'", "WHERE method LIKE '%card'"]}}
 ```
 
-> 🎬 **Остались вопросы про индексы?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=66222&end=66780)
-
-> 🎬 **Остались вопросы про как индекс ускоряет поиск?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=66780&end=67314)
+> 🎬 **Остались вопросы про индексы?** [Амелин объясняет · 7 мин](https://youtu.be/7w_Svh9Gnsw?t=33326&end=33736)
 
 ### Читаем EXPLAIN QUERY PLAN — SCAN или SEARCH :id=reading-explain-query-plan-scan-or-search
 
@@ -333,9 +331,7 @@ SELECT * FROM payments WHERE loan_id = 2242;
 {"type": "bug", "id": "w03d4-g3", "title": "Найдите медленную строку", "q": "У due_date есть индекс, а план говорит SCAN. Какая строка превращает SEARCH в SCAN?", "code": "CREATE INDEX ix_installments_due ON installments (due_date);\nSELECT COUNT(*)\nFROM installments\nWHERE strftime('%Y-%m', due_date) = '2026-09';", "answer": [3], "why": "Движок не может искать значение, которое приходится вычислять для каждой строки. WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01' даёт то же количество через SEARCH."}
 ```
 
-> 🎬 **Остались вопросы про план выполнения запроса?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=73231&end=73500)
-
-> 🎬 **Остались вопросы про SCAN и SEARCH в плане?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=73848&end=74215)
+> 🎬 **Остались вопросы про план выполнения запроса (в SQLite это EXPLAIN QUERY PLAN)?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=34210&end=34530)
 
 ### Привычки, которые делают запросы быстрыми :id=the-habits-that-make-queries-fast
 
@@ -420,7 +416,7 @@ SELECT * FROM t_collections_2026_09 ORDER BY collected DESC;
 
 ### Углубление (необязательно) :id=depth-optional
 
-- ▶ Baraa, *Views* [15:35:02](https://youtu.be/SSKVgrwhzus?t=56102&end=59800), *CTAS and temp tables* [16:36:40](https://youtu.be/SSKVgrwhzus?t=59800&end=62251), *Indexes* [18:23:42](https://youtu.be/SSKVgrwhzus?t=66222&end=73231), *Execution plan* [20:20:31](https://youtu.be/SSKVgrwhzus?t=73231&end=76263), *30 performance tips* [21:43:39](https://youtu.be/SSKVgrwhzus?t=78219&end=80665) — длинно; смотрите Views + Indexes + советы (≈2 ч), главу про план — если вашей целью является SQL Server. Хранимые процедуры и триггеры (17:27:04, 18:12:58) для аналитика необязательны.
+- ▶ (на англ.) Baraa, *Views* [15:35:02](https://youtu.be/SSKVgrwhzus?t=56102&end=59800), *CTAS and temp tables* [16:36:40](https://youtu.be/SSKVgrwhzus?t=59800&end=62251), *Indexes* [18:23:42](https://youtu.be/SSKVgrwhzus?t=66222&end=73231), *Execution plan* [20:20:31](https://youtu.be/SSKVgrwhzus?t=73231&end=76263), *30 performance tips* [21:43:39](https://youtu.be/SSKVgrwhzus?t=78219&end=80665) — длинно; смотрите Views + Indexes + советы (≈2 ч), главу про план — если вашей целью является SQL Server. Хранимые процедуры и триггеры (17:27:04, 18:12:58) для аналитика необязательны.
 - *Английские термины:* представление = view, временная таблица = temp table, материализация = materialisation, индекс = index, кластерный / некластерный = clustered / non-clustered, план выполнения = execution plan, полное сканирование = full scan, поиск по индексу = index seek.
 
 ```videoquiz

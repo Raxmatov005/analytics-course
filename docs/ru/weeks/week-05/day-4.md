@@ -268,6 +268,8 @@ act[["principal", "outstanding"]].corr()
 {"id": "w05d4-l3", "kind": "choice", "options": ["Фигура побольше, figsize=(20, 20)", "Маленькие полупрозрачные точки: s=8, alpha=0.3 — и логарифмические оси для денег", "Легенда", "Отсортировать строки перед рисованием"], "answer": 1, "explain": "Наложение точек лечится маленькими прозрачными точками — плотность видна как темнота; логарифмические оси растягивают деньги от 300 000 до 600 млн."}
 ```
 
+> 🎬 **Остались вопросы про диаграмму рассеяния (scatter plot)?** [Глеб Михайлов объясняет · 11 мин](https://youtu.be/dd3RcafdOQk?t=15383&end=16035)
+
 ### Подписи, заголовки и форматы чисел — график, который можно процитировать :id=labels-titles-and-number-formats--a-chart-people-can-quote
 
 **Что это.** График готов, когда читатель может его процитировать, не спрашивая вас. Для этого нужны **заголовок, который формулирует вывод** (*finding title*), подписи осей с единицами, числа в читаемом виде (млрд, а не `2e10`) и файл, сохранённый в фиксированном размере. **Форматтер** (`FuncFormatter`) переписывает каждую подпись делений оси; `fig.savefig` записывает PNG.
@@ -533,6 +535,8 @@ ct
 {"id": "w05d4-l6", "kind": "python", "starter": "import pandas as pd\ns = pd.read_csv(\"../excel/loans_status.csv\")\n\n# ваш код: средний остаток на кредит по каждому продукту; выведите значение SME в млн, один знак после запятой\n", "answer": 161.2, "dp": 1, "hint": "s.groupby(\"product\")[\"outstanding\"].mean() — затем [\"Small business loan\"] / 1e6.", "model": "mean_out = s.groupby(\"product\")[\"outstanding\"].mean()\nprint(round(mean_out[\"Small business loan\"] / 1e6, 1))     # 161.2\n\nbarplot по умолчанию рисует для SME 161,2 млн — среднее по 781 кредиту, — а итог 125 892 942 411. Та же форма графика, число в 781 раз меньше: estimator=sum или агрегируйте заранее."}
 ```
 
+> 🎬 **Остались вопросы про тепловую карту в seaborn (heatmap)?** [Глеб Михайлов объясняет · 4 мин](https://youtu.be/dd3RcafdOQk?t=12961&end=13227)
+
 ### sqlite3 и read_sql — мост :id=sqlite3-and-read_sql--the-bridge
 
 **Что это.** `sqlite3.connect(path)` открывает файл базы данных. **`pd.read_sql(query, con)`** выполняет любой SQL в базе и возвращает результат как DataFrame со столбцами из `SELECT`. Любой запрос недель 1–3 — соединения, CTE, оконные функции — попадает в pandas без перепечатывания. Значения передаются через **`params=`**, по одному `?` на значение.
@@ -665,13 +669,13 @@ fig.savefig("figures/01_disbursements_ma3.png", dpi=150, facecolor="white")
 
 **Видео (бесплатные, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Фигура и оси matplotlib — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:21:23](https://youtu.be/wUSDVGivd-8?t=19283&end=20081)
-- ▶ Форматирование графиков / гистограммы / ящики с усами — тот же курс, [8:17:21](https://youtu.be/wUSDVGivd-8?t=29841&end=30606)
-- ▶ seaborn — тот же курс, [9:31:39](https://youtu.be/wUSDVGivd-8?t=34299&end=35140)
-- ▶ seaborn (короткое видео по одной теме) — [Seaborn Crash Course - Data Visualization in Python (NeuralNine), 08:16](https://youtu.be/rLVCSmtoA7U?t=496&end=840)
-- ▶ Быстрые графики pandas — [Creating Visualizations using Pandas Library (Alex The Analyst), 01:52](https://youtu.be/JpSMse3eVVg?t=112&end=192)
-- ▶ `read_sql` — [SQL Databases with Pandas and Python - A Complete Guide (Rob Mulla), 08:35](https://youtu.be/DiQ5Hni6oRI?t=515&end=684)
-- ▶ `read_sql` с SQLite (совпадает с `sqlite3.connect` со страницы) — [SQLite with Pandas (Code Adhyayana)](https://youtu.be/xcVXCK6U6LA)
+- ▶ (на англ.) Фигура и оси matplotlib — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:21:23](https://youtu.be/wUSDVGivd-8?t=19283&end=20081)
+- ▶ (на англ.) Форматирование графиков / гистограммы / ящики с усами — тот же курс, [8:17:21](https://youtu.be/wUSDVGivd-8?t=29841&end=30606)
+- ▶ (на англ.) seaborn — тот же курс, [9:31:39](https://youtu.be/wUSDVGivd-8?t=34299&end=35140)
+- ▶ (на англ.) seaborn (короткое видео по одной теме) — [Seaborn Crash Course - Data Visualization in Python (NeuralNine), 08:16](https://youtu.be/rLVCSmtoA7U?t=496&end=840)
+- ▶ (на англ.) Быстрые графики pandas — [Creating Visualizations using Pandas Library (Alex The Analyst), 01:52](https://youtu.be/JpSMse3eVVg?t=112&end=192)
+- ▶ (на англ.) `read_sql` — [SQL Databases with Pandas and Python - A Complete Guide (Rob Mulla), 08:35](https://youtu.be/DiQ5Hni6oRI?t=515&end=684)
+- ▶ (на англ.) `read_sql` с SQLite (совпадает с `sqlite3.connect` со страницы) — [SQLite with Pandas (Code Adhyayana)](https://youtu.be/xcVXCK6U6LA)
 
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `4.5_Python.pdf`: ООП-интерфейс matplotlib — стр. 12–20, relational / categorical / distribution графики seaborn — стр. 22–38 (длинный и широкий формат — стр. 24), heatmap — стр. 36, графики pandas — стр. 47–55, выбор графика и сторителлинг — стр. 68–72. `4.4_Python.pdf`: DB-API и курсоры — стр. 7–28, `read_sql` / `to_sql` / порционная загрузка — стр. 29–34, движки SQLAlchemy — стр. 38–54 (на тот день, когда вы подключитесь к SQL Server).
 - *Английские термины:* chart / plot = график, line chart = линейный график, bar / barh = столбчатая / линейчатая диаграмма, histogram = гистограмма, boxplot = ящик с усами, scatter = диаграмма рассеяния, heatmap = тепловая карта, subplot = подграфик, legend = легенда, axis = ось, long / wide format = длинный / широкий формат.
@@ -1177,6 +1181,8 @@ git log --oneline
 ```task
 {"id": "w05d4-x4", "kind": "choice", "options": ["fix", "changes 2", "Start the week on Monday, not Thursday", "asdfgh"], "answer": 2, "explain": "Оно говорит, что изменилось и в какую сторону, одной строкой. В марте git log --oneline — это список таких строк: «fix» и «changes 2» не скажут ему, какой коммит сломал даты."}
 ```
+
+> 🎬 **Остались вопросы про Git?** [Merion Academy объясняет · 8 мин](https://youtu.be/EeARyFrZsnU?t=10&end=463)
 
 ### Ветки и слияние — пробуем изменение, не ломая main :id=branches-and-merge-try-a-change-without-breaking-main
 

@@ -125,14 +125,14 @@
 |---|---|---|
 | Source | From Text/CSV → customers_dirty.csv |   |
 | Promoted Headers |   |   |
-| Changed Type | customer_id, monthly_income → Whole Number (blanks become null); birth_date, registered_at → Date; phone → Text |   |
-| Trim names | select first_name, last_name → Transform → Format → Trim |   |
-| Capitalize names | → Format → Capitalize Each Word |   |
-| Flag bad birth dates | Add Column → Custom: `birth_date_invalid = [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)` |   |
-| Clean birth date | Add Column → Conditional: `birth_date_clean = if birth_date_invalid = true then null else [birth_date]` |   |
-| Age | Add Column → Custom: `age = if [birth_date_clean] = null then null else Date.Year(#date(2026,10,1)) - Date.Year([birth_date_clean]) - (if Date.DayOfYear(#date(2026,10,1)) < Date.DayOfYear([birth_date_clean]) then 1 else 0)` |   |
-| Sort | registered_at ascending | (so Remove Duplicates keeps the original, not the later copy) |
-| Remove duplicates | select phone, birth_date → Remove Rows → Remove Duplicates | 6 040 → 6 000 |
+| Changed Type | customer_id, monthly_income → Whole Number (пустые становятся null); birth_date, registered_at → Date; phone → Text |   |
+| Обрезать имена | выделить first_name, last_name → Transform → Format → Trim |   |
+| Имена с заглавной буквы | → Format → Capitalize Each Word |   |
+| Пометить неверные даты рождения | Add Column → Custom: `birth_date_invalid = [birth_date] > #date(2026,10,1) or [birth_date] < #date(1920,1,1)` |   |
+| Очистить дату рождения | Add Column → Conditional: `birth_date_clean = if birth_date_invalid = true then null else [birth_date]` |   |
+| Возраст | Add Column → Custom: `age = if [birth_date_clean] = null then null else Date.Year(#date(2026,10,1)) - Date.Year([birth_date_clean]) - (if Date.DayOfYear(#date(2026,10,1)) < Date.DayOfYear([birth_date_clean]) then 1 else 0)` |   |
+| Сортировка | registered_at ascending | (чтобы Remove Duplicates оставил оригинал, а не более позднюю копию) |
+| Удалить дубликаты | выделить phone, birth_date → Remove Rows → Remove Duplicates | 6 040 → 6 000 |
 | Close & Load To | Table customers_clean |   |
 
 Проверки на `Checks`: `=ROWS(customers_clean)` → **6 000**; `=COUNTIFS(customers_clean[birth_date_invalid], TRUE)` → **7**; `=MAX(customers_clean[customer_id])` → 6 000 (ни один идентификатор выше 6 000 не выживает — каждый дубликат был *более поздней* регистрацией; если у вас 6 0xx, вы не отсортировали сначала); `=COUNTBLANK(customers_clean[monthly_income])` → 354 (в сыром файле их 356; два пропуска принадлежали удалённым дубликатам — и 0, если вы набрали пропуски как 0: это неверно — нулевой доход есть утверждение, пропуск есть пробел); `=ROWS(UNIQUE(customers_clean[phone]))` → 5 997; `=COUNTIFS(customers_clean[first_name], "*Bobur*")` возвращает одно и то же независимо от того, был ли пробел следом. Однофамильцы 823/1197 и 2460/5562 присутствуют оба. Средний возраст валидных строк 45.2.
@@ -149,14 +149,14 @@
 
 | Запрос | Шаги | Примечание |
 |---|---|---|
-| payments_clean | Source → Promoted Headers → Changed Type (ids, amount → Whole Number; paid_at → Date; method, product, region → Text) |   |
-|   | Trim method → lowercase method → Replace Values "bank transfer" → "transfer" (entire cell) |   |
-|   | Sort payment_id ascending → Remove Duplicates on installment_id, paid_at, amount | 52 875 → 52 850 |
+| payments_clean | Source → Promoted Headers → Changed Type (id-столбцы, amount → Whole Number; paid_at → Date; method, product, region → Text) |   |
+|   | Trim method → lowercase method → Replace Values "bank transfer" → "transfer" (ячейка целиком) |   |
+|   | Sort payment_id ascending → Remove Duplicates по installment_id, paid_at, amount | 52 875 → 52 850 |
 |   | Add Column → Custom: `is_forward_dated = [paid_at] > #date(2026,10,1)` |   |
 |   | Close & Load To → Table |   |
-| paid_by_installment (reference payments_clean) | Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount), first_paid = Min(paid_at) | → Connection only |
-| installments_paid | Source installments.csv → types → Merge Queries paid_by_installment, Left Outer on installment_id → expand paid, first_paid |   |
-|   | → Replace null → 0 in paid → Add Column → Date → Month → Start of Month (due_date) as due_month → Close & Load To → Table |   |
+| paid_by_installment (Reference на payments_clean) | Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount), first_paid = Min(paid_at) | → Connection only |
+| installments_paid | Source installments.csv → типы → Merge Queries paid_by_installment, Left Outer по installment_id → expand paid, first_paid |   |
+|   | → Replace null → 0 в paid → Add Column → Date → Month → Start of Month (due_date) как due_month → Close & Load To → Table |   |
 
 Проверки: `=ROWS(payments_clean)` → **52 850**; `=SUM(payments_clean[amount])` → **255 114 772 176**; `=ROWS(UNIQUE(payments_clean[method]))` → **5**; количества card 17 612 · payme 8 897 · cash 8 788 · click 8 786 · transfer 8 767; `=COUNTIFS(payments_clean[is_forward_dated], TRUE)` → **24** (Σ 53 438 947); `=ROWS(installments_paid)` → **92 193** (Left Outer сохранил каждый платёж по графику); `=COUNTIFS(installments_paid[due_date], "<="&DATE(2026,10,1), …)` с `paid < total_due` через `SUMPRODUCT` → **1 784**; платежи по графику с `paid > total_due` → **0** (до удаления дубликатов было 25 — дубликаты были единственными переплатами).
 
@@ -415,7 +415,7 @@
 ```quiz
 {"id": "w04d5", "pass": 0.8, "questions": [
   {"type": "single", "q": "После Refresh All в customers_clean всё ещё есть идентификаторы выше 6 000. Что пошло не так?", "options": ["Неверный ключ дубликатов", "Нет Sort по registered_at перед Remove Duplicates, поэтому сохранилась более поздняя копия вместо оригинала", "Remove Duplicates запускали дважды", "Идентификаторы были заданы как текст"], "answer": 1, "explain": "Remove Duplicates сохраняет первую встреченную строку; отсортируйте так, чтобы нужная строка шла первой (→ A1, образец ответа; Если вы застряли)."},
-  {"type": "number", "q": "Месячный доход (monthly_income) трёх клиентов, в миллионах. Один пропуск при очистке был набран как 0. Что теперь вернёт AVERAGE?", "code": "monthly_income: 10 | 20 | 0   (the 0 was a blank)\n\n=AVERAGE(customers_clean[monthly_income])", "answer": 10, "explain": "Если пропуск сохранён как null, AVERAGE его пропускает и возвращает 15; нулевой доход есть утверждение, пропуск есть пробел (→ A1, проверки)."},
+  {"type": "number", "q": "Месячный доход (monthly_income) трёх клиентов, в миллионах. Один пропуск при очистке был набран как 0. Что теперь вернёт AVERAGE?", "code": "monthly_income: 10 | 20 | 0   (0 был пропуском)\n\n=AVERAGE(customers_clean[monthly_income])", "answer": 10, "explain": "Если пропуск сохранён как null, AVERAGE его пропускает и возвращает 15; нулевой доход есть утверждение, пропуск есть пробел (→ A1, проверки)."},
   {"type": "single", "q": "24 платежа датированы позже 2026-10-01. Что с ними делает payments_clean?", "options": ["Удаляет их", "Сохраняет, помечает через is_forward_dated и исключает из сумм на дату отсчёта", "Меняет их дату на 2026-10-01", "Переносит в отдельный файл"], "answer": 1, "explain": "Это настоящие платежи, записанные будущей датой: ничего не уничтожено, помечено, фильтруется там, где важна дата отсчёта (→ A2)."},
   {"type": "single", "q": "Проверяющий дублирует последнюю строку payments_dirty.csv и нажимает Refresh All. Что должна показать payments_clean?", "options": ["На одну строку больше, чем раньше", "Столько же строк, как раньше, — новая строка — ещё одна копия известного платежа", "Ошибку", "Ноль строк"], "answer": 1, "explain": "Очистка — свойство запроса, а не файла; изменившееся число означает, что что-то было вставлено (→ Что запускает проверяющий)."},
   {"type": "multi", "q": "Какие выборы делают страницу обновляемой?", "options": ["Данные приходят через Power Query или в таблицу", "Сводные таблицы построены на таблице или результате запроса", "Плитки читают сводные таблицы через GETPIVOTDATA или таблицу через SUMIFS", "Форматы чисел заданы в Value Field Settings", "Сводные таблицы построены на фиксированном диапазоне A1:M7829", "Плитки вставлены значениями перед отправкой"], "answer": [0, 1, 2, 3], "explain": "Фиксированный диапазон не растёт, а вставленное значение не обновляется (→ Часть C, вопрос 8; Типичные ошибки)."},

@@ -118,7 +118,7 @@ html[data-theme="dark"] .gm-tb-name { color: #b897eb; }
 html[data-theme="dark"] .gm-lines line { stroke: #9cf1d7; }
 html[data-theme="dark"] .gm-again { border: 0; background: transparent; color: #a073e6; }
 
-/* ---------- theme.css (577 rules) ---------- */
+/* ---------- theme.css (612 rules) ---------- */
 html[data-theme="dark"] body { background: var(--bg); color: var(--body); }
 html[data-theme="dark"] .content { background: var(--bg); }
 html[data-theme="dark"] .markdown-section { background: var(--card); border: 1px solid #333941; border-radius: 22px; }
@@ -696,6 +696,41 @@ html[data-theme="dark"] .xp-ci-miss { stroke: #eb718b; fill: #eb718b; }
 html[data-theme="dark"] .xp-ci-true { stroke: #d0d9ee; }
 html[data-theme="dark"] .xp-ci-zero { stroke: #94a3b8; }
 html[data-theme="dark"] .xp-ci-tl { fill: #d0d9ee; }
+html[data-theme="dark"] .rv-empty { color: var(--muted); }
+html[data-theme="dark"] .rv { border: 1px solid var(--line); border-radius: 18px; background: #161c22; }
+html[data-theme="dark"] .rv-hw { color: #a6f2ec; }
+html[data-theme="dark"] .rv-title { color: var(--ink); }
+html[data-theme="dark"] .rv-meta { color: var(--muted); }
+html[data-theme="dark"] .rv-meta a { color: #a6f2ec; }
+html[data-theme="dark"] .rv-score b { color: var(--ink); }
+html[data-theme="dark"] .rv-score span { color: var(--muted); }
+html[data-theme="dark"] .rv-bar { border-radius: 999px; background: #24292f; }
+html[data-theme="dark"] .rv-bar i { border-radius: 999px; background: #0d9488; }
+html[data-theme="dark"] .rv.rv-mid .rv-bar i { background: #d97706; }
+html[data-theme="dark"] .rv.rv-lo .rv-bar i { background: #dc2626; }
+html[data-theme="dark"] .rv h4 { color: var(--ink); }
+html[data-theme="dark"] .rv-good { border-radius: 12px; background: #172d1e; border: 1px solid #295f3c; }
+html[data-theme="dark"] .rv-next { border-radius: 12px; background: #142030; border: 1px solid #223e61; }
+html[data-theme="dark"] .rv-task { border-radius: 12px; border: 1px solid var(--line); border-left-width: 4px; background: #161c22; }
+html[data-theme="dark"] .rv-task.rv-ok { border-left-color: #16a34a; }
+html[data-theme="dark"] .rv-task.rv-partly { border-left-color: #d97706; background: #312c14; }
+html[data-theme="dark"] .rv-task.rv-wrong { border-left-color: #dc2626; background: #2d1515; }
+html[data-theme="dark"] .rv-task.rv-missing { border-left-color: #64748b; background: #1b2025; }
+html[data-theme="dark"] .rv-ic { border-radius: 999px; color: #ffffff; background: #16a34a; }
+html[data-theme="dark"] .rv-partly .rv-ic { background: #d97706; }
+html[data-theme="dark"] .rv-wrong .rv-ic { background: #dc2626; }
+html[data-theme="dark"] .rv-missing .rv-ic { background: #64748b; }
+html[data-theme="dark"] .rv-verdict { color: var(--muted); }
+html[data-theme="dark"] .rv-pts { color: var(--ink); }
+html[data-theme="dark"] .rv-q { color: var(--muted); }
+html[data-theme="dark"] .rv-her span { color: var(--muted); }
+html[data-theme="dark"] .rv-her pre { border-radius: 8px; background: #1d2329; color: #d0d9ee; }
+html[data-theme="dark"] .rv-see { color: #a6f2ec; }
+html[data-theme="dark"] .rv-ready { border-radius: 12px; background: #172d28; border: 1px solid #2c6c5f; color: #bbefeb; }
+html[data-theme="dark"] .rv-ready-ic { border-radius: 999px; background: #0d9488; color: #ffffff; }
+@media (max-width: 520px) {
+  html[data-theme="dark"] .rv { border-radius: 14px; }
+}
 
 /* ---------- labs.css (98 rules) ---------- */
 html[data-theme="dark"] .sq-box.sq-ed .sq-top { background: var(--brand-xl, #f0fdfa); }

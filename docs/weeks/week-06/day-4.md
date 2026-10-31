@@ -708,11 +708,9 @@ Read it with the questions from this section:
 - ▶ Wilcoxon signed-rank and the other rank tests — [Non-parametric tests - Sign test, Wilcoxon signed rank, Mann-Whitney (zedstatistics), 11:26](https://youtu.be/IcLSKko2tsg?t=686&end=1230)
 - ▶ Multiple comparisons — [The Bonferroni Correction - Clearly Explained (Steven Bradburn), 01:31](https://youtu.be/HLzS5wPqWR0?t=91)
 - ▶ Multiple comparisons and false discovery rate — [False Discovery Rates, FDR, clearly explained (StatQuest), 12:28](https://youtu.be/K8LQSvtjcEo?t=748)
-- ▶ Multiple comparisons (RU, simulation) — [Множественная проверка гипотез | Вероятность и статистика #8 (Глеб Михайлов), 45:32](https://youtu.be/qbbY7ubzDoE?t=2732&end=2898)
 - ▶ Statistical power — [Statistical Power, Clearly Explained!!! (StatQuest), 03:19](https://youtu.be/Rsc5znwR5FA?t=199&end=297)
 - ▶ Power and sample size calculation — [Power Analysis, Clearly Explained!!! (StatQuest), 11:48](https://youtu.be/VX_M3tIyiYk?t=708&end=910)
 - ▶ Power calculations (also p-hacking) — [p-hacking and power calculations (StatQuest), 14:12](https://youtu.be/UFhJefdVCjE?t=852)
-- ▶ Sample size in an A/B setting (RU) — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 17:57](https://youtu.be/FEI1OA-zgb8?t=1077&end=1482)
 
 - RU deck (TBC Data Analytics 2.0, if you have it) `Непараметрические тесты_latest.pdf` (lesson 5.5): normality checks and log-transform pp. 9–12, which test to choose pp. 13–14, ranks and Mann–Whitney pp. 15–16, Wilcoxon for paired samples pp. 17–18, Kruskal–Wallis p. 19, bootstrap pp. 20–21, power p. 22, MDE p. 23, A/A tests p. 24. Multiple comparisons: `Параметрические тесты (2).pdf` pp. 47–49 (Bonferroni, Tukey HSD).
 - Notebooks: `non-parametric.ipynb` (sample-mean normality, Mann–Whitney on exponential data, Wilcoxon, Kruskal–Wallis, bootstrap), `power.ipynb` (power by simulation: 1 000 t-tests on a 1 % shift — the same idea as our simulation cell). `стат_критерии.docx` is a reading list (Habr / YouTube articles on test choice, Mann–Whitney pitfalls, sample size); the card in section 2 is our own.
@@ -744,11 +742,6 @@ Read it with the questions from this section:
   {"at": 1200, "q": "Compared with Bonferroni, Benjamini–Hochberg is…", "options": ["stricter", "less strict — it flags more results", "the same", "only for paired data"], "answer": 1, "explain": "It accepts some false discoveries in exchange for power."}]}
 ```
 
-```videoquiz
-{"video": "qbbY7ubzDoE", "stops": [
-  {"at": 2790, "q": "In the simulation, many tests on data with no real effect give…", "options": ["no significant results", "some 'significant' results by chance alone", "only p-values above 0.5", "exactly α significant results every time"], "answer": 1, "explain": "Nur's ten branches with equal true rates: 31 % of books flag at least one."},
-  {"at": 2880, "q": "What does a correction for multiple comparisons do?", "options": ["Keeps the overall chance of a false alarm near α", "Makes the data larger", "Removes the outliers", "Raises the power"], "answer": 0, "explain": "Holm and Bonferroni control the family-wise error rate."}]}
-```
 
 ```videoquiz
 {"video": "Rsc5znwR5FA", "stops": [
@@ -768,11 +761,6 @@ Read it with the questions from this section:
   {"at": 1300, "q": "How do you avoid it?", "options": ["Look more often", "Use a one-sided test", "Lower the sample size", "Fix the sample size with a power calculation before the test"], "answer": 3, "explain": "Fix n, the metric and the end date in advance."}]}
 ```
 
-```videoquiz
-{"video": "FEI1OA-zgb8", "stops": [
-  {"at": 1200, "q": "The sample size an A/B test needs grows when…", "options": ["the effect you want to detect is smaller", "the baseline rate is close to 50 %", "α is looser", "you test once"], "answer": 0, "explain": "n ∝ 1 / h²: halve the effect, quadruple n."},
-  {"at": 1450, "q": "What is the MDE of a test?", "options": ["The largest effect it can find", "The smallest true effect it detects with the planned power", "The observed difference", "The p-value threshold"], "answer": 1, "explain": "1 000 per arm can only see FPD fall from 1.28 % to 0.26 %."}]}
-```
 
 ---
 

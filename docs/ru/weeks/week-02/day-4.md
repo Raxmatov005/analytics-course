@@ -229,9 +229,9 @@ FROM customers GROUP BY income_band;
 {"id": "w02d4-l5", "kind": "choice", "options": ["NULL", "0", "Значение последнего THEN", "Пустой текст ''"], "answer": 0, "explain": "CASE без ELSE возвращает NULL для неподошедших строк — в GROUP BY они образуют группу NULL. Пишите тот ELSE, который имеете в виду."}
 ```
 
-> 🎬 **Остались вопросы про CASE ... WHEN ... THEN?** [Бараа объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=29270&end=29857)
+> 🎬 **Остались вопросы про CASE ... WHEN ... THEN?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=14487&end=14790)
 
-> 🎬 **Остались вопросы про CASE для категорий?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=29902&end=30267)
+> 🎬 **Остались вопросы про CASE для категорий?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=15612&end=15829)
 
 ### Простой CASE — подстановка по одному значению :id=simple-case-a-lookup-on-one-value
 
@@ -261,9 +261,7 @@ GROUP BY channel_name;
 {"id": "w02d4-l6", "kind": "sql", "model": "SELECT code, CASE code WHEN 'MICRO' THEN 'Micro' WHEN 'CONS' THEN 'Consumer' ELSE code END AS short_name FROM products;", "note": "Пять строк: Micro, Consumer, BNPL, AUTO, SME. ELSE code оставляет остальные коды как есть."}
 ```
 
-> 🎬 **Остались вопросы про CASE для замены значений?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=30267&end=30620)
-
-> 🎬 **Остались вопросы про короткая форма CASE?** [Бараа объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=30620&end=30796)
+> 🎬 **Остались вопросы про CASE для замены значений?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=15047&end=15430)
 
 ### CASE в ORDER BY — свой порядок сортировки :id=case-in-order-by-a-sort-order-of-your-own
 
@@ -366,9 +364,7 @@ WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;
 {"id": "w02d4-l8", "kind": "choice", "options": ["FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.action_id IS NULL", "FROM loans l JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.action_id IS NULL", "FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.outcome = NULL", "FROM loans l WHERE l.loan_id <> NULL"], "answer": 0, "explain": "LEFT сохраняет каждый кредит; ключ действия равен NULL только там, где действие не нашлось, — 7 545 кредитов. Вариант с INNER возвращает 0; = NULL никогда не истина."}
 ```
 
-> 🎬 **Остались вопросы про left anti-join?** [Бараа объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=12468&end=12708)
-
-> 🎬 **Остались вопросы про anti-join (строки без пары)?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=27930&end=28282)
+> 🎬 **Остались вопросы про left anti-join?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=11490&end=11830)
 
 ### LEFT JOIN, который превращается в INNER JOIN, — ON vs WHERE :id=the-left-join-that-turns-into-an-inner-join-on-vs-where
 
@@ -556,7 +552,7 @@ ORDER BY bad_pct DESC;
 
 ### Углубление (по желанию) :id=depth-optional
 
-- ▶ Бараа, *NULL functions* [6:59:06](https://youtu.be/SSKVgrwhzus?t=25146&end=29270) — 50 мин; *CASE* [8:07:50](https://youtu.be/SSKVgrwhzus?t=29270&end=31416) — 35 мин; *Joins (advanced)* [3:27:29](https://youtu.be/SSKVgrwhzus?t=12449&end=14529) — анти-соединения, самосоединения, FULL.
+- ▶ (на англ.) Бараа, *NULL functions* [6:59:06](https://youtu.be/SSKVgrwhzus?t=25146&end=29270) — 50 мин; *CASE* [8:07:50](https://youtu.be/SSKVgrwhzus?t=29270&end=31416) — 35 мин; *Joins (advanced)* [3:27:29](https://youtu.be/SSKVgrwhzus?t=12449&end=14529) — анти-соединения, самосоединения, FULL.
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `2.2 SQL-1-38.pdf` — страницы про NULL / CASE. *Термины по-английски:* пустое значение = NULL, условное выражение = CASE, самосоединение = self-join, дубликаты = duplicates.
 
 ```videoquiz

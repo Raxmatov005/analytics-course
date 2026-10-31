@@ -193,6 +193,8 @@ Ctrl+H
 {"id": "w04d3-l3", "kind": "choice", "options": ["Очищенное имя — мгновенное заполнение запускается снова", "Ничего — мгновенное заполнение записало значения, и новые строки не получают правила", "#N/A", "Копия строки выше"], "answer": 1, "explain": "Мгновенное заполнение оставляет значения, а не формулу. Таблица копирует в новые строки формулы, но никогда не значения."}
 ```
 
+> 🎬 **Остались вопросы про мгновенное заполнение?** [Николай Павлов объясняет · 12 мин](https://youtu.be/n28ykstAr6M?t=16&end=747)
+
 ### TRIM, CLEAN, SUBSTITUTE — починка текста формулами :id=trim-clean-substitute-repairing-text-with-formulas
 
 **Что это.** Починка текста формулой на чистой вкладке, чтобы она запускалась заново. **TRIM** (*СЖПРОБЕЛЫ*) убирает пробелы по краям и двойные пробелы внутри. **CLEAN** (*ПЕЧСИМВ*) убирает непечатаемые символы — переносы строк и табуляции из копирования. **SUBSTITUTE** (*ПОДСТАВИТЬ*) заменяет один текст другим внутри ячейки. **LOWER**, **UPPER** и **PROPER** исправляют регистр (День 1).
@@ -443,6 +445,8 @@ Ctrl+H
 {"type": "sort", "id": "w04d3-g3", "title": "Найти или поставить?", "q": "Какие инструменты оставляют повторяемый рецепт, а какие — разовая правка?", "groups": {"Разовая правка — годится для просмотра, никогда для понедельничного файла": ["Найти и заменить (Ctrl+H)", "Мгновенное заполнение (Ctrl+E)", "кнопка «Удалить дубликаты»", "Текст по столбцам на сыром листе"], "Записано — повторяется на следующем файле": ["Power Query: шаг Replace Values", "Power Query: шаг Remove Duplicates", "=TRIM(…) на чистой вкладке", "Sheets: QUERY по сырой вкладке"]}}
 ```
 
+> 🎬 **Остались вопросы про Power Query (загрузка, шаги)?** [Дмитрий Езепов объясняет · 7 мин](https://youtu.be/-Vo6IcV5-HE?t=5&end=434)
+
 ### Изменение типа — первый шаг после заголовков :id=change-type-the-first-step-after-the-headers
 
 **Что это.** **Изменение типа** (Change Type) задаёт тип каждого столбца: целое число, десятичное число, дата, текст. Это `CAST` из SQL. Power Query угадывает типы при импорте; вы проверяете каждую догадку.
@@ -478,6 +482,8 @@ M: = Table.TransformColumnTypes(
 ```task
 {"id": "w04d3-l7", "kind": "choice", "options": ["+998902031105", "998902031105 — + теряется", "ошибка в каждой строке", "9.98902E+11, сохранённое как текст"], "answer": 1, "explain": "Число не может хранить +, поэтому он отбрасывается. Идентификаторам — телефонам, кодам, номерам счетов — задавайте тип «Текст»."}
 ```
+
+> 🎬 **Остались вопросы про типы данных столбцов в Power Query?** [Дмитрий Езепов объясняет · 12 мин](https://youtu.be/QcW2lf56zm8?t=5&end=728)
 
 ### Фильтр строк — WHERE в Power Query :id=filter-rows-where-in-power-query
 
@@ -756,6 +762,8 @@ M: = Table.UnpivotOtherColumns(
 {"id": "w04d3-l14", "kind": "number", "answer": 170, "dp": 0, "unit": "строк", "hint": "По строке на каждую бывшую ячейку.", "model": "5 × 34 = 170 — ровно форма monthly_disbursements.csv: по строке на месяц × продукт."}
 ```
 
+> 🎬 **Остались вопросы про отмену свёртывания столбцов (Unpivot)?** [Дмитрий Езепов объясняет · 8 мин](https://youtu.be/8E70Dp7QExk?t=5&end=484)
+
 ### Слияние запросов — JOIN :id=merge-queries-a-join
 
 **Что это.** **Слияние запросов** («Объединить запросы», Merge Queries) соединяет два запроса по ключу. Это `JOIN` из SQL; в списке **Тип соединения** — вся глава второй недели.
@@ -807,6 +815,8 @@ M: = Table.NestedJoin(
 ```task
 {"id": "w04d3-l15", "kind": "choice", "options": ["Inner", "Left Outer", "Left Anti", "Full Outer"], "answer": 2, "explain": "Left Anti оставляет верхние строки без совпадения — анти-соединение второй недели в одном списке."}
 ```
+
+> 🎬 **Остались вопросы про слияние запросов в Power Query (аналог ВПР / JOIN)?** [Дмитрий Езепов объясняет · 13 мин](https://youtu.be/WKRL3NE926M?t=5&end=800)
 
 ### Добавление запросов — UNION ALL :id=append-queries-a-union-all
 
@@ -883,6 +893,8 @@ M: = Table.Combine(
 {"id": "w04d3-l17", "kind": "choice", "options": ["Таблица на новом листе", "Только создать подключение", "Скопировать и вставить как значения", "Не загружать — тогда слияние не сможет его использовать"], "answer": 1, "explain": "Только подключение: запрос существует и другие запросы могут его объединять, но лист не добавляется — представление, а не таблица."}
 ```
 
+> 🎬 **Остались вопросы про «Закрыть и загрузить» и обновление запроса?** [Дмитрий Езепов объясняет · 5 мин](https://youtu.be/-Vo6IcV5-HE?t=434&end=713)
+
 ### Excel ↔ Google Sheets — справочник :id=excel-google-sheets-reference
 
 | Excel | Sheets | Примечание |
@@ -906,11 +918,11 @@ M: = Table.Combine(
 |---|---|---|
 | Source | From Text/CSV → payments_dirty.csv | Power Query: загрузка |
 | Promoted Headers |   |   |
-| Changed Type | ids, amount → Whole Number; paid_at → Date | изменение типа |
-| Trim method | Transform → Format → Trim | текстовые шаги (TRIM) |
-| Lowercase method | Transform → Format → lowercase | текстовые шаги (LOWER) |
-| bank transfer → transfer | Replace Values, match entire cell | текстовые шаги (SUBSTITUTE) |
-| Drop 25 duplicates | installment_id + paid_at + amount | удалить дубликаты (сначала проверено через COUNTIFS) |
+| Changed Type | id-столбцы, amount → Whole Number; paid_at → Date | изменение типа |
+| Убрать пробелы в method | Transform → Format → Trim | текстовые шаги (TRIM) |
+| method в нижний регистр | Transform → Format → lowercase | текстовые шаги (LOWER) |
+| bank transfer → transfer | Replace Values, ячейка целиком | текстовые шаги (SUBSTITUTE) |
+| Удалить 25 дубликатов | installment_id + paid_at + amount | удалить дубликаты (сначала проверено через COUNTIFS) |
 | is_forward_dated | Custom Column `[paid_at] > #date(2026,10,1)` | добавление столбца |
 | Close & Load To | Table payments_clean | закрыть и загрузить; обновить в следующий понедельник |
 
@@ -926,11 +938,11 @@ M: = Table.Combine(
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Починка текста (TRIM, PROPER, «Найти и заменить», «Текст по столбцам») — [Master Data Cleaning Essentials on Excel in Just 10 Minutes (Kenji Explains), 03:39](https://youtu.be/jxq4-KSB_OA?t=219&end=350)
-- ▶ Удалить дубликаты (кнопка, UNIQUE, Power Query; «что считается повторяющейся строкой») — [Three EASY Ways to Find and Remove Duplicates in Excel (Leila Gharani), 01:15](https://youtu.be/ADArCWLz55Y?t=75&end=146)
-- ▶ Power Query (где находится, подключение, Applied Steps) — [Power Query for Beginners: Automate Your Excel Work in 25 Mins (Leila Gharani), 04:45](https://youtu.be/x7mzOYEn0XA?t=285&end=402)
-- ▶ Power Query (второй вариант, короче, Get data -> Transform -> Close & Load) — [How to use Microsoft Power Query (Kevin Stratvert), 05:26](https://youtu.be/0aeZX1l4JT4?t=326&end=420)
-- ▶ Блок об очистке данных внутри одного более длинного курса по Excel — [Learn Excel in Under 3 Hours (Alex The Analyst), 1:39:03](https://youtu.be/zXnQNytHCPM?t=5943&end=7066)
+- ▶ (на англ.) Починка текста (TRIM, PROPER, «Найти и заменить», «Текст по столбцам») — [Master Data Cleaning Essentials on Excel in Just 10 Minutes (Kenji Explains), 03:39](https://youtu.be/jxq4-KSB_OA?t=219&end=350)
+- ▶ (на англ.) Удалить дубликаты (кнопка, UNIQUE, Power Query; «что считается повторяющейся строкой») — [Three EASY Ways to Find and Remove Duplicates in Excel (Leila Gharani), 01:15](https://youtu.be/ADArCWLz55Y?t=75&end=146)
+- ▶ (на англ.) Power Query (где находится, подключение, Applied Steps) — [Power Query for Beginners: Automate Your Excel Work in 25 Mins (Leila Gharani), 04:45](https://youtu.be/x7mzOYEn0XA?t=285&end=402)
+- ▶ (на англ.) Power Query (второй вариант, короче, Get data -> Transform -> Close & Load) — [How to use Microsoft Power Query (Kevin Stratvert), 05:26](https://youtu.be/0aeZX1l4JT4?t=326&end=420)
+- ▶ (на англ.) Блок об очистке данных внутри одного более длинного курса по Excel — [Learn Excel in Under 3 Hours (Alex The Analyst), 1:39:03](https://youtu.be/zXnQNytHCPM?t=5943&end=7066)
 
 - Русскоязычные книги `HW 3.1 Excel.xlsx` и `HW_2_Module_3.xlsx` — домашние задания по очистке из исходного курса (текстовые функции и поиск на файле магазина); у нас те же функции применяются к данным Nur Finance.
 - *Русские термины:* очистка данных = data cleaning, удалить дубликаты = Remove Duplicates, текст по столбцам = Text to Columns, мгновенное заполнение = Flash Fill, Power Query / Получить и преобразовать = Get & Transform, объединение запросов = Merge Queries, добавление запросов = Append, обновить = Refresh, журнал изменений = change log.
@@ -1016,11 +1028,11 @@ M: = Table.Combine(
 | Source | From Text/CSV → data/excel/payments_dirty.csv |   |
 | Promoted Headers |   |   |
 | Changed Type | payment_id, loan_id, installment_id, amount → Whole Number; paid_at → Date; method, product, region → Text |   |
-| Trim method | Transform → Format → Trim | (select method first) |
-| Lowercase method | Transform → Format → lowercase |   |
-| bank transfer → transfer | Replace Values, match entire cell |   |
-| Drop duplicates | select installment_id, paid_at, amount → Remove Duplicates | 52 875 → 52 850 |
-| Close & Load To | Table "payments_clean" on a new sheet |   |
+| Убрать пробелы в method | Transform → Format → Trim | (сначала выделите method) |
+| method в нижний регистр | Transform → Format → lowercase |   |
+| bank transfer → transfer | Replace Values, ячейка целиком |   |
+| Удалить дубликаты | выделить installment_id, paid_at, amount → Remove Duplicates | 52 875 → 52 850 |
+| Close & Load To | Table «payments_clean» на новом листе |   |
 
 <details><summary>Проверка после загрузки</summary>
 
@@ -1213,7 +1225,7 @@ M: = Table.Combine(
 | Запрос | Шаги |
 |---|---|
 | paid_by_installment | payments_clean → Filter paid_at <= 2026-10-01 → Group By installment_id: paid = Sum(amount) |
-| installments_paid | installments.csv → Merge paid_by_installment (Left Outer, installment_id) → expand paid → Replace null → 0 → Add Column → Date → Month → Start of Month (from due_date) as due_month |
+| installments_paid | installments.csv → Merge paid_by_installment (Left Outer, installment_id) → expand paid → Replace null → 0 → Add Column → Date → Month → Start of Month (из due_date) как due_month |
 | collection_by_month | installments_paid → Group By due_month: due = Sum(total_due), paid = Sum(paid), instalments = Count Rows → Add Column → Custom: `rate = [paid] / [due]` → Close & Load |
 
 | due month | instalments | due | collected (by 2026-10-01) | rate |
@@ -1257,7 +1269,7 @@ M: = Table.Combine(
 {"id": "w04d3", "pass": 0.8, "questions": [
   {"type": "single", "q": "Вы отмечаете first_name, last_name, birth_date на сыром листе Customers и запускаете «Удалить дубликаты». Почему оно пропускает часть настоящих дубликатов?", "options": ["Оно проверяет только первые 1 000 строк", "Оно игнорирует регистр, но не пробелы, поэтому 'Bobur ' и 'Bobur' остаются разными строками", "Оно учитывает регистр, поэтому MALIKA и Malika остаются раздельно", "Оно удаляет первую копию вместо второй"], "answer": 1, "explain": "«Удалить дубликаты» сравнивает ровно так, как отображено, без учёта регистра и с учётом пробелов; применяйте TRIM до сопоставления (→ раздел 1, Удалить дубликаты — и почему оно врёт; P8)."},
   {"type": "single", "q": "Почему в ключе сопоставления между частями стоит разделитель?", "code": "=LOWER(TRIM(B2))&\"|\"&LOWER(TRIM(C2))&\"|\"&TEXT(E2,\"yyyy-mm-dd\")", "options": ["Excel требует его для склейки текста", "Без него разные имена могут слипнуться в один ключ: 'Ali'&'Nazarov' = 'Alin'&'azarov'", "Он делает ключ нечувствительным к регистру", "COUNTIFS не умеет читать ключи без |"], "answer": 1, "explain": "Разделитель разводит части, поэтому один ключ делят только настоящие совпадения (→ раздел 1, Ключ сопоставления)."},
-  {"type": "single", "q": "Что возвращает эта формула в N2, протянутая вниз по листу?", "code": "=COUNTIFS($L$2:L2, L2)          (column L holds the key)", "options": ["Сколько строк на всём листе имеют этот ключ", "1 для первого вхождения ключа, 2 для второго, … — аналог ROW_NUMBER() OVER (PARTITION BY key) в Excel", "Номер строки", "TRUE, когда ключ уникален"], "answer": 1, "explain": "Диапазон растёт строка за строкой ($L$2 зафиксирована, L2 свободна), поэтому формула считает, сколько раз ключ встретился к этому моменту; отфильтруйте rank = 2, чтобы посмотреть на лишние строки до удаления (→ раздел 1, COUNTIFS по ключу)."},
+  {"type": "single", "q": "Что возвращает эта формула в N2, протянутая вниз по листу?", "code": "=COUNTIFS($L$2:L2, L2)          (в столбце L лежит ключ)", "options": ["Сколько строк на всём листе имеют этот ключ", "1 для первого вхождения ключа, 2 для второго, … — аналог ROW_NUMBER() OVER (PARTITION BY key) в Excel", "Номер строки", "TRUE, когда ключ уникален"], "answer": 1, "explain": "Диапазон растёт строка за строкой ($L$2 зафиксирована, L2 свободна), поэтому формула считает, сколько раз ключ встретился к этому моменту; отфильтруйте rank = 2, чтобы посмотреть на лишние строки до удаления (→ раздел 1, COUNTIFS по ключу)."},
   {"type": "single", "q": "На Payments вы отмечаете ВСЕ столбцы в «Удалить дубликаты» «для надёжности». Почему ничего не удаляется?", "options": ["В Payments нет дубликатов", "payment_id различается в каждой строке, поэтому нет двух строк, равных по всем столбцам; совпадение нужно определять по installment_id, paid_at и amount", "«Удалить дубликаты» не работает с числами", "Таблицу сначала нужно отсортировать"], "answer": 1, "explain": "Дубликат — это две строки, совпадающие во всём, что важно, а не во всём подряд (→ раздел 1, Удалить дубликаты — записанный шаг; Ошибки, которые стоят балла)."},
   {"type": "multi", "q": "Какие шаги Power Query сопоставлены с правильной идеей из SQL?", "options": ["Merge Queries, вид соединения Left Outer = LEFT JOIN", "Append Queries = UNION ALL", "Merge Queries, вид соединения Left Anti = строки без совпадения (анти-соединение)", "Append Queries удаляет повторяющиеся строки, как UNION", "Changed Type = WHERE"], "answer": [0, 1, 2], "explain": "Append сохраняет все строки и сопоставляет столбцы по имени; Changed Type — это CAST (→ раздел 1, Слияние запросов, Добавление запросов; P14)."},
   {"type": "number", "q": "Клиент родился 2000-10-02. Какой возраст даёт формула на 2026-10-01?", "code": "=DATEDIF(DATE(2000,10,2), DATE(2026,10,1), \"y\")", "answer": 25, "explain": "\"y\" считает полные годы; 26-летие наступает через день после даты отсчёта (→ раздел 2, шаг 3; P6)."},

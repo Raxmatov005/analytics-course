@@ -65,7 +65,7 @@ FROM pay;
 {"id": "w03d1-l1", "kind": "choice", "options": ["1 — SUM всегда возвращает одну строку", "5 — по одной на продукт", "7 828 — окно сохраняет каждую строку", "Ошибку — SUM нужен GROUP BY"], "answer": 2, "explain": "Окно никогда не убирает строки: на входе 7 828 кредитов, на выходе 7 828 строк, и рядом с каждой один и тот же итог."}
 ```
 
-> 🎬 **Остались вопросы про оконные функции?** [Baraa объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=31839&end=32138)
+> 🎬 **Остались вопросы про оконные функции?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=21347&end=21668)
 
 ### OVER () — одно окно на все строки :id=over-one-window-over-all-the-rows
 
@@ -210,9 +210,7 @@ ORDER BY paid_at;
 {"id": "w03d1-l4", "kind": "number", "answer": 25119000, "dp": 0, "unit": "сум", "hint": "Прочитайте collected_so_far в последней строке (оплачено 2026-09-03).", "model": "25 119 000 — девять платежей по 2 791 000. Накопительный итог в последней строке — это всё, что выплачено на сегодня."}
 ```
 
-> 🎬 **Остались вопросы про ORDER BY внутри OVER?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=33497&end=33752)
-
-> 🎬 **Остались вопросы про нарастающий итог?** [Baraa объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=37917&end=38493)
+> 🎬 **Остались вопросы про нарастающий итог?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=23513&end=23698)
 
 ### Окно или GROUP BY — одна сумма, две формы :id=window-vs-group-by-the-same-sum-two-shapes
 
@@ -409,9 +407,9 @@ ORDER BY disbursed_at, loan_id;
 {"type": "build", "id": "w03d1-g2", "title": "Соберите окно", "q": "Накопленный итог с начала года по каждому продукту для Бекзода: сумма месячной выдачи нарастающим итогом, которая начинается заново для каждого продукта, строка за строкой.", "tokens": ["SUM(disbursed)", "OVER (", "PARTITION BY code", "ORDER BY month", "ROWS UNBOUNDED PRECEDING", ")"], "distractors": ["GROUP BY code", "WHERE month >= '2026-01'", "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW"]}
 ```
 
-> 🎬 **Остались вопросы про рамка окна (ROWS BETWEEN)?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=33752&end=34150)
+> 🎬 **Остались вопросы про рамка окна (ROWS BETWEEN)?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=23388&end=23698)
 
-> 🎬 **Остались вопросы про примеры рамок и рамка по умолчанию?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=34153&end=34604)
+> 🎬 **Остались вопросы про рамка по умолчанию и совпадающие значения?** [Амелин объясняет · 9 мин](https://youtu.be/7w_Svh9Gnsw?t=23671&end=24205)
 
 ### Скользящее среднее — рамка фиксированной длины :id=moving-average-a-frame-of-fixed-length
 
@@ -468,7 +466,7 @@ ORDER BY month;
 {"id": "w03d1-l8", "kind": "choice", "options": ["ROWS BETWEEN 12 PRECEDING AND CURRENT ROW", "ROWS BETWEEN 11 PRECEDING AND CURRENT ROW", "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW", "ROWS BETWEEN 6 PRECEDING AND 6 FOLLOWING"], "answer": 1, "explain": "Одиннадцать строк назад плюс текущая = двенадцать месяцев. 12 PRECEDING дало бы тринадцать; UNBOUNDED — накопленное среднее; 6/6 — центрированная рамка из тринадцати месяцев."}
 ```
 
-> 🎬 **Остались вопросы про скользящее среднее?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=38493&end=38920)
+> 🎬 **Остались вопросы про скользящее среднее?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=23135&end=23388)
 
 ### Где может стоять окно — в SELECT и ORDER BY, но не в WHERE :id=where-a-window-may-appear-select-and-order-by-not-where
 
@@ -562,7 +560,7 @@ ORDER BY month;
 
 ### Углубление (необязательно) :id=depth-optional
 
-- ▶ Baraa, *Window functions basics* [8:50:11](https://youtu.be/SSKVgrwhzus?t=31811&end=35220), *Window aggregate* [9:47:00](https://youtu.be/SSKVgrwhzus?t=35220&end=39189) — ~2 ч; SQL Server, все ключевые слова здесь идентичны.
+- ▶ (на англ.) Baraa, *Window functions basics* [8:50:11](https://youtu.be/SSKVgrwhzus?t=31811&end=35220), *Window aggregate* [9:47:00](https://youtu.be/SSKVgrwhzus?t=35220&end=39189) — ~2 ч; SQL Server, все ключевые слова здесь идентичны.
 - Русскоязычная презентация (TBC Data Analytics 2.0, если она у вас есть) `2.3 SQL.pdf` — страницы про окна. *Английские термины:* оконные функции = window functions, секция = partition, рамка окна = frame, накопительный итог = running total, скользящее среднее = moving average.
 
 ```videoquiz

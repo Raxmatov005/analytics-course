@@ -79,8 +79,6 @@ Avg Ticket for the whole book: 404 783 280 000 ÷ 7 828 = 51 709 668 soum. A mea
 {"id": "w07d4-l2", "kind": "number", "answer": 26926915, "dp": 0, "unit": "soum", "hint": "A table by products[code] with Avg Ticket — or 65 109 280 000 ÷ 2 418.", "model": "26 926 915 = 65 109 280 000 / 2 418 loans. The same measure gives a different number in each row because each row has its own filter context."}
 ```
 
-> 🎬 **Didn't get your first DAX measures?** [A short explanation · 11 min](https://youtu.be/A2r6or-Dm28?t=3123&end=3800)
-
 ### Filter context in one picture
 
 **What it is.** A measure has no value of its own — only a value **in a cell**. The cell's filters are its filter context: the slicers on the page, the visual's row and column, page and report filters. Relationships carry them from the dimensions to the fact. Then the measure runs over the rows that are left.
@@ -161,8 +159,6 @@ When the condition involves a measure or several columns, write the filter as a 
 ```game
 {"type": "cloze", "id": "w07d4-g2", "title": "Fill in PAR30", "text": "PAR30 % = {{0}} ( {{1}} ( [Outstanding], v_loan_status[dpd] {{2}} 30 ), [Outstanding] )", "blanks": [["DIVIDE"], ["CALCULATE"], [">"]], "distractors": ["SUM", "FILTER", ">=", "AVERAGE"]}
 ```
-
-> 🎬 **Didn't get CALCULATE?** [A short explanation · 3 min](https://youtu.be/A2r6or-Dm28?t=3797&end=3998)
 
 ### Context transition — CALCULATE inside a row
 
@@ -561,7 +557,6 @@ The worked example below builds exactly this card and its next question.
 - ▶ Time intelligence, needs the marked date table — [My number 1 trick for TIME INTELLIGENCE (How to Power BI), 00:30](https://youtu.be/I8Y5fBGwqeQ?t=30&end=66)
 - ▶ Visuals — [Power BI for Data Analytics - Full Course for Beginners (Luke Barousse), 1:13:27](https://youtu.be/FwjaHCVNBWA?t=4407&end=5536)
 - ▶ Visuals and the full project — [Learn Power BI in Under 3 Hours (Alex The Analyst), 1:09:26](https://youtu.be/I0vQ_VLZTWg?t=4166&end=4960)
-- ▶ (RU) DAX basics — [Power BI с нуля — полный гайд | Часть 1 (MrAnalitik), 39:33](https://youtu.be/A2r6or-Dm28?t=2373&end=4004)
 
 - RU deck (TBC Data Analytics 2.0, if you have it) `Power BI 7.2.pptx`: M vs DAX — slide 9; DAX syntax, types, operators — slides 10–12; the most used functions (math and statistics, `DIVIDE`; logical `IF`, `AND`, `OR`) — slides 13–14; links — slide 15. RU deck (TBC Data Analytics 2.0, if you have it) `Power BI 7.3.pptx`: why visualise and visual categories — slides 3–6; **allocation of visuals (top / middle / bottom)** — slide 7; publishing to the web, refresh settings — slides 8–9; dashboards vs reports, sharing — slides 10–12; homework — slide 13.
 - `Power BI 7.2.pbix`, `Power BI 7.3.pbix` — the lecture files (binary; open them in Power BI Desktop, not readable here). `Homework.zip` — the 7.3 homework: `flights.csv` (72 MB, US flights), `airline_carriers.csv` and a task list: load and relate, a calculated column *Delay / On-Time* (`DepDelay` or `ArrDelay` > 0), a visual of the % share of each status, flights by carrier name, then a **Top N** filter to the top 5 carriers. A good extra hour on someone else's data with exactly today's tools.
@@ -592,9 +587,6 @@ The worked example below builds exactly this card and its next question.
 {"video": "I0vQ_VLZTWg", "stops": [{"at": 4400, "q": "What makes a report page readable?", "options": ["A few visuals, the key number top-left, titles that say what the chart means", "Every colour of the theme", "3D effects", "As many visuals as fit"], "answer": 0, "explain": "≤ 7 visuals a page; one colour for bad."}, {"at": 4800, "q": "A slicer should affect several pages. What do you use?", "options": ["Copy it to every page and set each by hand", "Sync slicers", "Bookmarks only", "A measure"], "answer": 1, "explain": "View → Sync slicers keeps product, branch and month the same across pages.", "back": 60}]}
 ```
 
-```videoquiz
-{"video": "A2r6or-Dm28", "stops": [{"at": 2700, "q": "Where do you create a measure?", "options": ["In the Service", "In the CSV", "In Power Query", "Home → New measure, in the formula bar"], "answer": 3, "explain": "Measures live in the model, not in a visual."}, {"at": 3300, "q": "Why prefer DIVIDE to the / operator?", "options": ["It is required for SUM", "It is faster", "It returns blank (or a chosen value) when the denominator is 0 or blank", "It rounds"], "answer": 2, "explain": "a / b shows Infinity on a card and breaks totals.", "back": 60}, {"at": 3900, "q": "A measure is evaluated…", "options": ["for every cell of every visual, in that cell's filter context", "only on cards", "once per table", "once at refresh"], "answer": 0, "explain": "That is filter context — today's one idea."}]}
-```
 
 ---
 

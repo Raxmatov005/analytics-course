@@ -803,7 +803,6 @@ Expect about 13 defaults and 206 m soum of loss; a month with 6 to 20 defaults (
 - ▶ Conditional probability, "among those who..." — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71&end=285)
 - ▶ Bayes and the base-rate trap — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321&end=552)
 - ▶ Binomial — [The Binomial Distribution and Test, Clearly Explained!!! (StatQuest)](https://youtu.be/J8jNoF-K8E8)
-- ▶ Binomial (RU) — [Биномиальное распределение. Вероятности вероятностей. Математика для аналитика #2 (Skypro)](https://youtu.be/VJTQNc8eliY)
 - ▶ Poisson — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135&end=188)
 - ▶ Normal distribution — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
 
@@ -832,11 +831,6 @@ Expect about 13 defaults and 206 m soum of loss; a month with 6 to 20 defaults (
   {"at": 420, "q": "Why does the binomial formula contain C(n, k), 'n choose k'?", "options": ["k 'yes' answers can sit in many different orders, and each order has the same probability", "To make the probabilities add up to n", "To correct for small samples", "It turns counts into percentages"], "answer": 0, "explain": "p^k (1 − p)^(n − k) is one order; C(n, k) counts the orders."}]}
 ```
 
-```videoquiz
-{"video": "VJTQNc8eliY", "stops": [
-  {"at": 150, "q": "Which situation is binomial?", "options": ["A fixed number of independent yes/no trials with the same p", "Events per hour with no upper limit", "Waiting time until the next event", "A score measured on a continuous scale"], "answer": 0, "explain": "400 loans, each FPD or not, same p — the model of Nilufar's wall number."},
-  {"at": 420, "q": "The expected number of 'yes' in Bin(n, p) is…", "options": ["p / n", "n · p · (1 − p)", "n · p", "√(n · p)"], "answer": 2, "explain": "E = n·p = 400 × 1.28 % = 5.13; n·p·(1 − p) is the variance."}]}
-```
 
 ```videoquiz
 {"video": "cPOChr_kuQs", "stops": [

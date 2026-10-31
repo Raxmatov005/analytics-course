@@ -422,6 +422,7 @@ Work in progress is kept in localStorage "al.sql". */
     catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('Workspace could not be read.', 'Не удалось прочитать рабочую область.') + '</p>'); return; }
     var box = document.createElement('div');
     box.className = 'sq-ws al-block';
+    box.dataset.lesson = spec.lesson || '';   // review.js puts "your mentor's feedback is ready" on top of it
     pre.parentNode.replaceChild(box, pre);
     var s = store(), mine = s.sql[spec.check] = s.sql[spec.check] || { code: {}, ok: {} };
     save(s);

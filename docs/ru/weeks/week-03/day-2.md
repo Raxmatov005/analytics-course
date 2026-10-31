@@ -58,7 +58,7 @@ ORDER BY loan_no;
 {"id": "w03d2-l1", "kind": "number", "answer": 868, "dp": 0, "unit": "клиентов", "hint": "SELECT COUNT(*) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS loan_no FROM loans) t WHERE loan_no = 3;", "model": "868 клиентов имеют кредит с номером 3 — все, у кого три кредита и больше (593 + 194 + 62 + 15 + 4)."}
 ```
 
-> 🎬 **Остались вопросы про ROW_NUMBER?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=39482&end=39750)
+> 🎬 **Остались вопросы про ROW_NUMBER?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=21870&end=22040)
 
 ### RANK и DENSE_RANK — что происходит при равенстве :id=rank-and-dense_rank-what-happens-on-a-tie
 
@@ -119,9 +119,7 @@ LIMIT 7;
 {"type": "match", "id": "w03d2-g1", "title": "Четыре кредита BNPL на 7 990 000", "pairs": [["ROW_NUMBER()", "1, 2, 3, 4 — затем 5; всегда уникален"], ["RANK()", "1, 1, 1, 1 — затем 5; общий номер, потом пропуск"], ["DENSE_RANK()", "1, 1, 1, 1 — затем 2; общий номер, без пропуска"], ["NTILE(4)", "четыре группы (почти) равного количества"], ["PERCENT_RANK()", "позиция от 0 до 1"]]}
 ```
 
-> 🎬 **Остались вопросы про RANK?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=39753&end=39995)
-
-> 🎬 **Остались вопросы про DENSE_RANK?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=39997&end=40262)
+> 🎬 **Остались вопросы про RANK и DENSE_RANK?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=22040&end=22247)
 
 ### NTILE — разрезать строки на n равных групп :id=ntile-cut-the-rows-into-n-equal-groups
 
@@ -167,7 +165,7 @@ ORDER BY quartile;
 {"id": "w03d2-l2", "kind": "number", "answer": 3, "dp": 0, "unit": "строк", "hint": "10 ÷ 4 = по 2 строки, и 2 остаются. Остаток достаётся первым группам.", "model": "3. Группы — 3, 3, 2, 2 строки: две лишние строки достаются группам 1 и 2."}
 ```
 
-> 🎬 **Остались вопросы про NTILE?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=41254&end=41630)
+> 🎬 **Остались вопросы про NTILE?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=22560&end=22810)
 
 ### LAG и LEAD — предыдущая и следующая строка :id=lag-and-lead-the-previous-and-the-next-row
 
@@ -232,7 +230,7 @@ ORDER BY month;
 {"type": "bug", "id": "w03d2-g2", "title": "Найдите сломанную строку", "q": "Интервалы между платежами по кредиту 1. Результат отсортирован по дате, а prev_paid скачет. Какая строка неверна?", "code": "SELECT payment_id, paid_at,\n       LAG(paid_at) OVER (PARTITION BY loan_id) AS prev_paid\nFROM payments\nWHERE loan_id = 1\nORDER BY paid_at;", "answer": [1], "why": "LAG нужен собственный ORDER BY внутри OVER (ORDER BY paid_at, payment_id). ORDER BY в конце сортирует только вывод; он не говорит LAG, какая строка «предыдущая»."}
 ```
 
-> 🎬 **Остались вопросы про LAG и LEAD?** [Baraa объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=43169&end=43790)
+> 🎬 **Остались вопросы про LAG и LEAD?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=22247&end=22552)
 
 ### FIRST_VALUE и LAST_VALUE — края окна и ловушка рамки :id=first_value-and-last_value-the-edges-of-the-window-and-the-frame-trap
 
@@ -265,7 +263,7 @@ WHERE loan_id = 1;
 {"id": "w03d2-l3", "kind": "choice", "options": ["LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)", "FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at DESC)", "LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)", "FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)"], "answer": 1, "explain": "Переверните порядок и возьмите первое значение. LAST_VALUE с рамкой по умолчанию возвращает собственную дату каждой строки; LAG — предыдущая строка; FIRST_VALUE по возрастанию — самый ранний платёж."}
 ```
 
-> 🎬 **Остались вопросы про FIRST_VALUE и LAST_VALUE?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=44712&end=45062)
+> 🎬 **Остались вопросы про FIRST_VALUE и LAST_VALUE?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=24277&end=24520)
 
 ### Топ-N по группе — ROW_NUMBER в CTE, фильтр снаружи :id=top-n-per-group-row_number-in-a-cte-filter-outside
 
@@ -416,7 +414,7 @@ ORDER BY from_bucket, to_bucket;
 {"id": "w03d2-l5", "kind": "number", "answer": 69.6, "dp": 1, "unit": "%", "hint": "Строка from_bucket = '31-60', to_bucket = '61-90'.", "model": "69.6 % — 16 из 23 кредитов. В 31–60 больше двух из трёх ухудшаются; в 1–30 три из четырёх вылечиваются."}
 ```
 
-> 🎬 **Остались вопросы про сравнение с прошлой строкой (LAG)?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=43790&end=44186)
+> 🎬 **Остались вопросы про сравнение с прошлой строкой (LAG)?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=22817&end=23135)
 
 ### Собираем вместе :id=putting-it-together
 
@@ -449,7 +447,7 @@ ORDER BY code;
 
 ### Углубление (необязательно) :id=depth-optional
 
-- ▶ Baraa, *Window ranking* [10:53:09](https://youtu.be/SSKVgrwhzus?t=39189&end=42965), *Window value* [11:56:05](https://youtu.be/SSKVgrwhzus?t=42965&end=45634) — ~2 ч.
+- ▶ (на англ.) Baraa, *Window ranking* [10:53:09](https://youtu.be/SSKVgrwhzus?t=39189&end=42965), *Window value* [11:56:05](https://youtu.be/SSKVgrwhzus?t=42965&end=45634) — ~2 ч.
 - Русскоязычная презентация (TBC Data Analytics 2.0, если она у вас есть) `2.3 SQL.pdf` — ранжирующие функции и функции смещения. *Английские термины:* ранжирование = ranking, функции смещения = offset functions (LAG/LEAD), дубликаты = duplicates.
 
 ```videoquiz

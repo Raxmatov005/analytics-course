@@ -73,7 +73,7 @@ WHERE customer_id = 1;
 {"id": "w02d3-l2", "kind": "sql", "model": "SELECT last_name || ', ' || first_name AS name FROM customers WHERE customer_id = 1;", "note": "фамилия, затем текст ', ' (запятая и пробел), затем имя. SQL Server: last_name + ', ' + first_name."}
 ```
 
-> 🎬 **Остались вопросы про склейка текстов (CONCAT)?** [Бараа объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=17578&end=17764)
+> 🎬 **Остались вопросы про склейка текстов (CONCAT)?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=3921&end=4135)
 
 ### UPPER и LOWER — один регистр для всех значений :id=upper-and-lower-one-case-for-every-value
 
@@ -121,7 +121,7 @@ SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);   -- 18
 {"id": "w02d3-l4", "kind": "number", "answer": 30, "dp": 0, "unit": "платежей", "hint": "WHERE method <> TRIM(method).", "model": "30 — те 30 строк, где записано 'CASH ' с пробелом в конце."}
 ```
 
-> 🎬 **Остались вопросы про TRIM?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=17910&end=18244)
+> 🎬 **Остались вопросы про TRIM?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=4198&end=4380)
 
 ### LENGTH — сколько символов :id=length-how-many-characters
 
@@ -184,7 +184,7 @@ ORDER BY applications DESC;
 {"id": "w02d3-l6", "kind": "text", "answer": ["08", "8", "08:00", "8:00"], "hint": "MIN(SUBSTR(applied_at, 12, 2)) FROM applications.", "model": "'08' — заявки идут с 08:00 до 21:59. Текст '08' сортируется раньше '15', потому что в обоих по две цифры."}
 ```
 
-> 🎬 **Остались вопросы про SUBSTRING (кусок текста)?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=18756&end=19108)
+> 🎬 **Остались вопросы про SUBSTRING (кусок текста)?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=4383&end=4606)
 
 ### REPLACE — заменить один текст другим :id=replace-swap-one-text-for-another
 
@@ -244,6 +244,8 @@ GROUP BY major;  -- 3 → 11 325 · 4 → 11 459
 {"id": "w02d3-l8", "kind": "number", "answer": 6, "dp": 0, "unit": "позиция", "hint": "'bank' — 4 символа, затем пробел.", "model": "6: b-a-n-k-пробел — позиции 1–5, а 'transfer' начинается с 6."}
 ```
 
+> 🎬 **Остались вопросы про поиск позиции текста (POSITION, в SQLite это INSTR)?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=4714&end=4896)
+
 ### LIKE — шаблоны с % и _ :id=like-patterns-with-and-_
 
 **Что это.** **LIKE** сравнивает текст с **шаблоном**. `%` означает любое число символов (в том числе ни одного); `_` — ровно один символ. Вы встречали его на Неделе 1; здесь все его правила.
@@ -298,7 +300,7 @@ ORDER BY avg_ticket_m DESC;
 {"id": "w02d3-l10", "kind": "number", "answer": 51709667.86, "dp": 2, "unit": "", "hint": "Два знака после запятой; третья цифра, 8, округляет вверх.", "model": "51 709 667.86 — средний основной долг всех кредитов, готовый к печати."}
 ```
 
-> 🎬 **Остались вопросы про ROUND?** [Бараа объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=19118&end=19298)
+> 🎬 **Остались вопросы про ROUND?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=3529&end=3741)
 
 ### Целочисленное и десятичное деление :id=integer-and-decimal-division
 
@@ -355,7 +357,7 @@ FROM loans;
 {"id": "w02d3-l11", "kind": "number", "answer": -2, "dp": 0, "unit": "", "hint": "CAST отбрасывает дробную часть; он не округляет.", "model": "−2: .99 отброшено в сторону нуля. ROUND(-2.99) дал бы −3."}
 ```
 
-> 🎬 **Остались вопросы про CAST?** [Бараа объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=23440&end=23737)
+> 🎬 **Остались вопросы про CAST?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=27874&end=28158)
 
 ### ABS — величина числа без знака :id=abs-the-size-of-a-number-without-its-sign
 
@@ -579,7 +581,7 @@ ORDER BY payments DESC;
 
 ### Углубление (по желанию) :id=depth-optional
 
-- ▶ Бараа, *String functions* [4:52:58](https://youtu.be/SSKVgrwhzus?t=17578&end=19124), *Numeric* [5:18:44](https://youtu.be/SSKVgrwhzus?t=19124&end=19368), *Date & time* [5:22:48](https://youtu.be/SSKVgrwhzus?t=19368&end=25146) — всего 1 ч 20 мин; везде синтаксис SQL Server, переводите его по таблице выше.
+- ▶ (на англ.) Бараа, *String functions* [4:52:58](https://youtu.be/SSKVgrwhzus?t=17578&end=19124), *Numeric* [5:18:44](https://youtu.be/SSKVgrwhzus?t=19124&end=19368), *Date & time* [5:22:48](https://youtu.be/SSKVgrwhzus?t=19368&end=25146) — всего 1 ч 20 мин; везде синтаксис SQL Server, переводите его по таблице выше.
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `2.2 SQL-1-38.pdf` — страницы про функции. *Термины по-английски:* строковые функции = string functions, преобразование типов = CAST, целочисленное деление = integer division, разница дат = date difference.
 
 ```videoquiz

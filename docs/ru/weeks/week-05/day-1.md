@@ -93,6 +93,8 @@ type(31_150_000), type(0.30), type("Consumer loan"), type(True), type(None)
 {"id": "w05d1-l2", "kind": "choice", "options": ["7828", "0.30", "\"7828\"", "True"], "answer": 2, "explain": "Кавычки делают текст: \"7828\" — это str, хотя выглядит как число. 7828 — int, 0.30 — float, True — bool."}
 ```
 
+> 🎬 **Остались вопросы про значения, типы и переменные в Python?** [Глеб Михайлов объясняет · 9 мин](https://youtu.be/dd3RcafdOQk?t=439&end=999)
+
 ### Переменные — имя для значения :id=variables--a-name-for-a-value
 
 **Что это.** **Переменная** (*variable*) — имя, которое указывает на значение. `=` даёт имени значение. Следующие строки используют имя вместо значения.
@@ -281,9 +283,9 @@ print(len(principals), "1-30" in buckets)
 {"id": "w05d1-l6", "kind": "python", "starter": "principals = [31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]   # кредиты 1–5\n\n# ваш код: средняя сумма этих пяти кредитов\n", "answer": 20182000, "dp": 0, "hint": "sum(principals) / len(principals).", "model": "print(sum(principals) / len(principals))     # 20182000.0\n\nСреднее — 20.2 млн, хотя два из пяти кредитов меньше 3 млн: несколько крупных кредитов тянут среднее вверх. Среднее против медианы с недели 3 — на пяти числах."}
 ```
 
-> 🎬 **Остались вопросы про списки?** [Списки объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/wUSDVGivd-8?t=5668&end=6106)
+> 🎬 **Остались вопросы про списки (и цикл for)?** [Глеб Михайлов объясняет · 12 мин](https://youtu.be/dd3RcafdOQk?t=1209&end=1934)
 
-> 🎬 **Остались вопросы про срезы списка?** [Списки объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/wUSDVGivd-8?t=6106&end=6390)
+> 🎬 **Остались вопросы про срезы списка?** [Глеб Михайлов объясняет · 4 мин](https://youtu.be/dd3RcafdOQk?t=1940&end=2183)
 
 ### Словари — таблица соответствий ключ → значение :id=dicts--a-lookup-table-key--value
 
@@ -329,6 +331,8 @@ no such product
 ```task
 {"id": "w05d1-l7", "kind": "python", "starter": "counts = {\"card\": 17612, \"payme\": 8897, \"cash\": 8788, \"click\": 8786, \"transfer\": 8767}   # чистые платежи по способам оплаты\n\n# ваш код: общее число платежей\n", "answer": 52850, "dp": 0, "hint": "sum(counts.values()).", "model": "print(sum(counts.values()))     # 52850\n\n52 850 — чистая книга платежей: 52 875 записанных строк минус 25 дубликатов (День 3)."}
 ```
+
+> 🎬 **Остались вопросы про словари?** [Глеб Михайлов объясняет · 9 мин](https://youtu.be/dd3RcafdOQk?t=3503&end=4043)
 
 ### if / elif / else — выбор по условию :id=if--elif--else--choose-by-a-condition
 
@@ -376,6 +380,8 @@ print(bucket)
 ```task
 {"id": "w05d1-l8", "kind": "choice", "options": ["0", "1-30", "61-90", "90+"], "answer": 2, "explain": "90 не проходит <= 0, <= 30 и <= 60 и проходит <= 90: 61-90. Корзины закрыты справа — день 90 ещё 61-90, день 91 уже 90+."}
 ```
+
+> 🎬 **Остались вопросы про if / elif / else?** [Глеб Михайлов объясняет · 4 мин](https://youtu.be/dd3RcafdOQk?t=2183&end=2407)
 
 ### Циклы for — один раз на элемент :id=for-loops--once-per-element
 
@@ -475,6 +481,8 @@ print(sum(1 for d in dpds if d > 90))          # COUNT с условием
 {"id": "w05d1-l9", "kind": "python", "starter": "principals = [31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]   # кредиты 1–5\n\n# ваш код: включением — суммы от 10 млн и больше; выведите список и сколько их\n", "answer": 3, "dp": 0, "hint": "[p for p in principals if p >= 10_000_000], затем len().", "model": "big = [p for p in principals if p >= 10_000_000]\nprint(big, len(big))     # [31150000, 40060000, 25590000] 3"}
 ```
 
+> 🎬 **Остались вопросы про списковые включения (list comprehension)?** [Глеб Михайлов объясняет · 7 мин](https://youtu.be/dd3RcafdOQk?t=2413&end=2853)
+
 ### Функции — def, параметры, return :id=functions--def-parameters-return
 
 **Что это.** **Функция** (*function*) — именованный шаг, который можно повторять. Она принимает входные данные (**параметры**, *parameters*), делает свою работу и возвращает один результат через `return`. Её пишут один раз через `def` и **вызывают** сколько угодно.
@@ -531,6 +539,8 @@ print(label(30), label(91))
 {"id": "w05d1-l10", "kind": "python", "starter": "# ваш код: def first_interest(principal, annual_rate), которая ВОЗВРАЩАЕТ round(principal * annual_rate / 12)\n\n\nprint(first_interest(1_590_000, 0.42))     # кредит 3, микрокредит\n", "answer": 55650, "dp": 0, "hint": "def first_interest(principal, annual_rate):\n    return round(principal * annual_rate / 12)", "model": "def first_interest(principal, annual_rate):\n    return round(principal * annual_rate / 12)\n\nprint(first_interest(1_590_000, 0.42))     # 55650 — первый interest_due кредита 3"}
 ```
 
+> 🎬 **Остались вопросы про функции в Python (def, return)?** [Глеб Михайлов объясняет · 7 мин](https://youtu.be/dd3RcafdOQk?t=3080&end=3503)
+
 ### Импорт модулей — чужие функции :id=importing-modules--someone-elses-functions
 
 **Что это.** **Модуль** (*module*) — файл с готовыми функциями. `import` делает его доступным. В **стандартной библиотеке** Python их десятки: `csv` для файлов, `datetime` для дат, `math` для округления вверх и логарифмов. Завтрашний `import pandas as pd` — тот же механизм.
@@ -576,7 +586,7 @@ print(st.median([31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]))
 {"id": "w05d1-l11", "kind": "python", "starter": "from datetime import date\n\n# ваш код: сколько дней от выдачи кредита 4 (2026-08-23) до даты отчёта (2026-10-01)?\n", "answer": 39, "dp": 0, "hint": "(date(2026, 10, 1) - date(2026, 8, 23)).days", "model": "print((date(2026, 10, 1) - date(2026, 8, 23)).days)     # 39\n\nРазность двух дат — это timedelta; .days превращает её в число."}
 ```
 
-> 🎬 **Остались вопросы про модули и import?** [Списки объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/wUSDVGivd-8?t=11569&end=12155)
+> 🎬 **Остались вопросы про модули и import?** [Школа itProger объясняет · 12 мин](https://youtu.be/dNg3l-wpRdY?t=20&end=741)
 
 ### Чтение CSV через модуль csv :id=reading-a-csv-with-the-csv-module
 
@@ -696,6 +706,8 @@ print(safe_int("658"), safe_int(""), safe_int("n/a"))
 {"id": "w05d1-l12", "kind": "choice", "options": ["Файл пустой", "В словаре нет ключа 'Channel' — в заголовке написано 'channel'", "Python не умеет читать словари", "Строка — это str, а не словарь"], "answer": 1, "explain": "KeyError называет отсутствующий ключ. Ключи различают регистр: в заголовке applications.csv написано channel, поэтому r[\"channel\"] работает, а r[\"Channel\"] — нет."}
 ```
 
+> 🎬 **Остались вопросы про исключения и try / except?** [Школа itProger объясняет · 9 мин](https://youtu.be/3nveLco08Y0?t=15&end=584)
+
 ### Собираем вместе :id=putting-it-together
 
 Один вопрос, все инструменты дня: *какая доля кредитов просрочена (`dpd > 0`) в каждом продукте?* Прочитать файл (**csv**), пройти строки (**for**), преобразовать текст (**типы**), проверить условие (**if**), посчитать по продуктам в двух **словарях**, вычислить долю **функцией**, вывести **f-строкой**.
@@ -747,13 +759,13 @@ for p in sorted(total, key=lambda k: share(late.get(k, 0), total[k]), reverse=Tr
 
 **Видео (бесплатные, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Jupyter (установка, новый ноутбук, markdown, горячие клавиши) — [Jupyter Notebook Tutorial: Introduction, Setup, and Walkthrough (Corey Schafer), 04:08](https://youtu.be/HW29067qVWk?t=248&end=961)
-- ▶ Установка Anaconda (путь через Jupyter) — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:50:56](https://youtu.be/wUSDVGivd-8?t=21056&end=21634)
-- ▶ Переменные и типы — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 18:52](https://youtu.be/wUSDVGivd-8?t=1132&end=1465)
-- ▶ Списки, словари, кортежи — [тот же курс, 1:34:24](https://youtu.be/wUSDVGivd-8?t=5664&end=6582)
-- ▶ if / for / while — [тот же курс, 1:26:20](https://youtu.be/wUSDVGivd-8?t=5180&end=5664)
-- ▶ Функции — [тот же курс, 2:52:12](https://youtu.be/wUSDVGivd-8?t=10332&end=10923)
-- ▶ Модули (import) — [тот же курс, 3:12:46](https://youtu.be/wUSDVGivd-8?t=11566&end=12496)
+- ▶ (на англ.) Jupyter (установка, новый ноутбук, markdown, горячие клавиши) — [Jupyter Notebook Tutorial: Introduction, Setup, and Walkthrough (Corey Schafer), 04:08](https://youtu.be/HW29067qVWk?t=248&end=961)
+- ▶ (на англ.) Установка Anaconda (путь через Jupyter) — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 5:50:56](https://youtu.be/wUSDVGivd-8?t=21056&end=21634)
+- ▶ (на англ.) Переменные и типы — [Python for Data Analytics - Full Course for Beginners (Luke Barousse), 18:52](https://youtu.be/wUSDVGivd-8?t=1132&end=1465)
+- ▶ (на англ.) Списки, словари, кортежи — [тот же курс, 1:34:24](https://youtu.be/wUSDVGivd-8?t=5664&end=6582)
+- ▶ (на англ.) if / for / while — [тот же курс, 1:26:20](https://youtu.be/wUSDVGivd-8?t=5180&end=5664)
+- ▶ (на англ.) Функции — [тот же курс, 2:52:12](https://youtu.be/wUSDVGivd-8?t=10332&end=10923)
+- ▶ (на англ.) Модули (import) — [тот же курс, 3:12:46](https://youtu.be/wUSDVGivd-8?t=11566&end=12496)
 
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `4.1 Python.pdf` (109 страниц): типы — стр. 26–48, управление потоком — стр. 49–61, списки / кортежи / словари / множества — стр. 62–71, функции — стр. 72–78, исключения — стр. 83–91, файлы — стр. 92–107 — запись `video1256130814.mp4` — это эта лекция. `En_4.2_Python.pdf` — это NumPy (массивы, срезы, broadcasting, стр. 12–66): pandas построен поверх него; прочитайте, когда вас озадачат `.values` или `np.where`.
 - *Английские термины:* variable = переменная, int / float = целое / вещественное число, str = строка, list = список, dict = словарь, tuple = кортеж, loop = цикл, function = функция, parameter / argument = параметр / аргумент, module = модуль, exception = исключение, traceback = трассировка, kernel = ядро, cell = ячейка.

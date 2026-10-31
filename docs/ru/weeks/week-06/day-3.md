@@ -160,6 +160,8 @@ print(np.mean(np.abs(diff) >= 41/2411 - 34/3263))
 {"type": "bug", "id": "w06d3-g2", "title": "Найдите неверный вывод", "q": "Одно предложение неверно толкует p-значение.", "code": "App FPD30 is 1.70 % (41 / 2 411) against 1.04 % for branch (34 / 3 263).\nA two-sided two-proportion z-test gives z = 2.15, p = 0.032.\nSo there is only a 3.2 % chance that the two channels have the same FPD rate.\nAt α = 5 %, fixed in advance, we reject H₀.\nThe difference is +0.66 points (95 % CI +0.05 to +1.33), about 7 extra FPDs per 1 000 loans.", "answer": [2], "why": "p-значение вычисляется в предположении, что H₀ верна, поэтому оно не может быть вероятностью того, что H₀ верна."}
 ```
 
+> 🎬 **Остались вопросы про p-значение и доверительные интервалы в A/B-тесте?** [Noukash объясняет · 5 мин](https://youtu.be/FEI1OA-zgb8?t=1767&end=2051)
+
 ### α, ошибки I и II рода, мощность :id=α-type-i-and-type-ii-errors-power
 
 **Прежде чем читать.** Сначала угадайте, потом поиграйте — объяснение ниже станет понятнее.
@@ -322,6 +324,8 @@ print(round(la.mean(), 1), round(lb.mean(), 1), [round(v, 3) for v in welch_t(la
 ```task
 {"id": "w06d3-l5", "kind": "number", "answer": 2.48, "dp": 2, "unit": "t Уэлча", "hint": "SE = √(51.70² / 2 598 + 53.07² / 3 491); t = (683.16 − 679.80) / SE.", "model": "SE = √(1.029 + 0.807) = 1.355; t = 3.36 / 1.355 = 2.48 — результат по одобренным кредитам из таблицы выше."}
 ```
+
+> 🎬 **Остались вопросы про t-критерий Стьюдента для двух групп?** [Кирилл Мильчаков объясняет · 11 мин](https://youtu.be/JgRPcWMUKEg?t=2&end=663)
 
 ### Связанные и независимые выборки :id=paired-vs-independent-samples
 
@@ -664,12 +668,12 @@ print(round((44 / 2034 - 10 / 1667) * 1000, 1), round((44 / 2034) / (10 / 1667),
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ p-значение (одно верное определение) — [p-values: What they are and how to interpret them (StatQuest), 04:32](https://youtu.be/vemZtEM63GY?t=272&end=427)
-- ▶ H0 / H1 — [Hypothesis Testing and The Null Hypothesis, Clearly Explained!!! (StatQuest), 09:51](https://youtu.be/0oc49DyA3hU?t=591&end=824)
-- ▶ z-критерий для двух долей — [Hypothesis Testing With Two Proportions (The Organic Chemistry Tutor)](https://youtu.be/pCbNUnZ98oE)
-- ▶ Критерий хи-квадрат на независимость — [Chi-Square Test [Simply explained] (numiqo), 00:17](https://youtu.be/rpKzq64GA9Y?t=17)
-- ▶ t-критерий (независимый / парный / допущения) — [t-Test - Full Course - Everything you need to know (numiqo), 01:45](https://youtu.be/VekJxtk4BYM?t=105&end=148)
 - ▶ Вся логика теста по-русски, p-значение и CI на разобранном случае — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 16:53](https://youtu.be/FEI1OA-zgb8?t=1013&end=1077)
+- ▶ (на англ.) p-значение (одно верное определение) — [p-values: What they are and how to interpret them (StatQuest), 04:32](https://youtu.be/vemZtEM63GY?t=272&end=427)
+- ▶ (на англ.) H0 / H1 — [Hypothesis Testing and The Null Hypothesis, Clearly Explained!!! (StatQuest), 09:51](https://youtu.be/0oc49DyA3hU?t=591&end=824)
+- ▶ (на англ.) z-критерий для двух долей — [Hypothesis Testing With Two Proportions (The Organic Chemistry Tutor)](https://youtu.be/pCbNUnZ98oE)
+- ▶ (на англ.) Критерий хи-квадрат на независимость — [Chi-Square Test [Simply explained] (numiqo), 00:17](https://youtu.be/rpKzq64GA9Y?t=17)
+- ▶ (на англ.) t-критерий (независимый / парный / допущения) — [t-Test - Full Course - Everything you need to know (numiqo), 01:45](https://youtu.be/VekJxtk4BYM?t=105&end=148)
 
 - RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `Параметрические тесты (2).pdf` (урок 5.4): ЦПТ и z-оценки — стр. 6–9, проверка нормальности и логарифмирование — стр. 10–12, p-значение — стр. 13, ошибки I/II рода — стр. 14, выбор теста — стр. 15–16, допущения параметрических тестов — стр. 18, одновыборочный z — стр. 19–21, двухвыборочный z — стр. 22–24, t Стьюдента — стр. 25–31 (парный — стр. 30–31), Уэлч — стр. 32–35, ANOVA — стр. 36–46, Бонферрони и Тьюки — стр. 47–49, корреляция и регрессия — стр. 50–58.
 - Ноутбук `примеры стат_тестов в python.ipynb`: одно- и двухвыборочный z, независимый и парный t, Уэлч, ANOVA (scipy и statsmodels), Бонферрони, Tukey HSD — каждый на симулированных данных; перезапустите любой из них на `f` или `x`.

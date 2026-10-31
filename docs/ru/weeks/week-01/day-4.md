@@ -257,7 +257,7 @@ SELECT COUNT(*) FROM payments;       -- гранулярность: один п�
 
 ### Углубление (необязательно) :id=depth-optional
 
-- ▶ Baraa, *Project: Data warehouse* [23:21:04](https://youtu.be/SSKVgrwhzus?t=84064&end=85264) — посмотрите первые 20 мин (что такое хранилище, bronze/silver/gold). Остальное — после 3-й недели.
+- ▶ (на англ.) Baraa, *Project: Data warehouse* [23:21:04](https://youtu.be/SSKVgrwhzus?t=84064&end=85264) — посмотрите первые 20 мин (что такое хранилище, bronze/silver/gold). Остальное — после 3-й недели.
 - Презентации на русском `1.3 NoSQL, OLAPOLTP & Data Architecture.pdf` (страницы про OLTP/OLAP, архитектуру данных) и `1.4 Dimensional Modeling Star & Snowflake Schemas.pdf` (факты, измерения, звезда, снежинка, гранулярность).
 
 ```videoquiz

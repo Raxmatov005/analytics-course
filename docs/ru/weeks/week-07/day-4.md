@@ -46,6 +46,8 @@ Outstanding = SUM ( v_loan_status[outstanding] )
 {"id": "w07d4-l1", "kind": "choice", "options": ["Оба — столбцы", "Оба — меры", "Флаг 90+ — столбец (значение на кредит, по которому режут); NPL90 % — мера (отношение, считаемое в каждой ячейке)", "Флаг — мера; NPL90 % — столбец"], "answer": 2, "explain": "Срезу нужно хранимое значение на строку. Отношение нужно считать после фильтров, как отношение сумм, — это мера."}
 ```
 
+> 🎬 **Остались вопросы про меры вместо перетаскивания полей (мера и столбец)?** [MrAnalitik объясняет · 7 мин](https://youtu.be/A2r6or-Dm28?t=2729&end=3121)
+
 ### Первые меры — SUM, COUNTROWS, DIVIDE :id=the-first-measures-sum-countrows-divide
 
 **Что это.** Три функции составляют большинство мер. **SUM** складывает столбец по видимым строкам. **COUNTROWS** считает видимые строки таблицы. **DIVIDE** делит и возвращает пусто (или выбранное значение), когда знаменатель равен 0 или пуст.
@@ -79,7 +81,9 @@ Avg Ticket       = DIVIDE ( [Disbursed Amount], [Disbursed Count] )
 {"id": "w07d4-l2", "kind": "number", "answer": 26926915, "dp": 0, "unit": "сумов", "hint": "Таблица по products[code] с Avg Ticket — или 65 109 280 000 ÷ 2 418.", "model": "26 926 915 = 65 109 280 000 / 2 418 кредитов. Одна и та же мера даёт разное число в каждой строке, потому что у каждой строки свой контекст фильтра."}
 ```
 
-> 🎬 **Остались вопросы про первые меры DAX?** [Короткое объяснение (на английском, есть субтитры) · 11 мин](https://youtu.be/A2r6or-Dm28?t=3123&end=3800)
+> 🎬 **Остались вопросы про первые меры DAX?** [MrAnalitik объясняет · 11 мин](https://youtu.be/A2r6or-Dm28?t=3123&end=3800)
+
+> 🎬 **Остались вопросы про первые меры DAX (SUM, средний чек, DIVIDE)?** [MrAnalitik объясняет · 11 мин](https://youtu.be/A2r6or-Dm28?t=3123&end=3797)
 
 ### Контекст фильтра на одной картинке :id=filter-context-in-one-picture
 
@@ -162,7 +166,9 @@ Loans 90+          = CALCULATE ( COUNTROWS ( v_loan_status ), v_loan_status[buck
 {"type": "cloze", "id": "w07d4-g2", "title": "Заполните PAR30", "text": "PAR30 % = {{0}} ( {{1}} ( [Outstanding], v_loan_status[dpd] {{2}} 30 ), [Outstanding] )", "blanks": [["DIVIDE"], ["CALCULATE"], [">"]], "distractors": ["SUM", "FILTER", ">=", "AVERAGE"]}
 ```
 
-> 🎬 **Остались вопросы про CALCULATE?** [Короткое объяснение (на английском, есть субтитры) · 3 мин](https://youtu.be/A2r6or-Dm28?t=3797&end=3998)
+> 🎬 **Остались вопросы про CALCULATE?** [MrAnalitik объясняет · 3 мин](https://youtu.be/A2r6or-Dm28?t=3797&end=3998)
+
+> 🎬 **Остались вопросы про CALCULATE?** [MrAnalitik объясняет · 3 мин](https://youtu.be/A2r6or-Dm28?t=3797&end=4004)
 
 ### Преобразование контекста — CALCULATE внутри строки :id=context-transition-calculate-inside-a-row
 
@@ -469,6 +475,8 @@ Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all 
 {"id": "w07d4-l9", "kind": "multi", "options": ["Карточка PAR30 слева вверху", "Красный для серии AUTO, зелёный для SME", "Заголовок: «PAR30 сосредоточен в SME Нукуса и в Бухаре»", "Одиннадцать визуалов на странице риска", "«Данные на 1 окт. 2026» в верхней полосе", "Матрица, раскрашенная PAR30 Colour"], "answer": [0, 2, 4, 5], "explain": "Главное число слева вверху, заголовок с выводом, дата «на», красный только для плохого. Красный как цвет серии и одиннадцать визуалов нарушают правила."}
 ```
 
+> 🎬 **Остались вопросы про построение и форматирование визуалов?** [MrAnalitik объясняет · 12 мин](https://youtu.be/A2r6or-Dm28?t=4005&end=4721)
+
 ### Публикация и обновление :id=publish-and-refresh
 
 **Что это.** **Публикация** (*publish*) загружает `.pbix` в **Power BI Service**, где **обновление по расписанию** (*scheduled refresh*) перечитывает источники, а люди открывают отчёт в браузере.
@@ -555,14 +563,14 @@ Dynamic Title = "Outstanding - " & SELECTEDVALUE ( products[product_name], "all 
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Меры против столбцов — [Learn 80% of DAX in an Hour (Chandoo), 13:39](https://youtu.be/lD7TvkoQ6rY?t=819&end=908)
-- ▶ CALCULATE — [Learn 80% of DAX in an Hour (Chandoo), 34:18](https://youtu.be/lD7TvkoQ6rY?t=2058&end=2541)
-- ▶ CALCULATE (коротко, одна идея) — [DAX CALCULATE Function Made Easy to Understand (Leila Gharani), 00:38](https://youtu.be/40xO1MD_CCs?t=38&end=241)
-- ▶ Time intelligence — [Time Intelligence DAX | Current, Previous & SamePeriodLastYear | MTD QTD YTD | MoM QoQ YoY POWER BI (Rahim Zulfiqar Ali), 13:07](https://youtu.be/WsWDjH-CgHg?t=787&end=969)
-- ▶ Time intelligence, нужна отмеченная таблица дат — [My number 1 trick for TIME INTELLIGENCE (How to Power BI), 00:30](https://youtu.be/I8Y5fBGwqeQ?t=30&end=66)
-- ▶ Визуалы — [Power BI for Data Analytics - Full Course for Beginners (Luke Barousse), 1:13:27](https://youtu.be/FwjaHCVNBWA?t=4407&end=5536)
-- ▶ Визуалы и полный проект — [Learn Power BI in Under 3 Hours (Alex The Analyst), 1:09:26](https://youtu.be/I0vQ_VLZTWg?t=4166&end=4960)
 - ▶ (RU) Основы DAX — [Power BI с нуля — полный гайд | Часть 1 (MrAnalitik), 39:33](https://youtu.be/A2r6or-Dm28?t=2373&end=4004)
+- ▶ (на англ.) Меры против столбцов — [Learn 80% of DAX in an Hour (Chandoo), 13:39](https://youtu.be/lD7TvkoQ6rY?t=819&end=908)
+- ▶ (на англ.) CALCULATE — [Learn 80% of DAX in an Hour (Chandoo), 34:18](https://youtu.be/lD7TvkoQ6rY?t=2058&end=2541)
+- ▶ (на англ.) CALCULATE (коротко, одна идея) — [DAX CALCULATE Function Made Easy to Understand (Leila Gharani), 00:38](https://youtu.be/40xO1MD_CCs?t=38&end=241)
+- ▶ (на англ.) Time intelligence — [Time Intelligence DAX | Current, Previous & SamePeriodLastYear | MTD QTD YTD | MoM QoQ YoY POWER BI (Rahim Zulfiqar Ali), 13:07](https://youtu.be/WsWDjH-CgHg?t=787&end=969)
+- ▶ (на англ.) Time intelligence, нужна отмеченная таблица дат — [My number 1 trick for TIME INTELLIGENCE (How to Power BI), 00:30](https://youtu.be/I8Y5fBGwqeQ?t=30&end=66)
+- ▶ (на англ.) Визуалы — [Power BI for Data Analytics - Full Course for Beginners (Luke Barousse), 1:13:27](https://youtu.be/FwjaHCVNBWA?t=4407&end=5536)
+- ▶ (на англ.) Визуалы и полный проект — [Learn Power BI in Under 3 Hours (Alex The Analyst), 1:09:26](https://youtu.be/I0vQ_VLZTWg?t=4166&end=4960)
 
 - RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `Power BI 7.2.pptx`: M против DAX — слайд 9; синтаксис, типы, операторы DAX — слайды 10–12; самые используемые функции (математические и статистические, `DIVIDE`; логические `IF`, `AND`, `OR`) — слайды 13–14; ссылки — слайд 15. RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `Power BI 7.3.pptx`: зачем визуализировать и категории визуалов — слайды 3–6; **размещение визуалов (верх / середина / низ)** — слайд 7; публикация в вебе, настройки обновления — слайды 8–9; дашборды против отчётов, доступ — слайды 10–12; домашнее задание — слайд 13.
 - `Power BI 7.2.pbix`, `Power BI 7.3.pbix` — файлы с лекций (бинарные; откройте их в Power BI Desktop, здесь они не читаются). `Homework.zip` — домашнее задание 7.3: `flights.csv` (72 МБ, рейсы в США), `airline_carriers.csv` и список задач: загрузить и связать, вычисляемый столбец *Delay / On-Time* (`DepDelay` или `ArrDelay` > 0), визуал с долей в % каждого статуса, рейсы по названию перевозчика, затем фильтр **Top N** до топ-5 перевозчиков. Хороший дополнительный час на чужих данных с теми самыми инструментами, что мы проходим сегодня.

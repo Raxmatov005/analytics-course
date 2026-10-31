@@ -2,6 +2,7 @@
 - [Карта курса](ru/map.md)
 - [Прогресс и награды](ru/progress.md)
 - [Мои ошибки](ru/mistakes.md)
+- [Мои отзывы](ru/feedback.md)
 - [Как сдавать домашние задания](ru/homework/how-to-submit.md)
 - [Пробный день: попробуйте распорядок](ru/practice.md)
 - [SQL-песочница](ru/playground.md)

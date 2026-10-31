@@ -40,10 +40,16 @@ def main(sub=""):
         ru = open(ru_path, encoding="utf-8").read() if os.path.exists(ru_path) else None
         eb = blocks(en)
         rb = blocks(ru) if ru is not None else None
+        # each language links videos in its own language since 2026-10-31 (the English page drops the Russian videos and
+        # their ```videoquiz): those blocks are matched by video below, every other block stays paired in order
+        vq_en = {json.loads(b).get("video"): (b, n) for l, b, n in eb if l == "videoquiz" and b.strip().startswith("{")}
+        vq_ru = {json.loads(b).get("video"): (b, n) for l, b, n in (rb or []) if l == "videoquiz" and b.strip().startswith("{")}
+        pair_en = [x for x in eb if x[0] != "videoquiz"]
+        pair_ru = [x for x in rb if x[0] != "videoquiz"] if rb is not None else None
         if ru is None:
             print(f"MISSING RU  {rel}")
             bad += 1
-        elif [b[0] for b in eb] != [b[0] for b in rb]:
+        elif [b[0] for b in pair_en] != [b[0] for b in pair_ru]:
             print(f"FENCES DIFFER  {rel}: en={[b[0] for b in eb]}\n                ru={[b[0] for b in rb]}")
             bad += 1
         for lang, body, line in eb:
@@ -62,7 +68,10 @@ def main(sub=""):
                         bad += 1
                     ids[key] = rel
         if rb:
-            for (l1, b1, n1), (l2, b2, n2) in zip(eb, rb):
+            for v in set(vq_en) & set(vq_ru):   # the same video on both pages: the same questions at the same seconds
+                pair_en.append(("videoquiz", vq_en[v][0], vq_en[v][1]))
+                pair_ru.append(("videoquiz", vq_ru[v][0], vq_ru[v][1]))
+            for (l1, b1, n1), (l2, b2, n2) in zip(pair_en, pair_ru):
                 if l1 in JSON_LANGS and l2 == l1:
                     try:
                         d1, d2 = json.loads(b1), json.loads(b2)

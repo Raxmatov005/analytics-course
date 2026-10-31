@@ -79,6 +79,8 @@ SELECT * FROM customers LIMIT 3;
 {"id": "w01d1-l1", "kind": "choice", "options": ["один кредит", "один плановый ежемесячный платёж по одному кредиту", "один реально полученный платёж", "один клиент"], "answer": 1, "explain": "installments — это график: одна строка на каждый запланированный ежемесячный платёж, поэтому loan_id повторяется. Кредит 1 выдан на 24 месяца — у него здесь 24 строки (четыре выше — первые из них). То, что реально пришло, хранится в другой таблице — payments."}
 ```
 
+> 🎬 **Остались вопросы про таблицы, строки и столбцы?** [Влад Мишустин объясняет · 4 мин](https://youtu.be/5sG9kmXYsKU?t=477&end=704)
+
 ### Типы данных — один вид значений в столбце :id=data-types-one-kind-of-value-per-column
 
 **Что это.** У каждого столбца есть **тип данных** (*data type*): вид значений, которые в нём могут лежать. В числовом столбце — только числа. В столбце с датами — только даты. Для этого курса хватит четырёх типов.
@@ -143,6 +145,8 @@ SELECT * FROM loans WHERE loan_id = 1;
 {"id": "w01d1-l2", "kind": "choice", "options": ["customer_id", "phone", "last_name", "region"], "answer": 0, "explain": "Только customer_id разный в каждой строке. На 6 040 строк всего 5 997 разных телефонов (в семьях один номер на всех, а некоторые люди записаны дважды); фамилии и регионы повторяются в тысячах строк."}
 ```
 
+> 🎬 **Остались вопросы про первичный ключ?** [Игорь Вовченко объясняет · 3 мин](https://youtu.be/cZTxadhqahQ?t=0&end=166)
+
 ### Внешний ключ — столбец, который указывает на другую таблицу :id=foreign-key-a-column-that-points-to-another-table
 
 **Что это.** **Внешний ключ** (*foreign key*, FK) — столбец, который хранит **первичный ключ другой таблицы**. Так строка одной таблицы указывает на строку другой. `loans.customer_id` — внешний ключ: в нём лежит `customer_id` человека, который взял кредит.
@@ -177,6 +181,8 @@ SELECT customer_id, first_name, last_name, region FROM customers WHERE customer_
 {"type": "connect", "id": "w01d1-fk", "title": "На что указывает кредит?", "left": {"name": "loans", "cols": ["loan_id", "application_id", "customer_id", "product_id", "branch_id", "principal"]}, "right": {"name": "таблицы, на которые он указывает", "cols": ["customers.customer_id", "applications.application_id", "staff.staff_id", "branches.branch_id", "products.product_id"]}, "links": [["application_id", "applications.application_id"], ["customer_id", "customers.customer_id"], ["product_id", "products.product_id"], ["branch_id", "branches.branch_id"]], "why": "Это четыре внешних ключа таблицы loans. principal — обычное число, а сотрудника кредит не хранит."}
 ```
 
+> 🎬 **Остались вопросы про внешние ключи?** [Влад Мишустин объясняет · 6 мин](https://youtu.be/5sG9kmXYsKU?t=2394&end=2772)
+
 ### «Один ко многим» — ключ хранит сторона «многие» :id=one-to-many-the-many-side-carries-the-key
 
 **Что это.** Связь **«один ко многим»** (*one-to-many*) соединяет одну строку с одной стороны со многими строками с другой. У одного клиента может быть много кредитов; один кредит принадлежит ровно одному клиенту. Записывается так: `customers 1 — ∞ loans`. Внешний ключ всегда стоит на стороне **«многие»**: каждый кредит хранит свой `customer_id`, а клиент не хранит списка кредитов.
@@ -210,6 +216,8 @@ WHERE customer_id = 3473;
 ```task
 {"id": "w01d1-l3", "kind": "choice", "options": ["staff — столбец staff.branch_id", "branches — столбец branches.staff_id", "обе таблицы", "ни одна — они не связаны"], "answer": 0, "explain": "Сторона «многие» хранит ключ стороны «один»: в строке каждого сотрудника записан филиал, где он работает. Строка филиала не может хранить список сотрудников в одной ячейке."}
 ```
+
+> 🎬 **Остались вопросы про связи между таблицами (один ко многим и другие)?** [Игорь Вовченко объясняет · 4 мин](https://youtu.be/cZTxadhqahQ?t=359&end=600)
 
 ### Как читать связь предложением :id=reading-a-relationship-as-a-sentence
 
@@ -368,7 +376,7 @@ SELECT application_id, customer_id, applied_at, status FROM applications WHERE a
 
 ### Углубление (необязательно) :id=depth-optional
 
-- ▶ Baraa, *Introduction to SQL* [0:07:38](https://youtu.be/SSKVgrwhzus?t=458&end=1353) — 15 мин, что такое база данных и зачем нужен SQL.
+- ▶ (на англ.) Baraa, *Introduction to SQL* [0:07:38](https://youtu.be/SSKVgrwhzus?t=458&end=1353) — 15 мин, что такое база данных и зачем нужен SQL.
 - Презентация на русском (TBC Data Analytics 2.0, если она у вас есть) `1.1 Database Fundamentals.pdf`, страницы 1–30 (что такое СУБД, таблицы, ключи). *Английские термины:* таблица = table, строка = row, столбец = column, первичный ключ = primary key, внешний ключ = foreign key.
 
 ```videoquiz

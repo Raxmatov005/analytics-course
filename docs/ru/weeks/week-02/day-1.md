@@ -44,7 +44,7 @@ WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
 SELECT * FROM cust;
 ```
 
-> 🎬 **Остались вопросы про зачем нужен JOIN?** [Бараа объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=10238&end=10707)
+> 🎬 **Остались вопросы про зачем нужен JOIN?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=9725&end=9906)
 
 ### Форма соединения — FROM … JOIN … ON :id=the-shape-of-a-join-from-join-on
 
@@ -123,7 +123,7 @@ INNER JOIN applications a ON a.customer_id = c.customer_id;
 {"id": "w02d1-j1", "kind": "number", "answer": 7828, "dp": 0, "unit": "строк", "hint": "У каждого кредита ровно один клиент. Сколько всего кредитов?", "model": "7 828 — по одной строке на кредит. INNER JOIN здесь ничего не теряет, потому что каждый кредит находит своего клиента."}
 ```
 
-> 🎬 **Остались вопросы про INNER JOIN?** [Бараа объясняет (на английском, есть субтитры) · 12 мин](https://youtu.be/SSKVgrwhzus?t=10708&end=11457)
+> 🎬 **Остались вопросы про INNER JOIN?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=9906&end=10296)
 
 ### LEFT JOIN — каждая строка левой таблицы :id=left-join-every-row-of-the-left-table
 
@@ -173,7 +173,7 @@ LEFT JOIN applications a ON a.customer_id = c.customer_id;    -- 14 587 стро
 {"id": "w02d1-j2", "kind": "number", "answer": 392, "dp": 0, "unit": "кредитов", "hint": "FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id — затем посчитайте строки, где p.payment_id IS NULL.", "model": "392. LEFT JOIN сохраняет каждый кредит; у кредитов без платежей в столбцах платежа стоит NULL."}
 ```
 
-> 🎬 **Остались вопросы про LEFT JOIN?** [Бараа объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=11457&end=11890)
+> 🎬 **Остались вопросы про LEFT JOIN?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=11386&end=11730)
 
 ### INNER vs LEFT — строка без пары :id=inner-vs-left-the-row-with-no-partner
 
@@ -222,7 +222,7 @@ WHERE a.application_id IS NULL;
 {"id": "w02d1-j4", "kind": "sql", "model": "SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id WHERE p.payment_id IS NULL;", "note": "LEFT JOIN от loans к payments, затем WHERE сторона платежа IS NULL."}
 ```
 
-> 🎬 **Остались вопросы про left anti-join?** [Бараа объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=12468&end=12708)
+> 🎬 **Остались вопросы про left anti-join?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=11490&end=11830)
 
 ### RIGHT JOIN — каждая строка правой таблицы :id=right-join-every-row-of-the-right-table
 
@@ -258,7 +258,7 @@ RIGHT JOIN app a ON a.cust_id = c.id;
 {"id": "w02d1-j5", "kind": "choice", "options": ["SELECT … FROM loans l LEFT JOIN customers c ON c.customer_id = l.customer_id", "SELECT … FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id", "SELECT … FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id", "Нет LEFT JOIN с теми же строками"], "answer": 1, "explain": "RIGHT сохраняет каждую строку таблицы после JOIN — customers. Поставьте customers в FROM и напишите LEFT: каждый клиент, с кредитами там, где они есть."}
 ```
 
-> 🎬 **Остались вопросы про RIGHT JOIN?** [Бараа объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=11890&end=12188)
+> 🎬 **Остались вопросы про RIGHT JOIN?** [Влад Мишустин объясняет · 3 мин](https://youtu.be/5sG9kmXYsKU?t=3458&end=3612)
 
 ### FULL OUTER JOIN — каждая строка с обеих сторон :id=full-outer-join-every-row-from-both-sides
 
@@ -326,7 +326,7 @@ ORDER BY p.name, b.branch_name;  -- 5 × 10 = 50 строк
 {"id": "w02d1-j7", "kind": "number", "answer": 50, "dp": 0, "unit": "строк", "hint": "Продукты × филиалы.", "model": "5 продуктов × 10 филиалов = 50 строк — по одной на каждую пару продукт–филиал."}
 ```
 
-> 🎬 **Остались вопросы про CROSS JOIN?** [Бараа объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=13416&end=13614)
+> 🎬 **Остались вопросы про CROSS JOIN?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=11947&end=12140)
 
 ### Самосоединение — таблица, соединённая сама с собой :id=self-join-a-table-joined-to-itself
 
@@ -486,7 +486,7 @@ JOIN branches  b ON b.branch_id   = l.branch_id;
 {"id": "w02d1-j10", "kind": "sql", "model": "SELECT c.region, COUNT(*) AS actions FROM collections_actions ca JOIN loans l ON l.loan_id = ca.loan_id JOIN customers c ON c.customer_id = l.customer_id GROUP BY c.region ORDER BY actions DESC;", "note": "Два шага: collections_actions → loans (loan_id), loans → customers (customer_id)."}
 ```
 
-> 🎬 **Остались вопросы про соединение нескольких таблиц?** [Бараа объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=13900&end=14511)
+> 🎬 **Остались вопросы про соединение нескольких таблиц?** [Амелин объясняет · 10 мин](https://youtu.be/7w_Svh9Gnsw?t=10301&end=10882)
 
 ### Собираем вместе :id=putting-it-together
 
@@ -516,7 +516,7 @@ ORDER BY loans DESC;
 
 ### Углубление (по желанию) :id=depth-optional
 
-- ▶ Бараа, *SQL joins (basics)* [2:47:57](https://youtu.be/SSKVgrwhzus?t=10077&end=12449) — 40 мин, INNER/LEFT/RIGHT/FULL с его картинками; его `customers`/`orders` — это наши `customers`/`loans`.
+- ▶ (на англ.) Бараа, *SQL joins (basics)* [2:47:57](https://youtu.be/SSKVgrwhzus?t=10077&end=12449) — 40 мин, INNER/LEFT/RIGHT/FULL с его картинками; его `customers`/`orders` — это наши `customers`/`loans`.
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `2.1 SQL-47-77.pdf` — страницы про JOIN. *Термины по-английски:* соединение = join, внутреннее = inner, левое = left, псевдоним = alias, ключ соединения = join key.
 
 ```videoquiz

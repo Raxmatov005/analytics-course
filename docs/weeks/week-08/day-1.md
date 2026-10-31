@@ -365,8 +365,6 @@ GROUP BY cohort ORDER BY cohort;
 {"id": "w08d1-l5", "kind": "number", "answer": 148, "dp": 0, "unit": "customers", "hint": "Run the query above and read the 2025-06 row.", "model": "148 customers took their first Nur loan in June 2025."}
 ```
 
-> 🎬 **Didn't get cohorts?** [A short explanation · 5 min](https://youtu.be/uYYh69Nf-34?t=1771&end=2083)
-
 ### The retention table and the retention curve
 
 **What it is.** A **retention table** puts cohorts in rows and the age N in columns; each cell is that cohort's retention at that age. A cell exists only when **every** customer of the cohort has had N months; otherwise it stays blank. A **retention curve** draws one row of the table as a line over N.
@@ -457,8 +455,6 @@ Each line is one cohort. At one month, 2024Q1 starts at 6.0 % and 2026Q1 at 22.8
 ```task
 {"id": "w08d1-l6", "kind": "number", "answer": 36.1, "dp": 1, "unit": "%", "hint": "Row 2025Q4, column m6.", "model": "36.1 %. Its m12 cell is blank: the cohort's December customers reach 12 months only in December 2026."}
 ```
-
-> 🎬 **Didn't get the cohort retention table?** [A short explanation · 5 min](https://youtu.be/uYYh69Nf-34?t=2083&end=2356)
 
 ### Churn — the customers who leave
 
@@ -627,20 +623,13 @@ Sessions grow from 373 to 526 a quarter; visit → money is 51.7 %, 54.0 %, 52.1
 
 **Videos (free, YouTube; each link opens at the right minute):**
 
-- ▶ Metric system, AARRR, metric tree / North Star (RU) — [Все продуктовые метрики за 15 минут — без воды | DAU, Retention, LTV (Аналитика без воды), 00:31](https://youtu.be/X4asNCIMBRg?t=31&end=90)
-- ▶ Funnels (RU) — same video, [06:41](https://youtu.be/X4asNCIMBRg?t=401&end=459)
-- ▶ Retention (RU) — same video, [05:15](https://youtu.be/X4asNCIMBRg?t=315&end=401)
 - ▶ Metric trees (EN, long) — [Analytics for Product Managers Masterclass (HelloPM), 1:17:30](https://youtu.be/N-Igkw7__z0?t=4650&end=4810)
 - ▶ Cohorts, how to read the chart — [What is a Cohort? How to Read a Cohort Analysis Chart... (Peel), 01:21](https://youtu.be/mb2_kskQDDU?t=81)
 - ▶ Retention by cohort, calculated — [Customer Retention & Cohort Analysis (Eric Andrews), 04:11](https://youtu.be/OwCATJh4lNg?t=251&end=434)
-- ▶ Cohorts (RU, long) — [Когортный анализ и важнейшие метрики продукта (ProductStar), 29:00](https://youtu.be/uYYh69Nf-34?t=1740&end=2780)
 
 - RU deck (TBC Data Analytics 2.0, if you have it) `8.1 Product Analytics.pptx` (lesson 8.1): slides 4–6 — what a metric is and why it exists; slides 7–11 — how to build one: goal → product initiatives → business questions → the metric (the Amplitude pyramid on 8–10, the one-line definition on 11: a metric tells you how what you do affects your goal); slides 12–18 — a case: MAU growing while revenue flattens (13–14), product vs growth metrics (15), a monthly KPI table with MoM and YoY (16), **cohort retention curves against a benchmark** (17), a daily product dashboard split into financial, growth and performance metrics (18); slide 19 — the summary grid (question, how, goal, metric; growth, financial, efficiency metrics). Mostly pictures: read them next to this page.
 - *Russian terms:* продуктовая аналитика = product analytics, дерево метрик = metric tree, входная / выходная метрика = input / output metric, опережающая / запаздывающая = leading / lagging, воронка = funnel, конверсия шага = step conversion, отвал = drop-off, когорта = cohort, удержание = retention, отток = churn, повторный займ = repeat loan, липкость = stickiness.
 
-```videoquiz
-{"video": "X4asNCIMBRg", "stops": [{"at": 70, "q": "What is a North Star metric?", "options": ["The one number that best captures the value the company delivers and earns from", "The number of app installs", "The sum of all the team's metrics", "Whichever metric grew fastest this month"], "answer": 0, "explain": "One number for the whole company — for a lender, usually disbursed amount (or good loans) per month — then decomposed into a tree."}, {"at": 360, "q": "What does retention measure?", "options": ["Revenue per user", "The share of a cohort that comes back after N days or months", "New users this month", "All users active today"], "answer": 1, "explain": "Retention follows one cohort over time. For Nur, 'coming back' means taking a second loan.", "back": 40}, {"at": 440, "q": "What does a funnel's step conversion compare?", "options": ["Users at a step ÷ users at the previous step", "Users at a step ÷ everyone who ever opened the app", "Revenue ÷ users", "Steps ÷ sessions"], "answer": 0, "explain": "Step conversion is k ÷ k−1; conversion from the top is k ÷ step 1. Always show both."}]}
-```
 
 ```videoquiz
 {"video": "N-Igkw7__z0", "stops": [{"at": 4700, "q": "What is a metric tree for?", "options": ["Listing every dashboard the company has", "Breaking the North Star into drivers that teams can move", "Ranking employees", "Replacing the funnel"], "answer": 1, "explain": "Each node is the product (or sum) of its children, down to things a team can push — today's five factors."}, {"at": 4790, "q": "A good child metric in the tree is…", "options": ["Any number that is easy to collect", "A lagging financial result", "Something a team can influence directly and that moves its parent", "App installs"], "answer": 2, "explain": "Input metrics go to teams as targets; the board reads the output at the top.", "back": 60}]}
@@ -654,9 +643,6 @@ Sessions grow from 373 to 526 a quarter; visit → money is 51.7 %, 54.0 %, 52.1
 {"video": "OwCATJh4lNg", "stops": [{"at": 300, "q": "A cohort's retention in month N is…", "options": ["Active users in month N ÷ all users ever", "Members of the cohort still returning in month N ÷ the cohort's starting size", "New users ÷ churned users", "Revenue growth in month N"], "answer": 1, "explain": "The denominator is the cohort's own starting size — never the whole user base."}, {"at": 410, "q": "Why does a cohort that started last month have no 12-month number?", "options": ["It has fewer users", "Retention only works for old cohorts", "It has not lived 12 months — the cell is not observed, not zero", "The query is wrong"], "answer": 2, "explain": "Blank the cell until every member has had N months — the rule you apply in P8.", "back": 60}]}
 ```
 
-```videoquiz
-{"video": "uYYh69Nf-34", "stops": [{"at": 1950, "q": "Why analyse by cohort instead of the total?", "options": ["Cohorts are smaller and faster to compute", "The total mixes users of different ages; cohorts compare like with like", "Totals cannot be charted", "Cohorts remove seasonality completely"], "answer": 1, "explain": "A growing base of new users drags a total down even when every cohort behaves the same."}, {"at": 2300, "q": "Which numbers are typically computed per cohort?", "options": ["Retention and revenue per user", "Total installs", "Headcount", "The number of screens in the app"], "answer": 0, "explain": "Per cohort: who came back and what they brought — repeat borrowing and, tomorrow, LTV."}, {"at": 2650, "q": "A newer cohort retains better than older ones at the same age. What does it suggest?", "options": ["Nothing — newer cohorts always look better", "A data error", "The product or the customer mix changed — find out which", "Retention should be dropped as a metric"], "answer": 2, "explain": "That is exactly P9's triangle: 6-month repeat borrowing rose from 22 % to 38 %. The next question is why — and whether the repeat loans are good.", "back": 60}]}
-```
 
 ---
 

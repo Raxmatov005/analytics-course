@@ -708,8 +708,6 @@ Read the `90+` column: SME **3.7 %**, Consumer 3.2 %, Micro 2.8 %, BNPL 2.7 %, A
 - ▶ Slicers and pivot charts — [Pivot Table Excel | Step-by-Step Tutorial (Kevin Stratvert), 07:08](https://youtu.be/dvbLrwD2SpA?t=428&end=485)
 - ▶ Charts — [Learn Excel in Under 3 Hours (Alex The Analyst), 35:57](https://youtu.be/zXnQNytHCPM?t=2157&end=2962)
 - ▶ One-page dashboard (pivot tables + charts + timeline/slicers) — [How to Build Excel Interactive Dashboards (Kevin Stratvert), 00:52](https://youtu.be/MTlQvyNQ3PM?t=52&end=85)
-- ▶ (RU, optional) Pivot tables from scratch — [Сводные таблицы Excel с нуля до профи за полчаса + Дэшборды! (Билял Хасенов)](https://youtu.be/4roVtL2mynA)
-- ▶ (RU, optional) Core analyst formulas incl. pivots in 10 minutes — [EXCEL для начинающих аналитиков (Noukash), 05:40](https://youtu.be/snqGcBdTgCU?t=340&end=418)
 
 - RU workbook `3.3 Pivot.xlsx` — sheets *Introduction*, *Building a Pivot table*, *Filtering*, *Calculations in Pivot Table*; the employee/store data shows the same Rows–Values–Filters mechanics.
 - *Russian terms:* сводная таблица = PivotTable, срез = slicer, временная шкала = timeline, вычисляемое поле = calculated field, группировка по месяцам = group by months, % от родительской строки = % of parent row total, нарастающий итог = running total, гистограмма / линейчатая / график / комбинированная / с накоплением = column / bar / line / combo / stacked chart, спарклайн = sparkline, обновить = refresh.
@@ -726,13 +724,7 @@ Read the `90+` column: SME **3.7 %**, Consumer 3.2 %, Micro 2.8 %, BNPL 2.7 %, A
 {"video": "MTlQvyNQ3PM", "stops": [{"at": 65, "q": "One slicer should filter all four pivots on the page. What connects them?", "options": ["Report Connections on the slicer", "Copying the slicer four times", "Grouping the pivots", "Protect Sheet"], "answer": 0, "explain": "Right-click the slicer → Report Connections → tick every pivot.", "back": 20}, {"at": 82, "q": "Where should the pivots live on a dashboard workbook?", "options": ["On the printed page, under the charts", "On a separate data sheet, read by charts and tiles", "In a different file", "Nowhere — paste values"], "answer": 1, "explain": "The page shows charts and tiles; the Data sheet holds the machinery.", "back": 20}]}
 ```
 
-```videoquiz
-{"video": "4roVtL2mynA", "stops": [{"at": 120, "q": "You drag a numeric field into Values. What appears?", "options": ["The raw rows", "Its aggregate per group — Sum by default", "A chart", "An error"], "answer": 1, "explain": "Value Field Settings switches Sum to Count, Average, Max…"}, {"at": 300, "q": "Which area of the field list acts like a WHERE for the whole pivot?", "options": ["Rows", "Values", "Filters", "Columns"], "answer": 2, "explain": "Filters (or a slicer) narrow the rows before they are grouped."}, {"at": 540, "q": "You added rows to the source table. What must you do before the pivot shows them?", "options": ["Nothing", "Refresh the pivot", "Rebuild it from scratch", "Sort the source"], "answer": 1, "explain": "The pivot reads its cache until you refresh.", "back": 60}]}
-```
 
-```videoquiz
-{"video": "snqGcBdTgCU", "stops": [{"at": 370, "q": "Which summary is a pivot table built to give you in seconds?", "options": ["Totals per category without writing a formula", "A cleaned copy of the data", "A lookup of one value", "A forecast"], "answer": 0, "explain": "Category → aggregate: the analyst's most frequent question."}, {"at": 410, "q": "The source data changed. Will a pivot's numbers change by themselves in Excel?", "options": ["Yes, instantly", "No — refresh it", "Only after saving", "Only in Google Sheets"], "answer": 1, "explain": "Excel pivots read a cache; Sheets pivots follow their source range.", "back": 40}]}
-```
 
 ---
 

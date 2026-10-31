@@ -55,9 +55,7 @@ ORDER BY loans DESC;
 {"id": "w03d3-l1", "kind": "number", "answer": 488, "dp": 0, "unit": "кредитов", "hint": "WHERE principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)", "model": "488 — 400 кредитов SME и 88 кредитов Auto больше 308 728 745, среднего кредита SME."}
 ```
 
-> 🎬 **Остались вопросы про подзапрос в SELECT?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=48005&end=48432)
-
-> 🎬 **Остались вопросы про подзапрос в WHERE?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=48740&end=49138)
+> 🎬 **Остались вопросы про подзапрос в SELECT?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=19455&end=19760)
 
 ### IN с подзапросом — есть ли значение в этом списке? :id=in-with-a-subquery-is-the-value-in-that-list
 
@@ -91,7 +89,7 @@ WHERE customer_id IN (SELECT customer_id              -- один столбец
 {"id": "w03d3-l2", "kind": "number", "answer": 2669, "dp": 0, "unit": "кредитов", "hint": "SELECT COUNT(*) FROM loans WHERE application_id IN (SELECT application_id FROM applications WHERE channel = 'app');", "model": "2 669 — ровно кредиты Micro: приложение продаёт один продукт. IN подтянул канал, не добавляя вторую таблицу в результат."}
 ```
 
-> 🎬 **Остались вопросы про IN с подзапросом?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=49138&end=49648)
+> 🎬 **Остались вопросы про IN с подзапросом?** [Амелин объясняет · 9 мин](https://youtu.be/7w_Svh9Gnsw?t=18630&end=19145)
 
 ### EXISTS и NOT EXISTS — есть ли хотя бы одна строка? :id=exists-and-not-exists-is-there-at-least-one-row
 
@@ -139,7 +137,7 @@ GROUP BY s.role;
 {"id": "w03d3-l3", "kind": "number", "answer": 3, "dp": 0, "unit": "филиала", "hint": "SELECT COUNT(*) FROM branches b WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.branch_id = b.branch_id AND l.status = 'written_off' AND l.product_id = 4);", "model": "3 филиала ни разу не списывали кредит Auto; у остальных 7 есть хотя бы один."}
 ```
 
-> 🎬 **Остались вопросы про EXISTS и NOT EXISTS?** [Baraa объясняет (на английском, есть субтитры) · 12 мин](https://youtu.be/SSKVgrwhzus?t=50660&end=51407)
+> 🎬 **Остались вопросы про EXISTS и NOT EXISTS?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=18406&end=18623)
 
 ### Производная таблица — подзапрос во FROM :id=derived-table-a-subquery-in-from
 
@@ -183,7 +181,7 @@ ORDER BY loans_per_customer;
 {"id": "w03d3-l4", "kind": "number", "answer": 48.2, "dp": 1, "unit": "%", "hint": "ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) во внешнем SELECT.", "model": "48.2 % — 2 089 из 4 335 заёмщиков взяли только один кредит. Половина клиентов так и не вернулась за вторым."}
 ```
 
-> 🎬 **Остались вопросы про подзапрос в FROM?** [Baraa объясняет (на английском, есть субтитры) · 13 мин](https://youtu.be/SSKVgrwhzus?t=47250&end=48001)
+> 🎬 **Остались вопросы про подзапрос в FROM?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=19898&end=20085)
 
 ### Коррелированный подзапрос — внутренний запрос читает внешнюю строку :id=correlated-subquery-the-inner-query-reads-the-outer-row
 
@@ -220,7 +218,7 @@ WHERE l.principal >= 0.99 * (SELECT p.max_amount
 {"id": "w03d3-l5", "kind": "number", "answer": 846, "dp": 0, "unit": "кредитов", "hint": "Замените 0.99 на 0.9 в запросе выше.", "model": "846 кредитов — примерно каждый девятый лежит в верхней десятой части диапазона своего продукта, у самого лимита."}
 ```
 
-> 🎬 **Остались вопросы про коррелированные подзапросы?** [Baraa объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=50027&end=50656)
+> 🎬 **Остались вопросы про коррелированные подзапросы?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=19553&end=19898)
 
 ### CTE — WITH name AS (…), и почему так читается лучше :id=cte-with-name-as-and-why-it-reads-better
 
@@ -262,9 +260,7 @@ ORDER BY loans_per_customer;
 {"type": "bug", "id": "w03d3-g3", "title": "Найдите сломанную строку", "q": "Два вопроса к одному CTE. Первый выполняется; второй пишет no such table: per_loan. Какая строка падает?", "code": "WITH per_loan AS (SELECT loan_id, SUM(principal_due) AS outstanding\n                  FROM installments WHERE due_date > '2026-10-01' GROUP BY loan_id)\nSELECT COUNT(*) FROM per_loan;\nSELECT AVG(outstanding) FROM per_loan;", "answer": [3], "why": "CTE существует только для одного оператора, который за ним следует; после точки с запятой его нет. Повторите WITH, выведите оба числа одним SELECT или сохраните результат как представление или таблицу (День 4)."}
 ```
 
-> 🎬 **Остались вопросы про CTE?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=51494&end=51975)
-
-> 🎬 **Остались вопросы про простой CTE?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=52316&end=52842)
+> 🎬 **Остались вопросы про CTE?** [Амелин объясняет · 7 мин](https://youtu.be/7w_Svh9Gnsw?t=20156&end=20554)
 
 ### Цепочка CTE — одна зернистость на шаг :id=a-chain-of-ctes-one-grain-per-step
 
@@ -313,9 +309,7 @@ ORDER BY owing_loans;
 {"type": "cloze", "id": "w03d3-g2", "title": "Соберите цепочку", "text": "WITH {{0}} AS (SELECT customer_id, COUNT(*) AS n FROM loans {{1}})\nSELECT n AS loans_per_customer, COUNT(*) AS customers\nFROM per_customer\n{{2}}\nORDER BY n;", "blanks": [["per_customer"], ["GROUP BY customer_id"], ["GROUP BY n"]], "distractors": ["WHERE n > 1", "per_loan", "GROUP BY loan_id", "HAVING COUNT(*) > 1"]}
 ```
 
-> 🎬 **Остались вопросы про несколько CTE в одном запросе?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=52842&end=53333)
-
-> 🎬 **Остались вопросы про CTE внутри CTE?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=53333&end=53798)
+> 🎬 **Остались вопросы про несколько CTE в одном запросе?** [Амелин объясняет · 8 мин](https://youtu.be/7w_Svh9Gnsw?t=20562&end=21038)
 
 ### Рекурсивный CTE — строки, которых нет ни в одной таблице :id=recursive-cte-rows-that-are-in-no-table
 
@@ -353,7 +347,7 @@ SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;
 {"id": "w03d3-l6", "kind": "number", "answer": 6, "dp": 0, "unit": "строк", "hint": "WITH RECURSIVE m(d) AS (SELECT '2026-01-01' UNION ALL SELECT date(d, '+1 month') FROM m WHERE d < '2026-06-01') SELECT COUNT(*) FROM m; — последняя добавленная строка — первая, которая уже не раньше июня.", "model": "6: с января по июнь. Шаг выполняется, пока последний месяц раньше июня, поэтому сам июнь ещё добавляется, а затем рекурсия останавливается."}
 ```
 
-> 🎬 **Остались вопросы про рекурсивный CTE?** [Baraa объясняет (на английском, есть субтитры) · 14 мин](https://youtu.be/SSKVgrwhzus?t=54326&end=55147)
+> 🎬 **Остались вопросы про рекурсивный CTE?** [Амелин объясняет · 10 мин](https://youtu.be/7w_Svh9Gnsw?t=31428&end=32002)
 
 ### Таблица поколений — шаг за шагом :id=the-vintage-table-built-step-by-step
 
@@ -460,7 +454,7 @@ ORDER BY yr;
 
 ### Углубление (необязательно) :id=depth-optional
 
-- ▶ Baraa, *Subqueries* [12:58:04](https://youtu.be/SSKVgrwhzus?t=46684&end=51488), *CTE* [14:18:08](https://youtu.be/SSKVgrwhzus?t=51488&end=56102) — ~2 ч 30 мин; его рекурсивные примеры используют синтаксис SQL Server (без слова `RECURSIVE`, с параметром `MAXRECURSION`).
+- ▶ (на англ.) Baraa, *Subqueries* [12:58:04](https://youtu.be/SSKVgrwhzus?t=46684&end=51488), *CTE* [14:18:08](https://youtu.be/SSKVgrwhzus?t=51488&end=56102) — ~2 ч 30 мин; его рекурсивные примеры используют синтаксис SQL Server (без слова `RECURSIVE`, с параметром `MAXRECURSION`).
 - Русскоязычная презентация (TBC Data Analytics 2.0, если она у вас есть) `2.4 SQL Advanced.pdf` — страницы про подзапросы и рекурсивный CTE. *Английские термины:* подзапрос = subquery, обобщённое табличное выражение (ОТВ) = CTE, рекурсия = recursion, когорта/винтаж = cohort/vintage.
 
 ```videoquiz

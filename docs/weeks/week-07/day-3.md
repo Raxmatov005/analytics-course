@@ -509,7 +509,6 @@ Week 4's one-pager already had every idea; Power BI gives each one a home that s
 - ▶ Star schema / data model — [Learn Data Modelling & Star Schema for Power BI in 20 minutes (Chandoo), 02:18](https://youtu.be/4ePNrdxWtY0?t=138&end=580)
 - ▶ Relationships (cardinality, filter direction, active) — [How to Create and Manage Relationships in Power BI (Alex The Analyst), 03:45](https://youtu.be/sW5LoDA1ssM?t=225&end=272)
 - ▶ Relationships, fuller — Alex's 3-hour course, [24:14](https://youtu.be/I0vQ_VLZTWg?t=1454&end=1917)
-- ▶ (RU) Power Query + Power BI data model — [Power Query для Excel и Power BI. ПОЛНЫЙ БАЗОВЫЙ КУРС (ПРО ДАННЫЕ), 05:02](https://youtu.be/pAn4FLC5nEU?t=302&end=359)
 
 - RU deck (TBC Data Analytics 2.0, if you have it) `7_1_Introduction_to_BI_tools,_Importing_data,_Transforming_Data.pptx` (lesson 7.1, Javokhir Tashbaev, TBC × Payme): what BI is and its benefits — slides 4–5; why Power BI and its parts (Desktop / Service / Mobile) — slides 6–8; the process of building a report — slide 9; Desktop's Report, Data and Model sections — slides 10–12; Power Query as an ETL tool — slide 13; the homework — slide 14.
 - RU deck (TBC Data Analytics 2.0, if you have it) `Power BI 7.2.pptx`: data model, star and snowflake schemas — slides 3–5; relationships: cardinality, cross-filter direction, active property — slides 6–8.
@@ -538,9 +537,6 @@ Week 4's one-pager already had every idea; Power BI gives each one a home that s
 {"video": "sW5LoDA1ssM", "stops": [{"at": 240, "q": "Where do you create or edit relationships?", "options": ["In the Report view's format pane", "In the Model view (or Manage relationships)", "In Power Query only", "In the Service"], "answer": 1, "explain": "Drag a dimension key onto the fact column, then check cardinality and direction."}, {"at": 265, "q": "A relationship line is dashed. What does that mean?", "options": ["It is broken", "It is inactive — used only when a measure asks with USERELATIONSHIP", "It is bidirectional", "It is many-to-many"], "answer": 1, "explain": "Only one active path may connect two tables.", "back": 25}]}
 ```
 
-```videoquiz
-{"video": "pAn4FLC5nEU", "stops": [{"at": 320, "q": "What is Power Query for, in Excel and Power BI alike?", "options": ["Repeatable loading and cleaning of data", "Drawing charts", "Writing VBA", "Sharing reports"], "answer": 0, "explain": "The same steps every month — that is what makes a report refresh."}, {"at": 352, "q": "After loading, what turns separate tables into a model?", "options": ["Copying them onto one sheet", "Relationships between their keys", "Formatting", "Pivot tables"], "answer": 1, "explain": "Relationships replace VLOOKUP: one definition used by every visual.", "back": 30}]}
-```
 
 ---
 

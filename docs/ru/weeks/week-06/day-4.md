@@ -427,6 +427,8 @@ p = 0.020 у Bukhara само по себе выглядит «значимым�
 {"id": "w06d4-l7", "kind": "number", "answer": 3, "dp": 0, "unit": "тестов", "hint": "bh([0.01, 0.02, 0.03, 0.20]) — затем посчитайте значения ниже 0.05.", "model": "BH: 0.04, 0.04, 0.04, 0.20 → три ниже 0.05. Холм: 0.04, 0.06, 0.06, 0.20 → только один. BH допускает часть ложных открытий в обмен на мощность."}
 ```
 
+> 🎬 **Остались вопросы про множественные сравнения и поправку Бонферрони?** [Глеб Михайлов объясняет · 8 мин](https://youtu.be/qbbY7ubzDoE?t=4050&end=4558)
+
 ### Подглядывание — множественные сравнения во времени :id=peeking--multiple-comparisons-in-time
 
 **Прежде чем читать.** Сначала угадайте, потом поиграйте — объяснение ниже станет понятнее.
@@ -550,6 +552,8 @@ print(round(power_at(0.0128, 0.010, 1000), 3))
 ```game
 {"type": "cloze", "id": "w06d4-g2", "title": "Кредитов на группу", "text": "n на группу = 2 · ( ( {{0}} + {{1}} ) / {{2}} )²", "blanks": [["z₁₋α/₂ (1.960)", "z₁₋β (0.842)"], ["z₁₋β (0.842)", "z₁₋α/₂ (1.960)"], ["h Коэна"]], "distractors": ["p-значение", "σ / √n"], "why": "α и мощность задают два значения z; размер эффекта h стоит в знаменателе, поэтому вдвое меньший эффект требует вчетверо больше n."}
 ```
+
+> 🎬 **Остались вопросы про размер выборки и мощность теста?** [Noukash объясняет · 6 мин](https://youtu.be/FEI1OA-zgb8?t=1048&end=1401)
 
 ### MDE и кривая мощности — что способен увидеть тест :id=mde-and-the-power-curve--what-can-this-test-see
 
@@ -706,15 +710,15 @@ print(res.round({"P(Micro later)": 3, "d": 3}))
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Манн–Уитни — [Mann-Whitney U Test [Simply explained] (numiqo), 00:23](https://youtu.be/LcxB56PzylA?t=23)
-- ▶ Знаковые ранги Вилкоксона и другие ранговые тесты — [Non-parametric tests - Sign test, Wilcoxon signed rank, Mann-Whitney (zedstatistics), 11:26](https://youtu.be/IcLSKko2tsg?t=686&end=1230)
-- ▶ Множественные сравнения — [The Bonferroni Correction - Clearly Explained (Steven Bradburn), 01:31](https://youtu.be/HLzS5wPqWR0?t=91)
-- ▶ Множественные сравнения и доля ложных открытий — [False Discovery Rates, FDR, clearly explained (StatQuest), 12:28](https://youtu.be/K8LQSvtjcEo?t=748)
 - ▶ Множественные сравнения (RU, симуляция) — [Множественная проверка гипотез | Вероятность и статистика #8 (Глеб Михайлов), 45:32](https://youtu.be/qbbY7ubzDoE?t=2732&end=2898)
-- ▶ Статистическая мощность — [Statistical Power, Clearly Explained!!! (StatQuest), 03:19](https://youtu.be/Rsc5znwR5FA?t=199&end=297)
-- ▶ Анализ мощности и расчёт объёма выборки — [Power Analysis, Clearly Explained!!! (StatQuest), 11:48](https://youtu.be/VX_M3tIyiYk?t=708&end=910)
-- ▶ Расчёты мощности (а также p-хакинг) — [p-hacking and power calculations (StatQuest), 14:12](https://youtu.be/UFhJefdVCjE?t=852)
 - ▶ Объём выборки в A/B-постановке (RU) — [Самая ПОЛНАЯ и ПОНЯТНАЯ лекция по A/B тестам (Noukash), 17:57](https://youtu.be/FEI1OA-zgb8?t=1077&end=1482)
+- ▶ (на англ.) Манн–Уитни — [Mann-Whitney U Test [Simply explained] (numiqo), 00:23](https://youtu.be/LcxB56PzylA?t=23)
+- ▶ (на англ.) Знаковые ранги Вилкоксона и другие ранговые тесты — [Non-parametric tests - Sign test, Wilcoxon signed rank, Mann-Whitney (zedstatistics), 11:26](https://youtu.be/IcLSKko2tsg?t=686&end=1230)
+- ▶ (на англ.) Множественные сравнения — [The Bonferroni Correction - Clearly Explained (Steven Bradburn), 01:31](https://youtu.be/HLzS5wPqWR0?t=91)
+- ▶ (на англ.) Множественные сравнения и доля ложных открытий — [False Discovery Rates, FDR, clearly explained (StatQuest), 12:28](https://youtu.be/K8LQSvtjcEo?t=748)
+- ▶ (на англ.) Статистическая мощность — [Statistical Power, Clearly Explained!!! (StatQuest), 03:19](https://youtu.be/Rsc5znwR5FA?t=199&end=297)
+- ▶ (на англ.) Анализ мощности и расчёт объёма выборки — [Power Analysis, Clearly Explained!!! (StatQuest), 11:48](https://youtu.be/VX_M3tIyiYk?t=708&end=910)
+- ▶ (на англ.) Расчёты мощности (а также p-хакинг) — [p-hacking and power calculations (StatQuest), 14:12](https://youtu.be/UFhJefdVCjE?t=852)
 
 - RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `Непараметрические тесты_latest.pdf` (урок 5.5): проверка нормальности и логарифмирование — стр. 9–12, какой тест выбрать — стр. 13–14, ранги и Манн–Уитни — стр. 15–16, Вилкоксон для связанных выборок — стр. 17–18, Краскел–Уоллис — стр. 19, бутстреп — стр. 20–21, мощность — стр. 22, MDE — стр. 23, A/A-тесты — стр. 24. Множественные сравнения: `Параметрические тесты (2).pdf`, стр. 47–49 (Бонферрони, Tukey HSD).
 - Ноутбуки: `non-parametric.ipynb` (нормальность выборочного среднего, Манн–Уитни на экспоненциальных данных, Вилкоксон, Краскел–Уоллис, бутстреп), `power.ipynb` (мощность через симуляцию: 1 000 t-тестов на сдвиге 1 % — та же идея, что и в нашей ячейке симуляции). `стат_критерии.docx` — список для чтения (статьи с Habr / YouTube о выборе теста, подводных камнях Манна–Уитни, объёме выборки); карта в разделе 2 — наша собственная.

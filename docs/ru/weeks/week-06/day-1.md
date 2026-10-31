@@ -218,6 +218,8 @@ print(round(sum(rate[c] * share[c] for c in rate), 4))
 {"id": "w06d1-l5", "kind": "number", "answer": 1.37, "dp": 2, "unit": "%", "hint": "0.5 × P(FPD | app) + 0.5 × P(FPD | branch).", "model": "0.5 × 1.70 % + 0.5 × 1.04 % = 1.37 % — новые веса поднимают долю по портфелю с 1.28 %."}
 ```
 
+> 🎬 **Остались вопросы про формулу полной вероятности?** [selfedu (Сергей Балакирев) объясняет · 3 мин](https://youtu.be/3bzXyXmzPP0?t=0&end=172)
+
 ### Формула Байеса и ловушка базовой частоты :id=bayes-and-the-base-rate-trap
 
 **Прежде чем читать.** Сначала угадайте, потом поиграйте — объяснение ниже станет понятнее.
@@ -275,6 +277,8 @@ print(round(tp / (tp + fp), 3))
 {"type": "cloze", "id": "w06d1-g1", "title": "Формула Байеса по частям", "text": "P(fraud | flag) = {{0}} · {{1}} / ( P(flag | fraud) · P(fraud) + {{2}} · {{3}} )", "blanks": [["P(flag | fraud)", "P(fraud)"], ["P(fraud)", "P(flag | fraud)"], ["P(flag | honest)", "P(honest)"], ["P(honest)", "P(flag | honest)"]], "distractors": ["P(fraud | flag)", "P(honest | flag)"], "why": "Числитель — помеченные мошенники. Знаменатель — все помеченные: мошенники плюс честные люди, попавшие под долю ложных срабатываний."}
 ```
 
+> 🎬 **Остались вопросы про формулу Байеса?** [selfedu (Сергей Балакирев) объясняет · 4 мин](https://youtu.be/3bzXyXmzPP0?t=172&end=440)
+
 ### Случайные величины, математическое ожидание и дисперсия :id=random-variables-expected-value-and-variance
 
 **Что это.** **Случайная величина** (*random variable*) — число, зависящее от случая: убыток по одному кредиту, число FPD в следующем месяце. **Дискретная** (*discrete*) принимает значения из списка, у каждого своя вероятность; **непрерывная** (*continuous*) принимает любое значение из промежутка. Её описывают три числа:
@@ -315,6 +319,8 @@ print(round(E), round(math.sqrt(Var)))                      # 515881 2844492
 ```task
 {"id": "w06d1-l6", "kind": "number", "answer": 0.3, "dp": 2, "unit": "млн сумов", "hint": "Σ значение × вероятность: 0 × 0.97 + 10 × 0.03.", "model": "E[L] = 0 × 0.97 + 10 млн × 0.03 = 0.3 млн сумов. Ни один кредит не теряет 0.3 млн — он теряет 0 или 10 млн; 0.3 млн — среднее на кредит в долгом ряду."}
 ```
+
+> 🎬 **Остались вопросы про математическое ожидание, дисперсию и стандартное отклонение?** [КиберПоц объясняет · 5 мин](https://youtu.be/06TFGVkQDGg?t=7&end=323)
 
 ### Бернулли и биномиальное — дефолты в партии :id=bernoulli-and-binomial--defaults-in-a-batch
 
@@ -365,6 +371,8 @@ print(min(k for k in range(n + 1) if cdf(k, n, p) >= 0.95))
 ```game
 {"id": "w06d1-g5", "type": "bug", "title": "Тревога, которая звонит на один позже", "q": "Нилуфар нужна P(10 и более FPD) на 400 кредитов. Одна строка отвечает на другой вопрос.", "code": "n, p = 400, 91 / 7099\n# P(10 or more FPDs)\ntail = 1 - cdf(10, n, p)\nprint(round(tail, 4))", "answer": [2], "why": "1 − cdf(10) — это 1 − P(X ≤ 10) = P(X ≥ 11). «10 и более» — это 1 − cdf(9, n, p), то есть at_least(10, n, p) = 0.0357."}
 ```
+
+> 🎬 **Остались вопросы про распределение Бернулли и биномиальное распределение?** [Skypro объясняет · 15 мин](https://youtu.be/VJTQNc8eliY?t=34&end=919)
 
 ### Пуассон — заявки в час :id=poisson--applications-per-hour
 
@@ -525,6 +533,8 @@ plt.tight_layout(); plt.show()
 {"id": "w06d1-l10", "kind": "number", "answer": 1.02, "dp": 2, "unit": "sd", "hint": "z = (x − μ) / σ.", "model": "(720 − 659.6) / 59.5 = 1.02: скор 720 примерно на одно sd выше среднего заявителя."}
 ```
 
+> 🎬 **Остались вопросы про нормальное распределение?** [КиберПоц объясняет · 6 мин](https://youtu.be/5rRQnN8Q_sc?t=7&end=361)
+
 ### Правило 68-95-99.7 — одно, два, три sd :id=the-68-95-997-rule--one-two-three-sds
 
 **Прежде чем читать.** Сначала угадайте, потом поиграйте — объяснение ниже станет понятнее.
@@ -571,6 +581,8 @@ print(round(NormalDist().inv_cdf(0.975), 2))
 ```task
 {"id": "w06d1-l11", "kind": "choice", "options": ["Между 600 и 719", "Между 541 и 779 — среднее ± 2 sd", "Между 481 и 838", "Между 560 и 760"], "answer": 1, "explain": "Центральные 95 % нормального распределения — это среднее ± 2 sd (точно ± 1.96 sd: от 543 до 776). 600–719 — это ±1 sd (68 %); 481–838 — ±3 sd (99.7 %)."}
 ```
+
+> 🎬 **Остались вопросы про правило трёх сигм (68-95-99.7)?** [Кирилл Мильчаков объясняет · 6 мин](https://youtu.be/4SEX9Bozktw?t=589&end=932)
 
 ### Среднее, медиана и мода — центр данных :id=mean-median-and-mode--the-centre-of-data
 
@@ -654,6 +666,8 @@ print(round(s.std(), 1), round(prin.std() / 1e6, 1))
 {"id": "w06d1-l13", "kind": "python", "starter": "t = loans[\"term_months\"]\n# выведите выборочное стандартное отклонение срока с округлением до 2 знаков\n", "answer": 10.18, "dp": 2, "model": "print(round(t.std(), 2), round(t.mean(), 2))   # 10.18 11.78 — сроки колеблются примерно на 10 месяцев вокруг среднего в 12 месяцев"}
 ```
 
+> 🎬 **Остались вопросы про среднее и стандартное отклонение?** [Кирилл Мильчаков объясняет · 4 мин](https://youtu.be/4SEX9Bozktw?t=376&end=589)
+
 ### Перцентили и квартили — где стоит значение :id=percentiles-and-quartiles--where-a-value-stands
 
 **Что это.** **p-й перцентиль** (*percentile*; иначе — *квантиль* уровня p/100) — значение, ниже которого лежат p % данных. 50-й перцентиль — медиана. 25-й и 75-й — **квартили** (*quartiles*) Q1 и Q3. Q3 − Q1 — **межквартильный размах**, IQR (*interquartile range*), ширина центральной половины.
@@ -687,6 +701,8 @@ print(round(100 * (s < 600).mean(), 1))
 ```task
 {"id": "w06d1-l14", "kind": "python", "starter": "# s = скоры 13 612 заявителей (первый блок)\n# выведите 25-й перцентиль\n", "answer": 619, "dp": 0, "model": "print(s.quantile(0.25), s.quantile(0.75))   # 619.0 700.0 — у центральной половины заявителей скор от 619 до 700"}
 ```
+
+> 🎬 **Остались вопросы про медиану и квартили (интерквартильный размах)?** [Кирилл Мильчаков объясняет · 7 мин](https://youtu.be/rxyWoHNXRuk?t=30&end=476)
 
 ### Асимметрия — когда среднее и медиана расходятся :id=skew--when-the-mean-and-the-median-disagree
 
@@ -802,12 +818,12 @@ print(round(mean_d - 1.96 * sd_d, 1), round(mean_d + 1.96 * sd_d, 1))
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Условная вероятность, «среди тех, кто...» — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71&end=285)
-- ▶ Байес и ловушка базовой частоты — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321&end=552)
-- ▶ Биномиальное распределение — [The Binomial Distribution and Test, Clearly Explained!!! (StatQuest)](https://youtu.be/J8jNoF-K8E8)
 - ▶ Биномиальное распределение (RU) — [Биномиальное распределение. Вероятности вероятностей. Математика для аналитика #2 (Skypro)](https://youtu.be/VJTQNc8eliY)
-- ▶ Пуассон — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135&end=188)
-- ▶ Нормальное распределение — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
+- ▶ (на англ.) Условная вероятность, «среди тех, кто...» — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71&end=285)
+- ▶ (на англ.) Байес и ловушка базовой частоты — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321&end=552)
+- ▶ (на англ.) Биномиальное распределение — [The Binomial Distribution and Test, Clearly Explained!!! (StatQuest)](https://youtu.be/J8jNoF-K8E8)
+- ▶ (на англ.) Пуассон — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135&end=188)
+- ▶ (на англ.) Нормальное распределение — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
 
 - RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `5.1 Basics of Probability Theory.pdf`: события и операции над ними — стр. 9–17, классическая / статистическая вероятность — стр. 32–43, условная вероятность — стр. 52–57, независимость — стр. 58–63, полная вероятность — стр. 64–70, формула Байеса — стр. 71–76, случайные величины — стр. 79–104, математическое ожидание — стр. 119–127, дисперсия — стр. 128–134, асимметрия / эксцесс / медиана / квантиль — стр. 139–150. `5.2 Statistics & Probability Theory.pdf`: формула Бернулли — стр. 5–10, биномиальное — стр. 26–31, Пуассон — стр. 32–36, показательное — стр. 41–44, нормальное — стр. 45–53.
 - Ноутбуки: `MS1_probability_theory.ipynb` (условная вероятность, задача Монти Холла, полная вероятность и формула Байеса на трёх разобранных примерах), `MS4_probability_theory_basics.ipynb` (все сегодняшние распределения, нарисованные через `scipy.stats`, плюс биномиальная симуляция колл-центра).

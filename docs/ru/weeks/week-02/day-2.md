@@ -66,7 +66,7 @@ FROM loans;
 {"id": "w02d2-l1", "kind": "number", "answer": 5453, "dp": 0, "unit": "клиентов", "hint": "COUNT(DISTINCT customer_id) FROM applications.", "model": "14 000 заявок подали 5 453 разных клиента. COUNT(*) сказал бы 14 000 — это заявки, а не люди."}
 ```
 
-> 🎬 **Остались вопросы про COUNT, SUM, AVG, MIN и MAX?** [Бараа объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=31420&end=31706)
+> 🎬 **Остались вопросы про COUNT, SUM, AVG, MIN и MAX?** [Амелин объясняет · 7 мин](https://youtu.be/7w_Svh9Gnsw?t=12494&end=12906)
 
 ### SUM — сложить столбец :id=sum-add-a-column-up
 
@@ -203,7 +203,7 @@ GROUP BY risk_grade;              -- A 1 821 · B 3 404 · C 2 264 · D 339
 {"id": "w02d2-g4", "type": "bug", "title": "Один loan_id на весь продукт", "q": "Мадине нужно число кредитов по каждому продукту. Одна строка просит то, чего группа дать не может.", "code": "SELECT product_id, loan_id, COUNT(*) AS loans\nFROM loans\nGROUP BY product_id;", "answer": [0], "why": "loan_id нет ни в GROUP BY, ни внутри агрегата, а у продукта сотни кредитов. Уберите loan_id из SELECT (или посчитайте его: COUNT(loan_id))."}
 ```
 
-> 🎬 **Остались вопросы про GROUP BY?** [Бараа объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=3514&end=4010)
+> 🎬 **Остались вопросы про GROUP BY?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=12383&end=12585)
 
 ### GROUP BY по двум столбцам — одна строка на сочетание :id=group-by-two-columns-one-row-per-combination
 
@@ -293,7 +293,7 @@ ORDER BY active_loans DESC;
 {"id": "w02d2-g1", "type": "cloze", "title": "WHERE, GROUP BY или HAVING?", "text": "SELECT b.branch_name, COUNT(*) AS active_loans FROM loans l JOIN branches b ON b.branch_id = l.branch_id {{0}} l.status = 'active' {{1}} b.branch_name {{2}} COUNT(*) > 300 ORDER BY active_loans DESC;", "blanks": [["WHERE"], ["GROUP BY"], ["HAVING"]], "distractors": ["ORDER BY", "SUM", "DISTINCT"]}
 ```
 
-> 🎬 **Остались вопросы про HAVING?** [Бараа объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=4010&end=4492)
+> 🎬 **Остались вопросы про HAVING?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=13851&end=14205)
 
 ### Агрегация после соединения — решите, что такое одна строка :id=aggregating-over-a-join-decide-what-one-row-is
 
@@ -450,11 +450,11 @@ SELECT customer_id FROM applications;  -- 5 453 строки
 {"id": "w02d2-l8", "kind": "choice", "options": ["UNION", "UNION ALL", "EXCEPT", "INTERSECT"], "answer": 2, "explain": "SELECT customer_id FROM applications EXCEPT SELECT customer_id FROM loans → 1 118 id: есть в первом результате, нет во втором."}
 ```
 
-> 🎬 **Остались вопросы про операции над множествами и их правила?** [Бараа объясняет (на английском, есть субтитры) · 13 мин](https://youtu.be/SSKVgrwhzus?t=14532&end=15286)
+> 🎬 **Остались вопросы про UNION и UNION ALL?** [Амелин объясняет · 9 мин](https://youtu.be/7w_Svh9Gnsw?t=16523&end=17058)
 
-> 🎬 **Остались вопросы про UNION и UNION ALL?** [Бараа объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=15283&end=15842)
+> 🎬 **Остались вопросы про операции над множествами и их правила?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=17057&end=17445)
 
-> 🎬 **Остались вопросы про EXCEPT?** [Бараа объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=15842&end=16162)
+> 🎬 **Остались вопросы про EXCEPT?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=17599&end=17823)
 
 ### Собираем вместе :id=putting-it-together
 
@@ -490,7 +490,7 @@ ORDER BY active_principal DESC;                      -- псевдоним, по
 
 ### Углубление (по желанию) :id=depth-optional
 
-- ▶ Бараа, *Aggregate functions* [8:43:36](https://youtu.be/SSKVgrwhzus?t=31416&end=31811) — 7 мин; и *Set operators* [4:02:09](https://youtu.be/SSKVgrwhzus?t=14529&end=17261) — 40 мин.
+- ▶ (на англ.) Бараа, *Aggregate functions* [8:43:36](https://youtu.be/SSKVgrwhzus?t=31416&end=31811) — 7 мин; и *Set operators* [4:02:09](https://youtu.be/SSKVgrwhzus?t=14529&end=17261) — 40 мин.
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `2.2 SQL-1-38.pdf` — страницы про GROUP BY / HAVING. *Термины по-английски:* агрегатная функция = aggregate, группировка = GROUP BY, средний чек = average ticket, объединение = UNION.
 
 ```videoquiz

@@ -82,6 +82,8 @@ by_region.sort_values(ascending=False).head()
 {"type": "cloze", "id": "w05d3-g1", "title": "Сумма оплат по регионам", "text": "pay.groupby({{0}})[{{1}}].{{2}}()     # Σ amount per region", "blanks": [["\"region\""], ["\"amount\""], ["sum"]], "distractors": ["\"payment_id\"", "transform", "mean"]}
 ```
 
+> 🎬 **Остались вопросы про groupby?** [Глеб Михайлов объясняет · 10 мин](https://youtu.be/dd3RcafdOQk?t=10364&end=10956)
+
 ### agg — несколько агрегатов с именами :id=agg--several-aggregates-with-names
 
 **Что это.** `.agg(name=("column", "function"))` считает **несколько** чисел на группу за один вызов и даёт имя каждому результату. Это **именованная агрегация** (*named aggregation*) — `SUM(amount) AS total` со встроенным `AS`.
@@ -328,6 +330,8 @@ len(paid), len(inst.merge(paid, on="installment_id")), len(inst.merge(paid, on="
 {"id": "w05d3-l5", "kind": "python", "starter": "import pandas as pd\nAS_OF = pd.Timestamp(\"2026-10-01\")\ni3 = pd.read_csv(\"../excel/installments.csv\", parse_dates=[\"due_date\"])\np3 = (pd.read_csv(\"../excel/payments_dirty.csv\", parse_dates=[\"paid_at\"])\n        .sort_values(\"payment_id\").drop_duplicates(subset=[\"installment_id\", \"paid_at\", \"amount\"]))\npd3 = p3[p3[\"paid_at\"] <= AS_OF].groupby(\"installment_id\", as_index=False).agg(paid=(\"amount\", \"sum\"))\n\n# ваш код: левое соединение pd3 с i3, затем посчитайте строки, где paid — NaN\n", "answer": 39367, "dp": 0, "hint": "m = i3.merge(pd3, on=\"installment_id\", how=\"left\"); m[\"paid\"].isna().sum()", "model": "m = i3.merge(pd3, on=\"installment_id\", how=\"left\")\nprint(len(m), m[\"paid\"].isna().sum())     # 92193 39367\n\n39 367 платежей по графику без оплаты — большинство из них просто ещё не наступили (графики идут до 2030 года)."}
 ```
 
+> 🎬 **Остались вопросы про соединение таблиц (join / merge)?** [Глеб Михайлов объясняет · 10 мин](https://youtu.be/dd3RcafdOQk?t=16035&end=16612)
+
 ### Ключи merge — on, left_on / right_on, суффиксы :id=merge-keys--on-left_on--right_on-suffixes
 
 **Что это.** **Ключ** — это столбец, который должен совпасть. `on="loan_id"`, когда в обоих фреймах он называется одинаково; `left_on=` / `right_on=`, когда имена различаются; `on=["a", "b"]` — ключ из двух столбцов. Столбцы, которые есть с обеих сторон и не являются ключом, получают **суффиксы** `_x` / `_y`.
@@ -489,6 +493,8 @@ pd.pivot_table(loans, index="bucket", columns="product", values="loan_id",
 ```task
 {"id": "w05d3-l8", "kind": "python", "starter": "import pandas as pd\nls3 = pd.read_csv(\"../excel/loans_status.csv\")\n\n# ваш код: pivot_table по outstanding, сумма, регион × продукт; выведите ячейку Tashkent / SME\n", "answer": 47901694555, "dp": 0, "hint": "pt = pd.pivot_table(ls3, index=\"region\", columns=\"product\", values=\"outstanding\", aggfunc=\"sum\", fill_value=0); pt.loc[\"Tashkent\", \"Small business loan\"]", "model": "pt = pd.pivot_table(ls3, index=\"region\", columns=\"product\", values=\"outstanding\", aggfunc=\"sum\", fill_value=0)\nprint(pt.loc[\"Tashkent\", \"Small business loan\"])     # 47901694555\n\n47.9 млрд — больше пятой части всего портфеля 208.7 млрд лежит в ташкентских кредитах SME."}
 ```
+
+> 🎬 **Остались вопросы про pivot_table?** [Глеб Михайлов объясняет · 9 мин](https://youtu.be/dd3RcafdOQk?t=12425&end=12960)
 
 ### Ремонт текста через .str — strip, lower, replace :id=text-repair-with-str--strip-lower-replace
 
@@ -792,11 +798,11 @@ owed
 
 **Видео (бесплатные, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ groupby и agg — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 1:05:47](https://youtu.be/2uvysYbKdjM?t=3947&end=4104)
-- ▶ groupby, короткое видео по одной теме — [Group By and Aggregate Functions in Pandas (Alex The Analyst), 01:20](https://youtu.be/VRmXto2YA2I?t=80&end=188)
-- ▶ merge / concat — Keith Galli, то же видео, [50:42](https://youtu.be/2uvysYbKdjM?t=3042&end=3513)
-- ▶ Очистка (дубликаты, strip, replace, заполнение пропусков) — [Data Cleaning in Pandas (Alex The Analyst), 02:34](https://youtu.be/bDhvCp3_lYw?t=154&end=221)
-- ▶ Та же тема внутри большого курса — [Python for Data Analytics (Luke Barousse), Merge 7:15:37](https://youtu.be/wUSDVGivd-8?t=26137&end=26753)
+- ▶ (на англ.) groupby и agg — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 1:05:47](https://youtu.be/2uvysYbKdjM?t=3947&end=4104)
+- ▶ (на англ.) groupby, короткое видео по одной теме — [Group By and Aggregate Functions in Pandas (Alex The Analyst), 01:20](https://youtu.be/VRmXto2YA2I?t=80&end=188)
+- ▶ (на англ.) merge / concat — Keith Galli, то же видео, [50:42](https://youtu.be/2uvysYbKdjM?t=3042&end=3513)
+- ▶ (на англ.) Очистка (дубликаты, strip, replace, заполнение пропусков) — [Data Cleaning in Pandas (Alex The Analyst), 02:34](https://youtu.be/bDhvCp3_lYw?t=154&end=221)
+- ▶ (на англ.) Та же тема внутри большого курса — [Python for Data Analytics (Luke Barousse), Merge 7:15:37](https://youtu.be/wUSDVGivd-8?t=26137&end=26753)
 
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `4.3_Python.pdf`, стр. 82–103: `groupby` и `.agg` — стр. 82–87, сводные таблицы — стр. 88–91, `pd.merge` / `join` / `concat` — стр. 92–103; `.apply` / `.map` — стр. 74–81. `4.4_Python.pdf` — завтрашний мост (DB-API, `read_sql`, SQLAlchemy).
 - *Английские термины:* groupby = группировка, aggregation = агрегация, named aggregation = именованная агрегация, window function (`transform`) = оконная функция, merge / join = слияние / соединение, concat = конкатенация, pivot table = сводная таблица, duplicates = дубликаты, data cleaning = очистка данных, assert = утверждение / проверка.

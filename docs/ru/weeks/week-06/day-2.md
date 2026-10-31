@@ -136,6 +136,8 @@ for start in range(5):
 {"id": "w06d2-l3", "kind": "choice", "options": ["Ошибка в данных", "Ошибка выборки — две выборки из одного процесса дают разные ставки", "Смещение в том, как отобраны кредиты", "Процесс наверняка изменился"], "answer": 1, "explain": "Два квартала — две выборки по несколько сотен кредитов. Их ставки различаются, даже когда истинная ставка одна; насколько — говорит стандартная ошибка (дальше)."}
 ```
 
+> 🎬 **Остались вопросы про ошибку выборки?** [Кирилл Мильчаков объясняет · 3 мин](https://youtu.be/MstzroncW28?t=213&end=419)
+
 ### Стандартная ошибка — насколько сдвигается оценка :id=standard-error--how-much-an-estimate-moves
 
 **Что это.** Берите выборку за выборкой — и оценка сдвигается. Её распределение по повторным выборкам называется **выборочным распределением** (*sampling distribution*). Стандартное отклонение этого распределения — **стандартная ошибка** (*standard error*, SE): типичный размер ошибки выборки.
@@ -302,6 +304,8 @@ print(round(cons.mean()))
 ```task
 {"id": "w06d2-l7", "kind": "number", "answer": 11.07, "dp": 2, "unit": "млн сумов", "hint": "SE = 112.6 / √400; полуширина = 1.966 × SE.", "model": "SE = 112.6 / 20 = 5.63 млн; 1.966 × 5.63 = 11.07 млн, то есть интервал примерно 40.6–62.8 млн."}
 ```
+
+> 🎬 **Остались вопросы про доверительный интервал для среднего?** [Кирилл Мильчаков объясняет · 7 мин](https://youtu.be/MstzroncW28?t=419&end=853)
 
 ### Доверительный интервал для доли — интервал Вальда :id=confidence-interval-for-a-proportion--the-wald-interval
 
@@ -585,12 +589,12 @@ print(n_for_rate(p, 0.0025))
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Стандартная ошибка — [Standard Deviation vs Standard Error, Clearly Explained!!! (StatQuest), 01:12](https://youtu.be/A82brFpdr9g?t=72)
-- ▶ Центральная предельная теорема — [The Central Limit Theorem, Clearly Explained!!! (StatQuest), 00:42](https://youtu.be/YAlJCEDH2uY?t=42)
-- ▶ Доверительные интервалы — [Confidence Intervals, Clearly Explained!!! (StatQuest), 02:55](https://youtu.be/TqOeMYtOc1w?t=175)
-- ▶ Доверительный интервал для среднего, путь через формулу — [Confidence Interval [Simply explained] (numiqo)](https://youtu.be/ENnlSlvQHO0)
-- ▶ Бутстреп — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
 - ▶ Доверительный интервал (RU) — [Доверительный интервал за 15 мин. Биостатистика. (Kirill Milchakov)](https://youtu.be/MstzroncW28)
+- ▶ (на англ.) Стандартная ошибка — [Standard Deviation vs Standard Error, Clearly Explained!!! (StatQuest), 01:12](https://youtu.be/A82brFpdr9g?t=72)
+- ▶ (на англ.) Центральная предельная теорема — [The Central Limit Theorem, Clearly Explained!!! (StatQuest), 00:42](https://youtu.be/YAlJCEDH2uY?t=42)
+- ▶ (на англ.) Доверительные интервалы — [Confidence Intervals, Clearly Explained!!! (StatQuest), 02:55](https://youtu.be/TqOeMYtOc1w?t=175)
+- ▶ (на англ.) Доверительный интервал для среднего, путь через формулу — [Confidence Interval [Simply explained] (numiqo)](https://youtu.be/ENnlSlvQHO0)
+- ▶ (на англ.) Бутстреп — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
 
 - RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `5.2 Statistics & Probability Theory.pdf`, стр. 68–73: закон больших чисел и ЦПТ. `MS_lecture3.pdf` (урок 5.3): выборочный метод и свойства выборки — стр. 5–13, точечные оценки (несмещённые, состоятельные, эффективные) — стр. 14–18, метод моментов и максимального правдоподобия — стр. 19–27, доверительные интервалы (лемма Фишера; среднее при известной и неизвестной σ; дисперсия) — стр. 28–35. Запись урока: `video1414856026.mp4`.
 - Ноутбуки: `MS_5_statistics.ipynb` (ЗБЧ на монете и кубике, ЦПТ для других распределений), `MS6_Точечное_оценивание.ipynb` (несмещённость и состоятельность через симуляцию), `MS6_Интервальное_оценивание.ipynb` (точный и асимптотический интервал, покрытие при n = 3 … 1 000 — тот же эксперимент, что и в нашей таблице Вальд/Уилсон), `HW_3_CI.ipynb` (интервал для среднего экспоненциального распределения).

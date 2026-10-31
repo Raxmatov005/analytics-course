@@ -467,7 +467,6 @@ You build this table yourself in P1–P4.
 - ▶ Answer first, one focal point, never a single number — [7 Effective Tips for Presenting Data at Work! (Jeff Su), 00:45](https://youtu.be/jizZKNnx9wA?t=45&end=97)
 - ▶ Structuring a narrative — [Storytelling with Data (Cole Nussbaumer Knaflic, Talks at Google), 22:19](https://youtu.be/8EMW7io4rSI?t=1339&end=1537)
 - ▶ Presenting a story (from the data team's own webinar) — [How to turn data into stories (storytelling with data), 25:54](https://youtu.be/Hfx1X9WSGYQ?t=1554&end=2138)
-- ▶ Unit economics (CAC, LTV/CAC, payback; the page's loan unit-economics section) (RU) — [Все продуктовые метрики за 15 минут (Аналитика без воды), 08:45](https://youtu.be/X4asNCIMBRg?t=525&end=609)
 
 ```videoquiz
 {"video": "jizZKNnx9wA", "stops": [{"at": 60, "q": "What should the first thing you say about your data be?", "options": ["How you collected it", "The answer — the conclusion you want the audience to take away", "A list of every chart", "The data sources"], "answer": 1, "explain": "Answer first: the reader stops when they believe you, so give them the conclusion at once."}, {"at": 90, "q": "Why never show a single number on its own?", "options": ["It looks too simple", "Without a comparison (last year, target, the book) nobody knows whether it is good or bad", "Charts are always better", "Executives dislike numbers"], "answer": 1, "explain": "'72.9 per 1 000 lent' means little; 'ten times Micro' means a decision.", "back": 30}]}
@@ -481,9 +480,6 @@ You build this table yourself in P1–P4.
 {"video": "Hfx1X9WSGYQ", "stops": [{"at": 1700, "q": "Before you build the story, what must you know?", "options": ["Which chart type is newest", "Who the audience is and what you want them to do", "How many slides the template has", "The colour palette"], "answer": 1, "explain": "Audience and action first: Bekzod needs a number per product for the budget, not your method."}, {"at": 1900, "q": "Your analysis produced forty tables. What goes into the story?", "options": ["All forty, in an appendix order", "Only what supports the message — the rest goes to the appendix or is cut", "The ten largest tables", "Whatever looks most impressive"], "answer": 1, "explain": "Exploratory work is for you; explanatory work is for them."}, {"at": 2100, "q": "How do you end a data story?", "options": ["With 'Questions?'", "With the method", "With the call to action: what to decide, who owns it, what it is worth", "With a summary of the data sources"], "answer": 2, "explain": "The deck's slide 9: recommendations with an owner, a date and a value.", "back": 60}]}
 ```
 
-```videoquiz
-{"video": "X4asNCIMBRg", "stops": [{"at": 550, "q": "What is CAC?", "options": ["Revenue per customer", "What it costs to acquire one new customer", "The cost of funds", "Customer satisfaction"], "answer": 1, "explain": "For Nur: marketing, the officer's time, the bureau check, the partner's commission — app 60 000, branch 450 000 soum per loan (our assumption)."}, {"at": 595, "q": "LTV ÷ CAC above 1 means…", "options": ["Customers leave quickly", "Acquisition pays for itself over the horizon", "The product loses money on every loan", "Marketing spend should be cut"], "answer": 1, "explain": "A first Micro loan already pays back its 60 000 CAC; the repeats are the profit (P10).", "back": 40}]}
-```
 
 ---
 

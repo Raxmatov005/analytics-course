@@ -118,6 +118,8 @@ print(cust_txt["phone"].dtype, cust_txt["phone"][0])
 {"id": "w05d2-l2", "kind": "python", "starter": "import pandas as pd\n\n# ваш код: прочитайте ../excel/customers_dirty.csv с usecols=[\"customer_id\", \"phone\", \"monthly_income\"]\n# и dtype={\"phone\": str}; выведите shape и dtypes\n", "answer": 6040, "dp": 0, "hint": "pd.read_csv(path, usecols=[...], dtype={\"phone\": str}); затем .shape и .dtypes.", "model": "c3 = pd.read_csv(\"../excel/customers_dirty.csv\", usecols=[\"customer_id\", \"phone\", \"monthly_income\"], dtype={\"phone\": str})\nprint(c3.shape)      # (6040, 3)\nprint(c3.dtypes)     # customer_id int64 · phone object · monthly_income float64\n\n6 040 строк, 3 столбца; телефон сохраняет свой +."}
 ```
 
+> 🎬 **Остались вопросы про чтение данных в DataFrame (read_csv)?** [Глеб Михайлов объясняет · 7 мин](https://youtu.be/dd3RcafdOQk?t=7182&end=7608)
+
 ### Первый взгляд — shape, head, info, describe :id=first-look--shape-head-info-describe
 
 **Что это.** Пять вызовов, которые вы запускаете на каждой новой таблице до любого анализа: `shape` (строки, столбцы), `head()` (первые строки), `dtypes` и `info()` (тип и число непустых значений по каждому столбцу — перепись NULL), `describe()` (количество, среднее, разброс и квартили каждого числового столбца).
@@ -226,6 +228,8 @@ loans[["loan_id", "product", "dpd"]].head(3)  # список столбцов �
 {"id": "w05d2-l4", "kind": "choice", "options": ["loans[\"customer\", \"outstanding\"]", "loans[[\"customer\", \"outstanding\"]]", "loans(\"customer\", \"outstanding\")", "loans[\"customer\"][\"outstanding\"]"], "answer": 1, "explain": "Список имён — [\"customer\", \"outstanding\"] — внутри скобок выбора. Одна пара скобок с двумя именами вызывает KeyError; круглые скобки вызывают фрейм как функцию."}
 ```
 
+> 🎬 **Остались вопросы про выбор столбцов в DataFrame?** [Глеб Михайлов объясняет · 10 мин](https://youtu.be/dd3RcafdOQk?t=7933&end=8530)
+
 ### Выбор строк — булева маска (&, |, ~, isin, between, str.contains) :id=selecting-rows--the-boolean-mask----isin-between-strcontains
 
 **Что это.** Сравнение по столбцу, `loans["dpd"] > 0`, возвращает **булеву маску** (*boolean mask*): Series из `True` / `False`, по одному на строку. `loans[mask]` оставляет строки, где маска `True`. Каждый `WHERE`, который вы писали на неделях 1–3, — это маска. Маски соединяются через `&` (и), `|` (или) и `~` (не).
@@ -298,6 +302,8 @@ sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_
 ```game
 {"type": "bug", "id": "w05d2-g1", "title": "Найдите сломанную строку", "q": "Строка за строкой здесь должны считаться просроченные кредиты, а затем просроченные кредиты, которые всё ещё активны. Одна строка вызывает ошибку.", "code": "late = loans[loans[\"dpd\"] > 0]\nactive_late = loans[loans[\"dpd\"] > 0 and loans[\"status\"] == \"active\"]\nprint(len(late), len(active_late))", "answer": [1], "why": "and работает с отдельными значениями, а не с целым столбцом: pandas вызывает ValueError: The truth value of a Series is ambiguous. Пишите (loans[\"dpd\"] > 0) & (loans[\"status\"] == \"active\") — & и скобки вокруг каждого условия."}
 ```
+
+> 🎬 **Остались вопросы про фильтрацию строк (булева маска)?** [Глеб Михайлов объясняет · 6 мин](https://youtu.be/dd3RcafdOQk?t=8800&end=9190)
 
 ### loc и iloc — строки по метке и по позиции :id=loc-and-iloc--rows-by-label-rows-by-position
 
@@ -435,6 +441,8 @@ pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")  # 658.0, NaN, NaN
 ```task
 {"id": "w05d2-l7", "kind": "python", "starter": "import pandas as pd\nlo = pd.read_csv(\"../excel/loans_status.csv\", parse_dates=[\"disbursed_at\"])\n\n# ваш код: lo[\"paid\"] = …, затем сумма в млрд с одним знаком\n", "answer": 196.1, "dp": 1, "hint": "lo[\"paid\"] = lo[\"principal\"] - lo[\"outstanding\"]; round(lo[\"paid\"].sum() / 1e9, 1).", "model": "lo[\"paid\"] = lo[\"principal\"] - lo[\"outstanding\"]\nprint(round(lo[\"paid\"].sum() / 1e9, 1))     # 196.1\n\n404.8 млрд выдано − 208.7 млрд ещё в остатке = 196.1 млрд основного долга уже возвращено (проценты не считаются)."}
 ```
+
+> 🎬 **Остались вопросы про новые столбцы в DataFrame?** [Глеб Михайлов объясняет · 4 мин](https://youtu.be/dd3RcafdOQk?t=8530&end=8800)
 
 ### Даты — аксессор .dt :id=dates--the-dt-accessor
 
@@ -578,6 +586,8 @@ print(len(cust.dropna(subset=["monthly_income"])))
 {"id": "w05d2-l10", "kind": "python", "starter": "import pandas as pd\ncu = pd.read_csv(\"../excel/customers_dirty.csv\")\n\n# ваш код: число непустых значений monthly_income (двумя способами: count() и notna().sum())\n", "answer": 5684, "dp": 0, "hint": "cu[\"monthly_income\"].count() или cu[\"monthly_income\"].notna().sum().", "model": "print(cu[\"monthly_income\"].count(), cu[\"monthly_income\"].notna().sum())     # 5684 5684\n\n6 040 клиентов − 356 пропусков = 5 684."}
 ```
 
+> 🎬 **Остались вопросы про пропущенные значения в pandas?** [Глеб Михайлов объясняет · 6 мин](https://youtu.be/dd3RcafdOQk?t=9192&end=9530)
+
 ### pd.cut — корзины без CASE :id=pdcut--buckets-without-a-case
 
 **Что это.** `pd.cut(col, bins=edges, labels=…)` относит каждое число к интервалу и возвращает его метку — `CASE WHEN dpd <= 30 THEN …` недели 2 в одну строку. Интервалы по умолчанию **закрыты справа**: `(30, 60]` содержит 60, но не 30.
@@ -624,6 +634,8 @@ loans["bucket_pd"].value_counts().sort_index()
 ```task
 {"id": "w05d2-l11", "kind": "python", "starter": "import pandas as pd\nimport numpy as np\ncu = pd.read_csv(\"../excel/customers_dirty.csv\")\n\n# ваш код: pd.cut с границами [0, 5e6, 10e6, 20e6, np.inf], четырьмя метками, right=False; затем value_counts\n", "answer": 1281, "dp": 0, "hint": "pd.cut(cu[\"monthly_income\"], [0, 5e6, 10e6, 20e6, np.inf], labels=[\"<5m\", \"5-10m\", \"10-20m\", \"20m+\"], right=False).", "model": "band = pd.cut(cu[\"monthly_income\"], [0, 5e6, 10e6, 20e6, np.inf],\n              labels=[\"<5m\", \"5-10m\", \"10-20m\", \"20m+\"], right=False)\nprint(band.value_counts(dropna=False).sort_index())\n# <5m 1281 · 5-10m 2198 · 10-20m 576 · 20m+ 1629 · NaN 356\n\nright=False даёт [5 млн, 10 млн): ровно 5 000 000 попадает в 5-10m, как в SQL monthly_income < 5000000. 356 пустых доходов остаются NaN — dropna=False их показывает."}
 ```
+
+> 🎬 **Остались вопросы про разбивку числа на интервалы (корзины)?** [Глеб Михайлов объясняет · 9 мин](https://youtu.be/dd3RcafdOQk?t=10956&end=11500)
 
 ### SQL ↔ pandas — таблица перевода :id=sql--pandas--the-translation-table
 
@@ -701,14 +713,14 @@ watch.head()
 
 **Видео (бесплатные, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Чтение файла в DataFrame — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 08:25](https://youtu.be/2uvysYbKdjM?t=505&end=822)
-- ▶ Выбор столбцов, loc / iloc — то же видео, [15:28](https://youtu.be/2uvysYbKdjM?t=928&end=1160)
-- ▶ Сортировка — то же видео, [21:11](https://youtu.be/2uvysYbKdjM?t=1271&end=1381)
-- ▶ Фильтрация (булева маска, несколько условий) — то же видео, [24:12](https://youtu.be/2uvysYbKdjM?t=1452&end=1678)
-- ▶ Новые столбцы и даты (`pd.to_datetime`, `.dt`) — то же видео, [41:40](https://youtu.be/2uvysYbKdjM?t=2500&end=2798)
-- ▶ Даты подробнее — [Python Pandas Tutorial (Part 10): Working with Dates and Time Series Data (Corey Schafer), 03:35](https://youtu.be/UFuo7EHI8zc?t=215)
-- ▶ Пропущенные значения (isna, fillna, dropna) — Keith Galli, то же видео, [58:33](https://youtu.be/2uvysYbKdjM?t=3513&end=3845)
-- ▶ Пропущенные значения (альтернатива, помедленнее) — [Python Pandas Tutorial 5: Handle Missing Data: fillna, dropna, interpolate (codebasics), 04:10](https://youtu.be/EaGbS7eWSs0?t=250&end=455)
+- ▶ (на англ.) Чтение файла в DataFrame — [Complete Python Pandas Data Science Tutorial! (2025 Updated Edition) (Keith Galli), 08:25](https://youtu.be/2uvysYbKdjM?t=505&end=822)
+- ▶ (на англ.) Выбор столбцов, loc / iloc — то же видео, [15:28](https://youtu.be/2uvysYbKdjM?t=928&end=1160)
+- ▶ (на англ.) Сортировка — то же видео, [21:11](https://youtu.be/2uvysYbKdjM?t=1271&end=1381)
+- ▶ (на англ.) Фильтрация (булева маска, несколько условий) — то же видео, [24:12](https://youtu.be/2uvysYbKdjM?t=1452&end=1678)
+- ▶ (на англ.) Новые столбцы и даты (`pd.to_datetime`, `.dt`) — то же видео, [41:40](https://youtu.be/2uvysYbKdjM?t=2500&end=2798)
+- ▶ (на англ.) Даты подробнее — [Python Pandas Tutorial (Part 10): Working with Dates and Time Series Data (Corey Schafer), 03:35](https://youtu.be/UFuo7EHI8zc?t=215)
+- ▶ (на англ.) Пропущенные значения (isna, fillna, dropna) — Keith Galli, то же видео, [58:33](https://youtu.be/2uvysYbKdjM?t=3513&end=3845)
+- ▶ (на англ.) Пропущенные значения (альтернатива, помедленнее) — [Python Pandas Tutorial 5: Handle Missing Data: fillna, dropna, interpolate (codebasics), 04:10](https://youtu.be/EaGbS7eWSs0?t=250&end=455)
 
 - Русская презентация (TBC Data Analytics 2.0, если она у вас есть) `4.3_Python.pdf`: Series и DataFrame — стр. 10–15, dtypes и `astype` / `to_numeric` — стр. 14–22, чтение и запись — стр. 23–30, первый взгляд — стр. 31–37, `loc` / `iloc` / булева индексация — стр. 38–44, пропущенные значения — стр. 45–52, `.str` — стр. 55–67, категориальный тип — стр. 68–72, сортировка — стр. 104–108. (Стр. 82–103 — завтра.)
 - *Английские термины:* DataFrame = датафрейм, Series = серия, index = индекс, boolean mask = булева маска, filtering = фильтрация, missing values = пропущенные значения / NaN, type casting = приведение типов, category dtype = категориальный тип, `pd.cut` = биннинг / разбиение на корзины.

@@ -64,6 +64,8 @@ SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loa
 {"id": "w01d3-l1", "kind": "choice", "options": ["Нет — 25 значений повторяются, потому что некоторые плановые платежи оплачены в два приёма", "Да — почти все значения разные", "Да — у каждого платежа есть плановый платёж", "Нет — первичный ключ не может быть числом"], "answer": 0, "explain": "Первичный ключ не допускает ни одного повтора. 52 875 − 52 850 = 25 плановых платежей получили второй платёж. Первичный ключ payments — payment_id."}
 ```
 
+> 🎬 **Остались вопросы про первичный ключ?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=30354&end=30632)
+
 ### NOT NULL — значение обязано быть :id=not-null-a-value-must-be-there
 
 **Что это.** **NOT NULL** — ограничение на один столбец: ячейка не может быть пустой. Вставка, которая пропускает этот столбец, отклоняется.
@@ -111,6 +113,8 @@ INSERT INTO my_keys_demo VALUES (4, 'Dilnoza', '+998905550000');
 {"id": "w01d3-l3", "kind": "choice", "options": ["UNIQUE на loans.application_id", "NOT NULL на loans.application_id", "PRIMARY KEY на applications.status", "UNIQUE на loans.customer_id"], "answer": 0, "explain": "Если application_id может встретиться в loans только один раз, ни одна заявка не даст второго кредита. UNIQUE на customer_id запретил бы клиенту второй кредит — неверно."}
 ```
 
+> 🎬 **Остались вопросы про UNIQUE?** [Амелин объясняет · 3 мин](https://youtu.be/7w_Svh9Gnsw?t=30171&end=30352)
+
 ### Внешний ключ — значение должно существовать у родителя :id=foreign-key-the-value-must-exist-in-the-parent
 
 **Что это.** **Внешний ключ** (*foreign key*, FK) как ограничение обеспечивает **ссылочную целостность** (*referential integrity*): данные не могут указывать в пустоту. Он запрещает две вещи:
@@ -145,6 +149,8 @@ INSERT INTO my_loans_demo VALUES (1, 999999);  -- клиента 999999 нет: 
 ```task
 {"id": "w01d3-l4", "kind": "choice", "options": ["Кредит для customer_id, которого нет в my_keys_demo", "Второй кредит для клиента 1", "Кредит для клиента 1, когда у него нет других кредитов", "Никакую — внешний ключ только описывает связь"], "answer": 0, "explain": "FK защищает дочернюю строку от ссылки в пустоту. Много кредитов у одного клиента разрешено («один ко многим»), как и первый кредит клиента."}
 ```
+
+> 🎬 **Остались вопросы про внешний ключ?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=30634&end=30946)
 
 ### Составной ключ — два столбца вместе :id=composite-key-two-columns-together
 
@@ -270,6 +276,8 @@ branches ─1──∞─▶ staff
 {"id": "w01d3-l6", "kind": "choice", "options": ["Аномалия обновления", "Аномалия вставки", "Аномалия удаления", "Ошибка типа"], "answer": 0, "explain": "Одно изменение в жизни требует многих изменений в ячейках, а пропущенные оставляют данные противоречащими друг другу."}
 ```
 
+> 🎬 **Остались вопросы про нормализацию?** [Listen IT объясняет · 7 мин](https://youtu.be/zqQxWdTpSIA?t=82&end=480)
+
 ### 1НФ — одно значение в ячейке, без повторяющихся групп :id=1nf-one-value-per-cell-no-repeating-groups
 
 **Что это.** Таблица в **первой нормальной форме** (1НФ), когда в каждой ячейке **одно значение** и ни один факт не повторяется по столбцам (`inst1_…`, `inst2_…` — это **повторяющаяся группа**).
@@ -289,6 +297,8 @@ Auto-кредиту на 48 месяцев нужно 48 строк, BNPL на 3
 ```task
 {"id": "w01d3-l7", "kind": "choice", "options": ["1НФ — в ячейке два значения", "2НФ", "3НФ", "Никакую — телефоны это текст"], "answer": 0, "explain": "Одна ячейка — одно значение. Исправление — по строке на телефон (таблица телефонов с customer_id) или два названных столбца, если в бизнесе их действительно ровно два."}
 ```
+
+> 🎬 **Остались вопросы про первую нормальную форму?** [Listen IT объясняет · 3 мин](https://youtu.be/zqQxWdTpSIA?t=480&end=679)
 
 ### 2НФ — каждый столбец зависит от всего ключа :id=2nf-every-column-depends-on-the-whole-key
 
@@ -319,6 +329,8 @@ Auto-кредиту на 48 месяцев нужно 48 строк, BNPL на 3
 ```task
 {"id": "w01d3-l8", "kind": "choice", "options": ["product_name — он зависит только от loan_id", "due_date — он зависит от кредита и номера платежа", "total_due — он зависит от кредита и номера платежа", "installment_no — он часть ключа"], "answer": 0, "explain": "Продукт — свойство кредита, одинаковое в каждом плановом платеже. Ему место в loans (как product_id), а не в каждой строке платежа."}
 ```
+
+> 🎬 **Остались вопросы про вторую нормальную форму?** [Listen IT объясняет · 4 мин](https://youtu.be/zqQxWdTpSIA?t=685&end=926)
 
 ### 3НФ — ни один столбец не зависит от другого обычного столбца :id=3nf-no-column-depends-on-another-ordinary-column
 
@@ -355,6 +367,8 @@ Auto-кредиту на 48 месяцев нужно 48 строк, BNPL на 3
 ```
 
 После трёх исправлений одна таблица Севары *и есть* наши одиннадцать таблиц: нормализация — та самая процедура, которая их породила. Завтра вы увидите другую сторону компромисса — хранилища денормализуют намеренно, потому что чтение из многих таблиц стоит соединений.
+
+> 🎬 **Остались вопросы про третью нормальную форму?** [Listen IT объясняет · 3 мин](https://youtu.be/zqQxWdTpSIA?t=929&end=1130)
 
 ### DDL и DML — два семейства команд :id=ddl-and-dml-two-families-of-commands
 
@@ -446,7 +460,7 @@ CREATE TABLE my_calls (
  "cleanup": "DROP TABLE IF EXISTS my_promises"}
 ```
 
-> 🎬 **Остались вопросы про CREATE TABLE?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=5549&end=5915)
+> 🎬 **Остались вопросы про CREATE TABLE?** [Амелин объясняет · 8 мин](https://youtu.be/7w_Svh9Gnsw?t=25301&end=25800)
 
 ### INSERT — добавляем строки :id=insert-add-rows
 
@@ -513,9 +527,9 @@ INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10
  "cleanup": "DELETE FROM my_promises"}
 ```
 
-> 🎬 **Остались вопросы про INSERT с VALUES?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=6228&end=6744)
+> 🎬 **Остались вопросы про INSERT с VALUES?** [Амелин объясняет · 6 мин](https://youtu.be/7w_Svh9Gnsw?t=25813&end=26150)
 
-> 🎬 **Остались вопросы про INSERT из SELECT?** [Baraa объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=6744&end=7036)
+> 🎬 **Остались вопросы про INSERT из SELECT?** [Амелин объясняет · 5 мин](https://youtu.be/7w_Svh9Gnsw?t=27174&end=27452)
 
 ### UPDATE … SET … WHERE — меняем строки :id=update-set-where-change-rows
 
@@ -553,7 +567,7 @@ SELECT * FROM my_calls;
  "cleanup": "UPDATE my_promises SET kept = NULL"}
 ```
 
-> 🎬 **Остались вопросы про UPDATE?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=7038&end=7433)
+> 🎬 **Остались вопросы про UPDATE?** [Влад Мишустин объясняет · 5 мин](https://youtu.be/5sG9kmXYsKU?t=1596&end=1892)
 
 ### DELETE … WHERE — удаляем строки :id=delete-where-remove-rows
 
@@ -587,7 +601,7 @@ SELECT * FROM my_calls;
   {"say": "Удалите обещание по кредиту 4503 — только эту строку.", "hint": "SELECT * FROM my_promises WHERE loan_id = 4503;\nDELETE FROM my_promises WHERE loan_id = 4503;", "expect": "SELECT COUNT(*) * 10 + COALESCE(SUM(loan_id = 4503), 0) FROM my_promises", "want": 20}]}
 ```
 
-> 🎬 **Остались вопросы про DELETE?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=7433&end=7662)
+> 🎬 **Остались вопросы про DELETE?** [Влад Мишустин объясняет · 3 мин](https://youtu.be/5sG9kmXYsKU?t=1909&end=2062)
 
 ### ALTER TABLE — меняем столбцы :id=alter-table-change-the-columns
 
@@ -624,7 +638,7 @@ SELECT * FROM my_calls;
   {"say": "Добавьте в `my_promises` текстовый столбец `note`.", "hint": "ALTER TABLE my_promises ADD COLUMN note TEXT;", "expect": "SELECT COUNT(*) FROM pragma_table_info('my_promises') WHERE name = 'note'", "want": 1}]}
 ```
 
-> 🎬 **Остались вопросы про ALTER TABLE?** [Baraa объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=5915&end=6123)
+> 🎬 **Остались вопросы про ALTER TABLE?** [Амелин объясняет · 4 мин](https://youtu.be/7w_Svh9Gnsw?t=26958&end=27168)
 
 ### DROP TABLE — удаляем таблицу целиком :id=drop-table-remove-the-whole-table
 
@@ -741,7 +755,7 @@ DROP TABLE IF EXISTS my_collectors;     -- потом родительская
 
 ### Углубление (необязательно) :id=depth-optional
 
-- ▶ Baraa, *DDL commands* [1:32:31](https://youtu.be/SSKVgrwhzus?t=5551&end=6224) — 11 мин; ▶ *DML commands* [1:43:44](https://youtu.be/SSKVgrwhzus?t=6224&end=7683) — 25 мин.
+- ▶ (на англ.) Baraa, *DDL commands* [1:32:31](https://youtu.be/SSKVgrwhzus?t=5551&end=6224) — 11 мин; ▶ *DML commands* [1:43:44](https://youtu.be/SSKVgrwhzus?t=6224&end=7683) — 25 мин.
 - Презентация на русском (TBC Data Analytics 2.0, если она у вас есть) `1.2 Database Modeling & Normalization.pdf`, страницы про ER-диаграмму, 1НФ/2НФ/3НФ и аномалии. *Английские термины:* сущность = entity, связь = relationship, нормализация = normalisation, избыточность = redundancy.
 
 ```videoquiz

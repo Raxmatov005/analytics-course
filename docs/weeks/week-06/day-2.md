@@ -586,7 +586,6 @@ Flip through the words of the day:
 - ▶ Confidence intervals — [Confidence Intervals, Clearly Explained!!! (StatQuest), 02:55](https://youtu.be/TqOeMYtOc1w?t=175)
 - ▶ Confidence interval for a mean, formula route — [Confidence Interval [Simply explained] (numiqo)](https://youtu.be/ENnlSlvQHO0)
 - ▶ Bootstrap — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
-- ▶ Confidence interval (RU) — [Доверительный интервал за 15 мин. Биостатистика. (Kirill Milchakov)](https://youtu.be/MstzroncW28)
 
 - RU deck (TBC Data Analytics 2.0, if you have it) `5.2 Statistics & Probability Theory.pdf` pp. 68–73: law of large numbers and CLT. `MS_lecture3.pdf` (lesson 5.3): sample method and sample properties pp. 5–13, point estimates — unbiased, consistent, efficient pp. 14–18, method of moments and maximum likelihood pp. 19–27, confidence intervals (Fisher's lemma; the mean with σ known and unknown; the variance) pp. 28–35. The lesson's recording: `video1414856026.mp4`.
 - Notebooks: `MS_5_statistics.ipynb` (LLN with a coin and a die, CLT from other distributions), `MS6_Точечное_оценивание.ipynb` (unbiasedness and consistency by simulation), `MS6_Интервальное_оценивание.ipynb` (exact vs asymptotic interval, coverage at n = 3 … 1 000 — the same experiment as our Wald/Wilson table), `HW_3_CI.ipynb` (an interval for an exponential mean).
@@ -625,11 +624,6 @@ Flip through the words of the day:
   {"at": 485, "q": "Why is the bootstrap useful?", "options": ["It works for statistics with no simple SE formula — a median, a ratio of sums", "It always gives narrower intervals", "It needs no data", "It fixes small samples"], "answer": 0, "explain": "Median ticket, collection rate — but with very few events (7 FPDs) it is too narrow."}]}
 ```
 
-```videoquiz
-{"video": "MstzroncW28", "stops": [
-  {"at": 200, "q": "What does a confidence interval add to a point estimate?", "options": ["A range of plausible values that shows how precise the estimate is", "A correction of the bias", "The median", "The probability that the estimate is right"], "answer": 0, "explain": "1.70 % alone hides n; 1.26–2.30 % shows how much the data allow."},
-  {"at": 450, "q": "With the same data, a 99 % interval compared with a 95 % one is…", "options": ["narrower", "the same", "wider", "shifted to the right"], "answer": 2, "explain": "More confidence costs width: the critical value grows from 1.96 to 2.58."}]}
-```
 
 ---
 

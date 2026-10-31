@@ -107,6 +107,8 @@
 {"id": "w07d3-l3", "kind": "choice", "options": ["Text/CSV, по разу на файл, каждый месяц", "Folder, затем Combine & Transform", "SQL Server", "Сначала скопировать и вставить в Excel"], "answer": 1, "explain": "Folder складывает все найденные файлы одной формы. Файл следующего месяца подхватывается обновлением без изменений в отчёте — именно так и должна была выглядеть ежемесячная вставка."}
 ```
 
+> 🎬 **Остались вопросы про получение данных из источников в Power Query?** [ПРО ДАННЫЕ объясняет · 4 мин](https://youtu.be/pAn4FLC5nEU?t=568&end=794)
+
 ### Import или DirectQuery — где живут данные :id=import-or-directquery-where-the-data-live
 
 **Что это.** **Режим хранения** (*storage mode*) решает, где лежат данные. **Import** копирует их в `.pbix`, сжатыми в памяти. **DirectQuery** оставляет их в базе и отправляет запрос на каждый визуал.
@@ -178,6 +180,8 @@ in
 {"id": "w07d3-l5", "kind": "text", "answer": ["Text", "text", "Text type", "текст", "текстовый"], "hint": "Его значения — \"0\", \"1-30\", \"31-60\", \"61-90\", \"90+\".", "model": "Text. «1-30» и «90+» — метки, а не числа; с типом Whole number они становятся ошибками, и срез ломается."}
 ```
 
+> 🎬 **Остались вопросы про шаги запроса в Power Query?** [ПРО ДАННЫЕ объясняет · 3 мин](https://youtu.be/pAn4FLC5nEU?t=794&end=999)
+
 ### Слияние и добавление — подстановка и стопка :id=merge-and-append-a-lookup-and-a-stack
 
 **Что это.** **Слияние запросов** (*Merge Queries*) добавляет столбцы из другой таблицы по ключу — это ВПР Power Query. **Добавление запросов** (*Append Queries*) складывает друг под друга таблицы одной формы — больше строк, те же столбцы.
@@ -214,6 +218,8 @@ in
 ```task
 {"id": "w07d3-l6", "kind": "number", "answer": 52850, "dp": 0, "unit": "строк", "hint": "Слияние Left Outer по уникальному ключу — это подстановка.", "model": "52 850 — по-прежнему по строке на платёж. Больше строк означало бы дубли ключей в правой таблице."}
 ```
+
+> 🎬 **Остались вопросы про объединение запросов (добавление и Join)?** [ПРО ДАННЫЕ объясняет · 9 мин](https://youtu.be/pAn4FLC5nEU?t=4375&end=4907)
 
 ### Схема «звезда» — таблицы фактов и измерений :id=the-star-schema-fact-tables-and-dimension-tables
 
@@ -505,13 +511,13 @@ PAR30 %           = DIVIDE ( SUM ( v_loan_status[par30_outstanding] ), [Outstand
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ Get Data + первое преобразование в Power Query — [Power BI Tutorial for Beginners (Step-by-Step in 30 Minutes) (Guy in a Cube), 05:04](https://youtu.be/OmW9YvxSl1E?t=304&end=447)
-- ▶ Power Query в Power BI — [Learn Power BI in Under 3 Hours (Alex The Analyst), 11:59](https://youtu.be/I0vQ_VLZTWg?t=719&end=1454)
-- ▶ Power Query в Power BI (короткое видео по одной теме) — [How to use Power Query in Power BI (Alex The Analyst), 01:45](https://youtu.be/gP-AxNi6uxo?t=105&end=152)
-- ▶ Схема «звезда» / модель данных — [Learn Data Modelling & Star Schema for Power BI in 20 minutes (Chandoo), 02:18](https://youtu.be/4ePNrdxWtY0?t=138&end=580)
-- ▶ Связи (кардинальность, направление фильтра, активность) — [How to Create and Manage Relationships in Power BI (Alex The Analyst), 03:45](https://youtu.be/sW5LoDA1ssM?t=225&end=272)
-- ▶ Связи, подробнее — 3-часовой курс Alex, [24:14](https://youtu.be/I0vQ_VLZTWg?t=1454&end=1917)
 - ▶ (RU) Power Query + модель данных Power BI — [Power Query для Excel и Power BI. ПОЛНЫЙ БАЗОВЫЙ КУРС (ПРО ДАННЫЕ), 05:02](https://youtu.be/pAn4FLC5nEU?t=302&end=359)
+- ▶ (на англ.) Get Data + первое преобразование в Power Query — [Power BI Tutorial for Beginners (Step-by-Step in 30 Minutes) (Guy in a Cube), 05:04](https://youtu.be/OmW9YvxSl1E?t=304&end=447)
+- ▶ (на англ.) Power Query в Power BI — [Learn Power BI in Under 3 Hours (Alex The Analyst), 11:59](https://youtu.be/I0vQ_VLZTWg?t=719&end=1454)
+- ▶ (на англ.) Power Query в Power BI (короткое видео по одной теме) — [How to use Power Query in Power BI (Alex The Analyst), 01:45](https://youtu.be/gP-AxNi6uxo?t=105&end=152)
+- ▶ (на англ.) Схема «звезда» / модель данных — [Learn Data Modelling & Star Schema for Power BI in 20 minutes (Chandoo), 02:18](https://youtu.be/4ePNrdxWtY0?t=138&end=580)
+- ▶ (на англ.) Связи (кардинальность, направление фильтра, активность) — [How to Create and Manage Relationships in Power BI (Alex The Analyst), 03:45](https://youtu.be/sW5LoDA1ssM?t=225&end=272)
+- ▶ (на англ.) Связи, подробнее — 3-часовой курс Alex, [24:14](https://youtu.be/I0vQ_VLZTWg?t=1454&end=1917)
 
 - RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `7_1_Introduction_to_BI_tools,_Importing_data,_Transforming_Data.pptx` (урок 7.1, Жавохир Ташбаев, TBC × Payme): что такое BI и его преимущества — слайды 4–5; почему Power BI и его части (Desktop / Service / Mobile) — слайды 6–8; процесс построения отчёта — слайд 9; разделы Report, Data и Model в Desktop — слайды 10–12; Power Query как ETL-инструмент — слайд 13; домашнее задание — слайд 14.
 - RU-презентация (TBC Data Analytics 2.0, если она у вас есть) `Power BI 7.2.pptx`: модель данных, схемы «звезда» и «снежинка» — слайды 3–5; связи: кардинальность, направление кросс-фильтрации, свойство активности — слайды 6–8.

@@ -2,6 +2,7 @@
 - [Course map](map.md)
 - [Progress & rewards](progress.md)
 - [My mistakes](mistakes.md)
+- [My feedback](feedback.md)
 - [How to submit homework](homework/how-to-submit.md)
 - [Practice day: try the routine](practice.md)
 - [SQL playground](playground.md)

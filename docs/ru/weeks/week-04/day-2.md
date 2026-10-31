@@ -43,9 +43,9 @@
 
 | Часть | Что это | Пример |
 |---|---|---|
-| what | the key in this row | B2 ("Micro loan") |
-| where | the column to search for the key | E2:E4 |
-| return | the column to bring back | F2:F4 |
+| what | ключ из этой строки | B2 ("Micro loan") |
+| where | столбец, в котором ищем ключ | E2:E4 |
+| return | столбец, из которого берём результат | F2:F4 |
 
 Картинка — таблица кредитов с добавленной найденной ставкой:
 
@@ -84,13 +84,13 @@
 | Формула | Примечание |
 |---|---|
 | `=VLOOKUP(what, where, column_number, FALSE)` |   |
-| `=VLOOKUP(B2, $E$2:$F$4, 2, FALSE)` | what = this row's product · where = the whole rates table · 2 = its 2nd column · FALSE = exact match |
+| `=VLOOKUP(B2, $E$2:$F$4, 2, FALSE)` | what = продукт этой строки · where = вся таблица ставок · 2 = её 2-й столбец · FALSE = точное совпадение |
 
 На маленькой таблице она возвращает 0.42, 0.24, `#N/A`, 0.42. На настоящей книге:
 
 | Формула | Даёт |
 |---|---|
-| `=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)` | 0.30 for a Consumer loan |
+| `=VLOOKUP([@product], Lookup!$A$3:$F$7, 3, FALSE)` | 0.30 для Consumer loan |
 
 Четыре ловушки, каждая из которых где-то уже дала неверное число правлению:
 
@@ -115,6 +115,8 @@
 {"type": "bug", "id": "w04d2-g1", "title": "Найдите ловушку", "q": "Этот столбец ставок протянут на все 7 828 кредитов. Диапазон закреплён, но некоторые продукты получают ставку другого продукта. Нажмите на строку, которая в этом виновата.", "code": "=VLOOKUP(\n    [@product],\n    Lookup!$A$3:$F$7,\n    3)", "answer": [3], "why": "Нет четвёртого аргумента, поэтому VLOOKUP выполняет приближённый поиск, считая столбец продуктов отсортированным. Он не отсортирован — пишите 3, FALSE)."}
 ```
 
+> 🎬 **Остались вопросы про ВПР (VLOOKUP)?** [Виталий Бархатов объясняет · 6 мин](https://youtu.be/O-f97g_eVpc?t=42&end=399)
+
 ### INDEX / MATCH — найти позицию, затем взять значение :id=index-match-find-the-position-then-take-the-value
 
 **Что это.** **MATCH** (*ПОИСКПОЗ*) возвращает **позицию** значения в одном столбце. **INDEX** (*ИНДЕКС*) возвращает значение на этой позиции в другом столбце. Вместе это поиск, который может вернуть любой столбец — левее или правее ключа — и не ломается при вставке столбцов.
@@ -123,8 +125,8 @@
 
 | Формула | Примечание |
 |---|---|
-| `=MATCH(what, one_column, 0)` | 0 = exact match → a position (1, 2, 3 …) |
-| `=INDEX(one_column, position)` | the value at that position |
+| `=MATCH(what, one_column, 0)` | 0 = точное совпадение → номер позиции (1, 2, 3 …) |
+| `=INDEX(one_column, position)` | значение на этой позиции |
 | `=INDEX(return_column, MATCH(what, key_column, 0))` |   |
 
 На маленькой таблице: `=MATCH("Auto loan", E2:E4, 0)` → **2**; `=INDEX(F2:F4, 2)` → **0.24**. Вместе: `=INDEX($F$2:$F$4, MATCH(B3, $E$2:$E$4, 0))` → 0.24.
@@ -133,8 +135,8 @@
 
 | Формула | Даёт |
 |---|---|
-| `=INDEX(Lookup!$C$3:$C$7, MATCH([@product], Lookup!$A$3:$A$7, 0))` | the rate |
-| `=INDEX(Lookup!$A$3:$A$7, MATCH("SME", Lookup!$B$3:$B$7, 0))` | "Small business loan" (looking left) |
+| `=INDEX(Lookup!$C$3:$C$7, MATCH([@product], Lookup!$A$3:$A$7, 0))` | ставка |
+| `=INDEX(Lookup!$A$3:$A$7, MATCH("SME", Lookup!$B$3:$B$7, 0))` | "Small business loan" (поиск влево) |
 
 `SME` стоит на позиции 5 в столбце `code`, поэтому `INDEX` берёт позицию 5 столбца `product`, который находится **левее** `code`.
 
@@ -168,6 +170,8 @@
 {"id": "w04d2-l2", "kind": "number", "answer": 0.24, "dp": 2, "hint": "Auto loan — 4-й продукт на Lookup; столбец C — annual_rate.", "model": "0.24 — MATCH находит Auto loan на позиции 4 в A3:A7; INDEX берёт позицию 4 в C3:C7."}
 ```
 
+> 🎬 **Остались вопросы про связку ИНДЕКС и ПОИСКПОЗ?** [Виталий Бархатов объясняет · 10 мин](https://youtu.be/O-f97g_eVpc?t=505&end=1111)
+
 ### XLOOKUP — точное совпадение и «не найдено» :id=xlookup-exact-match-and-not-found
 
 **Что это.** **XLOOKUP** (*ПРОСМОТРX*) — современный поиск (Excel 2021 / Microsoft 365, Google Sheets). Он принимает столбец ключей и столбец результата по отдельности, по умолчанию ищет точно и имеет собственный аргумент для «не найдено».
@@ -185,7 +189,7 @@
 
 | Формула | Примечание |
 |---|---|
-| `=XLOOKUP([@product], Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` | exact by default; #N/A if missing |
+| `=XLOOKUP([@product], Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` | точное совпадение по умолчанию; #N/A, если не найдено |
 | `=XLOOKUP($B$1, tblLoans[loan_id], tblLoans[customer], "not found")` |   |
 
 Если в `B1` стоит 2167, вторая формула возвращает **Dilnoza Abdullaeva**; если 99999 — `not found`.
@@ -207,6 +211,8 @@
 {"type": "cloze", "id": "w04d2-g2", "code": true, "title": "Соберите поиск для Севары: loan_id в B1 — клиент на выходе", "text": "=XLOOKUP({{0}}, {{1}}, {{2}}, {{3}})", "blanks": [["$B$1"], ["tblLoans[loan_id]"], ["tblLoans[customer]"], ["\"not found\""]], "distractors": ["FALSE", "-1", "tblLoans[branch]", "3"]}
 ```
 
+> 🎬 **Остались вопросы про XLOOKUP (ПРОСМОТРX)?** [Николай Павлов объясняет · 7 мин](https://youtu.be/KmWZTEFj55k?t=51&end=470)
+
 ### XLOOKUP для диапазонов — приближённое совпадение и подстановочные знаки :id=xlookup-for-bands-approximate-and-wildcard-match
 
 **Что это.** 5-й аргумент, **match_mode**, меняет способ сравнения. `-1` находит точное значение **или ближайшее меньшее** — правило для **таблицы диапазонов** (band table), в столбце ключей которой стоят нижние границы. `2` разрешает в ключе подстановочные знаки `*` и `?`.
@@ -215,14 +221,14 @@
 
 | match_mode | Что значит |
 |---|---|
-| 0 | exact (default) |
-| -1 | exact or next smaller |
-| 1 | exact or next larger |
-| 2 | wildcard |
+| 0 | точное (по умолчанию) |
+| -1 | точное или ближайшее меньшее |
+| 1 | точное или ближайшее большее |
+| 2 | подстановочные знаки |
 
 | Формула | Примечание |
 |---|---|
-| `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` | the empty 4th argument: no not-found text |
+| `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` | 4-й аргумент пустой: текста для «не найдено» нет |
 
 Таблица диапазонов на `Lookup` и что получают три значения dpd:
 
@@ -251,6 +257,8 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 {"id": "w04d2-l3", "kind": "text", "answer": ["61-90"], "model": "61-90 — 61 само является границей, поэтому точное совпадение срабатывает раньше, чем понадобится «ближайшее меньшее»."}
 ```
 
+> 🎬 **Остались вопросы про XLOOKUP с приближённым совпадением и подстановочными знаками?** [Николай Павлов объясняет · 7 мин](https://youtu.be/KmWZTEFj55k?t=472&end=874)
+
 ### XLOOKUP с конца — последнее совпадение :id=xlookup-from-the-end-the-last-match
 
 **Что это.** 6-й аргумент, **search_mode**, задаёт направление. `1` (по умолчанию) ищет сверху и возвращает **первое** совпадение. `-1` ищет снизу и возвращает **последнее**.
@@ -259,12 +267,12 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 
 | search_mode | Что значит |
 |---|---|
-| 1 | first to last (default) |
-| -1 | last to first |
+| 1 | от первой к последней (по умолчанию) |
+| -1 | от последней к первой |
 
 | Формула | Примечание |
 |---|---|
-| `=XLOOKUP(4567, tblPayments[loan_id], tblPayments[paid_at], , 0, -1)` | the bottom row of loan 4567 |
+| `=XLOOKUP(4567, tblPayments[loan_id], tblPayments[paid_at], , 0, -1)` | последняя строка кредита 4567 |
 
 У кредита 4567 три строки платежей: 2026-04-07, 2026-05-06, 2026-06-09. Сверху формула вернула бы 2026-04-07; снизу она возвращает **2026-06-09** (формат ячейки `yyyy-mm-dd`).
 
@@ -280,6 +288,8 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 {"id": "w04d2-l4", "kind": "choice", "options": ["2026-04-07 — первая строка кредита 4567", "2026-06-09 — последняя строка", "#N/A — search_mode 1 не разрешён", "Все три даты, разлитые вниз"], "answer": 0, "explain": "search_mode 1 ищет сверху вниз и останавливается на первом совпадении — первой строке платежей кредита 4567."}
 ```
 
+> 🎬 **Остались вопросы про XLOOKUP с поиском с конца?** [Николай Павлов объясняет · 3 мин](https://youtu.be/KmWZTEFj55k?t=874&end=1061)
+
 ### Поиск по двум ключам :id=two-key-lookups
 
 **Что это.** **Поиск по двум ключам** находит строку, где совпадают сразу **два** столбца, — соединение по двум столбцам. Обычный способ: склеить два ключа в один через `&` и искать его.
@@ -288,9 +298,9 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 
 | Способ | Как пишется | Примечание |
 |---|---|---|
-| 1. helper key column | `[@loan_id]&"\|"&[@installment_no]` | in the lookup table, then an exact lookup on it |
-| 2. glue inside | `=XLOOKUP(k1&"\|"&k2, col1&"\|"&col2, return_column)` |   |
-| 3. classic array | `=INDEX(return_column, MATCH(1, (col1=k1)*(col2=k2), 0))` | old Excel: Ctrl+Shift+Enter |
+| 1. вспомогательный столбец-ключ | `[@loan_id]&"\|"&[@installment_no]` | в таблице поиска, затем точный поиск по нему |
+| 2. склейка внутри формулы | `=XLOOKUP(k1&"\|"&k2, col1&"\|"&col2, return_column)` |   |
+| 3. классическая формула массива | `=INDEX(return_column, MATCH(1, (col1=k1)*(col2=k2), 0))` | старый Excel: Ctrl+Shift+Enter |
 
 `"|"` разделяет `1`&`12` и `11`&`2`: `1|12` и `11|2` — разные ключи, а `112` и `112` — нет. На маленькой таблице платежей по графику:
 
@@ -328,7 +338,7 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 | Формула | Даёт |
 |---|---|
 | `=IFERROR(formula, value_if_error)` |   |
-| `=IFERROR(INDEX($F$2:$F$4, MATCH(B4, $E$2:$E$4, 0)), "not found")` | `"not found"` for Car lease |
+| `=IFERROR(INDEX($F$2:$F$4, MATCH(B4, $E$2:$E$4, 0)), "not found")` | `"not found"` для Car lease |
 
 На настоящей книге: `=IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[loan_id], 0)), "not found")` возвращает то же, что поиск кредита через XLOOKUP выше, — `not found` для 99999.
 
@@ -357,8 +367,8 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 
 | Ячейка | Формула | Примечание |
 |---|---|---|
-| A3 | `=UNIQUE(tblLoans[branch])` | one formula → 10 cells, A3:A12 |
-| B3 | `=ROWS(A3#)` | → 10 · # = all of A3's spill, however long |
+| A3 | `=UNIQUE(tblLoans[branch])` | одна формула → 10 ячеек, A3:A12 |
+| B3 | `=ROWS(A3#)` | → 10 · # = весь разлив A3, любой длины |
 
 | | A |
 |---|---|
@@ -390,8 +400,8 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 | Формула | Даёт | Примечание |
 |---|---|---|
 | `=UNIQUE(range)` |   |   |
-| `=UNIQUE(tblLoans[region])` | 8 rows | one per region |
-| `=ROWS(UNIQUE(tblLoans[branch]))` | 10 | a count of distinct values |
+| `=UNIQUE(tblLoans[region])` | 8 строк | по одной на регион |
+| `=ROWS(UNIQUE(tblLoans[branch]))` | 10 | число различных значений |
 
 На маленькой таблице кредитов: `=UNIQUE(B2:B5)` → `Micro loan`, `Auto loan`, `Car lease` — три строки, Micro один раз.
 
@@ -407,6 +417,8 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 ```task
 {"id": "w04d2-l8", "kind": "number", "answer": 5, "dp": 0, "unit": "продуктов", "model": "5 — Micro, Consumer, Buy now pay later, Small business, Auto; те же пять строк, что в Lookup!A3:A7."}
 ```
+
+> 🎬 **Остались вопросы про функцию UNIQUE?** [Николай Павлов объясняет · 4 мин](https://youtu.be/EHb9UMIGnLk?t=577&end=797)
 
 ### FILTER — строки, которые подходят под условие :id=filter-the-rows-that-meet-a-condition
 
@@ -425,9 +437,9 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 
 | Часть | Что это |
 |---|---|
-| `tblLoans` | rows |
-| `(a)*(b)` | AND = multiply |
-| `"no late loans"` | text when nothing matches |
+| `tblLoans` | строки |
+| `(a)*(b)` | AND = умножить |
+| `"no late loans"` | текст, если ничего не подошло |
 
 Условия — это столбцы из TRUE/FALSE. **Перемножайте** их для AND, **складывайте** для OR: `(a)+(b)`.
 
@@ -453,6 +465,8 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 {"type": "cloze", "id": "w04d2-g6", "code": true, "title": "Активные кредиты в корзине 61-90", "text": "=FILTER(tblLoans, ({{0}}=\"active\"){{1}}(tblLoans[bucket]={{2}}), \"none\")", "blanks": [["tblLoans[status]"], ["*"], ["\"61-90\""]], "distractors": ["+", "AND", "61-90", "tblLoans[dpd]"]}
 ```
 
+> 🎬 **Остались вопросы про функцию FILTER?** [Николай Павлов объясняет · 4 мин](https://youtu.be/EHb9UMIGnLk?t=314&end=575)
+
 ### SORT и SORTBY — упорядочить список :id=sort-and-sortby-order-a-list
 
 **Что это.** **SORT** (*СОРТ*) возвращает диапазон, отсортированный по одному из его собственных столбцов. **SORTBY** сортирует диапазон по **другому** диапазону той же длины. Это `ORDER BY` в ячейке.
@@ -461,9 +475,9 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 
 | Формула | Примечание |
 |---|---|
-| `=SORT(range, [column_number], [order])` | order: 1 ascending (default), -1 descending |
+| `=SORT(range, [column_number], [order])` | order: 1 по возрастанию (по умолчанию), -1 по убыванию |
 | `=SORTBY(range, by_range, [order])` |   |
-| `=SORT(FILTER(tblLoans, …), 12, -1)` | by the 12th column of tblLoans (dpd), worst first |
+| `=SORT(FILTER(tblLoans, …), 12, -1)` | по 12-му столбцу tblLoans (dpd), худшие первыми |
 | `=SORTBY(tblLoans[loan_id], tblLoans[outstanding], -1)` |   |
 
 На маленькой таблице кредитов: `=SORTBY(A2:A5, C2:C5, -1)` → 102, 103, 101, 104 (по остатку 200, 90, 4, 2).
@@ -482,6 +496,8 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 ```task
 {"id": "w04d2-l9", "kind": "choice", "options": ["dpd", "outstanding", "status", "principal"], "answer": 1, "explain": "Столбцы: loan_id, customer, region, product, branch, grade, disbursed_at, principal, term, status, outstanding, dpd, bucket — 11-й — outstanding."}
 ```
+
+> 🎬 **Остались вопросы про функции SORT и SORTBY (динамические массивы)?** [Николай Павлов объясняет · 4 мин](https://youtu.be/EHb9UMIGnLk?t=77&end=314)
 
 ### SEQUENCE — столбец чисел :id=sequence-a-column-of-numbers
 
@@ -514,7 +530,7 @@ dpd принимает 258 разных значений, от 0 до 919; пя�
 **Как пишется.**
 
 ```text
-Select B1
+Выделите B1
   → Data
   → Data Validation
   → Allow: List
@@ -522,7 +538,7 @@ Select B1
 
 Helper!A2:
   =SORT(UNIQUE(tblLoans[branch]))
-  the list, spilled on a helper sheet
+  список, разлитый на вспомогательном листе
 
 Sheets:
   Data
@@ -568,7 +584,7 @@ Sheets:
 
 | Правило | Что значит |
 |---|---|
-| `=$M2="90+"` | $M = always column M (bucket) · 2 = the row moves with each row |
+| `=$M2="90+"` | $M = всегда столбец M (bucket) · 2 = строка сдвигается вместе с каждой строкой |
 
 | Ячейка | Правило, которое применяет Excel | Читает |
 |---|---|---|
@@ -590,9 +606,9 @@ Sheets:
 {"id": "w04d2-l12", "kind": "choice", "options": ["=$M$6=\"90+\"", "=$M6=\"90+\"", "=M$6=\"90+\"", "=$M2=\"90+\""], "answer": 1, "explain": "Правило пишется для первой строки выделения (строка 6), со столбцом закреплённым и строкой свободной. С $M2 каждая строка читала бы корзину на четыре строки выше себя."}
 ```
 
-> 🎬 **Остались вопросы про условное форматирование (готовые правила)?** [Короткое объяснение (на английском, есть субтитры) · 6 мин](https://youtu.be/zXnQNytHCPM?t=36&end=425)
+> 🎬 **Остались вопросы про условное форматирование (готовые правила)?** [Виталий Бархатов объясняет · 12 мин](https://youtu.be/bhMyd7xKJuM?t=2&end=700)
 
-> 🎬 **Остались вопросы про условное форматирование по своей формуле?** [Короткое объяснение (на английском, есть субтитры) · 6 мин](https://youtu.be/zXnQNytHCPM?t=808&end=1190)
+> 🎬 **Остались вопросы про условное форматирование по своей формуле?** [Виталий Бархатов объясняет · 10 мин](https://youtu.be/whfNj0iFFWw?t=75&end=672)
 
 ### Как читать ошибки :id=reading-the-errors
 
@@ -677,7 +693,7 @@ Sheets:
 
 | Ячейка | Что в ней |
 |---|---|
-| B1 | dropdown — Data Validation, List, source `=Helper!$A$2#` (Helper!A2: `=SORT(UNIQUE(tblLoans[branch]))`) |
+| B1 | выпадающий список — Data Validation, List, source `=Helper!$A$2#` (Helper!A2: `=SORT(UNIQUE(tblLoans[branch]))`) |
 | A6 | `=SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late loans"), 12, -1)` |
 | N6 | `=XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` |
 
@@ -699,15 +715,15 @@ Sheets:
 
 **Видео (бесплатно, YouTube; каждая ссылка открывается на нужной минуте):**
 
-- ▶ VLOOKUP и его ловушки (точное совпадение FALSE, фиксация таблицы, нет поиска влево, IFNA/IFERROR) — [The Only VLOOKUP Guide You'll Ever Need (Leila Gharani), 03:46](https://youtu.be/TDphx23AtqM?t=226&end=285)
-- ▶ INDEX / MATCH — [How to use Excel Index Match (the right way) (Leila Gharani), 06:37](https://youtu.be/F264FpBDX28?t=397&end=488)
-- ▶ INDEX / MATCH (альтернатива, длиннее, с примером выпадающего списка) — [INDEX MATCH Excel Tutorial (Kevin Stratvert), 05:36](https://youtu.be/6JhbY8Mku1A?t=336&end=530)
-- ▶ XLOOKUP — [How to Use XLOOKUP in Excel (5 Practical Examples) (Leila Gharani), 01:12](https://youtu.be/4c0CLUER6nw?t=72&end=178)
-- ▶ XLOOKUP (второй вариант) — [XLOOKUP in Excel Tutorial (Kevin Stratvert), 01:13](https://youtu.be/HXU7lsd0ftA?t=73&end=260)
-- ▶ UNIQUE — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 02:33](https://youtu.be/2USJsIyIzvo?t=153&end=185)
-- ▶ FILTER — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 04:06](https://youtu.be/2USJsIyIzvo?t=246&end=301)
-- ▶ Условное форматирование (правило с формулой) — [Excel Conditional Formatting with Formula | Highlight Rows based on a cell value (Leila Gharani), 01:03](https://youtu.be/XHT4paRaY4g?t=63&end=108)
-- ▶ Условное форматирование (основы) — [Learn Excel in Under 3 Hours | Pivot Tables, Lookups, Data Cleaning (Alex The Analyst), 00:37](https://youtu.be/zXnQNytHCPM?t=37&end=1200)
+- ▶ (на англ.) VLOOKUP и его ловушки (точное совпадение FALSE, фиксация таблицы, нет поиска влево, IFNA/IFERROR) — [The Only VLOOKUP Guide You'll Ever Need (Leila Gharani), 03:46](https://youtu.be/TDphx23AtqM?t=226&end=285)
+- ▶ (на англ.) INDEX / MATCH — [How to use Excel Index Match (the right way) (Leila Gharani), 06:37](https://youtu.be/F264FpBDX28?t=397&end=488)
+- ▶ (на англ.) INDEX / MATCH (альтернатива, длиннее, с примером выпадающего списка) — [INDEX MATCH Excel Tutorial (Kevin Stratvert), 05:36](https://youtu.be/6JhbY8Mku1A?t=336&end=530)
+- ▶ (на англ.) XLOOKUP — [How to Use XLOOKUP in Excel (5 Practical Examples) (Leila Gharani), 01:12](https://youtu.be/4c0CLUER6nw?t=72&end=178)
+- ▶ (на англ.) XLOOKUP (второй вариант) — [XLOOKUP in Excel Tutorial (Kevin Stratvert), 01:13](https://youtu.be/HXU7lsd0ftA?t=73&end=260)
+- ▶ (на англ.) UNIQUE — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 02:33](https://youtu.be/2USJsIyIzvo?t=153&end=185)
+- ▶ (на англ.) FILTER — [Excel Dynamic Arrays (How they will change EVERYTHING!) (Leila Gharani), 04:06](https://youtu.be/2USJsIyIzvo?t=246&end=301)
+- ▶ (на англ.) Условное форматирование (правило с формулой) — [Excel Conditional Formatting with Formula | Highlight Rows based on a cell value (Leila Gharani), 01:03](https://youtu.be/XHT4paRaY4g?t=63&end=108)
+- ▶ (на англ.) Условное форматирование (основы) — [Learn Excel in Under 3 Hours | Pivot Tables, Lookups, Data Cleaning (Alex The Analyst), 00:37](https://youtu.be/zXnQNytHCPM?t=37&end=1200)
 
 - Русскоязычная книга `3.2 Lookups.xlsx` — листы *VLOOKUP – Exact Match*, *VLOOKUP – Approx Match* (таблица оценок, примечание «таблица поиска должна быть отсортирована»), *MATCH* (три типа совпадения), *INDEX*, *Xlookup*; и *Cell Referrence* для таблицы умножения с `$`.
 - *Русские термины:* ВПР = VLOOKUP, ПОИСКПОЗ = MATCH, ИНДЕКС = INDEX, ПРОСМОТРX = XLOOKUP, точное / приближённое совпадение = exact / approximate match, проверка данных = data validation, условное форматирование = conditional formatting, выпадающий список = dropdown.
@@ -764,8 +780,8 @@ A6:  =SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late 
 
 | Подпись | Формула | Примечание |
 |---|---|---|
-| A2 "Late loans" | B2 `=IF(A6="no late loans", 0, COUNTA(INDEX(A6#, , 1)))` | count of filtered rows |
-| C2 "Outstanding" | D2 `=SUM(INDEX(A6#, , 11))` | 11th column = outstanding |
+| A2 "Late loans" | B2 `=IF(A6="no late loans", 0, COUNTA(INDEX(A6#, , 1)))` | число отобранных строк |
+| C2 "Outstanding" | D2 `=SUM(INDEX(A6#, , 11))` | 11-й столбец = outstanding |
 
    Выберите **Tashkent South**: B2 → **59** просроченных кредитов, D2 → **1 566 587 839** — остаток долга *только просроченных кредитов*. Вся книга филиала (`=SUMIFS(tblLoans[outstanding], tblLoans[branch], $B$1)`) — **26 787 392 136**. Поставьте на лист оба числа с подписями: «сумма» у Севары — это просроченные деньги, а у Бекзода — вся книга. Первая строка — худший кредит филиала: кредит 7339, 902 DPD, списан; 39 из 59 находятся в 90+, так что живой объём работы — 20 кредитов. Защита через `IF` важна: без совпадений A6 показывает `no late loans`, и голый `COUNTA` сказал бы 1.
 6. **XLOOKUP — ставка.** `N6` = `=XLOOKUP(INDEX(A6#, , 4), Lookup!$A$3:$A$7, Lookup!$C$3:$C$7)` (столбец 4 = product) разливает по ставке на строку. `IFERROR` не нужен: каждый продукт есть на `Lookup`, а если однажды его не окажется, `#N/A` — правильный сигнал.
@@ -776,12 +792,12 @@ A6:  =SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late 
 
 | Ячейка | Что в ней | Примечание |
 |---|---|---|
-| B1 | dropdown — Data validation → Dropdown (from a range) → Helper!A2:A11, where Helper!A2 = `SORT(UNIQUE(Loans!E2:E))` |   |
-| B2 | `=COUNTA(A6:A)` | rows in the spill (blank tail ignored by COUNTA) |
-| D2 | `=SUM(K6:K)` | outstanding column of the spill |
-| A5 | `=Loans!A1:M1` | header row |
+| B1 | выпадающий список — Data validation → Dropdown (from a range) → Helper!A2:A11, где Helper!A2 = `SORT(UNIQUE(Loans!E2:E))` |   |
+| B2 | `=COUNTA(A6:A)` | строки в разливе (пустой хвост COUNTA не считает) |
+| D2 | `=SUM(K6:K)` | столбец outstanding в разливе |
+| A5 | `=Loans!A1:M1` | строка заголовков |
 | A6 | `=SORT(FILTER(Loans!A2:M, Loans!E2:E=B1, Loans!L2:L>0), 12, FALSE)` |   |
-| N6 | `=ARRAYFORMULA(IF(D6:D="", "", XLOOKUP(D6:D, Lookup!A3:A7, Lookup!C3:C7)))` | rate per filtered row |
+| N6 | `=ARRAYFORMULA(IF(D6:D="", "", XLOOKUP(D6:D, Lookup!A3:A7, Lookup!C3:C7)))` | ставка для каждой отобранной строки |
 | A6:N | Format → Conditional formatting → Custom formula is `=$M6="90+"` |   |
 
 `IF(D6:D="", "", …)` оставляет столбец ставок пустым ниже разлива — без этого `ARRAYFORMULA` заполнит 1 000 строк значениями `#N/A`.
@@ -938,8 +954,8 @@ A6:  =SORT(FILTER(tblLoans, (tblLoans[branch]=$B$1)*(tblLoans[dpd]>0), "no late 
 
 | Лист | Столбец / ячейка | Что в ней |
 |---|---|---|
-| Loans, new column | lk_bucket | `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` |
-| Summary sheet | A3:A7 | 0 · 1-30 · 31-60 · 61-90 · 90+ (text — '0) |
+| Loans, новый столбец | lk_bucket | `=XLOOKUP([@dpd], Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` |
+| лист Summary | A3:A7 | 0 · 1-30 · 31-60 · 61-90 · 90+ (текст — '0) |
 |   | B3 | `=COUNTIFS(tblLoans[lk_bucket], A3)` |
 |   | C3 | `=SUMIFS(tblLoans[outstanding], tblLoans[lk_bucket], A3)` |
 |   | D3 | `=C3/SUM($C$3:$C$7)` → 0.00% |
