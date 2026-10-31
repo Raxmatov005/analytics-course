@@ -36,8 +36,9 @@ def check_page(path: str) -> list[str]:
     if quiz.get("pass", 0.8) != 0.8:
         errs.append("pass must be 0.8")
     qs = quiz.get("questions", [])
-    if not 6 <= len(qs) <= 10:
-        errs.append(f"{len(qs)} questions (need 6-10)")
+    exam = m.group(2) == "6"   # Day 6 = a section exam (2026-10-31): Part A is a 20–30 question quiz under its own heading
+    if not (20 <= len(qs) <= 30 if exam else 6 <= len(qs) <= 10):
+        errs.append(f"{len(qs)} questions (need {'20-30' if exam else '6-10'})")
     seen = set()
     for i, q in enumerate(qs, 1):
         t = q.get("type")
@@ -69,7 +70,7 @@ def check_page(path: str) -> list[str]:
             a = q.get("answer")
             if not (isinstance(a, str) or (isinstance(a, list) and a and all(isinstance(x, str) for x in a))):
                 errs.append(f"Q{i}: text answer must be a string or a list of strings")
-    if not re.search(r"^## Day quiz\s*$", md, re.M):
+    if not exam and not re.search(r"^## Day quiz\s*$", md, re.M):
         errs.append("no '## Day quiz' heading")
     return errs
 

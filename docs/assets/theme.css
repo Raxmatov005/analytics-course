@@ -133,7 +133,8 @@ body { background: var(--bg); color: var(--body); font-family: var(--sans); -web
 .qz-qtext { font-size: 1.28em; font-weight: 700; color: var(--ink); line-height: 1.45; margin-bottom: 1em; letter-spacing: -.01em; }
 .markdown-section pre.qz-code { margin: 0 0 1.1em; }
 .qz-hint { font-size: .88em; font-weight: 600; color: var(--muted); margin: -.5em 0 .8em; }
-.qz-opts { display: grid; gap: .65em; }
+.qz-opts { display: grid; grid-template-columns: minmax(0, 1fr); gap: .65em; }
+.qz-otext { min-width: 0; overflow-wrap: anywhere; }   /* a long name in an answer ('approved_not_disbursed') pushed the answers past the card (W1D2, 360 px) */
 .qz-opt { position: relative; display: flex; align-items: center; gap: .9em; padding: .9em 1.05em; border: 2px solid var(--line); border-radius: 14px; cursor: pointer; background: #fff; color: var(--ink); font-size: 1.02em; line-height: 1.45; transition: border-color .15s, background .15s; }
 .qz-opt:hover { border-color: var(--brand-l); background: #fafffe; }
 .qz-opt input { position: absolute; opacity: 0; pointer-events: none; }
@@ -353,9 +354,9 @@ body.db-on #sq-db-shade { opacity: 1; pointer-events: auto; }
 .yt-panel-icon { flex: none; width: 46px; height: 46px; border-radius: 14px; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(220, 38, 38, .3); }
 .yt-panel-title { font-weight: 800; font-size: 1.18em; color: var(--ink); line-height: 1.3; }
 .yt-panel-sub { font-size: .86em; color: var(--muted); line-height: 1.45; }
-.yt-grid { display: grid; gap: .7em; }
+.yt-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: .7em; }   /* one column no wider than the box: a bare link as a card's text made the auto column 40 px wider than a phone (sources, 2026-10-31) */
 .yt-panel .yt { margin: 0; max-width: none; }
-.yt-meta { font-size: .8em; color: var(--muted); line-height: 1.4; }
+.yt-meta { font-size: .8em; color: var(--muted); line-height: 1.4; overflow-wrap: anywhere; }
 .markdown-section .yt-pill { font: 700 .78em var(--sans); border: 0; background: #fee2e2; color: #b91c1c; border-radius: 999px; padding: .2em .65em; margin: 0 .15em; cursor: pointer; vertical-align: .08em; }
 .markdown-section .yt-pill:hover { background: #fecaca; }
 @media (max-width: 768px) {
@@ -465,7 +466,7 @@ body.db-on #sq-db-shade { opacity: 1; pointer-events: auto; }
 .gx-tb-name { font-weight: 800; font-size: .82em; color: var(--g-d); font-family: var(--mono); margin-bottom: .1em; }
 .gx-c { font-family: var(--mono); font-size: .8em; padding: .55em .6em; word-break: break-word; }
 .gx-c small { color: var(--muted); font-weight: 500; font-size: 1em; }
-.gx-lines { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; z-index: 2; }
+.gx-lines { position: absolute; left: 0; top: 0; max-width: 100%; pointer-events: none; overflow: visible; z-index: 2; }   /* before the first line it is the browser's 300 px default: wider than the game on a phone */
 .gx-lines path { fill: none; stroke: var(--c); stroke-width: 3; stroke-linecap: round; }
 .gx-lines circle { fill: var(--c); }
 .gx-foot { display: flex; justify-content: space-between; align-items: center; gap: .6em; margin-top: .85em; min-height: 1.6em; }
@@ -561,6 +562,8 @@ body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
 .markdown-section { overflow-wrap: break-word; }
 .markdown-section pre, .markdown-section .qz, .markdown-section .sq-box, .markdown-section .sq-ws, .markdown-section .gx, .yt-panel { max-width: 100%; box-sizing: border-box; }
 .markdown-section code { overflow-wrap: anywhere; }
+/* a code chip's own spaces stay (`CASH `), but one at a line end wraps instead of hanging: pre-wrap painted the chip past the text (RU W2D2, 375 px) */
+.markdown-section :not(pre) > code { white-space: break-spaces; }
 .markdown-section pre code { overflow-wrap: normal; }
 /* code never runs past its box: a long line wraps inside it (2026-10-28). Excel (one formula a line, so it
    pastes into one cell) and exact program output (```output) wrap too. Text pictures and lined-up columns (text, no language)
@@ -570,6 +573,9 @@ body.yp-lock #sq-db-btn, body.yp-lock .sidebar-toggle { display: none; }
 .markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang="output"] > code, .markdown-section pre[data-lang="powerquery"] > code { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 480px) {   /* a phone holds 41 characters of a text picture at 12 px: they are drawn 40 wide */
   .markdown-section pre[data-lang="text"] > code, .markdown-section pre[data-lang="excel"] > code, .markdown-section pre[data-lang=""] > code { font-size: 12px; padding: .9em; }
+}
+@media (max-width: 380px) {   /* a 360 px phone: 40 characters (288 px) plus .9em sides ran 8 px past the box and cut the last letter */
+  .markdown-section pre[data-lang="text"] > code, .markdown-section pre[data-lang=""] > code { padding-left: .5em; padding-right: .5em; }
 }
 
 /* course files: a download button after the file name (files.js) */
@@ -587,6 +593,11 @@ body.reading-down #sq-db-btn { transform: translateY(160%); opacity: 0; pointer-
 .markdown-section table:not(.sq-table):not(.gx-table):has(tr > :nth-child(5)) code { overflow-wrap: anywhere; }
 /* code in a table cell wraps at its spaces inside the cell (the cell stops at 17em); a nowrap code ran over the next column */
 .markdown-section table code { overflow-wrap: break-word; white-space: normal; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+/* Progress: the points tables fit a phone whole (Russian headers and long titles pushed the Feedback column 14-39 px out of view at 360 px) */
+@media (max-width: 520px) {
+  .markdown-section table.pts:not(.sq-table):not(.gx-table) td, .markdown-section table.pts:not(.sq-table):not(.gx-table) th { min-width: 0; padding-left: .45em; padding-right: .45em; }
+  .markdown-section table.pts td:first-child { overflow-wrap: anywhere; }
+}
 
 /* ---------- EN | RU switch (lang.js) ---------- */
 .lang-switch { position: fixed; top: 14px; right: 18px; z-index: 35; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(15, 23, 42, .12); font-family: var(--sans); }

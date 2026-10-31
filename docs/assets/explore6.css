@@ -48,6 +48,7 @@
 @media (max-width: 520px) {
   .xp6-svg .xp-ax { font-size: 15px; }
   .xp6-pl { font-size: 15px; }
+  .xp6-grid b { white-space: normal; }   /* a sum with its unit ran past its tile at 360 px (RU W8D2): the unit takes the next line */
 }
 
 /* dark:skip */

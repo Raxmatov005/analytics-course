@@ -94,7 +94,7 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
   }
   function pickReview(quizId, b, s, max) {
     var w = weekOf(quizId);
-    if (w == null || w < 2 || !b || !b.days) return [];
+    if (w == null || w < 2 || !b || !b.days || /d6$/.test(quizId)) return [];   // an exam (Day 6) is cumulative already
     var pool = [], miss = s.miss || {}, rev = s.rev || {};
     Object.keys(b.days).forEach(function (d) {
       var dw = weekOf(d);
@@ -213,8 +213,9 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
       pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This quiz could not be read', 'Не удалось прочитать тест') + ' (' + esc(e.message) + ').</p>');
       return;
     }
-    var pass = quiz.pass || 0.8, n = quiz.questions.length, need = Math.round(pass * 100), mins = Math.max(2, Math.round(n * 0.6));
-    var title = isPractice(quiz.id) ? T('Practice quiz', 'Пробный тест') : T('Day quiz', 'Тест дня');
+    var exam = /d6$/.test(quiz.id);   // Day 6 = a section exam's Part A (2026-10-31)
+    var pass = quiz.pass || 0.8, n = quiz.questions.length, need = Math.round(pass * 100), mins = Math.max(2, Math.round(n * (exam ? 1.6 : 0.6)));
+    var title = exam ? T('Exam · Part A', 'Экзамен · часть A') : isPractice(quiz.id) ? T('Practice quiz', 'Пробный тест') : T('Day quiz', 'Тест дня');
     var box = document.createElement('div');
     var prev = load().quizzes[quiz.id];
     box.className = 'qz al-block' + (prev && prev.passedOn ? ' al-done' : '');   // the done-state contract of sections.js
@@ -223,8 +224,8 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
       '<div class="qz-start">' +
         '<div class="qz-icon">✓</div>' +
         '<div class="qz-start-body"><div class="qz-title">' + title + '</div>' +
-        '<div class="qz-sub">' + T(n + ' questions · get ' + need + '% to finish the day · about ' + mins + ' min',
-          n + ' ' + plural(n, 'вопрос', 'вопроса', 'вопросов') + ' · наберите ' + need + '%, чтобы завершить день · около ' + mins + ' мин') + '</div>' +
+        '<div class="qz-sub">' + T(n + ' questions · get ' + need + '% to ' + (exam ? 'pass Part A' : 'finish the day') + ' · about ' + mins + ' min',
+          n + ' ' + plural(n, 'вопрос', 'вопроса', 'вопросов') + ' · наберите ' + need + '%, чтобы ' + (exam ? 'сдать часть A' : 'завершить день') + ' · около ' + mins + ' мин') + '</div>' +
         (prev && prev.passedOn ? '<div class="qz-badge">' + T('✓ Passed · best ' + prev.best + '%', '✓ Пройден · лучший результат ' + prev.best + '%') + '</div>'
           : prev && prev.attempts ? '<div class="qz-badge qz-badge-try">' + T('Best so far ' + prev.best + '% · ' + need + '% passes',
             'Лучший результат пока ' + prev.best + '% · для зачёта нужно ' + need + '%') + '</div>' : '') + '</div>' +

@@ -93,6 +93,10 @@ body.yp-lock .lang-switch { display: none; }   /* the player fills the window: n
   .yt-clip-row { flex-wrap: wrap; row-gap: .5em; }
   .yt-clip-t { flex-basis: calc(100% - 34px - .7em); }
   .yt-clip .yt-go { margin-left: calc(34px + .7em); }
+  /* the track gets its own row above the buttons: in one row it was 20 px wide at 360 px (35 at 375), too short to seek */
+  .yp-bar { flex-wrap: wrap; row-gap: 0; }
+  .yp-bar .yp-track { order: -1; flex: 1 0 100%; }
+  .yp-bar .yp-time { margin-right: auto; }
 }
 
 /* the box of full videos: closed, opened by its title or by a "▶ 34:01" link in the text */

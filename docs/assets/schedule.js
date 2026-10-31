@@ -61,7 +61,7 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
   }
   function weekOpen(n) {
     if (!on()) return true;
-    for (var d = 0; d <= 5; d++) if (dates['W' + n + 'D' + d] && state('W' + n + 'D' + d) !== 'soon') return true;
+    for (var d = 0; d <= 6; d++) if (dates['W' + n + 'D' + d] && state('W' + n + 'D' + d) !== 'soon') return true;
     return false;
   }
   function next() {   // the next lesson to open

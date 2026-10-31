@@ -55,6 +55,7 @@
   .xp4-kst { font-size: 14px; }
   .xp4-auct { font-size: 17px; }
   .xp4-term { font-size: 12.5px; }
+  .xp4-grid b { white-space: normal; }   /* "11678.6 млн" ran 10 px past its tile at 360 px: the unit takes the next line */
 }
 
 /* dark:skip */

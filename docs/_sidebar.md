@@ -30,6 +30,7 @@
   - [Day 3: subqueries, CTEs and vintages](weeks/week-03/day-3.md)
   - [Day 4: views, temp tables, speed](weeks/week-03/day-4.md)
   - [Day 5: checkpoint — EDA report](weeks/week-03/day-5.md)
+  - [Day 6: Exam 1 — SQL (Weeks 1–3)](weeks/week-03/day-6.md)
 
 - **Week 4 — Excel & Sheets**
   - [Day 1: the sheet is a table](weeks/week-04/day-1.md)
@@ -37,6 +38,7 @@
   - [Day 3: cleaning dirty data, Power Query](weeks/week-04/day-3.md)
   - [Day 4: pivot tables and charts](weeks/week-04/day-4.md)
   - [Day 5: checkpoint — clean data + one-pager](weeks/week-04/day-5.md)
+  - [Day 6: Exam 2 — Excel](weeks/week-04/day-6.md)
 
 - **Week 5 — Python**
   - [Day 1: Python from zero](weeks/week-05/day-1.md)
@@ -44,6 +46,7 @@
   - [Day 3: pandas II — groupby, merge, cleaning](weeks/week-05/day-3.md)
   - [Day 4: charts and the SQL bridge](weeks/week-05/day-4.md)
   - [Day 5: checkpoint — EDA in pandas](weeks/week-05/day-5.md)
+  - [Day 6: Exam 3 — Python & pandas](weeks/week-05/day-6.md)
 
 - **Week 6 — Statistics**
   - [Day 1: probability and distributions](weeks/week-06/day-1.md)
@@ -51,6 +54,7 @@
   - [Day 3: hypothesis tests I](weeks/week-06/day-3.md)
   - [Day 4: non-parametric tests and power](weeks/week-06/day-4.md)
   - [Day 5: checkpoint — intervals and test choice](weeks/week-06/day-5.md)
+  - [Day 6: Exam 4 — Statistics](weeks/week-06/day-6.md)
 
 - **Week 7 — A/B testing & Power BI**
   - [Day 1: designing an A/B test](weeks/week-07/day-1.md)
@@ -58,6 +62,7 @@
   - [Day 3: Power BI I — data and model](weeks/week-07/day-3.md)
   - [Day 4: Power BI II — DAX and visuals](weeks/week-07/day-4.md)
   - [Day 5: checkpoint — A/B + dashboard](weeks/week-07/day-5.md)
+  - [Day 6: Exam 5 — A/B tests & Power BI](weeks/week-07/day-6.md)
 
 - **Week 8 — Product, capstone, interview**
   - [Day 1: metrics, funnels, retention](weeks/week-08/day-1.md)
@@ -65,6 +70,7 @@
   - [Day 3: capstone I — brief and analysis](weeks/week-08/day-3.md)
   - [Day 4: capstone II — dashboard and story](weeks/week-08/day-4.md)
   - [Day 5: presentation, mock interview, what next](weeks/week-08/day-5.md)
+  - [Day 6: Exam 6 — Product analytics & the job](weeks/week-08/day-6.md)
 
 - **Week 9 — Credit risk models**
   - [Day 1: correlation and regression](weeks/week-09/day-1.md)
@@ -72,6 +78,7 @@
   - [Day 3: ROC, AUC, Gini, KS](weeks/week-09/day-3.md)
   - [Day 4: the cut-off and PSI](weeks/week-09/day-4.md)
   - [Day 5: checkpoint — the scorecard review](weeks/week-09/day-5.md)
+  - [Day 6: Exam 7 — Final: credit risk + the whole course](weeks/week-09/day-6.md)
 
 - **Company & metrics**
   - [Glossary](company/glossary.md)
