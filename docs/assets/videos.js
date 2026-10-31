@@ -1,7 +1,8 @@
-/* YouTube links as a "Videos for today" section (Docsify plugin). Every youtu.be link on a lesson page is gathered
-into one panel right under "Today in 3 lines": thumbnail, start time, topic, length, "▶ Watch here" (plays inside
-the page, youtube-nocookie, from the linked second) and "Open on YouTube". In the text the link becomes a small
-"▶ 34:01" button that jumps to its card and plays it. Link shapes the pages use:
+/* YouTube links on a lesson page (Docsify plugin). A quote starting with 🎬 is a clip: one topic's few minutes under
+that topic, played in place ("Didn't get DISTINCT? ▶ Watch · 6 min", see clip() below). Every other youtu.be link is
+gathered into one closed box, "Full videos — optional", right after the list that names them (the "Depth" list):
+thumbnail, start time, topic, length, "▶ Watch this part" (plays inside the page, youtube-nocookie, from the linked
+second). In the text the link becomes a small "▶ 34:01" button that opens the box and plays its card. Link shapes:
   - ▶ Topic — [Video title, 3:51:57](https://youtu.be/ID?t=13917)
   - ▶ Baraa, *Topic* [0:34:01](https://youtu.be/ID?t=2041) — 60 min, what it covers
 Nothing loads from YouTube until a thumbnail is shown or play is tapped. The player has a YouTube-style ⚙ menu with a
@@ -465,16 +466,45 @@ quality picker that works (by player size, below) and asks the questions of the 
       $('.yp-set').remove();
     });
   }
+  /* A clip: one topic's few minutes, right under the topic on the page (the founder, 2026-10-31: "did not get what join
+     means — watch this", after a 60-minute part was too long to take in). In the page it is a quote that starts with 🎬:
+       > 🎬 **Didn't get DISTINCT?** [Baraa explains it · 6 min](https://youtu.be/ID?t=4101&end=4460)
+     It becomes one row — the question, the link's words, "▶ Watch · 6 min" — and plays in place, its part only, with the
+     page's video questions that fall inside it. Clips stay out of the panel of full videos. */
+  var CLIP_IC = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+  function clip(bq, a, quiz) {
+    var v = info(a);
+    if (!v) return;
+    var b = bq.querySelector('strong, b');
+    v.ask = b ? b.textContent.trim() : '';
+    v.say = a.textContent.replace(/\s*·\s*\d+\s*(min|мин)\.?\s*$/, '').trim();
+    v.len = v.end ? Math.max(1, Math.round((v.end - v.t) / 60)) + T(' min', ' мин') : '';
+    v.stops = (quiz[v.id] || []).filter(function (s) { return s.at >= v.t && (!v.end || s.at < v.end); }).sort(function (x, y) { return x.at - y.at; });
+    var card = document.createElement('div');
+    card.className = 'yt yt-clip';
+    card.innerHTML = '<div class="yt-clip-row"><span class="yt-clip-ic">' + CLIP_IC + '</span>' +
+      '<div class="yt-clip-t"><b class="yt-title">' + esc(v.ask) + '</b><span>' + esc(v.say) + '</span></div>' +
+      '<button type="button" class="yt-go">' + T('▶ Watch', '▶ Смотреть') + (v.len ? ' · ' + esc(v.len) : '') + '</button></div>' +
+      '<button type="button" class="yt-thumb" hidden></button>';
+    card.querySelector('.yt-go').onclick = function () { play(card, v); };
+    bq.parentNode.replaceChild(card, bq);
+    mark(card, v);
+  }
   function build() {
     var sec = document.querySelector('.markdown-section');
     if (!sec) return;
     var quiz = quizzes(sec);   // the ```videoquiz blocks leave the page in any case
-    if (sec.querySelector('.yt-panel')) return;
+    if (sec.querySelector('.yt-panel, .yt-clip')) return;
+    Array.prototype.forEach.call(sec.querySelectorAll('blockquote'), function (bq) {
+      var a = bq.querySelector('a[href*="youtu.be/"]');
+      if (a && /^\s*🎬/.test(bq.textContent)) clip(bq, a, quiz);
+    });
     var links = Array.prototype.filter.call(sec.querySelectorAll('a[href*="youtu.be/"]'), function (a) { return !a.closest('.yt-panel'); });
-    var vids = [];
+    var vids = [], host = null;
     links.forEach(function (a) {
       var v = info(a);
       if (!v) return;
+      if (!host) for (host = a; host.parentNode !== sec; host = host.parentNode) { /* the page block that holds the first video */ }
       var prev = vids[vids.length - 1];   // two videos on one line share the channel name
       if (!v.title && prev && prev.host === a.parentNode && prev.who) v.title = prev.who;
       v.host = a.parentNode; v.who = v.title;
@@ -489,17 +519,24 @@ quality picker that works (by player size, below) and asks the questions of the 
       pill.title = T('Watch: ', 'Смотреть: ') + v.topic;
       pill.onclick = function () {
         var card = sec.querySelector('.yt-panel .yt[data-i="' + i + '"]');
+        card.closest('.yt-panel').open = true;
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         play(card, v);
       };
       a.parentNode.replaceChild(pill, a);
     });
-    if (!vids.length) return;
-    var panel = document.createElement('section');
+    if (!vids.length) { if (sec.querySelector('.yt-clip')) changed(); return; }
+    /* the full videos: optional depth, so a closed box where the page lists them (it used to open the day as "Videos for
+       today", and a 60-minute part read as the first task, 2026-10-31); the clips under the topics come first */
+    var mins = vids.reduce(function (s, v) { return s + (v.end ? v.end - v.t : 0); }, 0) / 60, clips = sec.querySelectorAll('.yt-clip').length;
+    var panel = document.createElement('details');
     panel.className = 'yt-panel';
-    panel.innerHTML = '<div class="yt-panel-head"><span class="yt-panel-icon">▶</span><div><div class="yt-panel-title">' + T('Videos for today', 'Видео на сегодня') + '</div>' +
-      '<div class="yt-panel-sub">' + T(vids.length + ' video' + (vids.length > 1 ? 's' : '') + '. Each plays only its part of the video and stops at the end of that part. Free, optional.',
-        vids.length + ' видео. Каждое показывает только свой фрагмент ролика и останавливается в его конце. Бесплатно, по желанию.') + '</div></div></div>' +
+    panel.innerHTML = '<summary class="yt-panel-head"><span class="yt-panel-icon">▶</span><div><div class="yt-panel-title">' + T('Full videos — optional', 'Полные видео — по желанию') + '</div>' +
+      '<div class="yt-panel-sub">' + T(vids.length + ' video' + (vids.length > 1 ? 's' : '') + (mins ? ' · ' + Math.round(mins) + ' min' : '') + '. The page already teaches all of this. ' +
+          (clips ? 'Stuck on one topic? Use the short “Didn’t get…?” clip under it.' : 'Each plays only its part and stops at its end.'),
+        vids.length + ' видео' + (mins ? ' · ' + Math.round(mins) + ' мин' : '') + '. Страница уже объясняет всё это. ' +
+          (clips ? 'Непонятна одна тема? Смотрите короткий ролик «Остались вопросы…?» под ней.' : 'Каждое показывает только свой фрагмент и останавливается в его конце.')) +
+      '</div></div><span class="yt-panel-more" aria-hidden="true">›</span></summary>' +
       '<div class="yt-grid">' + vids.map(cardHtml).join('') + '</div>';
     Array.prototype.forEach.call(panel.querySelectorAll('.yt'), function (card) {
       var v = vids[Number(card.dataset.i)];
@@ -507,16 +544,7 @@ quality picker that works (by player size, below) and asks the questions of the 
       card.querySelector('.yt-go').onclick = function () { play(card, v); };
       mark(card, v);
     });
-    // under "Today in 3 lines" (its list), else before the first section heading; a Russian page keeps the English id
-    var h = Array.prototype.filter.call(sec.querySelectorAll('h2'), function (x) {
-      return x.id === 'today-in-3-lines' || /today in 3 lines|сегодня в 3 строк/i.test(x.textContent);
-    })[0];
-    var at = h && h.nextElementSibling && /^(UL|OL)$/.test(h.nextElementSibling.tagName) ? h.nextElementSibling : null;
-    if (at) at.insertAdjacentElement('afterend', panel);
-    else {
-      var first = sec.querySelector('h2');
-      if (first) sec.insertBefore(panel, first); else sec.appendChild(panel);
-    }
+    host.insertAdjacentElement('afterend', panel);   // right after the list that names them (the "Depth" list)
     changed();   // new blocks on the page: the frames count them
   }
   window.$docsify = window.$docsify || {};

@@ -447,6 +447,8 @@ Types by engine:
  "cleanup": "DROP TABLE IF EXISTS my_promises"}
 ```
 
+> 🎬 **Didn't get CREATE TABLE?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=5549&end=5915)
+
 ### INSERT — add rows
 
 **What it is.** **INSERT** adds new rows to a table. It never changes rows that are already there.
@@ -512,6 +514,10 @@ INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10
  "cleanup": "DELETE FROM my_promises"}
 ```
 
+> 🎬 **Didn't get INSERT with VALUES?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=6228&end=6744)
+
+> 🎬 **Didn't get INSERT from a SELECT?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=6744&end=7036)
+
 ### UPDATE … SET … WHERE — change rows
 
 **What it is.** **UPDATE** changes values in rows that already exist. `SET` says which columns get which new values. `WHERE` says which rows.
@@ -548,6 +554,8 @@ The `UPDATE` changes 1 row. The final `SELECT` shows call 1 with `outcome` *paid
  "cleanup": "UPDATE my_promises SET kept = NULL"}
 ```
 
+> 🎬 **Didn't get UPDATE?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=7038&end=7433)
+
 ### DELETE … WHERE — remove rows
 
 **What it is.** **DELETE** removes whole rows. `WHERE` says which ones. The table itself stays, with its columns.
@@ -579,6 +587,8 @@ Two calls are left. In the Database panel, `my_calls` now shows 2 rows.
 {"id": "w01d3-l23", "title": "DELETE: a promise cancelled", "intro": "One step.", "steps": [
   {"say": "Delete the promise of loan 4503 — only that row.", "hint": "SELECT * FROM my_promises WHERE loan_id = 4503;\nDELETE FROM my_promises WHERE loan_id = 4503;", "expect": "SELECT COUNT(*) * 10 + COALESCE(SUM(loan_id = 4503), 0) FROM my_promises", "want": 20}]}
 ```
+
+> 🎬 **Didn't get DELETE?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=7433&end=7662)
 
 ### ALTER TABLE — change the columns
 
@@ -614,6 +624,8 @@ Every existing row got the new column `note`, empty (NULL); the `UPDATE` filled 
 {"id": "w01d3-l24", "title": "ALTER TABLE: one more column", "intro": "One step.", "steps": [
   {"say": "Add a text column `note` to `my_promises`.", "hint": "ALTER TABLE my_promises ADD COLUMN note TEXT;", "expect": "SELECT COUNT(*) FROM pragma_table_info('my_promises') WHERE name = 'note'", "want": 1}]}
 ```
+
+> 🎬 **Didn't get ALTER TABLE?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=5915&end=6123)
 
 ### DROP TABLE — remove the whole table
 

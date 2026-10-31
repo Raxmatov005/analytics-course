@@ -73,6 +73,8 @@ Madina's board pack comes from the warehouse, loaded on 1 October; HR's number c
 {"type": "sort", "id": "w01d4-g1", "title": "OLTP or OLAP?", "q": "Put each line with the kind of database it describes.", "groups": {"OLTP — runs the business": ["inserts one payment in milliseconds", "normalised, many narrow tables", "holds the state now", "used by the app, cashiers and officers"], "OLAP — the warehouse": ["sums two years of payments by month", "facts and dimensions, de-normalised on purpose", "keeps a snapshot at every month-end", "feeds the board pack and dashboards"]}}
 ```
 
+> 🎬 **Didn't get the data warehouse?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=84153&end=84562)
+
 ### Facts and dimensions — the two kinds of warehouse table
 
 **What it is.** A warehouse is built from the two kinds of table you met on Day 1:

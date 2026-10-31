@@ -58,6 +58,8 @@ Seven rows: customer 1893 has seven loans, numbered in the order they were paid 
 {"id": "w03d2-l1", "kind": "number", "answer": 868, "dp": 0, "unit": "customers", "hint": "SELECT COUNT(*) FROM (SELECT ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursed_at, loan_id) AS loan_no FROM loans) t WHERE loan_no = 3;", "model": "868 customers have a loan numbered 3 — everyone with three or more loans (593 + 194 + 62 + 15 + 4)."}
 ```
 
+> 🎬 **Didn't get ROW_NUMBER?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=39482&end=39750)
+
 ### RANK and DENSE_RANK — what happens on a tie
 
 **What it is.** `RANK()` and `DENSE_RANK()` number rows like `ROW_NUMBER`, but rows with the **same value** (a tie, *равные значения*) get the **same number**. After a tie `RANK` skips numbers; `DENSE_RANK` does not.
@@ -117,6 +119,10 @@ Rows 1–4 (loans 448, 2680, 4162, 5855) are all `RANK` 1 and `DENSE_RANK` 1. Th
 {"type": "match", "id": "w03d2-g1", "title": "Four BNPL loans tie at 7 990 000", "pairs": [["ROW_NUMBER()", "1, 2, 3, 4 — then 5; always unique"], ["RANK()", "1, 1, 1, 1 — then 5; ties share, then a gap"], ["DENSE_RANK()", "1, 1, 1, 1 — then 2; ties share, no gap"], ["NTILE(4)", "four groups of (almost) equal count"], ["PERCENT_RANK()", "a position from 0 to 1"]]}
 ```
 
+> 🎬 **Didn't get RANK?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=39753&end=39995)
+
+> 🎬 **Didn't get DENSE_RANK?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=39997&end=40262)
+
 ### NTILE — cut the rows into n equal groups
 
 **What it is.** `NTILE(n)` splits the ordered rows into **n groups of (almost) equal count** and returns the group number, 1 to n. `NTILE(4)` gives quartiles, `NTILE(10)` deciles. When the rows do not divide evenly, the first groups get one row more.
@@ -160,6 +166,8 @@ ORDER BY quartile;
 ```task
 {"id": "w03d2-l2", "kind": "number", "answer": 3, "dp": 0, "unit": "rows", "hint": "10 ÷ 4 = 2 rows each, with 2 left over. The leftovers go to the first groups.", "model": "3. The groups are 3, 3, 2, 2 rows: the two leftover rows go to groups 1 and 2."}
 ```
+
+> 🎬 **Didn't get NTILE?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=41254&end=41630)
 
 ### LAG and LEAD — the previous and the next row
 
@@ -224,6 +232,8 @@ ORDER BY month;
 {"type": "bug", "id": "w03d2-g2", "title": "Find the broken line", "q": "Gaps between loan 1's payments. The result is sorted by date, yet prev_paid jumps around. Which line is wrong?", "code": "SELECT payment_id, paid_at,\n       LAG(paid_at) OVER (PARTITION BY loan_id) AS prev_paid\nFROM payments\nWHERE loan_id = 1\nORDER BY paid_at;", "answer": [1], "why": "LAG needs its own ORDER BY inside OVER (ORDER BY paid_at, payment_id). The ORDER BY at the end only sorts the display; it does not tell LAG which row is 'previous'."}
 ```
 
+> 🎬 **Didn't get LAG and LEAD?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=43169&end=43790)
+
 ### FIRST_VALUE and LAST_VALUE — the edges of the window, and the frame trap
 
 **What it is.** `FIRST_VALUE(column)` returns the value on the **first** row of the frame, `LAST_VALUE(column)` on the **last** row. Both write it on every row. They depend on the frame from Day 1 — and that is the trap.
@@ -254,6 +264,8 @@ WHERE loan_id = 1;
 ```task
 {"id": "w03d2-l3", "kind": "choice", "options": ["LAST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)", "FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at DESC)", "LAG(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)", "FIRST_VALUE(paid_at) OVER (PARTITION BY loan_id ORDER BY paid_at)"], "answer": 1, "explain": "Reverse the order and take the first value. LAST_VALUE with the default frame returns each row's own date; LAG is the previous row; FIRST_VALUE ascending is the earliest payment."}
 ```
+
+> 🎬 **Didn't get FIRST_VALUE and LAST_VALUE?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=44712&end=45062)
 
 ### Top-N per group — ROW_NUMBER in a CTE, filter outside
 
@@ -288,6 +300,8 @@ Change `rn <= 3` to `rn = 1` and the window to `PARTITION BY customer_id ORDER B
 ```game
 {"type": "build", "id": "w03d2-g5", "title": "The latest loan of every customer", "q": "Build the inner query: each customer's loans numbered from the newest.", "tokens": ["SELECT customer_id, loan_id,", "ROW_NUMBER() OVER (", "PARTITION BY customer_id", "ORDER BY disbursed_at DESC, loan_id DESC", ") AS rn", "FROM loans"], "distractors": ["WHERE rn = 1", "GROUP BY customer_id", "ORDER BY disbursed_at ASC"]}
 ```
+
+> 🎬 **Didn't get top-N per group?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=40350&end=40544)
 
 ### Duplicates — find them and keep one with ROW_NUMBER
 
@@ -337,6 +351,8 @@ WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY … ORDE
 ```task
 {"id": "w03d2-l4", "kind": "choice", "options": ["PARTITION BY payment_id", "PARTITION BY installment_id, paid_at, amount", "PARTITION BY loan_id", "PARTITION BY paid_at"], "answer": 1, "explain": "The partition is the definition of sameness. payment_id is unique, so it never repeats; loan_id or paid_at alone would call two honest payments duplicates."}
 ```
+
+> 🎬 **Didn't get finding duplicates with ROW_NUMBER?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=40928&end=41229)
 
 ### Roll rates with LAG — from one snapshot to the next
 
@@ -399,6 +415,8 @@ ORDER BY from_bucket, to_bucket;
 ```task
 {"id": "w03d2-l5", "kind": "number", "answer": 69.6, "dp": 1, "unit": "%", "hint": "The row from_bucket = '31-60', to_bucket = '61-90'.", "model": "69.6 % — 16 of 23 loans. In 31–60 more than two in three get worse; in 1–30 three in four cure."}
 ```
+
+> 🎬 **Didn't get comparing with the previous row (LAG)?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=43790&end=44186)
 
 ### Putting it together
 

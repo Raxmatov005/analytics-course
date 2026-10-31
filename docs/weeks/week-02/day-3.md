@@ -73,6 +73,8 @@ Customer 1 is *Eldor Olimov*. The `' '` in the middle is a text of one space; wi
 {"id": "w02d3-l2", "kind": "sql", "model": "SELECT last_name || ', ' || first_name AS name FROM customers WHERE customer_id = 1;", "note": "last name, then the text ', ' (comma and space), then the first name. SQL Server: last_name + ', ' + first_name."}
 ```
 
+> 🎬 **Didn't get CONCAT (joining texts)?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=17578&end=17764)
+
 ### UPPER and LOWER — one case for every value
 
 **What it is.** **UPPER** turns every letter into a capital; **LOWER** into a small letter. Other characters stay as they are. Same spelling on both engines.
@@ -118,6 +120,8 @@ SELECT COUNT(*) FROM customers WHERE first_name <> TRIM(first_name);   -- 18
 ```task
 {"id": "w02d3-l4", "kind": "number", "answer": 30, "dp": 0, "unit": "payments", "hint": "WHERE method <> TRIM(method).", "model": "30 — the 30 rows spelt 'CASH ' with a trailing space."}
 ```
+
+> 🎬 **Didn't get TRIM?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=17910&end=18244)
 
 ### LENGTH — how many characters
 
@@ -180,6 +184,8 @@ Applications arrive from 08:00 to 21:59; the busiest hour is 15:00 with 1 089 ap
 {"id": "w02d3-l6", "kind": "text", "answer": ["08", "8", "08:00", "8:00"], "hint": "MIN(SUBSTR(applied_at, 12, 2)) FROM applications.", "model": "'08' — applications run from 08:00 to 21:59. The text '08' sorts before '15' because both have two digits."}
 ```
 
+> 🎬 **Didn't get SUBSTRING (a piece of a text)?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=18756&end=19108)
+
 ### REPLACE — swap one text for another
 
 **What it is.** **REPLACE**`(text, 'old', 'new')` swaps **every** occurrence of `'old'` inside the text for `'new'`. `'new'` may be empty, which deletes `'old'`. Same spelling on both engines.
@@ -205,6 +211,8 @@ Five rows, the five real methods. `TRIM` and `LOWER` merge `Card`, `CASH `, `Pay
 ```task
 {"id": "w02d3-l7", "kind": "number", "answer": 180, "dp": 0, "unit": "rows", "hint": "COUNT(*) with that WHERE.", "model": "180: 57 Card + 36 Click + 30 PayMe + 30 'CASH ' + 27 bank transfer. Timur's card tile moved because 0.3 % of the payments were spelt differently. (SQL Server's default collation ignores case and trailing spaces; there add COLLATE Latin1_General_CS_AS to see the same 180.)"}
 ```
+
+> 🎬 **Didn't get REPLACE?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=18244&end=18455)
 
 ### INSTR — where a text starts
 
@@ -291,6 +299,8 @@ The average SME loan is 308.7 m UZS; the average Micro loan is 2.7 m. Divided by
 {"id": "w02d3-l10", "kind": "number", "answer": 51709667.86, "dp": 2, "unit": "", "hint": "Two digits after the point; the third digit, 8, rounds up.", "model": "51 709 667.86 — the average principal of all loans, ready to print."}
 ```
 
+> 🎬 **Didn't get ROUND?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=19118&end=19298)
+
 ### Integer and decimal division
 
 **What it is.** Both engines divide two whole numbers **as whole numbers**: `7917 / 14000` is **0**. The fraction is cut off, silently. If one side is a decimal number, the result is a decimal.
@@ -345,6 +355,8 @@ FROM loans;
 ```task
 {"id": "w02d3-l11", "kind": "number", "answer": -2, "dp": 0, "unit": "", "hint": "CAST cuts the fraction off; it does not round.", "model": "−2: the .99 is cut off toward zero. ROUND(-2.99) would give −3."}
 ```
+
+> 🎬 **Didn't get CAST?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=23440&end=23737)
 
 ### ABS — the size of a number without its sign
 
@@ -426,6 +438,8 @@ SELECT '2026-9-5' < '2026-10-01';
 {"id": "w02d3-l14", "kind": "number", "answer": 129, "dp": 0, "unit": "applications", "hint": "WHERE date(applied_at) = '2026-10-01' — or the half-open range from 2026-10-01 to 2026-10-02.", "model": "129 applications on 1 October — about six times a normal September day (621 ÷ 30 ≈ 21), a question for Timur. WHERE applied_at = '2026-10-01' would find none: the stored value has a time."}
 ```
 
+> 🎬 **Didn't get what a date is and where today's date comes from?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=19367&end=19838)
+
 ### strftime — the parts of a date
 
 **What it is.** **strftime**`('format', date)` returns parts of a date as **text**: `%Y` year, `%m` month, `%d` day, `%H` hour, `%w` weekday (0 = Sunday), and any combination such as `'%Y-%m'`. SQL Server has a function per part: `YEAR(d)`, `MONTH(d)`, `DAY(d)`, `DATEPART(hour, d)`, `DATEPART(weekday, d)`, `FORMAT(d, 'yyyy-MM')`.
@@ -456,6 +470,10 @@ Loans are paid out evenly on all seven days, about 1 100 each, Sundays included:
 ```task
 {"id": "w02d3-l15", "kind": "number", "answer": 4, "dp": 0, "unit": "", "hint": "0 is Sunday, 1 Monday …", "model": "'4' — Thursday. (It comes back as text; the box reads it as the number 4.)"}
 ```
+
+> 🎬 **Didn't get year, month and day of a date?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=19886&end=20072)
+
+> 🎬 **Didn't get DATEPART (other parts of a date)?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=20077&end=20425)
 
 ### Date arithmetic — days between two dates, months added to a date
 
@@ -491,6 +509,10 @@ Loan 1 was paid out on 2025-03-28, 552 days before the as-of date. `julianday` c
 ```task
 {"id": "w02d3-l16", "kind": "text", "answer": ["2026-09-01", "01.09.2026", "1 September 2026"], "hint": "September has 30 days.", "model": "'2026-09-01'. Tomorrow's FPD30 uses exactly this date: the base is loans whose first instalment fell due on or before it."}
 ```
+
+> 🎬 **Didn't get adding to a date (DATEADD)?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=23738&end=24029)
+
+> 🎬 **Didn't get days between two dates (DATEDIFF)?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=24031&end=24625)
 
 ### Filtering a period — the half-open range
 

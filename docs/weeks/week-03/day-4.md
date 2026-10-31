@@ -52,6 +52,8 @@ SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;
 {"id": "w03d4-l1", "kind": "choice", "options": ["52 850 — the view stored its rows when it was created", "52 851 — the view runs its query again on today's rows", "An error — the view must be re-created after every change", "52 876 — the view counts the raw table"], "answer": 1, "explain": "A view stores the query, not the rows. Each read runs it on the current data, so the new payment is there (unless it repeats an earlier one — then the dedup removes it)."}
 ```
 
+> 🎬 **Didn't get views?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=56724&end=57243)
+
 ### CREATE VIEW and DROP VIEW
 
 **What it is.** `CREATE VIEW name AS SELECT …` saves a query under a name. `DROP VIEW name` removes the name; the tables underneath are not touched. A view cannot be edited in place in SQLite: you drop it and create it again.
@@ -92,6 +94,10 @@ SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;
 ```task
 {"id": "w03d4-l2", "kind": "choice", "options": ["ALTER VIEW my_v_written_off ADD COLUMN risk_grade", "DROP VIEW my_v_written_off, then CREATE VIEW again with the new column", "UPDATE my_v_written_off SET risk_grade = …", "Nothing — a view picks up new columns of loans by itself"], "answer": 1, "explain": "SQLite has no ALTER VIEW: drop the view and create it with the new SELECT. SQL Server can do it in one step with CREATE OR ALTER VIEW."}
 ```
+
+> 🎬 **Didn't get CREATE VIEW?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=57243&end=57796)
+
+> 🎬 **Didn't get changing and dropping a view?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=57796&end=58040)
 
 ### A view over a view — layers
 
@@ -189,6 +195,10 @@ The first table holds all 52 850 clean payments and will not change when `paymen
 {"id": "w03d4-l4", "kind": "number", "answer": 3158, "dp": 0, "unit": "payments", "hint": "SELECT COUNT(*) FROM tmp_sep — after running the box above.", "model": "3 158 — September's de-duplicated payments, the same number as the 2026-09 row of my_v_paid_monthly."}
 ```
 
+> 🎬 **Didn't get CREATE TABLE AS (CTAS)?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=60042&end=60471)
+
+> 🎬 **Didn't get temporary tables?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=61453&end=61866)
+
 ### When a view, when a table
 
 **What it is.** The choice between saving the **query** (view) and saving the **result** (table). A view is always fresh and costs the query every time; a table is fast to read and frozen.
@@ -226,6 +236,8 @@ SELECT (SELECT COUNT(*) FROM my_v_written_off) AS view_rows,
 ```game
 {"type": "sort", "id": "w03d4-g1", "title": "View, table or temp table?", "q": "Tap each situation, then what you would build for it.", "groups": {"View": ["Power BI's loan-status tile, which must show today's DPD", "One de-duplication rule that every report must share"], "Materialised table (CTAS / SELECT INTO)": ["The September month-end pack, frozen once it is sent to the board", "A 12-second query that 40 people open every morning, refreshed nightly"], "Temp table": ["An intermediate result reused five times in one long script, gone when you disconnect"]}}
 ```
+
+> 🎬 **Didn't get when to store a result as a table?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=60633&end=61179)
 
 ### Indexes — the phone book
 
@@ -275,6 +287,10 @@ WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);
 {"type": "sort", "id": "w03d4-g2", "title": "Can the index help?", "q": "Each column in these filters has an index. Tap a filter, then where it belongs.", "groups": {"Index helps (SEARCH)": ["WHERE installment_id = 59838", "WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01'", "JOIN payments p ON p.installment_id = i.installment_id"], "Index cannot help (SCAN)": ["WHERE strftime('%Y-%m', due_date) = '2026-09'", "WHERE LOWER(method) = 'card'", "WHERE method LIKE '%card'"]}}
 ```
 
+> 🎬 **Didn't get indexes?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=66222&end=66780)
+
+> 🎬 **Didn't get how an index speeds up a search?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=66780&end=67314)
+
 ### Reading EXPLAIN QUERY PLAN — SCAN or SEARCH
 
 **What it is.** The **execution plan** (*план выполнения*) is how the engine intends to run your query: which tables it reads, in which order, with which index. `EXPLAIN QUERY PLAN` in front of a query prints it in SQLite, one line per step. The word to look for on a big table: **SCAN** (every row) or **SEARCH** (through an index).
@@ -314,6 +330,10 @@ Same answer, different work. In SQL Server: *Display Estimated Execution Plan* (
 ```game
 {"type": "bug", "id": "w03d4-g3", "title": "Find the slow line", "q": "due_date has an index, yet the plan says SCAN. Which line turns the SEARCH into a SCAN?", "code": "CREATE INDEX ix_installments_due ON installments (due_date);\nSELECT COUNT(*)\nFROM installments\nWHERE strftime('%Y-%m', due_date) = '2026-09';", "answer": [3], "why": "The engine cannot look up a value it must compute for every row. WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01' gives the same count with a SEARCH."}
 ```
+
+> 🎬 **Didn't get the execution plan?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=73231&end=73500)
+
+> 🎬 **Didn't get scan or seek in a plan?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=73848&end=74215)
 
 ### The habits that make queries fast
 
@@ -358,6 +378,10 @@ Both say 3 305 instalments due in September. Only the second can use `ix_install
 ```game
 {"type": "sort", "id": "w03d4-g5", "title": "Fast or slow?", "q": "Tap each habit, then whether it makes a query faster or slower.", "groups": {"Faster": ["WHERE paid_at >= '2026-09-01' AND paid_at < '2026-10-01'", "SELECT loan_id, bucket, outstanding FROM v_loan_status", "UNION ALL of two monthly results", "An index on payments.installment_id before joining it"], "Slower (or wrong)": ["WHERE YEAR(paid_at) = 2026", "SELECT * into Power BI", "SELECT DISTINCT to remove rows a join multiplied", "A correlated subquery per row of 92 193 instalments"]}}
 ```
+
+> 🎬 **Didn't get fast filtering and selecting?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=78224&end=78804)
+
+> 🎬 **Didn't get fast joins?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=78804&end=79312)
 
 ### Putting it together
 

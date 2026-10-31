@@ -37,6 +37,10 @@ FROM customers;
 {"id": "w02d4-l1", "kind": "number", "answer": 3601, "dp": 0, "unit": "loans", "hint": "COUNT(*) - COUNT(closed_at) FROM loans.", "model": "3 601: 3 352 active + 44 default + 190 written off = 3 586 that are not closed, plus 15 closed loans with no closing date — Friday asks about those 15."}
 ```
 
+> 🎬 **Didn't get NULL (what it is)?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=25146&end=25316)
+
+> 🎬 **Didn't get NULL, an empty string and a space?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=28286&end=28696)
+
 ### Comparing with NULL — IS NULL, never = NULL
 
 **What it is.** NULL is not equal to anything, not even to another NULL. Any comparison with NULL (`=`, `<>`, `<`, `>`) gives *unknown*, and `WHERE` keeps only the rows where the condition is *true*. The only tests that work are **IS NULL** and **IS NOT NULL**.
@@ -62,6 +66,8 @@ The 356 rows leave *every* comparison: `monthly_income > x` and `monthly_income 
 ```game
 {"id": "w02d4-g1", "type": "bug", "title": "Where did the missing incomes go?", "q": "Madina wants the number of customers with no income on file. This returns 0. Tap the wrong line.", "code": "SELECT COUNT(*) AS no_income\nFROM customers\nWHERE monthly_income = NULL;", "answer": [2], "why": "A comparison with NULL is unknown, never true, so no row passes. Write WHERE monthly_income IS NULL → 356."}
 ```
+
+> 🎬 **Didn't get IS NULL and IS NOT NULL?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=27704&end=27930)
 
 ### NULL in arithmetic — anything combined with NULL is NULL
 
@@ -89,6 +95,8 @@ Customer 1 earns 3 894 708 a month, 46 736 496 a year. For the 356 customers wit
 ```task
 {"id": "w02d4-l2", "kind": "choice", "options": ["5", "0", "NULL", "An error"], "answer": 2, "explain": "Any arithmetic with NULL gives NULL. COALESCE(x, 0) + 5 gives 5 when 0 is the right meaning of 'missing'."}
 ```
+
+> 🎬 **Didn't get NULL in calculations?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=26219&end=26589)
 
 ### NULL in aggregates — COUNT, SUM and AVG skip it
 
@@ -121,6 +129,8 @@ The average income is 15.2 m UZS — of the 94 % of customers who have an income
 {"id": "w02d4-g2", "type": "sort", "title": "Who sees the 356 empty incomes?", "groups": {"Includes the 356 empty rows": ["COUNT(*)", "WHERE monthly_income IS NULL", "AVG(COALESCE(monthly_income, 0))"], "Leaves the 356 out": ["COUNT(monthly_income)", "AVG(monthly_income)", "WHERE monthly_income <> 5000000"]}}
 ```
 
+> 🎬 **Didn't get NULL in SUM, AVG and COUNT?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=25999&end=26219)
+
 ### COALESCE and IFNULL — a value instead of NULL
 
 **What it is.** **COALESCE**`(a, b, c, …)` returns the first argument that is not NULL. It is standard SQL and works on both engines. **IFNULL**`(a, b)` (SQLite) and **ISNULL**`(a, b)` (SQL Server) are two-argument versions of the same thing. Prefer `COALESCE`; it travels.
@@ -152,6 +162,10 @@ Wednesday's DPD query uses `COALESCE(SUM(p.amount), 0)`: an instalment with no p
 {"id": "w02d4-l3", "kind": "number", "answer": 0, "dp": 0, "unit": "", "hint": "The first argument that is not NULL — 0 is a value.", "model": "0. COALESCE stops at the first non-NULL argument; 0 is a real value, so the 5 is never reached."}
 ```
 
+> 🎬 **Didn't get ISNULL (IFNULL)?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=25312&end=25580)
+
+> 🎬 **Didn't get COALESCE?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=25580&end=25999)
+
 ### NULLIF — safe division
 
 **What it is.** **NULLIF**`(a, b)` returns NULL when `a = b`, and `a` otherwise. Its one job is **safe division**: `x / NULLIF(y, 0)` returns NULL instead of failing when `y` is 0.
@@ -178,6 +192,8 @@ Fergana Central approves 72.8 % of the applications it decided; Nukus Central 68
 ```task
 {"id": "w02d4-l4", "kind": "choice", "options": ["NULL", "0", "10", "An error"], "answer": 0, "explain": "NULLIF(0, 0) is NULL, and 10 / NULL is NULL — on both engines, with no error."}
 ```
+
+> 🎬 **Didn't get NULLIF?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=27340&end=27704)
 
 ### Searched CASE — a value chosen by conditions
 
@@ -214,6 +230,10 @@ Five bands that add up to 6 040. Order matters: a customer with 3 m matches `< 5
 {"id": "w02d4-l5", "kind": "choice", "options": ["NULL", "0", "The value of the last THEN", "An empty text ''"], "answer": 0, "explain": "A CASE without ELSE returns NULL for unmatched rows — they form a NULL group in a GROUP BY. Write the ELSE you mean."}
 ```
 
+> 🎬 **Didn't get CASE ... WHEN ... THEN?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=29270&end=29857)
+
+> 🎬 **Didn't get CASE for making categories?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=29902&end=30267)
+
 ### Simple CASE — a lookup on one value
 
 **What it is.** A **simple CASE** compares one expression with a list of values: `CASE expression WHEN value1 THEN result1 WHEN value2 THEN result2 ELSE other END`. It is a short way to write a lookup; it can only test equality.
@@ -241,6 +261,10 @@ Three readable labels for the three channel codes; the counts are Tuesday's.
 ```task
 {"id": "w02d4-l6", "kind": "sql", "model": "SELECT code, CASE code WHEN 'MICRO' THEN 'Micro' WHEN 'CONS' THEN 'Consumer' ELSE code END AS short_name FROM products;", "note": "Five rows: Micro, Consumer, BNPL, AUTO, SME. ELSE code keeps the other codes as they are."}
 ```
+
+> 🎬 **Didn't get CASE for mapping values?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=30267&end=30620)
+
+> 🎬 **Didn't get the short form of CASE?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=30620&end=30796)
 
 ### CASE in ORDER BY — a sort order of your own
 
@@ -314,6 +338,8 @@ This spelling is portable; SQLite's `SUM(cond)` and SQL Server's `IIF` from Tues
 {"id": "w02d4-g3", "type": "cloze", "title": "Count where", "text": "SELECT p.name, SUM(CASE {{0}} l.status = 'active' {{1}} 1 {{2}} 0 {{3}}) AS active FROM loans l JOIN products p ON p.product_id = l.product_id {{4}} p.name;", "blanks": [["WHEN"], ["THEN"], ["ELSE"], ["END"], ["GROUP BY"]], "distractors": ["IF", "WHERE", "COUNT"]}
 ```
 
+> 🎬 **Didn't get CASE inside SUM and COUNT?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=31024&end=31308)
+
 ### The anti-join — why IS NULL finds the rows with no partner
 
 **What it is.** Monday's anti-join, now with the reason it works. `LEFT JOIN` fills the right side with NULL where nothing matched. `WHERE right.key IS NULL` keeps exactly those rows, because a key column is never NULL on a *matched* row.
@@ -340,6 +366,10 @@ WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;
 ```task
 {"id": "w02d4-l8", "kind": "choice", "options": ["FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.action_id IS NULL", "FROM loans l JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.action_id IS NULL", "FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.outcome = NULL", "FROM loans l WHERE l.loan_id <> NULL"], "answer": 0, "explain": "LEFT keeps every loan; the action's key is NULL only where no action matched — 7 545 loans. The INNER version returns 0; = NULL is never true."}
 ```
+
+> 🎬 **Didn't get the left anti-join?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=12468&end=12708)
+
+> 🎬 **Didn't get the anti-join (rows with no partner)?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=27930&end=28282)
 
 ### The LEFT JOIN that turns into an INNER JOIN — ON vs WHERE
 

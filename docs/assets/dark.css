@@ -858,7 +858,7 @@ html[data-theme="dark"] .pic-chart .pc-dot { fill: var(--brand-text); }
 html[data-theme="dark"] .pic-chart .miss { stroke: #eb718b; fill: #eb718b; }
 html[data-theme="dark"] .pic-chart .pc-l.miss { stroke: none; }
 
-/* ---------- videos.css (31 rules) ---------- */
+/* ---------- videos.css (35 rules) ---------- */
 html[data-theme="dark"] .yp-screen { border-radius: 12px 12px 0 0; }
 html[data-theme="dark"] .yp-bar { border-radius: 0 0 12px 12px; }
 html[data-theme="dark"] .yp.yp-max .yp-screen, html[data-theme="dark"] .yp.yp-max .yp-bar { border-radius: 0; }
@@ -890,6 +890,10 @@ html[data-theme="dark"] .yp-quiz-acts button + button { background: transparent;
 html[data-theme="dark"] .yp-quiz-acts button:focus-visible { outline: 3px solid rgba(239, 68, 68, 0.6); outline-offset: 2px; }
 html[data-theme="dark"] .yp-done-q { color: #e2e8f0; }
 html[data-theme="dark"] .yt.yt-done .yt-title::before { color: var(--ok, #16a34a); }
+html[data-theme="dark"] .yt.yt-clip { border-color: #532121; background: #2d1212; }
+html[data-theme="dark"] .yt-clip-ic { border-radius: 10px; background: #dc2626; color: #ffffff; }
+html[data-theme="dark"] .yt-clip-t span { color: var(--muted); }
+html[data-theme="dark"] .yt-panel-more { color: var(--muted); }
 
 /* ---------- pyrun.css (13 rules) ---------- */
 html[data-theme="dark"] .py-box { border: 1px solid var(--line); border-radius: 14px; background: #161c22; }

@@ -52,6 +52,8 @@ LIMIT 5;
 {"type": "cloze", "id": "w01d2-g1", "title": "Bekzod's Auto loans, biggest first: fill the skeleton", "text": "SELECT {{0}} FROM {{1}} WHERE {{2}} ORDER BY {{3}};", "blanks": [["loan_id, principal"], ["loans"], ["product_id = 4"], ["principal DESC"]], "distractors": ["customers", "principal = NULL", "GROUP BY product_id"]}
 ```
 
+> 🎬 **Didn't get the order of the clauses in a query?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=5008&end=5262)
+
 ### SELECT — choose the columns
 
 **What it is.** **SELECT** (*выбрать*) lists the columns you want, separated by commas, in the order you want them. `SELECT *` means every column. `SELECT COUNT(*)` returns one number: how many rows there are.
@@ -84,6 +86,8 @@ SELECT COUNT(*) FROM customers;    -- one row, one number
 ```game
 {"type": "build", "id": "w01d2-g4", "title": "Choose the columns", "q": "The id, first name and region of every customer.", "tokens": ["SELECT", "customer_id,", "first_name,", "region", "FROM", "customers"], "distractors": ["loans", "WHERE", "*"]}
 ```
+
+> 🎬 **Didn't get SELECT and FROM?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=2139&end=2627)
 
 ### Aliases — AS renames a column in the result
 
@@ -140,6 +144,8 @@ SELECT DISTINCT channel, status FROM applications;
 {"id": "w01d2-l2", "kind": "number", "answer": 4, "dp": 0, "unit": "values", "hint": "SELECT DISTINCT outcome FROM collections_actions; then count the rows.", "model": "4: promise_to_pay, refused, no_answer, paid."}
 ```
 
+> 🎬 **Didn't get DISTINCT?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=4495&end=4701)
+
 ### ORDER BY — sort the rows
 
 **What it is.** **ORDER BY** (*сортировка*) sorts the result by one or more columns. `ASC` means smallest first and is the default. `DESC` means biggest first.
@@ -171,6 +177,8 @@ ORDER BY product_id, principal DESC;
 {"id": "w01d2-l3", "kind": "choice", "options": ["Sorts by region A→Z; inside each region, the highest income first", "Sorts by income only; region is ignored", "Sorts both columns from the highest down", "Sorts by region Z→A, then income"], "answer": 0, "explain": "DESC belongs to monthly_income only. region has no word after it, so it uses the default ASC (A→Z)."}
 ```
 
+> 🎬 **Didn't get ORDER BY?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=2984&end=3512)
+
 ### LIMIT and TOP — only the first N rows
 
 **What it is.** **LIMIT** returns at most N rows. It goes at the very end of the query. SQL Server writes the same thing as **TOP N** right after `SELECT`. This is the one place this week where the two engines spell a query differently.
@@ -195,6 +203,8 @@ SELECT application_id, requested_amount FROM applications ORDER BY requested_amo
 ```task
 {"id": "w01d2-l4", "kind": "number", "answer": 6338, "dp": 0, "hint": "ORDER BY applied_at DESC, then LIMIT 1.", "model": "6338 — applied on 2026-10-01 at 21:36, the evening of the data's as-of date."}
 ```
+
+> 🎬 **Didn't get TOP (LIMIT)?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=4700&end=5008)
 
 ### WHERE — keep only the rows you want
 
@@ -222,6 +232,8 @@ WHERE status = 'default';     -- column  operator  value
 {"type": "build", "id": "w01d2-g5", "title": "Keep only some rows", "q": "The id and principal of every loan whose status is written_off.", "tokens": ["SELECT", "loan_id, principal", "FROM", "loans", "WHERE", "status = 'written_off'"], "distractors": ["status = written_off", "ORDER BY", "customers"]}
 ```
 
+> 🎬 **Didn't get WHERE?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=2619&end=2986)
+
 ### The operators = and <> — equal and not equal
 
 **What it is.** `=` keeps the rows where the column **equals** the value. `<>` keeps the rows where it **does not equal** it (`!=` means the same).
@@ -241,6 +253,8 @@ SELECT COUNT(*) FROM applications WHERE channel <> 'branch';
 ```task
 {"id": "w01d2-l5", "kind": "number", "answer": 1821, "dp": 0, "unit": "loans", "hint": "WHERE risk_grade = 'A' — the letter in single quotes.", "model": "1 821 loans have risk grade A."}
 ```
+
+> 🎬 **Didn't get the = and <> operators?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=7736&end=8062)
 
 ### The operators >, <, >=, <= — bigger and smaller
 
@@ -270,6 +284,8 @@ SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01';
 {"id": "w01d2-l6", "kind": "number", "answer": 538, "dp": 0, "unit": "loans", "hint": "\"36 or longer\" includes 36: >=.", "model": "538 loans have term_months >= 36."}
 ```
 
+> 🎬 **Didn't get the >, <, >=, <= operators?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=8060&end=8234)
+
 ### BETWEEN — a range with both ends included
 
 **What it is.** **BETWEEN a AND b** keeps the values from `a` to `b`, **both ends included**. It is a short way to write `>= a AND <= b`.
@@ -293,6 +309,8 @@ SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;
 {"id": "w01d2-l7", "kind": "number", "answer": 838, "dp": 0, "unit": "applications", "hint": "WHERE requested_amount BETWEEN 10000000 AND 20000000 — numbers without spaces.", "model": "838 applications."}
 ```
 
+> 🎬 **Didn't get BETWEEN?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=8900&end=9168)
+
 ### IN — equal to one of a list
 
 **What it is.** **IN (…)** keeps the rows whose value equals **any** value in the list. It is a short way to write several `=` joined by `OR`.
@@ -313,6 +331,8 @@ SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);
 ```task
 {"id": "w01d2-l8", "kind": "number", "answer": 2455, "dp": 0, "unit": "customers", "hint": "WHERE segment IN ('affluent', 'sme') — text values in quotes, separated by commas.", "model": "2 455 customers; the other 3 585 are mass."}
 ```
+
+> 🎬 **Didn't get IN?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=9169&end=9418)
 
 ### LIKE — a text pattern
 
@@ -343,6 +363,8 @@ SELECT code FROM products WHERE code LIKE '____';
 ```task
 {"id": "w01d2-l9", "kind": "number", "answer": 317, "dp": 0, "unit": "customers", "hint": "WHERE last_name LIKE 'Abdu%' — % after the letters.", "model": "317 customers (Abdullaev, Abdullaeva, Abdurakhmonov…)."}
 ```
+
+> 🎬 **Didn't get LIKE?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=9418&end=10046)
 
 ### IS NULL — the empty cell
 
@@ -415,6 +437,8 @@ SELECT COUNT(*) FROM loans WHERE status NOT IN ('closed', 'written_off');
 ```task
 {"id": "w01d2-l10", "kind": "choice", "options": ["(a AND b) OR c", "a AND (b OR c)", "a, b and c must all be true", "It refuses to run without brackets"], "answer": 0, "explain": "AND binds tighter than OR, so a AND b is grouped first. If you mean a AND (b OR c), write the brackets."}
 ```
+
+> 🎬 **Didn't get AND, OR, NOT?** [Baraa explains it · 11 min](https://youtu.be/SSKVgrwhzus?t=8234&end=8901)
 
 ### Text, numbers and dates in conditions
 

@@ -282,6 +282,10 @@ A **tuple** (*кортеж*) looks like a list in round brackets and cannot be c
 {"id": "w05d1-l6", "kind": "python", "starter": "principals = [31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]   # loans 1–5\n\n# your code: the average principal of these five loans\n", "answer": 20182000, "dp": 0, "hint": "sum(principals) / len(principals).", "model": "print(sum(principals) / len(principals))     # 20182000.0\n\nThe average is 20.2 m, yet two of the five loans are under 3 m: a few large loans pull the mean up. Week 3's mean vs median, on five numbers."}
 ```
 
+> 🎬 **Didn't get lists?** [Lists explains it · 7 min](https://youtu.be/wUSDVGivd-8?t=5668&end=6106)
+
+> 🎬 **Didn't get slicing a list?** [Lists explains it · 5 min](https://youtu.be/wUSDVGivd-8?t=6106&end=6390)
+
 ### Dicts — a lookup table key → value
 
 **What it is.** A **dict** (*словарь*) stores pairs **key → value** inside `{ }`. You look a value up by its key, not by a position. It is week 4's `XLOOKUP` in one line.
@@ -572,6 +576,8 @@ print(st.median([31_150_000, 40_060_000, 1_590_000, 2_520_000, 25_590_000]))
 ```task
 {"id": "w05d1-l11", "kind": "python", "starter": "from datetime import date\n\n# your code: how many days from loan 4's disbursement (2026-08-23) to the as-of (2026-10-01)?\n", "answer": 39, "dp": 0, "hint": "(date(2026, 10, 1) - date(2026, 8, 23)).days", "model": "print((date(2026, 10, 1) - date(2026, 8, 23)).days)     # 39\n\nThe difference of two dates is a timedelta; .days turns it into a number."}
 ```
+
+> 🎬 **Didn't get modules and import?** [Lists explains it · 10 min](https://youtu.be/wUSDVGivd-8?t=11569&end=12155)
 
 ### Reading a CSV with the csv module
 

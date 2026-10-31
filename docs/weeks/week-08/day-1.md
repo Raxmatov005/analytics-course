@@ -365,6 +365,8 @@ GROUP BY cohort ORDER BY cohort;
 {"id": "w08d1-l5", "kind": "number", "answer": 148, "dp": 0, "unit": "customers", "hint": "Run the query above and read the 2025-06 row.", "model": "148 customers took their first Nur loan in June 2025."}
 ```
 
+> 🎬 **Didn't get cohorts?** [A short explanation · 5 min](https://youtu.be/uYYh69Nf-34?t=1771&end=2083)
+
 ### The retention table and the retention curve
 
 **What it is.** A **retention table** puts cohorts in rows and the age N in columns; each cell is that cohort's retention at that age. A cell exists only when **every** customer of the cohort has had N months; otherwise it stays blank. A **retention curve** draws one row of the table as a line over N.
@@ -455,6 +457,8 @@ Each line is one cohort. At one month, 2024Q1 starts at 6.0 % and 2026Q1 at 22.8
 ```task
 {"id": "w08d1-l6", "kind": "number", "answer": 36.1, "dp": 1, "unit": "%", "hint": "Row 2025Q4, column m6.", "model": "36.1 %. Its m12 cell is blank: the cohort's December customers reach 12 months only in December 2026."}
 ```
+
+> 🎬 **Didn't get the cohort retention table?** [A short explanation · 5 min](https://youtu.be/uYYh69Nf-34?t=2083&end=2356)
 
 ### Churn — the customers who leave
 

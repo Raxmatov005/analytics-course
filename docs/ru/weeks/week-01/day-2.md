@@ -52,6 +52,8 @@ LIMIT 5;
 {"type": "cloze", "id": "w01d2-g1", "title": "Auto-кредиты Бекзода, сначала крупные: заполните скелет", "text": "SELECT {{0}} FROM {{1}} WHERE {{2}} ORDER BY {{3}};", "blanks": [["loan_id, principal"], ["loans"], ["product_id = 4"], ["principal DESC"]], "distractors": ["customers", "principal = NULL", "GROUP BY product_id"]}
 ```
 
+> 🎬 **Остались вопросы про порядок частей запроса?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=5008&end=5262)
+
 ### SELECT — выбираем столбцы :id=select-choose-the-columns
 
 **Что это.** **SELECT** перечисляет нужные столбцы через запятую, в нужном порядке. `SELECT *` означает все столбцы. `SELECT COUNT(*)` возвращает одно число: сколько строк.
@@ -85,6 +87,8 @@ SELECT COUNT(*) FROM customers;    -- одна строка, одно число
 ```game
 {"type": "build", "id": "w01d2-g4", "title": "Выберите столбцы", "q": "id, имя и регион каждого клиента.", "tokens": ["SELECT", "customer_id,", "first_name,", "region", "FROM", "customers"], "distractors": ["loans", "WHERE", "*"]}
 ```
+
+> 🎬 **Остались вопросы про SELECT и FROM?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=2139&end=2627)
 
 ### Псевдонимы — AS переименовывает столбец в результате :id=aliases-as-renames-a-column-in-the-result
 
@@ -141,6 +145,8 @@ SELECT DISTINCT channel, status FROM applications;
 {"id": "w01d2-l2", "kind": "number", "answer": 4, "dp": 0, "unit": "значения", "hint": "SELECT DISTINCT outcome FROM collections_actions; затем посчитайте строки.", "model": "4: promise_to_pay, refused, no_answer, paid."}
 ```
 
+> 🎬 **Остались вопросы про DISTINCT?** [Baraa объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=4495&end=4701)
+
 ### ORDER BY — сортируем строки :id=order-by-sort-the-rows
 
 **Что это.** **ORDER BY** (*сортировка*) сортирует результат по одному или нескольким столбцам. `ASC` — сначала меньшие, это значение по умолчанию. `DESC` — сначала большие.
@@ -172,6 +178,8 @@ ORDER BY product_id, principal DESC;
 {"id": "w01d2-l3", "kind": "choice", "options": ["Сортирует по региону от A до Z; внутри каждого региона — сначала самый высокий доход", "Сортирует только по доходу; регион не учитывается", "Сортирует оба столбца от большего к меньшему", "Сортирует по региону от Z до A, затем по доходу"], "answer": 0, "explain": "DESC относится только к monthly_income. После region ничего не написано, поэтому для него действует ASC по умолчанию (от A до Z)."}
 ```
 
+> 🎬 **Остались вопросы про ORDER BY?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=2984&end=3512)
+
 ### LIMIT и TOP — только первые N строк :id=limit-and-top-only-the-first-n-rows
 
 **Что это.** **LIMIT** возвращает не больше N строк. Его пишут в самом конце запроса. SQL Server пишет то же самое как **TOP N** сразу после `SELECT`. Это единственное место на этой неделе, где две СУБД пишут запрос по-разному.
@@ -196,6 +204,8 @@ SELECT application_id, requested_amount FROM applications ORDER BY requested_amo
 ```task
 {"id": "w01d2-l4", "kind": "number", "answer": 6338, "dp": 0, "hint": "ORDER BY applied_at DESC, затем LIMIT 1.", "model": "6338 — подана 2026-10-01 в 21:36, вечером в день среза данных."}
 ```
+
+> 🎬 **Остались вопросы про TOP (LIMIT)?** [Baraa объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=4700&end=5008)
 
 ### WHERE — оставляем только нужные строки :id=where-keep-only-the-rows-you-want
 
@@ -223,6 +233,8 @@ WHERE status = 'default';     -- столбец  оператор  значен�
 {"type": "build", "id": "w01d2-g5", "title": "Оставьте только часть строк", "q": "id и основной долг каждого кредита со статусом written_off.", "tokens": ["SELECT", "loan_id, principal", "FROM", "loans", "WHERE", "status = 'written_off'"], "distractors": ["status = written_off", "ORDER BY", "customers"]}
 ```
 
+> 🎬 **Остались вопросы про WHERE?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=2619&end=2986)
+
 ### Операторы = и <> — равно и не равно :id=the-operators-and-equal-and-not-equal
 
 **Что это.** `=` оставляет строки, где столбец **равен** значению. `<>` оставляет строки, где он **не равен** ему (`!=` означает то же самое).
@@ -242,6 +254,8 @@ SELECT COUNT(*) FROM applications WHERE channel <> 'branch';
 ```task
 {"id": "w01d2-l5", "kind": "number", "answer": 1821, "dp": 0, "unit": "кредитов", "hint": "WHERE risk_grade = 'A' — буква в одинарных кавычках.", "model": "У 1 821 кредита риск-класс A."}
 ```
+
+> 🎬 **Остались вопросы про операторы = и <>?** [Baraa объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=7736&end=8062)
 
 ### Операторы >, <, >=, <= — больше и меньше :id=the-operators-bigger-and-smaller
 
@@ -271,6 +285,8 @@ SELECT COUNT(*) FROM loans WHERE disbursed_at >= '2026-09-01';
 {"id": "w01d2-l6", "kind": "number", "answer": 538, "dp": 0, "unit": "кредитов", "hint": "«36 или дольше» включает 36: >=.", "model": "У 538 кредитов term_months >= 36."}
 ```
 
+> 🎬 **Остались вопросы про операторы >, <, >=, <=?** [Baraa объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=8060&end=8234)
+
 ### BETWEEN — диапазон, оба края включены :id=between-a-range-with-both-ends-included
 
 **Что это.** **BETWEEN a AND b** оставляет значения от `a` до `b`, **оба края включены**. Это короткая запись `>= a AND <= b`.
@@ -294,6 +310,8 @@ SELECT COUNT(*) FROM loans WHERE term_months BETWEEN 12 AND 24;
 {"id": "w01d2-l7", "kind": "number", "answer": 838, "dp": 0, "unit": "заявок", "hint": "WHERE requested_amount BETWEEN 10000000 AND 20000000 — числа без пробелов.", "model": "838 заявок."}
 ```
 
+> 🎬 **Остались вопросы про BETWEEN?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=8900&end=9168)
+
 ### IN — равно одному из списка :id=in-equal-to-one-of-a-list
 
 **Что это.** **IN (…)** оставляет строки, значение которых равно **любому** значению из списка. Это короткая запись нескольких `=`, соединённых через `OR`.
@@ -314,6 +332,8 @@ SELECT COUNT(*) FROM loans WHERE product_id IN (4, 5);
 ```task
 {"id": "w01d2-l8", "kind": "number", "answer": 2455, "dp": 0, "unit": "клиентов", "hint": "WHERE segment IN ('affluent', 'sme') — текстовые значения в кавычках, через запятую.", "model": "2 455 клиентов; остальные 3 585 — mass."}
 ```
+
+> 🎬 **Остались вопросы про IN?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=9169&end=9418)
 
 ### LIKE — текстовый шаблон :id=like-a-text-pattern
 
@@ -344,6 +364,8 @@ SELECT code FROM products WHERE code LIKE '____';
 ```task
 {"id": "w01d2-l9", "kind": "number", "answer": 317, "dp": 0, "unit": "клиентов", "hint": "WHERE last_name LIKE 'Abdu%' — % после букв.", "model": "317 клиентов (Abdullaev, Abdullaeva, Abdurakhmonov…)."}
 ```
+
+> 🎬 **Остались вопросы про LIKE?** [Baraa объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=9418&end=10046)
 
 ### IS NULL — пустая ячейка :id=is-null-the-empty-cell
 
@@ -416,6 +438,8 @@ SELECT COUNT(*) FROM loans WHERE status NOT IN ('closed', 'written_off');
 ```task
 {"id": "w01d2-l10", "kind": "choice", "options": ["(a AND b) OR c", "a AND (b OR c)", "должны выполняться все три: a, b и c", "отказывается выполнять без скобок"], "answer": 0, "explain": "AND связывает сильнее, чем OR, поэтому сначала группируется a AND b. Если вы имеете в виду a AND (b OR c), напишите скобки."}
 ```
+
+> 🎬 **Остались вопросы про AND, OR, NOT?** [Baraa объясняет (на английском, есть субтитры) · 11 мин](https://youtu.be/SSKVgrwhzus?t=8234&end=8901)
 
 ### Текст, числа и даты в условиях :id=text-numbers-and-dates-in-conditions
 

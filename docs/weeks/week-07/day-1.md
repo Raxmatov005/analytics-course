@@ -187,6 +187,8 @@ print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}"
 {"id": "w07d1-l4", "kind": "number", "answer": 0.8, "dp": 1, "unit": "points", "hint": "Relative lift × baseline.", "model": "10 % × 8.0 % = 0.8 points: 8.0 → 8.8 %."}
 ```
 
+> 🎬 **Didn't get power, significance level and MDE?** [A short explanation · 7 min](https://youtu.be/KZe0C0Qq4p0?t=1271&end=1664)
+
 ### Sample size and duration — each input
 
 **Before you read.** Guess first, then play with it — the explanation below will make more sense.
@@ -275,6 +277,10 @@ Kamola's choice: **28 days**, about 14 000 per arm. That buys an MDE of +0.93 po
 ```task
 {"id": "w07d1-l5", "kind": "python", "starter": "from math import ceil\n# n_per_arm comes from the box above -- run it first\n# TODO: users per arm for 8.0 -> 8.9 % with alpha=0.01 (round up)\n", "answer": 22294, "dp": 0, "model": "ceil(n_per_arm(0.080, 0.089, alpha=0.01)) = 22 294 per arm — 49 % more than at 5 %, about 45 days at 1 000 viewers a day."}
 ```
+
+> 🎬 **Didn't get how to calculate the sample size?** [A short explanation · 6 min](https://youtu.be/KZe0C0Qq4p0?t=1664&end=2022)
+
+> 🎬 **Didn't get how long to run the test?** [A short explanation · 3 min](https://youtu.be/KZe0C0Qq4p0?t=2098&end=2288)
 
 ### Randomisation and assignment — hashing the user id
 

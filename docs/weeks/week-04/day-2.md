@@ -590,6 +590,10 @@ Add `=$M2="61-90"` (orange), `=$M2="31-60"` (yellow), `=$M2="1-30"` (light yello
 {"id": "w04d2-l12", "kind": "choice", "options": ["=$M$6=\"90+\"", "=$M6=\"90+\"", "=M$6=\"90+\"", "=$M2=\"90+\""], "answer": 1, "explain": "The rule is written for the first row of the selection (row 6), with the column pinned and the row free. $M2 would make each row read the bucket four rows above it."}
 ```
 
+> 🎬 **Didn't get conditional formatting (built-in rules)?** [A short explanation · 6 min](https://youtu.be/zXnQNytHCPM?t=36&end=425)
+
+> 🎬 **Didn't get conditional formatting with your own formula?** [A short explanation · 6 min](https://youtu.be/zXnQNytHCPM?t=808&end=1190)
+
 ### Reading the errors
 
 **What it is.** An error value tells you *what kind* of thing went wrong. Read it before you fix — or hide — anything.

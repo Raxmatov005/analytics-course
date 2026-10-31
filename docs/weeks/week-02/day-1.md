@@ -44,6 +44,8 @@ WITH cust(id, name) AS (VALUES (1, 'Aziz'), (2, 'Bekzod'), (3, 'Dilnoza')),
 SELECT * FROM cust;
 ```
 
+> 🎬 **Didn't get why we join tables?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=10238&end=10707)
+
 ### The shape of a join — FROM … JOIN … ON
 
 **How to write it.**
@@ -121,6 +123,8 @@ INNER JOIN applications a ON a.customer_id = c.customer_id;
 {"id": "w02d1-j1", "kind": "number", "answer": 7828, "dp": 0, "unit": "rows", "hint": "Every loan has exactly one customer. How many loans are there?", "model": "7 828 — one row per loan. INNER JOIN drops nothing here because every loan finds its customer."}
 ```
 
+> 🎬 **Didn't get INNER JOIN?** [Baraa explains it · 12 min](https://youtu.be/SSKVgrwhzus?t=10708&end=11457)
+
 ### LEFT JOIN — every row of the left table
 
 **What it is.** **LEFT JOIN** (*левое соединение*) keeps **every row of the left table** — the table named in `FROM`. When a left row has a partner, the partner's columns are filled in. When it has none, the row stays and the right-hand columns are **NULL** (empty).
@@ -169,6 +173,8 @@ LEFT JOIN applications a ON a.customer_id = c.customer_id;    -- 14 587 rows
 {"id": "w02d1-j2", "kind": "number", "answer": 392, "dp": 0, "unit": "loans", "hint": "FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id — then count the rows where p.payment_id IS NULL.", "model": "392. LEFT JOIN keeps every loan; the ones with no payment have NULL in the payment columns."}
 ```
 
+> 🎬 **Didn't get LEFT JOIN?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=11457&end=11890)
+
 ### INNER vs LEFT — the row with no partner
 
 **What it is.** The only difference between the two is what happens to a left row that finds **no partner**: INNER drops it, LEFT keeps it with NULLs.
@@ -215,6 +221,8 @@ WHERE a.application_id IS NULL;  -- 587 customers who never applied
 {"id": "w02d1-j4", "kind": "sql", "model": "SELECT COUNT(*) FROM loans l LEFT JOIN payments p ON p.loan_id = l.loan_id WHERE p.payment_id IS NULL;", "note": "LEFT JOIN from loans to payments, then WHERE the payment side IS NULL."}
 ```
 
+> 🎬 **Didn't get the left anti-join?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=12468&end=12708)
+
 ### RIGHT JOIN — every row of the right table
 
 **What it is.** **RIGHT JOIN** (*правое соединение*) is the mirror of LEFT: it keeps **every row of the right table** (the one after `JOIN`) and fills the left side with NULLs where nothing matches.
@@ -248,6 +256,8 @@ Three rows — all three applications. Application 103 stays, with NULL where it
 ```task
 {"id": "w02d1-j5", "kind": "choice", "options": ["SELECT … FROM loans l LEFT JOIN customers c ON c.customer_id = l.customer_id", "SELECT … FROM customers c LEFT JOIN loans l ON l.customer_id = c.customer_id", "SELECT … FROM customers c INNER JOIN loans l ON l.customer_id = c.customer_id", "There is no LEFT JOIN with the same rows"], "answer": 1, "explain": "RIGHT keeps every row of the table after JOIN — customers. Put customers in FROM and write LEFT: every customer, with loans where they exist."}
 ```
+
+> 🎬 **Didn't get RIGHT JOIN?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=11890&end=12188)
 
 ### FULL OUTER JOIN — every row from both sides
 
@@ -288,6 +298,8 @@ Four rows — nothing is lost from either side. Aziz has no application; applica
 {"id": "w02d1-j6", "kind": "choice", "options": ["INNER JOIN — only loans that are in both", "LEFT JOIN from our table — loans missing from the bank's file", "FULL OUTER JOIN — loans missing on either side, in one result", "CROSS JOIN — every pair"], "answer": 2, "explain": "Both kinds of difference matter (a loan we have and the bank does not, and the reverse), so both sides must be kept: FULL OUTER JOIN, then look at the rows with a NULL on one side."}
 ```
 
+> 🎬 **Didn't get FULL JOIN?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=12188&end=12459)
+
 ### CROSS JOIN — every row with every row
 
 **What it is.** **CROSS JOIN** (*перекрёстное соединение*) has no `ON`. It pairs **every row of the first table with every row of the second**: 5 rows × 10 rows = 50 rows.
@@ -312,6 +324,8 @@ ORDER BY p.name, b.branch_name;                              -- 5 × 10 = 50 row
 ```task
 {"id": "w02d1-j7", "kind": "number", "answer": 50, "dp": 0, "unit": "rows", "hint": "Products × branches.", "model": "5 products × 10 branches = 50 rows — one per product-and-branch pair."}
 ```
+
+> 🎬 **Didn't get CROSS JOIN?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=13416&end=13614)
 
 ### Self-join — a table joined to itself
 
@@ -469,6 +483,8 @@ Now write it: the number of collections actions per customer region (`collection
 ```task
 {"id": "w02d1-j10", "kind": "sql", "model": "SELECT c.region, COUNT(*) AS actions FROM collections_actions ca JOIN loans l ON l.loan_id = ca.loan_id JOIN customers c ON c.customer_id = l.customer_id GROUP BY c.region ORDER BY actions DESC;", "note": "Two hops: collections_actions → loans (loan_id), loans → customers (customer_id)."}
 ```
+
+> 🎬 **Didn't get joining several tables?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=13900&end=14511)
 
 ### Putting it together
 

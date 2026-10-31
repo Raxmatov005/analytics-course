@@ -66,6 +66,8 @@ FROM loans;
 {"id": "w02d2-l1", "kind": "number", "answer": 5453, "dp": 0, "unit": "customers", "hint": "COUNT(DISTINCT customer_id) FROM applications.", "model": "5 453 different customers sent the 14 000 applications. COUNT(*) would say 14 000 — applications, not people."}
 ```
 
+> 🎬 **Didn't get COUNT, SUM, AVG, MIN and MAX?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=31420&end=31706)
+
 ### SUM — add a column up
 
 **What it is.** **SUM** adds up the values of a numeric column over the rows that are left after `WHERE`. NULL values are skipped.
@@ -201,6 +203,8 @@ The rule behind most beginner errors: **every column in `SELECT` is either insid
 {"id": "w02d2-g4", "type": "bug", "title": "One loan_id for a whole product", "q": "Madina wants the number of loans per product. One line asks for something a group cannot give.", "code": "SELECT product_id, loan_id, COUNT(*) AS loans\nFROM loans\nGROUP BY product_id;", "answer": [0], "why": "loan_id is neither in GROUP BY nor inside an aggregate, and a product has hundreds of loans. Drop loan_id from SELECT (or count it: COUNT(loan_id))."}
 ```
 
+> 🎬 **Didn't get GROUP BY?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=3514&end=4010)
+
 ### GROUP BY two columns — one row per combination
 
 **What it is.** With two columns in `GROUP BY`, a group is a **combination** of values. The result has one row for each combination that occurs in the data.
@@ -287,6 +291,8 @@ Six of the ten branches have more than 300 active loans, from Tashkent Central w
 ```game
 {"id": "w02d2-g1", "type": "cloze", "title": "WHERE, GROUP BY or HAVING?", "text": "SELECT b.branch_name, COUNT(*) AS active_loans FROM loans l JOIN branches b ON b.branch_id = l.branch_id {{0}} l.status = 'active' {{1}} b.branch_name {{2}} COUNT(*) > 300 ORDER BY active_loans DESC;", "blanks": [["WHERE"], ["GROUP BY"], ["HAVING"]], "distractors": ["ORDER BY", "SUM", "DISTINCT"]}
 ```
+
+> 🎬 **Didn't get HAVING?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=4010&end=4492)
 
 ### Aggregating over a join — decide what one row is
 
@@ -441,6 +447,12 @@ SELECT customer_id FROM applications;  -- 5 453 rows
 ```task
 {"id": "w02d2-l8", "kind": "choice", "options": ["UNION", "UNION ALL", "EXCEPT", "INTERSECT"], "answer": 2, "explain": "SELECT customer_id FROM applications EXCEPT SELECT customer_id FROM loans → 1 118 ids: in the first result, not in the second."}
 ```
+
+> 🎬 **Didn't get set operators and their rules?** [Baraa explains it · 13 min](https://youtu.be/SSKVgrwhzus?t=14532&end=15286)
+
+> 🎬 **Didn't get UNION and UNION ALL?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=15283&end=15842)
+
+> 🎬 **Didn't get EXCEPT?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=15842&end=16162)
 
 ### Putting it together
 

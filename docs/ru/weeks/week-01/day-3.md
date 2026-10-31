@@ -446,6 +446,8 @@ CREATE TABLE my_calls (
  "cleanup": "DROP TABLE IF EXISTS my_promises"}
 ```
 
+> 🎬 **Остались вопросы про CREATE TABLE?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=5549&end=5915)
+
 ### INSERT — добавляем строки :id=insert-add-rows
 
 **Что это.** **INSERT** добавляет в таблицу новые строки. Уже существующие строки он никогда не меняет.
@@ -511,6 +513,10 @@ INSERT INTO my_calls (loan_id, collector_id, called_on) VALUES (1, 999, '2026-10
  "cleanup": "DELETE FROM my_promises"}
 ```
 
+> 🎬 **Остались вопросы про INSERT с VALUES?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=6228&end=6744)
+
+> 🎬 **Остались вопросы про INSERT из SELECT?** [Baraa объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=6744&end=7036)
+
 ### UPDATE … SET … WHERE — меняем строки :id=update-set-where-change-rows
 
 **Что это.** **UPDATE** меняет значения в уже существующих строках. `SET` говорит, какие столбцы получают какие новые значения. `WHERE` — в каких строках.
@@ -547,6 +553,8 @@ SELECT * FROM my_calls;
  "cleanup": "UPDATE my_promises SET kept = NULL"}
 ```
 
+> 🎬 **Остались вопросы про UPDATE?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=7038&end=7433)
+
 ### DELETE … WHERE — удаляем строки :id=delete-where-remove-rows
 
 **Что это.** **DELETE** удаляет строки целиком. `WHERE` говорит, какие. Сама таблица со столбцами остаётся.
@@ -578,6 +586,8 @@ SELECT * FROM my_calls;
 {"id": "w01d3-l23", "title": "DELETE: обещание отменено", "intro": "Один шаг.", "steps": [
   {"say": "Удалите обещание по кредиту 4503 — только эту строку.", "hint": "SELECT * FROM my_promises WHERE loan_id = 4503;\nDELETE FROM my_promises WHERE loan_id = 4503;", "expect": "SELECT COUNT(*) * 10 + COALESCE(SUM(loan_id = 4503), 0) FROM my_promises", "want": 20}]}
 ```
+
+> 🎬 **Остались вопросы про DELETE?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=7433&end=7662)
 
 ### ALTER TABLE — меняем столбцы :id=alter-table-change-the-columns
 
@@ -613,6 +623,8 @@ SELECT * FROM my_calls;
 {"id": "w01d3-l24", "title": "ALTER TABLE: ещё один столбец", "intro": "Один шаг.", "steps": [
   {"say": "Добавьте в `my_promises` текстовый столбец `note`.", "hint": "ALTER TABLE my_promises ADD COLUMN note TEXT;", "expect": "SELECT COUNT(*) FROM pragma_table_info('my_promises') WHERE name = 'note'", "want": 1}]}
 ```
+
+> 🎬 **Остались вопросы про ALTER TABLE?** [Baraa объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=5915&end=6123)
 
 ### DROP TABLE — удаляем таблицу целиком :id=drop-table-remove-the-whole-table
 

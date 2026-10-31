@@ -118,6 +118,8 @@ A Table gives four things a plain range does not:
 {"id": "w04d1-l2", "kind": "choice", "options": ["=SUM(Loans!K2:K7829)", "=SUM(Loans!$K$2:$K$7829)", "=SUM(tblLoans[outstanding])", "=SUBTOTAL(9, Loans!K2:K7829)"], "answer": 2, "explain": "Only the Table column grows with the Table. Every fixed range stops at row 7 829, with or without $."}
 ```
 
+> 🎬 **Didn't get Excel tables (Ctrl+T)?** [A short explanation · 8 min](https://youtu.be/pCJ15nGFgVg?t=14006&end=14459)
+
 ### Relative and absolute references — the `$`
 
 **What it is.** A **relative reference** (*относительная ссылка*) like `A3` moves when you copy the formula: one cell down, one row down; one cell right, one column right. An **absolute reference** (*абсолютная ссылка*) like `$A$3` never moves. A **mixed reference** pins one half: `$A3` keeps the column A, `B$2` keeps the row 2.

@@ -52,6 +52,8 @@ SELECT COUNT(*), SUM(amount), COUNT(DISTINCT method) FROM v_payments_clean;
 {"id": "w03d4-l1", "kind": "choice", "options": ["52 850 — представление сохранило свои строки при создании", "52 851 — представление заново выполняет свой запрос на сегодняшних строках", "Ошибку — представление нужно пересоздавать после каждого изменения", "52 876 — представление считает сырую таблицу"], "answer": 1, "explain": "Представление хранит запрос, а не строки. Каждое чтение выполняет его на текущих данных, поэтому новая оплата там будет (если только она не повторяет более раннюю — тогда её уберёт дедупликация)."}
 ```
 
+> 🎬 **Остались вопросы про представления (VIEW)?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=56724&end=57243)
+
 ### CREATE VIEW и DROP VIEW :id=create-view-and-drop-view
 
 **Что это.** `CREATE VIEW name AS SELECT …` сохраняет запрос под именем. `DROP VIEW name` удаляет имя; таблицы под ним не затрагиваются. В SQLite представление нельзя отредактировать на месте: его удаляют и создают заново.
@@ -94,6 +96,10 @@ SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;
 ```task
 {"id": "w03d4-l2", "kind": "choice", "options": ["ALTER VIEW my_v_written_off ADD COLUMN risk_grade", "DROP VIEW my_v_written_off, затем снова CREATE VIEW с новым столбцом", "UPDATE my_v_written_off SET risk_grade = …", "Ничего — представление само подхватит новые столбцы loans"], "answer": 1, "explain": "В SQLite нет ALTER VIEW: удалите представление и создайте его с новым SELECT. SQL Server делает это одним шагом через CREATE OR ALTER VIEW."}
 ```
+
+> 🎬 **Остались вопросы про CREATE VIEW?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=57243&end=57796)
+
+> 🎬 **Остались вопросы про изменение и удаление VIEW?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=57796&end=58040)
 
 ### Представление над представлением — слои :id=a-view-over-a-view-layers
 
@@ -191,6 +197,10 @@ FROM tmp_sep GROUP BY method ORDER BY collected DESC;
 {"id": "w03d4-l4", "kind": "number", "answer": 3158, "dp": 0, "unit": "оплат", "hint": "SELECT COUNT(*) FROM tmp_sep — после выполнения блока выше.", "model": "3 158 — сентябрьские оплаты без дубликатов, то же число, что в строке 2026-09 представления my_v_paid_monthly."}
 ```
 
+> 🎬 **Остались вопросы про CREATE TABLE AS (CTAS)?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=60042&end=60471)
+
+> 🎬 **Остались вопросы про временные таблицы?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=61453&end=61866)
+
 ### Когда представление, когда таблица :id=when-a-view-when-a-table
 
 **Что это.** Выбор между сохранением **запроса** (представление) и сохранением **результата** (таблица). Представление всегда свежее и каждый раз стоит целого запроса; таблица читается быстро и заморожена.
@@ -228,6 +238,8 @@ SELECT (SELECT COUNT(*) FROM my_v_written_off) AS view_rows,
 ```game
 {"type": "sort", "id": "w03d4-g1", "title": "Представление, таблица или временная таблица?", "q": "Нажмите на ситуацию, затем на то, что вы бы для неё построили.", "groups": {"Представление": ["Показатель статуса кредитов в Power BI, который должен показывать сегодняшний DPD", "Одно правило дедупликации, общее для всех отчётов"], "Материализованная таблица (CTAS / SELECT INTO)": ["Пакет на конец сентября, замороженный после отправки совету директоров", "Запрос на 12 секунд, который 40 человек открывают каждое утро, с ночным обновлением"], "Временная таблица": ["Промежуточный результат, используемый пять раз в одном длинном скрипте и исчезающий после отключения"]}}
 ```
+
+> 🎬 **Остались вопросы про когда сохранять результат в таблицу?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=60633&end=61179)
 
 ### Индексы — телефонная книга :id=indexes-the-phone-book
 
@@ -277,6 +289,10 @@ WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.customer_id = c.customer_id);
 {"type": "sort", "id": "w03d4-g2", "title": "Поможет ли индекс?", "q": "У каждого столбца в этих фильтрах есть индекс. Нажмите на фильтр, затем на его место.", "groups": {"Индекс помогает (SEARCH)": ["WHERE installment_id = 59838", "WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01'", "JOIN payments p ON p.installment_id = i.installment_id"], "Индекс не поможет (SCAN)": ["WHERE strftime('%Y-%m', due_date) = '2026-09'", "WHERE LOWER(method) = 'card'", "WHERE method LIKE '%card'"]}}
 ```
 
+> 🎬 **Остались вопросы про индексы?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=66222&end=66780)
+
+> 🎬 **Остались вопросы про как индекс ускоряет поиск?** [Baraa объясняет (на английском, есть субтитры) · 9 мин](https://youtu.be/SSKVgrwhzus?t=66780&end=67314)
+
 ### Читаем EXPLAIN QUERY PLAN — SCAN или SEARCH :id=reading-explain-query-plan-scan-or-search
 
 **Что это.** **План выполнения** (*execution plan*) — то, как движок собирается выполнить ваш запрос: какие таблицы читает, в каком порядке, с каким индексом. `EXPLAIN QUERY PLAN` перед запросом печатает его в SQLite, по строке на шаг. Слово, которое нужно искать на большой таблице: **SCAN** (каждая строка) или **SEARCH** (через индекс).
@@ -316,6 +332,10 @@ SELECT * FROM payments WHERE loan_id = 2242;
 ```game
 {"type": "bug", "id": "w03d4-g3", "title": "Найдите медленную строку", "q": "У due_date есть индекс, а план говорит SCAN. Какая строка превращает SEARCH в SCAN?", "code": "CREATE INDEX ix_installments_due ON installments (due_date);\nSELECT COUNT(*)\nFROM installments\nWHERE strftime('%Y-%m', due_date) = '2026-09';", "answer": [3], "why": "Движок не может искать значение, которое приходится вычислять для каждой строки. WHERE due_date >= '2026-09-01' AND due_date < '2026-10-01' даёт то же количество через SEARCH."}
 ```
+
+> 🎬 **Остались вопросы про план выполнения запроса?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=73231&end=73500)
+
+> 🎬 **Остались вопросы про SCAN и SEARCH в плане?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=73848&end=74215)
 
 ### Привычки, которые делают запросы быстрыми :id=the-habits-that-make-queries-fast
 
@@ -360,6 +380,10 @@ SELECT COUNT(*) FROM installments WHERE due_date >= '2026-09-01' AND due_date < 
 ```game
 {"type": "sort", "id": "w03d4-g5", "title": "Быстро или медленно?", "q": "Нажмите на привычку, затем на то, делает ли она запрос быстрее или медленнее.", "groups": {"Быстрее": ["WHERE paid_at >= '2026-09-01' AND paid_at < '2026-10-01'", "SELECT loan_id, bucket, outstanding FROM v_loan_status", "UNION ALL двух помесячных результатов", "Индекс по payments.installment_id перед соединением с ней"], "Медленнее (или неверно)": ["WHERE YEAR(paid_at) = 2026", "SELECT * в Power BI", "SELECT DISTINCT, чтобы убрать строки, размноженные соединением", "Коррелированный подзапрос на каждую из 92 193 строк платежей по графику"]}}
 ```
+
+> 🎬 **Остались вопросы про быстрые запросы: SELECT и фильтры?** [Baraa объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=78224&end=78804)
+
+> 🎬 **Остались вопросы про быстрые JOIN?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=78804&end=79312)
 
 ### Собираем вместе :id=putting-it-together
 

@@ -37,6 +37,10 @@ FROM customers;
 {"id": "w02d4-l1", "kind": "number", "answer": 3601, "dp": 0, "unit": "кредитов", "hint": "COUNT(*) - COUNT(closed_at) FROM loans.", "model": "3 601: 3 352 активных + 44 в дефолте + 190 списанных = 3 586 незакрытых, плюс 15 закрытых кредитов без даты закрытия — о них спросят в пятницу."}
 ```
 
+> 🎬 **Остались вопросы про NULL (что это)?** [Бараа объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=25146&end=25316)
+
+> 🎬 **Остались вопросы про NULL, пустая строка и пробел?** [Бараа объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=28286&end=28696)
+
 ### Сравнение с NULL — IS NULL, никогда = NULL :id=comparing-with-null-is-null-never-null
 
 **Что это.** NULL ничему не равен — даже другому NULL. Любое сравнение с NULL (`=`, `<>`, `<`, `>`) даёт *неизвестно*, а `WHERE` оставляет только строки, где условие *истинно*. Работают только проверки **IS NULL** и **IS NOT NULL**.
@@ -62,6 +66,8 @@ SELECT COUNT(*) FROM customers WHERE monthly_income <> 5000000;
 ```game
 {"id": "w02d4-g1", "type": "bug", "title": "Куда делись пропущенные доходы?", "q": "Мадине нужно число клиентов без дохода в базе. Запрос возвращает 0. Нажмите на неверную строку.", "code": "SELECT COUNT(*) AS no_income\nFROM customers\nWHERE monthly_income = NULL;", "answer": [2], "why": "Сравнение с NULL — «неизвестно», никогда не «истина», поэтому ни одна строка не проходит. Пишите WHERE monthly_income IS NULL → 356."}
 ```
+
+> 🎬 **Остались вопросы про IS NULL и IS NOT NULL?** [Бараа объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=27704&end=27930)
 
 ### NULL в арифметике — всё, что соединено с NULL, становится NULL :id=null-in-arithmetic-anything-combined-with-null-is-null
 
@@ -89,6 +95,8 @@ FROM customers;
 ```task
 {"id": "w02d4-l2", "kind": "choice", "options": ["5", "0", "NULL", "Ошибку"], "answer": 2, "explain": "Любая арифметика с NULL даёт NULL. COALESCE(x, 0) + 5 даёт 5, если 0 — правильный смысл «пропуска»."}
 ```
+
+> 🎬 **Остались вопросы про NULL в вычислениях?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=26219&end=26589)
 
 ### NULL в агрегатах — COUNT, SUM и AVG его пропускают :id=null-in-aggregates-count-sum-and-avg-skip-it
 
@@ -121,6 +129,8 @@ FROM customers;
 {"id": "w02d4-g2", "type": "sort", "title": "Кто видит 356 пустых доходов?", "groups": {"Включает 356 пустых строк": ["COUNT(*)", "WHERE monthly_income IS NULL", "AVG(COALESCE(monthly_income, 0))"], "Не учитывает 356 строк": ["COUNT(monthly_income)", "AVG(monthly_income)", "WHERE monthly_income <> 5000000"]}}
 ```
 
+> 🎬 **Остались вопросы про NULL в SUM, AVG и COUNT?** [Бараа объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=25999&end=26219)
+
 ### COALESCE и IFNULL — значение вместо NULL :id=coalesce-and-ifnull-a-value-instead-of-null
 
 **Что это.** **COALESCE**`(a, b, c, …)` возвращает первый аргумент, не равный NULL. Это стандартный SQL, работает на обоих движках. **IFNULL**`(a, b)` (SQLite) и **ISNULL**`(a, b)` (SQL Server) — двухаргументные версии того же. Предпочитайте `COALESCE`: он переносим.
@@ -151,6 +161,10 @@ WHERE customer_id IN (1, 14);      -- 3894708 · unknown
 {"id": "w02d4-l3", "kind": "number", "answer": 0, "dp": 0, "unit": "", "hint": "Первый аргумент, не равный NULL, — 0 тоже значение.", "model": "0. COALESCE останавливается на первом аргументе, не равном NULL; 0 — настоящее значение, поэтому до 5 дело не доходит."}
 ```
 
+> 🎬 **Остались вопросы про ISNULL (IFNULL)?** [Бараа объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=25312&end=25580)
+
+> 🎬 **Остались вопросы про COALESCE?** [Бараа объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=25580&end=25999)
+
 ### NULLIF — безопасное деление :id=nullif-safe-division
 
 **Что это.** **NULLIF**`(a, b)` возвращает NULL, когда `a = b`, и `a` в остальных случаях. Его единственная работа — **безопасное деление**: `x / NULLIF(y, 0)` возвращает NULL вместо ошибки, когда `y` равен 0.
@@ -177,6 +191,8 @@ Fergana Central одобряет 72.8 % рассмотренных заявок;
 ```task
 {"id": "w02d4-l4", "kind": "choice", "options": ["NULL", "0", "10", "Ошибку"], "answer": 0, "explain": "NULLIF(0, 0) — это NULL, а 10 / NULL — NULL; на обоих движках и без ошибки."}
 ```
+
+> 🎬 **Остались вопросы про NULLIF?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=27340&end=27704)
 
 ### Поисковый CASE — значение, выбранное по условиям :id=searched-case-a-value-chosen-by-conditions
 
@@ -213,6 +229,10 @@ FROM customers GROUP BY income_band;
 {"id": "w02d4-l5", "kind": "choice", "options": ["NULL", "0", "Значение последнего THEN", "Пустой текст ''"], "answer": 0, "explain": "CASE без ELSE возвращает NULL для неподошедших строк — в GROUP BY они образуют группу NULL. Пишите тот ELSE, который имеете в виду."}
 ```
 
+> 🎬 **Остались вопросы про CASE ... WHEN ... THEN?** [Бараа объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=29270&end=29857)
+
+> 🎬 **Остались вопросы про CASE для категорий?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=29902&end=30267)
+
 ### Простой CASE — подстановка по одному значению :id=simple-case-a-lookup-on-one-value
 
 **Что это.** **Простой CASE** (*simple CASE*) сравнивает одно выражение со списком значений: `CASE выражение WHEN значение1 THEN результат1 WHEN значение2 THEN результат2 ELSE иначе END`. Это короткая запись подстановки; он умеет проверять только равенство.
@@ -240,6 +260,10 @@ GROUP BY channel_name;
 ```task
 {"id": "w02d4-l6", "kind": "sql", "model": "SELECT code, CASE code WHEN 'MICRO' THEN 'Micro' WHEN 'CONS' THEN 'Consumer' ELSE code END AS short_name FROM products;", "note": "Пять строк: Micro, Consumer, BNPL, AUTO, SME. ELSE code оставляет остальные коды как есть."}
 ```
+
+> 🎬 **Остались вопросы про CASE для замены значений?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=30267&end=30620)
+
+> 🎬 **Остались вопросы про короткая форма CASE?** [Бараа объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=30620&end=30796)
 
 ### CASE в ORDER BY — свой порядок сортировки :id=case-in-order-by-a-sort-order-of-your-own
 
@@ -313,6 +337,8 @@ GROUP BY p.name ORDER BY p.name;
 {"id": "w02d4-g3", "type": "cloze", "title": "Посчитать, где", "text": "SELECT p.name, SUM(CASE {{0}} l.status = 'active' {{1}} 1 {{2}} 0 {{3}}) AS active FROM loans l JOIN products p ON p.product_id = l.product_id {{4}} p.name;", "blanks": [["WHEN"], ["THEN"], ["ELSE"], ["END"], ["GROUP BY"]], "distractors": ["IF", "WHERE", "COUNT"]}
 ```
 
+> 🎬 **Остались вопросы про CASE внутри SUM и COUNT?** [Бараа объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=31024&end=31308)
+
 ### Анти-соединение — почему IS NULL находит строки без пары :id=the-anti-join-why-is-null-finds-the-rows-with-no-partner
 
 **Что это.** Понедельничное анти-соединение, теперь с объяснением, почему оно работает. `LEFT JOIN` заполняет правую сторону NULL там, где пары нет. `WHERE правая.ключ IS NULL` оставляет ровно эти строки, потому что столбец ключа никогда не равен NULL в строке *с парой*.
@@ -339,6 +365,10 @@ WHERE l.loan_id IS NULL AND a.status LIKE 'approved%' GROUP BY a.status;
 ```task
 {"id": "w02d4-l8", "kind": "choice", "options": ["FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.action_id IS NULL", "FROM loans l JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.action_id IS NULL", "FROM loans l LEFT JOIN collections_actions ca ON ca.loan_id = l.loan_id WHERE ca.outcome = NULL", "FROM loans l WHERE l.loan_id <> NULL"], "answer": 0, "explain": "LEFT сохраняет каждый кредит; ключ действия равен NULL только там, где действие не нашлось, — 7 545 кредитов. Вариант с INNER возвращает 0; = NULL никогда не истина."}
 ```
+
+> 🎬 **Остались вопросы про left anti-join?** [Бараа объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=12468&end=12708)
+
+> 🎬 **Остались вопросы про anti-join (строки без пары)?** [Бараа объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=27930&end=28282)
 
 ### LEFT JOIN, который превращается в INNER JOIN, — ON vs WHERE :id=the-left-join-that-turns-into-an-inner-join-on-vs-where
 

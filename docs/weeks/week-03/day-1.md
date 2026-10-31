@@ -65,6 +65,8 @@ The first query returns one row: 700. The second returns all five payments, each
 {"id": "w03d1-l1", "kind": "choice", "options": ["1 — SUM always returns one row", "5 — one per product", "7 828 — a window keeps every row", "An error — SUM needs GROUP BY"], "answer": 2, "explain": "A window never removes rows: 7 828 loans in, 7 828 rows out, each with the same total beside it."}
 ```
 
+> 🎬 **Didn't get window functions?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=31839&end=32138)
+
 ### OVER () — one window over all the rows
 
 **What it is.** `OVER ()` with **empty brackets** makes one window that contains every row of the result. The aggregate is computed once over all of them and written on each row.
@@ -101,6 +103,8 @@ Three rows on screen, but the window ran over all 7 828 loans: 404 783 280 000 i
 ```task
 {"id": "w03d1-l2", "kind": "number", "answer": 241117150000, "dp": 0, "unit": "UZS", "hint": "WHERE runs before the window, so the window adds up only the SME loans.", "model": "241 117 150 000 — the principal of the 781 SME loans. WHERE removed the other products before the window ran."}
 ```
+
+> 🎬 **Didn't get OVER ()?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=32581&end=33009)
 
 ### PARTITION BY — one window per group
 
@@ -154,6 +158,8 @@ Loans 1 and 2 are Consumer loans, so both show the Consumer average, 26 926 915,
 {"id": "w03d1-l3", "kind": "number", "answer": 781, "dp": 0, "unit": "loans", "hint": "Loan 5 is an SME loan. Read loans_in_product on its row.", "model": "781 — every SME loan. COUNT(*) OVER (PARTITION BY p.code) counts the rows of the row's own product."}
 ```
 
+> 🎬 **Didn't get PARTITION BY?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=33009&end=33497)
+
 ### ORDER BY inside OVER — a running total
 
 **What it is.** `ORDER BY` inside the brackets puts the rows of each window in order. The aggregate then covers the rows **from the first one up to the current one**. A `SUM` becomes a **running total** (*накопительный итог*).
@@ -204,6 +210,10 @@ ORDER BY paid_at;
 {"id": "w03d1-l4", "kind": "number", "answer": 25119000, "dp": 0, "unit": "UZS", "hint": "Read collected_so_far on the last row (paid 2026-09-03).", "model": "25 119 000 — nine payments of 2 791 000. The running total on the last row is everything paid so far."}
 ```
 
+> 🎬 **Didn't get ORDER BY inside OVER?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=33497&end=33752)
+
+> 🎬 **Didn't get running total?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=37917&end=38493)
+
 ### Window vs GROUP BY — the same sum, two shapes
 
 **What it is.** `GROUP BY` and a window compute the same aggregate. The difference is the **shape of the result**: `GROUP BY` returns one row per group, a window returns every row with the group's number beside it.
@@ -251,6 +261,8 @@ FROM loans;
 {"id": "w03d1-l5", "kind": "choice", "options": ["GROUP BY product_id", "AVG(principal) OVER (PARTITION BY product_id)", "AVG(principal) OVER ()", "GROUP BY loan_id"], "answer": 1, "explain": "Every loan must stay, and each needs its own product's average: a window partitioned by product. GROUP BY would leave five rows; OVER () would give the company average."}
 ```
 
+> 🎬 **Didn't get window function vs GROUP BY?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=32138&end=32451)
+
 ### SUM, AVG, COUNT, MIN, MAX as windows
 
 **What it is.** Every ordinary aggregate works as a window: `SUM`, `AVG`, `COUNT(*)`, `COUNT(column)`, `MIN`, `MAX`. Put `OVER (…)` after it and it stops folding rows.
@@ -283,6 +295,10 @@ Loan 1 (Consumer, 31 150 000) sits between 3 110 000 and 49 990 000 and is 4 223
 ```task
 {"id": "w03d1-l6", "kind": "number", "answer": 290331255, "dp": 0, "unit": "UZS", "hint": "Sort, do not filter: WHERE l.loan_id = 2861 would leave the window one loan to average.", "model": "290 331 255: 599 060 000 − 308 728 745 (the SME average). With WHERE l.loan_id = 2861 the window sees one row and vs_avg is 0 — WHERE runs before the window."}
 ```
+
+> 🎬 **Didn't get aggregate functions as windows (COUNT)?** [Baraa explains it · 6 min](https://youtu.be/SSKVgrwhzus?t=35222&end=35569)
+
+> 🎬 **Didn't get SUM as a window?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=36349&end=36566)
 
 ### Share of total — value / SUM() OVER ()
 
@@ -334,6 +350,8 @@ Five rows; the shares add to 100. SME holds 60.3 % of the 208 723 504 430 outsta
 ```task
 {"id": "w03d1-l7", "kind": "number", "answer": 34.1, "dp": 1, "unit": "%", "hint": "SELECT p.code, COUNT(*), ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) … GROUP BY p.code", "model": "34.1 % — 2 669 of 7 828 loans. By count Micro is the biggest product; by outstanding it is 0.5 %. Always say share of what."}
 ```
+
+> 🎬 **Didn't get share of total?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=36568&end=36790)
 
 ### The frame — ROWS BETWEEN, and the default that lumps ties
 
@@ -390,6 +408,10 @@ ORDER BY disbursed_at, loan_id;
 {"type": "build", "id": "w03d1-g2", "title": "Build the window", "q": "Bekzod's year-to-date per product: a running sum of monthly disbursement that restarts for every product, row by row.", "tokens": ["SUM(disbursed)", "OVER (", "PARTITION BY code", "ORDER BY month", "ROWS UNBOUNDED PRECEDING", ")"], "distractors": ["GROUP BY code", "WHERE month >= '2026-01'", "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW"]}
 ```
 
+> 🎬 **Didn't get the window frame (ROWS BETWEEN)?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=33752&end=34150)
+
+> 🎬 **Didn't get more frame examples and the default frame?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=34153&end=34604)
+
 ### Moving average — a frame of fixed length
 
 **What it is.** A **moving average** (*скользящее среднее*) replaces each value by the average of itself and a fixed number of neighbours. `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW` is a three-row frame that slides down the rows:
@@ -444,6 +466,8 @@ ORDER BY month;
 {"id": "w03d1-l8", "kind": "choice", "options": ["ROWS BETWEEN 12 PRECEDING AND CURRENT ROW", "ROWS BETWEEN 11 PRECEDING AND CURRENT ROW", "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW", "ROWS BETWEEN 6 PRECEDING AND 6 FOLLOWING"], "answer": 1, "explain": "Eleven rows back plus the current row = twelve months. 12 PRECEDING would be thirteen; UNBOUNDED is a running average; 6/6 is a centred thirteen-month frame."}
 ```
 
+> 🎬 **Didn't get moving average?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=38493&end=38920)
+
 ### Where a window may appear — SELECT and ORDER BY, not WHERE
 
 **What it is.** A query is worked out in a fixed order. Windows are computed late: after `WHERE`, `GROUP BY` and `HAVING`. So a window may appear in `SELECT` and in `ORDER BY`, but not in `WHERE`, `GROUP BY` or `HAVING` — when those run, the window does not exist yet.
@@ -491,6 +515,8 @@ WHERE principal > product_avg;
 ```game
 {"type": "bug", "id": "w03d1-g1", "title": "Find the broken line", "q": "Bekzod wants the loans above their product's average principal. One line breaks this query.", "code": "SELECT l.loan_id, p.code, l.principal\nFROM loans l\nJOIN products p ON p.product_id = l.product_id\nWHERE l.principal > AVG(l.principal) OVER (PARTITION BY p.code);", "answer": [3], "why": "Windows are computed after WHERE, so a window cannot sit in WHERE. Compute it in a derived table, then filter outside."}
 ```
+
+> 🎬 **Didn't get where window functions are allowed?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=34619&end=34806)
 
 ### Putting it together
 

@@ -65,6 +65,8 @@ FROM pay;
 {"id": "w03d1-l1", "kind": "choice", "options": ["1 — SUM всегда возвращает одну строку", "5 — по одной на продукт", "7 828 — окно сохраняет каждую строку", "Ошибку — SUM нужен GROUP BY"], "answer": 2, "explain": "Окно никогда не убирает строки: на входе 7 828 кредитов, на выходе 7 828 строк, и рядом с каждой один и тот же итог."}
 ```
 
+> 🎬 **Остались вопросы про оконные функции?** [Baraa объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=31839&end=32138)
+
 ### OVER () — одно окно на все строки :id=over-one-window-over-all-the-rows
 
 **Что это.** `OVER ()` с **пустыми скобками** создаёт одно окно, в которое входит каждая строка результата. Агрегат считается один раз по всем строкам и записывается в каждую.
@@ -101,6 +103,8 @@ LIMIT 3;
 ```task
 {"id": "w03d1-l2", "kind": "number", "answer": 241117150000, "dp": 0, "unit": "сум", "hint": "WHERE выполняется до окна, поэтому окно складывает только кредиты SME.", "model": "241 117 150 000 — основной долг 781 кредита SME. WHERE убрал остальные продукты ещё до того, как сработало окно."}
 ```
+
+> 🎬 **Остались вопросы про OVER ()?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=32581&end=33009)
 
 ### PARTITION BY — своё окно для каждой группы :id=partition-by-one-window-per-group
 
@@ -154,6 +158,8 @@ LIMIT 5;
 {"id": "w03d1-l3", "kind": "number", "answer": 781, "dp": 0, "unit": "кредитов", "hint": "Кредит 5 — кредит SME. Прочитайте loans_in_product в его строке.", "model": "781 — все кредиты SME. COUNT(*) OVER (PARTITION BY p.code) считает строки собственного продукта строки."}
 ```
 
+> 🎬 **Остались вопросы про PARTITION BY?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=33009&end=33497)
+
 ### ORDER BY внутри OVER — накопительный итог :id=order-by-inside-over-a-running-total
 
 **Что это.** `ORDER BY` внутри скобок упорядочивает строки каждого окна. Тогда агрегат берёт строки **от первой до текущей**. `SUM` превращается в **накопительный итог** (*running total*).
@@ -204,6 +210,10 @@ ORDER BY paid_at;
 {"id": "w03d1-l4", "kind": "number", "answer": 25119000, "dp": 0, "unit": "сум", "hint": "Прочитайте collected_so_far в последней строке (оплачено 2026-09-03).", "model": "25 119 000 — девять платежей по 2 791 000. Накопительный итог в последней строке — это всё, что выплачено на сегодня."}
 ```
 
+> 🎬 **Остались вопросы про ORDER BY внутри OVER?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=33497&end=33752)
+
+> 🎬 **Остались вопросы про нарастающий итог?** [Baraa объясняет (на английском, есть субтитры) · 10 мин](https://youtu.be/SSKVgrwhzus?t=37917&end=38493)
+
 ### Окно или GROUP BY — одна сумма, две формы :id=window-vs-group-by-the-same-sum-two-shapes
 
 **Что это.** `GROUP BY` и окно считают один и тот же агрегат. Разница — в **форме результата**: `GROUP BY` возвращает одну строку на группу, окно возвращает каждую строку, а рядом — число её группы.
@@ -251,6 +261,8 @@ FROM loans;
 {"id": "w03d1-l5", "kind": "choice", "options": ["GROUP BY product_id", "AVG(principal) OVER (PARTITION BY product_id)", "AVG(principal) OVER ()", "GROUP BY loan_id"], "answer": 1, "explain": "Каждый кредит должен остаться, и каждому нужно среднее своего продукта: окно с разбиением по продукту. GROUP BY оставил бы пять строк; OVER () дал бы среднее по компании."}
 ```
 
+> 🎬 **Остались вопросы про оконная функция и GROUP BY?** [Baraa объясняет (на английском, есть субтитры) · 5 мин](https://youtu.be/SSKVgrwhzus?t=32138&end=32451)
+
 ### SUM, AVG, COUNT, MIN, MAX как окна :id=sum-avg-count-min-max-as-windows
 
 **Что это.** Любой обычный агрегат работает как окно: `SUM`, `AVG`, `COUNT(*)`, `COUNT(столбец)`, `MIN`, `MAX`. Поставьте после него `OVER (…)` — и он перестанет сворачивать строки.
@@ -283,6 +295,10 @@ LIMIT 5;
 ```task
 {"id": "w03d1-l6", "kind": "number", "answer": 290331255, "dp": 0, "unit": "сум", "hint": "Сортируйте, а не фильтруйте: с WHERE l.loan_id = 2861 окну осталось бы усреднять один кредит.", "model": "290 331 255: 599 060 000 − 308 728 745 (среднее по SME). С WHERE l.loan_id = 2861 окно видит одну строку, и vs_avg равен 0 — WHERE выполняется до окна."}
 ```
+
+> 🎬 **Остались вопросы про агрегатные функции как окна (COUNT)?** [Baraa объясняет (на английском, есть субтитры) · 6 мин](https://youtu.be/SSKVgrwhzus?t=35222&end=35569)
+
+> 🎬 **Остались вопросы про SUM как окно?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=36349&end=36566)
 
 ### Доля от итога — значение / SUM() OVER () :id=share-of-total-value-sum-over
 
@@ -335,6 +351,8 @@ ORDER BY outstanding DESC;
 ```task
 {"id": "w03d1-l7", "kind": "number", "answer": 34.1, "dp": 1, "unit": "%", "hint": "SELECT p.code, COUNT(*), ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) … GROUP BY p.code", "model": "34.1 % — 2 669 из 7 828 кредитов. По количеству Micro — крупнейший продукт; по остатку долга — 0.5 %. Всегда говорите, доля чего."}
 ```
+
+> 🎬 **Остались вопросы про доля от общего итога?** [Baraa объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=36568&end=36790)
 
 ### Рамка — ROWS BETWEEN и умолчание, которое склеивает совпадения :id=the-frame-rows-between-and-the-default-that-lumps-ties
 
@@ -391,6 +409,10 @@ ORDER BY disbursed_at, loan_id;
 {"type": "build", "id": "w03d1-g2", "title": "Соберите окно", "q": "Накопленный итог с начала года по каждому продукту для Бекзода: сумма месячной выдачи нарастающим итогом, которая начинается заново для каждого продукта, строка за строкой.", "tokens": ["SUM(disbursed)", "OVER (", "PARTITION BY code", "ORDER BY month", "ROWS UNBOUNDED PRECEDING", ")"], "distractors": ["GROUP BY code", "WHERE month >= '2026-01'", "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW"]}
 ```
 
+> 🎬 **Остались вопросы про рамка окна (ROWS BETWEEN)?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=33752&end=34150)
+
+> 🎬 **Остались вопросы про примеры рамок и рамка по умолчанию?** [Baraa объясняет (на английском, есть субтитры) · 8 мин](https://youtu.be/SSKVgrwhzus?t=34153&end=34604)
+
 ### Скользящее среднее — рамка фиксированной длины :id=moving-average-a-frame-of-fixed-length
 
 **Что это.** **Скользящее среднее** (*moving average*) заменяет каждое значение средним по нему самому и фиксированному числу соседей. `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW` — рамка из трёх строк, которая скользит вниз по строкам:
@@ -446,6 +468,8 @@ ORDER BY month;
 {"id": "w03d1-l8", "kind": "choice", "options": ["ROWS BETWEEN 12 PRECEDING AND CURRENT ROW", "ROWS BETWEEN 11 PRECEDING AND CURRENT ROW", "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW", "ROWS BETWEEN 6 PRECEDING AND 6 FOLLOWING"], "answer": 1, "explain": "Одиннадцать строк назад плюс текущая = двенадцать месяцев. 12 PRECEDING дало бы тринадцать; UNBOUNDED — накопленное среднее; 6/6 — центрированная рамка из тринадцати месяцев."}
 ```
 
+> 🎬 **Остались вопросы про скользящее среднее?** [Baraa объясняет (на английском, есть субтитры) · 7 мин](https://youtu.be/SSKVgrwhzus?t=38493&end=38920)
+
 ### Где может стоять окно — в SELECT и ORDER BY, но не в WHERE :id=where-a-window-may-appear-select-and-order-by-not-where
 
 **Что это.** Запрос выполняется в фиксированном порядке. Окна считаются поздно: после `WHERE`, `GROUP BY` и `HAVING`. Поэтому окно может стоять в `SELECT` и в `ORDER BY`, но не в `WHERE`, `GROUP BY` или `HAVING` — когда они выполняются, окна ещё не существует.
@@ -493,6 +517,8 @@ WHERE principal > product_avg;
 ```game
 {"type": "bug", "id": "w03d1-g1", "title": "Найдите сломанную строку", "q": "Бекзоду нужны кредиты выше среднего основного долга своего продукта. Одна строка ломает этот запрос.", "code": "SELECT l.loan_id, p.code, l.principal\nFROM loans l\nJOIN products p ON p.product_id = l.product_id\nWHERE l.principal > AVG(l.principal) OVER (PARTITION BY p.code);", "answer": [3], "why": "Окна считаются после WHERE, поэтому окно не может стоять в WHERE. Посчитайте его в производной таблице, а фильтруйте снаружи."}
 ```
+
+> 🎬 **Остались вопросы про где можно использовать оконные функции?** [Baraa объясняет (на английском, есть субтитры) · 3 мин](https://youtu.be/SSKVgrwhzus?t=34619&end=34806)
 
 ### Собираем вместе :id=putting-it-together
 

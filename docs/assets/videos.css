@@ -79,3 +79,25 @@ body.yp-lock .lang-switch { display: none; }   /* the player fills the window: n
   .yp-quiz { padding: 12px; font-size: .92em; }
   .yp-set { right: 6px; min-width: 210px; }
 }
+
+/* a clip under a topic: "Didn't get DISTINCT? ▶ Watch · 6 min" in one row, the player opens under it (videos.js clip()) */
+.yt.yt-clip { display: block; max-width: 680px; padding: .55em .7em; border-color: #fde2e2; background: #fff7f7; box-shadow: none; }
+.yt-clip-row { display: flex; align-items: center; gap: .7em; }
+.yt-clip-ic { flex: none; width: 34px; height: 34px; border-radius: 10px; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; }
+.yt-clip-t { flex: 1; min-width: 0; line-height: 1.35; }
+.yt-clip-t .yt-title { display: block; font-size: .93em; }
+.yt-clip-t span { display: block; font-size: .84em; color: var(--muted); }
+.yt-clip .yt-go { flex: none; white-space: nowrap; font-size: .86em; }
+.yt.yt-clip.yt-on .yp { margin-top: .6em; }
+@media (max-width: 520px) {
+  .yt-clip-row { flex-wrap: wrap; row-gap: .5em; }
+  .yt-clip-t { flex-basis: calc(100% - 34px - .7em); }
+  .yt-clip .yt-go { margin-left: calc(34px + .7em); }
+}
+
+/* the box of full videos: closed, opened by its title or by a "▶ 34:01" link in the text */
+details.yt-panel > summary { list-style: none; cursor: pointer; margin-bottom: 0; }
+details.yt-panel > summary::-webkit-details-marker { display: none; }
+details.yt-panel[open] > summary { margin-bottom: .95em; }
+.yt-panel-more { margin-left: auto; flex: none; font-size: 1.6em; line-height: 1; color: var(--muted); transition: transform .15s; }
+details.yt-panel[open] .yt-panel-more { transform: rotate(90deg); }

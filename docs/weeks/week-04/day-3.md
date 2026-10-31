@@ -78,6 +78,8 @@ Week 1's rule holds in Excel: **raw stays raw**. Never clean the only copy. Clea
 {"type": "sort", "id": "w04d3-g6", "title": "Which kind of dirt?", "q": "Drop each value from the Monday files into the kind of problem it shows.", "groups": {"Stray spaces": ["first_name 'Yulduz ' (trailing space)", "method 'CASH '"], "Case": ["first_name 'MALIKA'", "method 'PayMe'"], "Synonym": ["method 'bank transfer'"], "Duplicate": ["payment 52859 = payment 7172"], "Impossible value": ["birth_date 2031-04-12", "registered_at 2027-01-09"], "Blank": ["monthly_income empty"]}}
 ```
 
+> 🎬 **Didn't get what dirty data looks like?** [A short explanation · 4 min](https://youtu.be/zXnQNytHCPM?t=5984&end=6236)
+
 ### Find & Replace — Ctrl+H
 
 **What it is.** **Find & Replace** (*найти и заменить*) changes every occurrence of one text into another, in the selection, the sheet or the workbook. It is a one-time edit: nothing is recorded, and the next file does not get it.

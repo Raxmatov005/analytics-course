@@ -79,6 +79,8 @@ Avg Ticket for the whole book: 404 783 280 000 ÷ 7 828 = 51 709 668 soum. A mea
 {"id": "w07d4-l2", "kind": "number", "answer": 26926915, "dp": 0, "unit": "soum", "hint": "A table by products[code] with Avg Ticket — or 65 109 280 000 ÷ 2 418.", "model": "26 926 915 = 65 109 280 000 / 2 418 loans. The same measure gives a different number in each row because each row has its own filter context."}
 ```
 
+> 🎬 **Didn't get your first DAX measures?** [A short explanation · 11 min](https://youtu.be/A2r6or-Dm28?t=3123&end=3800)
+
 ### Filter context in one picture
 
 **What it is.** A measure has no value of its own — only a value **in a cell**. The cell's filters are its filter context: the slicers on the page, the visual's row and column, page and report filters. Relationships carry them from the dimensions to the fact. Then the measure runs over the rows that are left.
@@ -159,6 +161,8 @@ When the condition involves a measure or several columns, write the filter as a 
 ```game
 {"type": "cloze", "id": "w07d4-g2", "title": "Fill in PAR30", "text": "PAR30 % = {{0}} ( {{1}} ( [Outstanding], v_loan_status[dpd] {{2}} 30 ), [Outstanding] )", "blanks": [["DIVIDE"], ["CALCULATE"], [">"]], "distractors": ["SUM", "FILTER", ">=", "AVERAGE"]}
 ```
+
+> 🎬 **Didn't get CALCULATE?** [A short explanation · 3 min](https://youtu.be/A2r6or-Dm28?t=3797&end=3998)
 
 ### Context transition — CALCULATE inside a row
 
@@ -392,6 +396,10 @@ Tashkent Central 1, Tashkent South 2, … Bukhara Central 8, Nukus Central 9, Te
 ```game
 {"type": "sort", "id": "w07d4-g6", "title": "Which visual?", "q": "Put each question under the visual that answers it.", "groups": {"Card": ["What is PAR30 today?", "How much was disbursed in September 2026?"], "Line chart": ["How has the book grown month by month in 2026?"], "Clustered bar": ["Which branch has the best collection rate?", "How is outstanding split between the five products?"], "Matrix with conditional formatting": ["Where is PAR30 high — which branch and which product?"]}, "why": "One number → card; a trend → line; categories → a sorted bar; two dimensions → a matrix. Five products are a bar, not a pie."}
 ```
+
+> 🎬 **Didn't get which visual to choose?** [A short explanation · 4 min](https://youtu.be/FwjaHCVNBWA?t=4410&end=4640)
+
+> 🎬 **Didn't get stacked and 100% stacked bars?** [A short explanation · 4 min](https://youtu.be/FwjaHCVNBWA?t=5270&end=5530)
 
 ### Slicers, drill-through and tooltips
 

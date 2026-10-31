@@ -55,6 +55,10 @@ ORDER BY loans DESC;
 {"id": "w03d3-l1", "kind": "number", "answer": 488, "dp": 0, "unit": "loans", "hint": "WHERE principal > (SELECT AVG(principal) FROM loans WHERE product_id = 5)", "model": "488 — 400 SME loans and 88 Auto loans exceed 308 728 745, the average SME loan."}
 ```
 
+> 🎬 **Didn't get a subquery in SELECT?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=48005&end=48432)
+
+> 🎬 **Didn't get a subquery in WHERE?** [Baraa explains it · 7 min](https://youtu.be/SSKVgrwhzus?t=48740&end=49138)
+
 ### IN with a subquery — is the value in that list?
 
 **What it is.** `IN (subquery)` is true when the value appears in the **list** the subquery returns. The subquery returns one column and any number of rows.
@@ -86,6 +90,8 @@ WHERE customer_id IN (SELECT customer_id              -- one column,
 ```task
 {"id": "w03d3-l2", "kind": "number", "answer": 2669, "dp": 0, "unit": "loans", "hint": "SELECT COUNT(*) FROM loans WHERE application_id IN (SELECT application_id FROM applications WHERE channel = 'app');", "model": "2 669 — exactly the Micro loans: the app sells one product. IN brought the channel in without joining a second table into the result."}
 ```
+
+> 🎬 **Didn't get IN with a subquery?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=49138&end=49648)
 
 ### EXISTS and NOT EXISTS — is there at least one row?
 
@@ -132,6 +138,8 @@ Both give the same 1 705 customers. For "has none" `NOT EXISTS` usually reads be
 {"id": "w03d3-l3", "kind": "number", "answer": 3, "dp": 0, "unit": "branches", "hint": "SELECT COUNT(*) FROM branches b WHERE NOT EXISTS (SELECT 1 FROM loans l WHERE l.branch_id = b.branch_id AND l.status = 'written_off' AND l.product_id = 4);", "model": "3 branches have never written off an Auto loan; the other 7 have at least one."}
 ```
 
+> 🎬 **Didn't get EXISTS and NOT EXISTS?** [Baraa explains it · 12 min](https://youtu.be/SSKVgrwhzus?t=50660&end=51407)
+
 ### Derived table — a subquery in FROM
 
 **What it is.** A **derived table** (*производная таблица*) is a subquery in `FROM`: its result is used as a table. It needs an alias, and every column needs a name.
@@ -174,6 +182,8 @@ Seven rows: 2 089 borrowers have one loan, 4 have seven. 4 335 borrowers in all.
 {"id": "w03d3-l4", "kind": "number", "answer": 48.2, "dp": 1, "unit": "%", "hint": "ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) in the outer SELECT.", "model": "48.2 % — 2 089 of 4 335 borrowers took one loan only. Half the customers never came back for a second."}
 ```
 
+> 🎬 **Didn't get a subquery in FROM?** [Baraa explains it · 13 min](https://youtu.be/SSKVgrwhzus?t=47250&end=48001)
+
 ### Correlated subquery — the inner query reads the outer row
 
 **What it is.** A **correlated subquery** (*коррелированный подзапрос*) uses a column of the **outer** row, so its answer is different for every outer row. The `EXISTS` tests above were correlated. A scalar subquery can be too: "the limit of **this loan's** product".
@@ -208,6 +218,8 @@ WHERE l.principal >= 0.99 * (SELECT p.max_amount
 ```task
 {"id": "w03d3-l5", "kind": "number", "answer": 846, "dp": 0, "unit": "loans", "hint": "Change 0.99 to 0.9 in the query above.", "model": "846 loans — about one in nine sits in the top tenth of its product's range, close to the limit."}
 ```
+
+> 🎬 **Didn't get correlated subqueries?** [Baraa explains it · 10 min](https://youtu.be/SSKVgrwhzus?t=50027&end=50656)
 
 ### CTE — WITH name AS (…), and why it reads better
 
@@ -248,6 +260,10 @@ The same seven rows: 2 089, 1 378, 593 … 4. The work is identical; the order o
 ```game
 {"type": "bug", "id": "w03d3-g3", "title": "Find the broken line", "q": "Two questions about the same CTE. The first runs; the second says no such table: per_loan. Which line fails?", "code": "WITH per_loan AS (SELECT loan_id, SUM(principal_due) AS outstanding\n                  FROM installments WHERE due_date > '2026-10-01' GROUP BY loan_id)\nSELECT COUNT(*) FROM per_loan;\nSELECT AVG(outstanding) FROM per_loan;", "answer": [3], "why": "A CTE exists only for the one statement that follows it; after the semicolon it is gone. Repeat the WITH, put both numbers in one SELECT, or save the result as a view or table (Day 4)."}
 ```
+
+> 🎬 **Didn't get CTE?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=51494&end=51975)
+
+> 🎬 **Didn't get a standalone CTE?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=52316&end=52842)
 
 ### A chain of CTEs — one grain per step
 
@@ -295,6 +311,10 @@ Six rows. 1 859 borrowers owe on one loan (63 340 783 on average); one borrower 
 {"type": "cloze", "id": "w03d3-g2", "title": "Assemble the chain", "text": "WITH {{0}} AS (SELECT customer_id, COUNT(*) AS n FROM loans {{1}})\nSELECT n AS loans_per_customer, COUNT(*) AS customers\nFROM per_customer\n{{2}}\nORDER BY n;", "blanks": [["per_customer"], ["GROUP BY customer_id"], ["GROUP BY n"]], "distractors": ["WHERE n > 1", "per_loan", "GROUP BY loan_id", "HAVING COUNT(*) > 1"]}
 ```
 
+> 🎬 **Didn't get several CTEs in one query?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=52842&end=53333)
+
+> 🎬 **Didn't get a CTE inside a CTE?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=53333&end=53798)
+
 ### Recursive CTE — rows that are in no table
 
 **What it is.** A **recursive CTE** (*рекурсивный CTE*) refers to **itself**. It starts from an **anchor** row and adds new rows from the last ones until a stop condition fails. It generates rows that exist in no table: a calendar, the numbers 1 to n.
@@ -330,6 +350,8 @@ SELECT COUNT(*), MIN(month_start), MAX(month_start) FROM months;
 ```task
 {"id": "w03d3-l6", "kind": "number", "answer": 6, "dp": 0, "unit": "rows", "hint": "WITH RECURSIVE m(d) AS (SELECT '2026-01-01' UNION ALL SELECT date(d, '+1 month') FROM m WHERE d < '2026-06-01') SELECT COUNT(*) FROM m; — the last row added is the first one that is not before June.", "model": "6: January to June. The step runs while the last month is before June, so June itself is still added, and then the recursion stops."}
 ```
+
+> 🎬 **Didn't get recursive CTE?** [Baraa explains it · 14 min](https://youtu.be/SSKVgrwhzus?t=54326&end=55147)
 
 ### The vintage table — built step by step
 

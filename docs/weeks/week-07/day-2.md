@@ -86,6 +86,8 @@ The analysis table, first rows:
 {"id": "w07d2-l1", "kind": "number", "answer": 27374, "dp": 0, "unit": "rows", "hint": "len(ud) — or 27 974 − 600.", "model": "27 374 — one row per user, after dropping all 600 rows of the 300 users who were in both arms."}
 ```
 
+> 🎬 **Didn't get the experiment data (clicks per group)?** [A short explanation · 6 min](https://youtu.be/KZe0C0Qq4p0?t=2493&end=2849)
+
 ### Sanity check 1 — the sample ratio, overall and by slice
 
 **Before you read.** Guess first, then play with it — the explanation below will make more sense.
@@ -327,6 +329,8 @@ Conversion: 915 of 11 472 in A (7.98 %), 1 013 of 11 434 in B (8.86 %); z = 2.41
 {"id": "w07d2-l6", "kind": "python", "starter": "x2 = with_conversion(ud2, events)\nk2 = x2.groupby(\"variant\")[\"conv\"].agg([\"sum\", \"size\"])\n# TODO: z and p with z_test, B minus A (print z with two decimals)\n", "answer": 3.43, "dp": 2, "model": "A 1 038 / 13 008 = 7.98 %, B 1 193 / 13 007 = 9.17 %: z = 3.43, p = 0.0006. The novelty days make B look much stronger — the clean population (from 4 August) gives z = 2.41."}
 ```
 
+> 🎬 **Didn't get the two-proportion z-test?** [A short explanation · 10 min](https://youtu.be/KZe0C0Qq4p0?t=2849&end=3464)
+
 ### The confidence interval for the lift — absolute and relative
 
 **What it is.** The p-value says *whether*; the **confidence interval** (*доверительный интервал*) says *how much*. Report the lift two ways: **absolute** (points, B − A) and **relative** (%, B ÷ A − 1), each with its 95 % interval.
@@ -378,6 +382,8 @@ r = ab_readout(clean)
 ```task
 {"id": "w07d2-l7", "kind": "number", "answer": 21.0, "dp": 1, "unit": "%", "hint": "The third line of the readout: rel hi %.", "model": "+21.0 % — the ratio's upper limit 1.210, minus 1. Dividing the difference's limit by A's rate would give 20.1 %."}
 ```
+
+> 🎬 **Didn't get the confidence interval and practical significance?** [A short explanation · 3 min](https://youtu.be/KZe0C0Qq4p0?t=3459&end=3651)
 
 ### Secondary metrics — the funnel and the money
 
