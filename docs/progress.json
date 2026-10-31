@@ -1,6 +1,6 @@
 {
   "learner": "",
-  "updated": null,
+  "updated": "2026-10-31",
   "quizDays": 0,
   "stretch": 0,
   "bonus": [],
@@ -25,8 +25,8 @@
       "title": "HW 1.1 — tool ready",
       "title_ru": "HW 1.1 — инструмент готов",
       "max": 10,
-      "earned": null,
-      "onTime": null,
+      "earned": 8,
+      "onTime": true,
       "feedback": null
     },
     {
