@@ -112,32 +112,61 @@ The Python for each idea, and a few extra topics, are in **Going further — the
 
 Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `math`, `random`, `st`, `np`, `pd`, `NormalDist`, `pmf`, `cdf`, `at_least`, the frames `apps` and `loans` and the applicants' scores `s` are ready — if you came straight here, press ▶ Run on the first box of section 1. Answer, check, then open the fold for the full working. (The notebook `data/python/week6/day1_starter.ipynb` holds the same tools with `scipy`; you need it for the homework.)
 
-**First, press ▶ Run on this box once.** It loads the tools and the data that every Practice box uses.
+**First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
 
 ```python
+# the tools and the data from the full version of section 1 — run once
 import math, random
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import statistics as st
-# the normal distribution, from Python's standard library
 from statistics import NormalDist
-
 apps  = pd.read_csv("data/raw/applications.csv")
 loans = pd.read_csv("data/raw/loans.csv")
-# 13 612 scored applicants of 14 000 — say so
 s = apps["credit_score"].dropna()
-
-# binomial: P(X = k) for X ~ Bin(n, p)
 def pmf(k, n, p):
     return math.comb(n, k) * p**k * (1 - p)**(n - k)
 def cdf(k, n, p):                     # P(X <= k)
     return sum(pmf(i, n, p) for i in range(k + 1))
 def at_least(k, n, p):                # P(X >= k) = 1 - P(X <= k - 1)
     return 1 - cdf(k - 1, n, p)
-
-print(len(apps), len(loans), len(s))  # 14000 7828 13612
+p_true = 91 / 7099
+for n in (10, 100, 1_000, 10_000, 100_000):
+    # True = this loan is an FPD
+    k = sum(random.random() < p_true for _ in range(n))
+    print(n, k, round(k / n, 4))
+n, app, fpd, both = 7099, 2411, 91, 41
+p_app, p_fpd = app / n, fpd / n
+rate  = {"app": 41 / 2411,   "branch": 34 / 3263,   "partner": 16 / 1425}
+share = {"app": 2411 / 7099, "branch": 3263 / 7099, "partner": 1425 / 7099}
+N, prior, sens, fpr = 10_000, 44 / 7099, 0.90, 0.05
+values = [0, 0.6 * 27_000_000]
+probs  = [1 - 77 / 2418, 77 / 2418]
+E   = sum(x * q for x, q in zip(values, probs))
+Var = sum((x - E) ** 2 * q for x, q in zip(values, probs))
+n, p = 400, 91 / 7099
+lam, hours = 5102 / 3549, 3549
+def pois(k, lam):               # P(X = k) for X ~ Poisson(lam)
+    return math.exp(-lam) * lam**k / math.factorial(k)
+mins = pd.to_datetime(apps["applied_at"]).dt.minute
+mu, sd = s.mean(), s.std()
+model = NormalDist(mu, sd)
+q = np.sort(s.sample(2000, random_state=2026).to_numpy())
+theory = [model.inv_cdf((i + 0.5) / len(q)) for i in range(len(q))]
+for k in (1, 2, 3):
+    # share of N(0, 1) within ±k
+    rule = NormalDist().cdf(k) - NormalDist().cdf(-k)
+    # share of applicants within ±k sd
+    data = ((s - mu).abs() <= k * sd).mean()
+    print(k, round(rule, 3), round(data, 3), round(mu - k * sd), round(mu + k * sd))
+x = [2, 4, 5, 6, 33]
+rng = np.random.default_rng(2026)
+months = rng.binomial(400, 91 / 7099, size=100_000)
+n, p_c = 400, 77 / 2418
+lo = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.025)
+hi = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.975)
+print('ready')
 ```
+
 
 **P1.** *(probability as a long-run share)* Draw one batch of 50 loans and one batch of 50 000 loans at p = 91 / 7 099, with `random.seed(1)` before the first. Print both shares. Which one would you report as "the FPD rate"?
 

@@ -14,618 +14,95 @@
 
 ## 1. Learn — from the sample to the process
 
-### Population and sample — the process behind the table
+Eight short stories. Each one tells **one idea in small steps**: read a sentence, watch the picture change, press **Next**. A dotted word shows its meaning when you tap it. Tired of reading? Press **▶ Play as a video**: the page reads every step aloud and moves the picture for you.
 
-**What it is.** The **population** (*генеральная совокупность*) is everything you want to talk about. The **sample** (*выборка*) is the part you observed. A **parameter** (*параметр*) is the population's true value — μ for a mean, p for a rate — and it is unknown. An **estimate** (*оценка*), or statistic, is the same quantity computed from the sample: x̄, p̂. One number is a **point estimate** (*точечная оценка*).
+The Python for each idea, and the extra topics, are in **Going further — the full version** near the end of the page (optional).
 
-Even "all 2 411 app loans" is a sample when the question is about the **process**: *will* app loans default more? Next year's app loans are not in the table.
+### One handful — population, sample and sampling error
 
-| | Population (unknown) | Sample (what you compute) |
-|---|---|---|
-| mean | μ | x̄ |
-| standard deviation | σ | s |
-| rate | p | p̂ |
-| size | N | n |
-
-**How to write it.** Press ▶ Run: this first block loads the tools and the data for the whole page. Every later block reuses them.
-
-```python
-import math
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-loans = pd.read_csv("data/raw/loans.csv")
-# all 7 828 principals: the population of this page's experiments
-pop = loans["principal"].to_numpy(dtype=float)
-apps = pd.read_csv("data/raw/applications.csv")
-# 13 612 applicants' credit scores
-s = apps["credit_score"].dropna().to_numpy(dtype=float)
-# week 5's FPD frame: 7 099 loans, fpd30 = 0/1
-f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
-# app = Micro only, partner = BNPL only
-f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
-# seeded: the same "random" draws on every run
-rng = np.random.default_rng(2026)
-
-# 7828 51709668: N and μ — a parameter
-print(len(pop), round(pop.mean()))
-app = f[f["channel"] == "app"]
-# 2411 41 1.7: n, FPDs and p̂ — an estimate
-print(len(app), app["fpd30"].sum(), round(100 * app["fpd30"].mean(), 2))
+```story
+{"id": "w06d2-s1", "title": "One handful from the jar", "min": 6, "steps": [{"say": "A jar of 10 balls, {o|1 of them orange}. The jar is the [[population|everything you want to talk about]]. Tap **Draw 10**: you pull ten balls, one at a time, and put each one back.", "show": {"kind": "bag", "balls": [["o", 1], ["g", 9]], "words": {"hit": "orange"}}, "act": [{"label": "Draw 10", "rep": 1, "n": 10, "do": "draw"}]}, {"say": "Your ten balls are a [[sample|the part you actually observed]]. Their share of orange (under the jar: **share**) is an [[estimate|a number computed from the sample]]: **p̂**, “p-hat”. The jar's true share, the {g|dashed line}, is the [[parameter|the population's true value; in real work it is unknown]]: {g|p}.", "show": {"line": true}, "f": "estimate **p̂** = orange ÷ draws  ·  parameter {g|p} = 1 ÷ 10 = 10 %", "fs": "p-hat is the share in your sample; p is the jar's true share, 10 percent."}, {"say": "Put them back and draw another 10: a different share. The gap between an estimate and the truth is the [[sampling error|estimate − parameter: the luck of which units landed in the sample]]. Every sample has one. It is not a mistake.", "show": {"reset": true}, "f": "sampling error = **p̂** − {g|p}", "act": [{"label": "Draw 10", "rep": 1, "n": 10, "do": "draw"}]}, {"say": "Your turn.", "ask": {"q": "Two handfuls from the same jar show 0 % and 30 % orange. What happened?", "options": ["The jar changed between the draws", "Sampling error: two samples of one jar differ", "Someone miscounted"], "answer": 1, "why": "Nothing changed in the jar: which balls landed in each handful is luck. Every estimate wobbles around the truth."}}, {"say": "Nur's real book: all 7 828 loans, true average {g|51.71 m} (a parameter). Five samples of 392 loans each — every 20th loan — gave five averages, the {b|blue dots}. Each misses by 2.8 to 8.5 m.", "show": {"kind": "ivs", "rows": [[48.29, 48.29, 48.29], [58.11, 58.11, 58.11], [48.89, 48.89, 48.89], [60.16, 60.16, 60.16], [56.03, 56.03, 56.03]], "labels": ["sample 1", "sample 2", "sample 3", "sample 4", "sample 5"], "min": 40, "max": 65, "tick": 5, "unit": " m", "ref": 51.71, "words": {"ref": "true average 51.71 m"}}}, {"say": "In real work you see just **one** row and never know its error. Even all 2 411 app loans are one sample of the app's future: next year's loans aren't in the table. So the app's 1.70 % is an estimate.", "show": {"fade": [1, 2, 3, 4]}}, {"say": "A different trap: someone took the orange ball out before you drew. Every handful now says 0 %, and more draws never fix it. That is [[bias|a sample that misses in the same direction every time]] — like judging all applicants by approved loans only.", "show": {"kind": "bag", "balls": [["g", 9]], "words": {"hit": "orange"}}, "act": [{"label": "Draw 10", "rep": 2, "n": 10, "do": "draw"}], "ask": {"q": "You judge all applicants' credit scores by 5 000 approved loans. Does the big n fix the bias?", "options": ["Yes — 5 000 is plenty", "No — the low scores were never in the jar"], "answer": 1, "why": "Like the jar without its orange ball: more draws from the wrong jar only repeat the same miss. n shrinks sampling error, not bias."}}, {"say": "Back to the honest jar, and keep drawing. The {o|orange line} is the share so far. Tap **Draw 10** a few times, then **Draw 1 000**.", "show": {"balls": [["o", 1], ["g", 9]], "line": true}, "act": [{"label": "Draw 10", "rep": 3, "n": 10, "do": "draw"}, {"label": "Draw 1 000", "rep": 1, "n": 1000, "do": "draw"}]}, {"say": "At first the line swings wildly; then it settles near the {g|true 10 %} and stays there. That is the [[law of large numbers|as n grows, a sample's average gets closer to the population's and stays there]]: more data, smaller sampling error.", "act": [{"label": "Draw 1 000", "rep": 1, "n": 1000, "do": "draw"}]}, {"say": "Nur's loans do the same. One shuffle of all 7 828: the average was {o|106.38 m} after 10 loans, 35.06 m after 100, 52.06 m after 1 000 — and exactly {g|51.71 m} at the end. One huge loan can double a 10-loan average.", "show": {"kind": "ivs", "rows": [[106.38, 106.38, 106.38, "o"], [35.06, 35.06, 35.06], [52.06, 52.06, 52.06], [51.71, 51.71, 51.71, "g"]], "labels": ["after 10 loans", "after 100", "after 1 000", "after all 7 828"], "min": 0, "max": 120, "tick": 20, "unit": " m", "ref": 51.71, "words": {"ref": "true 51.71 m"}}}, {"say": "Your call.", "ask": {"q": "A new branch's average loan after its first 10 loans is twice the book's. What do you do?", "options": ["Act now: the branch lends twice as much", "Wait for more loans: an average of 10 still swings", "Fix the data: it must be wrong"], "answer": 1, "why": "Look at the top row: after 10 loans one shuffle gave 106 m against the true 51.7 m. The average settles only as n grows."}}]}
 ```
 
-The mean principal of all 7 828 loans, 51.71 m soum, is a parameter of the book: every loan is in it. The app's 1.70 % — 41 FPDs in 2 411 loans — is an estimate of the app process's true rate.
+### Many handfuls — the standard error, and how many loans you need
 
-**When you use it.**
-- Before a number goes into a report: say what the population is — the book as it stands, or the process that makes next month's loans.
-- Whenever the question says "will", "is the app riskier", "does the channel": the table is a sample of a process.
-
-**Your turn.** Bekzod asks: *"Will app loans default more than branch loans next year?"* What are the 2 411 app loans in the table?
-
-```task
-{"id": "w06d2-l1", "kind": "choice", "options": ["The population — they are all the app loans we have", "A sample of the app process — next year's loans are not in the table", "A parameter", "Neither — a table cannot be a sample"], "answer": 1, "explain": "The question is about the process that makes future app loans. The 2 411 loans we have are one sample of it, so 1.70 % is an estimate with its own uncertainty."}
+```story
+{"id": "w06d2-s2", "title": "Many handfuls", "min": 6, "steps": [{"say": "Back to the jar: {g|1 ball in 10} is orange. A handful is now 100 draws, and its share of orange drops into its bar. Tap **1 handful** a few times.", "show": {"kind": "hist", "gen": "share", "p": 0.1, "n": 100, "lo": 0, "hi": 24, "bins": 24, "unit": " %", "dp": 1, "truth": 10, "words": {"thing": "Handfuls", "axis": "orange in a handful of 100", "truth": "true 10 %"}}, "act": [{"label": "1 handful", "rep": 3, "n": 1, "do": "sample"}, {"label": "100 handfuls", "rep": 1, "n": 100, "do": "sample"}]}, {"say": "Now 100 handfuls. They pile up around the {g|true 10 %}, and their average (in the read-out) sits right on it. An estimate that is right on average is [[unbiased|right on average over many samples]].", "act": [{"label": "100 handfuls", "rep": 1, "n": 100, "do": "sample"}]}, {"say": "But single handfuls land all over: 6 %, 12 %, 15 %… Their typical distance from the truth — the read-out's {p|spread}, about 3 points — is the [[standard error|the typical distance of an estimate from the truth: the spread of many samples' results]], **SE**.", "show": {"band": 1}}, {"say": "In real work you get one handful, not a hundred. A formula gives the spread without them, and draws the {p|purple curve} the pile follows: {o|p} is the share, {b|n} the handful's size.", "show": {"bell": true}, "f": "SE = √( {o|p} × (1 − {o|p}) ÷ {b|n} ) = √( 0.1 × 0.9 ÷ 100 ) = {p|3 points}", "fs": "SE is the square root of p times one minus p, divided by n: 3 points."}, {"say": "Guess before you look.", "ask": {"q": "Handfuls of 400 instead of 100. The spread becomes…", "options": ["the same, about 3", "half: about 1.5", "a quarter: about 0.75"], "answer": 1, "why": "n sits under a square root: 4 times the draws → √4 = 2 times smaller spread."}}, {"say": "Four times the draws, **half** the spread. The SE shrinks like 1 ÷ √n, and it keeps shrinking as n grows: the estimate is [[consistent|it gets closer to the truth as n grows]].", "show": {"n": 400, "words": {"thing": "Handfuls", "axis": "orange in a handful of 400", "truth": "true 10 %"}}, "f": "SE = √( 0.1 × 0.9 ÷ 400 ) = {p|1.5 points}", "act": [{"label": "100 handfuls", "rep": 2, "n": 100, "do": "sample"}]}, {"say": "Nur: a branch-month of 400 loans with a true FPD rate of {g|1.28 %}. By luck alone the month's rate moves by about {p|0.56 points}. The app's 1.70 % on 2 411 loans moves by about 0.26.", "show": {"p": 0.012818706860121144, "n": 400, "lo": 0, "hi": 4, "bins": 16, "dp": 2, "truth": 1.2818706860121143, "band": null, "bell": false, "words": {"thing": "Months", "axis": "FPD rate of a branch-month, 400 loans", "truth": "true 1.28 %"}}, "f": "SE = √( 0.0128 × 0.9872 ÷ 400 ) = {p|0.56 points}", "act": [{"label": "100 months", "rep": 1, "n": 100, "do": "sample"}]}, {"say": "About 95 % of months land within {p|2 SEs} of the truth (1.96, to be exact). That 1.96 × SE is the [[margin of error|the half-width of the range around an estimate: 1.96 × SE for 95 %]], **E**.", "show": {"band": 2}, "f": "margin {y|E} = 1.96 × SE = 1.96 × 0.56 ≈ {y|1.1 points}"}, {"say": "Turn it around: how many loans for the margin you want? Solve E = 1.96 × SE for n. A rate near 1.28 % to within ±0.5 points takes {b|1 945} loans. Always round up.", "f": "n = 1.96² × p × (1 − p) ÷ {y|E}²  →  p = 1.28 %, {y|E} = 0.005  →  {b|1 945} loans", "fs": "n is 1.96 squared, times p times one minus p, divided by E squared: 1 945 loans.", "ask": {"q": "In that formula, “±0.5 points” means E = …", "options": ["0.5", "0.05", "0.005"], "answer": 2, "why": "E is in the same units as p: 1.28 % is 0.0128, so half a point is 0.005."}}, {"say": "Halve the margin, **quadruple** the loans: ±0.25 points would take 7 779 loans, more than Nur's whole book. With no idea of p, use 0.5, the worst case: ±3 points takes 1 068, the “about a thousand” of opinion polls.", "f": "±1 point → 487  ·  ±0.5 → 1 945  ·  ±0.25 → 7 779 loans"}, {"say": "Last one.", "ask": {"q": "Your estimate's SE is 0.4 points. You need 0.2. How many loans will it take?", "options": ["twice as many", "four times as many", "half as many"], "answer": 1, "why": "SE ∝ 1 ÷ √n: to halve it, √n must double, so n must quadruple — as with the handfuls of 100 and 400."}}]}
 ```
 
-### A good estimate — unbiased and consistent
+### A bell made of averages — the central limit theorem
 
-**What it is.** A good estimate is **unbiased** (*несмещённая*): right on average over many samples. It is also **consistent** (*состоятельная*): closer to the truth as n grows. The sample variance divides by **n − 1**, not by n, so that it is unbiased.
-
-**How to write it.** Sample variance = the sum of squared distances from the sample mean ÷ (n − 1). numpy: `x.var(ddof=1)`; pandas: `.var()`; Excel: `VAR.S`, `STDEV.S`. Check it by experiment — 20 000 samples of five scores, both formulas, averaged:
-
-```python
-# 20 000 samples, n = 5 each
-samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])
-# 3543: the population variance of the 13 612 scores
-print(round(s.var()))
-# ≈ 2 862 (too small), ≈ 3 578 (right on average)
-print(samples.var(axis=1, ddof=0).mean(), samples.var(axis=1, ddof=1).mean())
+```story
+{"id": "w06d2-s3", "title": "A bell made of averages", "min": 5, "steps": [{"say": "Nur's loan amounts. Each tap draws one loan at random and drops it into the bar of its size. Tap **1 loan** a few times, then **500 loans**.", "show": {"kind": "hist", "gen": "mean", "pop": [0.4, 0.4, 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.7, 0.7, 0.8, 0.8, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.1, 1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.3, 1.3, 1.3, 1.3, 1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.5, 1.5, 1.5, 1.5, 1.5, 1.6, 1.6, 1.6, 1.6, 1.6, 1.7, 1.7, 1.7, 1.7, 1.7, 1.8, 1.8, 1.8, 1.8, 1.8, 1.9, 1.9, 1.9, 1.9, 1.9, 2.0, 2.0, 2.0, 2.0, 2.0, 2.1, 2.1, 2.1, 2.1, 2.1, 2.2, 2.2, 2.2, 2.2, 2.2, 2.3, 2.3, 2.3, 2.3, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 2.5, 2.5, 2.5, 2.5, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 2.7, 2.7, 2.7, 2.7, 2.8, 2.8, 2.8, 2.8, 2.8, 2.8, 2.9, 2.9, 2.9, 2.9, 2.9, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.1, 3.1, 3.1, 3.1, 3.2, 3.2, 3.2, 3.2, 3.2, 3.3, 3.3, 3.3, 3.3, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.5, 3.5, 3.5, 3.5, 3.5, 3.6, 3.6, 3.6, 3.6, 3.6, 3.6, 3.7, 3.7, 3.7, 3.7, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.9, 3.9, 3.9, 3.9, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.1, 4.1, 4.1, 4.1, 4.1, 4.2, 4.2, 4.2, 4.2, 4.2, 4.2, 4.3, 4.3, 4.3, 4.3, 4.3, 4.4, 4.4, 4.4, 4.4, 4.4, 4.4, 4.5, 4.5, 4.5, 4.5, 4.5, 4.6, 4.6, 4.6, 4.6, 4.6, 4.7, 4.7, 4.7, 4.7, 4.8, 4.8, 4.8, 4.8, 4.8, 4.9, 4.9, 4.9, 4.9, 4.9, 4.9, 5.0, 5.0, 5.0, 5.0, 5.1, 5.2, 5.2, 5.3, 5.3, 5.4, 5.4, 5.5, 5.6, 5.6, 5.7, 5.7, 5.8, 5.8, 5.9, 5.9, 6.0, 6.1, 6.1, 6.2, 6.3, 6.3, 6.4, 6.4, 6.5, 6.6, 6.6, 6.6, 6.7, 6.8, 6.8, 6.8, 6.9, 7.0, 7.1, 7.1, 7.2, 7.2, 7.3, 7.4, 7.5, 7.5, 7.6, 7.6, 7.7, 7.8, 7.8, 7.9, 7.9, 8.0, 8.2, 8.5, 8.7, 9.0, 9.2, 9.6, 9.8, 10.1, 10.4, 10.8, 11.1, 11.4, 11.8, 12.2, 12.5, 12.8, 13.0, 13.4, 14.0, 14.4, 15.0, 15.2, 15.5, 15.9, 16.3, 16.6, 17.0, 17.2, 17.5, 17.9, 18.1, 18.4, 18.6, 18.9, 19.2, 19.4, 19.7, 20.0, 20.4, 20.6, 21.0, 21.2, 21.5, 21.9, 22.2, 22.4, 22.7, 22.9, 23.2, 23.5, 23.7, 24.1, 24.3, 24.5, 24.9, 25.3, 25.5, 25.8, 26.0, 26.3, 26.6, 26.9, 27.1, 27.3, 27.5, 27.8, 28.1, 28.4, 28.6, 29.0, 29.4, 29.7, 30.0, 30.3, 30.6, 30.9, 31.1, 31.5, 31.8, 32.1, 32.6, 33.0, 33.1, 33.5, 33.8, 34.1, 34.3, 34.6, 34.8, 35.2, 35.6, 36.2, 36.6, 36.8, 37.1, 37.4, 37.7, 37.9, 38.1, 38.3, 38.6, 39.0, 39.3, 39.7, 40.0, 40.3, 40.5, 40.7, 41.1, 41.4, 41.7, 41.9, 42.3, 42.6, 42.9, 43.0, 43.4, 43.6, 43.9, 44.1, 44.4, 44.6, 45.1, 45.3, 45.6, 45.9, 46.1, 46.4, 46.7, 46.9, 47.2, 47.6, 47.9, 48.2, 48.4, 48.7, 49.0, 49.1, 49.4, 49.6, 50.0, 56.5, 62.3, 68.5, 75.4, 80.4, 84.8, 88.7, 95.8, 101.7, 111.1, 116.8, 125.1, 129.6, 132.5, 138.3, 142.2, 150.9, 157.1, 165.1, 172.3, 179.6, 184.9, 192.2, 198.2, 207.2, 213.5, 216.9, 225.6, 229.5, 237.8, 242.0, 246.9, 253.1, 262.5, 269.4, 275.1, 280.7, 289.8, 294.8, 299.9, 307.4, 312.3, 317.9, 324.9, 330.6, 337.0, 341.9, 348.1, 353.6, 356.6, 363.0, 370.9, 378.6, 386.7, 395.2, 405.4, 417.2, 429.1, 440.0, 453.7, 465.6, 476.3, 482.8, 492.9, 505.8, 516.1, 523.1, 538.2, 552.1, 567.9, 573.8, 594.6], "n": 1, "lo": 0, "hi": 600, "bins": 40, "unit": " m", "dp": 1, "truth": 51.71, "words": {"thing": "Loans drawn", "axis": "one loan, m soum", "truth": "average 51.7"}}, "act": [{"label": "1 loan", "rep": 3, "n": 1, "do": "sample"}, {"label": "500 loans", "rep": 1, "n": 500, "do": "sample"}]}, {"say": "A tall bar near zero, a long thin tail to the right: very [[skewed|lopsided: most values small, a long tail of big ones]]. A few SME loans reach almost 600 m. The {g|average} is 51.7 m, the middle loan only 5.8 m.", "act": [{"label": "500 loans", "rep": 1, "n": 500, "do": "sample"}]}, {"say": "Now each sample is **5 loans**, and we drop their **average**. Still lopsided, but the tail is already shorter.", "show": {"n": 5, "hi": 300, "words": {"thing": "Samples", "axis": "average of 5 loans, m", "truth": "average 51.7"}}, "act": [{"label": "500 samples", "rep": 1, "n": 500, "do": "sample"}], "ask": {"q": "Compared with single loans, the averages of 5 spread…", "options": ["more", "less", "the same"], "answer": 1, "why": "An average pulls the huge and the tiny loans towards each other: the read-out's spread falls from about 112.6 m to about 50 m (σ ÷ √5)."}}, {"say": "Averages of **30 loans**: almost a bell. Only the right side still sticks out a little.", "show": {"n": 30, "hi": 160, "words": {"thing": "Samples", "axis": "average of 30 loans, m", "truth": "average 51.7"}}, "act": [{"label": "500 samples", "rep": 1, "n": 500, "do": "sample"}]}, {"say": "Averages of **100 loans**: a bell, and the {p|purple curve} fits it. This is the [[central limit theorem|the average of many independent draws is close to a normal bell, whatever the shape of the data]]: the loans stay skewed, their **average** becomes a bell.", "show": {"n": 100, "bell": true, "words": {"thing": "Samples", "axis": "average of 100 loans, m", "truth": "average 51.7"}}, "act": [{"label": "1 000 samples", "rep": 1, "n": 1000, "do": "sample"}]}, {"say": "Its width is known in advance: the loans' sd, {p|σ} = 112.6 m, divided by √n — the read-out's spread says the same. Keep the two apart: the **sd** describes the loans, the **SE** describes your average.", "show": {"band": 1}, "f": "spread of the averages = {p|σ} ÷ √n = 112.6 ÷ √100 = {p|11.3 m}", "fs": "The spread of the averages is sigma over root n: 112.6 over 10, 11.3 million."}, {"say": "Your turn.", "ask": {"q": "According to the CLT, what becomes a bell?", "options": ["the loan amounts themselves, once n ≥ 30", "the average of n loans, once n is large enough", "only data that were a bell to begin with"], "answer": 1, "why": "Remember the first picture: single loans stay skewed forever. Their average over 100 loans is the bell."}}, {"say": "95 % of the averages land within {p|2 SEs} of the truth (shaded). But “n ≥ 30 is enough” is folklore: on money this skewed, a “95 %” interval catches 88.6 % at n = 30 and 95.2 % at n = 400.", "show": {"band": 2}, "f": "skew of the averages: n = 5 → 1.33  ·  30 → 0.57  ·  100 → 0.30  ·  1 000 → 0.09"}]}
 ```
 
-Dividing by n gives about 2 860 instead of 3 543 — 20 % too small at n = 5. Dividing by n − 1 lands near 3 543. The reason: the sample's own mean sits closer to its five points than the true mean does, so the squared distances come out too small by the factor (n − 1)/n. (The sd, √ of the variance, is still a little low on average — 56.2 against 59.5 here — and nobody minds.)
-
-**When you use it.**
-- Every sample sd or variance: `ddof=1`. At n = 5 (a pilot, a branch-week) the difference is 20 %; at n = 2 411 it is invisible.
-
-> ⚠️ **Watch out.** `np.std(x)` and `np.var(x)` default to ddof = 0, the population formula; pandas' `.std()` uses ddof = 1. Pass `ddof=1` to numpy in every sample calculation.
-
-**Your turn.** At n = 5, the variance divided by n is on average what share of the true variance? Give it as a decimal (like 0.5), not in %.
-
-```task
-{"id": "w06d2-l2", "kind": "number", "answer": 0.8, "dp": 2, "unit": "of the true variance", "hint": "The factor is (n − 1) / n.", "model": "(5 − 1) / 5 = 0.8 — the experiment's 2 862 / 3 543 ≈ 0.81. That is why a sample variance divides by n − 1."}
-```
-
-### Sampling error — every sample misses a little
-
-**What it is.** **Sampling error** (*ошибка выборки*) is the gap between an estimate and the parameter: x̄ − μ. It comes from *which* units happened to land in the sample. It is not a mistake. Every sample has one, and another sample has another.
-
-```pic
-{"id": "w06d2-pic1", "title": "Five samples, five means, one true mean", "caption": "Every 20th loan, starting at loans 1 to 5: 392 loans each. Each dot misses the book's 51.71 m — by 2.8 to 8.5 million soum — and in real work you see only one of them.", "chart": {"type": "intervals", "rows": [{"label": "from loan 1", "lo": 48.29, "mid": 48.29, "hi": 48.29}, {"label": "from loan 2", "lo": 58.11, "mid": 58.11, "hi": 58.11}, {"label": "from loan 3", "lo": 48.89, "mid": 48.89, "hi": 48.89}, {"label": "from loan 4", "lo": 60.16, "mid": 60.16, "hi": 60.16}, {"label": "from loan 5", "lo": 56.03, "mid": 56.03, "hi": 56.03}], "ref": {"at": 51.71, "label": "μ = 51.71 m"}, "min": 40, "max": 65, "unit": " m"}}
-```
-
-**How to write it.** Sampling error = estimate − parameter. Here we know μ, so we can see the errors. Five samples of 392 loans each — every 20th loan, starting at loan 1, 2, 3, 4 and 5 (a **systematic sample**):
-
-```python
-# 51.71 m: the parameter
-mu = pop.mean()
-for start in range(5):
-    # every 20th loan: 392 loans
-    part = loans["principal"].iloc[start::20]
-    print(start + 1, len(part), round(part.mean() / 1e6, 2), round((part.mean() - mu) / 1e6, 2))
-```
-
-| sample starts at loan | n | mean, m soum | sampling error, m soum |
-|---|---|---|---|
-| 1 | 392 | 48.29 | −3.42 |
-| 2 | 392 | 58.11 | +6.40 |
-| 3 | 392 | 48.89 | −2.82 |
-| 4 | 392 | 60.16 | +8.45 |
-| 5 | 392 | 56.03 | +4.32 |
-
-Five samples from one book give five different means; each misses 51.71 m by 2.8 to 8.5 million soum. In real work you see one row of this table, and you do not know its error.
-
-**When you use it.**
-- To explain why this month's rate differs from last month's when nothing in the process changed.
-- As the reason every estimate needs an interval: the next subsections measure how big the error typically is.
-
-> ⚠️ **Watch out.** Sampling error is not **bias** (*смещение*). A biased sample — approved loans only, one branch only — misses in the same direction every time, and a larger n does not fix it. Sampling error shrinks as n grows; bias does not.
-
-**Your turn.** A branch's FPD rate was 1.1 % last quarter and 1.6 % this quarter. Nothing changed in the products, the officers or the rules. What is the most likely explanation?
-
-```task
-{"id": "w06d2-l3", "kind": "choice", "options": ["A data error", "Sampling error — two samples from the same process give different rates", "Bias in how the loans were chosen", "The process must have changed"], "answer": 1, "explain": "Two quarters are two samples of a few hundred loans each. Their rates differ even when the true rate is the same; the standard error (next) says by how much."}
-```
-
-### Standard error — how much an estimate moves
-
-**What it is.** Draw sample after sample, and the estimate moves. Its distribution over repeated samples is the **sampling distribution** (*выборочное распределение*). The standard deviation of that distribution is the **standard error** (*стандартная ошибка*, SE) — the typical size of the sampling error.
-
-**How to write it.**
-
-```text
-SE of a mean
-  = s / √n
-  (sd of the data ÷ square root
-   of the sample size)
-SE of a proportion
-  = √( p̂ (1 − p̂) / n )
-```
-
-```python
-# 5.69: SE of a 392-loan mean principal, m soum
-print(round(pop.std() / math.sqrt(392) / 1e6, 2))
-p = 41 / 2411
-# 0.263: SE of the app FPD rate, in points
-print(round(100 * math.sqrt(p * (1 - p) / 2411), 3))
-```
-
-A 392-loan mean principal moves by about 5.7 m from sample to sample — the size of the errors in the table above (−3.4 to +8.5 m). The app's 1.70 % moves by about 0.26 points.
-
-**When you use it.**
-- Inside every interval and every test this week: estimate ± critical value × SE.
-- To plan: four times the loans halve the SE.
-
-| | Standard deviation (sd) | Standard error (SE) |
-|---|---|---|
-| describes | the loans: how different they are | the estimate: how much it would move |
-| with more loans | stays about the same | shrinks like 1 / √n |
-| principal, n = 400 | 112.6 m | 112.6 / √400 = 5.63 m |
-
-> ⚠️ **Watch out.** An interval built with the sd instead of the SE is as wide as the data — √n times too wide. The sd is about loans; the SE is about your number.
-
-**Your turn.** The SE of the branch FPD rate, 34 FPDs in 3 263 loans, in percentage points, to 2 decimals?
-
-```task
-{"id": "w06d2-l4", "kind": "number", "answer": 0.18, "dp": 2, "unit": "points", "hint": "p̂ = 34 / 3 263; SE = √(p̂ (1 − p̂) / n), then × 100.", "model": "p̂ = 1.04 %; √(0.01042 × 0.98958 / 3 263) = 0.00178 = 0.18 points — smaller than the app's 0.26, because the branch has more loans."}
-```
-
-### The law of large numbers — the average settles
-
-**What it is.** The **law of large numbers** (*закон больших чисел*, ЗБЧ): as n grows, the sample mean gets closer to the population mean and stays there. It needs a finite mean — the Stretch shows a distribution that has none.
-
-**How to write it.** Running mean after n draws = the sum of the first n values ÷ n.
-
-```python
-# the 7 828 principals in a random order
-order = np.random.default_rng(2026).permutation(pop)
-# the mean after 1, 2, 3, … loans
-running = np.cumsum(order) / np.arange(1, len(order) + 1)
-for n in (10, 100, 1000, 7828):
-    # wild at first; exactly 51.71 m at 7 828
-    print(n, round(running[n - 1] / 1e6, 2))
-```
-
-One shuffle gave **106.38 m** after 10 loans, **35.06 m** after 100, **52.06 m** after 1 000 and **51.71 m** after all 7 828. Early means swing because one SME loan (up to 599 m) outweighs ten Micro loans. The swings die out like 1 / √n.
-
-**When you use it.**
-- The reason a rate from 2 411 loans is worth more than a rate from 50.
-- The reason not to judge a new branch on its first week: a running mean at n = 10 can be twice the truth.
-
-**Your turn.** A new branch's average ticket after its first 10 loans is twice the book's. What does the law of large numbers tell you?
-
-```task
-{"id": "w06d2-l5", "kind": "choice", "options": ["The branch lends twice as much — act now", "Ten loans are too few: a running mean swings until n is large, so wait for more loans", "The mean of 10 loans already equals the population mean", "The branch's data must be wrong"], "answer": 1, "explain": "The average settles only as n grows. On principal, one shuffle gave 106 m after 10 loans against the true 51.7 m."}
-```
-
-### The central limit theorem — the mean becomes a bell
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+**Now play.** The same idea with sliders — try the challenges.
 
 ```explore
 {"id": "w06d2-x1", "type": "clt", "title": "Watch the averages become a bell", "popLabel": "The data: all 7 828 loans — most are small, a few are huge (orange: 200 m and more)", "unit": "m", "predict": {"q": "Loan amounts are very skewed: most are small, a few are huge. Take many samples of **30 loans** and plot each sample's **average**. The averages will look…", "options": ["just as skewed as the loans", "almost a bell, still a little skewed", "flat: every average equally likely"], "why": "That is the central limit theorem: an average of n draws is close to normal, with spread σ / √n — but the more skewed the data, the larger n must be before the bell is clean.", "answer": 1}, "start": {"n": 1}, "ns": [1, 2, 5, 10, 30, 50, 100, 200], "popCap": 200, "pop": [0.4, 0.4, 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.7, 0.7, 0.8, 0.8, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.1, 1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.3, 1.3, 1.3, 1.3, 1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.5, 1.5, 1.5, 1.5, 1.5, 1.6, 1.6, 1.6, 1.6, 1.6, 1.7, 1.7, 1.7, 1.7, 1.7, 1.8, 1.8, 1.8, 1.8, 1.8, 1.9, 1.9, 1.9, 1.9, 1.9, 2.0, 2.0, 2.0, 2.0, 2.0, 2.1, 2.1, 2.1, 2.1, 2.1, 2.2, 2.2, 2.2, 2.2, 2.2, 2.3, 2.3, 2.3, 2.3, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 2.5, 2.5, 2.5, 2.5, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 2.7, 2.7, 2.7, 2.7, 2.8, 2.8, 2.8, 2.8, 2.8, 2.8, 2.9, 2.9, 2.9, 2.9, 2.9, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.1, 3.1, 3.1, 3.1, 3.2, 3.2, 3.2, 3.2, 3.2, 3.3, 3.3, 3.3, 3.3, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.5, 3.5, 3.5, 3.5, 3.5, 3.6, 3.6, 3.6, 3.6, 3.6, 3.6, 3.7, 3.7, 3.7, 3.7, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.9, 3.9, 3.9, 3.9, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.1, 4.1, 4.1, 4.1, 4.1, 4.2, 4.2, 4.2, 4.2, 4.2, 4.2, 4.3, 4.3, 4.3, 4.3, 4.3, 4.4, 4.4, 4.4, 4.4, 4.4, 4.4, 4.5, 4.5, 4.5, 4.5, 4.5, 4.6, 4.6, 4.6, 4.6, 4.6, 4.7, 4.7, 4.7, 4.7, 4.8, 4.8, 4.8, 4.8, 4.8, 4.9, 4.9, 4.9, 4.9, 4.9, 4.9, 5.0, 5.0, 5.0, 5.0, 5.1, 5.2, 5.2, 5.3, 5.3, 5.4, 5.4, 5.5, 5.6, 5.6, 5.7, 5.7, 5.8, 5.8, 5.9, 5.9, 6.0, 6.1, 6.1, 6.2, 6.3, 6.3, 6.4, 6.4, 6.5, 6.6, 6.6, 6.6, 6.7, 6.8, 6.8, 6.8, 6.9, 7.0, 7.1, 7.1, 7.2, 7.2, 7.3, 7.4, 7.5, 7.5, 7.6, 7.6, 7.7, 7.8, 7.8, 7.9, 7.9, 8.0, 8.2, 8.5, 8.7, 9.0, 9.2, 9.6, 9.8, 10.1, 10.4, 10.8, 11.1, 11.4, 11.8, 12.2, 12.5, 12.8, 13.0, 13.4, 14.0, 14.4, 15.0, 15.2, 15.5, 15.9, 16.3, 16.6, 17.0, 17.2, 17.5, 17.9, 18.1, 18.4, 18.6, 18.9, 19.2, 19.4, 19.7, 20.0, 20.4, 20.6, 21.0, 21.2, 21.5, 21.9, 22.2, 22.4, 22.7, 22.9, 23.2, 23.5, 23.7, 24.1, 24.3, 24.5, 24.9, 25.3, 25.5, 25.8, 26.0, 26.3, 26.6, 26.9, 27.1, 27.3, 27.5, 27.8, 28.1, 28.4, 28.6, 29.0, 29.4, 29.7, 30.0, 30.3, 30.6, 30.9, 31.1, 31.5, 31.8, 32.1, 32.6, 33.0, 33.1, 33.5, 33.8, 34.1, 34.3, 34.6, 34.8, 35.2, 35.6, 36.2, 36.6, 36.8, 37.1, 37.4, 37.7, 37.9, 38.1, 38.3, 38.6, 39.0, 39.3, 39.7, 40.0, 40.3, 40.5, 40.7, 41.1, 41.4, 41.7, 41.9, 42.3, 42.6, 42.9, 43.0, 43.4, 43.6, 43.9, 44.1, 44.4, 44.6, 45.1, 45.3, 45.6, 45.9, 46.1, 46.4, 46.7, 46.9, 47.2, 47.6, 47.9, 48.2, 48.4, 48.7, 49.0, 49.1, 49.4, 49.6, 50.0, 56.5, 62.3, 68.5, 75.4, 80.4, 84.8, 88.7, 95.8, 101.7, 111.1, 116.8, 125.1, 129.6, 132.5, 138.3, 142.2, 150.9, 157.1, 165.1, 172.3, 179.6, 184.9, 192.2, 198.2, 207.2, 213.5, 216.9, 225.6, 229.5, 237.8, 242.0, 246.9, 253.1, 262.5, 269.4, 275.1, 280.7, 289.8, 294.8, 299.9, 307.4, 312.3, 317.9, 324.9, 330.6, 337.0, 341.9, 348.1, 353.6, 356.6, 363.0, 370.9, 378.6, 386.7, 395.2, 405.4, 417.2, 429.1, 440.0, 453.7, 465.6, 476.3, 482.8, 492.9, 505.8, 516.1, 523.1, 538.2, 552.1, 567.9, 573.8, 594.6], "challenges": [{"id": "c1", "text": "Set **n = 1** and draw at least 200 samples: each “average” is one loan, so the picture is as skewed as the loans.", "when": {"n": ["=", 1], "samples": [">=", 200]}}, {"id": "c2", "text": "Set **n = 30**, draw 200 or more, and show the bell: close — but the right side still sticks out.", "when": {"n": ["=", 30], "samples": [">=", 200], "bell": ["=", 1]}}, {"id": "c3", "text": "Find the **smallest n** whose averages have a skew below **0.5** (watch the read-out) and draw 100 samples there.", "when": {"n": ["=", 50], "samples": [">=", 100]}}, {"id": "c4", "text": "Make the spread of the averages **10 m or less**. Which n does it take? (σ / √n tells you before you draw.)", "when": {"sdm": ["<=", 10.5], "samples": [">=", 100]}}]}
 ```
 
-**What it is.** The **central limit theorem** (*центральная предельная теорема*, ЦПТ): the mean of n independent draws is approximately **normal**, with mean μ and sd σ / √n, **whatever the shape of the data**, once n is large enough. It is shown here by simulation, not proved.
+### A net for the average — the t interval
 
-**How to write it.** Take many samples of n loans, keep each sample's mean, look at the means. Loan principal is about as skewed as money gets: mean 51.7 m, median 5.79 m, skew 2.92. The notebook's 5 000 samples per n (`default_rng(2026)`, without replacement):
-
-| n | sd of the 5 000 means | SE = σ / √n | skew of the means | share within ±1.96 SE |
-|---|---|---|---|---|
-| 5 | 49.08 m | 50.35 m | 1.33 | 95.6 % |
-| 30 | 20.47 m | 20.56 m | 0.57 | 95.8 % |
-| 100 | 11.32 m | 11.26 m | 0.30 | 94.7 % |
-| 1 000 | 3.33 m | 3.56 m | 0.09 | 96.0 % |
-
-
-See it yourself — 2 000 samples per n (your numbers will sit close to the table's):
-
-```python
-# 51.71 m, 112.6 m — the population
-mu, sigma = pop.mean(), pop.std()
-fig, axes = plt.subplots(1, 4, figsize=(14, 3))
-for ax, n in zip(axes, (5, 30, 100, 1000)):
-    # 2 000 sample means
-    means = np.array([rng.choice(pop, n, replace=False).mean() for _ in range(2000)])
-    ax.hist(means / 1e6, bins=40, color="#9bb7d4"); ax.axvline(mu / 1e6, color="#c0392b")
-    ax.set_title(f"n = {n}: sd {means.std() / 1e6:.1f} m, SE {sigma / np.sqrt(n) / 1e6:.1f} m", fontsize=9)
-plt.tight_layout(); plt.show()
+```story
+{"id": "w06d2-s4", "title": "A net for the average", "min": 5, "steps": [{"say": "Nur's 2 418 Consumer loans have a true average of {g|26.93 m} — but pretend you can't see it. You get **50 loans** (simulated with their real average and spread). Tap: the {b|blue dot} is their average, your estimate.", "show": {"kind": "ci", "mu": 26.93, "sd": 13.61, "n": 50, "conf": 0.95, "lo": 15, "hi": 39, "unit": " m", "words": {"truth": "true average 26.93 m"}}, "act": [{"label": "Take 50 loans", "rep": 1, "n": 1, "do": "draw"}]}, {"say": "A dot alone hides its wobble. So throw a **net** around it: the average ± about 2 standard errors — the {b|line} through the dot. From the bell of averages, such a net catches the truth about 95 times in 100.", "f": "average ± 2 × SE", "act": [{"label": "Another 50 loans", "rep": 2, "n": 1, "do": "draw"}]}, {"say": "The notebook's real 50 loans: average {b|27.49 m}, and their own sd, {p|s} = 12.62 m. We don't know the true σ of all the loans, so s stands in: SE = s ÷ √50 = {p|1.78 m}.", "f": "SE = {p|s} ÷ √n = 12.62 ÷ √50 = {p|1.78 m}", "fs": "SE is s over root n: 12.62 over root 50, 1.78 million."}, {"say": "The net: from {y|23.90 to 31.07 m}, and the true 26.93 m is inside. Such a range is a [[confidence interval|estimate ± multiplier × SE: a range of plausible values for the true number]].", "f": "{b|27.49} ± 2.01 × {p|1.78} = {y|23.90 … 31.07 m}", "fs": "27.49 plus or minus 2.01 times 1.78: from 23.90 to 31.07 million.", "ask": {"q": "With 200 loans instead of 50, the net would be about…", "options": ["twice as wide", "half as wide", "just as wide"], "answer": 1, "why": "The net is a multiple of SE = s ÷ √n: four times the loans, √4 = 2 times narrower."}}, {"say": "Why 2.01, not 1.96? s is itself estimated from the 50 loans, so the net needs a little extra room: the multiplier comes from [[Student's t|a bell with fatter tails, for when the sd is estimated from the sample]] with n − 1 = 49 [[degrees of freedom|n − 1 for a mean: one piece of information is used up by the sample's own average]].", "f": "t (49 df) = 2.01  ·  t (9 df) = 2.26  ·  z = 1.96", "fs": "t with 49 degrees of freedom is 2.01; with 9, 2.26; z is 1.96."}, {"say": "With only **10 loans** the nets are wide, and t = 2.26 makes them 15 % wider than z would. With few loans z is too narrow; t is the honest one. z only when the true σ is known — practically never.", "show": {"n": 10}, "act": [{"label": "Take 10 loans", "rep": 3, "n": 1, "do": "draw"}, {"label": "20 samples", "rep": 1, "n": 20, "do": "draw"}]}, {"say": "Your turn.", "ask": {"q": "You have 10 loans and want a 95 % net for their average. Which multiplier?", "options": ["1.96 (z)", "2.26 (t with 9 degrees of freedom)", "2.01 (t with 49 degrees of freedom)"], "answer": 1, "why": "n − 1 = 9 degrees of freedom: t = 2.26. With 1.96 the nets in the picture would be too narrow and miss more often."}}, {"say": "One trap: s divides by **n − 1**, not n. Your loans sit closer to their own average than to the true one, so dividing by n comes out too small — the variance by 20 % at n = 5. n − 1 makes it unbiased.", "show": {"n": 50}, "f": "s = √( sum of (x − average)² ÷ ({b|n} − 1) )", "fs": "s divides the squared distances by n minus 1.", "act": [{"label": "20 samples", "rep": 1, "n": 20, "do": "draw"}]}, {"say": "In code: pandas' `.std()` already divides by n − 1; numpy's `np.std(x)` divides by n unless you write `ddof=1`. In Excel: STDEV.S, not STDEV.P.", "ask": {"q": "Five pilot scores sit in a numpy array `x`. Which line gives the s for a net?", "options": ["`np.std(x)`", "`np.std(x, ddof=1)`", "`np.mean(x)`"], "answer": 1, "why": "`ddof=1` divides by n − 1. Plain `np.std(x)` divides by n: a net slightly too narrow."}}]}
 ```
 
-The spread of the means follows σ / √n, and their skew melts from 1.33 to 0.09: the bell appears. At n = 1 000 the spread is a little below σ / √n because we take 13 % of a finite population without replacement: × √((7 828 − 1 000) / 7 827) = 0.934 gives 3.32 m — the **finite-population correction**.
-
-**When you use it.**
-- It is why one t interval or one z-test works on money: they need the *mean* to be normal, not the loans.
-- It warns you: the more skewed the data, the larger the n before a normal-based interval keeps its promise.
-
-> ⚠️ **Watch out.** "n ≥ 30 is enough" is folklore. At n = 30 these means are still skewed (0.57), and an interval that assumes normality covers less than it promises (see "What 95 % means"). How many is "many" depends on the skew.
-
-**Your turn.** According to the CLT, *what* becomes approximately normal?
-
-```task
-{"id": "w06d2-l6", "kind": "choice", "options": ["The loan principals themselves, once n ≥ 30", "The mean of n loans, once n is large enough — later for skewed data", "Every sample, always", "Only data that were normal to begin with"], "answer": 1, "explain": "Loan amounts stay skewed forever. The average of many of them is close to normal — at n = 100 the means' skew is 0.30, at n = 1 000 it is 0.09."}
-```
-
-### Confidence interval for a mean — t, not z
-
-**What it is.** A **confidence interval** (*доверительный интервал*, CI) is a range of plausible values for a parameter: **estimate ± critical value × SE**. For a mean, the critical value comes from **Student's t** distribution (*распределение Стьюдента*) with n − 1 **degrees of freedom** (*степени свободы*), because s stands in for the unknown σ. The z value 1.96 is the limit of t as n grows.
-
-**How to write it.** Mean ± t(0.975, n − 1) × s / √n.
-
-| df | 4 | 9 | 29 | 49 | 99 | 999 | ∞ (z) |
-|---|---|---|---|---|---|---|---|
-| t₀.₉₇₅ | 2.776 | 2.262 | 2.045 | 2.010 | 1.984 | 1.962 | 1.960 |
-
-```python
-# the 2 418 Consumer loans (product_id 2 = CONS)
-cons = loans.loc[loans["product_id"] == 2, "principal"].to_numpy(dtype=float)
-# your 50 loans — the notebook's draw: mean 27 486 400, s 12 617 221
-smp = rng.choice(cons, 50, replace=False)
-# estimate, sample sd (ddof=1), size
-m, s50, n = smp.mean(), smp.std(ddof=1), 50
-# standard error — notebook: 1 784 345
-se = s50 / np.sqrt(n)
-# t(0.975, df = 49), from the table above — scipy.stats.t.ppf(0.975, 49)
-t_crit = 2.0096
-# t interval — notebook: 23 900 625 … 31 072 175
-print(round(m - t_crit * se), round(m + t_crit * se))
-# z: a little narrower (23 989 085 … 30 983 715)
-print(round(m - 1.96 * se), round(m + 1.96 * se))
-# the true Consumer mean: 26 926 915 — inside?
-print(round(cons.mean()))
-# scipy (the notebook): scipy.stats.t.interval(0.95, n - 1, loc=m, scale=se)
-```
-
-On the notebook's 50 loans the t interval is 23.90–31.07 m, and the true Consumer mean, 26.93 m, is inside. Excel: `=CONFIDENCE.T(0.05, STDEV.S(B2:B51), 50)` → half-width **3 585 775**; `=T.INV.2T(0.05, 49)` → 2.0096; `=NORM.S.INV(0.975)` → 1.96.
-
-**When you use it.**
-- An average with its precision: the average Consumer ticket, the average score of approved loans.
-
-| | z interval | t interval |
-|---|---|---|
-| critical value | 1.96, always | t(0.975, n − 1): 2.262 at n = 10, 2.010 at n = 50 |
-| assumes | σ is known | σ is estimated by s |
-| width vs the other | narrower | 15 % wider at n = 10, 2.5 % at n = 50 |
-| use it | practically never | always, for a mean |
-
-**Your turn.** 400 loans: mean principal 51.7 m, s = 112.6 m, t(0.975, 399) = 1.966. The half-width of the 95 % t interval, in m soum, to 2 decimals?
-
-```task
-{"id": "w06d2-l7", "kind": "number", "answer": 11.07, "dp": 2, "unit": "m soum", "hint": "SE = 112.6 / √400; half-width = 1.966 × SE.", "model": "SE = 112.6 / 20 = 5.63 m; 1.966 × 5.63 = 11.07 m, so the interval is about 40.6–62.8 m."}
-```
-
-### Confidence interval for a proportion — the Wald interval
-
-**What it is.** The **Wald interval** is the textbook interval for a rate: p̂ ± 1.96 × √(p̂ (1 − p̂) / n). It assumes the rate's sampling distribution is a symmetric bell. Near 0 % it is not: a rate cannot go below zero but can go far above.
-
-```pic
-{"id": "w06d2-pic2", "title": "Near 0 %, the Wald interval breaks", "caption": "On 41 FPDs in 2 411 app loans Wald is fine — Wilson sits close. On 2 FPDs in 150 loans it reaches below zero, and on 0 in 120 it shrinks to a point at zero: the two red rows.", "chart": {"type": "intervals", "rows": [{"label": "app, Wald", "lo": 1.18, "mid": 1.7, "hi": 2.22, "miss": false}, {"label": "app, Wilson", "lo": 1.26, "mid": 1.7, "hi": 2.3, "miss": false}, {"label": "2/150, Wald", "lo": -0.5, "mid": 1.33, "hi": 3.17, "miss": true}, {"label": "0/120, Wald", "lo": 0, "mid": 0, "hi": 0, "miss": true}], "ref": {"at": 0, "label": "0 %"}, "min": -1, "max": 3.5, "unit": " %"}}
-```
-
-**How to write it.**
-
-```python
-def wald(k, n, z=1.96):                    # k events in n trials
-    p = k / n                              # the estimate p̂
-    half = z * math.sqrt(p * (1 - p) / n)  # critical value × standard error
-    return p - half, p + half
-
-for name, k, n in [("app", 41, 2411), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
-    print(name, [round(100 * v, 2) for v in wald(k, n)])
-# app [1.18, 2.22] · 2 in 150 [-0.5, 3.17] · 0 in 120 [0.0, 0.0]
-```
-
-The app: 1.18–2.22 %. Two FPDs in 150 loans: −0.50 to 3.17 % — a negative default rate. Zero in 120: 0 to 0 — "certainly zero".
-
-**When you use it.**
-- A rate between about 20 % and 80 % on hundreds of cases (an approval rate on 2 000 applications).
-- Quick planning arithmetic (sample size, below).
-
-> ⚠️ **Watch out.** For a rate near 0 % — FPD, fraud, default — on a few hundred loans, Wald is too narrow, can go negative and collapses to zero width at 0 events. Default to Wilson (next).
-
-**Your turn.** The upper limit of the Wald 95 % interval for the branch FPD rate, 34 / 3 263, in %, to 2 decimals?
-
-```task
-{"id": "w06d2-l8", "kind": "number", "answer": 1.39, "dp": 2, "unit": "%", "hint": "wald(34, 3263), then × 100.", "model": "p̂ = 1.04 %, SE 0.18 points, half-width 0.35: 0.69–1.39 %."}
-```
-
-### The Wilson interval — the right default for a rate
-
-**What it is.** The **Wilson interval** (*интервал Уилсона*) is built by inverting the score test instead of assuming a bell around p̂. It is never negative, never zero-width, asymmetric in the right direction near 0 %, and covers close to 95 %. The **Clopper–Pearson** interval ("exact", *точный*) comes from the binomial itself; it guarantees *at least* 95 % and is therefore a little wide.
-
-**How to write it.**
-
-```text
-centre
-  = (p̂ + z²/2n) / (1 + z²/n)
-half-width
-  = z √( p̂(1 − p̂)/n + z²/4n² )
-    / (1 + z²/n)
-```
-
-```python
-def wilson(k, n, z=1.96):
-    p = k / n
-    # pulled a little towards 50 %
-    centre = (p + z**2 / (2 * n)) / (1 + z**2 / n)
-    half = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / (1 + z**2 / n)
-    return centre - half, centre + half
-# binomial P(X = k), from Day 1 (Practice uses it)
-def pmf(k, n, p):
-    return math.comb(n, k) * p**k * (1 - p)**(n - k)
-# 95 % CI for the difference p1 − p2
-def newcombe(k1, n1, k2, n2):
-    p1, p2 = k1 / n1, k2 / n2
-    l1, u1 = wilson(k1, n1); l2, u2 = wilson(k2, n2)
-    d = p1 - p2
-    return d, d - math.sqrt((p1 - l1)**2 + (u2 - p2)**2), d + math.sqrt((u1 - p1)**2 + (p2 - l2)**2)
-
-for name, k, n in [("app", 41, 2411), ("branch", 34, 3263), ("partner", 16, 1425), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
-    print(name, "Wilson", [round(100 * v, 2) for v in wilson(k, n)], "Wald", [round(100 * v, 2) for v in wald(k, n)])
-# [0.66, 0.05, 1.33]
-print("app − branch", [round(100 * v, 2) for v in newcombe(41, 2411, 34, 3263)])
-```
-
-App **1.26–2.30 %**, branch **0.75–1.45 %**, partner **0.69–1.82 %**; 2 in 150 → 0.37–4.73 %; 0 in 120 → 0–3.10 %. The app's interval reaches 0.44 points below 1.70 and 0.60 above: the right shape for a rate near zero. Excel has no Wilson function — with k in B1, n in B2, z in B3 (`=NORM.S.INV(0.975)`):
-
-| Bound | Excel |
-|---|---|
-| Wilson, lower | `=(B1/B2 + B3^2/(2*B2) - B3*SQRT(B1/B2*(1-B1/B2)/B2 + B3^2/(4*B2^2))) / (1 + B3^2/B2)` |
-| Wilson, upper | the same with `+` before `B3*SQRT` |
-| Clopper–Pearson, lower | `=BETA.INV(0.025, B1, B2-B1+1)` |
-| Clopper–Pearson, upper | `=BETA.INV(0.975, B1+1, B2-B1)` |
-
-**When you use it.** Every rate, at any n — FPD, approval rate, PAR30. Clopper–Pearson when an auditor or a regulator wants 95 % guaranteed. For a **difference** of two rates, combine the two Wilson intervals (**Newcombe**): app − branch = 0.66 points, 95 % CI **0.05 to 1.33** points. Coverage of a "95 %" interval at the true rate 1.28 % (20 000 samples each, `proportion_confint(k, n, method=...)`, `default_rng(2026)`):
-
-| n | Wald (`"normal"`) | Wilson (`"wilson"`) | Clopper–Pearson (`"beta"`) | samples with 0 FPDs |
-|---|---|---|---|---|
-| 100 | **72.7 %** | 95.9 % | 99.0 % | 27.1 % |
-| 400 | **87.7 %** | 96.0 % | 98.0 % | 0.6 % |
-| 2 000 | 94.0 % | 95.3 % | 96.3 % | 0 % |
-
-A "95 %" Wald interval on a branch-month of 400 loans is really an 88 % interval. In Python all three are `proportion_confint(41, 2411, method="wilson" | "beta" | "normal")` from `statsmodels.stats.proportion`.
-
-> ⚠️ **Watch out.** Two overlapping intervals are not a test of the difference. App (1.26–2.30 %) and branch (0.75–1.45 %) overlap, yet the Newcombe interval of their difference, 0.05 to 1.33 points, does not contain zero. Compare two rates with an interval for the difference — or tomorrow's test.
-
-**Your turn.** The upper limit of the Wilson 95 % interval for the partner FPD rate, 16 / 1 425, in %, to 2 decimals?
-
-```task
-{"id": "w06d2-l9", "kind": "number", "answer": 1.82, "dp": 2, "unit": "%", "hint": "wilson(16, 1425), then × 100.", "model": "Partner: 1.12 %, Wilson 0.69–1.82 % (Wald 0.58–1.67 %). Wilson sits higher and is wider above the estimate than below."}
-```
-
-### What 95 % means — and what it does not
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w06d2-x2", "type": "intervals", "title": "A hundred intervals, one true rate", "predict": {"q": "The true FPD rate is 1.28 %. You draw **100 samples** of 400 loans and build a 95 % interval from each. How many of the 100 intervals contain the true rate?", "options": ["all 100 — that is what 95 % confident means", "exactly 95, every time", "about 95 — one run 93, the next 98", "about half"], "answer": 2, "why": "95 % is the method's long-run catch rate. One run of 100 lands near 95 — anything from about 90 to 99 is normal — and no single interval can tell you whether it is one of the misses."}, "p": 0.012818706860121144, "ns": [50, 100, 200, 400, 800, 1600, 3200], "start": {"n": 400, "conf": 95, "wald": 0}, "challenges": [{"id": "c1", "text": "With the page's **Wilson** interval at n = 400 and 95 %, draw **500 intervals** or more: about **5 in 100** miss (between 2.5 % and 7.5 %).", "when": {"n": ["=", 400], "conf": ["=", 95], "wald": ["=", 0], "drawn": [">=", 500], "missShare": ["between", 0.025, 0.075]}}, {"id": "c2", "text": "Same n, drop to **80 %** and draw 200 or more: narrower intervals — and now about **1 in 5** misses.", "when": {"n": ["=", 400], "conf": ["=", 80], "drawn": [">=", 200], "missShare": [">=", 0.12]}}, {"id": "c3", "text": "Make the intervals **half as wide** as at n = 400 and draw 100 there. How many loans did it take?", "when": {"drawn": [">=", 100], "wratio": ["between", 0.45, 0.55]}}, {"id": "c4", "text": "Switch to the textbook **Wald** interval at **n = 100**, 95 %, and draw 200: far more than 5 in 100 miss.", "when": {"wald": ["=", 1], "n": ["=", 100], "conf": ["=", 95], "drawn": [">=", 200], "missShare": [">=", 0.15]}}]}
-```
-
-**What it is.** 95 % is a property of the **procedure** (*уровень доверия*, confidence level): if you repeated the sampling many times, 95 % of the intervals built this way would contain the true value. This one interval either contains it or not.
-
-```pic
-{"id": "w06d2-pic3", "title": "19 of 20 intervals catch the true mean", "caption": "20 samples of 400 loans drawn by computer (seed 2026), each with its 95 % t interval for the mean principal. 19 cover the true 51.71 m; one, in red, misses — the 5 % the method allows.", "chart": {"type": "intervals", "rows": [{"label": "sample 1", "lo": 36.77, "mid": 46.89, "hi": 57.01, "miss": false}, {"label": "sample 2", "lo": 34.41, "mid": 43.66, "hi": 52.92, "miss": false}, {"label": "sample 3", "lo": 48.35, "mid": 60.68, "hi": 73.01, "miss": false}, {"label": "sample 4", "lo": 34.65, "mid": 44.44, "hi": 54.23, "miss": false}, {"label": "sample 5", "lo": 35.96, "mid": 46.43, "hi": 56.9, "miss": false}, {"label": "sample 6", "lo": 39.02, "mid": 49.98, "hi": 60.94, "miss": false}, {"label": "sample 7", "lo": 51.9, "mid": 64.88, "hi": 77.85, "miss": true}, {"label": "sample 8", "lo": 41.63, "mid": 52.95, "hi": 64.27, "miss": false}, {"label": "sample 9", "lo": 44.48, "mid": 55.55, "hi": 66.63, "miss": false}, {"label": "sample 10", "lo": 40.59, "mid": 51.98, "hi": 63.37, "miss": false}, {"label": "sample 11", "lo": 41.42, "mid": 53.1, "hi": 64.79, "miss": false}, {"label": "sample 12", "lo": 35.33, "mid": 45.43, "hi": 55.54, "miss": false}, {"label": "sample 13", "lo": 48.48, "mid": 60.93, "hi": 73.37, "miss": false}, {"label": "sample 14", "lo": 44.84, "mid": 56.52, "hi": 68.2, "miss": false}, {"label": "sample 15", "lo": 43.61, "mid": 54.85, "hi": 66.1, "miss": false}, {"label": "sample 16", "lo": 38.13, "mid": 49.0, "hi": 59.86, "miss": false}, {"label": "sample 17", "lo": 39.47, "mid": 50.19, "hi": 60.9, "miss": false}, {"label": "sample 18", "lo": 38.97, "mid": 50.53, "hi": 62.08, "miss": false}, {"label": "sample 19", "lo": 33.3, "mid": 43.07, "hi": 52.84, "miss": false}, {"label": "sample 20", "lo": 32.63, "mid": 42.35, "hi": 52.08, "miss": false}], "ref": {"at": 51.71, "label": "μ = 51.71 m"}, "min": 30, "max": 80, "unit": " m"}}
-```
-
-**How to write it.** Run the procedure 100 times and count the hits:
-
-```python
-hits = 0
-for _ in range(100):                               # 100 samples of 400 loans
-    x = rng.choice(pop, 400, replace=False)
-    half = 1.966 * x.std(ddof=1) / math.sqrt(400)  # t(0.975, 399) × SE
-    hits += (x.mean() - half <= pop.mean() <= x.mean() + half)
-print(hits)                                        # about 95 — one run gave 96
-```
-
-One run: **96 of the 100** intervals contain the true 51.71 m. With 100 intervals, anything from about 90 to 99 is normal — the count itself is Bin(100, 0.95).
-
-| Right reading | Wrong reading |
-|---|---|
-| "We are 95 % confident: the method catches the true rate 95 times in 100." | "There is a 95 % probability that the true FPD is between 1.26 and 2.30 %." — the true value is fixed (that sentence is a Bayesian *credible* interval, Seeing Theory ch. 5) |
-| "The data are consistent with a true rate between 1.26 and 2.30 %." | "95 % of app loans have an FPD rate in that range." — loans do not have rates; the interval is about the average |
-| "Compare two rates with an interval for the difference." | "The intervals overlap, so there is no difference." |
-| "95 % holds when the method's assumptions hold." | "95 % whatever the data." — t intervals on skewed principal cover **88.6 %** at n = 30, **93.0 %** at n = 100, **95.2 %** at n = 400 |
-
-**When you use it.**
-- Every time you say an interval out loud, in a meeting or in a note.
-
-> ⚠️ **Watch out.** Never write "95 % probability the true rate is in 1.26–2.30 %". Write "95 % CI 1.26–2.30 %" or "the data are consistent with a true rate between 1.26 and 2.30 %".
-
-**Your turn.** One sentence in this note to Bekzod is wrong — tap it:
-
-```game
-{"type": "bug", "id": "w06d2-g2", "title": "Spot the misreading", "q": "One sentence misreads the interval.", "code": "App FPD30 is 1.70 % on 2 411 loans.\nThe 95 % Wilson interval is 1.26–2.30 %.\nSo there is a 95 % probability that the true app rate is between 1.26 and 2.30 %.\nThe interval is asymmetric because a rate near zero cannot go below zero.\nWith four times as many loans the interval would be about half as wide.", "answer": [2], "why": "The true rate is fixed; this interval either contains it or not. 95 % describes the procedure over repeated samples."}
-```
-
-### Sample size for a given margin
-
-**What it is.** The **margin of error** (*предельная ошибка*) E is the half-width of the interval. The **sample size** (*объём выборки*) you need is the n that makes the margin no larger than E. Solve E = z × SE for n.
-
-**How to write it.**
-
-```text
-for a rate:
-  n = z² · p(1 − p) / E²
-  p = your best guess; 0.5 if you
-  have none (the worst case)
-for a mean:
-  n = (z · σ / E)²
-  σ = from history or a pilot
-always round up
-```
-
-```python
-z = 1.96
-# loans needed to estimate a rate near p to ± E
-def n_for_rate(p, E):
-    return math.ceil(z**2 * p * (1 - p) / E**2)
-# cases needed to estimate a mean to ± E
-def n_for_mean(sigma, E):
-    return math.ceil((z * sigma / E) ** 2)
-
-print(n_for_rate(91 / 7099, 0.005), n_for_rate(0.5, 0.03))  # 1945 1068
-print(n_for_mean(112.6e6, 5e6))                             # 1949
-```
-
-A rate near 1.28 % to within ±0.5 points needs 1 945 loans. A rate you know nothing about, to ±3 points, needs 1 068 — the "about a thousand" of opinion polls. The mean principal to ±5 m soum needs 1 949 loans.
-
-| margin for a rate near 1.28 % | ±1 point | ±0.5 point | ±0.25 point |
-|---|---|---|---|
-| loans needed | 487 | 1 945 | 7 779 |
-
-Halve the margin, quadruple the loans.
-
-**When you use it.**
-- Before a pilot, an audit sample or a survey: how many cases do we need?
-- To say what precision a segment can ever reach: a branch with 400 loans a year cannot pin FPD to ±0.25 points.
-
-> ⚠️ **Watch out.** E is in the same units as p: ±0.5 points is E = 0.005, not 0.5. And the formula uses Wald arithmetic — for a rate near 0 % with a small n, check the result with a Wilson interval.
-
-**Your turn.** Applicants' credit scores have σ = 59.5. How many applicants do you need to estimate the mean score to within ±2 points (95 %)?
-
-```task
-{"id": "w06d2-l10", "kind": "number", "answer": 3401, "dp": 0, "unit": "applicants", "hint": "n = (1.96 × 59.5 / 2)², then round up.", "model": "(1.96 × 59.5 / 2)² = 58.31² = 3 400.06 → 3 401 applicants. Within ±4 points it would be a quarter of that: 851."}
-```
-
-### The bootstrap — an interval without a formula
-
-**What it is.** The **bootstrap** (*бутстреп*) treats the sample as the population. It resamples the sample **with replacement** many times, computes the statistic each time, and reads the 2.5th and 97.5th percentiles: the **percentile bootstrap**.
-
-**How to write it.**
-
-```python
-def bootstrap_ci(values, stat=np.mean, B=10_000, seed=2026):
-    # its own seeded generator
-    g = np.random.default_rng(seed)
-    # B resamples, the statistic of each
-    boot = [stat(g.choice(values, len(values), replace=True)) for _ in range(B)]
-    # the middle 95 %
-    return np.quantile(boot, [0.025, 0.975])
-# ≈ 1.20 % … 2.24 %   (Wilson 1.26 … 2.30)
-print(bootstrap_ci(f.loc[f.channel == "app", "fpd30"].to_numpy()))
-```
-
-The app's FPD: bootstrap ≈ 1.20–2.24 %, close to Wilson's 1.26–2.30 %. Its strength is a statistic with no SE formula: a 200-loan sample's **median** principal is 5.69 m, bootstrap 95 % CI **4.54–8.27 m** (true median 5.79 m).
-
-**When you use it.**
-- A median, a percentile, a ratio of sums (collection rate = Σ paid / Σ due), a difference of medians.
-- A mean of very skewed money at small n, where the t interval undercovers.
-
-> ⚠️ **Watch out.** With very few events the bootstrap is too narrow: it can only reshuffle what it saw. 7 FPDs in 314 grade-D loans: bootstrap 0.64–3.82 % against Wilson's 1.08–4.53 %. For rates near zero, Wilson; for medians and ratios, the bootstrap.
-
-**Your turn.** Which estimate is the best job for the bootstrap?
-
-```task
-{"id": "w06d2-l11", "kind": "choice", "options": ["The FPD rate of 2 411 app loans", "The median principal of 200 loans", "The mean score of 13 612 applicants", "A rate with 7 events in 314 loans"], "answer": 1, "explain": "A median has no simple SE formula — the bootstrap's home ground. Rates go to Wilson (especially with few events); a mean of 13 612 scores takes a t interval."}
-```
-
-### Putting it together
-
-One request, every tool of the day: *"Describe the app channel's FPD honestly, and say what more data would buy."*
-
-```python
-# the sample: app loans in FPD scope
-k, n = 41, 2411
-p = k / n                        # the point estimate p̂
-se = math.sqrt(p * (1 - p) / n)  # its standard error
-# a rate near 0 % → Wilson, not Wald
-lo, hi = wilson(k, n)
-print(f"FPD30 {100*p:.2f} % · n = {n} · SE {100*se:.2f} pt · 95 % CI {100*lo:.2f}–{100*hi:.2f} %")
-# loans needed for ±0.25 points
-print(n_for_rate(p, 0.0025))
-```
-
-`FPD30 1.70 % · n = 2411 · SE 0.26 pt · 95 % CI 1.26–2.30 %`, and ±0.25 points would need **10 275** app loans — more than four times the channel's whole history. Read it with the subsections: the 2 411 loans are a sample of the app process; 1.70 % is an estimate with a sampling error; the SE says it typically moves by 0.26 points; the rate is near zero, so the interval is Wilson; "95 %" is the method's promise, not a probability about this range; and precision costs n quadratically.
-
-**Which interval, when.**
-
-| You estimate | Typical Nur example | Interval | Python | Excel |
-|---|---|---|---|---|
-| a mean, n ≥ ~30, not wildly skewed | average Consumer principal, average score | t | `stats.t.interval(0.95, n-1, m, s/√n)` | `CONFIDENCE.T` |
-| a mean of very skewed money, small n | average SME ticket from 40 loans | bootstrap (or t on log values) | `bootstrap_ci(v)` | — |
-| a rate, any n, especially near 0 % or 100 % | FPD, approval rate, PAR30 | Wilson | `proportion_confint(k, n, method="wilson")` | formula above |
-| the difference of two rates | app − branch FPD | Newcombe | `newcombe(k1, n1, k2, n2)` | two Wilson formulas |
-| a rate that must be *guaranteed* ≥ 95 % | regulatory / audit sample | Clopper–Pearson | `method="beta"` | `BETA.INV` |
-| a median, a ratio of sums, a percentile | median ticket, collection rate | bootstrap | `bootstrap_ci(v, stat=np.median)` | — |
-| a count per period | 5 102 applications in 3 549 hours | Poisson (exact) | `stats.chi2.ppf([0.025, 0.975], [2*k, 2*k + 2]) / 2`, then ÷ hours | `=CHISQ.INV(0.025, 2*k)/2` |
-
-Default to a 95 % level and say so. Use 90 % only when a team agreed to it in advance — never because the 95 % interval "looked too wide".
-
-```game
-{"type": "sort", "id": "w06d2-g3", "title": "Which interval?", "q": "Put each Nur estimate under the interval you would report.", "groups": {"t interval": ["average Consumer principal from 400 loans", "average credit score of approved loans"], "Wilson": ["FPD30 of one branch-month (400 loans)", "approval rate of the app channel"], "Clopper–Pearson": ["an audit sample the regulator wants guaranteed at 95 %"], "Bootstrap": ["median ticket of 200 loans", "collection rate Σ paid / Σ due"]}}
-```
-
-Put the steps from a table to an honest number in order:
-
-```game
-{"type": "order", "id": "w06d2-g5", "title": "From a sample to an honest number", "items": ["Say what the population is — the book or the process", "Compute the point estimate from the sample", "Choose the interval that fits the estimate (t, Wilson, bootstrap)", "Build the 95 % interval — from the standard error, or by resampling", "Report the estimate with n and the interval, read the right way"], "why": "Each step uses the one before: the kind of estimate (a mean, a rate, a median) decides which interval fits, the interval is built by that method, and an honest sentence needs n and the interval."}
-```
-
-Flip through the words of the day:
+**Now check yourself.**
 
 ```game
 {"type": "flash", "id": "w06d2-g1", "title": "Samples and estimates", "cards": [["Population", "everything you want to talk about — often the process, not the table"], ["Sample", "what you actually observed"], ["Parameter", "the true value in the population (p, μ) — unknown"], ["Estimate (statistic)", "the number computed from the sample (p̂ = 41 / 2 411)"], ["Unbiased", "right on average over repeated samples"], ["Consistent", "gets closer to the truth as n grows"], ["Standard error", "the sd of an estimate over repeated samples: s / √n, √(p̂(1 − p̂)/n)"], ["Degrees of freedom", "n − 1 for a mean: one value is used up by the sample mean"]]}
 ```
 
-### Depth (optional)
+### A net for a rate — Wald breaks, Wilson holds
 
-**Videos (free, YouTube; each link opens at the right minute):**
-
-- ▶ Standard error — [Standard Deviation vs Standard Error, Clearly Explained!!! (StatQuest), 01:12](https://youtu.be/A82brFpdr9g?t=72)
-- ▶ Central limit theorem — [The Central Limit Theorem, Clearly Explained!!! (StatQuest), 00:42](https://youtu.be/YAlJCEDH2uY?t=42)
-- ▶ Confidence intervals — [Confidence Intervals, Clearly Explained!!! (StatQuest), 02:55](https://youtu.be/TqOeMYtOc1w?t=175)
-- ▶ Confidence interval for a mean, formula route — [Confidence Interval [Simply explained] (numiqo)](https://youtu.be/ENnlSlvQHO0)
-- ▶ Bootstrap — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
-
-- RU deck (TBC Data Analytics 2.0, if you have it) `5.2 Statistics & Probability Theory.pdf` pp. 68–73: law of large numbers and CLT. `MS_lecture3.pdf` (lesson 5.3): sample method and sample properties pp. 5–13, point estimates — unbiased, consistent, efficient pp. 14–18, method of moments and maximum likelihood pp. 19–27, confidence intervals (Fisher's lemma; the mean with σ known and unknown; the variance) pp. 28–35. The lesson's recording: `video1414856026.mp4`.
-- Notebooks: `MS_5_statistics.ipynb` (LLN with a coin and a die, CLT from other distributions), `MS6_Точечное_оценивание.ipynb` (unbiasedness and consistency by simulation), `MS6_Интервальное_оценивание.ipynb` (exact vs asymptotic interval, coverage at n = 3 … 1 000 — the same experiment as our Wald/Wilson table), `HW_3_CI.ipynb` (an interval for an exponential mean).
-- Visual: Seeing Theory, chapter 4 (Frequentist Inference: the CLT and confidence intervals, interactive).
-- *Russian terms:* генеральная совокупность = population, выборка = sample, оценка = estimate, точечная / интервальная оценка = point / interval estimate, несмещённость = unbiasedness, состоятельность = consistency, стандартная ошибка = standard error, закон больших чисел (ЗБЧ) = law of large numbers, центральная предельная теорема (ЦПТ) = central limit theorem, доверительный интервал = confidence interval, уровень доверия = confidence level, распределение Стьюдента = t distribution, степени свободы = degrees of freedom, бутстреп = bootstrap, асимптотический = asymptotic.
-
-**Questions inside the videos.** Open a video from the panel: it stops at these points and asks one question about the bit you just watched.
-
-```videoquiz
-{"video": "A82brFpdr9g", "stops": [
-  {"at": 200, "q": "What does the standard deviation describe?", "options": ["How much the individual values spread around their mean", "How much the mean would move between samples", "The error of the measuring device", "The difference between two groups"], "answer": 0, "explain": "sd describes the loans: how different 2 411 app loans are from each other."},
-  {"at": 450, "q": "And the standard error?", "options": ["The spread of the data", "The largest possible error", "The spread of the estimate (e.g. the mean) over repeated samples — sd / √n", "The sd divided by n"], "answer": 2, "explain": "SE describes your number: quadruple n to halve it."}]}
+```story
+{"id": "w06d2-s5", "title": "A net for a rate", "min": 6, "steps": [{"say": "Now a net for a **rate**. A branch-month: 400 loans, true FPD rate {g|1.28 %}. The month's rate {b|p̂} is the dot; the textbook net, the [[Wald interval|the rate ± 1.96 standard errors, as if the rates formed a symmetric bell]], is the line.", "show": {"kind": "ci", "p": 0.012818706860121144, "n": 400, "conf": 0.95, "lo": -1, "hi": 5, "unit": " %", "words": {"truth": "true rate 1.28 %"}, "method": "wald"}, "f": "{b|p̂} ± 1.96 × √( {b|p̂} × (1 − {b|p̂}) ÷ n )", "fs": "p-hat plus or minus 1.96 standard errors.", "act": [{"label": "1 branch-month", "rep": 3, "n": 1, "do": "draw"}]}, {"say": "Draw 100 months and count the {o|orange misses}: about 12, not 5. A “95 %” Wald net near 1.28 % on 400 loans really catches only about **88 %**.", "act": [{"label": "100 months", "rep": 1, "n": 100, "do": "draw"}]}, {"say": "Why? Near 0 % a rate can't go below zero but can run far above: no symmetric bell. At 100 loans it's worse: 27 % of months have **zero** FPDs, Wald's net shrinks to a point, and it catches only about 73 %.", "show": {"n": 100}, "act": [{"label": "100 months", "rep": 1, "n": 100, "do": "draw"}]}, {"say": "Real small branch-months. 2 FPDs in 150 loans: Wald says {o|−0.50 % to 3.17 %} — a negative default rate. 0 in 120: {o|0 % to 0 %}, “certainly zero”.", "show": {"kind": "ivs", "rows": [[-0.5, 1.33, 3.17, "o"], [0, 0, 0, "o"]], "labels": ["2 FPDs in 150", "0 FPDs in 120"], "min": -1, "max": 5, "tick": 1, "unit": " %", "zero": true}}, {"say": "Is that honest?", "ask": {"q": "Wald says 0 FPDs in 120 loans means a rate between 0 % and 0 %. Is that honest?", "options": ["Yes — no FPDs means a zero rate", "No — 120 loans can't prove the rate is exactly 0"], "answer": 1, "why": "A branch whose true rate is 1 % gets zero FPDs in 120 loans about 30 % of the time. Zero events still leave room above zero."}}, {"say": "The fix is the [[Wilson interval|a net for a rate that never goes below 0 or shrinks to a point, and leans the right way near zero]]. The same 400-loan months: about {g|96 in 100} nets catch the truth.", "show": {"kind": "ci", "p": 0.012818706860121144, "n": 400, "conf": 0.95, "lo": -1, "hi": 5, "unit": " %", "words": {"truth": "true rate 1.28 %"}, "method": "wilson"}, "act": [{"label": "100 months", "rep": 1, "n": 100, "do": "draw"}]}, {"say": "Its trick: it centres the net as if you had seen about **2 more FPDs and 2 more good loans** — a small pull away from zero — and its width never drops to 0. {o|k} is the number of FPDs, {b|n} the loans.", "f": "Wilson's centre = ({o|k} + 1.92) ÷ ({b|n} + 3.84)", "fs": "Wilson's centre is k plus 1.92, divided by n plus 3.84."}, {"say": "Wilson on the same months: 2 in 150 → {g|0.37 % to 4.73 %}; 0 in 120 → {g|0 % to 3.10 %}. Never negative, never a point. For the app, 41 in 2 411: {g|1.26–2.30 %} — 0.44 below 1.70 and 0.60 above, lopsided the right way.", "show": {"kind": "ivs", "rows": [[-0.5, 1.33, 3.17, "o"], [0.37, 1.33, 4.73, "g"], [0, 0, 0, "o"], [0, 0, 3.1, "g"], [1.26, 1.7, 2.3, "g"]], "labels": ["150 loans, Wald", "150 loans, Wilson", "120 loans, Wald", "120 loans, Wilson", "app, Wilson"], "lw": 140, "min": -1, "max": 5, "tick": 1, "unit": " %", "zero": true}}, {"say": "Use Wilson for every rate — FPD, approval rate, PAR30 — at any n. In Python: `wilson(k, n)` from Going further, or statsmodels' `proportion_confint`. When an auditor wants 95 % **guaranteed**, report [[Clopper–Pearson|the “exact” interval from the binomial itself: at least 95 %, a little wider]].", "show": {"fade": [0, 2]}, "f": "Python: wilson(k, n)  ·  proportion_confint(k, n, method=\"wilson\")"}, {"say": "Last one.", "ask": {"q": "Two branches, both at 2 %: 4 FPDs in 200 loans, and 40 in 2 000. Whose Wilson net is wider?", "options": ["The 200-loan branch: fewer loans, and only 4 events", "The 2 000-loan branch: it has more FPDs", "The same: the rates are equal"], "answer": 0, "why": "Width is set by n (and by how few events there are), not by the rate: 4 FPDs cannot pin a rate down."}}]}
 ```
 
-```videoquiz
-{"video": "YAlJCEDH2uY", "stops": [
-  {"at": 150, "q": "The central limit theorem is about the distribution of…", "options": ["the raw data", "the means of many samples", "the largest value", "the population"], "answer": 1, "explain": "Loan principals stay skewed; the means of samples of them become bell-shaped."},
-  {"at": 400, "q": "Does the CLT need the original data to be normal?", "options": ["Yes, always", "Only for n < 30", "No — the means become approximately normal whatever the shape, once n is large enough", "Only for rates"], "answer": 2, "explain": "Whatever the shape — but the more skewed the data, the larger n must be (principal at n = 30 is still skewed)."}]}
+### What the “95 %” promises — and an honest dashboard tile
+
+```story
+{"id": "w06d2-s6", "title": "What “95 %” promises", "min": 5, "steps": [{"say": "Every branch-month you throw one Wilson net. It either catches the true {g|1.28 %} (blue) or misses it ({o|orange}). Holding one net, you never know which kind it is.", "show": {"kind": "ci", "p": 0.012818706860121144, "n": 400, "conf": 0.95, "lo": -1, "hi": 5, "unit": " %", "words": {"truth": "true rate 1.28 %"}, "method": "wilson"}, "act": [{"label": "1 net", "rep": 3, "n": 1, "do": "draw"}]}, {"say": "Throw 100: about 95 catch it — 93 in one run, 98 in the next. **95 % is the catch rate of the method** over many samples: the [[confidence level|the share of nets built this way that catch the truth over repeated samples]].", "act": [{"label": "100 nets", "rep": 1, "n": 100, "do": "draw"}]}, {"say": "For the app's net, {b|1.26–2.30 %}, say “95 % CI 1.26–2.30 %” or “the data are consistent with a true rate in that range”. Never “a 95 % probability the true rate is in there”: the true rate is fixed — this net caught it or not.", "show": {"kind": "ivs", "rows": [[1.26, 1.7, 2.3]], "labels": ["app, 2 411 loans"], "min": 0, "max": 3, "tick": 0.5, "tdp": 1, "unit": " %"}}, {"say": "Your turn.", "ask": {"q": "Which sentence about the app's 95 % CI, 1.26–2.30 %, is right?", "options": ["95 % of app loans have an FPD rate in that range", "The method that built it catches the true rate in about 95 of 100 samples", "There is a 95 % probability that the true rate is 1.70 %"], "answer": 1, "why": "95 % belongs to the method, as the 100 nets showed. Single loans don't have rates, and the true rate is a fixed number, not a lottery."}}, {"say": "Drop the level to **80 %**: the nets get narrower — and about 1 in 5 misses. More confidence costs width. Stay at 95 % and say so; never switch to 90 % because 95 % “looked too wide”.", "show": {"kind": "ci", "p": 0.012818706860121144, "n": 400, "conf": 0.8, "lo": -1, "hi": 5, "unit": " %", "words": {"truth": "true rate 1.28 %"}, "method": "wilson"}, "act": [{"label": "100 nets", "rep": 1, "n": 100, "do": "draw"}]}, {"say": "Two channels: app {b|1.26–2.30 %}, branch {m|0.75–1.45 %}. Their nets overlap between 1.26 and 1.45 (shaded).", "show": {"kind": "ivs", "rows": [[1.26, 1.7, 2.3], [0.75, 1.04, 1.45, "m"]], "labels": ["app", "branch"], "min": -0.5, "max": 2.5, "tick": 0.5, "tdp": 1, "unit": " %", "band": [1.26, 1.45]}, "ask": {"q": "The nets overlap. So…", "options": ["the channels don't differ", "you can't tell by eye: you need a net for the difference", "the app is surely worse"], "answer": 1, "why": "Overlap is not a test. The next step builds the net for the gap itself."}}, {"say": "The net for the **gap**, app − branch, runs from {p|0.05 to 1.33 points}: it does not contain zero, although the two nets overlap. Compare two rates with a net for their difference — or with tomorrow's test.", "show": {"rows": [[1.26, 1.7, 2.3], [0.75, 1.04, 1.45, "m"], [0.05, 0.66, 1.33, "p"]], "labels": ["app", "branch", "app − branch"], "lw": 150, "zero": true, "band": null}}, {"say": "So every rate on a dashboard carries **three numbers**: the rate, n and the Wilson interval. Without n and the interval nobody can tell a signal from a small denominator. On a chart: a dot with whiskers, n in the label.", "show": {"rows": [[1.26, 1.7, 2.3], [0.75, 1.04, 1.45, "m"]], "labels": ["app (n = 2 411)", "branch (n = 3 263)"], "zero": false}, "f": "FPD30 1.70 %  ·  n = 2 411  ·  95 % CI 1.26–2.30 %"}]}
 ```
 
-```videoquiz
-{"video": "TqOeMYtOc1w", "stops": [
-  {"at": 300, "q": "A 95 % confidence interval is built so that…", "options": ["95 % of the data fall inside it", "95 % of intervals made this way contain the true value", "the true value is inside with probability 95 % for this interval", "it is 95 % of the mean"], "answer": 1, "explain": "A property of the procedure; this one interval either contains the truth or not."},
-  {"at": 600, "q": "What makes a confidence interval narrower?", "options": ["A higher confidence level", "More data", "More spread in the data", "A smaller sample"], "answer": 1, "explain": "Width ∝ critical value × s / √n: more n narrows it, more confidence widens it."}]}
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w06d2-x2", "type": "intervals", "title": "A hundred intervals, one true rate", "predict": {"q": "The true FPD rate is 1.28 %. You draw **100 samples** of 400 loans and build a 95 % interval from each. How many of the 100 intervals contain the true rate?", "options": ["all 100 — that is what 95 % confident means", "exactly 95, every time", "about 95 — one run 93, the next 98", "about half"], "answer": 2, "why": "95 % is the method's long-run catch rate. One run of 100 lands near 95 — anything from about 90 to 99 is normal — and no single interval can tell you whether it is one of the misses."}, "p": 0.012818706860121144, "ns": [50, 100, 200, 400, 800, 1600, 3200], "start": {"n": 400, "conf": 95, "wald": 0}, "challenges": [{"id": "c1", "text": "With the page's **Wilson** interval at n = 400 and 95 %, draw **500 intervals** or more: about **5 in 100** miss (between 2.5 % and 7.5 %).", "when": {"n": ["=", 400], "conf": ["=", 95], "wald": ["=", 0], "drawn": [">=", 500], "missShare": ["between", 0.025, 0.075]}}, {"id": "c2", "text": "Same n, drop to **80 %** and draw 200 or more: narrower intervals — and now about **1 in 5** misses.", "when": {"n": ["=", 400], "conf": ["=", 80], "drawn": [">=", 200], "missShare": [">=", 0.12]}}, {"id": "c3", "text": "Make the intervals **half as wide** as at n = 400 and draw 100 there. How many loans did it take?", "when": {"drawn": [">=", 100], "wratio": ["between", 0.45, 0.55]}}, {"id": "c4", "text": "Switch to the textbook **Wald** interval at **n = 100**, 95 %, and draw 200: far more than 5 in 100 miss.", "when": {"wald": ["=", 1], "n": ["=", 100], "conf": ["=", 95], "drawn": [">=", 200], "missShare": [">=", 0.15]}}]}
 ```
 
-```videoquiz
-{"video": "ENnlSlvQHO0", "stops": [
-  {"at": 150, "q": "The interval for a mean is…", "options": ["mean ± critical value × standard error", "mean ± sd", "median ± IQR", "mean ± 1.96 × sd"], "answer": 0, "explain": "Estimate ± critical value × SE: with s / √n, not the sd of the data."},
-  {"at": 400, "q": "When σ is unknown and estimated by s, the critical value comes from…", "options": ["the normal distribution, always 1.96", "Student's t with n − 1 degrees of freedom", "the chi-square distribution", "the binomial"], "answer": 1, "explain": "t₀.₉₇₅ with 49 df = 2.010; it approaches 1.96 as n grows."}]}
+**Now check yourself.**
+
+```game
+{"type": "bug", "id": "w06d2-g2", "title": "Spot the misreading", "q": "One sentence misreads the interval.", "code": "App FPD30 is 1.70 % on 2 411 loans.\nThe 95 % Wilson interval is 1.26–2.30 %.\nSo there is a 95 % probability that the true app rate is between 1.26 and 2.30 %.\nThe interval is asymmetric because a rate near zero cannot go below zero.\nWith four times as many loans the interval would be about half as wide.", "answer": [2], "why": "The true rate is fixed; this interval either contains it or not. 95 % describes the procedure over repeated samples."}
 ```
 
-```videoquiz
-{"video": "Xz0x-8-cgaQ", "stops": [
-  {"at": 430, "q": "How does the bootstrap build an interval?", "options": ["From a formula for the SE", "Resample the sample with replacement many times, compute the statistic each time, read the middle 95 %", "Split the data into two halves", "Add normal noise to the data"], "answer": 1, "explain": "The percentile bootstrap: 10 000 resamples, the 2.5th and 97.5th percentiles."},
-  {"at": 485, "q": "Why is the bootstrap useful?", "options": ["It works for statistics with no simple SE formula — a median, a ratio of sums", "It always gives narrower intervals", "It needs no data", "It fixes small samples"], "answer": 0, "explain": "Median ticket, collection rate — but with very few events (7 FPDs) it is too narrow."}]}
+### A sample of your sample — the bootstrap
+
+```story
+{"id": "w06d2-s7", "title": "A sample of your sample", "min": 5, "steps": [{"say": "The 11 loans from one branch you met yesterday, in m soum. Their middle loan, the [[median|the middle value when the values are lined up]], is {g|3.50 m} (dashed). How precisely do we know it? A median has no simple SE formula.", "show": {"kind": "boot", "vals": [0.65, 1.89, 2.3, 3.1, 3.37, 3.5, 4.98, 6.58, 6.74, 7.21, 22.42], "stat": "median", "lo": 0, "hi": 10, "bins": 50, "tick": 2, "unit": " m", "dp": 2, "cdp": 2, "own": true}}, {"say": "The trick: treat your sample as the jar. Draw 11 loans from it **with replacement** — some come twice (×2), some not at all (faded) — and take their median. It drops into the chart.", "act": [{"label": "Resample once", "rep": 1, "n": 1, "do": "resample"}]}, {"say": "Again and again: each [[resample|a new sample drawn from your own sample, with replacement, of the same size]] gives its own median. They gather around your 3.50 but wander off.", "act": [{"label": "Resample once", "rep": 3, "n": 1, "do": "resample"}]}, {"say": "A thousand resamples. The pile shows how far the median could move if the branch's loans had come out differently.", "act": [{"label": "1 000 resamples", "rep": 1, "n": 1000, "do": "resample"}], "ask": {"q": "Why draw **with replacement**?", "options": ["Without it, every resample would be the same 11 loans", "It makes the median bigger", "It is just faster"], "answer": 0, "why": "Drawing 11 out of 11 without putting them back only reshuffles the same loans: the median would never move."}}, {"say": "Keep the middle 95 % of those medians (shaded): about {y|2.30 to 6.74 m}. That is a [[bootstrap|resample your sample many times, compute the number each time, keep the middle 95 %]] interval: no formula, and lopsided like the money.", "show": {"cut": true}, "f": "middle 95 % of the resampled medians: {y|2.30 … 6.74 m}", "act": [{"label": "1 000 more", "rep": 1, "n": 1000, "do": "resample"}]}, {"say": "Real numbers. A 200-loan sample's median, 5.69 m: bootstrap interval 4.54–8.27 m, and the true 5.79 m is inside. The app's FPD: bootstrap {p|1.20–2.24 %}, close to Wilson's {g|1.26–2.30 %}.", "show": {"kind": "ivs", "rows": [[1.2, 1.7, 2.24, "p"], [1.26, 1.7, 2.3, "g"]], "labels": ["app, bootstrap", "app, Wilson"], "lw": 140, "min": 0.5, "max": 3, "tick": 0.5, "tdp": 1, "unit": " %"}}, {"say": "But it can only reshuffle what it saw. A branch-week: 20 loans, {g|no FPDs}. Every resample has no FPDs either, so the bootstrap says “0 % to 0 %”. Wilson says {g|0 % to 16.1 %}.", "show": {"kind": "boot", "vals": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "flag": true, "lo": -1, "hi": 20, "bins": 21, "tick": 5, "unit": " %", "dp": 1, "cut": true, "cmp": [0, 16.11], "words": {"cmp": "Wilson 0–16.1 %"}, "legend": [["g", "paid"], ["o", "FPD"]]}, "act": [{"label": "200 resamples", "rep": 1, "n": 200, "do": "resample"}]}, {"say": "Your turn.", "ask": {"q": "Which job suits the bootstrap best?", "options": ["An FPD rate with 5 events", "The median loan of a 200-loan sample", "The average score of 13 612 applicants"], "answer": 1, "why": "A median has no simple SE formula: the bootstrap's home ground. Few events → Wilson (the picture shows why); a mean of thousands → t."}}, {"say": "Three habits: resample **with replacement**, at the sample's own size, and fix a seed (`default_rng(2026)`) so a reviewer gets your interval exactly. Its home ground: a median, a percentile, a ratio of sums like the collection rate (Σ paid ÷ Σ due).", "f": "bootstrap: with replacement  ·  the sample's own size  ·  a fixed seed"}]}
 ```
 
+> 🎬 **Didn't get the bootstrap?** [StatQuest explains it · 2 min](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
 
----
+**Now check yourself.**
+
+```game
+{"type": "sort", "id": "w06d2-g3", "title": "Which interval?", "q": "Put each Nur estimate under the interval you would report.", "groups": {"t interval": ["average Consumer principal from 400 loans", "average credit score of approved loans"], "Wilson": ["FPD30 of one branch-month (400 loans)", "approval rate of the app channel"], "Clopper–Pearson": ["an audit sample the regulator wants guaranteed at 95 %"], "Bootstrap": ["median ticket of 200 loans", "collection rate Σ paid / Σ due"]}}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "order", "id": "w06d2-g5", "title": "From a sample to an honest number", "items": ["Say what the population is — the book or the process", "Compute the point estimate from the sample", "Choose the interval that fits the estimate (t, Wilson, bootstrap)", "Build the 95 % interval — from the standard error, or by resampling", "Report the estimate with n and the interval, read the right way"], "why": "Each step uses the one before: the kind of estimate (a mean, a rate, a median) decides which interval fits, the interval is built by that method, and an honest sentence needs n and the interval."}
+```
+
+### Signal or noise? The worst branch
+
+```story
+{"id": "w06d2-s8", "title": "Signal or noise? The worst branch", "min": 5, "steps": [{"say": "Nur's ten branches, ranked by FPD rate, each with its Wilson net. Top: Bukhara, {o|14 FPDs in 586 loans = 2.39 %}. Bottom: Nukus, 0.68 %. The {g|green line} is the whole book's 1.28 %.", "show": {"kind": "ivs", "rows": [[1.43, 2.39, 3.97, "o"], [0.92, 1.53, 2.56], [0.91, 1.53, 2.55], [0.7, 1.28, 2.34], [0.64, 1.26, 2.47], [0.49, 1.14, 2.65], [0.57, 1.08, 2.04], [0.43, 0.94, 2.05], [0.44, 0.87, 1.7], [0.23, 0.68, 1.99]], "lw": 140, "min": 0, "max": 4, "tick": 1, "unit": " %", "ref": 1.2818706860121143, "labels": ["Bukhara (586)", "Tashkent C. (913)", "Tashkent S. (917)", "Samarkand (782)", "Namangan (634)", "Termez (437)", "Fergana (834)", "Andijan (635)", "Tashkent N. (921)", "Nukus (440)"], "words": {"ref": "book 1.28 %"}}}, {"say": "Your guess first.", "ask": {"q": "Is Bukhara's 2.39 % a real problem, or could it be luck?", "options": ["Real — it is first in the ranking", "Could be luck — let's see what luck alone does"], "answer": 1, "why": "A ranking always has a first place. The next steps build a world where Bukhara is perfectly ordinary and count how often luck alone gives 2.39 %."}}, {"say": "The luck world: a branch of 586 loans whose true rate is exactly the book's {g|1.28 %}. Each tap gives it 586 fresh loans and drops its FPD rate into a bar. Tap a few times.", "show": {"kind": "hist", "gen": "share", "p": 0.012818706860121144, "n": 586, "lo": 0, "hi": 4.095153583617748, "bins": 24, "unit": " %", "dp": 2, "truth": 1.2818706860121143, "words": {"thing": "Ordinary branches", "axis": "FPD rate of a branch with 586 loans", "truth": "book 1.28 %"}}, "act": [{"label": "1 ordinary branch", "rep": 3, "n": 1, "do": "sample"}, {"label": "1 000 branches", "rep": 1, "n": 1000, "do": "sample"}]}, {"say": "A thousand ordinary branches. 95 % of them land between {p|0.51 % and 2.22 %} (the dashed lines): the [[funnel limits|the range a branch of this size shows 95 % of the time if its true rate is the book's]] for 586 loans.", "show": {"cut": [[0.51, ""], [2.22, ""]]}, "act": [{"label": "1 000 branches", "rep": 1, "n": 1000, "do": "sample"}]}, {"say": "Now Bukhara's {o|2.39 %}. Orange: ordinary branches that did as badly or worse by luck alone — about {o|2 in 100} (the read-out). Just outside its funnel: rare for one branch.", "show": {"obs": 2.3890784982935154, "tails": "right", "words": {"thing": "Ordinary branches", "axis": "FPD rate of a branch with 586 loans", "truth": "book 1.28 %", "obs": "Bukhara"}}}, {"say": "But Nur has **ten** branches, each able to land outside its funnel by luck: one flag in ten is roughly what chance alone produces. Even if all ten were exactly 1.28 %, the top one would average {o|2.00 %}. Somebody is always first.", "f": "10 branches × 5 % each = 0.5 flags expected from chance alone"}, {"say": "Your call.", "ask": {"q": "What should the risk pack do about Bukhara?", "options": ["Rank the branches and act on the worst", "Show its rate with n and its Wilson net, compare it with its funnel — and watch it", "Drop Bukhara from the book's rate"], "answer": 1, "why": "A ranking guarantees a “worst branch” even when all are equal. The funnel judges by size, and one flag in ten is near chance: watch the next vintages before anyone acts."}}, {"say": "Why so noisy? To pin a rate near 1.28 % to ±0.5 points takes 1 945 loans; the largest branch has 921. So no league tables of rates below ~1 000 loans a row: a funnel instead, and pool thin months into quarters.", "show": {"kind": "ivs", "rows": [[1.43, 2.39, 3.97, "o"], [0.92, 1.53, 2.56], [0.91, 1.53, 2.55], [0.7, 1.28, 2.34], [0.64, 1.26, 2.47], [0.49, 1.14, 2.65], [0.57, 1.08, 2.04], [0.43, 0.94, 2.05], [0.44, 0.87, 1.7], [0.23, 0.68, 1.99]], "lw": 140, "min": 0, "max": 4, "tick": 1, "unit": " %", "ref": 1.2818706860121143, "labels": ["Bukhara (586)", "Tashkent C. (913)", "Tashkent S. (917)", "Samarkand (782)", "Namangan (634)", "Termez (437)", "Fergana (834)", "Andijan (635)", "Tashkent N. (921)", "Nukus (440)"], "words": {"ref": "book 1.28 %"}}, "f": "±0.5 point at 1.28 % → 1 945 loans  ·  the largest branch: 921"}]}
+```
 
 ## 2. Worked example — Bekzod's channels (15 min)
 
@@ -652,6 +129,75 @@ Flip through the words of the day:
 ## 3. Practice (50 min)
 
 Every task has its own answer box. The Python boxes share the session of section 1's blocks: `loans`, `pop`, `cons`, `f` (with `channel`), `rng`, `wald`, `wilson`, `pmf`, `newcombe`, `n_for_rate` and `bootstrap_ci` are ready once you have pressed ▶ Run on those blocks. The Excel task needs Excel or Google Sheets. For the homework, `data/python/week6/day2_starter.ipynb` builds the same frames (and `x`, the payments) with `scipy` and `statsmodels`.
+
+**First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
+
+```python
+# the tools and the data from the full version of section 1 — run once
+import math
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+loans = pd.read_csv("data/raw/loans.csv")
+pop = loans["principal"].to_numpy(dtype=float)
+apps = pd.read_csv("data/raw/applications.csv")
+s = apps["credit_score"].dropna().to_numpy(dtype=float)
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
+rng = np.random.default_rng(2026)
+samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])
+mu = pop.mean()
+for start in range(5):
+    # every 20th loan: 392 loans
+    part = loans["principal"].iloc[start::20]
+    print(start + 1, len(part), round(part.mean() / 1e6, 2), round((part.mean() - mu) / 1e6, 2))
+p = 41 / 2411
+order = np.random.default_rng(2026).permutation(pop)
+running = np.cumsum(order) / np.arange(1, len(order) + 1)
+for n in (10, 100, 1000, 7828):
+    # wild at first; exactly 51.71 m at 7 828
+    print(n, round(running[n - 1] / 1e6, 2))
+mu, sigma = pop.mean(), pop.std()
+fig, axes = plt.subplots(1, 4, figsize=(14, 3))
+for ax, n in zip(axes, (5, 30, 100, 1000)):
+    # 2 000 sample means
+    means = np.array([rng.choice(pop, n, replace=False).mean() for _ in range(2000)])
+    ax.hist(means / 1e6, bins=40, color="#9bb7d4"); ax.axvline(mu / 1e6, color="#c0392b")
+    ax.set_title(f"n = {n}: sd {means.std() / 1e6:.1f} m, SE {sigma / np.sqrt(n) / 1e6:.1f} m", fontsize=9)
+cons = loans.loc[loans["product_id"] == 2, "principal"].to_numpy(dtype=float)
+smp = rng.choice(cons, 50, replace=False)
+m, s50, n = smp.mean(), smp.std(ddof=1), 50
+def wald(k, n, z=1.96):                    # k events in n trials
+    p = k / n                              # the estimate p̂
+    half = z * math.sqrt(p * (1 - p) / n)  # critical value × standard error
+    return p - half, p + half
+for name, k, n in [("app", 41, 2411), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
+    print(name, [round(100 * v, 2) for v in wald(k, n)])
+def wilson(k, n, z=1.96):
+    p = k / n
+    # pulled a little towards 50 %
+    centre = (p + z**2 / (2 * n)) / (1 + z**2 / n)
+    half = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / (1 + z**2 / n)
+    return centre - half, centre + half
+def pmf(k, n, p):
+    return math.comb(n, k) * p**k * (1 - p)**(n - k)
+def newcombe(k1, n1, k2, n2):
+    p1, p2 = k1 / n1, k2 / n2
+    l1, u1 = wilson(k1, n1); l2, u2 = wilson(k2, n2)
+    d = p1 - p2
+    return d, d - math.sqrt((p1 - l1)**2 + (u2 - p2)**2), d + math.sqrt((u1 - p1)**2 + (p2 - l2)**2)
+for name, k, n in [("app", 41, 2411), ("branch", 34, 3263), ("partner", 16, 1425), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
+    print(name, "Wilson", [round(100 * v, 2) for v in wilson(k, n)], "Wald", [round(100 * v, 2) for v in wald(k, n)])
+for _ in range(100):                               # 100 samples of 400 loans
+    x = rng.choice(pop, 400, replace=False)
+    half = 1.966 * x.std(ddof=1) / math.sqrt(400)  # t(0.975, 399) × SE
+    hits += (x.mean() - half <= pop.mean() <= x.mean() + half)
+z = 1.96
+k, n = 41, 2411
+p = k / n
+lo, hi = wilson(k, n)
+print('ready')
+```
+
 
 **P1.** *(population and sample)* Nilufar takes all 7 099 loans in FPD scope and computes 91 / 7 099 = 1.28 %. She will use it to set next month's alarm. Which statement is right?
 
@@ -976,6 +522,595 @@ Put the steps of an honest branch review in order:
 ```
 
 Tomorrow: the test. Bekzod's question becomes H₀: p_app = p_branch, a z statistic, a p-value — and Nilufar's yes/no for the risk committee.
+
+---
+
+## Going further — the full version, with Python (optional, 60 min)
+
+The same ideas as the stories, written out in full with Python and Excel, plus the n − 1 experiment, the finite-population correction, the Newcombe interval for a difference of two rates, Clopper–Pearson in Excel and a table of which interval to use when. Optional: nothing here counts toward the day.
+
+### Population and sample — the process behind the table
+
+**What it is.** The **population** (*генеральная совокупность*) is everything you want to talk about. The **sample** (*выборка*) is the part you observed. A **parameter** (*параметр*) is the population's true value — μ for a mean, p for a rate — and it is unknown. An **estimate** (*оценка*), or statistic, is the same quantity computed from the sample: x̄, p̂. One number is a **point estimate** (*точечная оценка*).
+
+Even "all 2 411 app loans" is a sample when the question is about the **process**: *will* app loans default more? Next year's app loans are not in the table.
+
+| | Population (unknown) | Sample (what you compute) |
+|---|---|---|
+| mean | μ | x̄ |
+| standard deviation | σ | s |
+| rate | p | p̂ |
+| size | N | n |
+
+**How to write it.** Press ▶ Run: this first block loads the tools and the data for the whole page. Every later block reuses them.
+
+```python
+import math
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+loans = pd.read_csv("data/raw/loans.csv")
+# all 7 828 principals: the population of this page's experiments
+pop = loans["principal"].to_numpy(dtype=float)
+apps = pd.read_csv("data/raw/applications.csv")
+# 13 612 applicants' credit scores
+s = apps["credit_score"].dropna().to_numpy(dtype=float)
+# week 5's FPD frame: 7 099 loans, fpd30 = 0/1
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
+# app = Micro only, partner = BNPL only
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
+# seeded: the same "random" draws on every run
+rng = np.random.default_rng(2026)
+
+# 7828 51709668: N and μ — a parameter
+print(len(pop), round(pop.mean()))
+app = f[f["channel"] == "app"]
+# 2411 41 1.7: n, FPDs and p̂ — an estimate
+print(len(app), app["fpd30"].sum(), round(100 * app["fpd30"].mean(), 2))
+```
+
+The mean principal of all 7 828 loans, 51.71 m soum, is a parameter of the book: every loan is in it. The app's 1.70 % — 41 FPDs in 2 411 loans — is an estimate of the app process's true rate.
+
+**When you use it.**
+- Before a number goes into a report: say what the population is — the book as it stands, or the process that makes next month's loans.
+- Whenever the question says "will", "is the app riskier", "does the channel": the table is a sample of a process.
+
+**Your turn.** Bekzod asks: *"Will app loans default more than branch loans next year?"* What are the 2 411 app loans in the table?
+
+```task
+{"id": "w06d2-l1", "kind": "choice", "options": ["The population — they are all the app loans we have", "A sample of the app process — next year's loans are not in the table", "A parameter", "Neither — a table cannot be a sample"], "answer": 1, "explain": "The question is about the process that makes future app loans. The 2 411 loans we have are one sample of it, so 1.70 % is an estimate with its own uncertainty."}
+```
+
+### A good estimate — unbiased and consistent
+
+**What it is.** A good estimate is **unbiased** (*несмещённая*): right on average over many samples. It is also **consistent** (*состоятельная*): closer to the truth as n grows. The sample variance divides by **n − 1**, not by n, so that it is unbiased.
+
+**How to write it.** Sample variance = the sum of squared distances from the sample mean ÷ (n − 1). numpy: `x.var(ddof=1)`; pandas: `.var()`; Excel: `VAR.S`, `STDEV.S`. Check it by experiment — 20 000 samples of five scores, both formulas, averaged:
+
+```python
+# 20 000 samples, n = 5 each
+samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])
+# 3543: the population variance of the 13 612 scores
+print(round(s.var()))
+# ≈ 2 862 (too small), ≈ 3 578 (right on average)
+print(samples.var(axis=1, ddof=0).mean(), samples.var(axis=1, ddof=1).mean())
+```
+
+Dividing by n gives about 2 860 instead of 3 543 — 20 % too small at n = 5. Dividing by n − 1 lands near 3 543. The reason: the sample's own mean sits closer to its five points than the true mean does, so the squared distances come out too small by the factor (n − 1)/n. (The sd, √ of the variance, is still a little low on average — 56.2 against 59.5 here — and nobody minds.)
+
+**When you use it.**
+- Every sample sd or variance: `ddof=1`. At n = 5 (a pilot, a branch-week) the difference is 20 %; at n = 2 411 it is invisible.
+
+> ⚠️ **Watch out.** `np.std(x)` and `np.var(x)` default to ddof = 0, the population formula; pandas' `.std()` uses ddof = 1. Pass `ddof=1` to numpy in every sample calculation.
+
+**Your turn.** At n = 5, the variance divided by n is on average what share of the true variance? Give it as a decimal (like 0.5), not in %.
+
+```task
+{"id": "w06d2-l2", "kind": "number", "answer": 0.8, "dp": 2, "unit": "of the true variance", "hint": "The factor is (n − 1) / n.", "model": "(5 − 1) / 5 = 0.8 — the experiment's 2 862 / 3 543 ≈ 0.81. That is why a sample variance divides by n − 1."}
+```
+
+### Sampling error — every sample misses a little
+
+**What it is.** **Sampling error** (*ошибка выборки*) is the gap between an estimate and the parameter: x̄ − μ. It comes from *which* units happened to land in the sample. It is not a mistake. Every sample has one, and another sample has another.
+
+```pic
+{"id": "w06d2-pic1", "title": "Five samples, five means, one true mean", "caption": "Every 20th loan, starting at loans 1 to 5: 392 loans each. Each dot misses the book's 51.71 m — by 2.8 to 8.5 million soum — and in real work you see only one of them.", "chart": {"type": "intervals", "rows": [{"label": "from loan 1", "lo": 48.29, "mid": 48.29, "hi": 48.29}, {"label": "from loan 2", "lo": 58.11, "mid": 58.11, "hi": 58.11}, {"label": "from loan 3", "lo": 48.89, "mid": 48.89, "hi": 48.89}, {"label": "from loan 4", "lo": 60.16, "mid": 60.16, "hi": 60.16}, {"label": "from loan 5", "lo": 56.03, "mid": 56.03, "hi": 56.03}], "ref": {"at": 51.71, "label": "μ = 51.71 m"}, "min": 40, "max": 65, "unit": " m"}}
+```
+
+**How to write it.** Sampling error = estimate − parameter. Here we know μ, so we can see the errors. Five samples of 392 loans each — every 20th loan, starting at loan 1, 2, 3, 4 and 5 (a **systematic sample**):
+
+```python
+# 51.71 m: the parameter
+mu = pop.mean()
+for start in range(5):
+    # every 20th loan: 392 loans
+    part = loans["principal"].iloc[start::20]
+    print(start + 1, len(part), round(part.mean() / 1e6, 2), round((part.mean() - mu) / 1e6, 2))
+```
+
+| sample starts at loan | n | mean, m soum | sampling error, m soum |
+|---|---|---|---|
+| 1 | 392 | 48.29 | −3.42 |
+| 2 | 392 | 58.11 | +6.40 |
+| 3 | 392 | 48.89 | −2.82 |
+| 4 | 392 | 60.16 | +8.45 |
+| 5 | 392 | 56.03 | +4.32 |
+
+Five samples from one book give five different means; each misses 51.71 m by 2.8 to 8.5 million soum. In real work you see one row of this table, and you do not know its error.
+
+**When you use it.**
+- To explain why this month's rate differs from last month's when nothing in the process changed.
+- As the reason every estimate needs an interval: the next subsections measure how big the error typically is.
+
+> ⚠️ **Watch out.** Sampling error is not **bias** (*смещение*). A biased sample — approved loans only, one branch only — misses in the same direction every time, and a larger n does not fix it. Sampling error shrinks as n grows; bias does not.
+
+**Your turn.** A branch's FPD rate was 1.1 % last quarter and 1.6 % this quarter. Nothing changed in the products, the officers or the rules. What is the most likely explanation?
+
+```task
+{"id": "w06d2-l3", "kind": "choice", "options": ["A data error", "Sampling error — two samples from the same process give different rates", "Bias in how the loans were chosen", "The process must have changed"], "answer": 1, "explain": "Two quarters are two samples of a few hundred loans each. Their rates differ even when the true rate is the same; the standard error (next) says by how much."}
+```
+
+### Standard error — how much an estimate moves
+
+**What it is.** Draw sample after sample, and the estimate moves. Its distribution over repeated samples is the **sampling distribution** (*выборочное распределение*). The standard deviation of that distribution is the **standard error** (*стандартная ошибка*, SE) — the typical size of the sampling error.
+
+**How to write it.**
+
+```text
+SE of a mean
+  = s / √n
+  (sd of the data ÷ square root
+   of the sample size)
+SE of a proportion
+  = √( p̂ (1 − p̂) / n )
+```
+
+```python
+# 5.69: SE of a 392-loan mean principal, m soum
+print(round(pop.std() / math.sqrt(392) / 1e6, 2))
+p = 41 / 2411
+# 0.263: SE of the app FPD rate, in points
+print(round(100 * math.sqrt(p * (1 - p) / 2411), 3))
+```
+
+A 392-loan mean principal moves by about 5.7 m from sample to sample — the size of the errors in the table above (−3.4 to +8.5 m). The app's 1.70 % moves by about 0.26 points.
+
+**When you use it.**
+- Inside every interval and every test this week: estimate ± critical value × SE.
+- To plan: four times the loans halve the SE.
+
+| | Standard deviation (sd) | Standard error (SE) |
+|---|---|---|
+| describes | the loans: how different they are | the estimate: how much it would move |
+| with more loans | stays about the same | shrinks like 1 / √n |
+| principal, n = 400 | 112.6 m | 112.6 / √400 = 5.63 m |
+
+> ⚠️ **Watch out.** An interval built with the sd instead of the SE is as wide as the data — √n times too wide. The sd is about loans; the SE is about your number.
+
+**Your turn.** The SE of the branch FPD rate, 34 FPDs in 3 263 loans, in percentage points, to 2 decimals?
+
+```task
+{"id": "w06d2-l4", "kind": "number", "answer": 0.18, "dp": 2, "unit": "points", "hint": "p̂ = 34 / 3 263; SE = √(p̂ (1 − p̂) / n), then × 100.", "model": "p̂ = 1.04 %; √(0.01042 × 0.98958 / 3 263) = 0.00178 = 0.18 points — smaller than the app's 0.26, because the branch has more loans."}
+```
+
+### The law of large numbers — the average settles
+
+**What it is.** The **law of large numbers** (*закон больших чисел*, ЗБЧ): as n grows, the sample mean gets closer to the population mean and stays there. It needs a finite mean — the Stretch shows a distribution that has none.
+
+**How to write it.** Running mean after n draws = the sum of the first n values ÷ n.
+
+```python
+# the 7 828 principals in a random order
+order = np.random.default_rng(2026).permutation(pop)
+# the mean after 1, 2, 3, … loans
+running = np.cumsum(order) / np.arange(1, len(order) + 1)
+for n in (10, 100, 1000, 7828):
+    # wild at first; exactly 51.71 m at 7 828
+    print(n, round(running[n - 1] / 1e6, 2))
+```
+
+One shuffle gave **106.38 m** after 10 loans, **35.06 m** after 100, **52.06 m** after 1 000 and **51.71 m** after all 7 828. Early means swing because one SME loan (up to 599 m) outweighs ten Micro loans. The swings die out like 1 / √n.
+
+**When you use it.**
+- The reason a rate from 2 411 loans is worth more than a rate from 50.
+- The reason not to judge a new branch on its first week: a running mean at n = 10 can be twice the truth.
+
+**Your turn.** A new branch's average ticket after its first 10 loans is twice the book's. What does the law of large numbers tell you?
+
+```task
+{"id": "w06d2-l5", "kind": "choice", "options": ["The branch lends twice as much — act now", "Ten loans are too few: a running mean swings until n is large, so wait for more loans", "The mean of 10 loans already equals the population mean", "The branch's data must be wrong"], "answer": 1, "explain": "The average settles only as n grows. On principal, one shuffle gave 106 m after 10 loans against the true 51.7 m."}
+```
+
+### The central limit theorem — the mean becomes a bell
+
+
+**What it is.** The **central limit theorem** (*центральная предельная теорема*, ЦПТ): the mean of n independent draws is approximately **normal**, with mean μ and sd σ / √n, **whatever the shape of the data**, once n is large enough. It is shown here by simulation, not proved.
+
+**How to write it.** Take many samples of n loans, keep each sample's mean, look at the means. Loan principal is about as skewed as money gets: mean 51.7 m, median 5.79 m, skew 2.92. The notebook's 5 000 samples per n (`default_rng(2026)`, without replacement):
+
+| n | sd of the 5 000 means | SE = σ / √n | skew of the means | share within ±1.96 SE |
+|---|---|---|---|---|
+| 5 | 49.08 m | 50.35 m | 1.33 | 95.6 % |
+| 30 | 20.47 m | 20.56 m | 0.57 | 95.8 % |
+| 100 | 11.32 m | 11.26 m | 0.30 | 94.7 % |
+| 1 000 | 3.33 m | 3.56 m | 0.09 | 96.0 % |
+
+
+See it yourself — 2 000 samples per n (your numbers will sit close to the table's):
+
+```python
+# 51.71 m, 112.6 m — the population
+mu, sigma = pop.mean(), pop.std()
+fig, axes = plt.subplots(1, 4, figsize=(14, 3))
+for ax, n in zip(axes, (5, 30, 100, 1000)):
+    # 2 000 sample means
+    means = np.array([rng.choice(pop, n, replace=False).mean() for _ in range(2000)])
+    ax.hist(means / 1e6, bins=40, color="#9bb7d4"); ax.axvline(mu / 1e6, color="#c0392b")
+    ax.set_title(f"n = {n}: sd {means.std() / 1e6:.1f} m, SE {sigma / np.sqrt(n) / 1e6:.1f} m", fontsize=9)
+plt.tight_layout(); plt.show()
+```
+
+The spread of the means follows σ / √n, and their skew melts from 1.33 to 0.09: the bell appears. At n = 1 000 the spread is a little below σ / √n because we take 13 % of a finite population without replacement: × √((7 828 − 1 000) / 7 827) = 0.934 gives 3.32 m — the **finite-population correction**.
+
+**When you use it.**
+- It is why one t interval or one z-test works on money: they need the *mean* to be normal, not the loans.
+- It warns you: the more skewed the data, the larger the n before a normal-based interval keeps its promise.
+
+> ⚠️ **Watch out.** "n ≥ 30 is enough" is folklore. At n = 30 these means are still skewed (0.57), and an interval that assumes normality covers less than it promises (see "What 95 % means"). How many is "many" depends on the skew.
+
+**Your turn.** According to the CLT, *what* becomes approximately normal?
+
+```task
+{"id": "w06d2-l6", "kind": "choice", "options": ["The loan principals themselves, once n ≥ 30", "The mean of n loans, once n is large enough — later for skewed data", "Every sample, always", "Only data that were normal to begin with"], "answer": 1, "explain": "Loan amounts stay skewed forever. The average of many of them is close to normal — at n = 100 the means' skew is 0.30, at n = 1 000 it is 0.09."}
+```
+
+### Confidence interval for a mean — t, not z
+
+**What it is.** A **confidence interval** (*доверительный интервал*, CI) is a range of plausible values for a parameter: **estimate ± critical value × SE**. For a mean, the critical value comes from **Student's t** distribution (*распределение Стьюдента*) with n − 1 **degrees of freedom** (*степени свободы*), because s stands in for the unknown σ. The z value 1.96 is the limit of t as n grows.
+
+**How to write it.** Mean ± t(0.975, n − 1) × s / √n.
+
+| df | 4 | 9 | 29 | 49 | 99 | 999 | ∞ (z) |
+|---|---|---|---|---|---|---|---|
+| t₀.₉₇₅ | 2.776 | 2.262 | 2.045 | 2.010 | 1.984 | 1.962 | 1.960 |
+
+```python
+# the 2 418 Consumer loans (product_id 2 = CONS)
+cons = loans.loc[loans["product_id"] == 2, "principal"].to_numpy(dtype=float)
+# your 50 loans — the notebook's draw: mean 27 486 400, s 12 617 221
+smp = rng.choice(cons, 50, replace=False)
+# estimate, sample sd (ddof=1), size
+m, s50, n = smp.mean(), smp.std(ddof=1), 50
+# standard error — notebook: 1 784 345
+se = s50 / np.sqrt(n)
+# t(0.975, df = 49), from the table above — scipy.stats.t.ppf(0.975, 49)
+t_crit = 2.0096
+# t interval — notebook: 23 900 625 … 31 072 175
+print(round(m - t_crit * se), round(m + t_crit * se))
+# z: a little narrower (23 989 085 … 30 983 715)
+print(round(m - 1.96 * se), round(m + 1.96 * se))
+# the true Consumer mean: 26 926 915 — inside?
+print(round(cons.mean()))
+# scipy (the notebook): scipy.stats.t.interval(0.95, n - 1, loc=m, scale=se)
+```
+
+On the notebook's 50 loans the t interval is 23.90–31.07 m, and the true Consumer mean, 26.93 m, is inside. Excel: `=CONFIDENCE.T(0.05, STDEV.S(B2:B51), 50)` → half-width **3 585 775**; `=T.INV.2T(0.05, 49)` → 2.0096; `=NORM.S.INV(0.975)` → 1.96.
+
+**When you use it.**
+- An average with its precision: the average Consumer ticket, the average score of approved loans.
+
+| | z interval | t interval |
+|---|---|---|
+| critical value | 1.96, always | t(0.975, n − 1): 2.262 at n = 10, 2.010 at n = 50 |
+| assumes | σ is known | σ is estimated by s |
+| width vs the other | narrower | 15 % wider at n = 10, 2.5 % at n = 50 |
+| use it | practically never | always, for a mean |
+
+**Your turn.** 400 loans: mean principal 51.7 m, s = 112.6 m, t(0.975, 399) = 1.966. The half-width of the 95 % t interval, in m soum, to 2 decimals?
+
+```task
+{"id": "w06d2-l7", "kind": "number", "answer": 11.07, "dp": 2, "unit": "m soum", "hint": "SE = 112.6 / √400; half-width = 1.966 × SE.", "model": "SE = 112.6 / 20 = 5.63 m; 1.966 × 5.63 = 11.07 m, so the interval is about 40.6–62.8 m."}
+```
+
+### Confidence interval for a proportion — the Wald interval
+
+**What it is.** The **Wald interval** is the textbook interval for a rate: p̂ ± 1.96 × √(p̂ (1 − p̂) / n). It assumes the rate's sampling distribution is a symmetric bell. Near 0 % it is not: a rate cannot go below zero but can go far above.
+
+```pic
+{"id": "w06d2-pic2", "title": "Near 0 %, the Wald interval breaks", "caption": "On 41 FPDs in 2 411 app loans Wald is fine — Wilson sits close. On 2 FPDs in 150 loans it reaches below zero, and on 0 in 120 it shrinks to a point at zero: the two red rows.", "chart": {"type": "intervals", "rows": [{"label": "app, Wald", "lo": 1.18, "mid": 1.7, "hi": 2.22, "miss": false}, {"label": "app, Wilson", "lo": 1.26, "mid": 1.7, "hi": 2.3, "miss": false}, {"label": "2/150, Wald", "lo": -0.5, "mid": 1.33, "hi": 3.17, "miss": true}, {"label": "0/120, Wald", "lo": 0, "mid": 0, "hi": 0, "miss": true}], "ref": {"at": 0, "label": "0 %"}, "min": -1, "max": 3.5, "unit": " %"}}
+```
+
+**How to write it.**
+
+```python
+def wald(k, n, z=1.96):                    # k events in n trials
+    p = k / n                              # the estimate p̂
+    half = z * math.sqrt(p * (1 - p) / n)  # critical value × standard error
+    return p - half, p + half
+
+for name, k, n in [("app", 41, 2411), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
+    print(name, [round(100 * v, 2) for v in wald(k, n)])
+# app [1.18, 2.22] · 2 in 150 [-0.5, 3.17] · 0 in 120 [0.0, 0.0]
+```
+
+The app: 1.18–2.22 %. Two FPDs in 150 loans: −0.50 to 3.17 % — a negative default rate. Zero in 120: 0 to 0 — "certainly zero".
+
+**When you use it.**
+- A rate between about 20 % and 80 % on hundreds of cases (an approval rate on 2 000 applications).
+- Quick planning arithmetic (sample size, below).
+
+> ⚠️ **Watch out.** For a rate near 0 % — FPD, fraud, default — on a few hundred loans, Wald is too narrow, can go negative and collapses to zero width at 0 events. Default to Wilson (next).
+
+**Your turn.** The upper limit of the Wald 95 % interval for the branch FPD rate, 34 / 3 263, in %, to 2 decimals?
+
+```task
+{"id": "w06d2-l8", "kind": "number", "answer": 1.39, "dp": 2, "unit": "%", "hint": "wald(34, 3263), then × 100.", "model": "p̂ = 1.04 %, SE 0.18 points, half-width 0.35: 0.69–1.39 %."}
+```
+
+### The Wilson interval — the right default for a rate
+
+**What it is.** The **Wilson interval** (*интервал Уилсона*) is built by inverting the score test instead of assuming a bell around p̂. It is never negative, never zero-width, asymmetric in the right direction near 0 %, and covers close to 95 %. The **Clopper–Pearson** interval ("exact", *точный*) comes from the binomial itself; it guarantees *at least* 95 % and is therefore a little wide.
+
+**How to write it.**
+
+```text
+centre
+  = (p̂ + z²/2n) / (1 + z²/n)
+half-width
+  = z √( p̂(1 − p̂)/n + z²/4n² )
+    / (1 + z²/n)
+```
+
+```python
+def wilson(k, n, z=1.96):
+    p = k / n
+    # pulled a little towards 50 %
+    centre = (p + z**2 / (2 * n)) / (1 + z**2 / n)
+    half = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / (1 + z**2 / n)
+    return centre - half, centre + half
+# binomial P(X = k), from Day 1 (Practice uses it)
+def pmf(k, n, p):
+    return math.comb(n, k) * p**k * (1 - p)**(n - k)
+# 95 % CI for the difference p1 − p2
+def newcombe(k1, n1, k2, n2):
+    p1, p2 = k1 / n1, k2 / n2
+    l1, u1 = wilson(k1, n1); l2, u2 = wilson(k2, n2)
+    d = p1 - p2
+    return d, d - math.sqrt((p1 - l1)**2 + (u2 - p2)**2), d + math.sqrt((u1 - p1)**2 + (p2 - l2)**2)
+
+for name, k, n in [("app", 41, 2411), ("branch", 34, 3263), ("partner", 16, 1425), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
+    print(name, "Wilson", [round(100 * v, 2) for v in wilson(k, n)], "Wald", [round(100 * v, 2) for v in wald(k, n)])
+# [0.66, 0.05, 1.33]
+print("app − branch", [round(100 * v, 2) for v in newcombe(41, 2411, 34, 3263)])
+```
+
+App **1.26–2.30 %**, branch **0.75–1.45 %**, partner **0.69–1.82 %**; 2 in 150 → 0.37–4.73 %; 0 in 120 → 0–3.10 %. The app's interval reaches 0.44 points below 1.70 and 0.60 above: the right shape for a rate near zero. Excel has no Wilson function — with k in B1, n in B2, z in B3 (`=NORM.S.INV(0.975)`):
+
+| Bound | Excel |
+|---|---|
+| Wilson, lower | `=(B1/B2 + B3^2/(2*B2) - B3*SQRT(B1/B2*(1-B1/B2)/B2 + B3^2/(4*B2^2))) / (1 + B3^2/B2)` |
+| Wilson, upper | the same with `+` before `B3*SQRT` |
+| Clopper–Pearson, lower | `=BETA.INV(0.025, B1, B2-B1+1)` |
+| Clopper–Pearson, upper | `=BETA.INV(0.975, B1+1, B2-B1)` |
+
+**When you use it.** Every rate, at any n — FPD, approval rate, PAR30. Clopper–Pearson when an auditor or a regulator wants 95 % guaranteed. For a **difference** of two rates, combine the two Wilson intervals (**Newcombe**): app − branch = 0.66 points, 95 % CI **0.05 to 1.33** points. Coverage of a "95 %" interval at the true rate 1.28 % (20 000 samples each, `proportion_confint(k, n, method=...)`, `default_rng(2026)`):
+
+| n | Wald (`"normal"`) | Wilson (`"wilson"`) | Clopper–Pearson (`"beta"`) | samples with 0 FPDs |
+|---|---|---|---|---|
+| 100 | **72.7 %** | 95.9 % | 99.0 % | 27.1 % |
+| 400 | **87.7 %** | 96.0 % | 98.0 % | 0.6 % |
+| 2 000 | 94.0 % | 95.3 % | 96.3 % | 0 % |
+
+A "95 %" Wald interval on a branch-month of 400 loans is really an 88 % interval. In Python all three are `proportion_confint(41, 2411, method="wilson" | "beta" | "normal")` from `statsmodels.stats.proportion`.
+
+> ⚠️ **Watch out.** Two overlapping intervals are not a test of the difference. App (1.26–2.30 %) and branch (0.75–1.45 %) overlap, yet the Newcombe interval of their difference, 0.05 to 1.33 points, does not contain zero. Compare two rates with an interval for the difference — or tomorrow's test.
+
+**Your turn.** The upper limit of the Wilson 95 % interval for the partner FPD rate, 16 / 1 425, in %, to 2 decimals?
+
+```task
+{"id": "w06d2-l9", "kind": "number", "answer": 1.82, "dp": 2, "unit": "%", "hint": "wilson(16, 1425), then × 100.", "model": "Partner: 1.12 %, Wilson 0.69–1.82 % (Wald 0.58–1.67 %). Wilson sits higher and is wider above the estimate than below."}
+```
+
+### What 95 % means — and what it does not
+
+
+**What it is.** 95 % is a property of the **procedure** (*уровень доверия*, confidence level): if you repeated the sampling many times, 95 % of the intervals built this way would contain the true value. This one interval either contains it or not.
+
+```pic
+{"id": "w06d2-pic3", "title": "19 of 20 intervals catch the true mean", "caption": "20 samples of 400 loans drawn by computer (seed 2026), each with its 95 % t interval for the mean principal. 19 cover the true 51.71 m; one, in red, misses — the 5 % the method allows.", "chart": {"type": "intervals", "rows": [{"label": "sample 1", "lo": 36.77, "mid": 46.89, "hi": 57.01, "miss": false}, {"label": "sample 2", "lo": 34.41, "mid": 43.66, "hi": 52.92, "miss": false}, {"label": "sample 3", "lo": 48.35, "mid": 60.68, "hi": 73.01, "miss": false}, {"label": "sample 4", "lo": 34.65, "mid": 44.44, "hi": 54.23, "miss": false}, {"label": "sample 5", "lo": 35.96, "mid": 46.43, "hi": 56.9, "miss": false}, {"label": "sample 6", "lo": 39.02, "mid": 49.98, "hi": 60.94, "miss": false}, {"label": "sample 7", "lo": 51.9, "mid": 64.88, "hi": 77.85, "miss": true}, {"label": "sample 8", "lo": 41.63, "mid": 52.95, "hi": 64.27, "miss": false}, {"label": "sample 9", "lo": 44.48, "mid": 55.55, "hi": 66.63, "miss": false}, {"label": "sample 10", "lo": 40.59, "mid": 51.98, "hi": 63.37, "miss": false}, {"label": "sample 11", "lo": 41.42, "mid": 53.1, "hi": 64.79, "miss": false}, {"label": "sample 12", "lo": 35.33, "mid": 45.43, "hi": 55.54, "miss": false}, {"label": "sample 13", "lo": 48.48, "mid": 60.93, "hi": 73.37, "miss": false}, {"label": "sample 14", "lo": 44.84, "mid": 56.52, "hi": 68.2, "miss": false}, {"label": "sample 15", "lo": 43.61, "mid": 54.85, "hi": 66.1, "miss": false}, {"label": "sample 16", "lo": 38.13, "mid": 49.0, "hi": 59.86, "miss": false}, {"label": "sample 17", "lo": 39.47, "mid": 50.19, "hi": 60.9, "miss": false}, {"label": "sample 18", "lo": 38.97, "mid": 50.53, "hi": 62.08, "miss": false}, {"label": "sample 19", "lo": 33.3, "mid": 43.07, "hi": 52.84, "miss": false}, {"label": "sample 20", "lo": 32.63, "mid": 42.35, "hi": 52.08, "miss": false}], "ref": {"at": 51.71, "label": "μ = 51.71 m"}, "min": 30, "max": 80, "unit": " m"}}
+```
+
+**How to write it.** Run the procedure 100 times and count the hits:
+
+```python
+hits = 0
+for _ in range(100):                               # 100 samples of 400 loans
+    x = rng.choice(pop, 400, replace=False)
+    half = 1.966 * x.std(ddof=1) / math.sqrt(400)  # t(0.975, 399) × SE
+    hits += (x.mean() - half <= pop.mean() <= x.mean() + half)
+print(hits)                                        # about 95 — one run gave 96
+```
+
+One run: **96 of the 100** intervals contain the true 51.71 m. With 100 intervals, anything from about 90 to 99 is normal — the count itself is Bin(100, 0.95).
+
+| Right reading | Wrong reading |
+|---|---|
+| "We are 95 % confident: the method catches the true rate 95 times in 100." | "There is a 95 % probability that the true FPD is between 1.26 and 2.30 %." — the true value is fixed (that sentence is a Bayesian *credible* interval, Seeing Theory ch. 5) |
+| "The data are consistent with a true rate between 1.26 and 2.30 %." | "95 % of app loans have an FPD rate in that range." — loans do not have rates; the interval is about the average |
+| "Compare two rates with an interval for the difference." | "The intervals overlap, so there is no difference." |
+| "95 % holds when the method's assumptions hold." | "95 % whatever the data." — t intervals on skewed principal cover **88.6 %** at n = 30, **93.0 %** at n = 100, **95.2 %** at n = 400 |
+
+**When you use it.**
+- Every time you say an interval out loud, in a meeting or in a note.
+
+> ⚠️ **Watch out.** Never write "95 % probability the true rate is in 1.26–2.30 %". Write "95 % CI 1.26–2.30 %" or "the data are consistent with a true rate between 1.26 and 2.30 %".
+
+
+### Sample size for a given margin
+
+**What it is.** The **margin of error** (*предельная ошибка*) E is the half-width of the interval. The **sample size** (*объём выборки*) you need is the n that makes the margin no larger than E. Solve E = z × SE for n.
+
+**How to write it.**
+
+```text
+for a rate:
+  n = z² · p(1 − p) / E²
+  p = your best guess; 0.5 if you
+  have none (the worst case)
+for a mean:
+  n = (z · σ / E)²
+  σ = from history or a pilot
+always round up
+```
+
+```python
+z = 1.96
+# loans needed to estimate a rate near p to ± E
+def n_for_rate(p, E):
+    return math.ceil(z**2 * p * (1 - p) / E**2)
+# cases needed to estimate a mean to ± E
+def n_for_mean(sigma, E):
+    return math.ceil((z * sigma / E) ** 2)
+
+print(n_for_rate(91 / 7099, 0.005), n_for_rate(0.5, 0.03))  # 1945 1068
+print(n_for_mean(112.6e6, 5e6))                             # 1949
+```
+
+A rate near 1.28 % to within ±0.5 points needs 1 945 loans. A rate you know nothing about, to ±3 points, needs 1 068 — the "about a thousand" of opinion polls. The mean principal to ±5 m soum needs 1 949 loans.
+
+| margin for a rate near 1.28 % | ±1 point | ±0.5 point | ±0.25 point |
+|---|---|---|---|
+| loans needed | 487 | 1 945 | 7 779 |
+
+Halve the margin, quadruple the loans.
+
+**When you use it.**
+- Before a pilot, an audit sample or a survey: how many cases do we need?
+- To say what precision a segment can ever reach: a branch with 400 loans a year cannot pin FPD to ±0.25 points.
+
+> ⚠️ **Watch out.** E is in the same units as p: ±0.5 points is E = 0.005, not 0.5. And the formula uses Wald arithmetic — for a rate near 0 % with a small n, check the result with a Wilson interval.
+
+**Your turn.** Applicants' credit scores have σ = 59.5. How many applicants do you need to estimate the mean score to within ±2 points (95 %)?
+
+```task
+{"id": "w06d2-l10", "kind": "number", "answer": 3401, "dp": 0, "unit": "applicants", "hint": "n = (1.96 × 59.5 / 2)², then round up.", "model": "(1.96 × 59.5 / 2)² = 58.31² = 3 400.06 → 3 401 applicants. Within ±4 points it would be a quarter of that: 851."}
+```
+
+### The bootstrap — an interval without a formula
+
+**What it is.** The **bootstrap** (*бутстреп*) treats the sample as the population. It resamples the sample **with replacement** many times, computes the statistic each time, and reads the 2.5th and 97.5th percentiles: the **percentile bootstrap**.
+
+**How to write it.**
+
+```python
+def bootstrap_ci(values, stat=np.mean, B=10_000, seed=2026):
+    # its own seeded generator
+    g = np.random.default_rng(seed)
+    # B resamples, the statistic of each
+    boot = [stat(g.choice(values, len(values), replace=True)) for _ in range(B)]
+    # the middle 95 %
+    return np.quantile(boot, [0.025, 0.975])
+# ≈ 1.20 % … 2.24 %   (Wilson 1.26 … 2.30)
+print(bootstrap_ci(f.loc[f.channel == "app", "fpd30"].to_numpy()))
+```
+
+The app's FPD: bootstrap ≈ 1.20–2.24 %, close to Wilson's 1.26–2.30 %. Its strength is a statistic with no SE formula: a 200-loan sample's **median** principal is 5.69 m, bootstrap 95 % CI **4.54–8.27 m** (true median 5.79 m).
+
+**When you use it.**
+- A median, a percentile, a ratio of sums (collection rate = Σ paid / Σ due), a difference of medians.
+- A mean of very skewed money at small n, where the t interval undercovers.
+
+> ⚠️ **Watch out.** With very few events the bootstrap is too narrow: it can only reshuffle what it saw. 7 FPDs in 314 grade-D loans: bootstrap 0.64–3.82 % against Wilson's 1.08–4.53 %. For rates near zero, Wilson; for medians and ratios, the bootstrap.
+
+**Your turn.** Which estimate is the best job for the bootstrap?
+
+```task
+{"id": "w06d2-l11", "kind": "choice", "options": ["The FPD rate of 2 411 app loans", "The median principal of 200 loans", "The mean score of 13 612 applicants", "A rate with 7 events in 314 loans"], "answer": 1, "explain": "A median has no simple SE formula — the bootstrap's home ground. Rates go to Wilson (especially with few events); a mean of 13 612 scores takes a t interval."}
+```
+
+### Putting it together
+
+One request, every tool of the day: *"Describe the app channel's FPD honestly, and say what more data would buy."*
+
+```python
+# the sample: app loans in FPD scope
+k, n = 41, 2411
+p = k / n                        # the point estimate p̂
+se = math.sqrt(p * (1 - p) / n)  # its standard error
+# a rate near 0 % → Wilson, not Wald
+lo, hi = wilson(k, n)
+print(f"FPD30 {100*p:.2f} % · n = {n} · SE {100*se:.2f} pt · 95 % CI {100*lo:.2f}–{100*hi:.2f} %")
+# loans needed for ±0.25 points
+print(n_for_rate(p, 0.0025))
+```
+
+`FPD30 1.70 % · n = 2411 · SE 0.26 pt · 95 % CI 1.26–2.30 %`, and ±0.25 points would need **10 275** app loans — more than four times the channel's whole history. Read it with the subsections: the 2 411 loans are a sample of the app process; 1.70 % is an estimate with a sampling error; the SE says it typically moves by 0.26 points; the rate is near zero, so the interval is Wilson; "95 %" is the method's promise, not a probability about this range; and precision costs n quadratically.
+
+**Which interval, when.**
+
+| You estimate | Typical Nur example | Interval | Python | Excel |
+|---|---|---|---|---|
+| a mean, n ≥ ~30, not wildly skewed | average Consumer principal, average score | t | `stats.t.interval(0.95, n-1, m, s/√n)` | `CONFIDENCE.T` |
+| a mean of very skewed money, small n | average SME ticket from 40 loans | bootstrap (or t on log values) | `bootstrap_ci(v)` | — |
+| a rate, any n, especially near 0 % or 100 % | FPD, approval rate, PAR30 | Wilson | `proportion_confint(k, n, method="wilson")` | formula above |
+| the difference of two rates | app − branch FPD | Newcombe | `newcombe(k1, n1, k2, n2)` | two Wilson formulas |
+| a rate that must be *guaranteed* ≥ 95 % | regulatory / audit sample | Clopper–Pearson | `method="beta"` | `BETA.INV` |
+| a median, a ratio of sums, a percentile | median ticket, collection rate | bootstrap | `bootstrap_ci(v, stat=np.median)` | — |
+| a count per period | 5 102 applications in 3 549 hours | Poisson (exact) | `stats.chi2.ppf([0.025, 0.975], [2*k, 2*k + 2]) / 2`, then ÷ hours | `=CHISQ.INV(0.025, 2*k)/2` |
+
+Default to a 95 % level and say so. Use 90 % only when a team agreed to it in advance — never because the 95 % interval "looked too wide".
+
+
+
+
+### Depth (optional)
+
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Standard error — [Standard Deviation vs Standard Error, Clearly Explained!!! (StatQuest), 01:12](https://youtu.be/A82brFpdr9g?t=72)
+- ▶ Central limit theorem — [The Central Limit Theorem, Clearly Explained!!! (StatQuest), 00:42](https://youtu.be/YAlJCEDH2uY?t=42)
+- ▶ Confidence intervals — [Confidence Intervals, Clearly Explained!!! (StatQuest), 02:55](https://youtu.be/TqOeMYtOc1w?t=175)
+- ▶ Confidence interval for a mean, formula route — [Confidence Interval [Simply explained] (numiqo)](https://youtu.be/ENnlSlvQHO0)
+- ▶ Bootstrap — [Bootstrapping Main Ideas!!! (StatQuest), 06:40](https://youtu.be/Xz0x-8-cgaQ?t=400&end=493)
+
+- RU deck (TBC Data Analytics 2.0, if you have it) `5.2 Statistics & Probability Theory.pdf` pp. 68–73: law of large numbers and CLT. `MS_lecture3.pdf` (lesson 5.3): sample method and sample properties pp. 5–13, point estimates — unbiased, consistent, efficient pp. 14–18, method of moments and maximum likelihood pp. 19–27, confidence intervals (Fisher's lemma; the mean with σ known and unknown; the variance) pp. 28–35. The lesson's recording: `video1414856026.mp4`.
+- Notebooks: `MS_5_statistics.ipynb` (LLN with a coin and a die, CLT from other distributions), `MS6_Точечное_оценивание.ipynb` (unbiasedness and consistency by simulation), `MS6_Интервальное_оценивание.ipynb` (exact vs asymptotic interval, coverage at n = 3 … 1 000 — the same experiment as our Wald/Wilson table), `HW_3_CI.ipynb` (an interval for an exponential mean).
+- Visual: Seeing Theory, chapter 4 (Frequentist Inference: the CLT and confidence intervals, interactive).
+- *Russian terms:* генеральная совокупность = population, выборка = sample, оценка = estimate, точечная / интервальная оценка = point / interval estimate, несмещённость = unbiasedness, состоятельность = consistency, стандартная ошибка = standard error, закон больших чисел (ЗБЧ) = law of large numbers, центральная предельная теорема (ЦПТ) = central limit theorem, доверительный интервал = confidence interval, уровень доверия = confidence level, распределение Стьюдента = t distribution, степени свободы = degrees of freedom, бутстреп = bootstrap, асимптотический = asymptotic.
+
+**Questions inside the videos.** Open a video from the panel: it stops at these points and asks one question about the bit you just watched.
+
+```videoquiz
+{"video": "A82brFpdr9g", "stops": [
+  {"at": 200, "q": "What does the standard deviation describe?", "options": ["How much the individual values spread around their mean", "How much the mean would move between samples", "The error of the measuring device", "The difference between two groups"], "answer": 0, "explain": "sd describes the loans: how different 2 411 app loans are from each other."},
+  {"at": 450, "q": "And the standard error?", "options": ["The spread of the data", "The largest possible error", "The spread of the estimate (e.g. the mean) over repeated samples — sd / √n", "The sd divided by n"], "answer": 2, "explain": "SE describes your number: quadruple n to halve it."}]}
+```
+
+```videoquiz
+{"video": "YAlJCEDH2uY", "stops": [
+  {"at": 150, "q": "The central limit theorem is about the distribution of…", "options": ["the raw data", "the means of many samples", "the largest value", "the population"], "answer": 1, "explain": "Loan principals stay skewed; the means of samples of them become bell-shaped."},
+  {"at": 400, "q": "Does the CLT need the original data to be normal?", "options": ["Yes, always", "Only for n < 30", "No — the means become approximately normal whatever the shape, once n is large enough", "Only for rates"], "answer": 2, "explain": "Whatever the shape — but the more skewed the data, the larger n must be (principal at n = 30 is still skewed)."}]}
+```
+
+```videoquiz
+{"video": "TqOeMYtOc1w", "stops": [
+  {"at": 300, "q": "A 95 % confidence interval is built so that…", "options": ["95 % of the data fall inside it", "95 % of intervals made this way contain the true value", "the true value is inside with probability 95 % for this interval", "it is 95 % of the mean"], "answer": 1, "explain": "A property of the procedure; this one interval either contains the truth or not."},
+  {"at": 600, "q": "What makes a confidence interval narrower?", "options": ["A higher confidence level", "More data", "More spread in the data", "A smaller sample"], "answer": 1, "explain": "Width ∝ critical value × s / √n: more n narrows it, more confidence widens it."}]}
+```
+
+```videoquiz
+{"video": "ENnlSlvQHO0", "stops": [
+  {"at": 150, "q": "The interval for a mean is…", "options": ["mean ± critical value × standard error", "mean ± sd", "median ± IQR", "mean ± 1.96 × sd"], "answer": 0, "explain": "Estimate ± critical value × SE: with s / √n, not the sd of the data."},
+  {"at": 400, "q": "When σ is unknown and estimated by s, the critical value comes from…", "options": ["the normal distribution, always 1.96", "Student's t with n − 1 degrees of freedom", "the chi-square distribution", "the binomial"], "answer": 1, "explain": "t₀.₉₇₅ with 49 df = 2.010; it approaches 1.96 as n grows."}]}
+```
+
+```videoquiz
+{"video": "Xz0x-8-cgaQ", "stops": [
+  {"at": 430, "q": "How does the bootstrap build an interval?", "options": ["From a formula for the SE", "Resample the sample with replacement many times, compute the statistic each time, read the middle 95 %", "Split the data into two halves", "Add normal noise to the data"], "answer": 1, "explain": "The percentile bootstrap: 10 000 resamples, the 2.5th and 97.5th percentiles."},
+  {"at": 485, "q": "Why is the bootstrap useful?", "options": ["It works for statistics with no simple SE formula — a median, a ratio of sums", "It always gives narrower intervals", "It needs no data", "It fixes small samples"], "answer": 0, "explain": "Median ticket, collection rate — but with very few events (7 FPDs) it is too narrow."}]}
+```
+
 
 ---
 

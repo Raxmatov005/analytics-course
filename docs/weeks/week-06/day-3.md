@@ -14,6 +14,472 @@
 
 ## 1. Learn — the logic of a test
 
+Nine short stories. Each one tells **one idea in small steps**: read a sentence, watch the picture change, press **Next**. A dotted word shows its meaning when you tap it. Tired of reading? Press **▶ Play as a video**: the page reads every step aloud and moves the picture for you.
+
+The Python for each idea, and the extra topics, are in **Going further — the full version** near the end of the page (optional).
+
+### Innocent until proven guilty — H₀ and H₁
+
+```story
+{"id": "w06d3-s1", "title": "Innocent until proven guilty", "min": 4, "steps": [{"say": "Nilufar's question for Friday: are app loans riskier than branch loans? The {o|orange bars} are the real FPD rates: app {o|41 of 2 411 = 1.70 %}, branch {o|34 of 3 263 = 1.04 %}.", "show": {"kind": "luck", "groups": [[41, 2411], [34, 3263]], "labels": ["app", "branch"], "max": 2.5, "words": {"exp": "one shared chance", "real": "real gap", "axis": "gap app − branch, points", "world": "Luck world"}}}, {"say": "The app is higher by {o|0.66 points}. But counts wobble even when nothing changes — remember Nilufar's months on Day 1. So is this gap **real**, or **luck**?", "f": "gap = {o|1.70 %} − {o|1.04 %} = {o|0.66 points}", "fs": "The gap: 1.70 minus 1.04, 0.66 points."}, {"say": "Two stories fit these bars. Story 1: the app really is riskier. Story 2: **nothing is going on** — both channels share one FPD chance (the {p|dashed line}), and the gap is luck.", "show": {"exp": true}}, {"say": "A court has the same problem. It starts from the boring story — **innocent** — and drops it only when the evidence would be very hard to explain that way.", "f": "a court: “innocent” — until the evidence is too strong"}, {"say": "A test does the same. The boring story is the [[null hypothesis|H₀, “nothing is going on”: here, app and branch share one FPD chance]], written {p|H₀}. The test assumes it is true, as a court assumes innocence.", "f": "{p|H₀}: app rate = branch rate", "fs": "H zero: the app rate equals the branch rate."}, {"say": "The other story is the [[alternative hypothesis|H₁: what you will claim if the data make H₀ hard to believe]], {p|H₁}. H₀ always holds the **=** sign; H₁ says **≠**, “different”.", "f": "{p|H₀}: app rate = branch rate   ·   {p|H₁}: app rate ≠ branch rate", "fs": "H zero: the rates are equal. H one: they differ."}, {"say": "Your turn.", "ask": {"q": "Grade C was priced for an FPD rate of 1.5 %. Bekzod asks: “Is grade C still at 1.5 %?” Which one is H₀?", "options": ["grade C's rate = 1.5 %", "grade C's rate ≠ 1.5 %", "grade C's rate is above 1.5 %"], "answer": 0, "why": "H₀ is the “nothing has changed” story, so it holds the =. “≠ 1.5 %” is H₁."}}, {"say": "A trial ends in one of two verdicts. **Guilty**: the data are too odd for H₀, so we **reject H₀**. **Not guilty**: not enough evidence, so we **fail to reject H₀**.", "f": "verdict:  reject H₀   ·   or   ·   fail to reject H₀"}, {"say": "Partner against branch: {o|1.12 %} vs {o|1.04 %}. The test finds no evidence of a difference — we fail to reject. But “not guilty” is not “innocent”: 1 425 partner loans are just too few to tell the two apart.", "show": {"groups": [[16, 1425], [34, 3263]], "labels": ["partner", "branch"], "exp": false}}, {"say": "Last one.", "ask": {"q": "So what may Nilufar write about partner vs branch?", "options": ["Partner is proven no different from branch", "The data cannot tell partner and branch apart (yet)", "We accept H₀: the two rates are equal"], "answer": 1, "why": "Failing to reject means “not proven”, never “proven equal” — and H₀ is never “accepted”. More loans could still show a difference."}}]}
+```
+
+> 🎬 **Didn't get H₀ and H₁?** [StatQuest explains it · 4 min](https://youtu.be/0oc49DyA3hU?t=591&end=824)
+
+### A world where only luck works — the p-value
+
+```story
+{"id": "w06d3-s2", "title": "A world where only luck works", "min": 6, "steps": [{"say": "To judge the gap, we play H₀ out. If the channel doesn't matter, every loan has the same FPD chance: all FPDs ÷ all loans = {p|1.32 %}, the {p|dashed line}.", "show": {"kind": "luck", "groups": [[41, 2411], [34, 3263]], "labels": ["app", "branch"], "max": 2.5, "exp": true, "words": {"exp": "one shared chance", "real": "real gap", "axis": "gap app − branch, points", "world": "Luck world"}}, "f": "one shared chance = all FPDs ÷ all loans = (41 + 34) ÷ (2 411 + 3 263) = {p|1.32 %}", "fs": "One shared chance: 75 FPDs divided by 5 674 loans, 1.32 percent."}, {"say": "Tap **Play one luck world**: all 5 674 loans roll the same {p|1.32 %} dice. This pretend world is a [[luck world|a world where H₀ is true: one shared FPD chance, so any gap is pure luck]]; the {b|blue bars} show what it gave each channel.", "act": [{"label": "Play one luck world", "rep": 1, "n": 1, "do": "roll"}]}, {"say": "Read the line under the picture: this world's app count, its branch count and its **gap**. Play a few more. The channels are identical by design — yet the gap is never exactly 0.", "act": [{"label": "Play one luck world", "rep": 3, "n": 1, "do": "roll"}]}, {"say": "Now each world also drops its gap as a {b|dot} on the line below. Right of 0: app came out higher; left of 0: branch did. The small triangle marks the newest world.", "show": {"strip": true}, "act": [{"label": "Play one luck world", "rep": 5, "n": 1, "do": "roll"}]}, {"say": "Play 100 worlds at once. The dots pile up around 0, and most land within half a point of it. That pile is **luck's own shape** for groups this size.", "act": [{"label": "Play 100 worlds", "rep": 1, "n": 100, "do": "roll"}]}, {"say": "A thousand dots won't fit, so we count them in bars. Each {b|bar} is how many luck worlds gave a gap in that range: the taller the bar, the more often luck gives that gap.", "show": {"kind": "hist", "gen": "gap", "pA": 0.013218188227000353, "nA": 2411, "pB": 0.013218188227000353, "nB": 3263, "lo": -2, "hi": 2, "bins": 40, "spread": false, "words": {"thing": "Luck worlds", "axis": "gap app − branch, points", "obs": "real gap"}}, "act": [{"label": "Play 1 000 worlds", "rep": 1, "n": 1000, "do": "sample"}]}, {"say": "How to read it: the middle, 0, means “no gap” — luck's most common result. The further from the middle, the shorter the bars. A gap beyond ±1 point almost never comes from luck.", "act": [{"label": "1 000 more", "rep": 1, "n": 1000, "do": "sample"}]}, {"say": "Now our real gap: the {o|orange line} at +0.66. Does it sit in the thick middle of luck's pile, or out on its thin edge?", "show": {"obs": 0.6586, "tails": "none"}}, {"say": "The dashed line at −0.66 is the same distance the other way: branch higher by as much. The {o|orange bars} are the luck worlds that went as far as ours or further — either way.", "show": {"tails": "two"}}, {"say": "Read their share under the picture: about {o|3 in 100}. That share is the [[p-value|how often a world where H₀ is true gives a result at least as extreme as ours]]; exactly, {o|p = 0.032}. If nothing were going on, a gap like ours would be rare.", "f": "p-value = share of luck worlds at least as far out as ours = {o|0.032}", "fs": "The p-value is 0.032."}, {"say": "The question everyone gets wrong once.", "ask": {"q": "What does p = 0.032 mean?", "options": ["a 3.2 % chance that app and branch have the same rate", "a 3.2 % chance that the gap is just luck", "if the rates were equal, 3.2 % of samples this size would show a gap this big or bigger"], "answer": 2, "why": "p is counted **inside** the luck world — it assumes H₀ is true. So it can't be the chance that H₀ is true, or that it is luck. Like P(FPD | app) on Day 1: the condition comes first."}}, {"say": "Keep the one right sentence: **if H₀ were true**, data this extreme would turn up 3.2 % of the time. The three wrong readings in the strip are everywhere — even in reports.", "f": "p is NOT:  the chance H₀ is true  ·  the chance it is luck  ·  the size of the gap"}]}
+```
+
+> 🎬 **Didn't get the p-value?** [StatQuest explains it · 3 min](https://youtu.be/vemZtEM63GY?t=272&end=427)
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w06d3-x1", "type": "pvalue", "title": "Build the no-effect world yourself", "predict": {"q": "App vs branch: z = 2.15 and **p = 0.032**. What does that 0.032 mean?", "options": ["a 3.2 % chance that the two channels have the same rate", "a 3.2 % chance that the gap is pure luck", "if the rates were equal, 3.2 % of samples would show a gap this big", "the app's rate is 3.2 % higher than branch's"], "why": "The p-value is computed **inside the H₀ world**: it assumes the channels are equal and asks how often such a world makes a gap like ours. It is not the chance that H₀ is true, not the chance of luck, and not the size of the effect. Build that world below and count.", "answer": 2}, "start": {"kA": 41, "nA": 2411, "kB": 34, "nB": 3263}, "kRange": [30, 55], "kLabel": "Late first payments in the app (of 2 411)", "histLabel": "The gap **app − branch** in the no-effect world, points", "challenges": [{"id": "c1", "text": "At the lesson's numbers, draw at least **1 000** samples. Does the simulated p land within **0.01** of the formula's 0.032?", "when": {"sims": [">=", 1000], "perr": ["<", 0.01]}, "only": []}, {"id": "c2", "text": "Take late payers away from the app, one at a time, until the gap is **no longer significant** (p of 0.05 or more). How many do you have to take away?", "when": {"pf": [">=", 0.05], "k": [">=", 39]}, "only": ["k"]}, {"id": "c3", "text": "Back at 41, keep both rates but give each channel **twice** the loans. Push p **below 0.01** — with the very same 0.66-point gap.", "when": {"scale": ["=", 2], "pf": ["<", 0.01]}, "only": ["s"]}]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "bug", "id": "w06d3-g2", "title": "Spot the wrong conclusion", "q": "One sentence misreads the p-value.", "code": "App FPD30 is 1.70 % (41 / 2 411) against 1.04 % for branch (34 / 3 263).\nA two-sided two-proportion z-test gives z = 2.15, p = 0.032.\nSo there is only a 3.2 % chance that the two channels have the same FPD rate.\nAt α = 5 %, fixed in advance, we reject H₀.\nThe difference is +0.66 points (95 % CI +0.05 to +1.33), about 7 extra FPDs per 1 000 loans.", "answer": [2], "why": "The p-value is computed assuming H₀ is true, so it cannot be the probability that H₀ is true."}
+```
+
+### A ruler made of noise — z, and one tail or two
+
+```story
+{"id": "w06d3-s3", "title": "A ruler made of noise", "min": 6, "steps": [{"say": "Back in the luck world. Counting thousands of worlds works, but there is a shortcut — and it starts with the **width** of this pile. Play the worlds first.", "show": {"kind": "hist", "gen": "gap", "pA": 0.013218188227000353, "nA": 2411, "pB": 0.013218188227000353, "nB": 3263, "lo": -2, "hi": 2, "bins": 40, "words": {"thing": "Luck worlds", "axis": "gap app − branch, points", "obs": "real gap"}}, "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "The read-out gives the pile's spread: about {p|0.31 points}. That is the typical size of a luck gap — the [[standard error|SE: how far a result typically lands from the truth by luck alone]]. Within ±1 SE: about {p|68 %} of worlds.", "show": {"band": 1}}, {"say": "Within ±2 SE: about {p|95 %}. So beyond 2 SE, in either direction, land only about 5 % of luck worlds — 1 in 20.", "show": {"band": 2}}, {"say": "Now measure our {o|0.66} with that ruler: it is {y|2.15} SEs from zero. That distance, in units of noise, is the [[test statistic|one number that says how far the data are from H₀, in units of noise]] — here it is called **z**.", "show": {"band": 0, "obs": 0.6586, "tails": "none"}, "f": "z = gap ÷ SE = {o|0.66} ÷ {p|0.307} = {y|2.15}", "fs": "z is the gap divided by the SE: 0.66 divided by 0.307, 2.15."}, {"say": "A rule of thumb for z: below 1 is everyday luck, about 2 is unusual, 3 or more is very rare. Ours, {y|2.15}, lies just outside the shaded ±2 SE.", "show": {"band": 2}, "f": "|z| below 1: everyday luck  ·  about 2: unusual (1 in 20)  ·  3 or more: very rare (3 in 1 000)"}, {"say": "The shortcut: luck's pile has the shape of Day 1's {p|bell}. The bell's two tails beyond ±2.15 SE hold {o|3.2 %} — the same p as counting, no simulation. [[Φ|the share of the standard bell to the left of z; NORM.S.DIST(z, TRUE) in Excel]] reads the bell.", "show": {"band": 0, "bell": true, "tails": "two"}, "f": "p = 2 × (1 − Φ(|z|)) = 2 × (1 − Φ(2.15)) = {o|0.032}", "fs": "p is two times, one minus Phi of 2.15: 0.032."}, {"say": "Try the ruler.", "ask": {"q": "Two branches' FPD rates differ by 0.30 points; the SE of that gap is 0.15 points. How unusual is that if H₀ is true?", "options": ["z = 2: unusual — about 1 luck world in 20 goes this far", "z = 0.5: everyday luck", "z = 0.045: everyday luck"], "answer": 0, "why": "z = 0.30 ÷ 0.15 = 2 SEs from zero, and beyond ±2 SE land only about 5 % of luck worlds."}}, {"say": "Where does 0.307 come from, without simulating? From the luck world's one shared chance, the [[pooled rate|all events of both groups ÷ all their loans: the one rate H₀ says both share]]. We call it {p|p}: {p|1.32 %}.", "show": {"bell": false}, "f": "one shared chance {p|p} = (41 + 34) ÷ (2 411 + 3 263) = {p|1.32 %}"}, {"say": "Then the noise of a gap between {b|n₁ = 2 411} and {b|n₂ = 3 263} loans comes from the formula in the strip: {p|0.307 points} — the same width the bars showed.", "f": "SE = √( {p|p} × (1 − {p|p}) × (1 ÷ {b|n₁} + 1 ÷ {b|n₂}) ) = √(0.0132 × 0.9868 × (1 ÷ 2 411 + 1 ÷ 3 263)) = {p|0.307 points}", "fs": "The SE is the square root of p times one minus p, times one over n one plus one over n two: 0.307 points."}, {"say": "Gap ÷ SE = {y|2.15}: that is the whole [[two-proportion z-test|compares two independent groups' rates: (rate 1 − rate 2) ÷ SE, with the pooled rate inside the SE]]. Swap the order — branch − app — and z is −2.15: the sign only tells which group came first.", "f": "z = ({o|1.70 %} − {o|1.04 %}) ÷ {p|0.307} = {y|2.15}"}, {"say": "So far we counted **both** tails: “different, either way”. A [[one-sided test|counts only one tail: “higher” only, or “lower” only]] asks just “is app higher?” and counts one tail: half the p, {o|0.016}.", "show": {"bell": true, "tails": "right"}, "f": "one-sided: p = 1 − Φ(2.15) = {o|0.016}   ·   two-sided: p = {o|0.032}"}, {"say": "Last one.", "ask": {"q": "When may Nilufar quote the one-sided p = 0.016?", "options": ["Always — it is smaller", "Only if she wrote down **before** the data that a better app would change nothing", "When the two-sided p is between 0.05 and 0.10"], "answer": 1, "why": "One-sided is a promise made in advance. Switching after seeing which group is higher halves p for free — the cheapest p-hacking. A much better app would also change policy, so: two-sided."}}]}
+```
+
+### False alarms and misses — α, errors and power
+
+```story
+{"id": "w06d3-s4", "title": "False alarms and misses", "min": 5, "steps": [{"say": "Nilufar needs a yes or a no. So **before** she sees any data she draws a line: she will say “app is different” only if the gap lands beyond {o|±0.60 points}.", "show": {"kind": "hist", "gen": "gap", "pA": 0.013218188227000353, "nA": 2411, "pB": 0.013218188227000353, "nB": 3263, "lo": -2, "hi": 2, "bins": 40, "obs": 0.601, "tails": "two", "spread": false, "words": {"thing": "Luck worlds", "axis": "gap app − branch, points", "obs": "line"}}, "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "Why 0.60? Only {o|5 %} of luck worlds cross it (read-out). That 5 % is the [[significance level|α: the false-alarm rate you accept, fixed before you see the data]], **α**: the line sits 1.96 SE out on each side.", "f": "α = 5 %  →  the line at ±1.96 SE = ±0.60 points", "fs": "Alpha is 5 percent: the line sits at 1.96 SE, 0.60 points."}, {"say": "Our gap, the {p|purple line}, lies just past the line. In p language: reject H₀ when p is below α. 0.032 is below 0.05, so at α = 5 % Nilufar's answer is **yes**.", "show": {"cut": [[0.6586, ""]]}, "f": "reject H₀ when p < α:   0.032 < 0.05  →  reject"}, {"say": "Now look at the {o|orange bars}. In these worlds nothing was going on — and the test still says “app is worse”. A false alarm: a [[type I error|rejecting H₀ when it is true — a false alarm]]. It happens in α = 5 % of luck worlds, by design.", "show": {"cut": []}}, {"say": "Now the other world: suppose the app **really** is worse — 1.70 % against 1.04 %, exactly what we saw. Play it: the gaps now pile up around {o|0.66}, not around 0.", "show": {"pA": 0.017005391953546247, "pB": 0.010419859025436715, "tails": "right", "cut": [[-0.601, ""]], "words": {"thing": "Real-difference worlds", "axis": "gap app − branch, points", "obs": "line"}}, "act": [{"label": "Play 2 000 worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "The {o|orange bars} cross the line: there the test catches the real difference. Their share is the [[power|the chance that a test catches a real effect]] — only about {o|57 %}!", "f": "caught = power ≈ {o|57 %}"}, {"say": "The {b|blue bars} are misses: the app really is worse, but the gap stayed inside the line. That is a [[type II error|failing to reject H₀ when it is false — a miss]]; its chance is called **β**, here about {b|43 %}.", "f": "caught = power ≈ {o|57 %}   ·   missed = β ≈ {b|43 %}"}, {"say": "Guess first.", "ask": {"q": "Nilufar moves to α = 1 % — a stricter line, further out. What happens?", "options": ["fewer false alarms, more misses", "fewer false alarms and fewer misses", "nothing changes"], "answer": 0, "why": "A line further out is crossed less often by every world: by luck worlds (fewer false alarms) and by real ones (more misses)."}}, {"say": "At α = 1 % the line moves out to {o|0.79}. Power drops to about {o|34 %}, two misses in three — and our own 0.66 is now inside the line: no longer a “yes”.", "show": {"obs": 0.79, "cut": [[-0.79, ""]]}, "f": "α = 1 %: the line at ±2.58 SE = ±0.79 points  ·  power ≈ {o|34 %}"}, {"say": "The cure for misses without extra false alarms: **more data**. With twice the loans the pile is narrower, the 5 % line moves in to {o|0.43}, and power jumps to about {o|85 %}.", "show": {"nA": 4822, "nB": 6526, "obs": 0.425, "cut": [[-0.425, ""]]}, "f": "twice the loans, α = 5 %: the line at ±0.43 points  ·  power ≈ {o|85 %}", "act": [{"label": "Play 2 000 worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "One rule ties it together: α is fixed **before** the data. “p = 0.07, so let's use 10 %” turns the test into a story.", "ask": {"q": "A reminder SMS really does nothing, but the test declares it a success. Which error is that?", "options": ["type I — a false alarm", "type II — a miss", "no error"], "answer": 0, "why": "H₀ (“the SMS does nothing”) was true and got rejected: a false alarm. Its rate is α."}}]}
+```
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w06d3-x2", "type": "errors", "title": "False alarms and misses, counted", "predict": {"q": "Suppose the app really is worse: its true FPD is **1.70 %**, branch's **1.04 %** — exactly the gap we saw. Nilufar's study is repeated on fresh loans, the same sizes, α = 5 %. How often does the test find the difference?", "options": ["almost always — about 95 % of the time", "about 80 % of the time", "a bit more than half the time", "about 5 % of the time"], "why": "A real effect exactly as big as the one we saw sits right at the edge of “significant”: it clears the bar only about **57 %** of the time. The other 43 % are type II errors — a real deterioration missed. Run the tests below and count.", "answer": 2}, "start": {"kA": 41, "nA": 2411, "kB": 34, "nB": 3263, "alpha": 0.05}, "names": ["app", "branch"], "worlds": ["No real difference", "A real difference"], "challenges": [{"id": "c1", "text": "In the world with **no real difference**, run at least **300** tests at α = 5 %. Do the false alarms come out near **5 %**?", "when": {"n0": [">=", 300], "alpha": ["=", 0.05], "fa": ["between", 0.03, 0.07]}}, {"id": "c2", "text": "Switch to **a real difference** and run at least **200** tests at α = 5 %. Count the misses: how often does a real effect slip through?", "when": {"n1": [">=", 200], "alpha": ["=", 0.05]}}, {"id": "c3", "text": "With tests in both worlds, make α **1 %**. Watch the trade: fewer false alarms — and how many more misses?", "when": {"alpha": ["=", 0.01], "n0": [">=", 100], "n1": [">=", 100]}}]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "sort", "id": "w06d3-g5", "title": "Which error?", "q": "Tap a situation, then the box it belongs in.", "groups": {"Type I error (false alarm)": ["The app's true FPD equals branch's, but the test says 'app is worse'", "A reminder SMS does nothing, but the test declares it a success"], "Type II error (a miss)": ["Grade D's FPD really rose, but the test says 'no evidence'", "The new scorecard really is better, but the small pilot fails to show it"], "Correct decision": ["A real rise in FPD is detected", "No real difference, and the test does not reject H₀"]}}
+```
+
+### Signal or noise? A game
+
+```story
+{"id": "w06d3-s5", "title": "Signal or noise? A game", "min": 5, "steps": [{"say": "A game in five rounds. Each shows two groups' FPDs; you guess **real** or **luck**; then 1 000 luck worlds answer. Round 1: two small branches, 200 loans each — {o|6 FPDs} against {o|2}.", "show": {"kind": "luck", "groups": [[6, 200], [2, 200]], "labels": ["branch A", "branch B"], "max": 4, "strip": false, "obs": true, "words": {"exp": "one shared chance", "real": "real gap", "axis": "gap A − B, points", "world": "Luck world"}}, "ask": {"q": "Round 1 — 3 % against 1 %. Real or luck?", "options": ["real", "luck"], "answer": 1, "why": "Only 8 FPDs in all, and 8 can split 6 to 2 by chance quite easily. Next: watch the luck worlds."}}, {"say": "1 000 worlds with one shared chance of {p|2 %}. About {o|1 in 5} gives a gap of 2 points or more, either way. Small groups wobble a lot: **luck**.", "show": {"strip": true}, "act": [{"label": "Play 1 000 luck worlds", "rep": 1, "n": 1000, "do": "roll"}]}, {"say": "Round 2: our own channels — app {o|41 of 2 411}, branch {o|34 of 3 263}.", "show": {"groups": [[41, 2411], [34, 3263]], "labels": ["app", "branch"], "max": 2.5, "strip": false, "words": {"exp": "one shared chance", "real": "real gap", "axis": "gap app − branch, points", "world": "Luck world"}}, "ask": {"q": "Round 2 — 1.70 % against 1.04 %. Real or luck?", "options": ["real", "luck"], "answer": 0, "why": "Real at α = 5 % — but only just. Next: count it."}}, {"say": "Only about {o|3 in 100} luck worlds go this far: p ≈ 0.03, below α = 5 %. **Real** — but by a hair; a few loans more or less could flip it.", "show": {"strip": true}, "act": [{"label": "Play 1 000 luck worlds", "rep": 1, "n": 1000, "do": "roll"}]}, {"say": "Round 3: partner against branch — {o|16 of 1 425} and {o|34 of 3 263}.", "show": {"groups": [[16, 1425], [34, 3263]], "labels": ["partner", "branch"], "max": 2.5, "strip": false, "words": {"exp": "one shared chance", "real": "real gap", "axis": "gap partner − branch, points", "world": "Luck world"}}, "ask": {"q": "Round 3 — 1.12 % against 1.04 %. Real or luck?", "options": ["real", "luck"], "answer": 1, "why": "A tiny gap on a modest group. Next: see how often luck beats it."}}, {"say": "About {o|80 in 100} luck worlds go this far or further: p ≈ 0.80. Easily **luck** — and, from story 1, still not proof that the two are equal.", "show": {"strip": true}, "act": [{"label": "Play 1 000 luck worlds", "rep": 1, "n": 1000, "do": "roll"}]}, {"say": "Round 4: FPD by risk grade — grade B {o|30 of 3 084}, grade A {o|10 of 1 667}. Grade B's rate is {o|1.6 times} grade A's.", "show": {"groups": [[30, 3084], [10, 1667]], "labels": ["grade B", "grade A"], "max": 1.5, "strip": false, "words": {"exp": "one shared chance", "real": "real gap", "axis": "gap B − A, points", "world": "Luck world"}}, "ask": {"q": "Round 4 — 0.97 % against 0.60 %. Real or luck?", "options": ["real", "luck"], "answer": 1, "why": "A big ratio, but only 40 FPDs in all. Next: count."}}, {"say": "About {o|18 in 100} luck worlds go this far: p ≈ 0.18. **Luck** — “1.6 times” means little when the counts are small.", "show": {"strip": true}, "act": [{"label": "Play 1 000 luck worlds", "rep": 1, "n": 1000, "do": "roll"}]}, {"say": "Round 5: loans with **any late payment** — grade B {o|1 511 of 3 246}, grade A {o|516 of 1 741}.", "show": {"groups": [[1511, 3246], [516, 1741]], "labels": ["grade B", "grade A"], "max": 50, "strip": false, "words": {"exp": "one shared chance", "real": "real gap", "axis": "gap B − A, points", "world": "Luck world"}}, "ask": {"q": "Round 5 — 46.5 % against 29.6 %. Real or luck?", "options": ["real", "luck"], "answer": 0, "why": "17 points on thousands of loans. Next: see how far luck reaches."}}, {"say": "Luck's gaps stay within about ±5 points; ours is {o|17}. Not one of 1 000 luck worlds gets near it: p ≈ 0. **Real**, beyond doubt.", "show": {"strip": true}, "act": [{"label": "Play 1 000 luck worlds", "rep": 1, "n": 1000, "do": "roll"}]}, {"say": "The game's lesson: a gap's size alone tells you little — 2 points was luck, 0.66 was real. What decides is the gap **measured against luck's own wobble**, and that wobble shrinks as the groups grow."}]}
+```
+
+### Still on target? — one group against a number
+
+```story
+{"id": "w06d3-s6", "title": "Still on target?", "min": 5, "steps": [{"say": "A new kind of question: one group against a **fixed number**. The 2026 budget assumed an FPD rate of {p|1.5 %}. The 2026 loans show {o|25 FPDs in 2 322}: {o|1.08 %}. Below budget, or luck?", "show": {"kind": "hist", "gen": "share", "p": 0.015, "n": 2322, "lo": 0.5, "hi": 2.5, "bins": 23, "unit": " %", "dp": 2, "spread": false, "words": {"thing": "Luck worlds", "axis": "FPD share of 2 322 loans", "obs": "2026"}}, "f": "H₀: the 2026 rate = 1.5 %   ·   H₁: ≠ 1.5 %"}, {"say": "The luck world here: H₀ is true, so each of the 2 322 loans rolls a {p|1.5 %} dice. Each bar counts the worlds by the FPD share they gave — piled around 1.5 %.", "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "Our {o|1.08 %} is the orange line; the dashed one is as far on the other side. The {o|orange bars} — worlds at least that far out, either way — are about {o|1 in 10}.", "show": {"obs": 1.0767, "tails": "two"}}, {"say": "The shortcut needs the noise of one rate. If H₀ is true, it comes from {p|p₀ = 1.5 %}, the rate H₀ claims — **not** from our 1.08 %: {p|0.25 points}, the shaded ±1 SE.", "show": {"band": 1}, "f": "SE = √( {p|p₀} × (1 − {p|p₀}) ÷ {b|n} ) = √(0.015 × 0.985 ÷ 2 322) = {p|0.25 points}", "fs": "The SE is the square root of p zero times one minus p zero, over n: 0.25 points."}, {"say": "z = {y|−1.68}: 1.68 SEs below budget, p = {o|0.093}, above 0.05. The data don't yet show that 2026 runs below budget. This is the [[one-proportion z-test|compares one group's rate with a fixed number p₀; the SE uses p₀]].", "show": {"band": 0}, "f": "z = ({o|1.08 %} − {p|1.5 %}) ÷ {p|0.25} = {y|−1.68}   →   p = {o|0.093}"}, {"say": "Your turn.", "ask": {"q": "Grade C was priced for 1.5 % and shows 44 FPDs in 2 034 loans: 2.16 %. If H₀ is true, the SE is 0.27 points. What is z?", "options": ["about +2.5", "about −2.5", "about +0.66"], "answer": 0, "why": "(2.16 − 1.5) ÷ 0.27 ≈ 2.5 — positive, because grade C runs above its price; p ≈ 0.014."}}, {"say": "The same works for an **average**. The scorecard vendor says applicants average {p|660}. The bars: averages of 5 361 applicants in worlds where 660 is still true.", "show": {"kind": "hist", "gen": "normal", "mu": 660, "sd": 0.8075, "dp": 1, "spread": false, "unit": "", "lo": null, "hi": null, "bins": null, "obs": null, "band": 0, "words": {"thing": "Luck worlds", "axis": "average score of 5 361 applicants", "obs": "2026"}}, "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "The 2026 applicants averaged {o|658.6} (orange line). Averages of 5 361 people wobble far less than single scores: their SE is the people's spread {p|s} divided by √n — {p|0.81}.", "show": {"obs": 658.6, "tails": "two"}, "f": "SE = {p|s} ÷ √{b|n} = 59.1 ÷ √5 361 = {p|0.81}", "fs": "The SE is s divided by the square root of n: 0.81."}, {"say": "Our average is {y|1.74} SEs below 660: p = {o|0.083}, no evidence at 5 % that it moved. When the spread is estimated from the data, the statistic is called **t** — the [[one-sample t-test|compares one group's average with a fixed number: (average − target) ÷ (s ÷ √n)]].", "f": "t = ({o|average} − {p|660}) ÷ {p|SE} = {y|−1.74}   →   p = {o|0.083}"}, {"say": "z or t? Same idea, different line. The {p|purple lines} are the 5 % lines at ±1.96 SE — ours is inside. With the spread estimated from a **small** n, luck wobbles more, so t's line sits further out.", "show": {"cut": [[658.42, ""], [661.58, ""]]}, "f": "5 % lines, in SEs:  n = 5: 2.78  ·  n = 10: 2.26  ·  n = 30: 2.05  ·  thousands: 1.96"}, {"say": "Last one.", "ask": {"q": "Ten branches, one average, and you use the bell's 1.96 instead of t's 2.26. What goes wrong?", "options": ["you reject H₀ too often — more false alarms than α", "you reject too rarely", "nothing — at n = 10 the lines are the same"], "answer": 0, "why": "At n = 10 luck crosses 1.96 more than 5 % of the time; the right 5 % line is 2.26. Below about 30 per group, use t."}}]}
+```
+
+### Two groups, or the same group twice? — Welch and paired
+
+```story
+{"id": "w06d3-s7", "title": "Two groups, or the same group twice?", "min": 5, "steps": [{"say": "Two groups' **averages** now: credit scores of approved loans — app {o|683.2}, branch {o|679.8}, a gap of {o|3.4 points}. The bars: the gaps luck gives if both channels share one true average.", "show": {"kind": "hist", "gen": "normal", "mu": 0, "sd": 1.355, "lo": -6, "hi": 6, "bins": 40, "dp": 1, "spread": false, "words": {"thing": "Luck worlds", "axis": "average score: app − branch", "obs": "real gap"}}, "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "The pile's width, the SE, comes from both groups, and each keeps **its own** spread {b|s}. That is [[Welch's t-test|compares two independent groups' averages; each group keeps its own spread — the safe default]]. Student's older version assumes equal spreads.", "f": "SE = √( {b|s₁²} ÷ {b|n₁} + {b|s₂²} ÷ {b|n₂} ) = √(51.70² ÷ 2 598 + 53.07² ÷ 3 491) = {p|1.35}", "fs": "The SE adds each group's own spread squared over its size, then takes the root: 1.35."}, {"say": "Our gap is {y|2.48} SEs out: p = {o|0.013}, significant at 5 %. Welch loses almost nothing when the spreads happen to be equal, so it is the default.", "show": {"obs": 3.36, "tails": "two"}, "f": "t = {o|3.36} ÷ {p|1.355} = {y|2.48}   →   p = {o|0.013}"}, {"say": "But significant isn't **big**. The shaded ±1 SE is only about 1.4 points, while people's scores spread about 52. A 3.4-point gap is 0.06 of that: [[Cohen's d|a gap between averages in units of the people's spread: 0.2 small, 0.5 medium, 0.8 large]] = 0.06 — nothing.", "show": {"band": 1}, "f": "Cohen's d = gap ÷ spread of people = 3.36 ÷ 52.4 = {p|0.06}"}, {"say": "A trap waits in any two-group test.", "show": {"band": 0}, "ask": {"q": "Welch on loan **amounts** by channel gives t = −43, p ≈ 0. But app loans are all Micro; branch loans are Auto, Consumer and SME. What does it say about channels?", "options": ["app customers borrow less because of the app", "nothing: channel and product are mixed together, and no test can separate them", "the app channel should be closed"], "answer": 1, "why": "The groups differ in product too: channel and product are confounded. Nilufar's FPD gap is also a Micro-against-other-products gap."}}, {"say": "A different shape of data: FPD of the **same ten branches**, in 2025 and in 2026. Seen as two separate groups, the {b|dots} overlap a lot.", "show": {"kind": "pairs", "vals": [[1.57, 0.89], [3.2, 1.99], [1.22, 0.82], [1.95, 0.49], [1.12, 0.66], [0.87, 0.75], [1.94, 1.44], [0.55, 1.54], [1.6, 1.03], [2.09, 0.72]], "labels": ["2025", "2026"], "max": 3.5, "tick": 1, "unit": " %"}}, {"say": "The {p|averages} fell from 1.61 % to 1.03 %. But branches differ from each other far more than that, so a test of two independent groups sees lots of noise: p = {o|0.055}, not significant.", "show": {"mean": true}, "f": "independent test: t = −2.05, p = 0.055"}, {"say": "But every 2025 dot has a **partner**: the same branch in 2026. Join them: {b|9 of 10 lines go down}. Bukhara falls from {o|3.20 %} to {o|1.99 %} — and is still the highest.", "show": {"link": true, "hot": 1, "words": {"names": ["Andijan", "Bukhara", "Fergana", "Namangan", "Nukus", "Samarkand", "Tashkent C.", "Tashkent N.", "Tashkent S.", "Termez"]}}}, {"say": "A [[paired test|works on the change inside each pair — the same units measured twice]] keeps only the {p|changes} (right). The big differences **between** branches drop out, and the fall stands clear: p = {o|0.031}.", "show": {"diff": true}, "f": "paired: 10 changes, average {p|−0.58} points  →  t = −2.56, p = {o|0.031}"}, {"say": "Which test?", "ask": {"q": "A colleague ran a test of two **independent** groups on the ten branches' 2025 and 2026 FPD. What should replace it?", "options": ["a paired t-test — the same branches measured twice, so it works on the changes", "Welch's t-test", "a chi-square test"], "answer": 0, "why": "Same units twice → paired. It compares each branch with itself, so the spread between branches stops counting as noise: 0.031 instead of 0.055."}}, {"say": "The question to ask every time: does each value in one group have a **partner** in the other? Yes — paired. No — independent, and then Welch.", "show": {"diff": false, "hot": null}, "f": "paired: the same units twice (branches 2025 → 2026, customers before → after)  ·  independent: two separate sets (app loans vs branch loans)"}]}
+```
+
+> 🎬 **Didn't get the t-test?** [numiqo explains it · 1 min](https://youtu.be/VekJxtk4BYM?t=105&end=148)
+
+### Three channels at once — chi-square
+
+```story
+{"id": "w06d3-s8", "title": "Three channels at once", "min": 4, "steps": [{"say": "Nur has three channels, not two. A fair first question: does FPD depend on the channel **at all**? App {o|1.70 %}, branch {o|1.04 %}, partner {o|1.12 %}.", "show": {"kind": "luck", "groups": [[41, 2411], [34, 3263], [16, 1425]], "labels": ["app", "branch", "partner"], "max": 2.5, "words": {"exp": "the book's rate"}}}, {"say": "If the channel didn't matter, every channel would have the book's rate, {p|1.28 %} (dashed). Its **expected** FPDs = its loans × 91 ÷ 7 099: app {p|30.9}, branch {p|41.8}, partner {p|18.3}.", "show": {"exp": true, "expN": true}, "f": "expected FPDs = loans × 91 ÷ 7 099"}, {"say": "Compare seen with expected in every cell of the table: the app's FPD cell gives (41 − 30.9)² ÷ 30.9 = 3.30. Add all six cells, FPD and no FPD: [[χ²|chi-square: adds up (seen − expected)² ÷ expected over every cell of a table]] = {y|5.11}.", "f": "χ² = Σ (seen − expected)² ÷ expected = 3.30 + 1.46 + 0.28 + … = {y|5.11}", "fs": "Chi-square adds up seen minus expected, squared, divided by expected, over every cell: 5.11."}, {"say": "Its own luck world says: with three channels, a χ² of 5.11 or more turns up {o|7.8 %} of the time. p = 0.078: across all three, **not** significant at 5 %. ([[Degrees of freedom|for a table: (rows − 1) × (columns − 1), here (3 − 1) × (2 − 1) = 2]]: 2.)", "f": "χ² = 5.11 with 2 degrees of freedom  →  p = {o|0.078}"}, {"say": "Two tests, two answers?", "ask": {"q": "App vs branch alone gave p = 0.032; all three channels give p = 0.078. What is going on?", "options": ["one of the tests is wrong", "different questions: “do the three differ at all?” vs one pair — the two extremes, picked after seeing the table", "χ² always gives a bigger p"], "answer": 1, "why": "Picking the most extreme pair after looking makes it look stronger than it is. That is why the committee note calls the evidence **moderate**."}}, {"say": "With just two groups the table is 2 × 2, and χ² is simply **z squared** — the same test, the same p. Grade A against grade B: z = −1.34, χ² = 1.80, p = 0.18 both ways.", "show": {"groups": [[10, 1667], [30, 3084]], "labels": ["grade A", "grade B"], "max": 1.5, "exp": false, "expN": false}, "f": "2 × 2 table:  χ² = z²  →  grade A vs B: (−1.34)² = 1.80, the same p = 0.18"}, {"say": "One trap: on a 2 × 2 table scipy's chi-square applies [[Yates' correction|a small adjustment that makes a 2 × 2 χ² more cautious; on by default in scipy]] unless told not to. Same data, p = 0.042 instead of 0.032 — so name the version you report.", "show": {"groups": [[41, 2411], [34, 3263]], "labels": ["app", "branch"], "max": 2.5}, "f": "app vs branch:  no correction p = 0.032  ·  scipy's default (Yates) p = 0.042"}, {"say": "Last one.", "ask": {"q": "A 2 × 2 table gives z = 3. Without a correction, what is χ²?", "options": ["3", "6", "9", "1.73"], "answer": 2, "why": "χ² = z² = 3² = 9, with exactly the same p-value."}}]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "sort", "id": "w06d3-g6", "title": "Which test?", "q": "Tap a question, then the test that answers it.", "groups": {"One-sample t": ["Do 2026 applicants still average a score of 660?"], "Welch t": ["Do app and branch applicants have different average scores?"], "Paired t": ["Did the same ten branches' FPD change from 2025 to 2026?"], "One-proportion z": ["Is grade C's FPD above the 1.5 % its price assumed?"], "Two-proportion z": ["Is the app's FPD rate different from branch's?"], "Chi-square": ["Does FPD depend on the channel, across all three channels?", "Does late payment depend on the risk grade (A–D)?"]}}
+```
+
+### Big enough to matter? — size, grain and the report
+
+```story
+{"id": "w06d3-s9", "title": "Big enough to matter?", "min": 5, "steps": [{"say": "One gap, {o|0.66 points}, three sizes of data. First with **a tenth** of our loans: 241 app, 326 branch. Luck's pile is wide, and our gap sits inside it — about half of the luck worlds go further.", "show": {"kind": "hist", "gen": "gap", "pA": 0.013218188227000353, "nA": 241, "pB": 0.013218188227000353, "nB": 326, "lo": -3, "hi": 3, "bins": 30, "obs": 0.6586, "tails": "two", "spread": false, "words": {"thing": "Luck worlds", "axis": "gap app − branch, points", "obs": "real gap"}}, "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "Now our real loans: the pile is about three times narrower, and only about {o|3 in 100} worlds reach 0.66 — p = 0.032.", "show": {"nA": 2411, "nB": 3263}, "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "With ten times the loans the pile is so thin that 0.66 lies far outside it: p < 0.001. The same gap, three verdicts.", "show": {"nA": 24110, "nB": 32630}, "f": "the same 0.66 points:  a tenth of the loans → p ≈ 0.50  ·  ours → p = 0.032  ·  ten times → p < 0.001", "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "So p tells how **clearly** we can see a gap, never how **big** it is: with enough rows every tiny gap becomes “significant”. Next to every p goes an [[effect size|how big a difference is, in units that matter]].", "f": "p: how **clearly** we see a gap   ·   effect size: how **big** it is"}, {"say": "For rates, give the size in a committee's units. The **difference**, +0.66 points, comes with its interval; times 1 000 it is about {y|6.6 extra FPDs per 1 000} app loans — a number someone can price.", "show": {"kind": "luck", "groups": [[41, 2411], [34, 3263]], "labels": ["app", "branch"], "max": 2.5}, "f": "difference = +0.66 points (95 % CI +0.05 to +1.33)  →  × 1 000 = {y|6.6 extra FPDs per 1 000 loans}"}, {"say": "Or as a ratio, the [[relative risk|how many times higher one group's rate is: rate₁ ÷ rate₂]]. Grade C against grade A: 2.16 % ÷ 0.60 % = {y|3.6} — grade C loans default 3.6 times as often.", "show": {"groups": [[44, 2034], [10, 1667]], "labels": ["grade C", "grade A"]}, "f": "relative risk = rate₁ ÷ rate₂ = 2.16 % ÷ 0.60 % = {y|3.6}"}, {"say": "Test at the right **grain**. Late payment, grade A against B: on payments z = −15.45, on loans z = −11.59. One loan's payments are not independent, so counting each one separately pretends to have about 7 times the evidence.", "show": {"groups": [[516, 1741], [1511, 3246]], "labels": ["grade A", "grade B"], "max": 50}, "f": "late payment, grade A vs B:  on 35 780 payments z = −15.45  ·  on 4 987 loans z = −11.59"}, {"say": "Check the grain.", "ask": {"q": "Why is z so much bigger on payments than on loans?", "options": ["payments are measured more precisely", "a loan's payments are not independent, so the payment-level test pretends to have more evidence and inflates z", "the loan-level test drops the late payments"], "answer": 1, "why": "Test at the unit that was sampled — the loan. Here the verdict survives; on a borderline question the wrong grain can manufacture significance."}}, {"say": "Finally, the report: **one sentence, six parts**, always in the order of the strip. A committee decides on the size; the p only says the size isn't luck.", "show": {"groups": [[41, 2411], [34, 3263]], "labels": ["app", "branch"], "max": 2.5}, "f": "groups and rates  ·  difference with 95 % CI  ·  the test, named  ·  statistic  ·  p  ·  conclusion at α, with the size"}, {"say": "Filled in: “App 1.70 % vs branch 1.04 % (+0.66 points, 95 % CI +0.05 to +1.33); two-sided two-proportion z-test, z = 2.15, p = 0.032; at α = 5 % app is higher — about 7 extra FPDs per 1 000 loans.”"}, {"say": "Two small habits. Write **p < 0.001**, never “p = 0.000”. And a big p — partner vs branch, p = 0.80; three channels, p = 0.078 — is **absence of evidence**: never “proven no different”, never “FPD does not depend on channel”.", "f": "write p < 0.001, never p = 0.000   ·   a big p is absence of evidence, not proof"}, {"say": "Last one.", "ask": {"q": "Which line belongs in Nilufar's note?", "options": ["“The difference is proven.”", "“+6.6 FPDs per 1 000 app loans (95 % CI 0.5 to 13.3).”", "“p = 0.000”", "“Partner is no different from branch (p = 0.80).”"], "answer": 1, "why": "A size in the committee's units, with its interval. Nothing is “proven”, p is never 0.000, and p = 0.80 is absence of evidence."}}]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "order", "id": "w06d3-g1", "title": "The steps of a test", "items": ["Write the question in business words", "State H₀ and H₁ (one- or two-sided) and fix α — before looking at the result", "Choose the test from the outcome type, the groups and the pairing", "Compute the test statistic and its p-value", "Compare p with α and decide", "Report the effect size with its confidence interval"], "why": "α and the sidedness are fixed before the data speak; the effect size is what the decision is about."}
+```
+
+**And the words of the day.**
+
+```game
+{"type": "match", "id": "w06d3-g3", "title": "Words of the test", "pairs": [["H₀", "'nothing is going on': p_app = p_branch"], ["p-value", "P(data at least this extreme | H₀ true)"], ["α", "the type I error rate you accept, fixed in advance"], ["Type I error", "rejecting a true H₀ — a false alarm"], ["Type II error", "missing a real effect"], ["Power", "1 − β: the chance of catching a real effect"], ["Effect size", "how big the difference is, in units that matter"]]}
+```
+
+## 2. Worked example — Nilufar's yes/no (15 min)
+
+**1. Question and hypotheses — *H₀ and H₁*, *two-sided*, *α*.** Is the app channel's FPD30 probability different from the branch's? H₀: p_app = p_branch; H₁: ≠ — two-sided, because a better app channel would also change policy. α = 0.05, fixed now, before any p-value.
+
+**First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
+
+```python
+# the tools and the data from the full version of section 1 — run once
+import math
+import numpy as np
+import pandas as pd
+from statistics import NormalDist
+Phi = NormalDist().cdf
+f = pd.read_csv("data/powerbi/fct_first_instalment.csv", parse_dates=["disbursed_at"])
+apps = pd.read_csv("data/raw/applications.csv")
+gap = 41 / 2411 - 34 / 3263
+p0 = 75 / 5674
+se = math.sqrt(p0 * (1 - p0) * (1 / 2411 + 1 / 3263))
+z = (gap - 0) / se
+p0 = 75 / 5674
+p = 0.0318
+z = 2.147
+s26 = apps.loc[apps["applied_at"].str[:4] == "2026", "credit_score"].dropna()
+mu0 = 660
+se = s26.std() / math.sqrt(len(s26))
+t = (s26.mean() - mu0) / se
+def welch_t(a, b):
+    # SE of the difference: each group keeps its own variance
+    se = math.sqrt(a.var() / len(a) + b.var() / len(b))
+    t = (a.mean() - b.mean()) / se
+    # normal tail: fine with hundreds per group
+    return t, 2 * (1 - Phi(abs(t)))
+sa = apps.loc[apps["channel"] == "app", "credit_score"].dropna()
+sb = apps.loc[apps["channel"] == "branch", "credit_score"].dropna()
+loans = pd.read_csv("data/raw/loans.csv").merge(apps[["application_id", "channel", "credit_score"]], on="application_id")
+la = loans.loc[loans["channel"] == "app", "credit_score"].dropna()
+lb = loans.loc[loans["channel"] == "branch", "credit_score"].dropna()
+w = f[f["year"].isin([2025, 2026])].pivot_table(index="branch_name", columns="year", values="fpd30", aggfunc="mean") * 100
+d = w[2026] - w[2025]
+def one_prop_z(k, n, p0):
+    # the noise of a rate IF H0 (rate = p0) is true — p0, not k / n
+    se = math.sqrt(p0 * (1 - p0) / n)
+    z = (k / n - p0) / se
+    return z, 2 * (1 - Phi(abs(z)))
+def two_prop_z(k1, n1, k2, n2):
+    # the pooled rate: what H0 says both channels share
+    p = (k1 + k2) / (n1 + n2)
+    se = math.sqrt(p * (1 - p) * (1 / n1 + 1 / n2))
+    z = (k1 / n1 - k2 / n2) / se
+    # z and the two-sided p-value
+    return z, 2 * (1 - Phi(abs(z)))
+z, p = two_prop_z(41, 2411, 34, 3263)
+from statsmodels.stats.proportion import proportions_ztest, confint_proportions_2indep
+ct = pd.crosstab(f["channel"], f["fpd30"])
+obs = ct.to_numpy()
+expected = np.outer(obs.sum(axis=1), obs.sum(axis=0)) / obs.sum()
+chi2 = ((obs - expected) ** 2 / expected).sum()
+d = (la.mean() - lb.mean()) / math.sqrt((la.var() + lb.var()) / 2)
+g = f.merge(pd.read_csv("data/raw/loans.csv")[["loan_id", "risk_grade"]], on="loan_id")
+z, p = two_prop_z(10, 1667, 44, 2034)
+print('ready')
+```
+
+
+**2. The data.** 41 / 2 411 vs 34 / 3 263 (week 5's FPD30, payments de-duplicated, first due date ≤ as-of − 30 days). Two separate groups of loans, so the samples are *independent*, not paired.
+
+**3. The test — *two-proportion z-test*, its *statistic* and *p-value*.** Two independent rates, 34–41 events per group (expected counts far above 5): the two-proportion z-test fits. **z = 2.147, p = 0.032** < α, so H₀ is rejected. Fisher's exact test (tomorrow) agrees: p = 0.034.
+
+```python
+# uses scipy and statsmodels: they load on the first ▶ Run (the notebook has
+# them too)
+k, n = np.array([41, 34]), np.array([2411, 3263])
+# 2.147, 0.0318
+z, p = proportions_ztest(k, n)
+# +0.0005, +0.0133
+lo, hi = confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb")
+# 1.04, 2.56
+rr_lo, rr_hi = confint_proportions_2indep(41, 2411, 34, 3263, compare="ratio", method="log")
+# odds ratio 1.64, p = 0.0344
+stats.fisher_exact([[41, 2370], [34, 3229]])
+# 0.0778 — the three-channel check
+stats.chi2_contingency(pd.crosstab(f.channel, f.fpd30))[1]
+```
+
+**4. The size — *effect size*.** +0.66 points (95 % CI +0.05 to +1.33); RR 1.63 (1.04–2.56); **6.6 extra FPDs per 1 000 app loans**. At the 2026 pace (1 036 app loans in January–September, ~1 381 a year) that is ~9 extra FPDs a year on loans averaging 2.69 m: ~25 m soum of exposure, ~15 m of expected loss at 60 % LGD.
+
+**5. The caveats that go in the note — *chi-square* and *assumptions*.** (a) The three-channel χ² is not significant (p = 0.078) and app vs branch was chosen as the most extreme pair — the evidence is **moderate**, not overwhelming. (b) App loans are all Micro, branch loans are Auto / Consumer / SME: the gap is channel *and* product; the data cannot separate them. (c) The interval of the difference starts at +0.05 points — consistent with almost nothing.
+
+**6. The answer — *reporting a result*.** *"Yes — at the 5 % level the app's FPD30 is higher than the branch's (1.70 % vs 1.04 %, p = 0.03), about 7 extra first-payment defaults per 1 000 loans. The evidence is moderate and the money is small (~15 m soum a year), so the action is a cheap fix and a re-test, not closing the channel."*
+
+---
+
+## 3. Practice (50 min)
+
+Every task has its own answer box. The Python boxes share the session of section 1's blocks: `two_prop_z`, `one_prop_z`, `welch_t`, `Phi`, `f` (with `channel` and `year`), `apps` and `loans` are ready once you have pressed ▶ Run on them. The questions follow the order of section 1. `data/python/week6/day3_starter.ipynb` has the same frames plus `x` (the payments) and the three TODO functions (`two_prop_ztest`, `relative_risk`, `cohens_d`) that the checkpoint reuses.
+
+**P1.** *(H₀ and H₁)* Write H₀ and H₁, one- or two-sided, for: (a) "Has grade D's late-payment rate changed since last year?" (b) "Marketing claims the new app screen raises approval; it ships only if it does." (c) "Is FPD independent of region?"
+
+```task
+{"id": "w06d3-p1", "kind": "free", "min": 25, "model": "(a) H₀: p_D,2026 = p_D,2025; H₁: they differ — two-sided, because a rise and a fall both matter. (b) H₀: p_new ≤ p_old; H₁: p_new > p_old — one-sided is defensible, because 'worse' and 'no change' lead to the same action (do not ship), and it is written down before the test. (c) H₀: FPD and region are independent; H₁: they are not — a χ² test on the region × FPD table.", "rubric": ["(a) two-sided, with the reason", "(b) one-sided, justified by 'same action' and decided in advance", "(c) independence as H₀, χ² test named", "every H₀ is the 'nothing going on' statement"]}
+```
+
+<details><summary>Answer</summary>
+
+(a) H₀: p_D,2026 = p_D,2025; H₁: ≠; two-sided — a fall or a rise both matter. (b) H₀: p_new ≤ p_old; H₁: p_new > p_old; one-sided is defensible because "worse" and "no change" lead to the same action (do not ship) — written down before the test. (c) H₀: FPD and region are independent; H₁: they are not; a χ² test on the region × FPD table (the χ² is "two-sided" by construction).
+
+</details>
+
+**P2.** *(test statistic and p-value)* One branch's FPD30 is 0.9 points above the rest of the network; under H₀ the standard error of that gap is 0.5 points. Compute z and the two-sided p-value. Then say in one sentence what the p-value means.
+
+```task
+{"id": "w06d3-p11", "kind": "python", "starter": "gap, se = 0.9, 0.5\nz = gap / se\n# print z and the two-sided p-value 2 * (1 - Phi(|z|)), rounded to 3 decimals\n", "answer": 0.072, "dp": 3, "model": "print(z, round(2 * (1 - Phi(abs(z))), 3))   # 1.8 0.072"}
+```
+
+<details><summary>Answer</summary>
+
+z = 0.9 / 0.5 = **1.8**; two-sided p = 2 · (1 − Φ(1.8)) = **0.072**. *"If this branch's true rate were the same as the network's, a gap of 0.9 points or more, either way, would turn up in about 7 samples in 100."* It is not the probability that the branch is fine.
+
+</details>
+
+**P3.** *(α, type I and type II errors)* Nilufar moves α from 5 % to 1 % for the app-vs-branch decision. What happens?
+
+```task
+{"id": "w06d3-p12", "kind": "choice", "options": ["Fewer false alarms and more misses; p = 0.032 no longer rejects H₀", "Fewer false alarms and fewer misses; the test gets better in every way", "Nothing — α does not change the decision", "More false alarms; p = 0.032 now rejects H₀ more strongly"], "answer": 0, "explain": "A smaller α lowers the type I error rate and raises β, the chance of missing a real effect. 0.032 > 0.01, so H₀ stands. Only more data reduces both errors."}
+```
+
+<details><summary>Answer</summary>
+
+A false alarm (type I) becomes rarer — 1 in 100 instead of 1 in 20 when there is no real difference — but a real difference is missed more often (type II, β rises, power falls). With α = 1 %, p = 0.032 is not below α, so the decision flips to "fail to reject". That is why α is fixed **before** the data: chosen afterwards, it decides the answer.
+
+</details>
+
+**P4.** *(one-sided vs two-sided)* For app vs branch, the one-sided p-value, to 4 decimals. When would Nilufar be allowed to quote it?
+
+```task
+{"id": "w06d3-p3", "kind": "number", "answer": 0.0159, "dp": 4, "unit": "one-sided p", "hint": "One-sided 'app is higher' takes only the upper tail: half the two-sided 0.0318, or 1 − Φ(2.147).", "model": "1 − Φ(2.147) = 0.0159. Quotable only if the committee had agreed in advance that a better app channel would change nothing — Bekzod's question came after looking at the dashboard, so the honest number is the two-sided 0.032."}
+```
+
+<details><summary>Answer</summary>
+
+`proportions_ztest([41, 34], [2411, 3263], alternative="larger")` → **0.0159**. Only if the committee had agreed in advance that an app channel *better* than branch would change nothing — and Bekzod's question ("is app worse, or is that noise?") was asked after looking at the dashboard. Switching to one-sided after seeing the direction is the cheapest p-hacking there is.
+
+</details>
+
+**P5.** *(one-sample t-test)* The pricing plan assumes an average Micro ticket of 2.8 m soum. Test it on the Micro loans disbursed in 2026: n, mean, t, two-sided p, and the 95 % interval of the mean.
+
+```task
+{"id": "w06d3-p13", "kind": "python", "starter": "m26 = loans.loc[(loans[\"product_id\"] == 1) & (loans[\"disbursed_at\"].str[:4] == \"2026\"), \"principal\"]   # product 1 = MICRO\nprint(len(m26), round(m26.mean()))\n# t = (mean − 2 800 000) / (sd / √n) — print t (2 decimals) and the two-sided p\n", "answer": -2.63, "dp": 2, "model": "se = m26.std() / math.sqrt(len(m26))\nt = (m26.mean() - 2_800_000) / se\nprint(round(t, 2), round(2 * (1 - Phi(abs(t))), 4))                   # -2.63 0.0085\nprint(round(m26.mean() - 1.96 * se), round(m26.mean() + 1.96 * se))  # 2609593 2772130"}
+```
+
+<details><summary>Answer</summary>
+
+1 045 Micro loans in 2026, mean **2.69 m** (sd 1.34 m); SE = 1.34 m / √1 045 = 41 464; t = (2 690 861 − 2 800 000) / 41 464 = **−2.63**, p = **0.0085**; 95 % interval 2.61–2.77 m. The 2026 average ticket is about 110 000 soum below the plan, and the interval excludes 2.8 m. With 1 044 df the normal tail equals the t tail; `stats.ttest_1samp(m26, 2_800_000)` gives the same.
+
+</details>
+
+**P6.** *(Welch t-test)* Welch t-test of applicants' credit scores, partner vs branch; then the same on **approved loans**. Add Cohen's d (your TODO `cohens_d`).
+
+```task
+{"id": "w06d3-p6", "kind": "python", "starter": "apps = pd.read_csv(\"data/raw/applications.csv\")\nsa = apps.loc[apps.channel == \"partner\", \"credit_score\"].dropna()\nsb = apps.loc[apps.channel == \"branch\", \"credit_score\"].dropna()\nprint(round(sa.mean(), 1), round(sb.mean(), 1))     # 657.2 659.6\n# Welch: t = (mean_a − mean_b) / √(var_a / n_a + var_b / n_b) — print t (2 decimals); then the p-value with 2 * (1 - Phi(abs(t)))\n", "answer": -1.72, "dp": 2, "model": "t = (sa.mean() - sb.mean()) / math.sqrt(sa.var() / len(sa) + sb.var() / len(sb))\nprint(round(t, 2), round(2 * (1 - Phi(abs(t))), 3))   # -1.72 0.086 — with thousands of scores the normal tail equals the t tail\nd = (sa.mean() - sb.mean()) / math.sqrt((sa.var() + sb.var()) / 2)\nprint(round(d, 2))                                     # Cohen's d = -0.04: nothing"}
+```
+
+<details><summary>Answer</summary>
+
+Applicants: partner 657.2 vs branch 659.6, Welch t = −1.72, **p = 0.086**, d = −0.04. Approved loans: 678.8 vs 679.8, t = −0.59, **p = 0.554**, d = −0.02. None of these moves a decision: a 2-point score gap is a fifth of the width of one grade band. The applicants' pool is the same across channels; whatever makes app FPD higher is not the score at the door.
+
+</details>
+
+**P7.** *(paired vs independent samples)* Paired vs independent on the ten branches (2025 vs 2026 FPD30): both tests, the mean change, and one sentence on why the p-values differ.
+
+```task
+{"id": "w06d3-p7", "kind": "choice", "options": ["The paired test is wrong here; branches are independent", "Pairing compares each branch with itself, so the big differences between branches no longer count as noise — paired p = 0.031 vs 0.055 unpaired", "The paired test uses more data", "Both p-values should be the same; one is a rounding error"], "answer": 1, "explain": "Ten differences with mean −0.58 points and t = −2.56. Same unit measured twice → paired."}
+```
+
+<details><summary>Answer</summary>
+
+Paired: t = **−2.56, p = 0.031**; independent: t = −2.05, p = 0.055; mean change −0.58 points (2025 average 1.61 %, 2026 1.03 %). Branch levels differ a lot (Bukhara 3.20 → 1.99, Samarkand 0.87 → 0.75); the paired test compares each branch with itself, so that between-branch spread no longer counts as noise. Use paired whenever the same unit is measured twice.
+
+</details>
+
+**P8.** *(one-proportion z-test)* The partner contract promises FPD30 **below** 1.5 %. Partner loans show 16 FPDs in 1 425. Write H₀ and H₁ (one-sided — the contract question has one direction), then z and the one-sided p. Can Nilufar tell the partner the contract is met?
+
+```task
+{"id": "w06d3-p14", "kind": "python", "starter": "k, n, p0 = 16, 1425, 0.015\nz, p_two = one_prop_z(k, n, p0)\n# H1: rate < 1.5 % — the one-sided p is the lower tail, Phi(z); print z and it, rounded to 3 decimals\n", "answer": 0.121, "dp": 3, "model": "print(round(z, 2), round(Phi(z), 3))   # -1.17 0.121 — 1.12 % is below 1.5 %, but not clearly enough"}
+```
+
+<details><summary>Answer</summary>
+
+H₀: p_partner ≥ 1.5 %; H₁: p_partner < 1.5 %. p̂ = 1.12 %, SE = √(0.015 × 0.985 / 1 425) = 0.32 points, **z = −1.17**, one-sided p = Φ(−1.17) = **0.121**. Not below 5 %: the partner's rate *looks* under the cap, but 1 425 loans cannot yet show it. Honest wording: *"1.12 %, consistent with the 1.5 % cap; not yet enough loans to confirm it is below."*
+
+</details>
+
+**P9.** *(two-proportion z-test)* `two_prop_ztest` (your TODO 1) for app vs partner and partner vs branch. Which pairs differ at 5 %?
+
+```task
+{"id": "w06d3-p2", "kind": "python", "starter": "# counts: app 41 / 2411 · branch 34 / 3263 · partner 16 / 1425\nprint(two_prop_z(41, 2411, 34, 3263))     # app vs branch\n# add app vs partner and partner vs branch; print z and p\n", "answer": 0.153, "dp": 3, "model": "print(two_prop_z(41, 2411, 16, 1425))     # z 1.43, p 0.153\nprint(two_prop_z(16, 1425, 34, 3263))     # z 0.25, p 0.804 — only app vs branch is below 0.05"}
+```
+
+<details><summary>Answer</summary>
+
+App vs partner: z = 1.43, **p = 0.153**; partner vs branch: z = 0.25, **p = 0.804**; app vs branch: z = 2.15, p = 0.032. Only one of three pairs, and the three-way χ² says p = 0.078 — the pattern "the extremes differ, nothing else does" is what a single moderate effect *or* chance plus selection would both produce. Thursday's Holm correction for three comparisons: 0.032 × 3 = 0.095.
+
+</details>
+
+**P10.** *(chi-square test of independence)* χ² test of FPD30 × risk grade (4 × 2). Statistic, df, p, the smallest expected count. Then grade A vs grade C as a two-proportion z-test.
+
+```task
+{"id": "w06d3-p4", "kind": "python", "starter": "loans = pd.read_csv(\"data/raw/loans.csv\")\ng = f.merge(loans[[\"loan_id\", \"risk_grade\"]], on=\"loan_id\")\nct = pd.crosstab(g[\"risk_grade\"], g[\"fpd30\"])\nprint(ct)                     # A 10 / 1 667 · B 30 / 3 084 · C 44 / 2 034 · D 7 / 314\n# expected counts, then chi2 = Σ (O − E)² / E — print chi2 (2 decimals) and the smallest expected count\n", "answer": 23.17, "dp": 2, "model": "obs = ct.to_numpy()\nexpected = np.outer(obs.sum(axis=1), obs.sum(axis=0)) / obs.sum()\nprint(round(((obs - expected) ** 2 / expected).sum(), 2), round(expected.min(), 1))   # 23.17 4.0 — df 3, p = 3.7e-05\nprint(two_prop_z(10, 1667, 44, 2034))                                                 # A vs C: z = -3.95, p = 7.9e-05"}
+```
+
+<details><summary>Answer</summary>
+
+Counts A 10 / 1 667, B 30 / 3 084, C 44 / 2 034, D 7 / 314; **χ² = 23.17, df = 3, p = 3.7 × 10⁻⁵**. Smallest expected count: grade D's FPD cell, **4.0** — one cell of eight below 5 (under the usual 20 % limit, so χ² is acceptable; Fisher–Freeman–Halton would be the purist's choice). A vs C: z = −3.95, **p = 7.9 × 10⁻⁵**; RR 2.16 / 0.60 = 3.6. The scorecard orders FPD as well as lateness.
+
+</details>
+
+**P11.** *(chi-square on a 2 × 2 table)* Show that a 2 × 2 χ² without continuity correction equals z² for app vs branch. What does scipy do by default, and which p do you report?
+
+```task
+{"id": "w06d3-p5", "kind": "choice", "options": ["scipy uses no correction, so its p equals the z-test's 0.0318", "scipy applies Yates' continuity correction on a 2 × 2 by default (χ² = 4.12, p = 0.042); report one version and name it — here the uncorrected z-test and Fisher (0.034) agree", "χ² and z can never agree on a 2 × 2 table", "Report the smallest of the three p-values"], "answer": 1, "explain": "Without correction χ² = 4.610 = 2.147², p = 0.0318 identical; with Yates p = 0.042, more conservative. Picking the smallest p is p-hacking."}
+```
+
+<details><summary>Answer</summary>
+
+`stats.chi2_contingency([[41, 2370], [34, 3229]], correction=False)` → χ² = **4.610** = 2.147², p = **0.0318**. The default (`correction=True`, Yates) gives χ² = 4.119, p = 0.042 — more conservative. Report one and name it; with these counts the z-test (no correction) and Fisher (0.034) agree, so the uncorrected value is fine.
+
+</details>
+
+**P12.** *(checking assumptions — independent rows)* Late payment, grade A vs grade B: z-test on payments, then on loans (any late payment). Why do the z values differ so much?
+
+```task
+{"id": "w06d3-p9", "kind": "choice", "options": ["Payments are more precise than loans", "A loan contributes about seven payments that are not independent, so the payment-level test pretends to have seven times the information and inflates z", "The loan-level test drops the late payments", "The z-test cannot be used on loans"], "answer": 1, "explain": "−15.45 on payments vs −11.59 on loans. Test at the unit that was sampled or randomised — the loan."}
+```
+
+<details><summary>Answer</summary>
+
+Payments: 5.09 % vs 9.82 %, z = **−15.45**, p = 7.5 × 10⁻⁵⁴ (12 219 vs 23 561 payments). Loans: 29.6 % vs 46.5 %, z = **−11.59**, p = 4.6 × 10⁻³¹ (1 741 vs 3 246 loans). The payment-level test pretends to have 7 times as many independent observations as it has; its z is inflated. Here the conclusion survives; on a borderline question the wrong grain manufactures significance. Test at the unit that was randomised or sampled — the loan.
+
+</details>
+
+**P13.** *(effect size)* Effect sizes for app vs branch FPD: difference with its 95 % CI, RR with its CI, extra FPDs per 1 000. Then translate into soum per year for the app channel.
+
+```task
+{"id": "w06d3-p8", "kind": "number", "answer": 6.6, "dp": 1, "unit": "extra FPDs per 1 000 app loans", "hint": "(41 / 2 411 − 34 / 3 263) × 1 000.", "model": "17.0 − 10.4 = 6.6 per 1 000 (95 % CI 0.5–13.3); RR 1.63 (1.04–2.56). At ~1 381 app loans a year: ~9 extra FPDs × 2.69 m ≈ 25 m soum at risk, ~15 m expected loss at LGD 60 %."}
+```
+
+<details><summary>Answer</summary>
+
+Difference **+0.66 points** (Newcombe CI +0.05 to +1.33); RR **1.63** (`confint_proportions_2indep(..., compare="ratio", method="log")` → 1.04–2.56); **6.6 per 1 000** (0.5–13.3). App volume 2026: 1 036 loans in January–September → ~1 381 a year → ~9 extra FPDs × 2.69 m average principal ≈ **25 m soum** at risk, ~15 m expected loss at LGD 60 %. Statistically "yes", financially a rounding error next to the 3.6 bn expected loss of the book (Day 1).
+
+</details>
+
+**P14.** *(reporting a result in one sentence)* Write the one-sentence report for P6's applicants' test (partner 657.2 vs branch 659.6, Welch t = −1.72, p = 0.086). The difference is −2.4 points with a 95 % CI of −5.1 to +0.3.
+
+```task
+{"id": "w06d3-p15", "kind": "free", "min": 30, "model": "Partner applicants had an average credit score of 657.2 vs 659.6 for branch applicants (difference −2.4 points, 95 % CI −5.1 to +0.3); a two-sided Welch t-test gives t = −1.72, p = 0.086; at α = 5 % we cannot say the channels attract applicants with different scores, and the gap is negligible anyway (Cohen's d = −0.04, a fifth of a grade band).", "rubric": ["both group estimates", "the difference with its 95 % CI", "the test named (Welch, two-sided) with t and p", "a conclusion at α that does not claim 'no difference'", "the size in a unit that matters (d or grade bands)"]}
+```
+
+<details><summary>Answer</summary>
+
+*"Partner applicants had an average credit score of 657.2 vs 659.6 for branch applicants (difference −2.4 points, 95 % CI −5.1 to +0.3); a two-sided Welch t-test gives t = −1.72, p = 0.086; at α = 5 % we cannot say the two channels attract applicants with different scores, and the gap is negligible anyway (Cohen's d = −0.04)."* Not "the scores are the same" — p = 0.086 is absence of evidence.
+
+</details>
+
+> 🚀 **Stretch (optional, +5 XP).** **P15.** *(effect size vs p-value)* p depends on n. Keep the app and branch FPD **rates** fixed and multiply both n's by 10, then by 0.1. Compute z and p each time. Then write the sentence that explains to Bekzod why "p = 0.000 000 01" on a 10-million-row table proves nothing about importance.
+
+```task
+{"id": "w06d3-p10", "kind": "python", "starter": "for m in (0.1, 1, 10):\n    z, p = two_prop_z(41 * m, 2411 * m, 34 * m, 3263 * m)\n    print(m)          # add z (2 decimals) and p to this line\n", "answer": 6.79, "dp": 2, "model": "for m in (0.1, 1, 10):\n    z, p = two_prop_z(41 * m, 2411 * m, 34 * m, 3263 * m)\n    print(m, round(z, 2), p)\n# 0.1 0.68 0.50 · 1 2.15 0.032 · 10 6.79 1.1e-11 — the same +0.66-point effect, three verdicts: z grows with √n", "xp": 2}
+```
+
+<details><summary>Answer</summary>
+
+×10 (410 / 24 110 vs 340 / 32 630): z = **6.79**, p = 1.1 × 10⁻¹¹. ×0.1: z = **0.68**, p = 0.50. ×1: z = 2.15, p = 0.032. Same effect (+0.66 points), three verdicts — z grows with √n. *"A p-value measures how clearly we can see a difference, not how big it is; with enough rows every difference is 'significant', so always read the effect size and its interval next to it."*
+
+</details>
+
+### Mistakes people make
+
+- "p = 0.032 means a 3.2 % chance that app and branch are the same."
+- "p = 0.078, so FPD does not depend on channel" — absence of evidence, small n.
+- Switching to one-sided after seeing the direction; choosing the pair to test after looking at the table.
+- Student's t with very different variances — use Welch (`equal_var=False`, `T.TEST(…, 3)`).
+- An independent test on paired data (or the reverse).
+- Testing payments when the unit is the loan — rows that are not independent inflate z.
+- Shapiro on 50 000 rows, p ≈ 0, "so I cannot use a t-test" — the CLT cares about n, the QQ plot about shape.
+- A significant result reported without its size, or a big-sounding RR without its interval (1.63, but 1.04–2.56).
+- A test across confounded groups (channel = product) reported as a channel effect.
+- A p-value printed as `0.000` — write p < 0.001, and give the effect next to it.
+
+---
+
+## 4. Homework
+
+**HW 6.1 is due today** in Day 1's hand-in box. **HW 6.2** (intervals and the chart, Day 2) is due on Day 5. Today's TODO functions (`two_prop_ztest`, `relative_risk`, `cohens_d`) are practice, not graded, but the checkpoint uses them — finish them now and check two of their results here.
+
+**H1.** What does your `relative_risk(41, 2411, 34, 3263)` return (2 decimals)?
+
+```task
+{"id": "w06d3-hw1", "kind": "number", "answer": 1.63, "dp": 2, "unit": "× (app rate / branch rate)", "hint": "(41 / 2 411) / (34 / 3 263).", "model": "1.700 % / 1.042 % = 1.63 — app loans have 1.63 times the branch FPD rate (95 % CI 1.04–2.56)."}
+```
+
+**H2.** And `two_prop_ztest(10, 1667, 44, 2034)` — grade A vs grade C — the z statistic (2 decimals)?
+
+```task
+{"id": "w06d3-hw2", "kind": "number", "answer": -3.95, "dp": 2, "unit": "z", "hint": "Pooled rate 54 / 3 701; z = (p̂_A − p̂_C) / SE. The sign follows the order A − C.", "model": "z = −3.95, p = 7.9 × 10⁻⁵: grade A's 0.60 % against grade C's 2.16 %, RR 3.6 — the scorecard orders FPD."}
+```
+
+---
+
+## 5. Self-check
+
+Three questions, one at a time. Wrong? The explanation points to the part of section 1 to reread.
+
+```check
+{"id": "w06d3-sc", "questions": [
+  {"type": "multi", "q": "Which sentences correctly describe p = 0.032 for app vs branch?", "options": ["If both channels had the same true rate, a gap this large or larger would appear in about 3 % of samples this size", "There is a 3.2 % chance the channels have the same rate", "There is a 3.2 % chance the result is due to chance", "At α = 5 % fixed in advance, we reject H₀"], "answer": [0, 3], "explain": "The p-value is computed assuming H₀; the other two sentences are the classic misreadings (→ section 1, 'The p-value')."},
+  {"type": "single", "q": "App vs branch: z-test p = 0.032; three-channel χ² p = 0.078. What is going on?", "options": ["One test is wrong", "They answer different questions: 'do the three differ at all?' vs a pair picked after seeing the table — the evidence is moderate", "χ² must always be smaller", "The z-test used Yates' correction"], "answer": 1, "explain": "That is why the committee note says 'moderate' (→ section 1, 'Chi-square', P9)."},
+  {"type": "multi", "q": "A test on 52 850 payments gives p = 10⁻⁶⁹. What do you ask before you believe it matters?", "options": ["How big is the effect, with its interval?", "Was the test run at the right grain (loans, not payments)?", "Is α = 5 %?", "Was a seed set?"], "answer": [0, 1], "explain": "Huge n makes any gap significant; payments of one loan are not independent (→ section 1, 'Effect size', P12, P15)."}
+]}
+```
+
+---
+
+## 6. Company corner <span class="badge company">The risk-committee note</span>
+
+A committee reads six lines, in this order, and nothing else. Each line is a habit: the question before the answer, the definition before the number, the interval with the number, the test with its name, the size in the committee's units, a decision someone can act on.
+
+| # | Line | Filled for app vs branch FPD30 |
+|---|---|---|
+| 1 | **Question** | Do loans originated in the app have a higher first-payment default rate than loans originated in branches? |
+| 2 | **Metric definition** | FPD30 = first instalment not fully paid within 30 days of its due date; loans whose first due date ≤ 2026-09-01 (as of 2026-10-01); payments de-duplicated; channel = channel of the application. |
+| 3 | **Numbers with 95 % CIs** | App 41 / 2 411 = **1.70 %** (Wilson 1.26–2.30 %); branch 34 / 3 263 = **1.04 %** (0.75–1.45 %); difference **+0.66 points** (+0.05 to +1.33). |
+| 4 | **Test and p-value** | Two-sided two-proportion z-test: z = 2.15, **p = 0.032** (Fisher exact 0.034). Caveat: the three-channel χ² gives p = 0.078 and app vs branch is the most extreme pair. |
+| 5 | **Effect in business terms** | **+6.6 FPDs per 1 000 app loans** (RR 1.63, CI 1.04–2.56) ≈ 9 extra FPDs a year at the 2026 pace, ~25 m soum exposure, ~15 m expected loss. App loans are all Micro: channel and product cannot be separated. |
+| 6 | **Decision** | **Yes, app FPD is higher — moderately, and cheaply fixable.** Keep the channel; run a first-instalment reminder test on app loans (sample size by Thursday); re-test on Q4 2026 vintages; review in January. |
+
+What the note does **not** say: "significant" without the size, "proved", "no difference in partner" (p = 0.80 is absence of evidence), or anything about Micro vs other products that the data cannot separate. And what Nilufar must be able to answer when the CFO asks *"so what is the chance you are wrong?"*: if there were no real difference, a gap this large would appear about 3 times in 100 — and the evidence that the gap is *big* is weak, which is why the decision is cheap and reversible.
+
+Sort the sentences: which ones belong in the note?
+
+```game
+{"type": "sort", "id": "w06d3-g4", "title": "In the note or not?", "q": "Tap a sentence, then where it belongs.", "groups": {"In the note": ["FPD30 = first instalment not fully paid within 30 days of its due date", "App 1.70 % (1.26–2.30 %) vs branch 1.04 % (0.75–1.45 %)", "Two-sided z-test: z = 2.15, p = 0.032", "+6.6 FPDs per 1 000 app loans, ~15 m soum a year", "Channel and product cannot be separated: app loans are all Micro"], "Not in the note": ["The difference is proven", "Partner is no different from branch (p = 0.80)", "p = 0.000", "Significant (no size given)"]}}
+```
+
+> 🎯 **Interview version.** *"Two groups have default rates 1.70 % and 1.04 %. Is the difference significant?"* — Ask for n; with 2 411 and 3 263 loans, a two-proportion z-test (or χ² / Fisher) gives p ≈ 0.03; report the difference with its CI (+0.05 to +1.33 points) and in business units; mention whether the comparison was pre-specified and whether the groups differ in other ways (product mix) before calling it a channel effect.
+
+**Say it like in an interview.** *"Two groups have default rates of 1.70 % and 1.04 %. Is the difference significant?"* — answer in 3–5 sentences, as you would to an interviewer.
+
+```task
+{"id": "w06d3-cc", "kind": "free", "min": 30, "model": "It depends on n, so I would ask for it first. With 2 411 and 3 263 loans a two-sided two-proportion z-test gives z = 2.15, p = 0.032, so at α = 5 % the rates differ; the difference is +0.66 points with a 95 % CI of +0.05 to +1.33, about 7 extra defaults per 1 000 loans. I would also say whether this comparison was planned or picked after looking (the three-group χ² is p = 0.078), and check whether the groups differ in other ways — here app loans are all Micro — before calling it a channel effect.", "rubric": ["asks for n before answering", "names the test and gives z / p", "reports the difference with its CI and in business units", "mentions pre-specification or confounding (product mix)"]}
+```
+
+Tomorrow: when the t-test's assumptions fail (skewed days-late, small branches), when you test ten things at once, and Jasur's question — is 2 000 loans enough to test the SMS reminder?
+
+---
+
+## Going further — the full version, with Python (optional, 60 min)
+
+The same ideas as the stories, written out in full with Python and Excel, plus checking assumptions (QQ plot, Shapiro, Levene), the Excel layouts of each test and “putting it together” on grade A vs grade C. Optional: nothing here counts toward the day.
+
 Press ▶ Run on this block first. It loads the data and the tools that every box on this page uses.
 
 ```python
@@ -114,12 +580,6 @@ The gap is 0.66 points and the noise is 0.307 points, so the gap is 2.15 noise-u
 
 ### The p-value — one right definition, three wrong ones
 
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w06d3-x1", "type": "pvalue", "title": "Build the no-effect world yourself", "predict": {"q": "App vs branch: z = 2.15 and **p = 0.032**. What does that 0.032 mean?", "options": ["a 3.2 % chance that the two channels have the same rate", "a 3.2 % chance that the gap is pure luck", "if the rates were equal, 3.2 % of samples would show a gap this big", "the app's rate is 3.2 % higher than branch's"], "why": "The p-value is computed **inside the H₀ world**: it assumes the channels are equal and asks how often such a world makes a gap like ours. It is not the chance that H₀ is true, not the chance of luck, and not the size of the effect. Build that world below and count.", "answer": 2}, "start": {"kA": 41, "nA": 2411, "kB": 34, "nB": 3263}, "kRange": [30, 55], "kLabel": "Late first payments in the app (of 2 411)", "histLabel": "The gap **app − branch** in the no-effect world, points", "challenges": [{"id": "c1", "text": "At the lesson's numbers, draw at least **1 000** samples. Does the simulated p land within **0.01** of the formula's 0.032?", "when": {"sims": [">=", 1000], "perr": ["<", 0.01]}, "only": []}, {"id": "c2", "text": "Take late payers away from the app, one at a time, until the gap is **no longer significant** (p of 0.05 or more). How many do you have to take away?", "when": {"pf": [">=", 0.05], "k": [">=", 39]}, "only": ["k"]}, {"id": "c3", "text": "Back at 41, keep both rates but give each channel **twice** the loans. Push p **below 0.01** — with the very same 0.66-point gap.", "when": {"scale": ["=", 2], "pf": ["<", 0.01]}, "only": ["s"]}]}
-```
-
 **What it is.** The **p-value** (*p-значение*) is *the probability, computed assuming H₀ is true, of getting a test statistic at least as extreme as the one observed.* Small p: data like ours would be rare in the H₀ world.
 
 | The p-value says | The p-value does **not** say |
@@ -154,19 +614,7 @@ If both channels had the same FPD rate, a gap of 0.66 points or more, in either 
 
 > ⚠️ **Watch out.** "p = 0.032" never means "a 3.2 % chance that H₀ is true" or "a 3.2 % chance it is luck". The condition comes first — *if* H₀ is true, data this extreme turn up 3.2 % of the time — exactly like P(D | A) on Day 1. And p > 0.05 is not proof of no difference.
 
-**Your turn.** One sentence of this analysis misreads the p-value — tap it.
-
-```game
-{"type": "bug", "id": "w06d3-g2", "title": "Spot the wrong conclusion", "q": "One sentence misreads the p-value.", "code": "App FPD30 is 1.70 % (41 / 2 411) against 1.04 % for branch (34 / 3 263).\nA two-sided two-proportion z-test gives z = 2.15, p = 0.032.\nSo there is only a 3.2 % chance that the two channels have the same FPD rate.\nAt α = 5 %, fixed in advance, we reject H₀.\nThe difference is +0.66 points (95 % CI +0.05 to +1.33), about 7 extra FPDs per 1 000 loans.", "answer": [2], "why": "The p-value is computed assuming H₀ is true, so it cannot be the probability that H₀ is true."}
-```
-
 ### α, type I and type II errors, power
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w06d3-x2", "type": "errors", "title": "False alarms and misses, counted", "predict": {"q": "Suppose the app really is worse: its true FPD is **1.70 %**, branch's **1.04 %** — exactly the gap we saw. Nilufar's study is repeated on fresh loans, the same sizes, α = 5 %. How often does the test find the difference?", "options": ["almost always — about 95 % of the time", "about 80 % of the time", "a bit more than half the time", "about 5 % of the time"], "why": "A real effect exactly as big as the one we saw sits right at the edge of “significant”: it clears the bar only about **57 %** of the time. The other 43 % are type II errors — a real deterioration missed. Run the tests below and count.", "answer": 2}, "start": {"kA": 41, "nA": 2411, "kB": 34, "nB": 3263, "alpha": 0.05}, "names": ["app", "branch"], "worlds": ["No real difference", "A real difference"], "challenges": [{"id": "c1", "text": "In the world with **no real difference**, run at least **300** tests at α = 5 %. Do the false alarms come out near **5 %**?", "when": {"n0": [">=", 300], "alpha": ["=", 0.05], "fa": ["between", 0.03, 0.07]}}, {"id": "c2", "text": "Switch to **a real difference** and run at least **200** tests at α = 5 %. Count the misses: how often does a real effect slip through?", "when": {"n1": [">=", 200], "alpha": ["=", 0.05]}}, {"id": "c3", "text": "With tests in both worlds, make α **1 %**. Watch the trade: fewer false alarms — and how many more misses?", "when": {"alpha": ["=", 0.01], "n0": [">=", 100], "n1": [">=", 100]}}]}
-```
 
 **What it is.** The **significance level** α (*уровень значимости*) is the false-alarm rate you accept, chosen **before** you see the data — 5 % by convention. You reject H₀ when p < α. Two mistakes are possible:
 
@@ -193,12 +641,6 @@ At α = 5 % the app-vs-branch p of 0.032 rejects H₀; at α = 1 % the same data
 - Lowering α buys fewer false alarms with more misses. Only more data reduces both.
 
 > ⚠️ **Watch out.** α chosen after seeing p is not α. "p = 0.07, so let us use 10 %" turns the test into a story.
-
-**Your turn.** Sort the outcomes.
-
-```game
-{"type": "sort", "id": "w06d3-g5", "title": "Which error?", "q": "Tap a situation, then the box it belongs in.", "groups": {"Type I error (false alarm)": ["The app's true FPD equals branch's, but the test says 'app is worse'", "A reminder SMS does nothing, but the test declares it a success"], "Type II error (a miss)": ["Grade D's FPD really rose, but the test says 'no evidence'", "The new scorecard really is better, but the small pilot fails to show it"], "Correct decision": ["A real rise in FPD is detected", "No real difference, and the test does not reject H₀"]}}
-```
 
 ### One-sided or two-sided
 
@@ -641,24 +1083,6 @@ print(round((44 / 2034 - 10 / 1667) * 1000, 1), round((44 / 2034) / (10 / 1667),
 
 Read it with the day's questions: H₀ holds the "=", the test is two-sided because both directions would matter, α was fixed first, the data are two independent rates so the two-proportion z-test fits, p = 0.00008 is below 5 %, and the effect — 15.6 extra FPDs per 1 000 loans, 3.6 times the rate — is what goes into the sentence.
 
-**The steps of a test, in order:**
-
-```game
-{"type": "order", "id": "w06d3-g1", "title": "The steps of a test", "items": ["Write the question in business words", "State H₀ and H₁ (one- or two-sided) and fix α — before looking at the result", "Choose the test from the outcome type, the groups and the pairing", "Compute the test statistic and its p-value", "Compare p with α and decide", "Report the effect size with its confidence interval"], "why": "α and the sidedness are fixed before the data speak; the effect size is what the decision is about."}
-```
-
-**Which test answers which question?**
-
-```game
-{"type": "sort", "id": "w06d3-g6", "title": "Which test?", "q": "Tap a question, then the test that answers it.", "groups": {"One-sample t": ["Do 2026 applicants still average a score of 660?"], "Welch t": ["Do app and branch applicants have different average scores?"], "Paired t": ["Did the same ten branches' FPD change from 2025 to 2026?"], "One-proportion z": ["Is grade C's FPD above the 1.5 % its price assumed?"], "Two-proportion z": ["Is the app's FPD rate different from branch's?"], "Chi-square": ["Does FPD depend on the channel, across all three channels?", "Does late payment depend on the risk grade (A–D)?"]}}
-```
-
-**The words of the day:**
-
-```game
-{"type": "match", "id": "w06d3-g3", "title": "Words of the test", "pairs": [["H₀", "'nothing is going on': p_app = p_branch"], ["p-value", "P(data at least this extreme | H₀ true)"], ["α", "the type I error rate you accept, fixed in advance"], ["Type I error", "rejecting a true H₀ — a false alarm"], ["Type II error", "missing a real effect"], ["Power", "1 − β: the chance of catching a real effect"], ["Effect size", "how big the difference is, in units that matter"]]}
-```
-
 ### Depth (optional)
 
 **Videos (free, YouTube; each link opens at the right minute):**
@@ -705,303 +1129,6 @@ Read it with the day's questions: H₀ holds the "=", the test is two-sided beca
   {"at": 125, "q": "Which t-test fits 'the same ten branches in 2025 and in 2026'?", "options": ["Independent samples", "Paired samples", "One-sample against zero rates", "None — use chi-square"], "answer": 1, "explain": "Same units measured twice → paired, on the differences."},
   {"at": 146, "q": "What does a two-sample t-test compare?", "options": ["Two medians", "Two means", "Two proportions of categories", "Two distributions' shapes"], "answer": 1, "explain": "Means — and Welch's version does not need equal variances."}]}
 ```
-
-
----
-
-## 2. Worked example — Nilufar's yes/no (15 min)
-
-**1. Question and hypotheses — *H₀ and H₁*, *two-sided*, *α*.** Is the app channel's FPD30 probability different from the branch's? H₀: p_app = p_branch; H₁: ≠ — two-sided, because a better app channel would also change policy. α = 0.05, fixed now, before any p-value.
-
-**2. The data.** 41 / 2 411 vs 34 / 3 263 (week 5's FPD30, payments de-duplicated, first due date ≤ as-of − 30 days). Two separate groups of loans, so the samples are *independent*, not paired.
-
-**3. The test — *two-proportion z-test*, its *statistic* and *p-value*.** Two independent rates, 34–41 events per group (expected counts far above 5): the two-proportion z-test fits. **z = 2.147, p = 0.032** < α, so H₀ is rejected. Fisher's exact test (tomorrow) agrees: p = 0.034.
-
-```python
-# uses scipy and statsmodels: they load on the first ▶ Run (the notebook has
-# them too)
-k, n = np.array([41, 34]), np.array([2411, 3263])
-# 2.147, 0.0318
-z, p = proportions_ztest(k, n)
-# +0.0005, +0.0133
-lo, hi = confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb")
-# 1.04, 2.56
-rr_lo, rr_hi = confint_proportions_2indep(41, 2411, 34, 3263, compare="ratio", method="log")
-# odds ratio 1.64, p = 0.0344
-stats.fisher_exact([[41, 2370], [34, 3229]])
-# 0.0778 — the three-channel check
-stats.chi2_contingency(pd.crosstab(f.channel, f.fpd30))[1]
-```
-
-**4. The size — *effect size*.** +0.66 points (95 % CI +0.05 to +1.33); RR 1.63 (1.04–2.56); **6.6 extra FPDs per 1 000 app loans**. At the 2026 pace (1 036 app loans in January–September, ~1 381 a year) that is ~9 extra FPDs a year on loans averaging 2.69 m: ~25 m soum of exposure, ~15 m of expected loss at 60 % LGD.
-
-**5. The caveats that go in the note — *chi-square* and *assumptions*.** (a) The three-channel χ² is not significant (p = 0.078) and app vs branch was chosen as the most extreme pair — the evidence is **moderate**, not overwhelming. (b) App loans are all Micro, branch loans are Auto / Consumer / SME: the gap is channel *and* product; the data cannot separate them. (c) The interval of the difference starts at +0.05 points — consistent with almost nothing.
-
-**6. The answer — *reporting a result*.** *"Yes — at the 5 % level the app's FPD30 is higher than the branch's (1.70 % vs 1.04 %, p = 0.03), about 7 extra first-payment defaults per 1 000 loans. The evidence is moderate and the money is small (~15 m soum a year), so the action is a cheap fix and a re-test, not closing the channel."*
-
----
-
-## 3. Practice (50 min)
-
-Every task has its own answer box. The Python boxes share the session of section 1's blocks: `two_prop_z`, `one_prop_z`, `welch_t`, `Phi`, `f` (with `channel` and `year`), `apps` and `loans` are ready once you have pressed ▶ Run on them. The questions follow the order of section 1. `data/python/week6/day3_starter.ipynb` has the same frames plus `x` (the payments) and the three TODO functions (`two_prop_ztest`, `relative_risk`, `cohens_d`) that the checkpoint reuses.
-
-**P1.** *(H₀ and H₁)* Write H₀ and H₁, one- or two-sided, for: (a) "Has grade D's late-payment rate changed since last year?" (b) "Marketing claims the new app screen raises approval; it ships only if it does." (c) "Is FPD independent of region?"
-
-```task
-{"id": "w06d3-p1", "kind": "free", "min": 25, "model": "(a) H₀: p_D,2026 = p_D,2025; H₁: they differ — two-sided, because a rise and a fall both matter. (b) H₀: p_new ≤ p_old; H₁: p_new > p_old — one-sided is defensible, because 'worse' and 'no change' lead to the same action (do not ship), and it is written down before the test. (c) H₀: FPD and region are independent; H₁: they are not — a χ² test on the region × FPD table.", "rubric": ["(a) two-sided, with the reason", "(b) one-sided, justified by 'same action' and decided in advance", "(c) independence as H₀, χ² test named", "every H₀ is the 'nothing going on' statement"]}
-```
-
-<details><summary>Answer</summary>
-
-(a) H₀: p_D,2026 = p_D,2025; H₁: ≠; two-sided — a fall or a rise both matter. (b) H₀: p_new ≤ p_old; H₁: p_new > p_old; one-sided is defensible because "worse" and "no change" lead to the same action (do not ship) — written down before the test. (c) H₀: FPD and region are independent; H₁: they are not; a χ² test on the region × FPD table (the χ² is "two-sided" by construction).
-
-</details>
-
-**P2.** *(test statistic and p-value)* One branch's FPD30 is 0.9 points above the rest of the network; under H₀ the standard error of that gap is 0.5 points. Compute z and the two-sided p-value. Then say in one sentence what the p-value means.
-
-```task
-{"id": "w06d3-p11", "kind": "python", "starter": "gap, se = 0.9, 0.5\nz = gap / se\n# print z and the two-sided p-value 2 * (1 - Phi(|z|)), rounded to 3 decimals\n", "answer": 0.072, "dp": 3, "model": "print(z, round(2 * (1 - Phi(abs(z))), 3))   # 1.8 0.072"}
-```
-
-<details><summary>Answer</summary>
-
-z = 0.9 / 0.5 = **1.8**; two-sided p = 2 · (1 − Φ(1.8)) = **0.072**. *"If this branch's true rate were the same as the network's, a gap of 0.9 points or more, either way, would turn up in about 7 samples in 100."* It is not the probability that the branch is fine.
-
-</details>
-
-**P3.** *(α, type I and type II errors)* Nilufar moves α from 5 % to 1 % for the app-vs-branch decision. What happens?
-
-```task
-{"id": "w06d3-p12", "kind": "choice", "options": ["Fewer false alarms and more misses; p = 0.032 no longer rejects H₀", "Fewer false alarms and fewer misses; the test gets better in every way", "Nothing — α does not change the decision", "More false alarms; p = 0.032 now rejects H₀ more strongly"], "answer": 0, "explain": "A smaller α lowers the type I error rate and raises β, the chance of missing a real effect. 0.032 > 0.01, so H₀ stands. Only more data reduces both errors."}
-```
-
-<details><summary>Answer</summary>
-
-A false alarm (type I) becomes rarer — 1 in 100 instead of 1 in 20 when there is no real difference — but a real difference is missed more often (type II, β rises, power falls). With α = 1 %, p = 0.032 is not below α, so the decision flips to "fail to reject". That is why α is fixed **before** the data: chosen afterwards, it decides the answer.
-
-</details>
-
-**P4.** *(one-sided vs two-sided)* For app vs branch, the one-sided p-value, to 4 decimals. When would Nilufar be allowed to quote it?
-
-```task
-{"id": "w06d3-p3", "kind": "number", "answer": 0.0159, "dp": 4, "unit": "one-sided p", "hint": "One-sided 'app is higher' takes only the upper tail: half the two-sided 0.0318, or 1 − Φ(2.147).", "model": "1 − Φ(2.147) = 0.0159. Quotable only if the committee had agreed in advance that a better app channel would change nothing — Bekzod's question came after looking at the dashboard, so the honest number is the two-sided 0.032."}
-```
-
-<details><summary>Answer</summary>
-
-`proportions_ztest([41, 34], [2411, 3263], alternative="larger")` → **0.0159**. Only if the committee had agreed in advance that an app channel *better* than branch would change nothing — and Bekzod's question ("is app worse, or is that noise?") was asked after looking at the dashboard. Switching to one-sided after seeing the direction is the cheapest p-hacking there is.
-
-</details>
-
-**P5.** *(one-sample t-test)* The pricing plan assumes an average Micro ticket of 2.8 m soum. Test it on the Micro loans disbursed in 2026: n, mean, t, two-sided p, and the 95 % interval of the mean.
-
-```task
-{"id": "w06d3-p13", "kind": "python", "starter": "m26 = loans.loc[(loans[\"product_id\"] == 1) & (loans[\"disbursed_at\"].str[:4] == \"2026\"), \"principal\"]   # product 1 = MICRO\nprint(len(m26), round(m26.mean()))\n# t = (mean − 2 800 000) / (sd / √n) — print t (2 decimals) and the two-sided p\n", "answer": -2.63, "dp": 2, "model": "se = m26.std() / math.sqrt(len(m26))\nt = (m26.mean() - 2_800_000) / se\nprint(round(t, 2), round(2 * (1 - Phi(abs(t))), 4))                   # -2.63 0.0085\nprint(round(m26.mean() - 1.96 * se), round(m26.mean() + 1.96 * se))  # 2609593 2772130"}
-```
-
-<details><summary>Answer</summary>
-
-1 045 Micro loans in 2026, mean **2.69 m** (sd 1.34 m); SE = 1.34 m / √1 045 = 41 464; t = (2 690 861 − 2 800 000) / 41 464 = **−2.63**, p = **0.0085**; 95 % interval 2.61–2.77 m. The 2026 average ticket is about 110 000 soum below the plan, and the interval excludes 2.8 m. With 1 044 df the normal tail equals the t tail; `stats.ttest_1samp(m26, 2_800_000)` gives the same.
-
-</details>
-
-**P6.** *(Welch t-test)* Welch t-test of applicants' credit scores, partner vs branch; then the same on **approved loans**. Add Cohen's d (your TODO `cohens_d`).
-
-```task
-{"id": "w06d3-p6", "kind": "python", "starter": "apps = pd.read_csv(\"data/raw/applications.csv\")\nsa = apps.loc[apps.channel == \"partner\", \"credit_score\"].dropna()\nsb = apps.loc[apps.channel == \"branch\", \"credit_score\"].dropna()\nprint(round(sa.mean(), 1), round(sb.mean(), 1))     # 657.2 659.6\n# Welch: t = (mean_a − mean_b) / √(var_a / n_a + var_b / n_b) — print t (2 decimals); then the p-value with 2 * (1 - Phi(abs(t)))\n", "answer": -1.72, "dp": 2, "model": "t = (sa.mean() - sb.mean()) / math.sqrt(sa.var() / len(sa) + sb.var() / len(sb))\nprint(round(t, 2), round(2 * (1 - Phi(abs(t))), 3))   # -1.72 0.086 — with thousands of scores the normal tail equals the t tail\nd = (sa.mean() - sb.mean()) / math.sqrt((sa.var() + sb.var()) / 2)\nprint(round(d, 2))                                     # Cohen's d = -0.04: nothing"}
-```
-
-<details><summary>Answer</summary>
-
-Applicants: partner 657.2 vs branch 659.6, Welch t = −1.72, **p = 0.086**, d = −0.04. Approved loans: 678.8 vs 679.8, t = −0.59, **p = 0.554**, d = −0.02. None of these moves a decision: a 2-point score gap is a fifth of the width of one grade band. The applicants' pool is the same across channels; whatever makes app FPD higher is not the score at the door.
-
-</details>
-
-**P7.** *(paired vs independent samples)* Paired vs independent on the ten branches (2025 vs 2026 FPD30): both tests, the mean change, and one sentence on why the p-values differ.
-
-```task
-{"id": "w06d3-p7", "kind": "choice", "options": ["The paired test is wrong here; branches are independent", "Pairing compares each branch with itself, so the big differences between branches no longer count as noise — paired p = 0.031 vs 0.055 unpaired", "The paired test uses more data", "Both p-values should be the same; one is a rounding error"], "answer": 1, "explain": "Ten differences with mean −0.58 points and t = −2.56. Same unit measured twice → paired."}
-```
-
-<details><summary>Answer</summary>
-
-Paired: t = **−2.56, p = 0.031**; independent: t = −2.05, p = 0.055; mean change −0.58 points (2025 average 1.61 %, 2026 1.03 %). Branch levels differ a lot (Bukhara 3.20 → 1.99, Samarkand 0.87 → 0.75); the paired test compares each branch with itself, so that between-branch spread no longer counts as noise. Use paired whenever the same unit is measured twice.
-
-</details>
-
-**P8.** *(one-proportion z-test)* The partner contract promises FPD30 **below** 1.5 %. Partner loans show 16 FPDs in 1 425. Write H₀ and H₁ (one-sided — the contract question has one direction), then z and the one-sided p. Can Nilufar tell the partner the contract is met?
-
-```task
-{"id": "w06d3-p14", "kind": "python", "starter": "k, n, p0 = 16, 1425, 0.015\nz, p_two = one_prop_z(k, n, p0)\n# H1: rate < 1.5 % — the one-sided p is the lower tail, Phi(z); print z and it, rounded to 3 decimals\n", "answer": 0.121, "dp": 3, "model": "print(round(z, 2), round(Phi(z), 3))   # -1.17 0.121 — 1.12 % is below 1.5 %, but not clearly enough"}
-```
-
-<details><summary>Answer</summary>
-
-H₀: p_partner ≥ 1.5 %; H₁: p_partner < 1.5 %. p̂ = 1.12 %, SE = √(0.015 × 0.985 / 1 425) = 0.32 points, **z = −1.17**, one-sided p = Φ(−1.17) = **0.121**. Not below 5 %: the partner's rate *looks* under the cap, but 1 425 loans cannot yet show it. Honest wording: *"1.12 %, consistent with the 1.5 % cap; not yet enough loans to confirm it is below."*
-
-</details>
-
-**P9.** *(two-proportion z-test)* `two_prop_ztest` (your TODO 1) for app vs partner and partner vs branch. Which pairs differ at 5 %?
-
-```task
-{"id": "w06d3-p2", "kind": "python", "starter": "# counts: app 41 / 2411 · branch 34 / 3263 · partner 16 / 1425\nprint(two_prop_z(41, 2411, 34, 3263))     # app vs branch\n# add app vs partner and partner vs branch; print z and p\n", "answer": 0.153, "dp": 3, "model": "print(two_prop_z(41, 2411, 16, 1425))     # z 1.43, p 0.153\nprint(two_prop_z(16, 1425, 34, 3263))     # z 0.25, p 0.804 — only app vs branch is below 0.05"}
-```
-
-<details><summary>Answer</summary>
-
-App vs partner: z = 1.43, **p = 0.153**; partner vs branch: z = 0.25, **p = 0.804**; app vs branch: z = 2.15, p = 0.032. Only one of three pairs, and the three-way χ² says p = 0.078 — the pattern "the extremes differ, nothing else does" is what a single moderate effect *or* chance plus selection would both produce. Thursday's Holm correction for three comparisons: 0.032 × 3 = 0.095.
-
-</details>
-
-**P10.** *(chi-square test of independence)* χ² test of FPD30 × risk grade (4 × 2). Statistic, df, p, the smallest expected count. Then grade A vs grade C as a two-proportion z-test.
-
-```task
-{"id": "w06d3-p4", "kind": "python", "starter": "loans = pd.read_csv(\"data/raw/loans.csv\")\ng = f.merge(loans[[\"loan_id\", \"risk_grade\"]], on=\"loan_id\")\nct = pd.crosstab(g[\"risk_grade\"], g[\"fpd30\"])\nprint(ct)                     # A 10 / 1 667 · B 30 / 3 084 · C 44 / 2 034 · D 7 / 314\n# expected counts, then chi2 = Σ (O − E)² / E — print chi2 (2 decimals) and the smallest expected count\n", "answer": 23.17, "dp": 2, "model": "obs = ct.to_numpy()\nexpected = np.outer(obs.sum(axis=1), obs.sum(axis=0)) / obs.sum()\nprint(round(((obs - expected) ** 2 / expected).sum(), 2), round(expected.min(), 1))   # 23.17 4.0 — df 3, p = 3.7e-05\nprint(two_prop_z(10, 1667, 44, 2034))                                                 # A vs C: z = -3.95, p = 7.9e-05"}
-```
-
-<details><summary>Answer</summary>
-
-Counts A 10 / 1 667, B 30 / 3 084, C 44 / 2 034, D 7 / 314; **χ² = 23.17, df = 3, p = 3.7 × 10⁻⁵**. Smallest expected count: grade D's FPD cell, **4.0** — one cell of eight below 5 (under the usual 20 % limit, so χ² is acceptable; Fisher–Freeman–Halton would be the purist's choice). A vs C: z = −3.95, **p = 7.9 × 10⁻⁵**; RR 2.16 / 0.60 = 3.6. The scorecard orders FPD as well as lateness.
-
-</details>
-
-**P11.** *(chi-square on a 2 × 2 table)* Show that a 2 × 2 χ² without continuity correction equals z² for app vs branch. What does scipy do by default, and which p do you report?
-
-```task
-{"id": "w06d3-p5", "kind": "choice", "options": ["scipy uses no correction, so its p equals the z-test's 0.0318", "scipy applies Yates' continuity correction on a 2 × 2 by default (χ² = 4.12, p = 0.042); report one version and name it — here the uncorrected z-test and Fisher (0.034) agree", "χ² and z can never agree on a 2 × 2 table", "Report the smallest of the three p-values"], "answer": 1, "explain": "Without correction χ² = 4.610 = 2.147², p = 0.0318 identical; with Yates p = 0.042, more conservative. Picking the smallest p is p-hacking."}
-```
-
-<details><summary>Answer</summary>
-
-`stats.chi2_contingency([[41, 2370], [34, 3229]], correction=False)` → χ² = **4.610** = 2.147², p = **0.0318**. The default (`correction=True`, Yates) gives χ² = 4.119, p = 0.042 — more conservative. Report one and name it; with these counts the z-test (no correction) and Fisher (0.034) agree, so the uncorrected value is fine.
-
-</details>
-
-**P12.** *(checking assumptions — independent rows)* Late payment, grade A vs grade B: z-test on payments, then on loans (any late payment). Why do the z values differ so much?
-
-```task
-{"id": "w06d3-p9", "kind": "choice", "options": ["Payments are more precise than loans", "A loan contributes about seven payments that are not independent, so the payment-level test pretends to have seven times the information and inflates z", "The loan-level test drops the late payments", "The z-test cannot be used on loans"], "answer": 1, "explain": "−15.45 on payments vs −11.59 on loans. Test at the unit that was sampled or randomised — the loan."}
-```
-
-<details><summary>Answer</summary>
-
-Payments: 5.09 % vs 9.82 %, z = **−15.45**, p = 7.5 × 10⁻⁵⁴ (12 219 vs 23 561 payments). Loans: 29.6 % vs 46.5 %, z = **−11.59**, p = 4.6 × 10⁻³¹ (1 741 vs 3 246 loans). The payment-level test pretends to have 7 times as many independent observations as it has; its z is inflated. Here the conclusion survives; on a borderline question the wrong grain manufactures significance. Test at the unit that was randomised or sampled — the loan.
-
-</details>
-
-**P13.** *(effect size)* Effect sizes for app vs branch FPD: difference with its 95 % CI, RR with its CI, extra FPDs per 1 000. Then translate into soum per year for the app channel.
-
-```task
-{"id": "w06d3-p8", "kind": "number", "answer": 6.6, "dp": 1, "unit": "extra FPDs per 1 000 app loans", "hint": "(41 / 2 411 − 34 / 3 263) × 1 000.", "model": "17.0 − 10.4 = 6.6 per 1 000 (95 % CI 0.5–13.3); RR 1.63 (1.04–2.56). At ~1 381 app loans a year: ~9 extra FPDs × 2.69 m ≈ 25 m soum at risk, ~15 m expected loss at LGD 60 %."}
-```
-
-<details><summary>Answer</summary>
-
-Difference **+0.66 points** (Newcombe CI +0.05 to +1.33); RR **1.63** (`confint_proportions_2indep(..., compare="ratio", method="log")` → 1.04–2.56); **6.6 per 1 000** (0.5–13.3). App volume 2026: 1 036 loans in January–September → ~1 381 a year → ~9 extra FPDs × 2.69 m average principal ≈ **25 m soum** at risk, ~15 m expected loss at LGD 60 %. Statistically "yes", financially a rounding error next to the 3.6 bn expected loss of the book (Day 1).
-
-</details>
-
-**P14.** *(reporting a result in one sentence)* Write the one-sentence report for P6's applicants' test (partner 657.2 vs branch 659.6, Welch t = −1.72, p = 0.086). The difference is −2.4 points with a 95 % CI of −5.1 to +0.3.
-
-```task
-{"id": "w06d3-p15", "kind": "free", "min": 30, "model": "Partner applicants had an average credit score of 657.2 vs 659.6 for branch applicants (difference −2.4 points, 95 % CI −5.1 to +0.3); a two-sided Welch t-test gives t = −1.72, p = 0.086; at α = 5 % we cannot say the channels attract applicants with different scores, and the gap is negligible anyway (Cohen's d = −0.04, a fifth of a grade band).", "rubric": ["both group estimates", "the difference with its 95 % CI", "the test named (Welch, two-sided) with t and p", "a conclusion at α that does not claim 'no difference'", "the size in a unit that matters (d or grade bands)"]}
-```
-
-<details><summary>Answer</summary>
-
-*"Partner applicants had an average credit score of 657.2 vs 659.6 for branch applicants (difference −2.4 points, 95 % CI −5.1 to +0.3); a two-sided Welch t-test gives t = −1.72, p = 0.086; at α = 5 % we cannot say the two channels attract applicants with different scores, and the gap is negligible anyway (Cohen's d = −0.04)."* Not "the scores are the same" — p = 0.086 is absence of evidence.
-
-</details>
-
-> 🚀 **Stretch (optional, +5 XP).** **P15.** *(effect size vs p-value)* p depends on n. Keep the app and branch FPD **rates** fixed and multiply both n's by 10, then by 0.1. Compute z and p each time. Then write the sentence that explains to Bekzod why "p = 0.000 000 01" on a 10-million-row table proves nothing about importance.
-
-```task
-{"id": "w06d3-p10", "kind": "python", "starter": "for m in (0.1, 1, 10):\n    z, p = two_prop_z(41 * m, 2411 * m, 34 * m, 3263 * m)\n    print(m)          # add z (2 decimals) and p to this line\n", "answer": 6.79, "dp": 2, "model": "for m in (0.1, 1, 10):\n    z, p = two_prop_z(41 * m, 2411 * m, 34 * m, 3263 * m)\n    print(m, round(z, 2), p)\n# 0.1 0.68 0.50 · 1 2.15 0.032 · 10 6.79 1.1e-11 — the same +0.66-point effect, three verdicts: z grows with √n", "xp": 2}
-```
-
-<details><summary>Answer</summary>
-
-×10 (410 / 24 110 vs 340 / 32 630): z = **6.79**, p = 1.1 × 10⁻¹¹. ×0.1: z = **0.68**, p = 0.50. ×1: z = 2.15, p = 0.032. Same effect (+0.66 points), three verdicts — z grows with √n. *"A p-value measures how clearly we can see a difference, not how big it is; with enough rows every difference is 'significant', so always read the effect size and its interval next to it."*
-
-</details>
-
-### Mistakes people make
-
-- "p = 0.032 means a 3.2 % chance that app and branch are the same."
-- "p = 0.078, so FPD does not depend on channel" — absence of evidence, small n.
-- Switching to one-sided after seeing the direction; choosing the pair to test after looking at the table.
-- Student's t with very different variances — use Welch (`equal_var=False`, `T.TEST(…, 3)`).
-- An independent test on paired data (or the reverse).
-- Testing payments when the unit is the loan — rows that are not independent inflate z.
-- Shapiro on 50 000 rows, p ≈ 0, "so I cannot use a t-test" — the CLT cares about n, the QQ plot about shape.
-- A significant result reported without its size, or a big-sounding RR without its interval (1.63, but 1.04–2.56).
-- A test across confounded groups (channel = product) reported as a channel effect.
-- A p-value printed as `0.000` — write p < 0.001, and give the effect next to it.
-
----
-
-## 4. Homework
-
-**HW 6.1 is due today** in Day 1's hand-in box. **HW 6.2** (intervals and the chart, Day 2) is due on Day 5. Today's TODO functions (`two_prop_ztest`, `relative_risk`, `cohens_d`) are practice, not graded, but the checkpoint uses them — finish them now and check two of their results here.
-
-**H1.** What does your `relative_risk(41, 2411, 34, 3263)` return (2 decimals)?
-
-```task
-{"id": "w06d3-hw1", "kind": "number", "answer": 1.63, "dp": 2, "unit": "× (app rate / branch rate)", "hint": "(41 / 2 411) / (34 / 3 263).", "model": "1.700 % / 1.042 % = 1.63 — app loans have 1.63 times the branch FPD rate (95 % CI 1.04–2.56)."}
-```
-
-**H2.** And `two_prop_ztest(10, 1667, 44, 2034)` — grade A vs grade C — the z statistic (2 decimals)?
-
-```task
-{"id": "w06d3-hw2", "kind": "number", "answer": -3.95, "dp": 2, "unit": "z", "hint": "Pooled rate 54 / 3 701; z = (p̂_A − p̂_C) / SE. The sign follows the order A − C.", "model": "z = −3.95, p = 7.9 × 10⁻⁵: grade A's 0.60 % against grade C's 2.16 %, RR 3.6 — the scorecard orders FPD."}
-```
-
----
-
-## 5. Self-check
-
-Three questions, one at a time. Wrong? The explanation points to the part of section 1 to reread.
-
-```check
-{"id": "w06d3-sc", "questions": [
-  {"type": "multi", "q": "Which sentences correctly describe p = 0.032 for app vs branch?", "options": ["If both channels had the same true rate, a gap this large or larger would appear in about 3 % of samples this size", "There is a 3.2 % chance the channels have the same rate", "There is a 3.2 % chance the result is due to chance", "At α = 5 % fixed in advance, we reject H₀"], "answer": [0, 3], "explain": "The p-value is computed assuming H₀; the other two sentences are the classic misreadings (→ section 1, 'The p-value')."},
-  {"type": "single", "q": "App vs branch: z-test p = 0.032; three-channel χ² p = 0.078. What is going on?", "options": ["One test is wrong", "They answer different questions: 'do the three differ at all?' vs a pair picked after seeing the table — the evidence is moderate", "χ² must always be smaller", "The z-test used Yates' correction"], "answer": 1, "explain": "That is why the committee note says 'moderate' (→ section 1, 'Chi-square', P9)."},
-  {"type": "multi", "q": "A test on 52 850 payments gives p = 10⁻⁶⁹. What do you ask before you believe it matters?", "options": ["How big is the effect, with its interval?", "Was the test run at the right grain (loans, not payments)?", "Is α = 5 %?", "Was a seed set?"], "answer": [0, 1], "explain": "Huge n makes any gap significant; payments of one loan are not independent (→ section 1, 'Effect size', P12, P15)."}
-]}
-```
-
----
-
-## 6. Company corner <span class="badge company">The risk-committee note</span>
-
-A committee reads six lines, in this order, and nothing else. Each line is a habit: the question before the answer, the definition before the number, the interval with the number, the test with its name, the size in the committee's units, a decision someone can act on.
-
-| # | Line | Filled for app vs branch FPD30 |
-|---|---|---|
-| 1 | **Question** | Do loans originated in the app have a higher first-payment default rate than loans originated in branches? |
-| 2 | **Metric definition** | FPD30 = first instalment not fully paid within 30 days of its due date; loans whose first due date ≤ 2026-09-01 (as of 2026-10-01); payments de-duplicated; channel = channel of the application. |
-| 3 | **Numbers with 95 % CIs** | App 41 / 2 411 = **1.70 %** (Wilson 1.26–2.30 %); branch 34 / 3 263 = **1.04 %** (0.75–1.45 %); difference **+0.66 points** (+0.05 to +1.33). |
-| 4 | **Test and p-value** | Two-sided two-proportion z-test: z = 2.15, **p = 0.032** (Fisher exact 0.034). Caveat: the three-channel χ² gives p = 0.078 and app vs branch is the most extreme pair. |
-| 5 | **Effect in business terms** | **+6.6 FPDs per 1 000 app loans** (RR 1.63, CI 1.04–2.56) ≈ 9 extra FPDs a year at the 2026 pace, ~25 m soum exposure, ~15 m expected loss. App loans are all Micro: channel and product cannot be separated. |
-| 6 | **Decision** | **Yes, app FPD is higher — moderately, and cheaply fixable.** Keep the channel; run a first-instalment reminder test on app loans (sample size by Thursday); re-test on Q4 2026 vintages; review in January. |
-
-What the note does **not** say: "significant" without the size, "proved", "no difference in partner" (p = 0.80 is absence of evidence), or anything about Micro vs other products that the data cannot separate. And what Nilufar must be able to answer when the CFO asks *"so what is the chance you are wrong?"*: if there were no real difference, a gap this large would appear about 3 times in 100 — and the evidence that the gap is *big* is weak, which is why the decision is cheap and reversible.
-
-Sort the sentences: which ones belong in the note?
-
-```game
-{"type": "sort", "id": "w06d3-g4", "title": "In the note or not?", "q": "Tap a sentence, then where it belongs.", "groups": {"In the note": ["FPD30 = first instalment not fully paid within 30 days of its due date", "App 1.70 % (1.26–2.30 %) vs branch 1.04 % (0.75–1.45 %)", "Two-sided z-test: z = 2.15, p = 0.032", "+6.6 FPDs per 1 000 app loans, ~15 m soum a year", "Channel and product cannot be separated: app loans are all Micro"], "Not in the note": ["The difference is proven", "Partner is no different from branch (p = 0.80)", "p = 0.000", "Significant (no size given)"]}}
-```
-
-> 🎯 **Interview version.** *"Two groups have default rates 1.70 % and 1.04 %. Is the difference significant?"* — Ask for n; with 2 411 and 3 263 loans, a two-proportion z-test (or χ² / Fisher) gives p ≈ 0.03; report the difference with its CI (+0.05 to +1.33 points) and in business units; mention whether the comparison was pre-specified and whether the groups differ in other ways (product mix) before calling it a channel effect.
-
-**Say it like in an interview.** *"Two groups have default rates of 1.70 % and 1.04 %. Is the difference significant?"* — answer in 3–5 sentences, as you would to an interviewer.
-
-```task
-{"id": "w06d3-cc", "kind": "free", "min": 30, "model": "It depends on n, so I would ask for it first. With 2 411 and 3 263 loans a two-sided two-proportion z-test gives z = 2.15, p = 0.032, so at α = 5 % the rates differ; the difference is +0.66 points with a 95 % CI of +0.05 to +1.33, about 7 extra defaults per 1 000 loans. I would also say whether this comparison was planned or picked after looking (the three-group χ² is p = 0.078), and check whether the groups differ in other ways — here app loans are all Micro — before calling it a channel effect.", "rubric": ["asks for n before answering", "names the test and gives z / p", "reports the difference with its CI and in business units", "mentions pre-specification or confounding (product mix)"]}
-```
-
-Tomorrow: when the t-test's assumptions fail (skewed days-late, small branches), when you test ten things at once, and Jasur's question — is 2 000 loans enough to test the SMS reminder?
 
 ---
 

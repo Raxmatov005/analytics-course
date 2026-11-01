@@ -47,6 +47,8 @@ so they need no new engine.
 ```
 python -I scripts/stories/rebuild.py w6d2        # once: builds the new Learn from w6d2.py
 python -I scripts/stories/apply.py w6d2          # after that: rewrites only the story blocks
+python -I scripts/stories/practice_setup.py w6d2 # after rebuild: the Python of sections 2+ gets one setup box
+                                                 # with what it needs from the old Learn (now in Going further)
 PYTHONIOENCODING=utf-8 python -I scripts/validate_pages.py week-06    # must end OK, except STALE BANK lines
 PYTHONIOENCODING=utf-8 python -I scripts/check_quizzes.py week-06
 ```

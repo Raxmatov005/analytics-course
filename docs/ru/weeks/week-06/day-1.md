@@ -118,32 +118,60 @@
 
 У каждого задания своё поле для ответа, а вопросы идут в порядке раздела 1 — понятие названо курсивом. Python-поля работают в той же сессии, что и раздел 1, поэтому `math`, `random`, `st`, `np`, `pd`, `NormalDist`, `pmf`, `cdf`, `at_least`, таблицы `apps` и `loans` и скоры заявителей `s` уже готовы — если вы пришли сразу сюда, нажмите ▶ Run в первом блоке раздела 1. Ответьте, проверьте, затем откройте сворачиваемый блок с полным решением. (В ноутбуке `data/python/week6/day1_starter.ipynb` те же инструменты на `scipy`; он нужен для домашнего задания.)
 
-**Сначала один раз нажмите ▶ Run в этом блоке.** Он загружает инструменты и данные для всех задач практики.
+**Сначала один раз нажмите ▶ Run в этом блоке.** Он загружает инструменты и данные для всех блоков Python ниже.
 
 ```python
+# инструменты и данные из полной версии раздела 1 — запустите один раз
 import math, random
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import statistics as st
-# нормальное распределение из стандартной библиотеки Python
 from statistics import NormalDist
-
 apps  = pd.read_csv("data/raw/applications.csv")
 loans = pd.read_csv("data/raw/loans.csv")
-# 13 612 заявителей со скором из 14 000 — скажите об этом
 s = apps["credit_score"].dropna()
-
-# биномиальное: P(X = k) для X ~ Bin(n, p)
 def pmf(k, n, p):
     return math.comb(n, k) * p**k * (1 - p)**(n - k)
 def cdf(k, n, p):                     # P(X <= k)
     return sum(pmf(i, n, p) for i in range(k + 1))
 def at_least(k, n, p):                # P(X >= k) = 1 - P(X <= k - 1)
     return 1 - cdf(k - 1, n, p)
-
-print(len(apps), len(loans), len(s))  # 14000 7828 13612
+p_true = 91 / 7099
+for n in (10, 100, 1_000, 10_000, 100_000):
+    # True = этот кредит — FPD
+    k = sum(random.random() < p_true for _ in range(n))
+    print(n, k, round(k / n, 4))
+n, app, fpd, both = 7099, 2411, 91, 41
+p_app, p_fpd = app / n, fpd / n
+rate  = {"app": 41 / 2411,   "branch": 34 / 3263,   "partner": 16 / 1425}
+N, prior, sens, fpr = 10_000, 44 / 7099, 0.90, 0.05
+values = [0, 0.6 * 27_000_000]
+probs  = [1 - 77 / 2418, 77 / 2418]
+E   = sum(x * q for x, q in zip(values, probs))
+Var = sum((x - E) ** 2 * q for x, q in zip(values, probs))
+n, p = 400, 91 / 7099
+lam, hours = 5102 / 3549, 3549
+def pois(k, lam):               # P(X = k) для X ~ Poisson(lam)
+    return math.exp(-lam) * lam**k / math.factorial(k)
+mins = pd.to_datetime(apps["applied_at"]).dt.minute
+mu, sd = s.mean(), s.std()
+model = NormalDist(mu, sd)
+q = np.sort(s.sample(2000, random_state=2026).to_numpy())
+theory = [model.inv_cdf((i + 0.5) / len(q)) for i in range(len(q))]
+for k in (1, 2, 3):
+    # доля N(0, 1) в пределах ±k
+    rule = NormalDist().cdf(k) - NormalDist().cdf(-k)
+    # доля заявителей в пределах ±k sd
+    data = ((s - mu).abs() <= k * sd).mean()
+    print(k, round(rule, 3), round(data, 3), round(mu - k * sd), round(mu + k * sd))
+x = [2, 4, 5, 6, 33]
+rng = np.random.default_rng(2026)
+months = rng.binomial(400, 91 / 7099, size=100_000)
+n, p_c = 400, 77 / 2418
+lo = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.025)
+hi = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.975)
+print('ready')
 ```
+
 
 **P1.** *(вероятность как доля в долгом ряду)* Разыграйте одну партию из 50 кредитов и одну из 50 000 кредитов при p = 91 / 7 099, поставив `random.seed(1)` перед первой. Выведите обе доли. Какую из них вы назовёте «долей FPD»?
 
