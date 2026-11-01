@@ -13,7 +13,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS = os.path.join(ROOT, "docs")
-JSON_LANGS = {"quiz", "challenge", "sqltask", "game", "task", "check", "videoquiz", "sqllab", "explore", "mistakes"}   # sqlplay holds SQL, not JSON
+JSON_LANGS = {"quiz", "challenge", "sqltask", "game", "task", "check", "videoquiz", "sqllab", "explore", "mistakes", "story"}   # sqlplay holds SQL, not JSON
 FENCE = re.compile(r"^(```|~~~)([\w-]*)[^\n]*\n(.*?)^\1[ \t]*$", re.S | re.M)
 
 
@@ -86,6 +86,15 @@ def main(sub=""):
                     for k in ("id", "answer", "h", "check", "type", "kind", "want", "at", "video"):
                         if not same_answer(d1.get(k), d2.get(k)):
                             print(f"EN/RU DIFF  {rel}:{n1} ({l1}) key {k}: {d1.get(k)!r} vs {d2.get(k)!r}")
+                            bad += 1
+                    if l1 == "story":   # the same steps, the same pictures and the same right answers in both languages
+                        s1, s2 = d1.get("steps") or [], d2.get("steps") or []
+                        def pic(s):   # the picture without its words (legend, labels, words, rollSay, unit are in each language)
+                            return json.dumps({k: v for k, v in (s.get("show") or {}).items() if k not in ("legend", "labels", "words", "rollSay", "unit")}, sort_keys=True)
+                        if len(s1) != len(s2) or any(pic(a) != pic(b) or len(a.get("act") or []) != len(b.get("act") or [])
+                                                     or (a.get("ask") or {}).get("answer") != (b.get("ask") or {}).get("answer") or len((a.get("ask") or {}).get("options") or []) != len((b.get("ask") or {}).get("options") or [])
+                                                     for a, b in zip(s1, s2)):
+                            print(f"EN/RU DIFF  {rel}:{n1} (story) steps")
                             bad += 1
                     if l1 in ("quiz", "check", "videoquiz"):
                         q1 = d1.get("questions") or d1.get("stops") or []

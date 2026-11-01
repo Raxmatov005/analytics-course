@@ -14,7 +14,105 @@
 
 ## 1. Learn — the language of chance
 
-Press ▶ Run on this first box once. It loads the tools and the data for the whole page; every later box on this page, and every Practice box, reuses them.
+Seven short stories. Each one tells **one idea in small steps**: read a sentence, watch the picture change, press **Next**. A dotted word shows its meaning when you tap it. Tired of reading? Press **▶ Play as a video**: the page reads every step aloud and moves the picture for you.
+
+The Python for each idea, and a few extra topics, are in **Going further — the full version** near the end of the page (optional).
+
+### Chance is a share
+
+```story
+{"id": "w06d1-s1", "title": "A jar of balls", "min": 4, "steps": [{"say": "Here is a jar with 10 balls: {o|1 orange} and {g|9 green}. Close your eyes, pull out one ball, look at it and put it back.", "show": {"kind": "bag", "balls": [["o", 1], ["g", 9]], "words": {"hit": "orange"}}, "act": [{"n": 1, "label": "Draw 1 ball", "rep": 3, "do": "draw"}]}, {"say": "Do it many times and keep count. Tap **Draw 10** a few times: the share of orange jumps around — 0 %, 20 %, 10 %…", "show": {"line": true}, "act": [{"n": 10, "label": "Draw 10", "rep": 3, "do": "draw"}]}, {"say": "Now draw a thousand. The orange line calms down near {o|1 in 10}. **That settling number is the probability**: how often something happens when you repeat it many, many times.", "act": [{"n": 1000, "label": "Draw 1 000", "rep": 1, "do": "draw"}]}, {"say": "With a jar you don't even need to draw: count the orange balls and divide by all the balls. We write it **P(orange)** — P for probability.", "f": "P(orange) = {o|1} ÷ {b|10} = {y|0.1} = {y|10 %}", "fs": "P of orange is 1 divided by 10: 0.1, or 10 percent."}, {"say": "Your turn.", "ask": {"q": "A jar has 20 balls, 5 of them orange. What is P(orange)?", "options": ["0.5", "0.25", "0.05", "5"], "answer": 1, "why": "5 ÷ 20 = 0.25: one ball in four."}}, {"say": "Nur's loans work the same way. The jar is all {b|7 099} loans; an orange ball is a loan with an [[FPD|first-payment default: the borrower did not pay the very first instalment]]. There were {o|91}. Here: 1 000 dots, each about 7 loans, {o|13} of them orange.", "show": {"kind": "dots", "groups": [[13, "o", "fpd"], [987, "g", "ok"]], "cols": 50, "scatter": 7, "legend": [["o", "FPD"], ["g", "paid the first instalment"]]}}, {"say": "So the chance that a loan has an FPD is {o|91} ÷ {b|7 099} = {y|1.28 %}: about {o|13 loans in 1 000}.", "f": "P(FPD) = {o|91} ÷ {b|7 099} = {y|0.0128} = {y|1.28 %}", "fs": "P of FPD is 91 divided by 7099: 1.28 percent."}, {"say": "The chance it does **not** happen is all the rest: {g|1 − 0.0128 = 0.9872}. A loan either has an FPD or it doesn't, so the two chances always add up to 1 (100 %).", "show": {"fade": ["fpd"]}, "f": "P(no FPD) = 1 − {y|0.0128} = {g|0.9872}"}, {"say": "One more.", "show": {"fade": []}, "ask": {"q": "For app loans P(FPD) = 0.017. What is P(no FPD) for app loans?", "options": ["0.017", "0.983", "1.017", "0.83"], "answer": 1, "why": "1 − 0.017 = 0.983. The two always add up to 1."}}]}
+```
+
+### Among those who — conditional probability
+
+```story
+{"id": "w06d1-s2", "title": "Cover half the bank", "min": 5, "steps": [{"say": "A small bank with 20 loans: {b|8} came through the **app**, {m|12} through a **branch**.", "show": {"kind": "dots", "blocks": [8, 12], "labels": ["app", "branch"], "groups": [[8, "b", "app"], [12, "m", "br"]], "legend": [["b", "app loan"], ["m", "branch loan"]]}}, {"say": "{o|3 loans} had an FPD: {o|2} app loans and {o|1} branch loan. Orange inside, the channel's colour round the edge.", "show": {"groups": [[2, "o", "appf", "b"], [6, "b", "app"], [1, "o", "brf", "m"], [11, "m", "br"]], "legend": [["b", "app loan"], ["m", "branch loan"], ["o", "FPD"]]}}, {"say": "The chance of an FPD for any loan: {o|3} out of all 20 = 15 %.", "f": "P(FPD) = {o|3} ÷ 20 = 15 %"}, {"say": "A new question: **among the app loans only**, how many had an FPD? Cover the branch loans with your hand: we look only at the {b|8} app loans.", "show": {"fade": ["brf", "br"], "box": ["appf", "app"]}}, {"say": "{o|2} of the {b|8}: 2 ÷ 8 = 25 %. This is a [[conditional probability|a chance counted inside one group only: “among those who…”]] — the chance of an FPD **given** that the loan came through the app.", "f": "P(FPD | app) = {o|2} ÷ {b|8} = 25 %", "fs": "P of FPD given app: 2 divided by 8, 25 percent."}, {"say": "The bar **|** reads “given” or “among”. It changes only the bottom of the fraction: from all 20 loans to the 8 app loans."}, {"say": "Your turn — the picture already hides the app loans.", "show": {"fade": ["appf", "app"], "box": ["brf", "br"]}, "ask": {"q": "**Among the branch loans**, what is the chance of an FPD?", "options": ["1 ÷ 20 = 5 %", "1 ÷ 12 ≈ 8 %", "1 ÷ 3 ≈ 33 %"], "answer": 1, "why": "Only the 12 branch loans count now, and 1 of them is orange: 1 ÷ 12 ≈ 8 %."}}, {"say": "Now flip it: **among the loans with an FPD**, how many came through the app? We look only at the {o|3} orange loans.", "show": {"fade": ["app", "br"], "box": ["appf", "brf"]}}, {"say": "{b|2} of the {o|3}: about 67 %. The same 2 loans on top, a **different bottom**. P(app | FPD) and P(FPD | app) answer different questions.", "f": "P(app | FPD) = {b|2} ÷ {o|3} ≈ 67 %"}, {"say": "Nur's real numbers: {o|41} FPDs among {b|2 411} app loans → 1.70 %. And 41 of all {o|91} FPDs came through the app → 45 %. Before you say a percentage, say **among whom**.", "show": {"fade": [], "box": []}, "f": "P(FPD | app) = 41 ÷ 2 411 = 1.70 %  ·  P(app | FPD) = 41 ÷ 91 = 45 %"}, {"say": "Last one.", "ask": {"q": "A colleague says: “45 % of our FPDs come from the app, so app loans are very risky.” What's wrong?", "options": ["Nothing — 45 % is high", "45 % is “among FPDs”, not the risk of an app loan (that is 1.70 %)", "They should divide by 7 099"], "answer": 1, "why": "45 % answers “where do FPDs come from?”. The risk of an app loan is P(FPD | app) = 1.70 % — only a little above the 1.28 % average."}}]}
+```
+
+> 🎬 **Didn't get "among those who"?** [StatQuest explains it · 4 min](https://youtu.be/_IgyaD7vOOA?t=71&end=285)
+
+### The fraud-flag trap — Bayes' rule
+
+```story
+{"id": "w06d1-s3", "title": "1 000 applicants and one rule", "min": 5, "steps": [{"say": "Here are 1 000 people applying for a loan. Each dot is one person.", "show": {"kind": "dots", "groups": [[1000, "m", "all"]], "cols": 50, "scatter": 11}}, {"say": "Fraud is rare at Nur: about {o|6 in 1 000} applicants are fraudsters. Can you spot them?", "show": {"groups": [[6, "o", "f"], [994, "m", "h"]], "legend": [["o", "fraudster"], ["m", "honest"]]}}, {"say": "A vendor sells Nur a fraud rule. It catches {o|9 fraudsters in 10}: here it flags {o|5} of the 6. One slips through (faded).", "show": {"groups": [[5, "o", "tp"], [1, "o", "fn"], [994, "m", "h"]], "fade": ["fn"]}}, {"say": "But it also makes mistakes: it flags {b|5 honest people in 100}. 5 % of the 994 honest people is about {b|50} — they light up blue.", "show": {"groups": [[5, "o", "tp"], [1, "o", "fn"], [50, "b", "fp"], [944, "m", "tn"]], "legend": [["o", "fraudster, flagged"], ["b", "honest, flagged"], ["m", "no flag"]]}}, {"say": "Guess before we count.", "ask": {"q": "Someone is flagged. How likely is it that they really are a fraudster?", "options": ["about 90 %", "about 50 %", "about 10 %"], "answer": 2, "why": "Count the lit dots: 5 orange, 50 blue. Only 5 of the 55 flags are real."}}, {"say": "Keep only the flagged people: {o|5} fraudsters and {b|50} honest people. 55 flags — and only 5 of them are real.", "show": {"fade": ["fn", "tn"]}}, {"say": "A flag means fraud only about {o|1 time in 10}. This counting is **Bayes' rule**: real flags ÷ all flags.", "f": "P(fraud | flag) = {o|5} ÷ ({o|5} + {b|50}) ≈ 9 %", "fs": "P of fraud given a flag: 5 divided by 5 plus 50, about 9 percent."}, {"say": "Why so low, when the rule is good? Honest people are so many that even 5 % of them outnumber the fraudsters 10 to 1. This is the **base-rate trap**: the [[base rate|how common something is before any test — here 6 in 1 000]] matters as much as the rule."}, {"say": "With Nur's exact numbers on 10 000 applicants: {o|56} fraudsters flagged, {b|497} honest people flagged. 56 ÷ 553 = 10.1 %.", "f": "P(fraud | flag) = {o|56} ÷ ({o|56} + {b|497}) = 10.1 %"}, {"say": "Last one — think with the picture.", "show": {"fade": []}, "ask": {"q": "Fraud becomes 10 times more common: 60 in 1 000. Will a flag be right more often or less often?", "options": ["more often", "less often", "the same — the rule didn't change"], "answer": 0, "why": "More fraudsters → more orange among the flags: about 54 real against 47 honest. Now more than half of the flags are right."}}]}
+```
+
+> 🎬 **Didn't get Bayes' rule?** [StatQuest explains it · 4 min](https://youtu.be/9wCnvr7Xw4E?t=321&end=552)
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w06d1-x1", "type": "bayes", "title": "Who is behind a flag?", "predict": {"q": "The rule catches **90 %** of fraudsters and wrongly flags **5 %** of honest applicants. Fraud is rare: **0.62 %** of applicants. When the rule flags someone, how likely is it that they really are a fraudster?", "options": ["about 90 %", "about 50 %", "about 10 %", "about 5 %"], "why": "Fraud is so rare that the few real fraudsters are swamped by 5 % of the many honest people: 56 true flags against 497 false ones. Move the sliders and watch it happen.", "answer": 2}, "start": {"base": 0.0062, "sens": 0.9, "fpr": 0.05}, "challenges": [{"id": "c1", "text": "Keep the rule as it is (90 % and 5 %) and find the **base rate** at which a flag is right **about half the time**.", "when": {"ppv": ["between", 0.45, 0.6]}, "only": ["base"]}, {"id": "c2", "text": "Back at our base rate (0.62 %), move **only the false-positive rate** until **most flags are real fraud** (over 50 %).", "when": {"ppv": [">", 0.5]}, "only": ["fpr"]}, {"id": "c3", "text": "Make the rule catch **every** fraudster (sensitivity 100 %), nothing else. Does P(fraud | flag) jump?", "when": {"sens": [">=", 0.995]}, "only": ["sens"]}]}
+```
+
+### Average, middle and spread
+
+```story
+{"id": "w06d1-s4", "title": "Eleven loans on a see-saw", "min": 5, "steps": [{"say": "11 real loans from one branch, in **million soum**. Each blue dot is one loan.", "show": {"kind": "line", "vals": [0.65, 1.89, 2.3, 3.1, 3.37, 3.5, 4.98, 6.58, 6.74, 7.21, 22.42], "unit": "m", "max": 25, "tick": 5}}, {"say": "The **average** (the mean): add all 11 loans and divide by 11 → {p|5.70 m}. Picture the line as a see-saw: the average is the point where it balances.", "show": {"mark": ["mean"]}, "f": "average = (0.65 + 1.89 + … + 22.42) ÷ 11 = {p|5.70}", "fs": "The average is the sum of the 11 loans divided by 11: 5.70."}, {"say": "The **median** is the middle loan: line them up and take the one in the middle — the 6th of 11 → {y|3.50 m}. Five loans are smaller, five are bigger.", "show": {"mark": ["mean", "median"]}}, {"say": "Why is the average so much bigger than the middle? One big loan, {o|22.42 m}, sits far to the right and pulls the balance point towards it.", "show": {"hot": 10}, "f": ""}, {"say": "Drag the orange loan to the right, or tap **+10 m**. The average runs after it. The middle loan does not move at all.", "show": {"max": 60, "tick": 10, "drag": 10}, "act": [{"label": "+10 m", "rep": 3, "do": "nudge", "i": 10, "by": 10}]}, {"say": "Which number tells the truth about a typical loan?", "ask": {"q": "You tell a manager what a “typical loan” is. A few loans are huge, most are small. Which number do you use?", "options": ["the average", "the median"], "answer": 1, "why": "Huge loans pull the average up; the median stays with the typical loan."}}, {"say": "Now **spread**: how far the loans are from the average. Each purple line is one loan's distance from the average.", "show": {"reset": true, "max": 25, "tick": 5, "drag": null, "hot": null, "mark": ["mean", "dist"]}}, {"say": "The [[standard deviation|the typical distance of the values from their average; “sd” for short]] is the typical length of those lines: {p|± 5.94 m}. Square each distance, add them up, divide by 10 (one less than the 11 loans — pandas does the same), take the square root.", "show": {"mark": ["mean", "dist", "spread"]}, "f": "sd = √( (d₁² + d₂² + … + d₁₁²) ÷ (11 − 1) ) ≈ {p|5.94}", "fs": "The standard deviation is about 5.94."}, {"say": "Small sd: the loans sit close together. Big sd: they are all over the place. Two branches can have the same average and a very different sd."}, {"say": "[[Percentiles|the value with that share of all values below it]] say where a value stands in the line-up. The 90th percentile has 90 % of values below it. The median is simply the **50th percentile**.", "show": {"mark": ["median"]}, "f": "median = the 50th percentile"}, {"say": "Last one.", "ask": {"q": "Your loan is at the 75th percentile. What does that mean?", "options": ["75 % of loans are smaller than yours", "your loan is 75 % of the average", "75 loans are bigger than yours"], "answer": 0, "why": "A percentile is the share of values below yours."}}]}
+```
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w06d1-x4", "type": "median", "title": "One loan against the middle", "unit": "m", "label": "11 real loans: Bukhara Central, March 2025, in m soum.", "predict": {"q": "Bukhara Central's 11 loans of March 2025: mean **5.70 m**, median **3.50 m**. Their biggest loan, 22.42 m, grows to **400 m**. What does the median do?", "options": ["it grows a lot, like the mean", "it grows a little", "it does not move at all", "it falls"], "answer": 2, "why": "The median is the loan in the middle of the line — the 6th of 11. The biggest loan was above it and stays above it however big it gets, so the median stays at 3.50 m while the mean jumps to about 40 m."}, "loans": [[0.65, "MICRO"], [1.89, "MICRO"], [2.3, "BNPL"], [3.1, "MICRO"], [3.37, "MICRO"], [3.5, "BNPL"], [4.98, "MICRO"], [6.58, "CONS"], [6.74, "CONS"], [7.21, "BNPL"], [22.42, "CONS"]], "max": 600, "start": {"sel": 10}, "challenges": [{"id": "c1", "text": "Move **one** loan until the mean is **more than twice** the median.", "when": {"ratio": [">", 2]}}, {"id": "c2", "text": "**Double** the mean (to about 11.4 m) while the median **does not move at all**.", "when": {"meanX": [">=", 2], "medMove": ["<", 0.0001]}}, {"id": "c3", "text": "Now move the **median**: pick a small loan and push it far up. How far does the median go?", "when": {"medMove": [">", 0.0001]}}]}
+```
+
+### Nilufar's panic number — the binomial
+
+```story
+{"id": "w06d1-s5", "title": "When should Nilufar panic?", "min": 6, "steps": [{"say": "Next month Nur gives out about {b|400 loans}, one dot each. From our data, each one has a {o|1.28 %} chance of an FPD.", "show": {"kind": "dots", "groups": [[400, "g", "all"]], "cols": 40, "legend": [["g", "a loan"], ["o", "FPD"]], "rollSay": "This month: {o|%k} of %n loans had an FPD."}}, {"say": "How many FPDs should we expect? {b|400} × {o|0.0128} = {p|5.1}. That is the [[expected value|the average you would get over many, many months]]. We call the number of loans {b|n} and the chance {o|p}.", "f": "expected = {b|n} × {o|p} = {b|400} × {o|0.0128} = {p|5.1}", "fs": "Expected: n times p, 400 times 0.0128, about 5.1."}, {"say": "But a real month is never exactly 5.1. Tap **Roll one month**: each of the 400 loans rolls its own dice.", "act": [{"label": "Roll one month", "rep": 1, "do": "roll", "p": 0.012818706860121144}]}, {"say": "Roll a few more. Sometimes 3, sometimes 8. The count wobbles by luck alone, even when nothing has changed.", "act": [{"label": "Roll one month", "rep": 3, "do": "roll", "p": 0.012818706860121144}]}, {"say": "Let's keep score. Each month drops into the bar of its count. Tap **1 month** a few times, then **100 months**.", "show": {"kind": "months", "dist": "binom", "n": 400, "p": 0.012818706860121144, "mean": true, "words": {"unit": "months", "thing": "FPDs", "axis": "FPDs in a month"}}, "act": [{"n": 1, "label": "1 month", "rep": 3, "do": "run"}, {"n": 10, "label": "10 months", "rep": 1, "do": "run"}, {"n": 100, "label": "100 months", "rep": 1, "do": "run"}]}, {"say": "The bars make a shape: most months have 2 to 8 FPDs, a few have more. The shape has a name: the [[binomial distribution|the counts you get from n tries, each with the same chance p]].", "act": [{"n": 100, "label": "100 months", "rep": 1, "do": "run"}]}, {"say": "Nilufar's question: when is a month **too high**? Put the alarm at 10. Look at the orange bars: only about {o|4 months in 100} reach 10 or more by luck.", "show": {"alarm": 10}, "act": [{"n": 100, "label": "100 months", "rep": 1, "do": "run"}]}, {"say": "The binomial formula draws the exact bars: the {p|dashed outlines}. Your months land on them. It says: 10 or more happens in {o|3.6 %} of months, 12 or more in {o|0.6 %}.", "show": {"exact": true}, "f": "P(10 or more) = {o|3.6 %}  ·  P(12 or more) = {o|0.6 %}"}, {"say": "Nilufar gets her wall number.", "ask": {"q": "Next month has 9 FPDs. Panic?", "options": ["Yes — phone Nilufar", "No — 9 happens in ordinary months"], "answer": 1, "why": "9 is below the alarm. 10 or more (3.6 %) means “look at it”; 12 or more (0.6 %) means “phone me”."}}, {"say": "Double the book to {b|800} loans: you expect twice as many FPDs (10.3), but the wobble grows only about **1.4 times**. That is √2: the wobble grows like the **square root** of n. Big books are calmer.", "show": {"n": 800, "alarm": null, "exact": false}, "f": "wobble (sd) = √( {b|n} × {o|p} × (1 − {o|p}) ):  400 → 2.25,  800 → 3.18", "fs": "The wobble is the square root of n times p times one minus p: 2.25 for 400 loans, 3.18 for 800.", "act": [{"n": 100, "label": "100 months", "rep": 1, "do": "run"}]}, {"say": "Every run gives different months. In Python you fix a [[seed|a starting number for the random generator: the same seed gives the same “random” draws every time]], so a colleague who re-runs your notebook sees exactly your numbers."}, {"say": "A Python tip for the homework: `X.sf(k)` gives P(**more than** k). So P(10 or more) is `X.sf(9)` — one less. This off-by-one catches everyone once.", "f": "P(10 or more) = X.sf(9)"}]}
+```
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w06d1-x2", "type": "binomial", "title": "A month of 400 loans, again and again", "predict": {"q": "Last October Nilufar saw **7** FPDs in a batch of 400 loans and called a meeting. If every loan has the usual 1.28 % chance, how often does a month bring **7 or more**?", "options": ["almost never — under 1 % of months", "about 1 month in 20", "about 1 month in 4", "about every second month"], "answer": 2, "why": "P(X ≥ 7) = 25.6 %: a quarter of perfectly ordinary months reach 7. Expect 5.1, but give or take 2.25 — so 7 is noise, not a signal. Run the batches and watch the orange tail."}, "p": 0.012818706860121144, "start": {"n": 400, "k": 7}, "challenges": [{"id": "c1", "text": "Run **200 batches** or more at n = 400: their average lands within **0.3** of n · p = 5.13.", "when": {"n": ["=", 400], "batches": [">=", 200], "avgErr": ["<", 0.3]}}, {"id": "c2", "text": "Find Nilufar's wall number: slide the alarm to the **smallest** count that rings in **under 5 %** of months (watch the exact share).", "when": {"n": ["=", 400], "tail": ["<", 0.05], "tailPrev": [">=", 0.05]}}, {"id": "c3", "text": "Make the spread **twice** as wide — an sd of 4.5 FPDs instead of 2.25 — by changing only the batch size. How many loans does it take?", "when": {"sd": ["between", 4.45, 4.55]}}]}
+```
+
+### Counting per hour — the Poisson
+
+```story
+{"id": "w06d1-s6", "title": "Applications, hour by hour", "min": 4, "steps": [{"say": "Applications reach Nur's app one by one, all day — on average {b|1.44 per hour}. Each bar counts hours.", "show": {"kind": "months", "dist": "pois", "lam": 1.4376, "mean": true, "xmax": 7, "words": {"unit": "hours", "thing": "applications", "axis": "applications in one hour"}}, "act": [{"n": 10, "label": "10 hours", "rep": 1, "do": "run"}, {"n": 100, "label": "100 hours", "rep": 1, "do": "run"}], "film": 1}, {"say": "Some hours bring none, some bring 4 or 5. Tap **100 hours** and watch the shape.", "act": [{"n": 100, "label": "100 hours", "rep": 2, "do": "run"}]}, {"say": "When things arrive one at a time, independently, at a steady average rate, the counts per hour follow the **Poisson distribution**. One number describes it: the average rate, called {b|λ} (lambda).", "f": "λ = applications ÷ hours = {b|1.44}", "fs": "Lambda is applications divided by hours: 1.44."}, {"say": "The formula draws the exact bars (dashed). For example, an **empty hour** happens {y|24 %} of the time — about one hour in four.", "show": {"exact": true}, "f": "P(0 in an hour) = e^(−λ) = e^(−1.44) ≈ {y|0.24}", "fs": "The chance of an empty hour is e to the minus lambda: about 0.24."}, {"say": "Two facts to keep. For Poisson the **variance equals the average** — both are λ. And if counts per hour are Poisson, the **minutes between** applications follow the [[exponential distribution|the waiting time between Poisson arrivals: many short gaps, a few long ones]].", "f": "average = variance = λ"}, {"say": "Your turn.", "ask": {"q": "Which of these counts is most likely Poisson?", "options": ["calls to support per minute", "a customer's credit score", "whether one loan has an FPD"], "answer": 0, "why": "Calls arrive one by one at a steady rate and are counted in a fixed window. A score is a measurement; one loan is a single yes / no."}}]}
+```
+
+> 🎬 **Didn't get the Poisson?** [zedstatistics explains it · 1 min](https://youtu.be/cPOChr_kuQs?t=135&end=188)
+
+### The bell — the normal distribution
+
+```story
+{"id": "w06d1-s7", "title": "Drop people on a bell", "min": 5, "steps": [{"say": "Credit scores of Nur's applicants. Tap **Drop 100 people**: each dot is one person landing at their score (simulated with the real average and spread).", "show": {"kind": "bell", "mu": 659.6, "sd": 59.5}, "act": [{"n": 100, "label": "Drop 100 people", "rep": 3, "do": "drop"}, {"n": 1000, "label": "Drop 1 000", "rep": 1, "do": "drop"}]}, {"say": "Most people land near the middle, fewer at the edges. The pile takes the shape of a **bell**: the [[normal distribution|values pile up around the average and thin out evenly on both sides]].", "act": [{"n": 1000, "label": "Drop 1 000", "rep": 1, "do": "drop"}]}, {"say": "Two numbers set the bell: the middle, **μ** (mu) — the average, {p|659.6}; and the width, **σ** (sigma) — the sd, {p|59.5}.", "show": {"sdTicks": true}, "f": "N( μ = {p|659.6}, σ = {p|59.5} )", "fs": "A normal with mu 659.6 and sigma 59.5."}, {"say": "Between 600 and 719 — **one sd** either side of the average — sit about {y|68 %} of people.", "show": {"band": 1}}, {"say": "Two sds either side (541 to 779): about {y|95 %}.", "show": {"band": 2}}, {"say": "Three sds (481 to 838): {y|99.7 %}. A score outside is very rare. This is the **68-95-99.7 rule**.", "show": {"band": 3}, "f": "± 1 sd: 68 %  ·  ± 2 sd: 95 %  ·  ± 3 sd: 99.7 %"}, {"say": "Use the picture.", "show": {"band": 2}, "ask": {"q": "What share of people are more than 2 sds **above** the average?", "options": ["about 5 %", "about 2.5 %", "about 32 %"], "answer": 1, "why": "95 % are inside, so 5 % are outside — half on each side: 2.5 % above, 2.5 % below."}}, {"say": "Any range works. The bell puts {y|59 %} of applicants between 600 and 700. In Excel it is the line in the strip — homework H2 asks exactly this.", "show": {"band": 0, "cut": [600, 700]}, "f": "= NORM.DIST(700, 659.6, 59.5, TRUE) − NORM.DIST(600, 659.6, 59.5, TRUE) ≈ {y|59 %}", "fs": "In Excel, two NORM.DIST lines: about 59 percent."}, {"say": "One warning: fit the bell to **all applicants**. Approved loans are a selection — the low scores were turned away — so their left side is cut off and the bell will not match them."}]}
+```
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w06d1-x3", "type": "normal", "title": "Shares under the bell", "predict": {"q": "Applicants' scores: mean 659.6, sd 59.5. The bank refuses everyone below **540** — about **2 sd** under the mean. What share of applicants is that?", "options": ["about 5 %", "about 2.5 %", "about 16 %", "about 0.3 %"], "answer": 1, "why": "About 95 % of a bell lies within ±2 sd, so 5 % lies outside — but split between the two tails: only about 2 % sit below 540 (the bell says 2.2 %, the real applicants 2.3 %), and as many above 779."}, "mu": 659.6, "sd": 59.5, "from": 424, "counts": [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 1, 2, 2, 2, 1, 2, 3, 1, 1, 0, 0, 4, 1, 2, 3, 3, 2, 5, 2, 2, 2, 5, 2, 3, 1, 1, 3, 3, 8, 1, 6, 7, 2, 7, 3, 8, 3, 7, 2, 3, 11, 9, 2, 7, 9, 1, 8, 5, 5, 3, 5, 7, 16, 6, 10, 6, 9, 10, 16, 11, 16, 15, 12, 18, 15, 18, 17, 9, 19, 12, 22, 15, 12, 14, 16, 7, 23, 12, 17, 19, 20, 10, 17, 25, 21, 25, 20, 24, 27, 29, 21, 27, 29, 33, 33, 29, 32, 30, 40, 35, 37, 35, 43, 36, 50, 45, 33, 44, 43, 56, 34, 31, 45, 61, 61, 51, 58, 45, 54, 47, 64, 63, 57, 47, 42, 57, 59, 67, 56, 68, 62, 60, 65, 59, 74, 54, 73, 68, 68, 84, 70, 87, 79, 79, 84, 75, 71, 64, 88, 79, 73, 94, 79, 87, 73, 66, 90, 81, 84, 75, 85, 77, 67, 83, 82, 72, 77, 91, 93, 85, 93, 92, 106, 93, 109, 98, 98, 89, 98, 84, 58, 77, 82, 84, 92, 87, 97, 81, 85, 84, 92, 114, 92, 77, 100, 90, 81, 90, 93, 86, 77, 99, 74, 97, 98, 91, 84, 85, 86, 84, 70, 70, 96, 70, 73, 74, 80, 87, 81, 64, 63, 70, 80, 78, 82, 72, 72, 63, 80, 71, 66, 79, 61, 65, 58, 45, 55, 60, 54, 60, 65, 56, 51, 53, 52, 65, 48, 50, 39, 46, 52, 41, 44, 44, 43, 59, 51, 30, 33, 50, 42, 35, 29, 36, 40, 34, 27, 30, 30, 27, 33, 24, 35, 43, 30, 25, 32, 25, 25, 34, 21, 21, 20, 18, 26, 18, 23, 20, 13, 22, 21, 16, 17, 12, 15, 12, 13, 18, 14, 19, 9, 16, 19, 11, 11, 15, 11, 9, 6, 5, 9, 10, 7, 8, 5, 4, 6, 5, 12, 4, 5, 5, 4, 7, 6, 2, 3, 3, 4, 4, 4, 3, 4, 3, 6, 3, 2, 1, 6, 0, 2, 0, 3, 4, 2, 2, 0, 3, 2, 1, 1, 0, 1, 1, 3, 0, 1, 1, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 8], "start": {"mode": "band", "k": 1, "cut": 540}, "challenges": [{"id": "c1", "text": "Find the band that holds **95 %** of applicants. How many sds wide is it — exactly 2?", "when": {"inside": ["between", 0.945, 0.955]}}, {"id": "c2", "text": "Widen the band until only **3 applicants in 1 000** are left outside (99.7 % inside).", "when": {"inside": [">=", 0.997]}}, {"id": "c3", "text": "Switch to the cut-off and find the score with **15.8 %** of applicants below it — the lesson's number from the normal model. How many sds from the mean is it?", "when": {"below": ["between", 0.15, 0.17]}}]}
+```
+
+## 2. Worked example — Nilufar's wall number (15 min)
+
+**Step 1 — probability as a long-run share, then the binomial model.** p = 91 / 7 099 = 1.282 % is the book's long-run FPD share. Each of next month's 400 loans is a Bernoulli trial with that p; assume **independence**; X = the number of FPDs ~ Bin(400, 0.01282).
+
+**Step 2 — expected value and sd of the binomial.** E[X] = n·p = 400 × 0.01282 = **5.13**; sd = √(n·p·(1 − p)) = √(400 × 0.01282 × 0.98718) = **2.25**.
+
+**Step 3 — percentiles: what an ordinary month looks like.** The middle 95 %: `X.ppf([0.025, 0.975])` → **1 to 10** (because counts are whole numbers, P(1 ≤ X ≤ 10) is 97.9 %, not exactly 95). Zero FPDs is itself unusual: P(X = 0) = 0.57 %.
+
+**Step 4 — the binomial tail, P(X ≥ k).** P(X ≥ k) for k = 8 … 13: 14.6 %, 7.5 %, **3.6 %**, 1.6 %, **0.6 %**, 0.2 %. The smallest k with P(X ≥ k) ≤ 5 % is **10**; with ≤ 1 %, **12**. Excel: `=BINOM.INV(400, 91/7099, 0.95) + 1` → 10, `=BINOM.INV(400, 91/7099, 0.99) + 1` → 12.
+
+**Step 5 — simulation, to check the formula.** 100 000 seeded months: mean 5.115, P(X ≥ 10) = 3.55 %, middle 95 % [1, 10] — the formula, twice.
+
+**Step 6 — the answer, with the law of total probability as the caveat.** *"Expect about 5 FPDs in 400 loans; anything from 1 to 10 is ordinary noise. Ten or more happens in fewer than 4 months out of 100 if nothing has changed — look at it; twelve or more happens less than once in 100 months — phone me. The line assumes this month's mix is like the book's; if the 400 are mostly app loans (1.70 %), the expected count is 6.8 and 10 is no longer rare (14.8 %)."* The book's p is a weighted average of the channel rates, so a new mix means a new p.
+
+**Step 7 — the binomial tail again, for last October.** 7 FPDs in 288 loans; P(X ≥ 7 | n = 288, p = 1.28 %) = **8.0 %**. Unusual, not alarming — and in a year of twelve vintages you should *expect* one at that level. Day 4 calls this the multiple-comparisons problem; today it is a reason not to call a meeting at the first 7.
+
+---
+
+## 3. Practice (50 min)
+
+Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `math`, `random`, `st`, `np`, `pd`, `NormalDist`, `pmf`, `cdf`, `at_least`, the frames `apps` and `loans` and the applicants' scores `s` are ready — if you came straight here, press ▶ Run on the first box of section 1. Answer, check, then open the fold for the full working. (The notebook `data/python/week6/day1_starter.ipynb` holds the same tools with `scipy`; you need it for the homework.)
+
+**First, press ▶ Run on this box once.** It loads the tools and the data that every Practice box uses.
 
 ```python
 import math, random
@@ -40,833 +138,6 @@ def at_least(k, n, p):                # P(X >= k) = 1 - P(X <= k - 1)
 
 print(len(apps), len(loans), len(s))  # 14000 7828 13612
 ```
-
-### Probability — a long-run share
-
-**What it is.** The **probability** (*вероятность*) of an event A, written **P(A)**, is a number from 0 to 1: the share of times A happens when the same situation repeats very many times. In lending you never know it exactly. You estimate it from history: 91 first-payment defaults (FPD) in 7 099 first instalments give **P(FPD) ≈ 91 / 7 099 = 1.28 %**. A share from a few cases jumps around; a share from many cases settles down (the **law of large numbers** — tomorrow measures how fast).
-
-**How to write it.** P(A) ≈ (times A happened) / (times you looked). The box draws fresh batches of loans whose true FPD rate is 1.28 % and prints each batch's share.
-
-```python
-# the same "random" draws on every run
-random.seed(2026)
-p_true = 91 / 7099                # the long-run share
-# one fresh batch of n loans each time
-for n in (10, 100, 1_000, 10_000, 100_000):
-    # True = this loan is an FPD
-    k = sum(random.random() < p_true for _ in range(n))
-    print(n, k, round(k / n, 4))  # loans, FPDs, share
-```
-
-| loans in the batch | FPDs | share |
-|---|---|---|
-| 10 | 0 | 0.0000 |
-| 100 | 0 | 0.0000 |
-| 1 000 | 13 | 0.0130 |
-| 10 000 | 127 | 0.0127 |
-| 100 000 | 1 282 | 0.0128 |
-
-Batches of 10 and 100 loans show 0 % — the true 1.28 % is invisible at that size; 100 000 loans show 1.28 %.
-
-**When you use it.**
-- Every rate in a report — FPD rate, approval rate, default rate — is an estimate of a probability.
-- Before you trust a rate, look at its denominator: 2 of 20 is a hint; 91 of 7 099 is evidence.
-
-> ⚠️ **Watch out.** A rate from a handful of cases can be 0 % or 10 % by luck alone. Say the count next to the rate: "1.28 % (91 of 7 099)".
-
-**Your turn.** A new branch had 2 FPDs in its first 20 loans. Which statement is right?
-
-```task
-{"id": "w06d1-l1", "kind": "choice", "options": ["The branch's FPD probability is 10 %", "10 % is a noisy estimate from 20 loans — the share settles only as the count grows; report it as '2 of 20'", "Its FPD probability is 0 %, because most batches of 20 loans have no FPD", "A share from 20 loans and a share from 7 099 loans are equally reliable"], "answer": 1, "explain": "A probability is a long-run share. 20 loans are far too few for the share to settle: the table above shows batches of 100 reading 0 % while the truth is 1.28 %."}
-```
-
-### Events — complement, AND, OR
-
-**What it is.** An **event** (*случайное событие*) is something that happens or does not happen for one case: D = "this loan's first instalment is 30+ days late" (an FPD), A = "this loan came through the app". From events you build new ones:
-
-| Event | In words | Notation | Probability |
-|---|---|---|---|
-| **complement** (*противоположное событие*) | not D | D̄ | 1 − P(D) |
-| **intersection** (*произведение событий*) | A and D | A ∩ D | count the cases that are both |
-| **union** (*сумма событий*) | A or D, or both | A ∪ D | P(A) + P(D) − P(A ∩ D) |
-
-**How to write it.** The 7 099 loans in FPD scope: 2 411 app loans, 91 FPDs, 41 loans that are both.
-
-```text
-             FPD     no FPD     total
-app           41      2 370     2 411
-not app       50      4 638     4 688
-total         91      7 008     7 099
-```
-
-```python
-n, app, fpd, both = 7099, 2411, 91, 41
-print(round(1 - fpd / n, 4))  # not D:   0.9872
-print(round(both / n, 4))     # A and D: 0.0058
-# A or D:  0.3467 — the 41 are subtracted once
-print(round((app + fpd - both) / n, 4))
-```
-
-The union is 2 461 loans — 2 411 app loans plus 91 FPDs minus the 41 that were counted twice — so P(A ∪ D) = 34.67 %.
-
-Events that cannot happen together — "app" and "branch" for the same loan — are **mutually exclusive** (*несовместные*). Their intersection is empty, and their probabilities simply add.
-
-**When you use it.**
-- "What share is *not* …" → complement. "… *and* …" → intersection. "… *or* …" → union.
-
-> ⚠️ **Watch out.** P(A or D) is P(A) + P(D) only when A and D cannot overlap. 33.96 % + 1.28 % counts the 41 app FPDs twice; subtract P(A ∩ D).
-
-**Your turn.** Branch loans: 3 263 of the 7 099, and 34 of them are FPDs. What is P(branch ∪ FPD), in %, to 2 decimals?
-
-```task
-{"id": "w06d1-l2", "kind": "number", "answer": 46.77, "dp": 2, "unit": "%", "hint": "P(branch) + P(FPD) − P(branch ∩ FPD): (3 263 + 91 − 34) / 7 099.", "model": "(3 263 + 91 − 34) / 7 099 = 3 320 / 7 099 = 46.77 %. The 34 branch FPDs are in both counts, so they are subtracted once."}
-```
-
-### Conditional probability — "among those who…"
-
-**What it is.** A **conditional probability** (*условная вероятность*) **P(D | A)** is the chance of D **among the cases where A happened**. Read the bar as "given". The condition shrinks the denominator: from all 7 099 loans to the 2 411 app loans.
-
-**How to write it.** P(D | A) = P(A ∩ D) / P(A) = (count of both) / (count of A).
-
-```python
-# P(FPD | app) = 41 / 2 411 = 0.0170 — how risky is an app loan?
-print(round(both / app, 4))
-# P(app | FPD) = 41 / 91    = 0.4505 — where do our FPDs come from?
-print(round(both / fpd, 4))
-```
-
-Same 41 loans, two denominators: 1.70 % of app loans have an FPD, and 45.1 % of all FPDs came through the app.
-
-**When you use it.**
-
-| | P(FPD given app) | P(app given FPD) |
-|---|---|---|
-| Denominator | 2 411 app loans | 91 FPDs |
-| Value | 1.70 % | 45.1 % |
-| Answers | how risky is an app loan? | where do our defaults come from? |
-| In SQL | `WHERE channel = 'app'`, then the share of FPD | `WHERE fpd30 = 1`, then the share of app |
-
-> ⚠️ **Watch out.** P(D | A) and P(A | D) share a numerator (the 41 loans) and nothing else. Before you say a percentage out loud, say its denominator: "of app loans…" (2 411) or "of FPDs…" (91).
-
-**Your turn.** What is P(FPD | branch), in %, to 2 decimals? (34 FPDs among 3 263 branch loans.)
-
-```task
-{"id": "w06d1-l3", "kind": "number", "answer": 1.04, "dp": 2, "unit": "%", "hint": "Divide by the condition: the branch loans.", "model": "34 / 3 263 = 1.04 % — the FPD rate of a branch loan. 34 / 91 = 37.4 % would be P(branch | FPD), a different question."}
-```
-
-### Independence
-
-**What it is.** Two events are **independent** (*независимые события*) when knowing one does not change the chance of the other: **P(D | A) = P(D)**. The same thing written another way: **P(A ∩ D) = P(A) · P(D)**.
-
-**How to write it.** Compare the conditional rate with the overall rate, or the observed "both" share with the product.
-
-```python
-p_app, p_fpd = app / n, fpd / n
-# P(D | A) = 0.0170   vs  P(D) = 0.0128
-print(round(both / app, 4), round(p_fpd, 4))
-# P(A ∩ D) = 0.00578 vs  P(A)·P(D) = 0.00435
-print(round(both / n, 5), round(p_app * p_fpd, 5))
-```
-
-If channel did not matter, 0.435 % of the 7 099 loans — about 31 — would be app FPDs; there are 41. In this sample, channel and FPD are **not** independent.
-
-**When you use it.**
-- You may multiply probabilities ("both borrowers default = p × p") only for independent events.
-- The binomial model below assumes it: one borrower's default does not change another's.
-
-> ⚠️ **Watch out.** "Not independent in the sample" is not yet "not independent in reality": 10 extra loans can be luck, and Wednesday's test measures that. Also, independent is not mutually exclusive. Exclusive events are strongly dependent: if one happens, the other cannot.
-
-**Your turn.** Partner loans: P(FPD | partner) = 16 / 1 425 = 1.12 %, and P(FPD) = 1.28 %. What do you conclude?
-
-```task
-{"id": "w06d1-l4", "kind": "choice", "options": ["Partner and FPD are exactly independent", "Close to independent: 1.12 % against 1.28 %, a gap of about 2 loans (16 seen, 18.3 expected) — much smaller than the app's gap", "Strongly dependent: partner loans never default", "They are mutually exclusive"], "answer": 1, "explain": "Under independence 1 425 × 91 / 7 099 = 18.3 partner loans would be FPDs; 16 are. Close, not exact — and real data are never exactly independent."}
-```
-
-### The law of total probability — a rate as a weighted average
-
-**What it is.** The **law of total probability** (*формула полной вероятности*) rebuilds an overall rate from groups that cover every case exactly once: **P(D) = Σ P(D | group) · P(group)**. The book's rate is a **weighted average** of the group rates; each group's weight is its share.
-
-**How to write it.**
-
-```python
-# P(FPD | channel)
-rate  = {"app": 41 / 2411,   "branch": 34 / 3263,   "partner": 16 / 1425}
-# P(channel)
-share = {"app": 2411 / 7099, "branch": 3263 / 7099, "partner": 1425 / 7099}
-# 0.0128 — the book rate
-print(round(sum(rate[c] * share[c] for c in rate), 4))
-```
-
-| channel | share P(channel) | FPD rate | share × rate |
-|---|---|---|---|
-| app | 0.3396 | 1.70 % | 0.58 % |
-| branch | 0.4596 | 1.04 % | 0.48 % |
-| partner | 0.2007 | 1.12 % | 0.23 % |
-| **book** | 1 | | **1.28 %** |
-
-The book's 1.28 % is three pieces, one per channel: 0.58 + 0.48 + 0.23 points.
-
-**When you use it.**
-- A new mix: next month's rate is Σ (new share × channel rate).
-- The denominator of Bayes' rule (next subsection) is this law.
-
-> ⚠️ **Watch out.** The groups must not overlap and must cover everyone. Channels do; "app" and "grade C" do not — an app loan of grade C would be counted twice.
-
-**Your turn.** Next month is planned as 50 % app and 50 % branch loans. What FPD rate should you expect, in %, to 2 decimals?
-
-```task
-{"id": "w06d1-l5", "kind": "number", "answer": 1.37, "dp": 2, "unit": "%", "hint": "0.5 × P(FPD | app) + 0.5 × P(FPD | branch).", "model": "0.5 × 1.70 % + 0.5 × 1.04 % = 1.37 % — the new weights move the book rate up from 1.28 %."}
-```
-
-### Bayes and the base-rate trap
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w06d1-x1", "type": "bayes", "title": "Who is behind a flag?", "predict": {"q": "The rule catches **90 %** of fraudsters and wrongly flags **5 %** of honest applicants. Fraud is rare: **0.62 %** of applicants. When the rule flags someone, how likely is it that they really are a fraudster?", "options": ["about 90 %", "about 50 %", "about 10 %", "about 5 %"], "why": "Fraud is so rare that the few real fraudsters are swamped by 5 % of the many honest people: 56 true flags against 497 false ones. Move the sliders and watch it happen.", "answer": 2}, "start": {"base": 0.0062, "sens": 0.9, "fpr": 0.05}, "challenges": [{"id": "c1", "text": "Keep the rule as it is (90 % and 5 %) and find the **base rate** at which a flag is right **about half the time**.", "when": {"ppv": ["between", 0.45, 0.6]}, "only": ["base"]}, {"id": "c2", "text": "Back at our base rate (0.62 %), move **only the false-positive rate** until **most flags are real fraud** (over 50 %).", "when": {"ppv": [">", 0.5]}, "only": ["fpr"]}, {"id": "c3", "text": "Make the rule catch **every** fraudster (sensitivity 100 %), nothing else. Does P(fraud | flag) jump?", "when": {"sens": [">=", 0.995]}, "only": ["sens"]}]}
-```
-
-**What it is.** **Bayes' rule** (*формула Байеса*) turns a conditional round: from P(flag | fraud) — how often a fraudster is flagged — to **P(fraud | flag)** — how often a flag is a fraudster. The answer depends heavily on the **base rate** (*базовая частота*): how common fraud is before any flag.
-
-```pic
-{"id": "w06d1-pic1", "title": "Of 553 flags, only 56 are fraudsters", "caption": "Of 10 000 applicants, the rule flags 56 of the 62 fraudsters (red) and 497 honest people (blue). Fraud is rare, so the honest flags outnumber the true ones about nine to one.", "chart": {"type": "bars", "labels": ["fraud", "honest"], "values": [56, 497], "tone": ["d", "e"], "show": true, "note": "y: flagged applicants, of 10 000"}}
-```
-
-**How to write it.** In words: the flagged fraudsters divided by everyone flagged.
-
-```text
-P(fraud | flag) =
-  P(flag | fraud) · P(fraud)
-  / [ P(flag | fraud) · P(fraud)
-    + P(flag | honest) · P(honest) ]
-```
-
-The easy way is **natural frequencies**: imagine 10 000 applicants. A vendor's rule catches 90 % of fraudsters (the **sensitivity**) and flags 5 % of honest applicants (the **false-positive rate**). Our base rate for first-payment fraud — a loan that never paid a single soum of its first instalment — is 44 of 7 099 = 0.62 %.
-
-```python
-N, prior, sens, fpr = 10_000, 44 / 7099, 0.90, 0.05
-fraud  = N * prior            # fraudsters among 10 000 applicants
-honest = N - fraud            # honest applicants
-tp = sens * fraud             # fraudsters flagged
-fp = fpr * honest             # honest applicants flagged
-print(round(fraud), round(tp), round(honest), round(fp))   # 62 56 9938 497
-# 0.101 = P(fraud | flag)
-print(round(tp / (tp + fp), 3))
-```
-
-| of 10 000 applicants | flagged | not flagged | total |
-|---|---|---|---|
-| fraudsters | **56** | 6 | 62 |
-| honest | **497** | 9 441 | 9 938 |
-| total | **553** | 9 447 | 10 000 |
-
-553 flags, and 56 of them are fraudsters: P(fraud | flag) = 56 / 553 = **10.1 %** — nine flags in ten are honest people. The rule is accurate; fraud is rare; that is the **base-rate trap**.
-
-
-**When you use it.**
-- Any screening rule, scorecard cut-off or alert: "when it fires, how often is it right?"
-- Always together with the base rate. A 5 % false-positive rate is small only next to a big base rate.
-
-> 💡 **Key idea.** How often a flag is right depends on how common the thing is. Turn every Bayes question into natural frequencies — "of 10 000 applicants…" — and the answer counts itself.
-
-**Your turn.** Fill in Bayes' rule by tapping the pieces into place.
-
-```game
-{"type": "cloze", "id": "w06d1-g1", "title": "Bayes' rule, piece by piece", "text": "P(fraud | flag) = {{0}} · {{1}} / ( P(flag | fraud) · P(fraud) + {{2}} · {{3}} )", "blanks": [["P(flag | fraud)", "P(fraud)"], ["P(fraud)", "P(flag | fraud)"], ["P(flag | honest)", "P(honest)"], ["P(honest)", "P(flag | honest)"]], "distractors": ["P(fraud | flag)", "P(honest | flag)"], "why": "Numerator: the flagged fraudsters. Denominator: everyone flagged — fraudsters plus honest people caught by the false-positive rate."}
-```
-
-### Random variables, expected value and variance
-
-**What it is.** A **random variable** (*случайная величина*) is a number that depends on chance: the loss on one loan, the number of FPDs next month. A **discrete** one (*дискретная*) takes values from a list, each with a probability; a **continuous** one (*непрерывная*) takes any value in a range. Three numbers describe it:
-- the **expected value** (*математическое ожидание*) E[X] = Σ x · P(X = x) — the long-run average;
-- the **variance** (*дисперсия*) Var(X) = Σ (x − E[X])² · P(X = x) — the average squared distance from E[X];
-- the **standard deviation** (*стандартное отклонение*) sd = √Var — the spread in the variable's own units.
-
-**How to write it.** One Consumer loan: 27 m soum lent, PD = 77 / 2 418 = 3.18 % (Consumer loans now in 90+), and 60 % of the money is lost if it defaults.
-
-| loss L | P(L) |
-|---|---|
-| 0 | 0.9682 |
-| 16.2 m soum (0.6 × 27 m) | 0.0318 |
-
-```python
-# the possible losses, soum
-values = [0, 0.6 * 27_000_000]
-# their probabilities (sum = 1)
-probs  = [1 - 77 / 2418, 77 / 2418]
-E   = sum(x * q for x, q in zip(values, probs))             # expected value
-Var = sum((x - E) ** 2 * q for x, q in zip(values, probs))  # variance
-print(round(E), round(math.sqrt(Var)))                      # 515881 2844492
-```
-
-The expected loss is 0.52 m soum and the sd is 2.84 m — the spread is five times the mean, so one loan is a lottery ticket.
-
-Four rules you will use all week: E[aX + b] = a·E[X] + b; Var(aX + b) = a²·Var(X); expectations of a sum always add; variances add when the variables are independent. For 400 independent Consumer loans: E = 400 × 0.52 m = 206.4 m, sd = √400 × 2.84 m = 56.9 m.
-
-**When you use it.**
-- Expected loss, expected revenue, the expected number of defaults: E.
-- How far the result can swing around E: the sd.
-
-> 💡 **Key idea.** Expectations add always; variances add when the loans are independent. So the total grows like n and its spread like √n — the arithmetic behind "many small loans" and behind every standard error tomorrow.
-
-**Your turn.** A loan loses 0 with probability 0.97 and 10 m soum with probability 0.03. What is E[L], in m soum?
-
-```task
-{"id": "w06d1-l6", "kind": "number", "answer": 0.3, "dp": 2, "unit": "m soum", "hint": "Σ value × probability: 0 × 0.97 + 10 × 0.03.", "model": "E[L] = 0 × 0.97 + 10 m × 0.03 = 0.3 m soum. No single loan ever loses 0.3 m — it loses 0 or 10 m; 0.3 m is the long-run average per loan."}
-```
-
-### Bernoulli and binomial — defaults in a batch
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w06d1-x2", "type": "binomial", "title": "A month of 400 loans, again and again", "predict": {"q": "Last October Nilufar saw **7** FPDs in a batch of 400 loans and called a meeting. If every loan has the usual 1.28 % chance, how often does a month bring **7 or more**?", "options": ["almost never — under 1 % of months", "about 1 month in 20", "about 1 month in 4", "about every second month"], "answer": 2, "why": "P(X ≥ 7) = 25.6 %: a quarter of perfectly ordinary months reach 7. Expect 5.1, but give or take 2.25 — so 7 is noise, not a signal. Run the batches and watch the orange tail."}, "p": 0.012818706860121144, "start": {"n": 400, "k": 7}, "challenges": [{"id": "c1", "text": "Run **200 batches** or more at n = 400: their average lands within **0.3** of n · p = 5.13.", "when": {"n": ["=", 400], "batches": [">=", 200], "avgErr": ["<", 0.3]}}, {"id": "c2", "text": "Find Nilufar's wall number: slide the alarm to the **smallest** count that rings in **under 5 %** of months (watch the exact share).", "when": {"n": ["=", 400], "tail": ["<", 0.05], "tailPrev": [">=", 0.05]}}, {"id": "c3", "text": "Make the spread **twice** as wide — an sd of 4.5 FPDs instead of 2.25 — by changing only the batch size. How many loans does it take?", "when": {"sd": ["between", 4.45, 4.55]}}]}
-```
-
-**What it is.** A **Bernoulli** variable (*распределение Бернулли*) is one yes/no trial: 1 with probability p, 0 otherwise; E = p, Var = p(1 − p). The **binomial** (*биномиальное распределение*) **X ~ Bin(n, p)** counts the yeses in n **independent** Bernoulli trials with the same p — the FPDs among 400 loans.
-
-```pic
-{"id": "w06d1-pic2", "title": "FPDs in a batch of 400 loans: about 5, rarely 10", "caption": "The exact Bin(400, 1.28 %) probabilities: the bars pile up around the mean of 5.13 FPDs. The dark bar is the tail, **10 or more** FPDs: 3.57 % of months.", "chart": {"type": "bars", "labels": ["0–1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"], "values": [3.55, 7.72, 13.3, 17.14, 17.63, 15.07, 11.01, 7.03, 3.97, 3.57], "hl": [9], "marks": [{"at": 4.13, "label": "mean 5.13"}], "note": "x: FPDs among 400 loans · y: probability"}}
-```
-
-**How to write it.** P(X = k) = C(n, k) · p^k · (1 − p)^(n − k): the number of orders C(n, k) times the probability of one order. E[X] = n·p, Var(X) = n·p·(1 − p). The helpers `pmf`, `cdf`, `at_least` are in the first box.
-
-```python
-n, p = 400, 91 / 7099
-# 5.13 2.25 — mean and sd
-print(round(n * p, 2), round(math.sqrt(n * p * (1 - p)), 2))
-# P(X = 5)   = 0.1763   Excel: =BINOM.DIST(5, 400, 91/7099, FALSE)
-print(round(pmf(5, n, p), 4))
-# P(X <= 4)  = 0.4172   Excel: =BINOM.DIST(4, 400, 91/7099, TRUE)
-print(round(cdf(4, n, p), 4))
-# P(X >= 10) = 0.0357   Excel: =1 - BINOM.DIST(9, 400, 91/7099, TRUE)
-print(round(at_least(10, n, p), 4))
-# 9: the 95th percentile   Excel: =BINOM.INV(400, 91/7099, 0.95)
-print(min(k for k in range(n + 1) if cdf(k, n, p) >= 0.95))
-# the same in scipy (the notebook): X = scipy.stats.binom(400, p); X.mean(),
-# X.std(), X.pmf(5), X.cdf(4), X.sf(9), X.ppf(0.95)
-```
-
-| FPDs k in 400 loans | 0 | 2 | 4 | 5 | 6 | 8 | 10 | 12 |
-|---|---|---|---|---|---|---|---|---|
-| P(X = k) | 0.006 | 0.077 | 0.171 | 0.176 | 0.151 | 0.070 | 0.020 | 0.004 |
-
-Expect 5.13 FPDs, give or take 2.25; ten or more happens in 3.57 % of months.
-
-**When you use it.**
-- A fixed number n of yes/no cases with the same p, independent of each other: FPDs among next month's loans, approvals among 50 decided applications.
-- "How many is unusual?" — the tail, P(X ≥ k).
-
-> ⚠️ **Watch out.** "10 or more" is P(X ≥ 10) = 1 − P(X ≤ 9) = `sf(9)` in scipy, not `sf(10)`. The off-by-one is the trap of the day, in Excel too (`1 - BINOM.DIST(9, …, TRUE)`). And the model assumes independence: in a recession defaults move together and the binomial *understates* the tail (the Stretch measures how much).
-
-**Your turn.**
-
-```game
-{"id": "w06d1-g5", "type": "bug", "title": "The alarm that rings one late", "q": "Nilufar wants P(10 or more FPDs) in 400 loans. One line answers a different question.", "code": "n, p = 400, 91 / 7099\n# P(10 or more FPDs)\ntail = 1 - cdf(10, n, p)\nprint(round(tail, 4))", "answer": [2], "why": "1 − cdf(10) is 1 − P(X ≤ 10) = P(X ≥ 11). '10 or more' is 1 − cdf(9, n, p), which is at_least(10, n, p) = 0.0357."}
-```
-
-### Poisson — applications per hour
-
-**What it is.** The **Poisson** distribution (*распределение Пуассона*) counts events in a fixed window — an hour, a day — when they arrive independently at a constant average rate **λ**. It has one parameter, and **mean = variance = λ**. There is no fixed n: an hour can hold 0, 1, 2 … applications.
-
-**How to write it.** P(X = k) = e^(−λ) · λ^k / k!. Nur's 2026 applications (1 Jan – 30 Sep, clock hours 08:00–20:59, empty hours counted): 5 102 applications in 3 549 hours.
-
-```python
-lam, hours = 5102 / 3549, 3549  # λ = 1.44 applications per hour
-def pois(k, lam):               # P(X = k) for X ~ Poisson(lam)
-    return math.exp(-lam) * lam**k / math.factorial(k)
-# hours the model expects with 0, 1, … 6 applications
-print([round(hours * pois(k, lam), 1) for k in range(7)])
-# 0.2375: an empty hour   Excel: =POISSON.DIST(0, 1.4376, FALSE)
-print(round(pois(0, lam), 4))
-# 0.0158: 5 or more       Excel: =1 - POISSON.DIST(4, 1.4376, TRUE)
-print(round(1 - sum(pois(k, lam) for k in range(5)), 4))
-```
-
-| applications in the hour | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7+ |
-|---|---|---|---|---|---|---|---|---|
-| hours observed | 850 | 1 204 | 863 | 420 | 163 | 38 | 8 | 3 |
-| Poisson(1.44) expects | 842.9 | 1 211.7 | 871.0 | 417.4 | 150.0 | 43.1 | 10.3 | 2.6 |
-
-The model expects 842.9 empty hours and 850 were observed; the data's mean and variance are both 1.44 — the Poisson fingerprint.
-
-**When you use it.**
-- Staffing: how many officers the 18:00 peak needs.
-- Alerting: an hour with 8 applications (P ≈ 0.01 %) is a bot or a campaign.
-- A shortcut for the binomial when n is large and p small: Poisson(5.13) gives P(X ≥ 10) = 3.67 % against the exact 3.57 %.
-
-| | Binomial | Poisson |
-|---|---|---|
-| Counts | yeses in n trials | events in a window |
-| Upper limit | n | none |
-| Parameters | n, p | λ |
-| Mean, variance | n·p, n·p·(1 − p) | λ, λ |
-
-> ⚠️ **Watch out.** Check that the mean is close to the variance before you use Poisson. When events come in bursts (a marketing SMS, a holiday), the variance is far bigger and the Poisson understates the busy hours.
-
-**Your turn.** With λ = 1.4376, what share of hours should have exactly 3 applications, in %, to 1 decimal?
-
-```task
-{"id": "w06d1-l7", "kind": "number", "answer": 11.8, "dp": 1, "unit": "%", "hint": "e^(−λ) · λ³ / 3!  — or pois(3, lam) in the box above.", "model": "e^(−1.4376) × 1.4376³ / 6 = 0.1176 → 11.8 % of hours; × 3 549 hours = 417.4, against 420 observed."}
-```
-
-### Exponential — minutes between applications
-
-**What it is.** If arrivals are Poisson, the **gaps** between them follow the **exponential** distribution (*показательное распределение*). It is continuous — a gap can be 12.4 minutes — and has one parameter, the mean gap. Its odd property is **memorylessness** (*отсутствие последействия*): after 30 quiet minutes, the wait for the next application is still 39 minutes on average.
-
-**How to write it.** P(gap > t) = e^(−t / mean gap).
-
-```python
-# minutes, the 4 829 gaps within 2026 working days
-mean_gap = 39.34
-# 0.2176: P(gap > 60 min); observed 0.2172   Excel: =1 - EXPON.DIST(60, 1/39.34,
-# TRUE)
-print(round(math.exp(-60 / mean_gap), 4))
-# 0.4665: P(gap > 30 min); observed 0.4587
-print(round(math.exp(-30 / mean_gap), 4))
-```
-
-The model says 21.8 % of gaps last more than an hour; the data say 21.7 %.
-
-**When you use it.**
-- Waiting times between independent arrivals: the next application, the next call to the call centre.
-
-> ⚠️ **Watch out.** Memorylessness fits arrivals from many independent people. It does not fit things on a schedule: payments cluster at the due date, so the time to the next payment is not exponential.
-
-**Your turn.** What share of gaps does the model put above 90 minutes, in %, to 1 decimal?
-
-```task
-{"id": "w06d1-l8", "kind": "number", "answer": 10.1, "dp": 1, "unit": "%", "hint": "e^(−90 / 39.34).", "model": "e^(−90 / 39.34) = 0.1015 → 10.1 %; the data show 10.5 %."}
-```
-
-### Uniform — every value equally likely
-
-**What it is.** The **uniform** distribution (*равномерное распределение*) gives every value in a range the same chance. **Discrete** uniform: a die, a loan id drawn at random from 1 to 7 828. **Continuous** uniform **U(a, b)**: every point between a and b is equally likely, and the density is a flat line at 1 / (b − a).
-
-**How to write it.** For U(a, b): P(between c and d) = (d − c) / (b − a); mean = (a + b) / 2; sd = (b − a) / √12. The minute past the hour at which an application arrives should be U(0, 60):
-
-```python
-a, b = 0, 60
-# 30.0 17.32 — the model's mean and sd
-print((a + b) / 2, round((b - a) / math.sqrt(12), 2))
-# minute past the hour, 14 000 applications
-mins = pd.to_datetime(apps["applied_at"]).dt.minute
-# 28.9 17.2 — the data's mean and sd
-print(round(mins.mean(), 1), round(mins.std(), 1))
-# 0.255 — the model says 15 / 60 = 0.25
-print(round((mins < 15).mean(), 3))
-# [2375, 2385, 2491, 2342, 2210, 2197]
-print(mins.floordiv(10).value_counts().sort_index().tolist())
-```
-
-| minutes past the hour | 0–9 | 10–19 | 20–29 | 30–39 | 40–49 | 50–59 |
-|---|---|---|---|---|---|---|
-| applications | 2 375 | 2 385 | 2 491 | 2 342 | 2 210 | 2 197 |
-
-Each 10-minute block holds between 2 197 and 2 491 applications; a perfectly flat line would be 2 333 each.
-
-**When you use it.**
-- Drawing a fair random sample, where every loan is equally likely — tomorrow starts here.
-- A "know only the range" model.
-- `random.random()` is U(0, 1): the first subsection used it to decide which loans default.
-
-**Your turn.** What share of applications does U(0, 60) put in the last 10 minutes of an hour, in %, to 1 decimal?
-
-```task
-{"id": "w06d1-l9", "kind": "number", "answer": 16.7, "dp": 1, "unit": "%", "hint": "(d − c) / (b − a) = (60 − 50) / 60.", "model": "10 / 60 = 16.7 %. The data show 2 197 / 14 000 = 15.7 % — slightly fewer applications at the end of the hour."}
-```
-
-### Normal — credit scores
-
-**What it is.** The **normal** distribution (*нормальное распределение*) **N(μ, σ)** is the symmetric bell. The mean μ places its centre; the standard deviation σ sets its width. **Standardising** (*стандартизация*) **z = (x − μ) / σ** says how many sds a value sits from the mean, and puts every normal on one scale, N(0, 1).
-
-**How to write it.** `NormalDist(mu, sd).cdf(x)` = P(X ≤ x). Nur's 13 612 scored applicants (388 have no score — `dropna` and say so):
-
-```python
-mu, sd = s.mean(), s.std()
-model = NormalDist(mu, sd)
-# 13612 659.6 59.5
-print(len(s), round(mu, 1), round(sd, 1))
-# -1.0: a score of 600 is one sd below the mean
-print(round((600 - mu) / sd, 2))
-# 0.1583 model, 0.1583 data   Excel: =NORM.DIST(600, 659.6, 59.5, TRUE)
-print(round(model.cdf(600), 4), round((s < 600).mean(), 4))
-
-fig, ax = plt.subplots(1, 2, figsize=(10, 3.6))
-ax[0].hist(s, bins=40, density=True, color="#9bb7d4")  # the bars
-grid = np.linspace(s.min(), s.max(), 200)
-# the bell over the bars
-ax[0].plot(grid, [model.pdf(v) for v in grid], color="#c0392b")
-ax[0].set_title("Applicants' credit score + the normal curve")
-# QQ plot: data quantiles vs normal quantiles
-q = np.sort(s.sample(2000, random_state=2026).to_numpy())
-theory = [model.inv_cdf((i + 0.5) / len(q)) for i in range(len(q))]
-ax[1].scatter(theory, q, s=4); ax[1].plot(theory, theory, color="#c0392b")
-ax[1].set_title("QQ plot (2 000 applicants): on the line = normal")
-plt.tight_layout(); plt.show()
-# scipy (the notebook): scipy.stats.norm.cdf(600, 659.6, 59.5),
-# scipy.stats.probplot(s, dist="norm", plot=plt)
-```
-
-μ = 659.6, σ = 59.5; the model puts 15.83 % of applicants below 600, and the data say 15.83 %.
-
-The **QQ plot** (*квантиль-квантильный график*) puts the data's quantiles against the normal's: points on the line mean normal; an S shape means heavy or light tails; a bend at one end means skew. Applicants' scores lie on the line.
-
-**When you use it.**
-- Measurements that pile up symmetrically around a centre: scores, and tomorrow the averages of samples.
-- To turn a value into "how unusual is it?": its z.
-
-> ⚠️ **Watch out.** Check *which* population you fitted. Approved loans' scores are not normal: 7 615 scored loans, μ = 680.8, σ = 52.6, and the left tail is cut — the model says 6.2 % below 600, the data 4.3 %, because the approval rule removed most of them. A **selected** sample is not the population it came from. Check every normal with two pictures — the bell over the histogram and the QQ plot — not one number.
-
-**Your turn.** What is the z-score of a score of 720 (μ = 659.6, σ = 59.5)? Two decimals.
-
-```task
-{"id": "w06d1-l10", "kind": "number", "answer": 1.02, "dp": 2, "unit": "sd", "hint": "z = (x − μ) / σ.", "model": "(720 − 659.6) / 59.5 = 1.02: a score of 720 sits about one sd above the average applicant."}
-```
-
-### The 68-95-99.7 rule — one, two, three sds
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w06d1-x3", "type": "normal", "title": "Shares under the bell", "predict": {"q": "Applicants' scores: mean 659.6, sd 59.5. The bank refuses everyone below **540** — about **2 sd** under the mean. What share of applicants is that?", "options": ["about 5 %", "about 2.5 %", "about 16 %", "about 0.3 %"], "answer": 1, "why": "About 95 % of a bell lies within ±2 sd, so 5 % lies outside — but split between the two tails: only about 2 % sit below 540 (the bell says 2.2 %, the real applicants 2.3 %), and as many above 779."}, "mu": 659.6, "sd": 59.5, "from": 424, "counts": [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 1, 2, 2, 2, 1, 2, 3, 1, 1, 0, 0, 4, 1, 2, 3, 3, 2, 5, 2, 2, 2, 5, 2, 3, 1, 1, 3, 3, 8, 1, 6, 7, 2, 7, 3, 8, 3, 7, 2, 3, 11, 9, 2, 7, 9, 1, 8, 5, 5, 3, 5, 7, 16, 6, 10, 6, 9, 10, 16, 11, 16, 15, 12, 18, 15, 18, 17, 9, 19, 12, 22, 15, 12, 14, 16, 7, 23, 12, 17, 19, 20, 10, 17, 25, 21, 25, 20, 24, 27, 29, 21, 27, 29, 33, 33, 29, 32, 30, 40, 35, 37, 35, 43, 36, 50, 45, 33, 44, 43, 56, 34, 31, 45, 61, 61, 51, 58, 45, 54, 47, 64, 63, 57, 47, 42, 57, 59, 67, 56, 68, 62, 60, 65, 59, 74, 54, 73, 68, 68, 84, 70, 87, 79, 79, 84, 75, 71, 64, 88, 79, 73, 94, 79, 87, 73, 66, 90, 81, 84, 75, 85, 77, 67, 83, 82, 72, 77, 91, 93, 85, 93, 92, 106, 93, 109, 98, 98, 89, 98, 84, 58, 77, 82, 84, 92, 87, 97, 81, 85, 84, 92, 114, 92, 77, 100, 90, 81, 90, 93, 86, 77, 99, 74, 97, 98, 91, 84, 85, 86, 84, 70, 70, 96, 70, 73, 74, 80, 87, 81, 64, 63, 70, 80, 78, 82, 72, 72, 63, 80, 71, 66, 79, 61, 65, 58, 45, 55, 60, 54, 60, 65, 56, 51, 53, 52, 65, 48, 50, 39, 46, 52, 41, 44, 44, 43, 59, 51, 30, 33, 50, 42, 35, 29, 36, 40, 34, 27, 30, 30, 27, 33, 24, 35, 43, 30, 25, 32, 25, 25, 34, 21, 21, 20, 18, 26, 18, 23, 20, 13, 22, 21, 16, 17, 12, 15, 12, 13, 18, 14, 19, 9, 16, 19, 11, 11, 15, 11, 9, 6, 5, 9, 10, 7, 8, 5, 4, 6, 5, 12, 4, 5, 5, 4, 7, 6, 2, 3, 3, 4, 4, 4, 3, 4, 3, 6, 3, 2, 1, 6, 0, 2, 0, 3, 4, 2, 2, 0, 3, 2, 1, 1, 0, 1, 1, 3, 0, 1, 1, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 8], "start": {"mode": "band", "k": 1, "cut": 540}, "challenges": [{"id": "c1", "text": "Find the band that holds **95 %** of applicants. How many sds wide is it — exactly 2?", "when": {"inside": ["between", 0.945, 0.955]}}, {"id": "c2", "text": "Widen the band until only **3 applicants in 1 000** are left outside (99.7 % inside).", "when": {"inside": [">=", 0.997]}}, {"id": "c3", "text": "Switch to the cut-off and find the score with **15.8 %** of applicants below it — the lesson's number from the normal model. How many sds from the mean is it?", "when": {"below": ["between", 0.15, 0.17]}}]}
-```
-
-**What it is.** For any normal, about **68 %** of values lie within ±1 sd of the mean, **95 %** within ±2 sd (±1.96 sd exactly), and **99.7 %** within ±3 sd. It is the quickest check of "is this value unusual?".
-
-```pic
-{"id": "w06d1-pic3", "title": "Two thirds of applicants within one sd, 95 % within two", "caption": "Applicants' credit scores in bands of one sd around the mean 659.6 (σ = 59.5). The two teal bars hold **68.0 %** of the 13 612 scored applicants; add the two amber bars and it is **95.4 %**.", "chart": {"type": "bars", "labels": ["<−2", "−2…−1", "−1…0", "0…1", "1…2", ">2"], "values": [2.4, 13.85, 33.41, 34.54, 13.63, 2.17], "tone": [null, "b", "a", "a", "b", null], "marks": [{"at": 2.5, "label": "mean 659.6"}], "note": "x: sds from the mean · y: share of applicants"}}
-```
-
-**How to write it.** The rule comes from N(0, 1); the box checks it on the applicants' scores (`mu`, `sd` from the box above).
-
-```python
-for k in (1, 2, 3):
-    # share of N(0, 1) within ±k
-    rule = NormalDist().cdf(k) - NormalDist().cdf(-k)
-    # share of applicants within ±k sd
-    data = ((s - mu).abs() <= k * sd).mean()
-    print(k, round(rule, 3), round(data, 3), round(mu - k * sd), round(mu + k * sd))
-# 1.96   Excel: =NORM.S.INV(0.975)
-print(round(NormalDist().inv_cdf(0.975), 2))
-```
-
-| within | the rule | applicants' scores | score range |
-|---|---|---|---|
-| ±1 sd | 68.3 % | 68.0 % | 600 – 719 |
-| ±2 sd | 95.4 % | 95.4 % | 541 – 779 |
-| ±3 sd | 99.7 % | 99.8 % | 481 – 838 |
-
-95.4 % of applicants score between 541 and 779 — the rule, almost to the decimal.
-
-**When you use it.**
-- "Is a score of 800 unusual?" — (800 − 659.6) / 59.5 = 2.36 sd: outside the ±2 sd band, about 1 applicant in 110 scores higher.
-- A quick range: mean ± 2 sd holds about 95 % of a normal column.
-
-> ⚠️ **Watch out.** The rule needs a roughly normal shape. Loan principal has mean 51.7 m and sd 112.6 m, so "mean − 1 sd" is negative — no loan is. Check the shape first (Skew, below).
-
-**Your turn.** Between which two scores does the normal model put the middle 95 % of applicants?
-
-```task
-{"id": "w06d1-l11", "kind": "choice", "options": ["Between 600 and 719", "Between 541 and 779 — the mean ± 2 sd", "Between 481 and 838", "Between 560 and 760"], "answer": 1, "explain": "The middle 95 % of a normal is mean ± 2 sd (± 1.96 sd exactly: 543 to 776). 600–719 is ±1 sd (68 %); 481–838 is ±3 sd (99.7 %)."}
-```
-
-### Mean, median and mode — the centre of data
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w06d1-x4", "type": "median", "title": "One loan against the middle", "unit": "m", "label": "11 real loans: Bukhara Central, March 2025, in m soum.", "predict": {"q": "Bukhara Central's 11 loans of March 2025: mean **5.70 m**, median **3.50 m**. Their biggest loan, 22.42 m, grows to **400 m**. What does the median do?", "options": ["it grows a lot, like the mean", "it grows a little", "it does not move at all", "it falls"], "answer": 2, "why": "The median is the loan in the middle of the line — the 6th of 11. The biggest loan was above it and stays above it however big it gets, so the median stays at 3.50 m while the mean jumps to about 40 m."}, "loans": [[0.65, "MICRO"], [1.89, "MICRO"], [2.3, "BNPL"], [3.1, "MICRO"], [3.37, "MICRO"], [3.5, "BNPL"], [4.98, "MICRO"], [6.58, "CONS"], [6.74, "CONS"], [7.21, "BNPL"], [22.42, "CONS"]], "max": 600, "start": {"sel": 10}, "challenges": [{"id": "c1", "text": "Move **one** loan until the mean is **more than twice** the median.", "when": {"ratio": [">", 2]}}, {"id": "c2", "text": "**Double** the mean (to about 11.4 m) while the median **does not move at all**.", "when": {"meanX": [">=", 2], "medMove": ["<", 0.0001]}}, {"id": "c3", "text": "Now move the **median**: pick a small loan and push it far up. How far does the median go?", "when": {"medMove": [">", 0.0001]}}]}
-```
-
-**What it is.** Three ways to say "a typical value" of a data column:
-- the **mean** (*среднее арифметическое*) — the sum divided by the count;
-- the **median** (*медиана*) — the middle value after sorting: half the values are below it, half above;
-- the **mode** (*мода*) — the most frequent value.
-
-**How to write it.** Five loans, principal in m soum: 2, 4, 5, 6, 33. The mean is 50 / 5 = 10. The median is 5, the third of five. One big loan pulls the mean to 10; the median stays at 5.
-
-```python
-x = [2, 4, 5, 6, 33]
-print(st.mean(x), st.median(x))  # 10 5
-# all 7 828 loans, soum
-prin = loans["principal"]
-# 51.71 5.79 (m soum)
-print(round(prin.mean() / 1e6, 2), round(prin.median() / 1e6, 2))
-# [6] 2483
-print(loans["term_months"].mode().tolist(), (loans["term_months"] == 6).sum())
-```
-
-The average loan is 51.71 m soum, but half of all loans are below 5.79 m: a few large Auto and SME loans pull the mean up. The most common term is 6 months (2 483 loans).
-
-**When you use it.**
-
-| | mean | median | mode |
-|---|---|---|---|
-| Answers | the total ÷ the count | the typical case | the most common value |
-| A few huge values | pull it | do not move it | do not move it |
-| Good for | totals and budgets, symmetric data | money, incomes, days late | categories, terms, counts |
-
-> ⚠️ **Watch out.** The mode of a continuous column is noise: the most common principal, 4 880 000 soum, belongs to only 17 loans. Use the mode for categories and whole-number columns.
-
-**Your turn.** The median principal of Consumer loans (`product_id` 2), in soum.
-
-```task
-{"id": "w06d1-l12", "kind": "python", "starter": "cons = loans.loc[loans[\"product_id\"] == 2, \"principal\"]    # Consumer loans\n# print the median principal, in soum\n", "answer": 26965000, "dp": 0, "model": "print(cons.median(), round(cons.mean()))   # 26965000.0 26926915 — inside one product the mean and the median almost agree"}
-```
-
-### Variance and standard deviation of data
-
-**What it is.** The **variance** (*дисперсия*) of a data column is the average squared distance from the mean. The **standard deviation** (*стандартное отклонение*) is its square root, back in the column's units. For a **sample** you divide by n − 1, not n — the **sample variance** (*выборочная дисперсия*). pandas `.std()` and Excel `STDEV.S` do this by default.
-
-**How to write it.** The five loans 2, 4, 5, 6, 33 (mean 10):
-
-| x | x − mean | (x − mean)² |
-|---|---|---|
-| 2 | −8 | 64 |
-| 4 | −6 | 36 |
-| 5 | −5 | 25 |
-| 6 | −4 | 16 |
-| 33 | 23 | 529 |
-| **sum** | 0 | **670** |
-
-Variance = 670 / (5 − 1) = 167.5; sd = √167.5 = 12.94.
-
-```python
-# 167.5 12.94   Excel: =VAR.S(…), =STDEV.S(…)
-print(st.variance(x), round(st.stdev(x), 2))
-# 59.5 points (scores), 112.6 m soum (principal)
-print(round(s.std(), 1), round(prin.std() / 1e6, 1))
-```
-
-Scores swing about 59.5 points around 659.6; principals swing 112.6 m around 51.7 m — more than twice the mean.
-
-**When you use it.**
-- How spread out a column is, in its own units.
-- Comparing the spread of two groups; tomorrow's standard error is sd / √n.
-
-> ⚠️ **Watch out.** NumPy's `np.std(x)` divides by n; pandas `.std()` divides by n − 1. On 7 828 loans the gap is invisible; on the 5 values above it is 11.58 against 12.94. Write `ddof=1` in NumPy when you mean a sample.
-
-**Your turn.** The standard deviation of the loan term, in months (sample, 2 decimals).
-
-```task
-{"id": "w06d1-l13", "kind": "python", "starter": "t = loans[\"term_months\"]\n# print the sample standard deviation of the term, rounded to 2 decimals\n", "answer": 10.18, "dp": 2, "model": "print(round(t.std(), 2), round(t.mean(), 2))   # 10.18 11.78 — terms swing about 10 months around a 12-month average"}
-```
-
-### Percentiles and quartiles — where a value stands
-
-**What it is.** The **p-th percentile** (*перцентиль*, or *квантиль* of level p/100) is the value below which p % of the data lie. The 50th percentile is the median. The 25th and 75th are the **quartiles** (*квартили*) Q1 and Q3. Q3 − Q1 is the **interquartile range**, IQR (*межквартильный размах*) — the width of the middle half.
-
-**How to write it.** `col.quantile(q)` with q between 0 and 1.
-
-```python
-# [2.88, 5.79, 34.71, 187.03] m soum
-print((prin.quantile([0.25, 0.5, 0.75, 0.9]) / 1e6).round(2).tolist())
-# [583.0, 660.0, 736.0]
-print(s.quantile([0.1, 0.5, 0.9]).tolist())
-# 15.8: a score of 600 sits at the 16th percentile
-print(round(100 * (s < 600).mean(), 1))
-```
-
-| principal, m soum | Q1 (25 %) | median (50 %) | Q3 (75 %) | 90 % |
-|---|---|---|---|---|
-| all 7 828 loans | 2.88 | 5.79 | 34.71 | 187.03 |
-
-A quarter of loans are below 2.88 m; the middle half lies between 2.88 m and 34.71 m (IQR 31.8 m); one loan in ten is above 187 m.
-
-**When you use it.**
-- "Where does this customer stand?" — the percentile rank.
-- Cut-offs: the bottom 10 % of scores, the top 1 % of exposures.
-- A spread that ignores outliers: the IQR does not move when the biggest loan doubles; the sd does.
-
-> ⚠️ **Watch out.** pandas' default and Excel's `PERCENTILE.INC` agree; `PERCENTILE.EXC` and other methods give slightly different values on small data. Say which one you used when numbers must match.
-
-**Your turn.** The 25th percentile (Q1) of applicants' credit scores.
-
-```task
-{"id": "w06d1-l14", "kind": "python", "starter": "# s = the 13 612 applicants' scores (first box)\n# print the 25th percentile\n", "answer": 619, "dp": 0, "model": "print(s.quantile(0.25), s.quantile(0.75))   # 619.0 700.0 — the middle half of applicants scores 619 to 700"}
-```
-
-### Skew — when the mean and the median disagree
-
-**What it is.** **Skewness** (*асимметрия*) measures how lopsided a distribution is. **Right skew** (positive): a long tail of large values, so the mean is above the median — money, incomes, days late. **Left skew** (negative): a long tail of small values, mean below the median. Skew near 0: symmetric, mean ≈ median.
-
-**How to write it.** pandas `.skew()`. Above about +1 or below −1 counts as strongly skewed.
-
-```python
-print(round(prin.skew(), 2), round(s.skew(), 2))  # 2.93 -0.04
-# 8.9: the mean principal is almost nine times the median
-print(round(prin.mean() / prin.median(), 1))
-```
-
-| column | mean | median | skew | shape |
-|---|---|---|---|---|
-| principal, m soum | 51.71 | 5.79 | 2.93 | long right tail |
-| credit score | 659.6 | 660 | −0.04 | symmetric |
-
-Principal is strongly right-skewed — many small Micro and BNPL loans, a few huge SME and Auto loans. The score is symmetric, which is why the normal fits it.
-
-**When you use it.**
-- Before you pick a centre: skewed → report the median and percentiles; symmetric → the mean is fine.
-- Before you use the normal or the 68-95-99.7 rule — both need skew near 0.
-- On Day 4: skew is the first reason a t-test can mislead.
-
-> ⚠️ **Watch out.** A mix of groups can create the skew. Inside each product the principal is nearly symmetric (Consumer: mean 26.93 m, median 26.97 m); the whole book is not. When groups differ, describe each group.
-
-**Your turn.** Customers' monthly income: mean 15.25 m soum, median 7.90 m soum. Which shape, and which number is "the typical customer's income"?
-
-```task
-{"id": "w06d1-l15", "kind": "choice", "options": ["Symmetric; either number", "Right-skewed; the median, 7.90 m", "Right-skewed; the mean, 15.25 m", "Left-skewed; the median, 7.90 m"], "answer": 1, "explain": "Mean almost twice the median → a long tail of high incomes (skew 1.32). Half of customers earn less than 7.90 m, so the median is the typical customer; the mean is pulled up by a few high earners."}
-```
-
-### Simulation — when the formula runs out
-
-**What it is.** A **simulation** (*имитационное моделирование*) draws the random world many times with a computer and counts what happened. It answers questions no formula covers — a month that mixes products with different PDs, defaults that move together, a loss with a random LGD.
-
-**How to write it.** Draw, count, compare with a formula where one exists.
-
-```python
-# seeded: the same "random" numbers on every run
-rng = np.random.default_rng(2026)
-# 100 000 simulated months of 400 loans
-months = rng.binomial(400, 91 / 7099, size=100_000)
-# 5.115, 0.0355 — the formula says 5.127, 0.0357
-print(months.mean(), np.mean(months >= 10))
-# [1, 10]: the middle 95 % of months
-print(np.quantile(months, [0.025, 0.975]))
-```
-
-100 000 simulated months average 5.115 FPDs and reach 10 or more 3.55 % of the time — the formula's 5.127 and 3.57 %, within the simulation's noise.
-
-**When you use it.**
-- When the model has parts no textbook distribution covers.
-- To check a formula you are not sure of.
-
-> 💡 **Key idea.** A simulation is a formula you can always write: draw the world many times, count. Seed it so others get your numbers, and test it where a formula exists before you trust it where none does.
-
-**Your turn.** Why `default_rng(2026)` and not `default_rng()`?
-
-```task
-{"id": "w06d1-l16", "kind": "choice", "options": ["To make the simulation run faster", "So that anyone who re-runs the box gets exactly your numbers", "To make the random numbers more random", "Because NumPy refuses to run without one"], "answer": 1, "explain": "An unseeded run gives 3.55 % for you and 3.61 % for the reviewer, and the meeting is about noise. default_rng(2026) fixes the draws."}
-```
-
-### Putting it together
-
-One request, most of today's tools: *"400 Consumer loans next month — how many defaults, and how much money could we lose?"*
-
-```python
-# probability: PD of a Consumer loan, a long-run share
-n, p_c = 400, 77 / 2418
-# random variable: 16.2 m soum lost if one loan defaults
-loss_if_default = 0.6 * 27_000_000
-mean_d = n * p_c                                 # binomial: expected defaults
-# and their sd (independence assumed)
-sd_d = math.sqrt(n * p_c * (1 - p_c))
-# binomial percentiles:
-lo = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.025)
-# the middle 95 % of months
-hi = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.975)
-print(round(mean_d, 1), round(sd_d, 2), lo, hi)  # 12.7 3.51 6 20
-# 206.4: expected loss, m soum (expectations add)
-print(round(mean_d * loss_if_default / 1e6, 1))
-# 5.9 19.6: the normal shortcut, ±1.96 sd
-print(round(mean_d - 1.96 * sd_d, 1), round(mean_d + 1.96 * sd_d, 1))
-```
-
-| step | the number | the concept |
-|---|---|---|
-| PD = 77 / 2 418 | 3.18 % | probability as a long-run share; conditional — P(90+ given Consumer) |
-| loss of one loan | 0 or 16.2 m | random variable, Bernoulli |
-| defaults among 400 | expect 12.7, sd 3.51 | binomial, independence |
-| an ordinary month | 6 to 20 defaults | binomial percentiles |
-| expected loss | 206.4 m soum | expected value — expectations add |
-| the quick check | 5.9 to 19.6 | normal, 68-95-99.7 (±1.96 sd) |
-
-Expect about 13 defaults and 206 m soum of loss; a month with 6 to 20 defaults (97 m to 324 m) is ordinary. The normal shortcut lands close to the exact binomial because n·p = 12.7 is large enough for the bell.
-
-**Which distribution?** Four shapes and the uniform, five kinds of question — sort them.
-
-```game
-{"type": "sort", "id": "w06d1-g3", "title": "Which distribution?", "q": "Put each Nur question under the distribution that models it.", "groups": {"Binomial": ["FPDs among next month's 400 loans", "approved applications out of 50 decided"], "Poisson": ["applications arriving in one clock hour", "calls to the call centre in one minute"], "Normal": ["applicants' credit scores", "the z-score of one applicant's score"], "Exponential": ["minutes between two applications", "the wait after 30 quiet minutes"], "Uniform": ["the minute past the hour an application arrives", "a loan id drawn at random for an audit"]}}
-```
-
-**Words of the day.**
-
-```game
-{"type": "match", "id": "w06d1-g2", "title": "Words of the day", "pairs": [["Complement", "not A — its probability is 1 − P(A)"], ["Intersection A ∩ D", "A and D both happen"], ["Conditional probability P(D | A)", "the chance of D among the cases where A happened"], ["Independent events", "knowing A does not change the chance of D"], ["Expectation E[X]", "the long-run average of a random variable"], ["Standard deviation", "the spread, in the variable's own units"], ["Median", "the middle value: half the data below, half above"], ["Right skew", "a long tail of large values — the mean above the median"]]}
-```
-
-### Depth (optional)
-
-**Videos (free, YouTube; each link opens at the right minute):**
-
-- ▶ Conditional probability, "among those who..." — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71&end=285)
-- ▶ Bayes and the base-rate trap — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321&end=552)
-- ▶ Binomial — [The Binomial Distribution and Test, Clearly Explained!!! (StatQuest)](https://youtu.be/J8jNoF-K8E8)
-- ▶ Poisson — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135&end=188)
-- ▶ Normal distribution — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
-
-- RU deck (TBC Data Analytics 2.0, if you have it) `5.1 Basics of Probability Theory.pdf`: events and operations pp. 9–17, classical / statistical probability pp. 32–43, conditional probability pp. 52–57, independence pp. 58–63, total probability pp. 64–70, Bayes pp. 71–76, random variables pp. 79–104, expectation pp. 119–127, variance pp. 128–134, skewness / kurtosis / median / quantile pp. 139–150. `5.2 Statistics & Probability Theory.pdf`: Bernoulli formula pp. 5–10, binomial pp. 26–31, Poisson pp. 32–36, exponential pp. 41–44, normal pp. 45–53.
-- Notebooks: `MS1_probability_theory.ipynb` (conditional probability, Monty Hall, total probability and Bayes with three worked examples), `MS4_probability_theory_basics.ipynb` (every distribution of today drawn with `scipy.stats`, plus a call-centre binomial simulation).
-- Visual: Seeing Theory (seeing-theory.brown.edu), chapters 1–3 — Basic Probability, Compound Probability, Probability Distributions.
-- *Russian terms:* случайное событие = event, вероятность = probability, условная вероятность = conditional probability, независимые события = independent events, формула полной вероятности = law of total probability, формула Байеса = Bayes' rule, случайная величина = random variable, математическое ожидание (мат. ожидание) = expectation, дисперсия = variance, стандартное (среднеквадратическое) отклонение = standard deviation, распределение Бернулли / биномиальное / Пуассона / нормальное / показательное = Bernoulli / binomial / Poisson / normal / exponential distribution, функция распределения = cumulative distribution function, плотность = density, квантиль = quantile, ТВиМС = probability theory and mathematical statistics.
-
-**Questions inside the videos.** Open a video from the panel: it stops at these points and asks one question about the bit you just watched.
-
-```videoquiz
-{"video": "_IgyaD7vOOA", "stops": [
-  {"at": 150, "q": "What does the bar in P(A | B) mean?", "options": ["'Given': the chance of A counted only among the cases where B happened", "'Or': A or B happens", "'Divided by': P(A) / P(B)", "'Not': A without B"], "answer": 0, "explain": "The condition shrinks the world to B; the new denominator is B's count — 2 411 app loans, not 7 099."},
-  {"at": 260, "q": "How is a conditional probability computed from a table of counts?", "options": ["Both together, divided by the grand total", "The condition's count divided by the grand total", "Both together, divided by the count of the condition", "Multiply the two shares"], "answer": 2, "explain": "P(D | A) = P(A ∩ D) / P(A): 41 / 2 411 = 1.70 %. Divide by the grand total and you get the intersection, 0.58 %."}]}
-```
-
-```videoquiz
-{"video": "9wCnvr7Xw4E", "stops": [
-  {"at": 400, "q": "Bayes' rule turns which probability round?", "options": ["P(B | A) into P(A | B)", "P(A) into P(not A)", "P(A ∩ B) into P(A ∪ B)", "A mean into a median"], "answer": 0, "explain": "From 'how often is a fraudster flagged' to 'how often is a flag a fraudster' — the question the committee actually asks."},
-  {"at": 520, "q": "What does the denominator of Bayes' rule add up?", "options": ["Only the true cases", "Every way to get the evidence: true cases flagged plus other cases flagged", "The prior twice", "The false positives only"], "answer": 1, "explain": "That is the law of total probability: 56 fraudsters flagged + 497 honest people flagged = 553 flags."}]}
-```
-
-```videoquiz
-{"video": "J8jNoF-K8E8", "stops": [
-  {"at": 150, "q": "What do you need to fix before a binomial probability can be computed?", "options": ["The mean and the standard deviation", "The rate per hour λ", "Only the number of 'yes' answers", "The number of trials n and the probability p of a 'yes' in each"], "answer": 3, "explain": "X ~ Bin(n, p): next month's n = 400 loans, p = 91 / 7 099 per loan."},
-  {"at": 420, "q": "Why does the binomial formula contain C(n, k), 'n choose k'?", "options": ["k 'yes' answers can sit in many different orders, and each order has the same probability", "To make the probabilities add up to n", "To correct for small samples", "It turns counts into percentages"], "answer": 0, "explain": "p^k (1 − p)^(n − k) is one order; C(n, k) counts the orders."}]}
-```
-
-
-```videoquiz
-{"video": "cPOChr_kuQs", "stops": [
-  {"at": 158, "q": "What must be true for counts per window to be Poisson?", "options": ["Events arrive independently at a constant average rate", "Exactly n trials happen", "The counts are normally distributed", "Each window has at least one event"], "answer": 0, "explain": "Applications per clock hour: independent arrivals at λ = 1.44 per hour."},
-  {"at": 182, "q": "The Poisson distribution has one parameter λ. What is it?", "options": ["Its maximum", "Both its mean and its variance", "Its median only", "The number of trials"], "answer": 1, "explain": "Mean = variance = λ — the fingerprint you checked on Nur's 3 549 hours."}]}
-```
-
-```videoquiz
-{"video": "rzFX5NWojp0", "stops": [
-  {"at": 150, "q": "What do the mean and the standard deviation do to a normal curve?", "options": ["The mean places the centre, the sd sets the width", "The mean sets the width, the sd the height", "Both shift it left", "Neither — a normal curve has one shape"], "answer": 0, "explain": "N(659.6, 59.5²): centred at 659.6, about 68 % within ±59.5."},
-  {"at": 400, "q": "About what share of a normal distribution lies within ±2 sd of the mean?", "options": ["About 68 %", "About 50 %", "About 95 %", "About 99.7 %"], "answer": 2, "explain": "68 / 95 / 99.7 % within 1 / 2 / 3 sd — applicants' scores: 68.0 / 95.4 / 99.8 %."}]}
-```
-
----
-
-## 2. Worked example — Nilufar's wall number (15 min)
-
-**Step 1 — probability as a long-run share, then the binomial model.** p = 91 / 7 099 = 1.282 % is the book's long-run FPD share. Each of next month's 400 loans is a Bernoulli trial with that p; assume **independence**; X = the number of FPDs ~ Bin(400, 0.01282).
-
-**Step 2 — expected value and sd of the binomial.** E[X] = n·p = 400 × 0.01282 = **5.13**; sd = √(n·p·(1 − p)) = √(400 × 0.01282 × 0.98718) = **2.25**.
-
-**Step 3 — percentiles: what an ordinary month looks like.** The middle 95 %: `X.ppf([0.025, 0.975])` → **1 to 10** (because counts are whole numbers, P(1 ≤ X ≤ 10) is 97.9 %, not exactly 95). Zero FPDs is itself unusual: P(X = 0) = 0.57 %.
-
-**Step 4 — the binomial tail, P(X ≥ k).** P(X ≥ k) for k = 8 … 13: 14.6 %, 7.5 %, **3.6 %**, 1.6 %, **0.6 %**, 0.2 %. The smallest k with P(X ≥ k) ≤ 5 % is **10**; with ≤ 1 %, **12**. Excel: `=BINOM.INV(400, 91/7099, 0.95) + 1` → 10, `=BINOM.INV(400, 91/7099, 0.99) + 1` → 12.
-
-**Step 5 — simulation, to check the formula.** 100 000 seeded months: mean 5.115, P(X ≥ 10) = 3.55 %, middle 95 % [1, 10] — the formula, twice.
-
-**Step 6 — the answer, with the law of total probability as the caveat.** *"Expect about 5 FPDs in 400 loans; anything from 1 to 10 is ordinary noise. Ten or more happens in fewer than 4 months out of 100 if nothing has changed — look at it; twelve or more happens less than once in 100 months — phone me. The line assumes this month's mix is like the book's; if the 400 are mostly app loans (1.70 %), the expected count is 6.8 and 10 is no longer rare (14.8 %)."* The book's p is a weighted average of the channel rates, so a new mix means a new p.
-
-**Step 7 — the binomial tail again, for last October.** 7 FPDs in 288 loans; P(X ≥ 7 | n = 288, p = 1.28 %) = **8.0 %**. Unusual, not alarming — and in a year of twelve vintages you should *expect* one at that level. Day 4 calls this the multiple-comparisons problem; today it is a reason not to call a meeting at the first 7.
-
----
-
-## 3. Practice (50 min)
-
-Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `math`, `random`, `st`, `np`, `pd`, `NormalDist`, `pmf`, `cdf`, `at_least`, the frames `apps` and `loans` and the applicants' scores `s` are ready — if you came straight here, press ▶ Run on the first box of section 1. Answer, check, then open the fold for the full working. (The notebook `data/python/week6/day1_starter.ipynb` holds the same tools with `scipy`; you need it for the homework.)
 
 **P1.** *(probability as a long-run share)* Draw one batch of 50 loans and one batch of 50 000 loans at p = 91 / 7 099, with `random.seed(1)` before the first. Print both shares. Which one would you report as "the FPD rate"?
 
@@ -1295,6 +566,822 @@ Match the three letters before you say them out loud:
 ```
 
 Tomorrow: the 1.28 % itself is an estimate from 7 099 loans — how sure are we of it? Samples, the central limit theorem, and the confidence interval Bekzod needs before he believes "app is worse".
+
+---
+
+## Going further — the full version, with Python (optional, 60 min)
+
+The same ideas as the stories, written out in full with Python and Excel, plus independence, the law of total probability, the uniform and exponential distributions, skew and simulation. Optional: nothing here counts toward the day.
+
+Press ▶ Run on this first box once. It loads the tools and the data for the whole page; every later box on this page, and every Practice box, reuses them.
+
+```python
+import math, random
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import statistics as st
+# the normal distribution, from Python's standard library
+from statistics import NormalDist
+
+apps  = pd.read_csv("data/raw/applications.csv")
+loans = pd.read_csv("data/raw/loans.csv")
+# 13 612 scored applicants of 14 000 — say so
+s = apps["credit_score"].dropna()
+
+# binomial: P(X = k) for X ~ Bin(n, p)
+def pmf(k, n, p):
+    return math.comb(n, k) * p**k * (1 - p)**(n - k)
+def cdf(k, n, p):                     # P(X <= k)
+    return sum(pmf(i, n, p) for i in range(k + 1))
+def at_least(k, n, p):                # P(X >= k) = 1 - P(X <= k - 1)
+    return 1 - cdf(k - 1, n, p)
+
+print(len(apps), len(loans), len(s))  # 14000 7828 13612
+```
+
+### Probability — a long-run share
+
+**What it is.** The **probability** (*вероятность*) of an event A, written **P(A)**, is a number from 0 to 1: the share of times A happens when the same situation repeats very many times. In lending you never know it exactly. You estimate it from history: 91 first-payment defaults (FPD) in 7 099 first instalments give **P(FPD) ≈ 91 / 7 099 = 1.28 %**. A share from a few cases jumps around; a share from many cases settles down (the **law of large numbers** — tomorrow measures how fast).
+
+**How to write it.** P(A) ≈ (times A happened) / (times you looked). The box draws fresh batches of loans whose true FPD rate is 1.28 % and prints each batch's share.
+
+```python
+# the same "random" draws on every run
+random.seed(2026)
+p_true = 91 / 7099                # the long-run share
+# one fresh batch of n loans each time
+for n in (10, 100, 1_000, 10_000, 100_000):
+    # True = this loan is an FPD
+    k = sum(random.random() < p_true for _ in range(n))
+    print(n, k, round(k / n, 4))  # loans, FPDs, share
+```
+
+| loans in the batch | FPDs | share |
+|---|---|---|
+| 10 | 0 | 0.0000 |
+| 100 | 0 | 0.0000 |
+| 1 000 | 13 | 0.0130 |
+| 10 000 | 127 | 0.0127 |
+| 100 000 | 1 282 | 0.0128 |
+
+Batches of 10 and 100 loans show 0 % — the true 1.28 % is invisible at that size; 100 000 loans show 1.28 %.
+
+**When you use it.**
+- Every rate in a report — FPD rate, approval rate, default rate — is an estimate of a probability.
+- Before you trust a rate, look at its denominator: 2 of 20 is a hint; 91 of 7 099 is evidence.
+
+> ⚠️ **Watch out.** A rate from a handful of cases can be 0 % or 10 % by luck alone. Say the count next to the rate: "1.28 % (91 of 7 099)".
+
+**Your turn.** A new branch had 2 FPDs in its first 20 loans. Which statement is right?
+
+```task
+{"id": "w06d1-l1", "kind": "choice", "options": ["The branch's FPD probability is 10 %", "10 % is a noisy estimate from 20 loans — the share settles only as the count grows; report it as '2 of 20'", "Its FPD probability is 0 %, because most batches of 20 loans have no FPD", "A share from 20 loans and a share from 7 099 loans are equally reliable"], "answer": 1, "explain": "A probability is a long-run share. 20 loans are far too few for the share to settle: the table above shows batches of 100 reading 0 % while the truth is 1.28 %."}
+```
+
+### Events — complement, AND, OR
+
+**What it is.** An **event** (*случайное событие*) is something that happens or does not happen for one case: D = "this loan's first instalment is 30+ days late" (an FPD), A = "this loan came through the app". From events you build new ones:
+
+| Event | In words | Notation | Probability |
+|---|---|---|---|
+| **complement** (*противоположное событие*) | not D | D̄ | 1 − P(D) |
+| **intersection** (*произведение событий*) | A and D | A ∩ D | count the cases that are both |
+| **union** (*сумма событий*) | A or D, or both | A ∪ D | P(A) + P(D) − P(A ∩ D) |
+
+**How to write it.** The 7 099 loans in FPD scope: 2 411 app loans, 91 FPDs, 41 loans that are both.
+
+```text
+             FPD     no FPD     total
+app           41      2 370     2 411
+not app       50      4 638     4 688
+total         91      7 008     7 099
+```
+
+```python
+n, app, fpd, both = 7099, 2411, 91, 41
+print(round(1 - fpd / n, 4))  # not D:   0.9872
+print(round(both / n, 4))     # A and D: 0.0058
+# A or D:  0.3467 — the 41 are subtracted once
+print(round((app + fpd - both) / n, 4))
+```
+
+The union is 2 461 loans — 2 411 app loans plus 91 FPDs minus the 41 that were counted twice — so P(A ∪ D) = 34.67 %.
+
+Events that cannot happen together — "app" and "branch" for the same loan — are **mutually exclusive** (*несовместные*). Their intersection is empty, and their probabilities simply add.
+
+**When you use it.**
+- "What share is *not* …" → complement. "… *and* …" → intersection. "… *or* …" → union.
+
+> ⚠️ **Watch out.** P(A or D) is P(A) + P(D) only when A and D cannot overlap. 33.96 % + 1.28 % counts the 41 app FPDs twice; subtract P(A ∩ D).
+
+**Your turn.** Branch loans: 3 263 of the 7 099, and 34 of them are FPDs. What is P(branch ∪ FPD), in %, to 2 decimals?
+
+```task
+{"id": "w06d1-l2", "kind": "number", "answer": 46.77, "dp": 2, "unit": "%", "hint": "P(branch) + P(FPD) − P(branch ∩ FPD): (3 263 + 91 − 34) / 7 099.", "model": "(3 263 + 91 − 34) / 7 099 = 3 320 / 7 099 = 46.77 %. The 34 branch FPDs are in both counts, so they are subtracted once."}
+```
+
+### Conditional probability — "among those who…"
+
+**What it is.** A **conditional probability** (*условная вероятность*) **P(D | A)** is the chance of D **among the cases where A happened**. Read the bar as "given". The condition shrinks the denominator: from all 7 099 loans to the 2 411 app loans.
+
+**How to write it.** P(D | A) = P(A ∩ D) / P(A) = (count of both) / (count of A).
+
+```python
+# P(FPD | app) = 41 / 2 411 = 0.0170 — how risky is an app loan?
+print(round(both / app, 4))
+# P(app | FPD) = 41 / 91    = 0.4505 — where do our FPDs come from?
+print(round(both / fpd, 4))
+```
+
+Same 41 loans, two denominators: 1.70 % of app loans have an FPD, and 45.1 % of all FPDs came through the app.
+
+**When you use it.**
+
+| | P(FPD given app) | P(app given FPD) |
+|---|---|---|
+| Denominator | 2 411 app loans | 91 FPDs |
+| Value | 1.70 % | 45.1 % |
+| Answers | how risky is an app loan? | where do our defaults come from? |
+| In SQL | `WHERE channel = 'app'`, then the share of FPD | `WHERE fpd30 = 1`, then the share of app |
+
+> ⚠️ **Watch out.** P(D | A) and P(A | D) share a numerator (the 41 loans) and nothing else. Before you say a percentage out loud, say its denominator: "of app loans…" (2 411) or "of FPDs…" (91).
+
+**Your turn.** What is P(FPD | branch), in %, to 2 decimals? (34 FPDs among 3 263 branch loans.)
+
+```task
+{"id": "w06d1-l3", "kind": "number", "answer": 1.04, "dp": 2, "unit": "%", "hint": "Divide by the condition: the branch loans.", "model": "34 / 3 263 = 1.04 % — the FPD rate of a branch loan. 34 / 91 = 37.4 % would be P(branch | FPD), a different question."}
+```
+
+### Independence
+
+**What it is.** Two events are **independent** (*независимые события*) when knowing one does not change the chance of the other: **P(D | A) = P(D)**. The same thing written another way: **P(A ∩ D) = P(A) · P(D)**.
+
+**How to write it.** Compare the conditional rate with the overall rate, or the observed "both" share with the product.
+
+```python
+p_app, p_fpd = app / n, fpd / n
+# P(D | A) = 0.0170   vs  P(D) = 0.0128
+print(round(both / app, 4), round(p_fpd, 4))
+# P(A ∩ D) = 0.00578 vs  P(A)·P(D) = 0.00435
+print(round(both / n, 5), round(p_app * p_fpd, 5))
+```
+
+If channel did not matter, 0.435 % of the 7 099 loans — about 31 — would be app FPDs; there are 41. In this sample, channel and FPD are **not** independent.
+
+**When you use it.**
+- You may multiply probabilities ("both borrowers default = p × p") only for independent events.
+- The binomial model below assumes it: one borrower's default does not change another's.
+
+> ⚠️ **Watch out.** "Not independent in the sample" is not yet "not independent in reality": 10 extra loans can be luck, and Wednesday's test measures that. Also, independent is not mutually exclusive. Exclusive events are strongly dependent: if one happens, the other cannot.
+
+**Your turn.** Partner loans: P(FPD | partner) = 16 / 1 425 = 1.12 %, and P(FPD) = 1.28 %. What do you conclude?
+
+```task
+{"id": "w06d1-l4", "kind": "choice", "options": ["Partner and FPD are exactly independent", "Close to independent: 1.12 % against 1.28 %, a gap of about 2 loans (16 seen, 18.3 expected) — much smaller than the app's gap", "Strongly dependent: partner loans never default", "They are mutually exclusive"], "answer": 1, "explain": "Under independence 1 425 × 91 / 7 099 = 18.3 partner loans would be FPDs; 16 are. Close, not exact — and real data are never exactly independent."}
+```
+
+### The law of total probability — a rate as a weighted average
+
+**What it is.** The **law of total probability** (*формула полной вероятности*) rebuilds an overall rate from groups that cover every case exactly once: **P(D) = Σ P(D | group) · P(group)**. The book's rate is a **weighted average** of the group rates; each group's weight is its share.
+
+**How to write it.**
+
+```python
+# P(FPD | channel)
+rate  = {"app": 41 / 2411,   "branch": 34 / 3263,   "partner": 16 / 1425}
+# P(channel)
+share = {"app": 2411 / 7099, "branch": 3263 / 7099, "partner": 1425 / 7099}
+# 0.0128 — the book rate
+print(round(sum(rate[c] * share[c] for c in rate), 4))
+```
+
+| channel | share P(channel) | FPD rate | share × rate |
+|---|---|---|---|
+| app | 0.3396 | 1.70 % | 0.58 % |
+| branch | 0.4596 | 1.04 % | 0.48 % |
+| partner | 0.2007 | 1.12 % | 0.23 % |
+| **book** | 1 | | **1.28 %** |
+
+The book's 1.28 % is three pieces, one per channel: 0.58 + 0.48 + 0.23 points.
+
+**When you use it.**
+- A new mix: next month's rate is Σ (new share × channel rate).
+- The denominator of Bayes' rule (next subsection) is this law.
+
+> ⚠️ **Watch out.** The groups must not overlap and must cover everyone. Channels do; "app" and "grade C" do not — an app loan of grade C would be counted twice.
+
+**Your turn.** Next month is planned as 50 % app and 50 % branch loans. What FPD rate should you expect, in %, to 2 decimals?
+
+```task
+{"id": "w06d1-l5", "kind": "number", "answer": 1.37, "dp": 2, "unit": "%", "hint": "0.5 × P(FPD | app) + 0.5 × P(FPD | branch).", "model": "0.5 × 1.70 % + 0.5 × 1.04 % = 1.37 % — the new weights move the book rate up from 1.28 %."}
+```
+
+### Bayes and the base-rate trap
+
+
+**What it is.** **Bayes' rule** (*формула Байеса*) turns a conditional round: from P(flag | fraud) — how often a fraudster is flagged — to **P(fraud | flag)** — how often a flag is a fraudster. The answer depends heavily on the **base rate** (*базовая частота*): how common fraud is before any flag.
+
+```pic
+{"id": "w06d1-pic1", "title": "Of 553 flags, only 56 are fraudsters", "caption": "Of 10 000 applicants, the rule flags 56 of the 62 fraudsters (red) and 497 honest people (blue). Fraud is rare, so the honest flags outnumber the true ones about nine to one.", "chart": {"type": "bars", "labels": ["fraud", "honest"], "values": [56, 497], "tone": ["d", "e"], "show": true, "note": "y: flagged applicants, of 10 000"}}
+```
+
+**How to write it.** In words: the flagged fraudsters divided by everyone flagged.
+
+```text
+P(fraud | flag) =
+  P(flag | fraud) · P(fraud)
+  / [ P(flag | fraud) · P(fraud)
+    + P(flag | honest) · P(honest) ]
+```
+
+The easy way is **natural frequencies**: imagine 10 000 applicants. A vendor's rule catches 90 % of fraudsters (the **sensitivity**) and flags 5 % of honest applicants (the **false-positive rate**). Our base rate for first-payment fraud — a loan that never paid a single soum of its first instalment — is 44 of 7 099 = 0.62 %.
+
+```python
+N, prior, sens, fpr = 10_000, 44 / 7099, 0.90, 0.05
+fraud  = N * prior            # fraudsters among 10 000 applicants
+honest = N - fraud            # honest applicants
+tp = sens * fraud             # fraudsters flagged
+fp = fpr * honest             # honest applicants flagged
+print(round(fraud), round(tp), round(honest), round(fp))   # 62 56 9938 497
+# 0.101 = P(fraud | flag)
+print(round(tp / (tp + fp), 3))
+```
+
+| of 10 000 applicants | flagged | not flagged | total |
+|---|---|---|---|
+| fraudsters | **56** | 6 | 62 |
+| honest | **497** | 9 441 | 9 938 |
+| total | **553** | 9 447 | 10 000 |
+
+553 flags, and 56 of them are fraudsters: P(fraud | flag) = 56 / 553 = **10.1 %** — nine flags in ten are honest people. The rule is accurate; fraud is rare; that is the **base-rate trap**.
+
+
+**When you use it.**
+- Any screening rule, scorecard cut-off or alert: "when it fires, how often is it right?"
+- Always together with the base rate. A 5 % false-positive rate is small only next to a big base rate.
+
+> 💡 **Key idea.** How often a flag is right depends on how common the thing is. Turn every Bayes question into natural frequencies — "of 10 000 applicants…" — and the answer counts itself.
+
+**Your turn.** Fill in Bayes' rule by tapping the pieces into place.
+
+```game
+{"type": "cloze", "id": "w06d1-g1", "title": "Bayes' rule, piece by piece", "text": "P(fraud | flag) = {{0}} · {{1}} / ( P(flag | fraud) · P(fraud) + {{2}} · {{3}} )", "blanks": [["P(flag | fraud)", "P(fraud)"], ["P(fraud)", "P(flag | fraud)"], ["P(flag | honest)", "P(honest)"], ["P(honest)", "P(flag | honest)"]], "distractors": ["P(fraud | flag)", "P(honest | flag)"], "why": "Numerator: the flagged fraudsters. Denominator: everyone flagged — fraudsters plus honest people caught by the false-positive rate."}
+```
+
+### Random variables, expected value and variance
+
+**What it is.** A **random variable** (*случайная величина*) is a number that depends on chance: the loss on one loan, the number of FPDs next month. A **discrete** one (*дискретная*) takes values from a list, each with a probability; a **continuous** one (*непрерывная*) takes any value in a range. Three numbers describe it:
+- the **expected value** (*математическое ожидание*) E[X] = Σ x · P(X = x) — the long-run average;
+- the **variance** (*дисперсия*) Var(X) = Σ (x − E[X])² · P(X = x) — the average squared distance from E[X];
+- the **standard deviation** (*стандартное отклонение*) sd = √Var — the spread in the variable's own units.
+
+**How to write it.** One Consumer loan: 27 m soum lent, PD = 77 / 2 418 = 3.18 % (Consumer loans now in 90+), and 60 % of the money is lost if it defaults.
+
+| loss L | P(L) |
+|---|---|
+| 0 | 0.9682 |
+| 16.2 m soum (0.6 × 27 m) | 0.0318 |
+
+```python
+# the possible losses, soum
+values = [0, 0.6 * 27_000_000]
+# their probabilities (sum = 1)
+probs  = [1 - 77 / 2418, 77 / 2418]
+E   = sum(x * q for x, q in zip(values, probs))             # expected value
+Var = sum((x - E) ** 2 * q for x, q in zip(values, probs))  # variance
+print(round(E), round(math.sqrt(Var)))                      # 515881 2844492
+```
+
+The expected loss is 0.52 m soum and the sd is 2.84 m — the spread is five times the mean, so one loan is a lottery ticket.
+
+Four rules you will use all week: E[aX + b] = a·E[X] + b; Var(aX + b) = a²·Var(X); expectations of a sum always add; variances add when the variables are independent. For 400 independent Consumer loans: E = 400 × 0.52 m = 206.4 m, sd = √400 × 2.84 m = 56.9 m.
+
+**When you use it.**
+- Expected loss, expected revenue, the expected number of defaults: E.
+- How far the result can swing around E: the sd.
+
+> 💡 **Key idea.** Expectations add always; variances add when the loans are independent. So the total grows like n and its spread like √n — the arithmetic behind "many small loans" and behind every standard error tomorrow.
+
+**Your turn.** A loan loses 0 with probability 0.97 and 10 m soum with probability 0.03. What is E[L], in m soum?
+
+```task
+{"id": "w06d1-l6", "kind": "number", "answer": 0.3, "dp": 2, "unit": "m soum", "hint": "Σ value × probability: 0 × 0.97 + 10 × 0.03.", "model": "E[L] = 0 × 0.97 + 10 m × 0.03 = 0.3 m soum. No single loan ever loses 0.3 m — it loses 0 or 10 m; 0.3 m is the long-run average per loan."}
+```
+
+### Bernoulli and binomial — defaults in a batch
+
+
+**What it is.** A **Bernoulli** variable (*распределение Бернулли*) is one yes/no trial: 1 with probability p, 0 otherwise; E = p, Var = p(1 − p). The **binomial** (*биномиальное распределение*) **X ~ Bin(n, p)** counts the yeses in n **independent** Bernoulli trials with the same p — the FPDs among 400 loans.
+
+```pic
+{"id": "w06d1-pic2", "title": "FPDs in a batch of 400 loans: about 5, rarely 10", "caption": "The exact Bin(400, 1.28 %) probabilities: the bars pile up around the mean of 5.13 FPDs. The dark bar is the tail, **10 or more** FPDs: 3.57 % of months.", "chart": {"type": "bars", "labels": ["0–1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"], "values": [3.55, 7.72, 13.3, 17.14, 17.63, 15.07, 11.01, 7.03, 3.97, 3.57], "hl": [9], "marks": [{"at": 4.13, "label": "mean 5.13"}], "note": "x: FPDs among 400 loans · y: probability"}}
+```
+
+**How to write it.** P(X = k) = C(n, k) · p^k · (1 − p)^(n − k): the number of orders C(n, k) times the probability of one order. E[X] = n·p, Var(X) = n·p·(1 − p). The helpers `pmf`, `cdf`, `at_least` are in the first box.
+
+```python
+n, p = 400, 91 / 7099
+# 5.13 2.25 — mean and sd
+print(round(n * p, 2), round(math.sqrt(n * p * (1 - p)), 2))
+# P(X = 5)   = 0.1763   Excel: =BINOM.DIST(5, 400, 91/7099, FALSE)
+print(round(pmf(5, n, p), 4))
+# P(X <= 4)  = 0.4172   Excel: =BINOM.DIST(4, 400, 91/7099, TRUE)
+print(round(cdf(4, n, p), 4))
+# P(X >= 10) = 0.0357   Excel: =1 - BINOM.DIST(9, 400, 91/7099, TRUE)
+print(round(at_least(10, n, p), 4))
+# 9: the 95th percentile   Excel: =BINOM.INV(400, 91/7099, 0.95)
+print(min(k for k in range(n + 1) if cdf(k, n, p) >= 0.95))
+# the same in scipy (the notebook): X = scipy.stats.binom(400, p); X.mean(),
+# X.std(), X.pmf(5), X.cdf(4), X.sf(9), X.ppf(0.95)
+```
+
+| FPDs k in 400 loans | 0 | 2 | 4 | 5 | 6 | 8 | 10 | 12 |
+|---|---|---|---|---|---|---|---|---|
+| P(X = k) | 0.006 | 0.077 | 0.171 | 0.176 | 0.151 | 0.070 | 0.020 | 0.004 |
+
+Expect 5.13 FPDs, give or take 2.25; ten or more happens in 3.57 % of months.
+
+**When you use it.**
+- A fixed number n of yes/no cases with the same p, independent of each other: FPDs among next month's loans, approvals among 50 decided applications.
+- "How many is unusual?" — the tail, P(X ≥ k).
+
+> ⚠️ **Watch out.** "10 or more" is P(X ≥ 10) = 1 − P(X ≤ 9) = `sf(9)` in scipy, not `sf(10)`. The off-by-one is the trap of the day, in Excel too (`1 - BINOM.DIST(9, …, TRUE)`). And the model assumes independence: in a recession defaults move together and the binomial *understates* the tail (the Stretch measures how much).
+
+**Your turn.**
+
+```game
+{"id": "w06d1-g5", "type": "bug", "title": "The alarm that rings one late", "q": "Nilufar wants P(10 or more FPDs) in 400 loans. One line answers a different question.", "code": "n, p = 400, 91 / 7099\n# P(10 or more FPDs)\ntail = 1 - cdf(10, n, p)\nprint(round(tail, 4))", "answer": [2], "why": "1 − cdf(10) is 1 − P(X ≤ 10) = P(X ≥ 11). '10 or more' is 1 − cdf(9, n, p), which is at_least(10, n, p) = 0.0357."}
+```
+
+### Poisson — applications per hour
+
+**What it is.** The **Poisson** distribution (*распределение Пуассона*) counts events in a fixed window — an hour, a day — when they arrive independently at a constant average rate **λ**. It has one parameter, and **mean = variance = λ**. There is no fixed n: an hour can hold 0, 1, 2 … applications.
+
+**How to write it.** P(X = k) = e^(−λ) · λ^k / k!. Nur's 2026 applications (1 Jan – 30 Sep, clock hours 08:00–20:59, empty hours counted): 5 102 applications in 3 549 hours.
+
+```python
+lam, hours = 5102 / 3549, 3549  # λ = 1.44 applications per hour
+def pois(k, lam):               # P(X = k) for X ~ Poisson(lam)
+    return math.exp(-lam) * lam**k / math.factorial(k)
+# hours the model expects with 0, 1, … 6 applications
+print([round(hours * pois(k, lam), 1) for k in range(7)])
+# 0.2375: an empty hour   Excel: =POISSON.DIST(0, 1.4376, FALSE)
+print(round(pois(0, lam), 4))
+# 0.0158: 5 or more       Excel: =1 - POISSON.DIST(4, 1.4376, TRUE)
+print(round(1 - sum(pois(k, lam) for k in range(5)), 4))
+```
+
+| applications in the hour | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7+ |
+|---|---|---|---|---|---|---|---|---|
+| hours observed | 850 | 1 204 | 863 | 420 | 163 | 38 | 8 | 3 |
+| Poisson(1.44) expects | 842.9 | 1 211.7 | 871.0 | 417.4 | 150.0 | 43.1 | 10.3 | 2.6 |
+
+The model expects 842.9 empty hours and 850 were observed; the data's mean and variance are both 1.44 — the Poisson fingerprint.
+
+**When you use it.**
+- Staffing: how many officers the 18:00 peak needs.
+- Alerting: an hour with 8 applications (P ≈ 0.01 %) is a bot or a campaign.
+- A shortcut for the binomial when n is large and p small: Poisson(5.13) gives P(X ≥ 10) = 3.67 % against the exact 3.57 %.
+
+| | Binomial | Poisson |
+|---|---|---|
+| Counts | yeses in n trials | events in a window |
+| Upper limit | n | none |
+| Parameters | n, p | λ |
+| Mean, variance | n·p, n·p·(1 − p) | λ, λ |
+
+> ⚠️ **Watch out.** Check that the mean is close to the variance before you use Poisson. When events come in bursts (a marketing SMS, a holiday), the variance is far bigger and the Poisson understates the busy hours.
+
+**Your turn.** With λ = 1.4376, what share of hours should have exactly 3 applications, in %, to 1 decimal?
+
+```task
+{"id": "w06d1-l7", "kind": "number", "answer": 11.8, "dp": 1, "unit": "%", "hint": "e^(−λ) · λ³ / 3!  — or pois(3, lam) in the box above.", "model": "e^(−1.4376) × 1.4376³ / 6 = 0.1176 → 11.8 % of hours; × 3 549 hours = 417.4, against 420 observed."}
+```
+
+### Exponential — minutes between applications
+
+**What it is.** If arrivals are Poisson, the **gaps** between them follow the **exponential** distribution (*показательное распределение*). It is continuous — a gap can be 12.4 minutes — and has one parameter, the mean gap. Its odd property is **memorylessness** (*отсутствие последействия*): after 30 quiet minutes, the wait for the next application is still 39 minutes on average.
+
+**How to write it.** P(gap > t) = e^(−t / mean gap).
+
+```python
+# minutes, the 4 829 gaps within 2026 working days
+mean_gap = 39.34
+# 0.2176: P(gap > 60 min); observed 0.2172   Excel: =1 - EXPON.DIST(60, 1/39.34,
+# TRUE)
+print(round(math.exp(-60 / mean_gap), 4))
+# 0.4665: P(gap > 30 min); observed 0.4587
+print(round(math.exp(-30 / mean_gap), 4))
+```
+
+The model says 21.8 % of gaps last more than an hour; the data say 21.7 %.
+
+**When you use it.**
+- Waiting times between independent arrivals: the next application, the next call to the call centre.
+
+> ⚠️ **Watch out.** Memorylessness fits arrivals from many independent people. It does not fit things on a schedule: payments cluster at the due date, so the time to the next payment is not exponential.
+
+**Your turn.** What share of gaps does the model put above 90 minutes, in %, to 1 decimal?
+
+```task
+{"id": "w06d1-l8", "kind": "number", "answer": 10.1, "dp": 1, "unit": "%", "hint": "e^(−90 / 39.34).", "model": "e^(−90 / 39.34) = 0.1015 → 10.1 %; the data show 10.5 %."}
+```
+
+### Uniform — every value equally likely
+
+**What it is.** The **uniform** distribution (*равномерное распределение*) gives every value in a range the same chance. **Discrete** uniform: a die, a loan id drawn at random from 1 to 7 828. **Continuous** uniform **U(a, b)**: every point between a and b is equally likely, and the density is a flat line at 1 / (b − a).
+
+**How to write it.** For U(a, b): P(between c and d) = (d − c) / (b − a); mean = (a + b) / 2; sd = (b − a) / √12. The minute past the hour at which an application arrives should be U(0, 60):
+
+```python
+a, b = 0, 60
+# 30.0 17.32 — the model's mean and sd
+print((a + b) / 2, round((b - a) / math.sqrt(12), 2))
+# minute past the hour, 14 000 applications
+mins = pd.to_datetime(apps["applied_at"]).dt.minute
+# 28.9 17.2 — the data's mean and sd
+print(round(mins.mean(), 1), round(mins.std(), 1))
+# 0.255 — the model says 15 / 60 = 0.25
+print(round((mins < 15).mean(), 3))
+# [2375, 2385, 2491, 2342, 2210, 2197]
+print(mins.floordiv(10).value_counts().sort_index().tolist())
+```
+
+| minutes past the hour | 0–9 | 10–19 | 20–29 | 30–39 | 40–49 | 50–59 |
+|---|---|---|---|---|---|---|
+| applications | 2 375 | 2 385 | 2 491 | 2 342 | 2 210 | 2 197 |
+
+Each 10-minute block holds between 2 197 and 2 491 applications; a perfectly flat line would be 2 333 each.
+
+**When you use it.**
+- Drawing a fair random sample, where every loan is equally likely — tomorrow starts here.
+- A "know only the range" model.
+- `random.random()` is U(0, 1): the first subsection used it to decide which loans default.
+
+**Your turn.** What share of applications does U(0, 60) put in the last 10 minutes of an hour, in %, to 1 decimal?
+
+```task
+{"id": "w06d1-l9", "kind": "number", "answer": 16.7, "dp": 1, "unit": "%", "hint": "(d − c) / (b − a) = (60 − 50) / 60.", "model": "10 / 60 = 16.7 %. The data show 2 197 / 14 000 = 15.7 % — slightly fewer applications at the end of the hour."}
+```
+
+### Normal — credit scores
+
+**What it is.** The **normal** distribution (*нормальное распределение*) **N(μ, σ)** is the symmetric bell. The mean μ places its centre; the standard deviation σ sets its width. **Standardising** (*стандартизация*) **z = (x − μ) / σ** says how many sds a value sits from the mean, and puts every normal on one scale, N(0, 1).
+
+**How to write it.** `NormalDist(mu, sd).cdf(x)` = P(X ≤ x). Nur's 13 612 scored applicants (388 have no score — `dropna` and say so):
+
+```python
+mu, sd = s.mean(), s.std()
+model = NormalDist(mu, sd)
+# 13612 659.6 59.5
+print(len(s), round(mu, 1), round(sd, 1))
+# -1.0: a score of 600 is one sd below the mean
+print(round((600 - mu) / sd, 2))
+# 0.1583 model, 0.1583 data   Excel: =NORM.DIST(600, 659.6, 59.5, TRUE)
+print(round(model.cdf(600), 4), round((s < 600).mean(), 4))
+
+fig, ax = plt.subplots(1, 2, figsize=(10, 3.6))
+ax[0].hist(s, bins=40, density=True, color="#9bb7d4")  # the bars
+grid = np.linspace(s.min(), s.max(), 200)
+# the bell over the bars
+ax[0].plot(grid, [model.pdf(v) for v in grid], color="#c0392b")
+ax[0].set_title("Applicants' credit score + the normal curve")
+# QQ plot: data quantiles vs normal quantiles
+q = np.sort(s.sample(2000, random_state=2026).to_numpy())
+theory = [model.inv_cdf((i + 0.5) / len(q)) for i in range(len(q))]
+ax[1].scatter(theory, q, s=4); ax[1].plot(theory, theory, color="#c0392b")
+ax[1].set_title("QQ plot (2 000 applicants): on the line = normal")
+plt.tight_layout(); plt.show()
+# scipy (the notebook): scipy.stats.norm.cdf(600, 659.6, 59.5),
+# scipy.stats.probplot(s, dist="norm", plot=plt)
+```
+
+μ = 659.6, σ = 59.5; the model puts 15.83 % of applicants below 600, and the data say 15.83 %.
+
+The **QQ plot** (*квантиль-квантильный график*) puts the data's quantiles against the normal's: points on the line mean normal; an S shape means heavy or light tails; a bend at one end means skew. Applicants' scores lie on the line.
+
+**When you use it.**
+- Measurements that pile up symmetrically around a centre: scores, and tomorrow the averages of samples.
+- To turn a value into "how unusual is it?": its z.
+
+> ⚠️ **Watch out.** Check *which* population you fitted. Approved loans' scores are not normal: 7 615 scored loans, μ = 680.8, σ = 52.6, and the left tail is cut — the model says 6.2 % below 600, the data 4.3 %, because the approval rule removed most of them. A **selected** sample is not the population it came from. Check every normal with two pictures — the bell over the histogram and the QQ plot — not one number.
+
+**Your turn.** What is the z-score of a score of 720 (μ = 659.6, σ = 59.5)? Two decimals.
+
+```task
+{"id": "w06d1-l10", "kind": "number", "answer": 1.02, "dp": 2, "unit": "sd", "hint": "z = (x − μ) / σ.", "model": "(720 − 659.6) / 59.5 = 1.02: a score of 720 sits about one sd above the average applicant."}
+```
+
+### The 68-95-99.7 rule — one, two, three sds
+
+
+**What it is.** For any normal, about **68 %** of values lie within ±1 sd of the mean, **95 %** within ±2 sd (±1.96 sd exactly), and **99.7 %** within ±3 sd. It is the quickest check of "is this value unusual?".
+
+```pic
+{"id": "w06d1-pic3", "title": "Two thirds of applicants within one sd, 95 % within two", "caption": "Applicants' credit scores in bands of one sd around the mean 659.6 (σ = 59.5). The two teal bars hold **68.0 %** of the 13 612 scored applicants; add the two amber bars and it is **95.4 %**.", "chart": {"type": "bars", "labels": ["<−2", "−2…−1", "−1…0", "0…1", "1…2", ">2"], "values": [2.4, 13.85, 33.41, 34.54, 13.63, 2.17], "tone": [null, "b", "a", "a", "b", null], "marks": [{"at": 2.5, "label": "mean 659.6"}], "note": "x: sds from the mean · y: share of applicants"}}
+```
+
+**How to write it.** The rule comes from N(0, 1); the box checks it on the applicants' scores (`mu`, `sd` from the box above).
+
+```python
+for k in (1, 2, 3):
+    # share of N(0, 1) within ±k
+    rule = NormalDist().cdf(k) - NormalDist().cdf(-k)
+    # share of applicants within ±k sd
+    data = ((s - mu).abs() <= k * sd).mean()
+    print(k, round(rule, 3), round(data, 3), round(mu - k * sd), round(mu + k * sd))
+# 1.96   Excel: =NORM.S.INV(0.975)
+print(round(NormalDist().inv_cdf(0.975), 2))
+```
+
+| within | the rule | applicants' scores | score range |
+|---|---|---|---|
+| ±1 sd | 68.3 % | 68.0 % | 600 – 719 |
+| ±2 sd | 95.4 % | 95.4 % | 541 – 779 |
+| ±3 sd | 99.7 % | 99.8 % | 481 – 838 |
+
+95.4 % of applicants score between 541 and 779 — the rule, almost to the decimal.
+
+**When you use it.**
+- "Is a score of 800 unusual?" — (800 − 659.6) / 59.5 = 2.36 sd: outside the ±2 sd band, about 1 applicant in 110 scores higher.
+- A quick range: mean ± 2 sd holds about 95 % of a normal column.
+
+> ⚠️ **Watch out.** The rule needs a roughly normal shape. Loan principal has mean 51.7 m and sd 112.6 m, so "mean − 1 sd" is negative — no loan is. Check the shape first (Skew, below).
+
+**Your turn.** Between which two scores does the normal model put the middle 95 % of applicants?
+
+```task
+{"id": "w06d1-l11", "kind": "choice", "options": ["Between 600 and 719", "Between 541 and 779 — the mean ± 2 sd", "Between 481 and 838", "Between 560 and 760"], "answer": 1, "explain": "The middle 95 % of a normal is mean ± 2 sd (± 1.96 sd exactly: 543 to 776). 600–719 is ±1 sd (68 %); 481–838 is ±3 sd (99.7 %)."}
+```
+
+### Mean, median and mode — the centre of data
+
+
+**What it is.** Three ways to say "a typical value" of a data column:
+- the **mean** (*среднее арифметическое*) — the sum divided by the count;
+- the **median** (*медиана*) — the middle value after sorting: half the values are below it, half above;
+- the **mode** (*мода*) — the most frequent value.
+
+**How to write it.** Five loans, principal in m soum: 2, 4, 5, 6, 33. The mean is 50 / 5 = 10. The median is 5, the third of five. One big loan pulls the mean to 10; the median stays at 5.
+
+```python
+x = [2, 4, 5, 6, 33]
+print(st.mean(x), st.median(x))  # 10 5
+# all 7 828 loans, soum
+prin = loans["principal"]
+# 51.71 5.79 (m soum)
+print(round(prin.mean() / 1e6, 2), round(prin.median() / 1e6, 2))
+# [6] 2483
+print(loans["term_months"].mode().tolist(), (loans["term_months"] == 6).sum())
+```
+
+The average loan is 51.71 m soum, but half of all loans are below 5.79 m: a few large Auto and SME loans pull the mean up. The most common term is 6 months (2 483 loans).
+
+**When you use it.**
+
+| | mean | median | mode |
+|---|---|---|---|
+| Answers | the total ÷ the count | the typical case | the most common value |
+| A few huge values | pull it | do not move it | do not move it |
+| Good for | totals and budgets, symmetric data | money, incomes, days late | categories, terms, counts |
+
+> ⚠️ **Watch out.** The mode of a continuous column is noise: the most common principal, 4 880 000 soum, belongs to only 17 loans. Use the mode for categories and whole-number columns.
+
+**Your turn.** The median principal of Consumer loans (`product_id` 2), in soum.
+
+```task
+{"id": "w06d1-l12", "kind": "python", "starter": "cons = loans.loc[loans[\"product_id\"] == 2, \"principal\"]    # Consumer loans\n# print the median principal, in soum\n", "answer": 26965000, "dp": 0, "model": "print(cons.median(), round(cons.mean()))   # 26965000.0 26926915 — inside one product the mean and the median almost agree"}
+```
+
+### Variance and standard deviation of data
+
+**What it is.** The **variance** (*дисперсия*) of a data column is the average squared distance from the mean. The **standard deviation** (*стандартное отклонение*) is its square root, back in the column's units. For a **sample** you divide by n − 1, not n — the **sample variance** (*выборочная дисперсия*). pandas `.std()` and Excel `STDEV.S` do this by default.
+
+**How to write it.** The five loans 2, 4, 5, 6, 33 (mean 10):
+
+| x | x − mean | (x − mean)² |
+|---|---|---|
+| 2 | −8 | 64 |
+| 4 | −6 | 36 |
+| 5 | −5 | 25 |
+| 6 | −4 | 16 |
+| 33 | 23 | 529 |
+| **sum** | 0 | **670** |
+
+Variance = 670 / (5 − 1) = 167.5; sd = √167.5 = 12.94.
+
+```python
+# 167.5 12.94   Excel: =VAR.S(…), =STDEV.S(…)
+print(st.variance(x), round(st.stdev(x), 2))
+# 59.5 points (scores), 112.6 m soum (principal)
+print(round(s.std(), 1), round(prin.std() / 1e6, 1))
+```
+
+Scores swing about 59.5 points around 659.6; principals swing 112.6 m around 51.7 m — more than twice the mean.
+
+**When you use it.**
+- How spread out a column is, in its own units.
+- Comparing the spread of two groups; tomorrow's standard error is sd / √n.
+
+> ⚠️ **Watch out.** NumPy's `np.std(x)` divides by n; pandas `.std()` divides by n − 1. On 7 828 loans the gap is invisible; on the 5 values above it is 11.58 against 12.94. Write `ddof=1` in NumPy when you mean a sample.
+
+**Your turn.** The standard deviation of the loan term, in months (sample, 2 decimals).
+
+```task
+{"id": "w06d1-l13", "kind": "python", "starter": "t = loans[\"term_months\"]\n# print the sample standard deviation of the term, rounded to 2 decimals\n", "answer": 10.18, "dp": 2, "model": "print(round(t.std(), 2), round(t.mean(), 2))   # 10.18 11.78 — terms swing about 10 months around a 12-month average"}
+```
+
+### Percentiles and quartiles — where a value stands
+
+**What it is.** The **p-th percentile** (*перцентиль*, or *квантиль* of level p/100) is the value below which p % of the data lie. The 50th percentile is the median. The 25th and 75th are the **quartiles** (*квартили*) Q1 and Q3. Q3 − Q1 is the **interquartile range**, IQR (*межквартильный размах*) — the width of the middle half.
+
+**How to write it.** `col.quantile(q)` with q between 0 and 1.
+
+```python
+# [2.88, 5.79, 34.71, 187.03] m soum
+print((prin.quantile([0.25, 0.5, 0.75, 0.9]) / 1e6).round(2).tolist())
+# [583.0, 660.0, 736.0]
+print(s.quantile([0.1, 0.5, 0.9]).tolist())
+# 15.8: a score of 600 sits at the 16th percentile
+print(round(100 * (s < 600).mean(), 1))
+```
+
+| principal, m soum | Q1 (25 %) | median (50 %) | Q3 (75 %) | 90 % |
+|---|---|---|---|---|
+| all 7 828 loans | 2.88 | 5.79 | 34.71 | 187.03 |
+
+A quarter of loans are below 2.88 m; the middle half lies between 2.88 m and 34.71 m (IQR 31.8 m); one loan in ten is above 187 m.
+
+**When you use it.**
+- "Where does this customer stand?" — the percentile rank.
+- Cut-offs: the bottom 10 % of scores, the top 1 % of exposures.
+- A spread that ignores outliers: the IQR does not move when the biggest loan doubles; the sd does.
+
+> ⚠️ **Watch out.** pandas' default and Excel's `PERCENTILE.INC` agree; `PERCENTILE.EXC` and other methods give slightly different values on small data. Say which one you used when numbers must match.
+
+**Your turn.** The 25th percentile (Q1) of applicants' credit scores.
+
+```task
+{"id": "w06d1-l14", "kind": "python", "starter": "# s = the 13 612 applicants' scores (first box)\n# print the 25th percentile\n", "answer": 619, "dp": 0, "model": "print(s.quantile(0.25), s.quantile(0.75))   # 619.0 700.0 — the middle half of applicants scores 619 to 700"}
+```
+
+### Skew — when the mean and the median disagree
+
+**What it is.** **Skewness** (*асимметрия*) measures how lopsided a distribution is. **Right skew** (positive): a long tail of large values, so the mean is above the median — money, incomes, days late. **Left skew** (negative): a long tail of small values, mean below the median. Skew near 0: symmetric, mean ≈ median.
+
+**How to write it.** pandas `.skew()`. Above about +1 or below −1 counts as strongly skewed.
+
+```python
+print(round(prin.skew(), 2), round(s.skew(), 2))  # 2.93 -0.04
+# 8.9: the mean principal is almost nine times the median
+print(round(prin.mean() / prin.median(), 1))
+```
+
+| column | mean | median | skew | shape |
+|---|---|---|---|---|
+| principal, m soum | 51.71 | 5.79 | 2.93 | long right tail |
+| credit score | 659.6 | 660 | −0.04 | symmetric |
+
+Principal is strongly right-skewed — many small Micro and BNPL loans, a few huge SME and Auto loans. The score is symmetric, which is why the normal fits it.
+
+**When you use it.**
+- Before you pick a centre: skewed → report the median and percentiles; symmetric → the mean is fine.
+- Before you use the normal or the 68-95-99.7 rule — both need skew near 0.
+- On Day 4: skew is the first reason a t-test can mislead.
+
+> ⚠️ **Watch out.** A mix of groups can create the skew. Inside each product the principal is nearly symmetric (Consumer: mean 26.93 m, median 26.97 m); the whole book is not. When groups differ, describe each group.
+
+**Your turn.** Customers' monthly income: mean 15.25 m soum, median 7.90 m soum. Which shape, and which number is "the typical customer's income"?
+
+```task
+{"id": "w06d1-l15", "kind": "choice", "options": ["Symmetric; either number", "Right-skewed; the median, 7.90 m", "Right-skewed; the mean, 15.25 m", "Left-skewed; the median, 7.90 m"], "answer": 1, "explain": "Mean almost twice the median → a long tail of high incomes (skew 1.32). Half of customers earn less than 7.90 m, so the median is the typical customer; the mean is pulled up by a few high earners."}
+```
+
+### Simulation — when the formula runs out
+
+**What it is.** A **simulation** (*имитационное моделирование*) draws the random world many times with a computer and counts what happened. It answers questions no formula covers — a month that mixes products with different PDs, defaults that move together, a loss with a random LGD.
+
+**How to write it.** Draw, count, compare with a formula where one exists.
+
+```python
+# seeded: the same "random" numbers on every run
+rng = np.random.default_rng(2026)
+# 100 000 simulated months of 400 loans
+months = rng.binomial(400, 91 / 7099, size=100_000)
+# 5.115, 0.0355 — the formula says 5.127, 0.0357
+print(months.mean(), np.mean(months >= 10))
+# [1, 10]: the middle 95 % of months
+print(np.quantile(months, [0.025, 0.975]))
+```
+
+100 000 simulated months average 5.115 FPDs and reach 10 or more 3.55 % of the time — the formula's 5.127 and 3.57 %, within the simulation's noise.
+
+**When you use it.**
+- When the model has parts no textbook distribution covers.
+- To check a formula you are not sure of.
+
+> 💡 **Key idea.** A simulation is a formula you can always write: draw the world many times, count. Seed it so others get your numbers, and test it where a formula exists before you trust it where none does.
+
+**Your turn.** Why `default_rng(2026)` and not `default_rng()`?
+
+```task
+{"id": "w06d1-l16", "kind": "choice", "options": ["To make the simulation run faster", "So that anyone who re-runs the box gets exactly your numbers", "To make the random numbers more random", "Because NumPy refuses to run without one"], "answer": 1, "explain": "An unseeded run gives 3.55 % for you and 3.61 % for the reviewer, and the meeting is about noise. default_rng(2026) fixes the draws."}
+```
+
+### Putting it together
+
+One request, most of today's tools: *"400 Consumer loans next month — how many defaults, and how much money could we lose?"*
+
+```python
+# probability: PD of a Consumer loan, a long-run share
+n, p_c = 400, 77 / 2418
+# random variable: 16.2 m soum lost if one loan defaults
+loss_if_default = 0.6 * 27_000_000
+mean_d = n * p_c                                 # binomial: expected defaults
+# and their sd (independence assumed)
+sd_d = math.sqrt(n * p_c * (1 - p_c))
+# binomial percentiles:
+lo = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.025)
+# the middle 95 % of months
+hi = min(k for k in range(n + 1) if cdf(k, n, p_c) >= 0.975)
+print(round(mean_d, 1), round(sd_d, 2), lo, hi)  # 12.7 3.51 6 20
+# 206.4: expected loss, m soum (expectations add)
+print(round(mean_d * loss_if_default / 1e6, 1))
+# 5.9 19.6: the normal shortcut, ±1.96 sd
+print(round(mean_d - 1.96 * sd_d, 1), round(mean_d + 1.96 * sd_d, 1))
+```
+
+| step | the number | the concept |
+|---|---|---|
+| PD = 77 / 2 418 | 3.18 % | probability as a long-run share; conditional — P(90+ given Consumer) |
+| loss of one loan | 0 or 16.2 m | random variable, Bernoulli |
+| defaults among 400 | expect 12.7, sd 3.51 | binomial, independence |
+| an ordinary month | 6 to 20 defaults | binomial percentiles |
+| expected loss | 206.4 m soum | expected value — expectations add |
+| the quick check | 5.9 to 19.6 | normal, 68-95-99.7 (±1.96 sd) |
+
+Expect about 13 defaults and 206 m soum of loss; a month with 6 to 20 defaults (97 m to 324 m) is ordinary. The normal shortcut lands close to the exact binomial because n·p = 12.7 is large enough for the bell.
+
+**Which distribution?** Four shapes and the uniform, five kinds of question — sort them.
+
+```game
+{"type": "sort", "id": "w06d1-g3", "title": "Which distribution?", "q": "Put each Nur question under the distribution that models it.", "groups": {"Binomial": ["FPDs among next month's 400 loans", "approved applications out of 50 decided"], "Poisson": ["applications arriving in one clock hour", "calls to the call centre in one minute"], "Normal": ["applicants' credit scores", "the z-score of one applicant's score"], "Exponential": ["minutes between two applications", "the wait after 30 quiet minutes"], "Uniform": ["the minute past the hour an application arrives", "a loan id drawn at random for an audit"]}}
+```
+
+**Words of the day.**
+
+```game
+{"type": "match", "id": "w06d1-g2", "title": "Words of the day", "pairs": [["Complement", "not A — its probability is 1 − P(A)"], ["Intersection A ∩ D", "A and D both happen"], ["Conditional probability P(D | A)", "the chance of D among the cases where A happened"], ["Independent events", "knowing A does not change the chance of D"], ["Expectation E[X]", "the long-run average of a random variable"], ["Standard deviation", "the spread, in the variable's own units"], ["Median", "the middle value: half the data below, half above"], ["Right skew", "a long tail of large values — the mean above the median"]]}
+```
+
+### Depth (optional)
+
+**Videos (free, YouTube; each link opens at the right minute):**
+
+- ▶ Conditional probability, "among those who..." — [Conditional Probabilities, Clearly Explained!!! (StatQuest with Josh Starmer), 01:11](https://youtu.be/_IgyaD7vOOA?t=71&end=285)
+- ▶ Bayes and the base-rate trap — [Bayes' Theorem, Clearly Explained!!!! (StatQuest), 05:21](https://youtu.be/9wCnvr7Xw4E?t=321&end=552)
+- ▶ Binomial — [The Binomial Distribution and Test, Clearly Explained!!! (StatQuest)](https://youtu.be/J8jNoF-K8E8)
+- ▶ Poisson — [Poisson Distribution EXPLAINED in UNDER 15 MINUTES! (zedstatistics), 02:15](https://youtu.be/cPOChr_kuQs?t=135&end=188)
+- ▶ Normal distribution — [The Normal Distribution, Clearly Explained!!! (StatQuest)](https://youtu.be/rzFX5NWojp0)
+
+- RU deck (TBC Data Analytics 2.0, if you have it) `5.1 Basics of Probability Theory.pdf`: events and operations pp. 9–17, classical / statistical probability pp. 32–43, conditional probability pp. 52–57, independence pp. 58–63, total probability pp. 64–70, Bayes pp. 71–76, random variables pp. 79–104, expectation pp. 119–127, variance pp. 128–134, skewness / kurtosis / median / quantile pp. 139–150. `5.2 Statistics & Probability Theory.pdf`: Bernoulli formula pp. 5–10, binomial pp. 26–31, Poisson pp. 32–36, exponential pp. 41–44, normal pp. 45–53.
+- Notebooks: `MS1_probability_theory.ipynb` (conditional probability, Monty Hall, total probability and Bayes with three worked examples), `MS4_probability_theory_basics.ipynb` (every distribution of today drawn with `scipy.stats`, plus a call-centre binomial simulation).
+- Visual: Seeing Theory (seeing-theory.brown.edu), chapters 1–3 — Basic Probability, Compound Probability, Probability Distributions.
+- *Russian terms:* случайное событие = event, вероятность = probability, условная вероятность = conditional probability, независимые события = independent events, формула полной вероятности = law of total probability, формула Байеса = Bayes' rule, случайная величина = random variable, математическое ожидание (мат. ожидание) = expectation, дисперсия = variance, стандартное (среднеквадратическое) отклонение = standard deviation, распределение Бернулли / биномиальное / Пуассона / нормальное / показательное = Bernoulli / binomial / Poisson / normal / exponential distribution, функция распределения = cumulative distribution function, плотность = density, квантиль = quantile, ТВиМС = probability theory and mathematical statistics.
+
+**Questions inside the videos.** Open a video from the panel: it stops at these points and asks one question about the bit you just watched.
+
+```videoquiz
+{"video": "_IgyaD7vOOA", "stops": [
+  {"at": 150, "q": "What does the bar in P(A | B) mean?", "options": ["'Given': the chance of A counted only among the cases where B happened", "'Or': A or B happens", "'Divided by': P(A) / P(B)", "'Not': A without B"], "answer": 0, "explain": "The condition shrinks the world to B; the new denominator is B's count — 2 411 app loans, not 7 099."},
+  {"at": 260, "q": "How is a conditional probability computed from a table of counts?", "options": ["Both together, divided by the grand total", "The condition's count divided by the grand total", "Both together, divided by the count of the condition", "Multiply the two shares"], "answer": 2, "explain": "P(D | A) = P(A ∩ D) / P(A): 41 / 2 411 = 1.70 %. Divide by the grand total and you get the intersection, 0.58 %."}]}
+```
+
+```videoquiz
+{"video": "9wCnvr7Xw4E", "stops": [
+  {"at": 400, "q": "Bayes' rule turns which probability round?", "options": ["P(B | A) into P(A | B)", "P(A) into P(not A)", "P(A ∩ B) into P(A ∪ B)", "A mean into a median"], "answer": 0, "explain": "From 'how often is a fraudster flagged' to 'how often is a flag a fraudster' — the question the committee actually asks."},
+  {"at": 520, "q": "What does the denominator of Bayes' rule add up?", "options": ["Only the true cases", "Every way to get the evidence: true cases flagged plus other cases flagged", "The prior twice", "The false positives only"], "answer": 1, "explain": "That is the law of total probability: 56 fraudsters flagged + 497 honest people flagged = 553 flags."}]}
+```
+
+```videoquiz
+{"video": "J8jNoF-K8E8", "stops": [
+  {"at": 150, "q": "What do you need to fix before a binomial probability can be computed?", "options": ["The mean and the standard deviation", "The rate per hour λ", "Only the number of 'yes' answers", "The number of trials n and the probability p of a 'yes' in each"], "answer": 3, "explain": "X ~ Bin(n, p): next month's n = 400 loans, p = 91 / 7 099 per loan."},
+  {"at": 420, "q": "Why does the binomial formula contain C(n, k), 'n choose k'?", "options": ["k 'yes' answers can sit in many different orders, and each order has the same probability", "To make the probabilities add up to n", "To correct for small samples", "It turns counts into percentages"], "answer": 0, "explain": "p^k (1 − p)^(n − k) is one order; C(n, k) counts the orders."}]}
+```
+
+
+```videoquiz
+{"video": "cPOChr_kuQs", "stops": [
+  {"at": 158, "q": "What must be true for counts per window to be Poisson?", "options": ["Events arrive independently at a constant average rate", "Exactly n trials happen", "The counts are normally distributed", "Each window has at least one event"], "answer": 0, "explain": "Applications per clock hour: independent arrivals at λ = 1.44 per hour."},
+  {"at": 182, "q": "The Poisson distribution has one parameter λ. What is it?", "options": ["Its maximum", "Both its mean and its variance", "Its median only", "The number of trials"], "answer": 1, "explain": "Mean = variance = λ — the fingerprint you checked on Nur's 3 549 hours."}]}
+```
+
+```videoquiz
+{"video": "rzFX5NWojp0", "stops": [
+  {"at": 150, "q": "What do the mean and the standard deviation do to a normal curve?", "options": ["The mean places the centre, the sd sets the width", "The mean sets the width, the sd the height", "Both shift it left", "Neither — a normal curve has one shape"], "answer": 0, "explain": "N(659.6, 59.5²): centred at 659.6, about 68 % within ±59.5."},
+  {"at": 400, "q": "About what share of a normal distribution lies within ±2 sd of the mean?", "options": ["About 68 %", "About 50 %", "About 95 %", "About 99.7 %"], "answer": 2, "explain": "68 / 95 / 99.7 % within 1 / 2 / 3 sd — applicants' scores: 68.0 / 95.4 / 99.8 %."}]}
+```
 
 ---
 

@@ -1205,6 +1205,94 @@ html[data-theme="dark"] .xp7-id { color: #efb78d; }
 html[data-theme="dark"] .xp7-ref { color: #98d1f0; }
 html[data-theme="dark"] .xp7-more { color: var(--muted); }
 
+/* ---------- story.css (86 rules) ---------- */
+html[data-theme="dark"] .sy { border-radius: 20px; background: #161c22; border: 1px solid #2c6c5f; }
+html[data-theme="dark"] .sy.al-done { border-color: #327149; }
+html[data-theme="dark"] .sy-icon { border-radius: 12px; background: #1c3c36; color: #a6f2ec; }
+html[data-theme="dark"] .sy-kicker { color: #a6f2ec; }
+html[data-theme="dark"] .sy-title { color: var(--ink); }
+html[data-theme="dark"] .sy-play { border-radius: 999px; border: 2px solid #0f766e; background: #161c22; color: #a6f2ec; }
+html[data-theme="dark"] .sy-play:hover, html[data-theme="dark"] .sy-play.on { background: #0f766e; color: #ffffff; }
+html[data-theme="dark"] .sy-bar-p i { border-radius: 3px; background: #24292f; }
+html[data-theme="dark"] .sy-bar-p i.on { background: #5eead4; }
+html[data-theme="dark"] .sy-bar-p i.now { background: #0f766e; }
+html[data-theme="dark"] .sy-svg .sy-ax { fill: #b5bfcd; }
+html[data-theme="dark"] .sy-svg .sy-lab { fill: #d0d9ee; }
+html[data-theme="dark"] .sy-svg .sy-pl { fill: #a073e6; }
+html[data-theme="dark"] .sy-svg .sy-or { fill: #eea486; }
+html[data-theme="dark"] .sy-svg .sy-am { fill: #f0cb96; }
+html[data-theme="dark"] .sy-svg .sy-tg { fill: #a6f2ec; }
+html[data-theme="dark"] .sy-svg .sy-big { fill: #f0cb96; }
+html[data-theme="dark"] .sy-dot, html[data-theme="dark"] .sy-ball { stroke: transparent; }
+html[data-theme="dark"] .sy-f-o { fill: #ea9e69; }
+html[data-theme="dark"] .sy-f-g { fill: #86efac; }
+html[data-theme="dark"] .sy-f-b { fill: #5bbce8; }
+html[data-theme="dark"] .sy-f-p { fill: #a78bfa; }
+html[data-theme="dark"] .sy-f-y { fill: #ead069; }
+html[data-theme="dark"] .sy-f-m { fill: #cbd5e1; }
+html[data-theme="dark"] .sy-r-b { stroke: #88cbee; }
+html[data-theme="dark"] .sy-r-m { stroke: #a5afbe; }
+html[data-theme="dark"] .sy-r-o { stroke: #eea486; }
+html[data-theme="dark"] .sy-box { fill: none; stroke: #a6f2ec; }
+html[data-theme="dark"] .sy-jar { fill: #f8fafc; stroke: #94a3b8; }
+html[data-theme="dark"] .sy-picked { stroke: #d0d9ee; }
+html[data-theme="dark"] .sy-axl, html[data-theme="dark"] .sy-tick { stroke: #94a3b8; }
+html[data-theme="dark"] .sy-target { stroke: #a6f2ec; }
+html[data-theme="dark"] .sy-run { fill: none; stroke: #ea9e69; }
+html[data-theme="dark"] .sy-bar { fill: #7dd3fc; }
+html[data-theme="dark"] .sy-bar.sy-hot { fill: #ea9e69; }
+html[data-theme="dark"] .sy-ex { fill: none; stroke: #a073e6; }
+html[data-theme="dark"] .sy-mean { stroke: #a073e6; }
+html[data-theme="dark"] .sy-alarm { stroke: #eea486; }
+html[data-theme="dark"] .sy-plank { stroke: #b5bfcd; }
+html[data-theme="dark"] .sy-fulcrum { fill: #915fe8; }
+html[data-theme="dark"] .sy-medmark { fill: #ebcf76; }
+html[data-theme="dark"] .sy-band { fill: #ede9fe; }
+html[data-theme="dark"] .sy-dist { stroke: #a78bfa; }
+html[data-theme="dark"] .sy-handle { stroke: #f0ab95; }
+html[data-theme="dark"] .sy-curve { fill: none; stroke: #a073e6; }
+html[data-theme="dark"] .sy-area { fill: #ede9fe; }
+html[data-theme="dark"] .sy-area-y { fill: #fef08a; }
+html[data-theme="dark"] .sy-pp { fill: #5bbce8; }
+html[data-theme="dark"] .sy-info { color: var(--body); }
+html[data-theme="dark"] .sy-lg i { border-radius: 50%; background: #2e333a; }
+html[data-theme="dark"] .sy-lg i.sy-f-o { background: #f97316; }
+html[data-theme="dark"] .sy-lg i.sy-f-g { background: #2d593d; }
+html[data-theme="dark"] .sy-lg i.sy-f-b { background: #38bdf8; }
+html[data-theme="dark"] .sy-lg i.sy-f-y { background: #facc15; }
+html[data-theme="dark"] .sy-lg i.sy-f-p { background: #332657; }
+html[data-theme="dark"] .sy-act { border-radius: 12px; border: 2px solid #38bdf8; background: #13242f; color: #a3d6f2; }
+html[data-theme="dark"] .sy-act:hover { background: #172935; }
+html[data-theme="dark"] .sy-f { border-radius: 12px; background: #1b2025; border: 1px dashed #3c454f; color: var(--ink); }
+html[data-theme="dark"] .sy-say { color: var(--ink); }
+html[data-theme="dark"] .sy-playing .sy-say { border-left: 4px solid #0f766e; border-radius: 0; }
+html[data-theme="dark"] .sy-c { border-radius: 5px; }
+html[data-theme="dark"] .sy-c-o { background: #3a2b18; color: #f0ab95; }
+html[data-theme="dark"] .sy-c-g { background: #1a3623; color: #afeec7; }
+html[data-theme="dark"] .sy-c-b { background: #172935; color: #a3d6f2; }
+html[data-theme="dark"] .sy-c-p { background: #1b1631; color: #ac86e9; }
+html[data-theme="dark"] .sy-c-y { background: #413e1b; color: #f1cb9f; }
+html[data-theme="dark"] .sy-c-m { background: #1d2329; color: #bec9d8; }
+html[data-theme="dark"] .sy-w { color: inherit; background: none; border: 0; }
+html[data-theme="dark"] .sy-tip { border-radius: 10px; background: #172d28; border: 1px solid #2c6c5f; color: var(--body); }
+html[data-theme="dark"] .sy-ask { border-radius: 14px; background: #312c14; border: 1px solid #736428; }
+html[data-theme="dark"] .sy-q { color: var(--ink); }
+html[data-theme="dark"] .sy-opt { border-radius: 12px; border: 2px solid var(--line); background: #161c22; color: var(--ink); }
+html[data-theme="dark"] .sy-opt:hover:not(:disabled) { border-color: #fbbf24; }
+html[data-theme="dark"] .sy-opt.right { border-color: var(--ok); background: #172d1e; }
+html[data-theme="dark"] .sy-opt.wrong { border-color: var(--bad); background: #2d1515; }
+html[data-theme="dark"] .sy-verdict { color: var(--body); }
+html[data-theme="dark"] .sy-verdict.ok b { color: color-mix(in srgb, var(--ok) 55%, #ffffff); }
+html[data-theme="dark"] .sy-verdict.bad b { color: color-mix(in srgb, var(--bad) 55%, #ffffff); }
+html[data-theme="dark"] .sy-count { color: var(--muted); }
+html[data-theme="dark"] .sy-back, html[data-theme="dark"] .sy-next { border-radius: 12px; }
+html[data-theme="dark"] .sy-back { border: 2px solid var(--line); background: #161c22; color: var(--body); }
+html[data-theme="dark"] .sy-next { border: 2px solid #0f766e; background: #0f766e; color: #ffffff; }
+html[data-theme="dark"] .sy-next.sy-go { background: #15803d; border-color: #15803d; }
+@media (max-width: 520px) {
+  html[data-theme="dark"] .sy { border-radius: 16px; }
+}
+
 /* ---------- by hand (scripts/dark_manual.css): last, so it wins ---------- */
 /* ---------- dark mode, by hand (copied first into docs/assets/dark.css by scripts/make_dark_css.py) ----------
    html[data-theme="dark"] is set before the page draws (index.html <head>), from the switch (theme.js) or, until she
