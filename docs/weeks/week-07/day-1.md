@@ -14,6 +14,398 @@
 
 ## 1. Learn — the experiment is designed, not found
 
+Eight short stories. Each one tells **one idea in small steps**: read a sentence, watch the picture change, press **Next**. A dotted word shows its meaning when you tap it. Tired of reading? Press **▶ Play as a video**: the page reads every step aloud and moves the picture for you.
+
+The Python for each idea, and the extra topics, are in **Going further — the full version** near the end of the page (optional).
+
+### September or a coin? — confounding and the A/B test
+
+```story
+{"id": "w07d1-s1", "title": "September or a coin?", "min": 4, "steps": [{"say": "Nur's app, 2026: the share of applications approved, month by month. **Nothing was changed in the app** — no new screen, no new rule. Yet each blue dot sits somewhere else.", "show": {"kind": "ivs", "rows": [[69.1, 69.1, 69.1], [71.4, 71.4, 71.4], [67.9, 67.9, 67.9], [66.7, 66.7, 66.7]], "labels": ["June", "July", "August", "September"], "min": 64, "max": 74, "tick": 2, "dp": 1, "unit": " %", "lw": 90}}, {"say": "From July to September the rate fell {o|4.7 points} on its own. Salary days, school fees, a marketing push, a different mix of new users — the calendar moves the number.", "show": {"rows": [[69.1, 69.1, 69.1], [71.4, 71.4, 71.4, "o"], [67.9, 67.9, 67.9], [66.7, 66.7, 66.7, "o"]]}, "f": "July → September: {o|71.4 %} − {o|66.7 %} = {o|4.7 points}, with nothing changed", "fs": "From July to September the rate fell 4.7 points, with nothing changed."}, {"say": "Kamola's plan: ship the new offer screen on 1 September and compare September with August. But between those months **two things** change — the screen **and** the calendar. That is [[confounding|two things change at once, so you cannot tell which one moved the number]]."}, {"say": "Think with the dots.", "ask": {"q": "The new screen adds about +0.9 points. Can “September vs August” see it?", "options": ["Yes — +0.9 is a real lift", "No — with nothing changed the months already swing by up to 4.7 points", "Only if September is longer"], "answer": 1, "why": "The calendar alone moves the rate five times further than the screen. Whatever September shows, nobody can say how much of it is the screen."}}, {"say": "The fix: **the same days, and a coin decides**. From 1 to 28 August every user who opens the offer is sent, by a coin, to {b|screen A} or {y|screen B}. This is an [[A/B test|a random half sees the current version, the other half the new one, over the same days]].", "show": {"kind": "dots", "blocks": [10, 10], "labels": ["screen A — today's", "screen B — the new one"], "groups": [[10, "b", "a"], [10, "y", "b"]], "legend": [["b", "sees screen A"], ["y", "sees screen B"]]}}, {"say": "Because a coin decides, the halves come out alike in everything else: here {g|3 iPhone users} landed on each side — by chance, not by plan. The same goes for region, salary day and mood.", "show": {"groups": [[3, "b", "ai", "g"], [7, "b", "a"], [3, "y", "bi", "g"], [7, "y", "b"]], "legend": [["b", "sees screen A"], ["y", "sees screen B"], ["ring-g", "iPhone user"]]}}, {"say": "So the only **systematic** difference between the halves is the screen. A gap bigger than chance allows was caused by the screen — no calendar in the way.", "f": "{b|A} = [[control|the group that keeps today's version]]  ·  {y|B} = [[treatment|the group that gets the change]]  ·  only the screen differs", "fs": "A is the control, B the treatment; only the screen differs."}, {"say": "One more trap.", "ask": {"q": "Kamola: “Then compare September 2026 with September 2025 — the same month!” What is still wrong?", "options": ["Nothing — the season is the same", "The year changed too: prices, policy, users and the app itself", "A year is too long to wait"], "answer": 1, "why": "Any two periods differ in more than the screen. Only users split by a coin over the same days differ in the screen alone."}}, {"say": "Keep it as a rule: a before/after chart can **spot** that something changed; only a concurrent random split can **measure** what one change did."}]}
+```
+
+### One number decides — hypothesis, primary metric, guardrails
+
+```story
+{"id": "w07d1-s2", "title": "One number decides", "min": 5, "steps": [{"say": "Here are 100 users who opened Kamola's offer screen. Before any of them is split, she writes one sentence: the [[hypothesis|one sentence written before the test: the change, why it should work, and which number will move]].", "show": {"kind": "dots", "groups": [[100, "m", "all"]], "cols": 20, "scatter": 7}, "f": "If we {b|change …}, then {y|this number} will go up, because {p|this is why}"}, {"say": "Filled in: a {b|change}, a {p|mechanism} and a {y|number that can move}. If the number does not move, the sentence was wrong — that is what makes it testable.", "f": "If we show the {b|monthly payment in big type and one button}, then {y|more viewers sign within 7 days}, because {p|the cost is easier to judge}"}, {"say": "Your turn.", "ask": {"q": "Which one is a testable hypothesis?", "options": ["Users will love the new design, as the interviews showed", "If the offer shows the monthly payment, more viewers sign within 7 days, because the cost is easier to judge", "We will see what changes after the release"], "answer": 1, "why": "Only the second names a number that could prove it wrong. “Love” and “we will see” survive any result."}}, {"say": "The number in the hypothesis becomes the [[primary metric|the ONE number the decision rests on: a numerator, a denominator and a time window]]. {y|8} of these 100 signed within 7 days of their first offer view: 8 % — Kamola's planning number.", "show": {"groups": [[8, "y", "sig"], [92, "m", "no"]], "legend": [["y", "signed within 7 days"], ["m", "did not"]]}, "f": "primary metric = {y|signed within 7 days} ÷ {m|all assigned users} = {y|8} ÷ 100 = {y|8 %}", "fs": "Primary metric: signed within 7 days, divided by all assigned users: 8 percent."}, {"say": "Why a 7-day window? Every user gets the same time to sign, whether she came on 1 or on 28 August (94 % of signings come within 7 days). The faded dot signed on day 10 — outside the window, not counted.", "show": {"groups": [[8, "y", "sig"], [1, "y", "late"], [91, "m", "no"]], "fade": ["late"]}}, {"say": "Pick **one** primary. With five “primaries” you will end up reporting the one that moved. The rest become [[secondary metrics|numbers that explain WHERE the effect comes from — the funnel steps, the loan size; you read them, you don't decide on them]]."}, {"say": "Spot the bad primary.", "ask": {"q": "Why is “clicks on Get the money” a bad primary for this test?", "options": ["Clicks can rise without a single extra signed loan", "Clicks are too hard to count", "Clicks have no denominator"], "answer": 0, "why": "A brighter button gets more clicks, not more loans. The same with “contracts in total”: more users in B by chance or by a bug inflates it."}}, {"say": "Nilufar's worry is the third kind: a [[guardrail|a number that must NOT get worse even when the primary wins; in lending, first of all FPD]]. More loans are money only if they are repaid. The Company corner finds the line: B may raise FPD by at most {g|+1.25 points}.", "show": {"kind": "ivs", "rows": [[-1.17, 0, 1.17]], "labels": ["FPD, B − A"], "min": -2, "max": 2, "tick": 1, "tdp": 0, "dp": 2, "unit": " pt", "zero": true, "ref": 1.25, "words": {"ref": "break-even +1.25"}, "nums": false}}, {"say": "But the guardrail test is weak: about 1 100 loans per arm. Even if B changed nothing, the {b|interval} would run ±1.17 points — nearly the whole safe zone. So the plan writes a **number**, and the decision reads the interval's upper end.", "f": "about 1 100 loans per arm, FPD ≈ 2 %:  B − A = 0 ± {b|1.17 points}  →  compare the {b|upper end} with {g|+1.25}", "fs": "With about 1100 loans per arm, the interval is plus or minus 1.17 points."}, {"say": "Last one.", "ask": {"q": "The FPD test ends “not significant”, p = 0.40. Has the guardrail passed?", "options": ["Yes — not significant means no harm", "Only if the interval's upper end is below the +1.25 break-even", "Yes, if the primary is significant"], "answer": 1, "why": "With so few loans, “not significant” mostly means “we could not see”. The interval says how bad it could be; the break-even says how bad is too bad."}}]}
+```
+
+> 🎬 **Didn't get the design steps?** [DataInterview explains it · 2 min](https://youtu.be/DUNk4GPZ9bw?t=581&end=694)
+
+**Now check yourself.**
+
+```game
+{"type": "sort", "id": "w07d1-g3", "title": "Primary, guardrail, or a bad primary?", "q": "The offer-screen test. Put each metric where it belongs.", "groups": {"Primary (the decision)": ["Signed within 7 days of the first offer view ÷ assigned users"], "Guardrail (must not get worse)": ["FPD of the resulting loans", "Average principal per loan", "App crash rate", "Complaints"], "Bad primary (do not decide on it)": ["Clicks on 'Get the money'", "Signed contracts in total", "Conversion with no time window"]}, "why": "One primary with a numerator, a denominator and a window; guardrails with thresholds; clicks and totals move without meaning more good loans."}
+```
+
+### Who gets the coin? — the unit of randomisation
+
+```story
+{"id": "w07d1-s3", "title": "Who gets the coin?", "min": 4, "steps": [{"say": "Four users. Each opens the offer screen three times this week; each dot is one visit — one [[session|one visit to the app, from opening it to closing it]].", "show": {"kind": "dots", "blocks": [3, 3, 3, 3], "bcols": [3, 3, 3, 3], "labels": ["user 1", "user 2", "user 3", "user 4"], "groups": [[3, "m", "u1"], [3, "m", "u2"], [3, "m", "u3"], [3, "m", "u4"]]}}, {"say": "Flip the coin on every **session**: user 1 sees {b|A} on Monday, {y|B} on Tuesday, {b|A} again on Friday. If she signs, which screen did it?", "show": {"groups": [[1, "b", "u1"], [1, "y", "u1"], [1, "b", "u1"], [2, "y", "u2"], [1, "b", "u2"], [2, "b", "u3"], [1, "y", "u3"], [1, "y", "u4"], [1, "b", "u4"], [1, "y", "u4"]], "legend": [["b", "sees A"], ["y", "sees B"]], "box": ["u1"]}}, {"say": "Flip it once per **user**: every person sees one screen on every visit and every phone. The thing that gets the coin is the [[unit of randomisation|what the coin is flipped for: a user, a session, or a loan / application]].", "show": {"groups": [[3, "b", "u1"], [3, "y", "u2"], [3, "y", "u3"], [3, "b", "u4"]], "box": []}}, {"say": "The second trap is counting. The 12 dots look like 12 pieces of evidence, but they are 4 people, and one person's visits behave alike. Count sessions and the test believes it has 3 times the information it has.", "f": "12 sessions ≠ 12 independent units  ·  4 people = 4 units"}, {"say": "One rule: **count what you flipped**. Randomise users → one row per user in the analysis table, and every metric per user.", "f": "unit of analysis = unit of randomisation"}, {"say": "Your turn.", "ask": {"q": "A test randomises and analyses sessions, and people come back several times. What happens to the z-test?", "options": ["Nothing — more sessions give more power", "One person's sessions count as independent units: n is inflated and the p-value too small", "Conversion goes down"], "answer": 1, "why": "The test thinks it has 12 units when it has 4: its noise estimate is too small, so it calls luck “significant” too often."}}, {"say": "When is the unit something else? A new price applied once per **application** → the application is the unit, but hash the customer id, so one person never gets two prices. A screen with no login → a session or device cookie."}, {"say": "And watch for [[interference|B users changing A users' outcomes — a referral screen, a shared daily lending limit]]: if B can reach A, A is no longer a clean control. Then randomise bigger units — regions or time periods."}]}
+```
+
+### How many users, how many days? — MDE, power, sample size
+
+```story
+{"id": "w07d1-s4", "title": "How many users, how many days?", "min": 6, "steps": [{"say": "Kamola: “the smallest lift worth a release is {y|+0.9 points}”. That is the [[MDE|minimum detectable effect: the smallest true lift the test is built to find]] — said two ways: **absolute** (points) and **relative** (% of the 8.0 % baseline).", "show": {"kind": "hist", "gen": "gap", "pA": 0.08, "nA": 2000, "pB": 0.08, "nB": 2000, "lo": -3, "hi": 3, "bins": 40, "spread": false, "words": {"thing": "Luck worlds", "axis": "gap B − A, points", "obs": "5 % line"}}, "f": "MDE = {y|+0.9 points}: 8.0 % → 8.9 %  ·  relative: 0.9 ÷ 8.0 = {y|+11 %}", "fs": "The MDE is plus 0.9 points, 8.0 to 8.9 percent, or 11 percent relative."}, {"say": "Quick one.", "ask": {"q": "A +15 % relative lift on today's 8.0 % — how many points is that?", "options": ["+15 points", "+1.2 points", "+0.15 points"], "answer": 1, "why": "15 % of 8.0 is 1.2: 8.0 % → 9.2 %. Relative × baseline = absolute."}}, {"say": "Now a world where the screens **don't differ**: both arms 8 %, 2 000 users each. Play it: each world gives a gap B − A by luck alone, and the bars pile up around 0.", "act": [{"label": "Play 2 000 luck worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "The test says “B is different” only beyond the {o|orange lines}, ±1.68 points. Only 5 % of luck worlds cross them — that 5 % is α, the false alarms we accept.", "show": {"obs": 1.681, "tails": "two"}}, {"say": "Now give B Kamola's real +0.9 and play again. The pile moves to +0.9 — but most of it stays inside the line. Only about {o|1 world in 5} crosses: this test would usually **miss** a lift that is really there.", "show": {"pA": 0.089, "tails": "right", "cut": [[-1.681, ""]], "words": {"thing": "Worlds with a real +0.9", "axis": "gap B − A, points", "obs": "5 % line"}}, "act": [{"label": "Play 2 000 real worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "The same +0.9 with **15 000 users per arm**: the pile is far narrower, the line moves in to 0.61, and about {o|8 worlds in 10} cross. That share is the [[power|the chance that the test catches a real effect of the MDE's size]]: 80 %.", "show": {"nA": 15000, "nB": 15000, "obs": 0.614, "cut": [[-0.614, ""]]}, "act": [{"label": "Play 2 000 real worlds", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "So n is grown until power reaches 80 %. The formula skips the playing: {o|1.96} from α = 5 %, {p|0.84} from 80 % power, {b|p(1 − p)} the noise of one user (p ≈ 8.5 %), and the {y|MDE squared} at the bottom.", "f": "n per arm ≈ 2 × ({o|1.96} + {p|0.84})² × {b|p(1 − p)} ÷ {y|MDE}² ≈ 2 × 7.85 × 0.077 ÷ 0.009² ≈ 15 000", "fs": "n per arm is about 2 times 1.96 plus 0.84 squared, times p times one minus p, divided by the MDE squared: about 15 000."}, {"say": "Use the bottom of the formula.", "ask": {"q": "Kamola halves the MDE, from +0.9 to +0.45 points. The users per arm become about…", "options": ["twice as many", "four times as many", "the same", "half as many"], "answer": 1, "why": "The MDE sits squared at the bottom: half the effect → ÷ 0.25 → four times the users (and about four months instead of one)."}}, {"say": "Each input, moved one at a time (users per arm): a smaller MDE, more power, a stricter α or a noisier baseline (12 % instead of 8 %) — each one costs more users.", "f": "as planned ≈ 15 000  ·  MDE +0.8 → 18 863  ·  power 90 % → 20 057  ·  α 1 % → 22 294  ·  baseline 12 % → 21 118"}, {"say": "The **duration** is both arms ÷ daily traffic: about 1 000 users a day see the offer → {y|30 days}. Run [[whole weeks|weekday and weekend users differ, so every weekday should appear equally often]]: Kamola picks 28 days and writes down the price — power 77 %.", "f": "days = 2 arms × ≈ 15 000 ÷ 1 000 viewers a day ≈ {y|30 days}  →  {y|28 days} (4 whole weeks, power 77 %)", "fs": "About 30 days of traffic; Kamola takes 28 days, four whole weeks."}, {"say": "Two rules on top: never stop before the planned n; and if the arithmetic says five months, change the metric or the MDE — not the arithmetic.", "f": "H1 tip: `n_per_arm` (full version) uses Cohen's h, as statsmodels does; the classic formula gives a few users more — name your method"}]}
+```
+
+> 🎬 **Didn't get power, significance level and MDE?** [freeCodeCamp explains it · 7 min](https://youtu.be/KZe0C0Qq4p0?t=1271&end=1664)
+
+> 🎬 **Didn't get how to calculate the sample size?** [freeCodeCamp explains it · 6 min](https://youtu.be/KZe0C0Qq4p0?t=1664&end=2022)
+
+> 🎬 **Didn't get how long to run the test?** [freeCodeCamp explains it · 3 min](https://youtu.be/KZe0C0Qq4p0?t=2098&end=2288)
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w07d1-x1", "type": "abplan", "title": "Plan Kamola's test: users and days", "predict": {"q": "Kamola's screen: today 8.0 % of users sign within 7 days, and she wants to see **+0.9 points** (8.9 %), with α 5 % and 80 % power. About **1 000** users a day see the offer, split 50/50. How long must the test run?", "options": ["about a week", "about a month", "about three months", "about a year"], "why": "14 983 users per arm, 29 966 in all: **30 days** of traffic. The MDE drives it: halve the lift you want to see and the test runs about four times as long. Try it below.", "answer": 1}, "start": {"base": 0.08, "mde": 0.009, "traffic": 1000, "split": 0.5}, "alpha": 0.05, "power": 0.8, "trafficLabel": "Offer viewers a day", "challenges": [{"id": "c1", "text": "Kamola wants the answer in **two weeks** (14 days) at 1 000 viewers a day. Move only the **MDE**: what is the smallest lift a 14-day test can see?", "when": {"days": ["<=", 14], "mde": ["<", 0.0137]}, "only": ["mde"]}, {"id": "c2", "text": "Now go the other way: **halve** the plan's MDE, to **+0.45** points. Twice as long — or more?", "when": {"mde": ["=", 0.0045]}, "only": ["mde"]}, {"id": "c3", "text": "A cautious launch: only **10 %** of users see the new screen (a 90 / 10 split). Keep the rest as planned: how long now?", "when": {"split": ["=", 0.1]}, "only": ["split"]}]}
+```
+
+### The arm is computed, not stored — hashing with a salt
+
+```story
+{"id": "w07d1-s5", "title": "The arm is computed, not stored", "min": 4, "steps": [{"say": "Nobody stores a coin flip. The arm is **computed**: glue the test's name to the user id and feed it to a [[hash function|turns any text into a huge number that looks random but is always the same for the same text]] — here sha256. These are Nur's July A/A users.", "show": {"kind": "hash", "salt": "offer_screen_aa_2026_07", "rows": [[925601, "58f3d270aad9fb8f6fb80b66eed937d0bc8897f0ddd3e388a57c977cf897f971"], [665666, "ef63843168314deaa090f198d67d3b5324dc47a615ec5408d20fc71f9c7919cc"], [652995, "487ef4139731350f2be9f9210c260718e3c6b639dd7b4d4cee7a3beda158e798"], [774155, "1181da91cddcf6e93a51aa9e2e3181a2c5d05d46aa25c1d03c45d417eaf57827"], [376261, "31f048fb41e21d2402ee09784ffd61b7969ab0cdded242f32a7848198c221ca8"], [859393, "03c628c940618d30d258388d6709a628e9045d30c14717c42e55e0eb933a6d96"]], "n": 0}, "act": [{"label": "Compute the next arm", "rep": 1, "do": "hash"}]}, {"say": "User 925601: the hash is a 64-character number in hex. Its last character, {y|1}, is odd → arm {y|B}. (Even or odd is decided by the last character alone, so it is all we need to look at.)", "show": {"n": 1}, "f": "last character even (0 2 4 6 8 a c e) → {b|A}  ·  odd (1 3 5 7 9 b d f) → {y|B}"}, {"say": "Compute the rest — B, A, A, B, A, A: exactly what the experiment service logged in July. Then press **Compute again**: the same arms, every time. The hash is [[deterministic|the same input always gives the same output]].", "act": [{"label": "Compute all of them", "rep": 1, "n": 6, "do": "hash"}, {"label": "Compute again", "rep": 1, "do": "hash"}]}, {"say": "Your turn.", "ask": {"q": "User 925601 opens the app next week on a new phone. Which screen does he see?", "options": ["B again — the same id gives the same hash", "A or B, a new coin each time", "A — new devices start in A"], "answer": 0, "why": "The arm is a function of salt + id, not of the device or the day: one user, one screen, everywhere."}}, {"say": "Read the **whole** hash as a number between 0 and 1. Here are the first 100 A/A users: they spread evenly along the line, about half left of 0.5 ({b|A}) and half right ({y|B}). The hash is [[uniform|every stretch of the 0–1 line gets about the same share of users]].", "show": {"rows": [], "strip": [0.3475, 0.9351, 0.2832, 0.0684, 0.1951, 0.0147, 0.2291, 0.9908, 0.288, 0.2284, 0.6343, 0.9227, 0.0581, 0.594, 0.3744, 0.3965, 0.964, 0.6275, 0.7314, 0.1404, 0.8934, 0.6904, 0.091, 0.2651, 0.9307, 0.1409, 0.3991, 0.6479, 0.6351, 0.1314, 0.4162, 0.1388, 0.6465, 0.0894, 0.5268, 0.1578, 0.2497, 0.4435, 0.3021, 0.0598, 0.4145, 0.2658, 0.7973, 0.5113, 0.6448, 0.8027, 0.1569, 0.697, 0.1181, 0.6774, 0.9868, 0.9139, 0.5446, 0.3449, 0.5298, 0.9785, 0.2128, 0.3952, 0.5596, 0.4886, 0.283, 0.4503, 0.2536, 0.6583, 0.9972, 0.5159, 0.038, 0.8612, 0.3284, 0.6098, 0.5678, 0.3855, 0.4612, 0.313, 0.7104, 0.8452, 0.6992, 0.424, 0.1942, 0.5118, 0.2165, 0.7303, 0.8578, 0.3914, 0.5339, 0.0523, 0.9013, 0.9209, 0.8169, 0.4764, 0.963, 0.1345, 0.5091, 0.1945, 0.7116, 0.9625, 0.8562, 0.8036, 0.339, 0.3322], "cut": 0.5}}, {"say": "A risky change? Cut at 0.9: only users right of it see B — a 90 / 10 split. Here 13 of 100; on all 12 852 A/A users it comes out close to 10 %.", "show": {"cut": 0.9}}, {"say": "A new test gets a new [[salt|the test's name glued to the id; a new salt re-draws everyone]]: offer_screen_v2. The same six users, a fresh draw — the lit rows changed arm.", "show": {"strip": [], "salt": "offer_screen_v2", "rows": [[925601, "cd62721c5f8224645df07e8caba297a49d8f415a91a6c16ee2e26785cf1fae4d"], [665666, "605fa3e34107099c9ff3d8570a69b6d91e55ad5cba2ae5fdfa2eeb051a13f8b5"], [652995, "35072562681056e7309a114443f78fde1f89e41277e2ce67ea0c4c21d9eb91bb"], [774155, "e5e38901fe0f57035699e44f6977ea449374f930440e3777ea0523999cbfc191"], [376261, "15b881ad856bdf936e1a19bbed144c5f6d203057cf4fc69ab84d20cd4348a9ed"], [859393, "db229407b9196cba568183d4c92fd576ea0773aa28d8f5bbcd10e9542de3cb10"]], "n": 6, "hot": [1, 2, 4]}}, {"say": "Last one.", "ask": {"q": "Why must the salt change between experiments?", "options": ["sha256 runs out of numbers", "With the same salt the same users land in B every time — their history follows them, and two tests are perfectly correlated", "To make the split exactly 50 / 50"], "answer": 1, "why": "Users who were “treated” last time carry fatigue and habits; and two tests with one salt split everyone identically, so their effects cannot be told apart."}}]}
+```
+
+### Test the machine first — the SRM check and the A/A test
+
+```story
+{"id": "w07d1-s6", "title": "Test the machine first", "min": 6, "steps": [{"say": "A test ends with 28 000 users, split 50 / 50 by the hash. Even a perfect split never gives exactly 14 000 each. Play 2 000 fair splits: {y|B}'s share wobbles around 50 %.", "show": {"kind": "hist", "gen": "share", "p": 0.5, "n": 28000, "lo": 49, "hi": 51, "bins": 40, "unit": " %", "dp": 2, "spread": false, "words": {"thing": "Fair splits", "axis": "B's share of 28 000 users", "obs": "ours"}}, "act": [{"label": "Play 2 000 fair splits", "rep": 1, "n": 2000, "do": "sample"}]}, {"say": "Ours: B 14 200, A 13 800 — {o|50.7 %}. Only about {o|2 fair splits in 100} land this far from 50 %, either way. A split chance rarely makes is a [[sample ratio mismatch|SRM: the arms' sizes differ from the plan by more than chance allows — the most common sign of a broken experiment]].", "show": {"obs": 50.714, "tails": "two"}}, {"say": "The check is a [[chi-square test|compares the counts you got with the counts the plan expects: (got − expected)² ÷ expected, added up]]: the plan expects {p|14 000} in each arm. One line of code in the homework (`srm_pvalue` in the full version).", "f": "χ² = (13 800 − {p|14 000})² ÷ {p|14 000} + (14 200 − {p|14 000})² ÷ {p|14 000} = 5.71  →  p = {o|0.017}", "fs": "Chi-square is 5.71, so p is 0.017."}, {"say": "Another test: B 14 050, A 13 950 — 50.2 %. Fair splits go this far all the time: p = 0.55. Fine.", "show": {"obs": 50.179}}, {"say": "Two thresholds. The automatic alarm runs every day on every slice, so it is strict: **p < 0.001**. Our p = 0.017 does not trip it — but 50.7 / 49.3 on 28 000 users is odd enough to go and look yourself."}, {"say": "Your turn.", "show": {"obs": 50.714}, "ask": {"q": "50.7 / 49.3 on 28 000 users, p = 0.017. What do you do first?", "options": ["Reweight B down to 50 %", "Treat it as a broken split: look for the bug by day, device and slice before reading any result", "Drop 400 B users at random"], "answer": 1, "why": "An SRM is a bug to find, not a bias to correct: users went missing or were pushed somewhere. Reweighting hides the bug; Day 2 hunts one down."}}, {"say": "Before the real test, test the machine. In July Nur ran an [[A/A test|the real split, logging and analysis — but BOTH arms see the same screen, so any “effect” is the system's error]]: 12 852 users, two arms, the same old screen.", "show": {"kind": "hist", "gen": "gap", "pA": 0.08, "nA": 6400, "pB": 0.08, "nB": 6400, "lo": -2.5, "hi": 2.5, "bins": 40, "spread": false, "unit": "", "dp": 2, "obs": null, "words": {"thing": "Re-splits", "axis": "gap B − A, points", "obs": "p < 0.05 line"}}, "act": [{"label": "Re-split 1 000 times", "rep": 1, "n": 1000, "do": "sample"}]}, {"say": "Four checks — all of them in HW 7.1: the split (the SRM p), the hash recomputed for every row, the 7-day conversion in each arm, and Week 6's two-proportion z-test of B − A, with the pooled rate inside the SE.", "f": "“the system works”:  split → SRM p far from the alarm  ·  hash → every row matches  ·  metric → two rates that differ only by noise  ·  test → a 95 % CI of B − A that contains 0"}, {"say": "But one run says little: 1 A/A run in 20 looks “significant” by luck. So re-split the same users at random 1 000 times: the {o|orange} share should be near 5 %. Nur's: {o|4.0 %}.", "show": {"obs": 0.938, "tails": "two"}}, {"say": "Last one.", "ask": {"q": "Re-splits of an A/A test come out “significant” 15 % of the time. What does it tell you?", "options": ["Nothing — 15 % is close to 5 %", "The test is wrong for this data (e.g. sessions counted as independent users): its 5 % promise does not hold", "B is better than A"], "answer": 1, "why": "Three times the promised false alarms means the test's assumptions don't match the data. Fix the analysis before the real test. One A/A run at p = 0.03 is not a failure; a failure repeats."}}]}
+```
+
+> 🎬 **Didn't get the validity checks (A/A, SRM)?** [DataInterview explains it · 3 min](https://youtu.be/DUNk4GPZ9bw?t=752&end=913)
+
+### Two traps in time — novelty and peeking
+
+```story
+{"id": "w07d1-s7", "title": "Two traps in time: novelty and peeking", "min": 6, "steps": [{"say": "Users react to **change**, not only to the new screen. Suppose B's true lift is {o|+2.0 points} in week 1 — they try the new thing because it is new — and only {g|+0.5} after. That first-week bump is the [[novelty effect|users click the new thing because it is new; the lift fades within days]].", "show": {"kind": "days", "vals": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], "hot": 7, "lo": -0.5, "hi": 2.5, "tick": 1, "ref": 0.5, "words": {"axis": "day of the test", "ref": "the lasting +0.5"}}}, {"say": "A test reports the **average over its days** — the {p|purple line}. Stop it after one week: {p|+2.0}, four times the lasting +0.5. Try the other stops.", "show": {"run": true}, "act": [{"label": "Stop on day 7", "rep": 1, "do": "stop", "d": 7}, {"label": "Stop on day 14", "rep": 1, "do": "stop", "d": 14}, {"label": "Stop on day 28", "rep": 1, "do": "stop", "d": 28}]}, {"say": "Four weeks still read about +0.9, above the lasting +0.5 — but now the first week is a small part. The opposite also happens: the [[primacy effect|returning users first resist a change; the lift appears only after they learn it]] hides a real lift in week 1.", "f": "7 days → +2.0  ·  14 days → +1.25  ·  28 days → about +0.9  ·  lasting: +0.5"}, {"say": "Count it out.", "ask": {"q": "3 launch days at +3.0 points, then +1.0 every day. What does a test that stops after 6 days report?", "options": ["+1.0", "+2.0", "+3.0"], "answer": 1, "why": "(3 × 3.0 + 3 × 1.0) ÷ 6 = 12 ÷ 6 = +2.0 — double the steady +1.0. Equal traffic each day, so the report is the plain average of the days."}}, {"say": "The design's answers: **whole weeks**, long enough that the first days are a small part; a **daily lift chart** for Day 2; launch-day exclusion decided in the plan, never after the result; new and returning users looked at apart."}, {"say": "The second trap. An A/A test — both arms 8 %, 500 users per arm a day, 28 days; the line is its z after each day. **Read once, on day 28**: about 5 % of such tests cross the orange lines, as promised.", "show": {"kind": "peekd", "p": 0.08, "per": 500, "months": 28, "mode": "once", "words": {"x": "day of the test"}}, "act": [{"label": "Run 1 A/A test", "rep": 3, "n": 1, "do": "run"}, {"label": "Run 100", "rep": 1, "n": 100, "do": "run"}]}, {"say": "Now [[peeking|looking at the p-value while the test runs and stopping at the first p < 0.05]]: look every morning and stop at the first p < 0.05. The wandering line dips past a line far more often than once in twenty.", "show": {"mode": "peek"}, "act": [{"label": "Run 100", "rep": 1, "n": 100, "do": "run"}, {"label": "Run 1", "rep": 3, "n": 1, "do": "run"}]}, {"say": "Simulated 2 000 times (the full version): daily looks turn the 5 % promise into {o|27 %} — more than one no-effect test in four “wins”. Most false wins come early, when the sample is small.", "f": "one look on day 28: {g|4.9 %}  ·  every week: {o|12.4 %}  ·  every day: {o|27.2 %}", "fs": "One look: 4.9 percent. Weekly: 12.4. Daily: 27.2."}, {"say": "Must the business look early? Then plan the looks **before the start**, with stricter lines: Pocock's p < 0.0182 at each of four weekly looks keeps 4.8 %; O'Brien–Fleming is very strict early and almost 0.05 at the end.", "show": {"looks": [7, 14, 21, 28]}, "f": "weekly looks, p < 0.05 each: 12.4 %  ·  weekly looks, [[Pocock|a group-sequential design: the same stricter line at every planned look]] p < 0.0182 each: {g|4.8 %}", "act": [{"label": "Run 100", "rep": 1, "n": 100, "do": "run"}]}, {"say": "Last one.", "ask": {"q": "Which way of looking keeps an A/A test's false wins near 5 %?", "options": ["A live dashboard p-value, stopping when it dips below 0.05", "Weekly looks, stopping at the first p < 0.05", "Four weekly looks with p < 0.0182 at each, decided before the start"], "answer": 2, "why": "Planned looks with a stricter line (Pocock; or O'Brien–Fleming) keep about 5 %, and so does one look on the end date. Stopping at the first p < 0.05 does not: weekly 12 %, daily 27 %."}}]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "bug", "id": "w07d1-g2", "title": "Find the line that breaks the plan", "q": "Kamola's draft analysis plan. One line breaks the 5 % promise.", "code": "Primary: signed within 7 days of the first offer view, per assigned user\nSplit: 50/50, sha256(\"offer_screen_v2\" + user_id) mod 2\nSample: 14 983 users per arm, 1–28 August (four whole weeks)\nWe check the dashboard every morning and stop as soon as p < 0.05\nSRM alarm: p < 0.001, overall and by device and week\nDecision: ship if p < 0.05 and the FPD difference's upper 95 % bound < +1.25 pt", "answer": [3], "why": "Daily looks with a stop at the first p < 0.05 turn 5 % false wins into about 27 %. Fix the end date — or pre-register a sequential design (Pocock, O'Brien–Fleming)."}
+```
+
+### Is this a real experiment? A game — and the one-page plan
+
+```story
+{"id": "w07d1-s8", "title": "Is this a real experiment? A game", "min": 5, "steps": [{"say": "A game in four rounds. Each round is a plan for testing Kamola's screen; the lit chips are its design. Round 1 — her first idea: ship on 1 September, compare September's users with August's, read the result once.", "show": {"kind": "design", "labels": [["Who sees B?", ["next month's users", "another channel", "a coin: the hash"]], ["The coin flips per…", ["session", "user"]], ["The result is read…", ["every morning", "once, at the end"]]], "pick": [0, 1, 1], "words": {}, "bad": false}, "ask": {"q": "Round 1 — real experiment or not?", "options": ["a real experiment", "not an experiment"], "answer": 1, "why": "B is “next month's users”: the calendar changed too. Next: the verdict."}}, {"say": "Two things changed at once — the screen and the calendar, which alone moved the approval rate by 4.7 points.", "show": {"words": {"test": "✗ the calendar changed too"}, "bad": true}}, {"say": "Round 2: hash the user id with a new salt, 1–28 August, both screens on the same days, read the result once on 28 August.", "show": {"pick": [2, 1, 1], "words": {}, "bad": false}, "ask": {"q": "Round 2 — real experiment or not?", "options": ["a real experiment", "not an experiment"], "answer": 0, "why": "A coin per user, the same days, one look. Next: the verdict."}}, {"say": "One thing changed: the screen. A gap beyond chance is the screen's doing.", "show": {"words": {"test": "✓ only the screen differs"}, "bad": false}}, {"say": "Round 3: the same hash, but on the **session** id — and people come back several times a week.", "show": {"pick": [2, 0, 1], "words": {}, "bad": false}, "ask": {"q": "Round 3 — real experiment or not?", "options": ["a real experiment", "not an experiment"], "answer": 1, "why": "A coin per visit: one person sees both screens, and her visits count as independent units. Next: the verdict."}}, {"say": "Randomised, but at the wrong unit: mixed screens per person, and an n that is inflated.", "show": {"words": {"test": "✗ one person, both screens"}, "bad": true}}, {"say": "Round 4: hash by user, same days — but the dashboard is checked every morning, and the test stops at the first p < 0.05.", "show": {"pick": [2, 1, 0], "words": {}, "bad": false}, "ask": {"q": "Round 4 — real experiment or not?", "options": ["a real experiment", "not an experiment"], "answer": 1, "why": "The split is fine, the reading is not: daily peeking. Next: the verdict."}}, {"say": "A fair split read the wrong way: a screen that does nothing would “win” in about one test in four.", "show": {"words": {"test": "✗ 27 % false wins"}, "bad": true}}, {"say": "Every choice of today goes on one page, written and dated **before** the first user is assigned: the [[pre-registration|the test plan, written down and dated before the start, so it cannot be bent to fit the result]]. HW 7.1 is this page.", "show": {"pick": [2, 1, 1], "words": {"test": "✓ the plan, dated before 1 August"}, "bad": false}, "f": "1 hypothesis · 2 primary metric · 3 guardrails · 4 unit and split · 5 sample size and dates · 6 checks (A/A, SRM, novelty) · 7 analysis plan · 8 decision rule"}, {"say": "Last one.", "ask": {"q": "Which line can NOT be in the pre-registration?", "options": ["The primary metric with its 7-day window", "The segments you will report, with the correction", "The segment that showed the biggest lift", "The decision rule as conditions on the numbers"], "answer": 2, "why": "The biggest-lift segment can only be known after the data — choosing it then is exactly what the plan prevents. Kamola's rule: ship if the primary is significant at 5 % and the FPD difference's upper 95 % bound is below +1.25 points."}}]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "order", "id": "w07d1-g1", "title": "The design document, in order", "items": ["Hypothesis: change → mechanism → consequence", "Primary metric: one number, exact definition", "Guardrails: what must not get worse", "Unit of randomisation", "MDE, α, power → sample size → duration", "Analysis plan: test, exclusions, segments, stopping rule"], "why": "Each decision constrains the next: the metric fixes the unit, the unit and the MDE fix n, n fixes the dates — all written before any data.", "alts": [["Hypothesis: change → mechanism → consequence", "Primary metric: one number, exact definition", "Unit of randomisation", "Guardrails: what must not get worse", "MDE, α, power → sample size → duration", "Analysis plan: test, exclusions, segments, stopping rule"]]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "sort", "id": "w07d1-g5", "title": "Which decision prevents it?", "q": "Put each problem under the design decision that prevents it.", "groups": {"A concurrent random control": ["September had a marketing push"], "The user as the unit": ["One person saw both screens on two visits"], "A fixed end date": ["The test was stopped on day 9 at p = 0.03"], "The SRM check": ["B lost 2 % of its users to a broken redirect"], "Whole weeks and a daily lift chart": ["The lift in week 1 was four times the lift in week 4"], "Pre-registration": ["The segment that 'worked' was chosen after the results"]}, "why": "Each trap of the day has its own guard; the pre-registration writes all of them down before the start."}
+```
+
+## 2. Worked example — Kamola's answer, in numbers (15 min)
+
+**Ask:** Kamola wants to ship the new screen on 1 September and compare September with August. Turn that into a test that can answer her — one decision per concept, in the order of section 1.
+
+1. **Confounding — why not September vs August.** The app's approval rate moved 71.4 % → 67.9 % → 66.7 % over three months with no change at all. Seasonality, marketing and policy would all be credited to the screen. A concurrent random split answers in the same four weeks.
+2. **Hypothesis.** A single button and the monthly payment in large type reduce hesitation, so more viewers sign within 7 days.
+3. **Metrics.** Primary: signed within 7 days of the first offer view ÷ assigned users. Secondary: start, submit, approval and signing rates; principal per loan. Guardrail: FPD of the resulting loans, with a stop threshold of +1.25 points (the break-even in the Company corner).
+4. **Unit of randomisation.** The user, assigned at the first offer view — she sees the screen many times and must always see the same one.
+5. **MDE.** +0.9 points (8.0 → 8.9 %, +11 % relative): the smallest lift worth a release.
+6. **Sample size and duration.** `n_per_arm(0.080, 0.089)` = 14 983 per arm → 30 days at ~1 000 viewers a day → four whole weeks, 1–28 August: about 14 000 per arm, power 77 %, accepted and written down.
+7. **Assignment.** `sha256("offer_screen_v2" + user_id) mod 2` — deterministic, uniform, a new salt.
+8. **SRM and A/A.** The July A/A passed (your HW 7.1 cell: split, hash, two rates, p-value; 4.0 % false positives over 1 000 re-splits). During the test an SRM alarm at p < 0.001, overall and by device and week.
+9. **Novelty and peeking.** A daily lift chart; one look, on 28 August.
+10. **Pre-registration.** All of it on one dated page:
+
+| Decision | Choice | Why |
+|---|---|---|
+| unit | user (`user_id`), assigned at the first offer view | the screen is seen repeatedly; conversion is per user |
+| split | 50/50, `sha256("offer_screen_v2" + user_id)` mod 2 | deterministic, salted |
+| primary | signed within 7 days of assignment ÷ assigned users | one number, fixed window |
+| guardrails | FPD on the resulting loans; average principal; crash rate | Company corner |
+| α, power, MDE | 5 % two-sided, 80 %, +0.9 pt (8.0 → 8.9 %) | smallest lift worth a release |
+| n, dates | 14 983 per arm → 1–28 August 2026 (four whole weeks, ~14 000 per arm, power 77 % — accepted) | traffic ~1 000/day |
+| checks | A/A in July (passed); SRM daily with p < 0.001 alarm; daily lift chart for novelty | |
+| decision rule | ship if primary p < 0.05 **and** the FPD difference's upper 95 % bound < +1.25 pt (break-even, Company corner) | written before the start |
+
+**What goes back to Kamola**, in three sentences: *"Comparing September to August would mix the screen with everything else that changes between months — your own approval rate moved four points in a month with no change. Instead we show the new screen to a random half of app users for four weeks in August (about 14 000 per arm), which can detect a +0.9-point lift with 77 % power, and we decide on 28 August, not before. If conversion rises but first-payment defaults rise by more than 1.25 points, the screen loses money and we do not ship it as is."*
+
+---
+
+## 3. Practice (50 min)
+
+Answer each question in the box under it. The ▶ Run boxes run Python right here, in the page, and see everything the Learn blocks above defined (`n_per_arm`, `hash_variant`, `srm_pvalue`, the peeking simulation) — run those blocks first. The notebook `day1_starter.ipynb` is for HW 7.1 (section 4); its Part 0 walks through the same steps if you prefer Jupyter.
+
+**First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
+
+```python
+# the tools and the data from the full version of section 1 — run once
+import pandas as pd
+aa = pd.read_csv("data/ab/aa_users.csv", parse_dates=["assigned_at"])
+ev = pd.read_csv("data/ab/aa_events.csv", parse_dates=["event_time"])
+signed = ev[ev["event_name"] == "contract_signed"].merge(aa[["user_id", "assigned_at"]], on="user_id")
+in_window = signed[(signed["event_time"] >= signed["assigned_at"]) &
+                   # the 7-day window
+                   (signed["event_time"] <= signed["assigned_at"] + pd.Timedelta(days=7))]
+conv = aa["user_id"].isin(in_window["user_id"]).mean()
+from math import asin, sqrt, ceil
+from statistics import NormalDist
+z = NormalDist().inv_cdf
+def n_per_arm(p1, p2, alpha=0.05, power=0.80, two_sided=True):
+    """Users per arm to detect p1 -> p2 (Cohen's h: what statsmodels' zt_ind_solve_power returns)."""
+    # the effect on the arcsine scale
+    h = 2 * asin(sqrt(p2)) - 2 * asin(sqrt(p1))
+    # how strict the "significant" line is
+    z_a = z(1 - alpha / 2) if two_sided else z(1 - alpha)
+    # how sure we want to be to cross it
+    return 2 * ((z_a + z(power)) / h) ** 2
+n = n_per_arm(0.080, 0.089)
+p1, p2 = 0.080, 0.089
+for mde in [0.004, 0.005, 0.008, 0.009, 0.012, 0.016]:
+    n = ceil(n_per_arm(0.080, 0.080 + mde))
+    print(f"+{mde * 100:.1f} pt   relative {mde / 0.080:5.1%}   {n:>7,} per arm   {2 * n / 1000:4.0f} days at 1 000/day")
+import hashlib
+def hash_variant(user_id, salt="offer_screen_v2"):
+    # the hash, read as an integer
+    h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)
+    # even → A, odd → B
+    return "A" if h % 2 == 0 else "B"
+from math import sqrt
+from statistics import NormalDist
+def srm_pvalue(n_a, n_b, expected_share_b=0.5):
+    """Chi-square goodness-of-fit for two groups (1 df): the same p as scipy.stats.chisquare."""
+    n = n_a + n_b
+    # the counts the plan expects
+    e_a, e_b = n * (1 - expected_share_b), n * expected_share_b
+    chi2 = (n_a - e_a) ** 2 / e_a + (n_b - e_b) ** 2 / e_b
+    # with 1 df, chi2 is z squared
+    return 2 * (1 - NormalDist().cdf(sqrt(chi2)))
+lift_by_day = [2.0] * 7 + [0.5] * 21
+for days in (7, 14, 28):
+    # 2.0 · 1.25 · 0.875
+    print(days, "days:", round(sum(lift_by_day[:days]) / days, 3), "points")
+import numpy as np
+rng = np.random.default_rng(2026)
+n_exp, days, per_day, p = 2000, 28, 500, 0.08
+conv_a = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)
+conv_b = rng.binomial(per_day, p, size=(n_exp, days)).cumsum(axis=1)
+n = per_day * np.arange(1, days + 1)
+pool = (conv_a + conv_b) / (2 * n)
+z = (conv_b - conv_a) / n / np.sqrt(pool * (1 - pool) * 2 / n)
+weeks = [6, 13, 20, 27]
+print('ready')
+```
+
+**P1.** *(confounding)* Kamola's before/after idea. Name **four** things other than the screen that differ between August and September for app users, and use the table in section 1 to say how big a month-to-month change can be with no intervention.
+
+```task
+{"id": "w07d1-p1", "kind": "free", "min": 30, "rubric": ["names four factors other than the screen (season, marketing, product/policy, user mix)", "quotes a no-change swing from the table (−3.5 points July → August, 4.7 from July to September)", "says a +0.9-point effect would be lost in that noise"], "model": "Seasonality (school start, salary and holiday cycles), marketing (a campaign, an SMS blast, a partner promotion), product and policy (another app release, a scorecard cut-off change, a new price), and the user mix (more new users after a campaign; new users convert less). With no change, the app approval rate moved −3.5 points July → August (71.4 → 67.9 %) and the average Micro ticket swung from 2.59 m (June) to 2.90 m (July) and back to 2.59 m (August) — ±12 %. A +0.9-point screen effect is far inside that noise."}
+```
+
+**P2.** *(hypothesis, metrics)* Write the design's first three lines for the offer screen: hypothesis, primary metric (with its exact definition), two guardrails. Then a bad primary metric and why it is bad.
+
+```task
+{"id": "w07d1-p2", "kind": "free", "min": 40, "rubric": ["a hypothesis with change, mechanism and measurable consequence", "a primary with numerator, denominator and a 7-day window", "two guardrails, one of them FPD", "a bad primary (clicks, total contracts, no window) and why it is bad"], "model": "Hypothesis: a single button and the monthly payment in large type reduce hesitation, so more viewers sign. Primary: users with a contract_signed within 7 × 24 h of their first view_offer ÷ users assigned. Guardrails: FPD rate of the resulting loans (risk), average principal (revenue); also crash rate (quality). Bad primaries: clicks on the button (moves easily, may not become loans — a \"dark pattern\" wins), signed contracts in total (not a rate: more traffic in B by chance or by bug inflates it), conversion with no window (users assigned later have less time, and the arms may differ in timing)."}
+```
+
+**P3.** *(unit of randomisation)* For each change pick the unit — user, session or application — and one sentence why: (a) the offer screen; (b) a new interest-rate rule shown at the decision; (c) the order of products on the app's home screen for logged-out visitors; (d) an SMS reminder before the first due date (week 6).
+
+```task
+{"id": "w07d1-p3", "kind": "choice", "options": ["(a) session · (b) user · (c) user · (d) application", "(a) user · (b) application, all of one customer's applications in the same arm · (c) session or device cookie · (d) loan, hashed on customer_id", "(a) user · (b) session · (c) application · (d) user", "(a) application · (b) application · (c) session · (d) session"], "answer": 1, "explain": "(a) User — seen repeatedly; must be consistent. (b) Application, but with every application of the same customer forced into the same arm (hash the customer_id) — two prices for one person is a complaint and a fairness problem. (c) Session or a device cookie — no login, so no user id; accept the weaker consistency. (d) Loan (one SMS per loan; FPD is per loan) — but hashing customer_id again avoids one customer getting the SMS on one loan and not on another."}
+```
+
+**P4.** *(MDE, sample size)* Sample size with your `n_per_arm`: 8.0 → 8.9 % at 80 % and at 90 % power; one-sided at 80 %; and the days each needs at 1 000 users a day. When is the one-sided number legitimate?
+
+```task
+{"id": "w07d1-p4", "kind": "python", "starter": "from math import ceil\n# n_per_arm comes from the Learn block 'Sample size and duration' -- run it first\nfor power in (0.80, 0.90):\n    n = ceil(n_per_arm(0.080, 0.089, power=power))\n    print(power, n, round(2 * n / 1000, 1), \"days\")\n# TODO: the one-sided version at 80 % power (two_sided=False) -- print n and the days\n", "answer": 11802, "dp": 0, "model": "80 %: 14 983 per arm → 30.0 days. 90 %: 20 057 → 40.1 days. One-sided 80 %: 11 802 → 23.6 days. One-sided is legitimate only if \"B is worse\" and \"no difference\" lead to the same action (do not ship) and you wrote that down before the start — for a screen redesign that is arguable, but most teams keep two-sided so that a harmful screen is also detected, not just \"not shipped\"."}
+```
+
+**P5.** *(sample size, turned round)* Turn it round: with 28 days (~14 000 users per arm), what is the MDE, and what power does the test have for a true +0.9 point? With 10 000 per arm?
+
+```task
+{"id": "w07d1-p5", "kind": "python", "starter": "from math import asin, sqrt\nfrom statistics import NormalDist\nN = NormalDist()\n\ndef power_at(n, p1=0.080, p2=0.089, alpha=0.05):\n    h = 2 * asin(sqrt(p2)) - 2 * asin(sqrt(p1))\n    return N.cdf(abs(h) * sqrt(n / 2) - N.inv_cdf(1 - alpha / 2))\n\nprint(f\"14 000 per arm: power {power_at(14000):.1%}\")\n# TODO: the power with 10 000 per arm (print it in %)\n# TODO: the MDE at 14 000 -- try p2 = 0.0890, 0.0892, 0.0894 ... until the power reaches 80 %\n", "answer": 62.9, "dp": 1, "model": "14 000 per arm: MDE +0.93 pt (11.6 % relative), power for +0.9 pt 77.3 %. 10 000 per arm: MDE +1.11 pt (13.8 %), power for +0.9 pt 62.9 %. (NormalIndPower().power(h, nobs1=n, alpha=0.05), and a root-finder on the power for the MDE.) Four weeks is slightly short of 80 % — acceptable if written down; three weeks would not be."}
+```
+
+**P6.** *(randomisation by hash)* Hashing: compute `hash_variant` for the first five A/A users with the A/A salt and with the salt `"another_test"`. Check that all 12 852 A/A rows match their logged variant. Why must the salt change between experiments?
+
+```task
+{"id": "w07d1-p6", "kind": "python", "starter": "import pandas as pd\naa = pd.read_csv(\"data/ab/aa_users.csv\")\nfirst5 = aa[\"user_id\"].head()\n# hash_variant comes from the Learn block 'Randomisation by hashing'\nprint([hash_variant(u, \"offer_screen_aa_2026_07\") for u in first5])\nprint([hash_variant(u, \"another_test\") for u in first5])\n# TODO: recompute the variant of every row with the A/A salt and print how many rows match the logged variant\n", "answer": 12852, "dp": 0, "model": "With offer_screen_aa_2026_07: B, A, A, B, A (users 925601, 665666, 652995, 774155, 376261 — the notebook's table, which also shows the first 12 hex digits); with another_test: A, A, B, A, A. All 12 852 rows match. Without a new salt, every experiment would put the same users in B: their \"treated\" history (fatigue, earlier changes) would follow them, and two simultaneous tests would be perfectly correlated — the effects of the two could not be separated."}
+```
+
+**P7.** *(SRM)* SRM: your `srm_pvalue` for 14 200 vs 13 800, 14 050 vs 13 950, and 9 000 vs 1 000 for a planned 90/10 split. Which would you investigate, and what threshold do you use?
+
+```task
+{"id": "w07d1-p7", "kind": "python", "starter": "# srm_pvalue comes from the Learn block 'SRM'\n# TODO: print the p-value for 14 200 vs 13 800, for 14 050 vs 13 950,\n#       and for 9 000 vs 1 000 with expected_share_b=0.1 (three decimals)\n", "answer": 0.017, "dp": 3, "model": "0.017, 0.55, and 1.0 for 9 000 vs 1 000 (expected_share_b=0.1: exactly the plan). Investigate the first (a 50.7 / 49.3 split of 28 000 is unusual) — and with the usual production threshold of p < 0.001 it would not raise an automatic alarm, which is why you also check by day and segment (Day 2). The strict threshold exists because SRM checks are run many times; the response to an alarm is not a correction but a search for the bug."}
+```
+
+**P8.** *(A/A test)* The A/A check itself is HW 7.1 (section 4). Here, read the 1 000 re-splits in section 1 ("The A/A test"): 4.0 % false positives and flat deciles. Which of these would tell you that an A/A test — the system — has failed?
+
+```task
+{"id": "w07d1-p9", "kind": "multi", "options": ["SRM p < 0.001 on the split", "One A/A run with p = 0.03 that disappears on a re-split", "Re-splits 'significant' 15 % of the time instead of about 5 %", "One arm has no contract_signed events after a release", "p-values of 1 000 re-splits spread evenly from 0 to 1"], "answer": [0, 2, 3], "explain": "Re-splits: 4.0 % below 0.05; deciles 92, 90, 110, 101, 115, 100, 99, 90, 101, 102 (flat) — the test behaves on this data. Your own A/A cell should show the same shape as the table in section 1: an SRM p far from the alarm, every row matching the hash, two close rates, an interval of the difference that contains 0. Failing: an SRM (p < 0.001), a \"significant\" A/A difference that repeats on a re-run, a re-split false-positive rate well above 5 % (the test is wrong for the data, e.g. sessions counted as independent users), or one arm missing events (a logging bug)."}
+```
+
+> 🚀 **Stretch (optional, +5 XP).** **P9.** *(novelty)* Novelty arithmetic. Suppose B's true lift is **+3.4 points** on days 1–3 (novelty) and **+0.9** afterwards, with equal traffic every day and A at 8.0 %. What lift would a test that stops after 7 days report? After 14 and 28 (the box takes the 28-day lift, to 2 decimals)? What does that say about "we saw a big win in the first week, let us ship"?
+
+```task
+{"id": "w07d1-p10", "kind": "number", "answer": 1.17, "dp": 2, "unit": "points", "hint": "Enter the 28-day lift: (3 × 3.4 + 25 × 0.9) / 28.", "xp": 2, "model": "7 days: (3 × 3.4 + 4 × 0.9) / 7 = +1.97 pt (+24.6 % relative). 14 days: (10.2 + 11 × 0.9) / 14 = +1.44 pt. 28 days: (10.2 + 25 × 0.9) / 28 = +1.17 pt — and still above the steady +0.9. A first-week result overstates a novelty-driven change by more than double; the cure is whole weeks, the daily lift chart, and an analysis that excludes the novelty days (or reads only the last weeks) — decided in the pre-registration. (Day 2 will find exactly this pattern in the real data.)"}
+```
+
+**P10.** *(peeking)* Run the peeking simulation (the code block in section 1, "Peeking"). Report the false-positive rate for one look, weekly looks and daily looks, and the day on which half of the daily-peeking "wins" have already been declared.
+
+```task
+{"id": "w07d1-p8", "kind": "choice", "options": ["about 5 %", "about 12 %", "about 27 %", "about 50 %"], "answer": 2, "explain": "One look 4.9 %; weekly 12.4 %; daily 27.2 % — a null screen \"wins\" in more than one test in four. Half of the daily-peeking false wins are declared by day 6 (median first crossing), when the sample is smallest and the p-value most volatile; 15.9 % of all A/A runs have a false win within the first week. With Pocock's 0.0182 at four weekly looks the rate is back to 4.8 %."}
+```
+
+**P11.** *(pre-registration)* Which of these must be written in the plan **before** the first user is assigned? Tick every one.
+
+```task
+{"id": "w07d1-p11", "kind": "multi", "options": ["The primary metric with its window", "The planned n and the end date", "The segments you will report, with the correction", "Whether the launch days are excluded", "The segment that showed the biggest lift", "The decision rule as conditions on the numbers"], "answer": [0, 1, 2, 3, 5], "explain": "Everything that can be bent after seeing the data goes in the plan first: the metric, n and end date, the segments, the exclusions, the decision rule. 'The segment with the biggest lift' can only be known afterwards — choosing it then is exactly what pre-registration prevents."}
+```
+
+### Mistakes people make
+
+- Before/after comparisons presented as "the effect" of a change.
+- Choosing the primary metric after seeing the results — or keeping five "primaries" and reporting the one that moved.
+- Randomising sessions and analysing users (or the reverse); counting payments when loans were randomised.
+- No guardrail on risk: a conversion win shipped that raises first-payment defaults.
+- A sample size computed for the hoped-for effect (+30 %) instead of the smallest worth acting on.
+- Stopping on the first day the dashboard shows p < 0.05; extending "one more week" because it is almost significant.
+- Ignoring an SRM because "it is only 50.7 / 49.3".
+- Re-using the previous experiment's salt.
+- Running a test for 9 days (a week and two weekend days) — weekday mix differs between arms' exposure periods.
+- No A/A test before the first experiment on a new system.
+
+---
+
+## 4. Homework <span class="badge hw">HW 7.1 — Due Day 3</span>
+
+**The pre-registration for the offer-screen test.** Hand in with the 📎 box below:
+
+1. `experiment_design.md` — one page, using the template below, filled for Kamola's test (your own wording; the worked example is a model, not a text to copy).
+2. `day1_starter.ipynb` — executed (Kernel → Restart & Run All, then save) with the five TODO functions passing their asserts, the sample-size cell, and the **A/A check** cell printing the split, the SRM p, the conversion per group, the difference with its CI and the p-value.
+
+```markdown
+# Experiment design — new loan-offer screen        (date, author)
+1. Hypothesis: change → mechanism → measurable consequence
+2. Primary metric: exact definition (numerator, denominator, window), the code that computes it
+3. Guardrails: each with its definition and the threshold that stops a ship
+4. Unit of randomisation and assignment rule (hash, salt, split)
+5. Sample size: baseline, MDE (absolute and relative), alpha, power, method → n per arm; traffic → days; dates
+6. Checks: A/A result (split, SRM p, difference, p); SRM monitoring rule; novelty plan
+7. Analysis plan: test, CI method, exclusions, segments (named, with the correction), stopping rule
+8. Decision rule: ship / do not ship / extend — written as conditions on the numbers
+
+```
+
+**Check your numbers before you hand in.** The site checks these four; your notebook must print the same.
+
+**H1.** Users per arm for 8.0 → 8.9 %, α = 5 % two-sided, power 80 %, with Cohen's h (the statsmodels method).
+
+```task
+{"id": "w07d1-h1", "kind": "number", "answer": 14983, "dp": 0, "unit": "users per arm", "hint": "Round UP; the classic formula gives 14 992 — the box wants the Cohen's h number.", "model": "n_per_arm(0.080, 0.089) = 14 982.2 → 14 983 users per arm (classic formula: 14 991.1 → 14 992). Name the method you used in experiment_design.md."}
+```
+
+**H2.** The A/A split: users in A and B and the SRM p-value of the planned 50/50.
+
+```task
+{"id": "w07d1-h2", "kind": "python", "starter": "import pandas as pd\naa = pd.read_csv(\"data/ab/aa_users.csv\", parse_dates=[\"assigned_at\"])\nprint(aa[\"variant\"].value_counts())\n# TODO: the SRM p-value with srm_pvalue (Learn, 'SRM'), two decimals\n", "answer": 0.79, "dp": 2, "model": "A 6 411, B 6 441: srm_pvalue(6411, 6441) = 0.79 — far from any alarm."}
+```
+
+**H3.** The A/A conversion within 7 days per group (`contract_signed` within 7 × 24 h of `assigned_at`), in %.
+
+```task
+{"id": "w07d1-h3", "kind": "python", "starter": "ev = pd.read_csv(\"data/ab/aa_events.csv\", parse_dates=[\"event_time\"])\nsigned = ev[ev[\"event_name\"] == \"contract_signed\"].merge(aa[[\"user_id\", \"assigned_at\"]], on=\"user_id\")\nok = signed[(signed[\"event_time\"] >= signed[\"assigned_at\"]) &\n            (signed[\"event_time\"] <= signed[\"assigned_at\"] + pd.Timedelta(days=7))]\naa[\"conv\"] = aa[\"user_id\"].isin(ok[\"user_id\"]).astype(int)\n# TODO: conversion per variant in %, two decimals (A first)\n", "answer": 8.2, "dp": 2, "model": "A 526 / 6 411 = 8.20 %, B 527 / 6 441 = 8.18 % — two rates that differ only by noise."}
+```
+
+**H4.** The two-proportion z-test of B − A on the A/A data: the p-value.
+
+```task
+{"id": "w07d1-h4", "kind": "python", "starter": "from math import sqrt\nfrom statistics import NormalDist\nk = aa.groupby(\"variant\")[\"conv\"].agg([\"sum\", \"size\"])\nkA, nA, kB, nB = k.loc[\"A\", \"sum\"], k.loc[\"A\", \"size\"], k.loc[\"B\", \"sum\"], k.loc[\"B\", \"size\"]\n# TODO: pooled rate, z = (pB - pA) / sqrt(pool * (1 - pool) * (1/nA + 1/nB)), two-sided p (two decimals)\n", "answer": 0.96, "dp": 2, "model": "Difference −0.02 points (95 % CI −0.97 to +0.93), z = −0.05, p = 0.96: the interval contains 0, the p-value is far from 0.05 — the system works, for July."}
+```
+
+### 📎 Hand in here
+
+```sqltask
+{"check": "handin-W7D1", "lesson": "W7D1", "title": "HW 7.1", "tasks": [{"id": "experiment_design.md", "file": "experiment_design.md", "text": true, "minLines": 3, "q": "Write `experiment_design.md` here — what the page above asks for."}, {"id": "day1_starter.ipynb", "file": "day1_starter.ipynb", "names": ["day1_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day1_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}], "why": "A design written after the data can be bent to fit any result. This one is dated before the first user is assigned, and the A/A numbers prove that the split, the logging and the test work.", "graded": ["Every number traceable: n per arm (14 983 or 14 992, method named), the A/A numbers matching the notebook and the checks above", "A guardrail with a quantified stop threshold and a reason (Company corner)", "A decision rule written as conditions someone else could apply without you", "The notebook runs top to bottom (Restart & Run All) with the five TODO functions passing their asserts"]}
+```
+
+---
+
+## 5. Self-check
+
+```check
+{"id": "w07d1-sc", "questions": [{"type": "multi", "q": "Kamola: 'The test showed p = 0.03 on day 9, so we can stop.' Which are reasons not to?", "options": ["Stopping at the first p < 0.05 inflates false wins (peeking)", "Day 9 is before the planned n and not a whole number of weeks", "p = 0.03 is not below 0.05", "The first days may carry a novelty effect"], "answer": [0, 1, 3], "explain": "The 5 % promise holds for one look at the planned n; daily looks give about 27 % false wins (→ 'Peeking', 'Sample size and duration')."}, {"type": "single", "q": "A 50/50 experiment ends with 50.8 % of about 28 000 users in B. What do you do first?", "options": ["Reweight B down to 50 %", "Run the SRM test overall and by slice and look for the bug before reading the result", "Read the result — 0.8 points is nothing", "Drop B users at random until it is 50/50"], "answer": 1, "explain": "An SRM is a bug to find, not a bias to correct (→ 'SRM', P7)."}, {"type": "single", "q": "You randomise the offer screen by user but analyse sessions. What happens to the z-test?", "options": ["Nothing — more sessions give more power", "One person's sessions are not independent, so n is inflated and the p-value too small", "The hash stops working", "Conversion falls"], "answer": 1, "explain": "The unit of analysis must equal the unit of randomisation (→ 'The unit of randomisation', P3)."}]}
+```
+
+---
+
+## 6. Company corner <span class="badge company">Guardrails in lending</span>
+
+In e-commerce a conversion win is almost always money. In lending it is money **only if the extra borrowers repay**: a screen that makes borrowing easier can attract exactly the marginal users the scorecard approves with hesitation. So the offer-screen test has two questions — *more loans?* and *worse loans?* — and the answer to the second can cancel the first.
+
+**A simple unit-economics formula** (per 1 000 offer viewers). Week 6's expected loss, EL = PD × LGD × EAD, with three simplifications for a short Micro loan: a loan with a first-payment default is treated as defaulted (PD ≈ FPD), EAD ≈ the principal, and every other loan pays its interest in full.
+
+```
+profit per 1 000 viewers
+  = 1 000 × conversion
+    × [ (1 − FPD) × I − FPD × LGD × P ]
+
+Nur Micro:
+  P = 2 705 586
+    average principal
+  I = 266 662
+    interest over the life of a
+    repaid loan
+  LGD = 60 %
+  → loss L = 1 623 352
+```
+
+| Scenario | conversion | FPD | profit per loan | profit per 1 000 viewers |
+|---|---|---|---|---|
+| A — today | 8.0 % | 1.7 % | 234 532 | **18 762 542** |
+| B — more loans, same quality | 8.9 % | 1.7 % | 234 532 | 20 873 327 (+11.2 %) |
+| B — more loans, FPD +0.5 pt | 8.9 % | 2.2 % | 225 082 | 20 032 271 (+6.8 %) |
+| B — more loans, FPD +1.3 pt | 8.9 % | 3.0 % | 209 962 | **18 686 582 (−0.4 %)** |
+
+**Break-even FPD for B** — solve profit_B = profit_A for FPD_B:
+
+```
+FPD_B* = ( I − (conv_A / conv_B)
+           × (I − FPD_A × (I + L)) )
+         / (I + L)
+       = 2.95 %
+→ B may raise FPD by at most
+  +1.25 points
+```
+
+So **+0.9 points of conversion is worth +1.25 points of FPD** on Micro loans — and not more. Two lessons for the design: (1) the guardrail needs a **number** (the stop threshold is break-even, written in the pre-registration), not "FPD should not get worse"; (2) the guardrail test will be weak — about 1 100 loans per arm, FPD around 2 % — so the decision will rest on the **confidence interval's upper bound** compared with +1.25, not on a p-value. A risky change gets a staged rollout and an FPD watch even after "ship".
+
+Where the simple formula is too simple (say so in the readout): FPD is not PD (some FPD loans cure, some non-FPD loans default later); interest is earned over months, so a time value applies; the funding cost and the cost of acquiring and servicing a loan are left out (they make each loan worth less and the break-even FPD lower); and a more careful bank would use the risk team's PD for the segments B attracts.
+
+```game
+{"type": "sort", "id": "w07d1-g4", "title": "More money than A, or less?", "q": "Screen B lifts conversion from 8.0 % to 8.9 %; A's FPD is 1.7 %. Sort each FPD outcome for B.", "groups": {"B earns more than A": ["B's FPD 1.7 % (unchanged)", "B's FPD 2.2 %", "B's FPD 2.9 %"], "B earns less than A": ["B's FPD 3.0 %", "B's FPD 3.5 %"]}, "why": "Break-even is FPD 2.95 % (+1.25 points over A): below it the extra loans pay for their losses, above it they do not."}
+```
+
+> 🎯 **Interview version.** *"Your test raised loan conversion by 11 %. Ship it?"* — Only after the guardrails: the new loans' early-default rate (FPD) and size. Translate both into money per viewer — interest on good loans minus PD × LGD × EAD on bad ones — find the break-even FPD increase (here about +1.25 points), and compare it with the upper end of the FPD difference's confidence interval; if the interval cannot exclude a loss, ship in stages with the guardrail monitored.
+
+**Say it like in an interview.** *"Your test raised loan conversion by 11 %. Ship it?"* Answer in three to five sentences, with the numbers from today.
+
+```task
+{"id": "w07d1-ci", "kind": "free", "min": 30, "model": "Only after the guardrails. Conversion is money in lending only if the extra borrowers repay, so I would look at the first-payment-default rate and the size of the new loans. I would turn both into money per viewer — interest on the good loans minus PD × LGD × EAD on the bad ones — and find the break-even: here +0.9 points of conversion pays for at most +1.25 points of FPD. Then I compare that with the upper end of the FPD difference's confidence interval; if the interval cannot exclude a loss, I ship in stages with the guardrail monitored and a hold-out kept.", "rubric": ["checks the guardrails before shipping (FPD, loan size)", "turns them into money per viewer (interest minus PD × LGD × EAD)", "names a break-even FPD increase (about +1.25 points)", "compares it with the upper end of the FPD confidence interval and stages the rollout if a loss cannot be excluded"]}
+```
+
+Tomorrow: the data is in — 27 974 user rows, 67 215 events, 2 583 loans. Before the first z-test, three checks that every experiment deserves.
+
+---
+
+## Going further — the full version, with Python (optional, 60 min)
+
+The same ideas as the stories, written out in full with Python: the primary metric as code, `n_per_arm` with Cohen's h and the classic formula, every input moved one at a time, `hash_variant`, `srm_pvalue`, the A/A check table, the novelty arithmetic, the peeking simulation, the eight-line plan and the Depth videos. Optional: nothing here counts toward the day.
+
 The Python boxes on this page run here, in the page, in one shared namespace — like the cells of a notebook. Run them top to bottom; later boxes use what earlier ones defined.
 
 ### Why "September vs August" is not an experiment — confounding
@@ -132,9 +524,6 @@ print(f"{conv:.2%} of {len(aa):,} users signed within 7 days")
 
 **Your turn.**
 
-```game
-{"type": "sort", "id": "w07d1-g3", "title": "Primary, guardrail, or a bad primary?", "q": "The offer-screen test. Put each metric where it belongs.", "groups": {"Primary (the decision)": ["Signed within 7 days of the first offer view ÷ assigned users"], "Guardrail (must not get worse)": ["FPD of the resulting loans", "Average principal per loan", "App crash rate", "Complaints"], "Bad primary (do not decide on it)": ["Clicks on 'Get the money'", "Signed contracts in total", "Conversion with no time window"]}, "why": "One primary with a numerator, a denominator and a window; guardrails with thresholds; clicks and totals move without meaning more good loans."}
-```
 
 ### The unit of randomisation — user, session or loan
 
@@ -191,11 +580,6 @@ print(f"target {baseline + mde_abs:.1%}, relative lift {mde_abs / baseline:.2%}"
 
 ### Sample size and duration — each input
 
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w07d1-x1", "type": "abplan", "title": "Plan Kamola's test: users and days", "predict": {"q": "Kamola's screen: today 8.0 % of users sign within 7 days, and she wants to see **+0.9 points** (8.9 %), with α 5 % and 80 % power. About **1 000** users a day see the offer, split 50/50. How long must the test run?", "options": ["about a week", "about a month", "about three months", "about a year"], "why": "14 983 users per arm, 29 966 in all: **30 days** of traffic. The MDE drives it: halve the lift you want to see and the test runs about four times as long. Try it below.", "answer": 1}, "start": {"base": 0.08, "mde": 0.009, "traffic": 1000, "split": 0.5}, "alpha": 0.05, "power": 0.8, "trafficLabel": "Offer viewers a day", "challenges": [{"id": "c1", "text": "Kamola wants the answer in **two weeks** (14 days) at 1 000 viewers a day. Move only the **MDE**: what is the smallest lift a 14-day test can see?", "when": {"days": ["<=", 14], "mde": ["<", 0.0137]}, "only": ["mde"]}, {"id": "c2", "text": "Now go the other way: **halve** the plan's MDE, to **+0.45** points. Twice as long — or more?", "when": {"mde": ["=", 0.0045]}, "only": ["mde"]}, {"id": "c3", "text": "A cautious launch: only **10 %** of users see the new screen (a 90 / 10 split). Keep the rest as planned: how long now?", "when": {"split": ["=", 0.1]}, "only": ["split"]}]}
-```
 
 **What it is.** The **sample size** (*объём выборки*) per arm comes from four inputs. The **duration** is that sample divided by your daily traffic, rounded up to whole weeks.
 
@@ -470,9 +854,6 @@ Daily looks turn a 5 % promise into 27 %: more than one null test in four "wins"
 
 **Your turn.**
 
-```game
-{"type": "bug", "id": "w07d1-g2", "title": "Find the line that breaks the plan", "q": "Kamola's draft analysis plan. One line breaks the 5 % promise.", "code": "Primary: signed within 7 days of the first offer view, per assigned user\nSplit: 50/50, sha256(\"offer_screen_v2\" + user_id) mod 2\nSample: 14 983 users per arm, 1–28 August (four whole weeks)\nWe check the dashboard every morning and stop as soon as p < 0.05\nSRM alarm: p < 0.001, overall and by device and week\nDecision: ship if p < 0.05 and the FPD difference's upper 95 % bound < +1.25 pt", "answer": [3], "why": "Daily looks with a stop at the first p < 0.05 turn 5 % false wins into about 27 %. Fix the end date — or pre-register a sequential design (Pocock, O'Brien–Fleming)."}
-```
 
 ### Pre-registration — the one-page test plan
 
@@ -499,9 +880,6 @@ The decision rule for the offer screen: *ship if the primary is significant at 5
 
 **Your turn.**
 
-```game
-{"type": "order", "id": "w07d1-g1", "title": "The design document, in order", "items": ["Hypothesis: change → mechanism → consequence", "Primary metric: one number, exact definition", "Guardrails: what must not get worse", "Unit of randomisation", "MDE, α, power → sample size → duration", "Analysis plan: test, exclusions, segments, stopping rule"], "why": "Each decision constrains the next: the metric fixes the unit, the unit and the MDE fix n, n fixes the dates — all written before any data.", "alts": [["Hypothesis: change → mechanism → consequence", "Primary metric: one number, exact definition", "Unit of randomisation", "Guardrails: what must not get worse", "MDE, α, power → sample size → duration", "Analysis plan: test, exclusions, segments, stopping rule"]]}
-```
 
 ### Putting it together
 
@@ -522,9 +900,6 @@ One test, every decision of this section, in the order you make them:
 
 **Your turn.** Each problem below is prevented by one decision. Match them.
 
-```game
-{"type": "sort", "id": "w07d1-g5", "title": "Which decision prevents it?", "q": "Put each problem under the design decision that prevents it.", "groups": {"A concurrent random control": ["September had a marketing push"], "The user as the unit": ["One person saw both screens on two visits"], "A fixed end date": ["The test was stopped on day 9 at p = 0.03"], "The SRM check": ["B lost 2 % of its users to a broken redirect"], "Whole weeks and a daily lift chart": ["The lift in week 1 was four times the lift in week 4"], "Pre-registration": ["The segment that 'worked' was chosen after the results"]}, "why": "Each trap of the day has its own guard; the pre-registration writes all of them down before the start."}
-```
 
 ### Depth (optional)
 
@@ -553,242 +928,6 @@ One test, every decision of this section, in the order you make them:
 {"video": "sSi6h-PpXQI", "stops": [{"at": 120, "q": "What is a sample ratio mismatch?", "options": ["The groups' sizes differ from the planned split more than chance allows", "B has a higher conversion", "The test ran too long", "Too many metrics"], "answer": 0, "explain": "Planned 50/50, observed 50.7/49.3 on 28 000 users is already suspicious (p = 0.017)."}, {"at": 300, "q": "You find an SRM. What do you do?", "options": ["Reweight the groups to 50/50", "Read the result anyway", "Find the cause — redirects, crashes, bots, assignment bugs — before trusting the result", "Drop users at random"], "answer": 2, "explain": "An SRM is a bug to find, not a bias to correct.", "back": 60}]}
 ```
 
-
----
-
-## 2. Worked example — Kamola's answer, in numbers (15 min)
-
-**Ask:** Kamola wants to ship the new screen on 1 September and compare September with August. Turn that into a test that can answer her — one decision per concept, in the order of section 1.
-
-1. **Confounding — why not September vs August.** The app's approval rate moved 71.4 % → 67.9 % → 66.7 % over three months with no change at all. Seasonality, marketing and policy would all be credited to the screen. A concurrent random split answers in the same four weeks.
-2. **Hypothesis.** A single button and the monthly payment in large type reduce hesitation, so more viewers sign within 7 days.
-3. **Metrics.** Primary: signed within 7 days of the first offer view ÷ assigned users. Secondary: start, submit, approval and signing rates; principal per loan. Guardrail: FPD of the resulting loans, with a stop threshold of +1.25 points (the break-even in the Company corner).
-4. **Unit of randomisation.** The user, assigned at the first offer view — she sees the screen many times and must always see the same one.
-5. **MDE.** +0.9 points (8.0 → 8.9 %, +11 % relative): the smallest lift worth a release.
-6. **Sample size and duration.** `n_per_arm(0.080, 0.089)` = 14 983 per arm → 30 days at ~1 000 viewers a day → four whole weeks, 1–28 August: about 14 000 per arm, power 77 %, accepted and written down.
-7. **Assignment.** `sha256("offer_screen_v2" + user_id) mod 2` — deterministic, uniform, a new salt.
-8. **SRM and A/A.** The July A/A passed (your HW 7.1 cell: split, hash, two rates, p-value; 4.0 % false positives over 1 000 re-splits). During the test an SRM alarm at p < 0.001, overall and by device and week.
-9. **Novelty and peeking.** A daily lift chart; one look, on 28 August.
-10. **Pre-registration.** All of it on one dated page:
-
-| Decision | Choice | Why |
-|---|---|---|
-| unit | user (`user_id`), assigned at the first offer view | the screen is seen repeatedly; conversion is per user |
-| split | 50/50, `sha256("offer_screen_v2" + user_id)` mod 2 | deterministic, salted |
-| primary | signed within 7 days of assignment ÷ assigned users | one number, fixed window |
-| guardrails | FPD on the resulting loans; average principal; crash rate | Company corner |
-| α, power, MDE | 5 % two-sided, 80 %, +0.9 pt (8.0 → 8.9 %) | smallest lift worth a release |
-| n, dates | 14 983 per arm → 1–28 August 2026 (four whole weeks, ~14 000 per arm, power 77 % — accepted) | traffic ~1 000/day |
-| checks | A/A in July (passed); SRM daily with p < 0.001 alarm; daily lift chart for novelty | |
-| decision rule | ship if primary p < 0.05 **and** the FPD difference's upper 95 % bound < +1.25 pt (break-even, Company corner) | written before the start |
-
-**What goes back to Kamola**, in three sentences: *"Comparing September to August would mix the screen with everything else that changes between months — your own approval rate moved four points in a month with no change. Instead we show the new screen to a random half of app users for four weeks in August (about 14 000 per arm), which can detect a +0.9-point lift with 77 % power, and we decide on 28 August, not before. If conversion rises but first-payment defaults rise by more than 1.25 points, the screen loses money and we do not ship it as is."*
-
----
-
-## 3. Practice (50 min)
-
-Answer each question in the box under it. The ▶ Run boxes run Python right here, in the page, and see everything the Learn blocks above defined (`n_per_arm`, `hash_variant`, `srm_pvalue`, the peeking simulation) — run those blocks first. The notebook `day1_starter.ipynb` is for HW 7.1 (section 4); its Part 0 walks through the same steps if you prefer Jupyter.
-
-**P1.** *(confounding)* Kamola's before/after idea. Name **four** things other than the screen that differ between August and September for app users, and use the table in section 1 to say how big a month-to-month change can be with no intervention.
-
-```task
-{"id": "w07d1-p1", "kind": "free", "min": 30, "rubric": ["names four factors other than the screen (season, marketing, product/policy, user mix)", "quotes a no-change swing from the table (−3.5 points July → August, 4.7 from July to September)", "says a +0.9-point effect would be lost in that noise"], "model": "Seasonality (school start, salary and holiday cycles), marketing (a campaign, an SMS blast, a partner promotion), product and policy (another app release, a scorecard cut-off change, a new price), and the user mix (more new users after a campaign; new users convert less). With no change, the app approval rate moved −3.5 points July → August (71.4 → 67.9 %) and the average Micro ticket swung from 2.59 m (June) to 2.90 m (July) and back to 2.59 m (August) — ±12 %. A +0.9-point screen effect is far inside that noise."}
-```
-
-**P2.** *(hypothesis, metrics)* Write the design's first three lines for the offer screen: hypothesis, primary metric (with its exact definition), two guardrails. Then a bad primary metric and why it is bad.
-
-```task
-{"id": "w07d1-p2", "kind": "free", "min": 40, "rubric": ["a hypothesis with change, mechanism and measurable consequence", "a primary with numerator, denominator and a 7-day window", "two guardrails, one of them FPD", "a bad primary (clicks, total contracts, no window) and why it is bad"], "model": "Hypothesis: a single button and the monthly payment in large type reduce hesitation, so more viewers sign. Primary: users with a contract_signed within 7 × 24 h of their first view_offer ÷ users assigned. Guardrails: FPD rate of the resulting loans (risk), average principal (revenue); also crash rate (quality). Bad primaries: clicks on the button (moves easily, may not become loans — a \"dark pattern\" wins), signed contracts in total (not a rate: more traffic in B by chance or by bug inflates it), conversion with no window (users assigned later have less time, and the arms may differ in timing)."}
-```
-
-**P3.** *(unit of randomisation)* For each change pick the unit — user, session or application — and one sentence why: (a) the offer screen; (b) a new interest-rate rule shown at the decision; (c) the order of products on the app's home screen for logged-out visitors; (d) an SMS reminder before the first due date (week 6).
-
-```task
-{"id": "w07d1-p3", "kind": "choice", "options": ["(a) session · (b) user · (c) user · (d) application", "(a) user · (b) application, all of one customer's applications in the same arm · (c) session or device cookie · (d) loan, hashed on customer_id", "(a) user · (b) session · (c) application · (d) user", "(a) application · (b) application · (c) session · (d) session"], "answer": 1, "explain": "(a) User — seen repeatedly; must be consistent. (b) Application, but with every application of the same customer forced into the same arm (hash the customer_id) — two prices for one person is a complaint and a fairness problem. (c) Session or a device cookie — no login, so no user id; accept the weaker consistency. (d) Loan (one SMS per loan; FPD is per loan) — but hashing customer_id again avoids one customer getting the SMS on one loan and not on another."}
-```
-
-**P4.** *(MDE, sample size)* Sample size with your `n_per_arm`: 8.0 → 8.9 % at 80 % and at 90 % power; one-sided at 80 %; and the days each needs at 1 000 users a day. When is the one-sided number legitimate?
-
-```task
-{"id": "w07d1-p4", "kind": "python", "starter": "from math import ceil\n# n_per_arm comes from the Learn block 'Sample size and duration' -- run it first\nfor power in (0.80, 0.90):\n    n = ceil(n_per_arm(0.080, 0.089, power=power))\n    print(power, n, round(2 * n / 1000, 1), \"days\")\n# TODO: the one-sided version at 80 % power (two_sided=False) -- print n and the days\n", "answer": 11802, "dp": 0, "model": "80 %: 14 983 per arm → 30.0 days. 90 %: 20 057 → 40.1 days. One-sided 80 %: 11 802 → 23.6 days. One-sided is legitimate only if \"B is worse\" and \"no difference\" lead to the same action (do not ship) and you wrote that down before the start — for a screen redesign that is arguable, but most teams keep two-sided so that a harmful screen is also detected, not just \"not shipped\"."}
-```
-
-**P5.** *(sample size, turned round)* Turn it round: with 28 days (~14 000 users per arm), what is the MDE, and what power does the test have for a true +0.9 point? With 10 000 per arm?
-
-```task
-{"id": "w07d1-p5", "kind": "python", "starter": "from math import asin, sqrt\nfrom statistics import NormalDist\nN = NormalDist()\n\ndef power_at(n, p1=0.080, p2=0.089, alpha=0.05):\n    h = 2 * asin(sqrt(p2)) - 2 * asin(sqrt(p1))\n    return N.cdf(abs(h) * sqrt(n / 2) - N.inv_cdf(1 - alpha / 2))\n\nprint(f\"14 000 per arm: power {power_at(14000):.1%}\")\n# TODO: the power with 10 000 per arm (print it in %)\n# TODO: the MDE at 14 000 -- try p2 = 0.0890, 0.0892, 0.0894 ... until the power reaches 80 %\n", "answer": 62.9, "dp": 1, "model": "14 000 per arm: MDE +0.93 pt (11.6 % relative), power for +0.9 pt 77.3 %. 10 000 per arm: MDE +1.11 pt (13.8 %), power for +0.9 pt 62.9 %. (NormalIndPower().power(h, nobs1=n, alpha=0.05), and a root-finder on the power for the MDE.) Four weeks is slightly short of 80 % — acceptable if written down; three weeks would not be."}
-```
-
-**P6.** *(randomisation by hash)* Hashing: compute `hash_variant` for the first five A/A users with the A/A salt and with the salt `"another_test"`. Check that all 12 852 A/A rows match their logged variant. Why must the salt change between experiments?
-
-```task
-{"id": "w07d1-p6", "kind": "python", "starter": "import pandas as pd\naa = pd.read_csv(\"data/ab/aa_users.csv\")\nfirst5 = aa[\"user_id\"].head()\n# hash_variant comes from the Learn block 'Randomisation by hashing'\nprint([hash_variant(u, \"offer_screen_aa_2026_07\") for u in first5])\nprint([hash_variant(u, \"another_test\") for u in first5])\n# TODO: recompute the variant of every row with the A/A salt and print how many rows match the logged variant\n", "answer": 12852, "dp": 0, "model": "With offer_screen_aa_2026_07: B, A, A, B, A (users 925601, 665666, 652995, 774155, 376261 — the notebook's table, which also shows the first 12 hex digits); with another_test: A, A, B, A, A. All 12 852 rows match. Without a new salt, every experiment would put the same users in B: their \"treated\" history (fatigue, earlier changes) would follow them, and two simultaneous tests would be perfectly correlated — the effects of the two could not be separated."}
-```
-
-**P7.** *(SRM)* SRM: your `srm_pvalue` for 14 200 vs 13 800, 14 050 vs 13 950, and 9 000 vs 1 000 for a planned 90/10 split. Which would you investigate, and what threshold do you use?
-
-```task
-{"id": "w07d1-p7", "kind": "python", "starter": "# srm_pvalue comes from the Learn block 'SRM'\n# TODO: print the p-value for 14 200 vs 13 800, for 14 050 vs 13 950,\n#       and for 9 000 vs 1 000 with expected_share_b=0.1 (three decimals)\n", "answer": 0.017, "dp": 3, "model": "0.017, 0.55, and 1.0 for 9 000 vs 1 000 (expected_share_b=0.1: exactly the plan). Investigate the first (a 50.7 / 49.3 split of 28 000 is unusual) — and with the usual production threshold of p < 0.001 it would not raise an automatic alarm, which is why you also check by day and segment (Day 2). The strict threshold exists because SRM checks are run many times; the response to an alarm is not a correction but a search for the bug."}
-```
-
-**P8.** *(A/A test)* The A/A check itself is HW 7.1 (section 4). Here, read the 1 000 re-splits in section 1 ("The A/A test"): 4.0 % false positives and flat deciles. Which of these would tell you that an A/A test — the system — has failed?
-
-```task
-{"id": "w07d1-p9", "kind": "multi", "options": ["SRM p < 0.001 on the split", "One A/A run with p = 0.03 that disappears on a re-split", "Re-splits 'significant' 15 % of the time instead of about 5 %", "One arm has no contract_signed events after a release", "p-values of 1 000 re-splits spread evenly from 0 to 1"], "answer": [0, 2, 3], "explain": "Re-splits: 4.0 % below 0.05; deciles 92, 90, 110, 101, 115, 100, 99, 90, 101, 102 (flat) — the test behaves on this data. Your own A/A cell should show the same shape as the table in section 1: an SRM p far from the alarm, every row matching the hash, two close rates, an interval of the difference that contains 0. Failing: an SRM (p < 0.001), a \"significant\" A/A difference that repeats on a re-run, a re-split false-positive rate well above 5 % (the test is wrong for the data, e.g. sessions counted as independent users), or one arm missing events (a logging bug)."}
-```
-
-> 🚀 **Stretch (optional, +5 XP).** **P9.** *(novelty)* Novelty arithmetic. Suppose B's true lift is **+3.4 points** on days 1–3 (novelty) and **+0.9** afterwards, with equal traffic every day and A at 8.0 %. What lift would a test that stops after 7 days report? After 14 and 28 (the box takes the 28-day lift, to 2 decimals)? What does that say about "we saw a big win in the first week, let us ship"?
-
-```task
-{"id": "w07d1-p10", "kind": "number", "answer": 1.17, "dp": 2, "unit": "points", "hint": "Enter the 28-day lift: (3 × 3.4 + 25 × 0.9) / 28.", "xp": 2, "model": "7 days: (3 × 3.4 + 4 × 0.9) / 7 = +1.97 pt (+24.6 % relative). 14 days: (10.2 + 11 × 0.9) / 14 = +1.44 pt. 28 days: (10.2 + 25 × 0.9) / 28 = +1.17 pt — and still above the steady +0.9. A first-week result overstates a novelty-driven change by more than double; the cure is whole weeks, the daily lift chart, and an analysis that excludes the novelty days (or reads only the last weeks) — decided in the pre-registration. (Day 2 will find exactly this pattern in the real data.)"}
-```
-
-**P10.** *(peeking)* Run the peeking simulation (the code block in section 1, "Peeking"). Report the false-positive rate for one look, weekly looks and daily looks, and the day on which half of the daily-peeking "wins" have already been declared.
-
-```task
-{"id": "w07d1-p8", "kind": "choice", "options": ["about 5 %", "about 12 %", "about 27 %", "about 50 %"], "answer": 2, "explain": "One look 4.9 %; weekly 12.4 %; daily 27.2 % — a null screen \"wins\" in more than one test in four. Half of the daily-peeking false wins are declared by day 6 (median first crossing), when the sample is smallest and the p-value most volatile; 15.9 % of all A/A runs have a false win within the first week. With Pocock's 0.0182 at four weekly looks the rate is back to 4.8 %."}
-```
-
-**P11.** *(pre-registration)* Which of these must be written in the plan **before** the first user is assigned? Tick every one.
-
-```task
-{"id": "w07d1-p11", "kind": "multi", "options": ["The primary metric with its window", "The planned n and the end date", "The segments you will report, with the correction", "Whether the launch days are excluded", "The segment that showed the biggest lift", "The decision rule as conditions on the numbers"], "answer": [0, 1, 2, 3, 5], "explain": "Everything that can be bent after seeing the data goes in the plan first: the metric, n and end date, the segments, the exclusions, the decision rule. 'The segment with the biggest lift' can only be known afterwards — choosing it then is exactly what pre-registration prevents."}
-```
-
-### Mistakes people make
-
-- Before/after comparisons presented as "the effect" of a change.
-- Choosing the primary metric after seeing the results — or keeping five "primaries" and reporting the one that moved.
-- Randomising sessions and analysing users (or the reverse); counting payments when loans were randomised.
-- No guardrail on risk: a conversion win shipped that raises first-payment defaults.
-- A sample size computed for the hoped-for effect (+30 %) instead of the smallest worth acting on.
-- Stopping on the first day the dashboard shows p < 0.05; extending "one more week" because it is almost significant.
-- Ignoring an SRM because "it is only 50.7 / 49.3".
-- Re-using the previous experiment's salt.
-- Running a test for 9 days (a week and two weekend days) — weekday mix differs between arms' exposure periods.
-- No A/A test before the first experiment on a new system.
-
----
-
-## 4. Homework <span class="badge hw">HW 7.1 — Due Day 3</span>
-
-**The pre-registration for the offer-screen test.** Hand in with the 📎 box below:
-
-1. `experiment_design.md` — one page, using the template below, filled for Kamola's test (your own wording; the worked example is a model, not a text to copy).
-2. `day1_starter.ipynb` — executed (Kernel → Restart & Run All, then save) with the five TODO functions passing their asserts, the sample-size cell, and the **A/A check** cell printing the split, the SRM p, the conversion per group, the difference with its CI and the p-value.
-
-```markdown
-# Experiment design — new loan-offer screen        (date, author)
-1. Hypothesis: change → mechanism → measurable consequence
-2. Primary metric: exact definition (numerator, denominator, window), the code that computes it
-3. Guardrails: each with its definition and the threshold that stops a ship
-4. Unit of randomisation and assignment rule (hash, salt, split)
-5. Sample size: baseline, MDE (absolute and relative), alpha, power, method → n per arm; traffic → days; dates
-6. Checks: A/A result (split, SRM p, difference, p); SRM monitoring rule; novelty plan
-7. Analysis plan: test, CI method, exclusions, segments (named, with the correction), stopping rule
-8. Decision rule: ship / do not ship / extend — written as conditions on the numbers
-
-```
-
-**Check your numbers before you hand in.** The site checks these four; your notebook must print the same.
-
-**H1.** Users per arm for 8.0 → 8.9 %, α = 5 % two-sided, power 80 %, with Cohen's h (the statsmodels method).
-
-```task
-{"id": "w07d1-h1", "kind": "number", "answer": 14983, "dp": 0, "unit": "users per arm", "hint": "Round UP; the classic formula gives 14 992 — the box wants the Cohen's h number.", "model": "n_per_arm(0.080, 0.089) = 14 982.2 → 14 983 users per arm (classic formula: 14 991.1 → 14 992). Name the method you used in experiment_design.md."}
-```
-
-**H2.** The A/A split: users in A and B and the SRM p-value of the planned 50/50.
-
-```task
-{"id": "w07d1-h2", "kind": "python", "starter": "import pandas as pd\naa = pd.read_csv(\"data/ab/aa_users.csv\", parse_dates=[\"assigned_at\"])\nprint(aa[\"variant\"].value_counts())\n# TODO: the SRM p-value with srm_pvalue (Learn, 'SRM'), two decimals\n", "answer": 0.79, "dp": 2, "model": "A 6 411, B 6 441: srm_pvalue(6411, 6441) = 0.79 — far from any alarm."}
-```
-
-**H3.** The A/A conversion within 7 days per group (`contract_signed` within 7 × 24 h of `assigned_at`), in %.
-
-```task
-{"id": "w07d1-h3", "kind": "python", "starter": "ev = pd.read_csv(\"data/ab/aa_events.csv\", parse_dates=[\"event_time\"])\nsigned = ev[ev[\"event_name\"] == \"contract_signed\"].merge(aa[[\"user_id\", \"assigned_at\"]], on=\"user_id\")\nok = signed[(signed[\"event_time\"] >= signed[\"assigned_at\"]) &\n            (signed[\"event_time\"] <= signed[\"assigned_at\"] + pd.Timedelta(days=7))]\naa[\"conv\"] = aa[\"user_id\"].isin(ok[\"user_id\"]).astype(int)\n# TODO: conversion per variant in %, two decimals (A first)\n", "answer": 8.2, "dp": 2, "model": "A 526 / 6 411 = 8.20 %, B 527 / 6 441 = 8.18 % — two rates that differ only by noise."}
-```
-
-**H4.** The two-proportion z-test of B − A on the A/A data: the p-value.
-
-```task
-{"id": "w07d1-h4", "kind": "python", "starter": "from math import sqrt\nfrom statistics import NormalDist\nk = aa.groupby(\"variant\")[\"conv\"].agg([\"sum\", \"size\"])\nkA, nA, kB, nB = k.loc[\"A\", \"sum\"], k.loc[\"A\", \"size\"], k.loc[\"B\", \"sum\"], k.loc[\"B\", \"size\"]\n# TODO: pooled rate, z = (pB - pA) / sqrt(pool * (1 - pool) * (1/nA + 1/nB)), two-sided p (two decimals)\n", "answer": 0.96, "dp": 2, "model": "Difference −0.02 points (95 % CI −0.97 to +0.93), z = −0.05, p = 0.96: the interval contains 0, the p-value is far from 0.05 — the system works, for July."}
-```
-
-### 📎 Hand in here
-
-```sqltask
-{"check": "handin-W7D1", "lesson": "W7D1", "title": "HW 7.1", "tasks": [{"id": "experiment_design.md", "file": "experiment_design.md", "text": true, "minLines": 3, "q": "Write `experiment_design.md` here — what the page above asks for."}, {"id": "day1_starter.ipynb", "file": "day1_starter.ipynb", "names": ["day1_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day1_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}], "why": "A design written after the data can be bent to fit any result. This one is dated before the first user is assigned, and the A/A numbers prove that the split, the logging and the test work.", "graded": ["Every number traceable: n per arm (14 983 or 14 992, method named), the A/A numbers matching the notebook and the checks above", "A guardrail with a quantified stop threshold and a reason (Company corner)", "A decision rule written as conditions someone else could apply without you", "The notebook runs top to bottom (Restart & Run All) with the five TODO functions passing their asserts"]}
-```
-
----
-
-## 5. Self-check
-
-```check
-{"id": "w07d1-sc", "questions": [{"type": "multi", "q": "Kamola: 'The test showed p = 0.03 on day 9, so we can stop.' Which are reasons not to?", "options": ["Stopping at the first p < 0.05 inflates false wins (peeking)", "Day 9 is before the planned n and not a whole number of weeks", "p = 0.03 is not below 0.05", "The first days may carry a novelty effect"], "answer": [0, 1, 3], "explain": "The 5 % promise holds for one look at the planned n; daily looks give about 27 % false wins (→ 'Peeking', 'Sample size and duration')."}, {"type": "single", "q": "A 50/50 experiment ends with 50.8 % of about 28 000 users in B. What do you do first?", "options": ["Reweight B down to 50 %", "Run the SRM test overall and by slice and look for the bug before reading the result", "Read the result — 0.8 points is nothing", "Drop B users at random until it is 50/50"], "answer": 1, "explain": "An SRM is a bug to find, not a bias to correct (→ 'SRM', P7)."}, {"type": "single", "q": "You randomise the offer screen by user but analyse sessions. What happens to the z-test?", "options": ["Nothing — more sessions give more power", "One person's sessions are not independent, so n is inflated and the p-value too small", "The hash stops working", "Conversion falls"], "answer": 1, "explain": "The unit of analysis must equal the unit of randomisation (→ 'The unit of randomisation', P3)."}]}
-```
-
----
-
-## 6. Company corner <span class="badge company">Guardrails in lending</span>
-
-In e-commerce a conversion win is almost always money. In lending it is money **only if the extra borrowers repay**: a screen that makes borrowing easier can attract exactly the marginal users the scorecard approves with hesitation. So the offer-screen test has two questions — *more loans?* and *worse loans?* — and the answer to the second can cancel the first.
-
-**A simple unit-economics formula** (per 1 000 offer viewers). Week 6's expected loss, EL = PD × LGD × EAD, with three simplifications for a short Micro loan: a loan with a first-payment default is treated as defaulted (PD ≈ FPD), EAD ≈ the principal, and every other loan pays its interest in full.
-
-```
-profit per 1 000 viewers
-  = 1 000 × conversion
-    × [ (1 − FPD) × I − FPD × LGD × P ]
-
-Nur Micro:
-  P = 2 705 586
-    average principal
-  I = 266 662
-    interest over the life of a
-    repaid loan
-  LGD = 60 %
-  → loss L = 1 623 352
-```
-
-| Scenario | conversion | FPD | profit per loan | profit per 1 000 viewers |
-|---|---|---|---|---|
-| A — today | 8.0 % | 1.7 % | 234 532 | **18 762 542** |
-| B — more loans, same quality | 8.9 % | 1.7 % | 234 532 | 20 873 327 (+11.2 %) |
-| B — more loans, FPD +0.5 pt | 8.9 % | 2.2 % | 225 082 | 20 032 271 (+6.8 %) |
-| B — more loans, FPD +1.3 pt | 8.9 % | 3.0 % | 209 962 | **18 686 582 (−0.4 %)** |
-
-**Break-even FPD for B** — solve profit_B = profit_A for FPD_B:
-
-```
-FPD_B* = ( I − (conv_A / conv_B)
-           × (I − FPD_A × (I + L)) )
-         / (I + L)
-       = 2.95 %
-→ B may raise FPD by at most
-  +1.25 points
-```
-
-So **+0.9 points of conversion is worth +1.25 points of FPD** on Micro loans — and not more. Two lessons for the design: (1) the guardrail needs a **number** (the stop threshold is break-even, written in the pre-registration), not "FPD should not get worse"; (2) the guardrail test will be weak — about 1 100 loans per arm, FPD around 2 % — so the decision will rest on the **confidence interval's upper bound** compared with +1.25, not on a p-value. A risky change gets a staged rollout and an FPD watch even after "ship".
-
-Where the simple formula is too simple (say so in the readout): FPD is not PD (some FPD loans cure, some non-FPD loans default later); interest is earned over months, so a time value applies; the funding cost and the cost of acquiring and servicing a loan are left out (they make each loan worth less and the break-even FPD lower); and a more careful bank would use the risk team's PD for the segments B attracts.
-
-```game
-{"type": "sort", "id": "w07d1-g4", "title": "More money than A, or less?", "q": "Screen B lifts conversion from 8.0 % to 8.9 %; A's FPD is 1.7 %. Sort each FPD outcome for B.", "groups": {"B earns more than A": ["B's FPD 1.7 % (unchanged)", "B's FPD 2.2 %", "B's FPD 2.9 %"], "B earns less than A": ["B's FPD 3.0 %", "B's FPD 3.5 %"]}, "why": "Break-even is FPD 2.95 % (+1.25 points over A): below it the extra loans pay for their losses, above it they do not."}
-```
-
-> 🎯 **Interview version.** *"Your test raised loan conversion by 11 %. Ship it?"* — Only after the guardrails: the new loans' early-default rate (FPD) and size. Translate both into money per viewer — interest on good loans minus PD × LGD × EAD on bad ones — find the break-even FPD increase (here about +1.25 points), and compare it with the upper end of the FPD difference's confidence interval; if the interval cannot exclude a loss, ship in stages with the guardrail monitored.
-
-**Say it like in an interview.** *"Your test raised loan conversion by 11 %. Ship it?"* Answer in three to five sentences, with the numbers from today.
-
-```task
-{"id": "w07d1-ci", "kind": "free", "min": 30, "model": "Only after the guardrails. Conversion is money in lending only if the extra borrowers repay, so I would look at the first-payment-default rate and the size of the new loans. I would turn both into money per viewer — interest on the good loans minus PD × LGD × EAD on the bad ones — and find the break-even: here +0.9 points of conversion pays for at most +1.25 points of FPD. Then I compare that with the upper end of the FPD difference's confidence interval; if the interval cannot exclude a loss, I ship in stages with the guardrail monitored and a hold-out kept.", "rubric": ["checks the guardrails before shipping (FPD, loan size)", "turns them into money per viewer (interest minus PD × LGD × EAD)", "names a break-even FPD increase (about +1.25 points)", "compares it with the upper end of the FPD confidence interval and stages the rollout if a loss cannot be excluded"]}
-```
-
-Tomorrow: the data is in — 27 974 user rows, 67 215 events, 2 583 loans. Before the first z-test, three checks that every experiment deserves.
 
 ---
 

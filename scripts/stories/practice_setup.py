@@ -13,7 +13,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 DOCS = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "docs")
 LEAD = {"en": "**First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.",
         "ru": "**Сначала один раз нажмите ▶ Run в этом блоке.** Он загружает инструменты и данные для всех блоков Python ниже."}
-OLD_LEAD = re.compile(r"^\*\*(First, press ▶ Run on this box once|Сначала один раз нажмите ▶ Run в этом блоке)\.\*\*[^\n]*\n\n```python\n.*?^```\n", re.S | re.M)
+OLD_LEAD = re.compile(r"^\*\*(First, press ▶ Run on this box once|Сначала один раз нажмите ▶ Run в этом блоке)\.\*\*[^\n]*\n\n```python\n.*?^```\n\n?", re.S | re.M)   # with the blank line after it, so a rerun adds none
 HEAD = {"en": "# the tools and the data from the full version of section 1 — run once", "ru": "# инструменты и данные из полной версии раздела 1 — запустите один раз"}
 WORD = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
@@ -73,8 +73,8 @@ def run(day, lang):
     if not body:
         print(lang, "nothing needed from the full version"); return
     box = "```python\n" + HEAD[lang] + "\n" + "\n".join(body) + "\nprint('ready')\n```\n"
-    py = re.search(r"^```python\n", after, re.M)
-    sec = list(re.finditer(r"^## .*\n\n(?:[^\n]+\n)+\n", after[: py.start()], re.M))[-1]
+    py = re.search(r"^```python\n", after, re.M) or re.search(r"^```task\n", after, re.M)   # a day whose Python is all in tasks (w7d1)
+    sec =list(re.finditer(r"^## .*\n\n(?:[^\n]+\n)+\n", after[: py.start()], re.M))[-1]
     at = s2.start() + sec.end()
     t = t[:at] + LEAD[lang] + "\n\n" + box + "\n" + t[at:]
     io.open(p, "w", encoding="utf-8", newline="").write(t.replace("\n", nl))
