@@ -34,6 +34,17 @@ Pictures:
            drag (or nudge with act {do: "nudge", i, by}); "pull" [i, value] puts it there.
   bell   — the normal curve ("mu", "sd", "lo", "hi"); "band" k shades ± k sd with its share; "cut" [a, b] shades the
            share between; act "drop" n drops simulated people as dots under it.
+  hist   — many samples, one bar per range of what they gave. "gen": "share" (p, n: the share in %), "mean" (pop: values,
+           n: the mean of n drawn with replacement), "gap" (pA, nA, pB, nB: share A − share B in points), "normal"
+           (mu, sd). act "sample" n adds n samples. "bell" lays the formula's curve on top; "band" k shades ± k SE with
+           its share; "obs" draws the observed value, and "tails" ("two" default, "right", "left", "none") colours
+           the samples as far out or further (the simulated p-value); "truth" marks the true value; "cut" [[x, label]];
+           "lo", "hi", "bins", "unit", "dp"; "words" {thing, axis, obs, truth}. The read-out gives the samples' own sd —
+           the standard error, seen.
+  ci     — one interval per sample against the true value: a share ("p", "n", "method" "wald" or "wilson") or a
+           mean ("mu", "sd", "n": the t interval); "conf" 0.8 / 0.9 / 0.95 / 0.99; act "draw" n; caught in blue,
+           missed in orange; "lo", "hi", "unit", "words" {truth}.
+More kinds can live in other files (story2.js …): they add themselves to window.ALStory.scenes and use its helpers.
 
 Done: the card is an "al-block" and turns "al-done" when she presses Finish on the last step (sections.js counts it).
 State: localStorage "al.v1" → story[id] = {at, ans: {step: option}, done, doneOn}; sync.js keeps it with her sign-in. */
@@ -316,7 +327,114 @@ State: localStorage "al.v1" → story[id] = {at, ans: {step: option}, done, done
     };
   }
 
-  var SCENES = { dots: dots, bag: bag, months: months, line: line, bell: bell };
+  function gauss0() { var u = 1 - Math.random(), w = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * w); }
+  function binom(n, p) {   // one binomial draw; a normal stand-in when n is huge
+    if (n > 20000) return Math.max(0, Math.round(n * p + Math.sqrt(n * p * (1 - p)) * gauss0()));
+    var k = 0; for (var i = 0; i < n; i++) if (Math.random() < p) k++; return k;
+  }
+  function zOf(conf) { return { 0.8: 1.2816, 0.9: 1.6449, 0.95: 1.96, 0.99: 2.5758 }[conf] || 1.96; }
+
+  /* ---------- hist: many samples, one bar chart of what they give ---------- */
+  function hist(host, info) {
+    var o = {}, key = '', vals = [], th = {};
+    function theory() {   // the centre and the standard error the formula gives
+      var g = o.gen;
+      if (g === 'share') return { c: o.p * 100, se: Math.sqrt(o.p * (1 - o.p) / o.n) * 100 };
+      if (g === 'mean') { var m = 0, v = 0; o.pop.forEach(function (x) { m += x; }); m /= o.pop.length; o.pop.forEach(function (x) { v += (x - m) * (x - m); }); return { c: m, se: Math.sqrt(v / o.pop.length / o.n) }; }
+      if (g === 'gap') return { c: (o.pA - o.pB) * 100, se: Math.sqrt(o.pA * (1 - o.pA) / o.nA + o.pB * (1 - o.pB) / o.nB) * 100 };
+      return { c: o.mu, se: o.sd };
+    }
+    function one() {
+      var g = o.gen;
+      if (g === 'share') return binom(o.n, o.p) / o.n * 100;
+      if (g === 'mean') { var s = 0; for (var i = 0; i < o.n; i++) s += o.pop[Math.floor(Math.random() * o.pop.length)]; return s / o.n; }
+      if (g === 'gap') return (binom(o.nA, o.pA) / o.nA - binom(o.nB, o.pB) / o.nB) * 100;
+      return o.mu + o.sd * gauss0();
+    }
+    function beyond(x) { var t = o.tails || 'two'; return t === 'right' ? x >= o.obs - 1e-9 : t === 'left' ? x <= o.obs + 1e-9 : Math.abs(x - th.c) >= Math.abs(o.obs - th.c) - 1e-9; }
+    function paint() {
+      var lo = o.lo != null ? o.lo : th.c - 4.5 * th.se, hi = o.hi != null ? o.hi : th.c + 4.5 * th.se, nb = o.bins || 30, bw = (hi - lo) / nb;
+      var L = 24, R = 466, B = 166, Tp = 26, s = '', cnt = [], k, u = o.unit || '', dp = o.dp != null ? o.dp : 2;
+      function x(v) { return L + (v - lo) / (hi - lo) * (R - L); }
+      for (k = 0; k < nb; k++) cnt[k] = 0;
+      vals.forEach(function (v) { var i = Math.floor((v - lo) / bw); if (i >= 0 && i < nb) cnt[i]++; });
+      var N = vals.length, peak = N * bw / (th.se * Math.sqrt(2 * Math.PI)), top = Math.max(1, Math.max.apply(null, cnt), o.bell ? peak : 0) * 1.12;
+      function y(c) { return B - c / top * (B - Tp); }
+      if (o.band) { var a0 = th.c - o.band * th.se, a1 = th.c + o.band * th.se; s += '<rect class="sy-hband" x="' + x(a0).toFixed(1) + '" y="' + Tp + '" width="' + (x(a1) - x(a0)).toFixed(1) + '" height="' + (B - Tp) + '"/>' + txt(x(th.c), Tp - 8, '± ' + o.band + ' SE: ' + pc(Phi(o.band) - Phi(-o.band), 0), 'sy-ax sy-pl', 'middle'); }
+      for (k = 0; k < nb; k++) if (cnt[k]) { var mid = lo + (k + 0.5) * bw, hot = o.obs != null && o.tails !== 'none' && beyond(mid); s += '<rect class="sy-bar' + (hot ? ' sy-hot' : '') + '" x="' + (x(lo + k * bw) + 1).toFixed(1) + '" y="' + y(cnt[k]).toFixed(1) + '" width="' + Math.max(1, (R - L) / nb - 2).toFixed(1) + '" height="' + (B - y(cnt[k])).toFixed(1) + '" rx="1.5"/>'; }
+      if (o.bell) { var d = '', pk = N ? peak : (B - Tp) * 0.8 * top / (B - Tp); for (var i = 0; i <= 100; i++) { var v = lo + (hi - lo) * i / 100; d += (i ? ' L' : 'M') + x(v).toFixed(1) + ' ' + y(pk * Math.exp(-0.5 * Math.pow((v - th.c) / th.se, 2))).toFixed(1); } s += '<path class="sy-curve" d="' + d + '"/>'; }
+      s += '<line class="sy-axl" x1="' + L + '" x2="' + R + '" y1="' + B + '" y2="' + B + '"/>';
+      for (k = 0; k <= 4; k++) { var tv = lo + (hi - lo) * k / 4; s += txt(x(tv), B + 15, dec(tv, Math.abs(hi - lo) >= 20 ? 0 : Math.abs(hi - lo) >= 2 ? 1 : 2) + u, 'sy-ax', 'middle'); }
+      if (o.words && o.words.axis) s += txt(R, B + 30, o.words.axis, 'sy-ax', 'end');
+      (o.cut || []).forEach(function (c) { s += '<line class="sy-mean" x1="' + x(c[0]).toFixed(1) + '" x2="' + x(c[0]).toFixed(1) + '" y1="' + Tp + '" y2="' + B + '"/>' + txt(x(c[0]) + 3, Tp + 8, c[1] || '', 'sy-ax sy-pl'); });
+      if (o.truth != null) s += '<line class="sy-truth" x1="' + x(o.truth).toFixed(1) + '" x2="' + x(o.truth).toFixed(1) + '" y1="' + (Tp - 4) + '" y2="' + B + '"/>' + txt(x(o.truth), Tp - 8, (o.words && o.words.truth) || '', 'sy-ax sy-tg', 'middle');
+      if (o.obs != null) {
+        var ob = [o.obs]; if ((o.tails || 'two') === 'two' && o.tails !== 'none') ob.push(2 * th.c - o.obs);
+        ob.forEach(function (v, j) { s += '<line class="sy-alarm' + (j ? ' sy-dash' : '') + '" x1="' + x(v).toFixed(1) + '" x2="' + x(v).toFixed(1) + '" y1="' + Tp + '" y2="' + B + '"/>'; });
+        s += txt(x(o.obs) + (o.obs >= th.c ? 4 : -4), Tp + 10, ((o.words && o.words.obs) || '') + ' ' + dec(o.obs, dp) + u, 'sy-ax sy-or', o.obs >= th.c ? 'start' : 'end');
+      }
+      if (N && o.last !== false) { var lv = vals[N - 1]; s += '<path class="sy-lastmk" d="M' + x(lv).toFixed(1) + ' ' + (B + 2) + ' l-6 9 h12 z"/>'; }
+      host.innerHTML = svg(480, 206, s);
+      var w = o.words || {}, parts = [];
+      if (N) {
+        var m = 0, ss = 0; vals.forEach(function (v) { m += v; }); m /= N; vals.forEach(function (v) { ss += (v - m) * (v - m); });
+        parts.push(T('%t: **%n**', '%t: **%n**').replace('%t', w.thing || T('Samples', 'Выборок')).replace('%n', N));
+        parts.push(T('the last one: {b|%v}', 'последняя: {b|%v}').replace('%v', dec(vals[N - 1], dp) + u));
+        if (o.spread !== false) parts.push(T('their average {p|%a}, their spread (sd) {p|%s}', 'их среднее {p|%a}, их разброс (sd) {p|%s}').replace('%a', dec(m, dp) + u).replace('%s', dec(N > 1 ? Math.sqrt(ss / (N - 1)) : 0, dp) + u));
+        if (o.obs != null && o.tails !== 'none') { var b2 = vals.filter(beyond).length; parts.push(T('as far as the line or further: {o|%k} (%p)', 'на линии или дальше: {o|%k} (%p)').replace('%k', b2).replace('%p', pc(b2 / N, 1))); }
+      }
+      info.innerHTML = '<div class="sy-read">' + (parts.length ? fmt(parts.join(' · ')) : esc(T('Nothing drawn yet.', 'Пока ничего не вытянуто.'))) + '</div>';
+    }
+    return {
+      set: function (nx) {
+        var k = JSON.stringify([nx.gen, nx.p, nx.n, nx.pA, nx.nA, nx.pB, nx.nB, nx.mu, nx.sd, (nx.pop || []).length]);
+        o = nx; th = theory();
+        if (k !== key || nx.reset) { key = k; vals = []; }
+        paint();
+      },
+      act: function (a) { if (a.do === 'sample') { for (var j = 0; j < (a.n || 1); j++) vals.push(one()); if (vals.length > 50000) vals = vals.slice(-50000); paint(); } }
+    };
+  }
+
+  /* ---------- ci: one interval per sample, against the truth ---------- */
+  function ci(host, info) {
+    var o = {}, key = '', rows = [], drawn = 0, miss = 0;
+    function one() {
+      var z = zOf(o.conf || 0.95), n = o.n;
+      if (o.mu != null) {   // a mean: n normal values, mean ± t·s/√n
+        var xs = [], m = 0, ss = 0; for (var i = 0; i < n; i++) { xs.push(o.mu + o.sd * gauss0()); m += xs[i]; } m /= n; xs.forEach(function (v) { ss += (v - m) * (v - m); });
+        var t = z + (z * z * z + z) / (4 * (n - 1)), h = t * Math.sqrt(ss / (n - 1)) / Math.sqrt(n);
+        return [m - h, m, m + h, o.mu];
+      }
+      var k = binom(n, o.p), p = k / n, lo, hi;
+      if (o.method === 'wilson') { var d = 1 + z * z / n, c = (p + z * z / (2 * n)) / d, w = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d; lo = c - w; hi = c + w; }
+      else { var e = z * Math.sqrt(p * (1 - p) / n); lo = p - e; hi = p + e; }
+      return [lo * 100, p * 100, hi * 100, o.p * 100];
+    }
+    function paint() {
+      var lo = o.lo, hi = o.hi, L = 24, R = 466, Tp = 10, rowH = 7, shown = rows.slice(-24), B = Tp + 24 * rowH + 6, s = '', u = o.unit != null ? o.unit : ' %';
+      if (lo == null) { var c = o.mu != null ? o.mu : o.p * 100, sp = o.mu != null ? 4 * o.sd / Math.sqrt(o.n) : 400 * Math.sqrt(o.p * (1 - o.p) / o.n); lo = c - sp; hi = c + sp; }
+      function x(v) { return L + (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * (R - L); }
+      shown.forEach(function (r, i) {
+        var yy = Tp + i * rowH + 3, hit = r[0] <= r[3] && r[3] <= r[2];
+        s += '<line class="sy-iv' + (hit ? '' : ' sy-miss') + '" x1="' + x(r[0]).toFixed(1) + '" x2="' + x(r[2]).toFixed(1) + '" y1="' + yy + '" y2="' + yy + '"/><circle class="sy-iv-pt' + (hit ? '' : ' sy-miss') + '" cx="' + x(r[1]).toFixed(1) + '" cy="' + yy + '" r="2.4"/>';
+      });
+      var tv = o.mu != null ? o.mu : o.p * 100;
+      s += '<line class="sy-truth" x1="' + x(tv).toFixed(1) + '" x2="' + x(tv).toFixed(1) + '" y1="2" y2="' + B + '"/>';
+      s += '<line class="sy-axl" x1="' + L + '" x2="' + R + '" y1="' + B + '" y2="' + B + '"/>';
+      for (var k = 0; k <= 4; k++) { var v = lo + (hi - lo) * k / 4; s += txt(x(v), B + 14, dec(v, Math.abs(hi - lo) >= 20 ? 0 : 1) + u, 'sy-ax', 'middle'); }
+      s += txt(x(tv), B + 28, (o.words && o.words.truth) || T('the true value', 'истинное значение'), 'sy-ax sy-tg', 'middle');
+      host.innerHTML = svg(480, B + 34, s);
+      info.innerHTML = '<div class="sy-read">' + (drawn ? fmt(T('Intervals: **%d** · caught the true value: {g|%h} (%s) · missed: {o|%m}', 'Интервалов: **%d** · поймали истинное значение: {g|%h} (%s) · промахнулись: {o|%m}')
+        .replace('%d', drawn).replace('%h', drawn - miss).replace('%s', pc((drawn - miss) / drawn, 1)).replace('%m', miss)) : esc(T('No samples yet.', 'Выборок пока нет.'))) + '</div>';
+    }
+    return {
+      set: function (nx) { var k = JSON.stringify([nx.p, nx.n, nx.mu, nx.sd, nx.conf, nx.method]); o = nx; if (k !== key || nx.reset) { key = k; rows = []; drawn = 0; miss = 0; } paint(); },
+      act: function (a) { if (a.do === 'draw') { for (var j = 0; j < (a.n || 1); j++) { var r = one(); rows.push(r); drawn++; if (!(r[0] <= r[3] && r[3] <= r[2])) miss++; } if (rows.length > 200) rows = rows.slice(-200); paint(); } }
+    };
+  }
+
+  var SCENES = { dots: dots, bag: bag, months: months, line: line, bell: bell, hist: hist, ci: ci };
 
   /* ---------- the voice ---------- */
   var VOICE = { on: !!window.speechSynthesis, pick: null };
@@ -459,7 +577,8 @@ State: localStorage "al.v1" → story[id] = {at, ans: {step: option}, done, done
   }
 
   if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged = function () { /* voices load late in Chrome */ }; } catch (e) { /* no voices */ }
-  window.ALStory = { scenes: SCENES, plain: plain };
+  /* more pictures can live in other files: they add themselves to ALStory.scenes and use these helpers */
+  window.ALStory = { scenes: SCENES, plain: plain, T: T, esc: esc, fmt: fmt, dec: dec, pc: pc, rng: rng, Phi: Phi, svg: svg, txt: txt, binom: binom, gauss: gauss0 };
   window.$docsify = window.$docsify || {};
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.doneEach(function () { document.querySelectorAll('.markdown-section pre[data-lang="story"]').forEach(mount); });

@@ -53,6 +53,12 @@ rules for the pictures sit inside dark:skip at the end). */
 .sy-curve { fill: none; stroke: #6d28d9; stroke-width: 2.5; }
 .sy-area { fill: #ede9fe; } .sy-area-y { fill: #fef08a; }
 .sy-pp { fill: #38bdf8; }
+.sy-hband { fill: #ede9fe; }
+.sy-truth { stroke: #15803d; stroke-width: 2.2; }
+.sy-dash { stroke-dasharray: 5 3; }
+.sy-lastmk { fill: #0284c7; }
+.sy-iv { stroke: #38bdf8; stroke-width: 2.4; stroke-linecap: round; } .sy-iv-pt { fill: #0284c7; }
+.sy-iv.sy-miss { stroke: #f97316; } .sy-iv-pt.sy-miss { fill: #c2410c; }
 
 /* read-outs, legend, buttons under the picture */
 .sy-info { margin-top: .35em; font-size: .9em; color: var(--body); text-align: center; }
@@ -129,4 +135,6 @@ html[data-theme="dark"] .sy .sy-box { stroke: #5eead4; }
 html[data-theme="dark"] .sy .sy-ex { stroke: #c4b5fd; }
 html[data-theme="dark"] .sy .sy-mean, html[data-theme="dark"] .sy .sy-curve { stroke: #a78bfa; }
 html[data-theme="dark"] .sy .sy-handle { stroke: #fdba74; }
+html[data-theme="dark"] .sy .sy-hband { fill: #3b2f63; }
+html[data-theme="dark"] .sy .sy-truth { stroke: #4ade80; }
 /* dark:end */

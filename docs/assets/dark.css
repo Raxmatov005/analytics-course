@@ -1205,7 +1205,7 @@ html[data-theme="dark"] .xp7-id { color: #efb78d; }
 html[data-theme="dark"] .xp7-ref { color: #98d1f0; }
 html[data-theme="dark"] .xp7-more { color: var(--muted); }
 
-/* ---------- story.css (86 rules) ---------- */
+/* ---------- story.css (93 rules) ---------- */
 html[data-theme="dark"] .sy { border-radius: 20px; background: #161c22; border: 1px solid #2c6c5f; }
 html[data-theme="dark"] .sy.al-done { border-color: #327149; }
 html[data-theme="dark"] .sy-icon { border-radius: 12px; background: #1c3c36; color: #a6f2ec; }
@@ -1254,6 +1254,13 @@ html[data-theme="dark"] .sy-curve { fill: none; stroke: #a073e6; }
 html[data-theme="dark"] .sy-area { fill: #ede9fe; }
 html[data-theme="dark"] .sy-area-y { fill: #fef08a; }
 html[data-theme="dark"] .sy-pp { fill: #5bbce8; }
+html[data-theme="dark"] .sy-hband { fill: #ede9fe; }
+html[data-theme="dark"] .sy-truth { stroke: #a0efbe; }
+html[data-theme="dark"] .sy-lastmk { fill: #88cbee; }
+html[data-theme="dark"] .sy-iv { stroke: #5bbce8; }
+html[data-theme="dark"] .sy-iv-pt { fill: #88cbee; }
+html[data-theme="dark"] .sy-iv.sy-miss { stroke: #ea9e69; }
+html[data-theme="dark"] .sy-iv-pt.sy-miss { fill: #eea486; }
 html[data-theme="dark"] .sy-info { color: var(--body); }
 html[data-theme="dark"] .sy-lg i { border-radius: 50%; background: #2e333a; }
 html[data-theme="dark"] .sy-lg i.sy-f-o { background: #f97316; }
