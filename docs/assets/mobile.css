@@ -1,0 +1,231 @@
+/* The phone layout (mobile.js; the founder, 2026-11-02: "it seems like just a website that is mostly meant to be inside
+a laptop is kind of squeezed into the phone screen … make it a proper version for a mobile screen size").
+Built from the phone audit of 2026-11-02 (375 and 360 px, light and dark, EN and RU). Loaded last, so on a phone it has
+the final word; everything is inside max-width: 768px, a computer is untouched. Light here; the dark twins come from
+scripts/make_dark_css.py, the hand rules sit inside dark:skip at the end.
+The rules: an app shell (a bar on top, the menu as a drawer, the day's sections as a sticky row), one level of card
+(section frames become headings, blocks run to the screen's edges), a phone type scale (h1 24, h2 21, h3 18, text 16,
+labels 12+), every form field 16 px (iOS zooms into anything smaller), every tap target 44 px. */
+
+/* the phone-only parts do not exist on a wider screen */
+.m-bar, .m-shade, .m-fs, .m-unfold { display: none; }
+
+@media (max-width: 768px) {
+  /* ---------- the app bar ---------- */
+  .m-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 40; height: 56px; padding: 0 8px 0 4px; display: flex; align-items: center; gap: 4px;
+    background: rgba(255, 255, 255, .97); border-bottom: 1px solid var(--line); transition: transform .25s ease; font-family: var(--sans); }
+  body.reading-down:not(.m-open) .m-bar { transform: translateY(-100%); }
+  body.m-open .m-bar { z-index: 60; transform: none; }   /* the bar stays over the open menu: its ✕ closes it */
+  .m-menu { flex: none; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+  .m-menu span { display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--ink); transition: transform .2s, opacity .2s; }
+  .m-open .m-menu span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .m-open .m-menu span:nth-child(2) { opacity: 0; }
+  .m-open .m-menu span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  .m-menu:active { background: #f1f5f9; }
+  .m-title { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; text-decoration: none !important; line-height: 1.2; }
+  .m-title b { font-size: 15px; font-weight: 800; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-title small { font-size: 12.5px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .m-tools { flex: none; display: flex; align-items: center; }
+  .m-tools .lang-switch { position: static; box-shadow: none; padding: 2px; opacity: 1; pointer-events: auto; }
+  .m-tools .lang-switch button { min-height: 38px; padding: 0 .7em; font-size: 12.5px; }
+  .m-tools .lang-switch .theme-btn { min-width: 38px; padding: 0 .5em; margin-right: 0; }
+  .m-line { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--brand); transform-origin: 0 50%; transform: scaleX(0); }
+
+  /* ---------- the menu: a drawer over a dimmed page, weeks that open one at a time ---------- */
+  .sidebar-toggle { display: none !important; }
+  .sidebar { position: fixed; top: 56px; bottom: 0; left: 0 !important; z-index: 50; width: min(88vw, 340px); transform: translateX(-100%); transition: transform .28s ease;
+    box-shadow: none; border-right: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  body.close .sidebar { transform: translateX(0); box-shadow: 0 0 40px rgba(15, 23, 42, .28); }
+  body.close .content { transform: none !important; }
+  .m-shade { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(15, 23, 42, .45); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  body.m-open .m-shade { opacity: 1; pointer-events: auto; }
+  .sidebar > h1 { display: none; }   /* the bar already names the course */
+  .sidebar-nav > ul > li > a { font-weight: 600; }
+  .sidebar .search { margin: 0 .8em .4em; }
+  .sidebar .search input { font-size: 16px !important; min-height: 44px; }
+  .sidebar-nav { padding: 0 .6em 3em; }
+  .sidebar-nav a { padding: .7em .8em !important; font-size: 15.5px !important; line-height: 1.35; white-space: normal !important; overflow: visible !important;
+    text-overflow: clip !important; text-transform: none !important; letter-spacing: 0 !important; border-radius: 10px; }
+  .sidebar-nav ul ul a { font-size: 15px !important; }
+  .sidebar .app-sub-sidebar { display: none !important; }   /* the page's own outline: the sticky row of sections does that on a phone */
+  .sidebar-nav li.m-week > strong, .sidebar-nav li.m-week > p { display: flex !important; align-items: center; justify-content: space-between; min-height: 46px;
+    margin: .2em 0 !important; padding: 0 .8em; font-size: 15px !important; font-weight: 700 !important; text-transform: none !important; letter-spacing: 0 !important; border-radius: 10px; cursor: pointer; color: var(--ink) !important; }
+  .sidebar-nav li.m-week > strong::after, .sidebar-nav li.m-week > p::after { content: "›"; font-size: 20px; line-height: 1; color: var(--muted); transition: transform .2s; }
+  .sidebar-nav li.m-week.m-week-open > strong::after, .sidebar-nav li.m-week.m-week-open > p::after { transform: rotate(90deg); }
+  .sidebar-nav li.m-week > ul { display: none; }
+  .sidebar-nav li.m-week.m-week-open > ul { display: block; }
+  .sidebar-nav li.m-week.m-week-here > strong, .sidebar-nav li.m-week.m-week-here > p { background: var(--brand-xl); color: var(--brand-d) !important; }
+
+  /* ---------- the page: room for the bar, 16 px sides, a phone's type scale ---------- */
+  html, body, main { overflow-x: clip !important; overflow-y: visible !important; }   /* hidden made <main> a scroll box and broke every sticky row */
+  body.m-open, body.m-lock { overflow: hidden !important; }
+  .content { padding: 68px 16px 104px !important; left: 0 !important; }
+  .markdown-section { padding: 0 !important; max-width: none; font-size: 16px; line-height: 1.6; }
+  .markdown-section > h1:first-child, .markdown-section > h1:first-of-type { padding-right: 0; }
+  .markdown-section h1 { font-size: 24px; line-height: 1.24; letter-spacing: -.01em; margin: .3em 0 .5em; }
+  .markdown-section h2 { font-size: 21px; line-height: 1.28; margin-top: 1.6em; }
+  .markdown-section h3 { font-size: 18px; line-height: 1.32; margin: 1.7em 0 .5em; }
+  .markdown-section h4 { font-size: 16px; }
+  .markdown-section p, .markdown-section li { font-size: 16px; }
+  .markdown-section ul, .markdown-section ol { padding-left: 1.25em; }
+  .markdown-section p code, .markdown-section li code, .markdown-section td code { font-size: 14px; }
+  .markdown-section h1, .markdown-section h2, .markdown-section h3, .markdown-section [id] { scroll-margin-top: 112px; }
+  .markdown-section .al-sec { scroll-margin-top: 104px; }
+  /* the title's badges: one compact row that scrolls sideways */
+  .markdown-section > p:has(> .badge) { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px .6em; padding: 0 16px 2px; }
+  .markdown-section > p:has(> .badge)::-webkit-scrollbar { display: none; }
+  .markdown-section > p:has(> .badge) .badge { flex: none; margin: 0; font-size: 12.5px; padding: .3em .7em; white-space: nowrap; }
+  /* the day's story: plain reading weight; italics only where the text has them */
+  .markdown-section blockquote.story, .markdown-section blockquote.story p { font-weight: 400; }
+  .markdown-section blockquote { margin: 1em 0; padding: 12px 14px; }
+  .markdown-section blockquote.callout { display: block; padding: 12px 14px; border-radius: 0 12px 12px 0; }
+  .markdown-section blockquote.callout > :first-child:not(p) { float: left; margin: .05em .5em 0 0; }
+  .markdown-section blockquote.callout::after { content: ""; display: block; clear: both; }
+
+  /* ---------- the day's sections: frames become headings; Today's route becomes a sticky row ---------- */
+  .al-sec, .al-sec + .al-sec { margin: 2.4em 0 1em; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .al-sec-head { padding: 0 0 .75em; gap: .65em; align-items: center; background: none; border-radius: 0; border-bottom: 2px solid var(--k-l); }
+  .al-sec-ico { width: 34px; height: 34px; border-radius: 10px; box-shadow: none; }
+  .al-sec-ico svg { width: 18px; height: 18px; }
+  .al-sec-kick { font-size: 12px; letter-spacing: .04em; }
+  .al-sec-track .al-sec-kick { padding-right: 0; }
+  .markdown-section .al-sec h2 { font-size: 21px; margin: .05em 0 .1em; }
+  .al-sec-sub { font-size: 14px; }
+  .al-sec-state { position: static; align-self: flex-start; font-size: 12px; padding: .25em .65em; }
+  .al-sec-body { padding: .9em 0 0; }
+  .al-sec.m-shut > .al-sec-body { display: none; }
+  .m-unfold { display: block; width: 100%; min-height: 48px; margin: .9em 0 0; border: 1px dashed var(--k-l); border-radius: 12px; background: var(--k-xl);
+    color: var(--k-d); font: 700 15px var(--sans); cursor: pointer; }
+  .al-route { position: sticky; top: 56px; z-index: 30; display: flex; flex-direction: column; margin: .6em -16px 1em !important; padding: 8px 0 0 !important;
+    border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: rgba(255, 255, 255, .97); box-shadow: none; transition: top .25s ease; }
+  body.reading-down .al-route { top: 0; }
+  .al-route-top { display: none; }
+  .al-route-chips { order: 1; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding: 0 16px 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .al-route-chips::-webkit-scrollbar { display: none; }
+  .al-chip { flex: none; min-height: 38px; font-size: 13.5px; padding: 0 .85em 0 .65em; }
+  .al-chip.m-here { background: var(--k); border-color: var(--k); color: #fff; }
+  .al-chip.m-here .al-chip-ico, .al-chip.m-here .al-chip-ok { color: #fff; }
+  .al-route-bar { order: 2; height: 3px; margin: 0; border-radius: 0; }
+
+  /* ---------- blocks: one level of card, edge to edge ---------- */
+  .al-sec-body > .sy, .al-sec-body > .xp, .al-sec-body > .gx, .al-sec-body > .py-box, .al-sec-body > .sq-lab, .al-sec-body > .sq-ws, .al-sec-body > .qz,
+  .markdown-section > .sy, .markdown-section > .xp, .markdown-section > .gx, .markdown-section > .py-box, .markdown-section > .sq-ws, .markdown-section > .qz,
+  .markdown-section > .sq-play, .markdown-section figure.pic, .al-sec-body > figure.pic, .al-sec-body > .yt-panel, .markdown-section > .yt-panel {
+    margin-left: -16px !important; margin-right: -16px !important; border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; box-shadow: none !important; }
+  .sy, .xp, .gx { padding-left: 14px !important; padding-right: 14px !important; }
+  .markdown-section figure.pic { width: auto !important; max-width: none !important; box-sizing: border-box; }
+  figure.pic .pic-tags { flex-wrap: wrap; }
+  .al-q { margin: 1.2em 0; padding: 0 0 .6em; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
+  .al-q > .sq-box { margin: .6em 0; }
+  .markdown-section details > summary { min-height: 44px; display: flex; align-items: center; gap: .4em; }
+
+  /* kickers and small labels: 12 px at least */
+  .sy-kicker, .xp-kicker, .gx-kicker, .tk-kind, .al-continue-k, .sq-lab-kicker { font-size: 12px !important; letter-spacing: .04em; }
+
+  /* tap targets */
+  .sy-act, .xp-btn, .gx-btn, .gx-again, .tk-btn, .sq-bar button, .sq-run, .sq-check, .sq-reset, .tk-hint, .sq-chip, .py-link, .yt-go, .sq-lab-show, .sq-open-db { min-height: 44px; }
+  .yt-pill { min-height: 36px; display: inline-flex; align-items: center; padding: 0 .7em; }
+  .sq-bar { flex-wrap: wrap; gap: 8px; }
+  .sq-bar .sq-run { flex: 1 1 auto; }
+
+  /* story cards: Back · Next stays under the thumb while the card is on screen; picture words readable */
+  .sy-nav { position: sticky; bottom: 0; z-index: 5; margin: .8em -14px 0; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--line); }
+  .sy-svg .sy-ax { font-size: 14px !important; }
+  .sy-svg .sy-lab { font-size: 14.5px !important; }
+  .sy-say { font-size: 16.5px; }
+  .sy-w { min-height: 28px; }
+  /* explorers and pictures: chart words readable */
+  .xp svg text, .xp4-svg .xp-ax, .xp2-svg text { font-size: 14px; }
+  .pic-chart text { font-size: 14px; }
+  .pic-t td, .pic-t th { font-size: 13px; }
+
+  /* mini-games: the bins sit two to a row, close to the cards */
+  .gx-bins { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gx-bin { min-height: 60px; }
+
+  /* SQL and Python: results and data frames edge to edge inside the card, the first column pinned */
+  .sq-scroll { max-height: 62vh; }
+  .sq-scroll .sq-table th:first-child, .sq-scroll .sq-table td:first-child { position: sticky; left: 0; z-index: 1; background: #fff; box-shadow: 1px 0 0 var(--line); }
+  .sq-scroll .sq-table th:first-child { z-index: 2; }
+  .m-fs { display: inline-flex; align-items: center; gap: .35em; min-height: 40px; margin: .4em 0; padding: 0 .9em; border: 1px solid var(--line); border-radius: 10px;
+    background: #fff; color: var(--ink); font: 600 14px var(--sans); cursor: pointer; }
+  .m-sheet { position: fixed; inset: 0; z-index: 70; margin: 0 !important; padding: 0 !important; background: #fff; }
+  .m-sheet .m-full { position: absolute !important; inset: 52px 0 0 0 !important; max-height: none !important; margin: 0 !important; border: 0 !important; border-top: 1px solid var(--line) !important;
+    border-radius: 0 !important; background: #fff; overflow: auto !important; }
+  .m-full-x { position: fixed; top: 6px; right: 8px; z-index: 71; min-width: 44px; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    font: 700 15px var(--sans); color: var(--ink); cursor: pointer; padding: 0 .9em; }
+
+  /* tables: a box of their own that scrolls sideways (first column pinned), or cards when they are short prose */
+  .m-scroll { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1em -16px; padding: 0 16px; }
+  .markdown-section .m-scroll > table { display: table; margin: 0 !important; min-width: 100%; width: max-content !important; max-width: none; overflow: visible; }
+  .m-scroll > table td, .m-scroll > table th { max-width: 16em; }
+  .m-pin > table tr > :first-child { position: sticky; left: -16px; z-index: 1; background: #fff; box-shadow: 1px 0 0 var(--line); }
+  .m-more { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), rgba(0, 0, 0, .15)); mask-image: linear-gradient(to right, #000 calc(100% - 32px), rgba(0, 0, 0, .15)); }
+  .markdown-section table.m-stack, .markdown-section table.m-stack tbody, .markdown-section table.m-stack tr, .markdown-section table.m-stack td { display: block; width: auto; }
+  .markdown-section table.m-stack { border: 0; margin: 1em 0; }
+  .markdown-section table.m-stack thead { display: none; }
+  .markdown-section table.m-stack tr { margin: 0 0 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+  .markdown-section table.m-stack td { min-width: 0 !important; max-width: none !important; padding: 2px 0 !important; border: 0 !important; background: none !important; }
+  .markdown-section table.m-stack td::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
+  .markdown-section table.m-stack td:first-child { font-weight: 700; color: var(--ink); }
+  .markdown-section table.m-stack td:first-child::before { content: none; }
+
+  /* code: whole lines that scroll sideways, never a word cut in two */
+  .markdown-section pre:not(.hi-back) { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-left: -16px; margin-right: -16px; border-radius: 0; }
+  .markdown-section pre:not(.hi-back) > code { white-space: pre !important; word-break: normal !important; overflow-wrap: normal !important; font-size: 13px; }
+  .al-q pre, .tk pre, .sq-box pre, .py-box pre, .gx pre, .xp pre, .sy pre, .qz pre, blockquote pre { margin-left: 0; margin-right: 0; border-radius: 8px; }
+
+  /* form fields at 16 px: anything smaller makes iOS zoom the page when tapped (the code layer behind an editor copies it) */
+  .markdown-section input[type="text"], .markdown-section input[type="number"], .markdown-section input[type="password"], .markdown-section input[type="search"],
+  .markdown-section input:not([type]), .markdown-section textarea, .markdown-section select, #sq-db input { font-size: 16px !important; }
+
+  /* sign-in: the fields one under the other, a big button */
+  .si-row { flex-direction: column; align-items: stretch !important; gap: 8px; }
+  .si-row input, .si-row button { width: 100% !important; max-width: none !important; }
+  .si-row button { min-height: 48px; }
+
+  /* videos: the panel's parts one under the other at full width, the player as wide as the screen */
+  .yt-grid { grid-template-columns: 1fr !important; }
+  .yt-panel .yt-grid > .yt:not(.yt-on), .yt-grid > .yt { flex-direction: column; align-items: stretch; }
+  .yt-grid > .yt > .yt-body { width: 100%; min-width: 0; }
+  .yt-panel { width: auto !important; }
+  .yt-thumb { width: 100% !important; height: auto !important; aspect-ratio: 16 / 9; }
+  .yt-clip.yt-on { margin-left: -16px; margin-right: -16px; border-radius: 0; border-left: 0; border-right: 0; }
+  .yp-bar button { min-height: 44px; min-width: 40px; }
+
+  /* Previous / Next: two full-width rows in reading order */
+  .markdown-section .docsify-pagination-container { grid-template-columns: 1fr; gap: 10px; }
+  .markdown-section .pagination-item--next { order: 0; }
+  .markdown-section .pagination-item, .markdown-section .pagination-item--next { text-align: left !important; }
+  .markdown-section .pagination-item a { align-items: flex-start !important; }
+
+  /* the last small words and taps the phone check found (2026-11-02) */
+  figure.pic :is(th, td, .pic-tag, .pic-null, .pic-label, .mk, .new, .hot, .lt-a) { font-size: 12.5px !important; }
+  .xp-step-k, .yt-at, .sq-lab-stepno, .sq-state, .sq-opt, .gx-bin-name, .mlevel, .mhere, .ms-size, .markdown-section p .badge { font-size: 12.5px !important; }
+  .gx-gap { min-height: 36px; min-width: 64px; }
+  .gx-line { min-height: 40px; }
+  .gx-it, .qz-btn, .chal-go, .sq-all, .sq-lab-db, .sq-lab-over, .sq-play-chips button { min-height: 44px; }
+  .fl-dl { min-height: 32px; padding: .35em .75em !important; }
+  .yt-clip .yt-go { margin-left: 0 !important; width: 100%; justify-content: center; }
+  .yt-acts { flex-wrap: wrap; gap: 8px; }
+  .yt-acts .yt-go { flex: 1 1 100%; justify-content: center; white-space: normal; }
+  .sq-ws-graded, .sq-ws-graded b, .markdown-section span .badge, .al-sec h2 .badge { font-size: 12.5px !important; }
+  /* the database drawer fills the screen; the preview strip is a thin full-width line at the bottom */
+  #sq-db { width: 100% !important; max-width: none !important; }
+  #sq-db button { min-height: 40px; }
+  #sq-db-btn { bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .sch-preview { left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; box-sizing: border-box; transform: none !important; max-width: none !important; border-radius: 0 !important;
+    padding: 6px 12px calc(6px + env(safe-area-inset-bottom)) !important; text-align: center; font-size: 13px !important; z-index: 38 !important; }
+  .sch-preview a { display: inline-block; padding: 4px 6px; }
+}
+
+/* dark:skip */
+@media (max-width: 768px) {
+  html[data-theme="dark"] .m-bar, html[data-theme="dark"] .al-route { background: rgba(17, 24, 32, .96); }
+  html[data-theme="dark"] .m-menu:active { background: #1f2a37; }
+  html[data-theme="dark"] .sy-nav, html[data-theme="dark"] .sq-scroll .sq-table th:first-child, html[data-theme="dark"] .sq-scroll .sq-table td:first-child,
+  html[data-theme="dark"] .m-pin > table tr > :first-child, html[data-theme="dark"] .m-full, html[data-theme="dark"] .m-sheet, html[data-theme="dark"] .m-full-x, html[data-theme="dark"] .m-fs,
+  html[data-theme="dark"] .markdown-section table.m-stack tr { background: var(--card); }
+}
+/* dark:end */

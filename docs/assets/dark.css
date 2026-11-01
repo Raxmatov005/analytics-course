@@ -1304,6 +1304,50 @@ html[data-theme="dark"] .sy-next.sy-go { background: #15803d; border-color: #158
   html[data-theme="dark"] .sy { border-radius: 16px; }
 }
 
+/* ---------- mobile.css (42 rules) ---------- */
+@media (max-width: 768px) {
+  html[data-theme="dark"] .m-bar { background: rgba(22, 28, 34, 0.97); border-bottom: 1px solid var(--line); }
+  html[data-theme="dark"] .m-menu { border: 0; border-radius: 12px; background: transparent; }
+  html[data-theme="dark"] .m-menu span { border-radius: 2px; background: #2f3a47; }
+  html[data-theme="dark"] .m-menu:active { background: #1d2329; }
+  html[data-theme="dark"] .m-title b { color: var(--ink); }
+  html[data-theme="dark"] .m-title small { color: var(--muted); }
+  html[data-theme="dark"] .m-line { background: var(--brand); }
+  html[data-theme="dark"] .sidebar { border-right: 0; }
+  html[data-theme="dark"] .m-shade { background: rgba(27, 41, 75, 0.45); }
+  html[data-theme="dark"] .sidebar-nav a { border-radius: 10px; }
+  html[data-theme="dark"] .sidebar-nav li.m-week > strong, html[data-theme="dark"] .sidebar-nav li.m-week > p { border-radius: 10px; color: var(--ink) !important; }
+  html[data-theme="dark"] .sidebar-nav li.m-week > strong::after, html[data-theme="dark"] .sidebar-nav li.m-week > p::after { color: var(--muted); }
+  html[data-theme="dark"] .sidebar-nav li.m-week.m-week-here > strong, html[data-theme="dark"] .sidebar-nav li.m-week.m-week-here > p { background: var(--brand-xl); color: var(--brand-text) !important; }
+  html[data-theme="dark"] .markdown-section blockquote.callout { border-radius: 0 12px 12px 0; }
+  html[data-theme="dark"] .al-sec, html[data-theme="dark"] .al-sec + .al-sec { border: 0; border-radius: 0; background: transparent; }
+  html[data-theme="dark"] .al-sec-head { background: none; border-radius: 0; border-bottom: 2px solid var(--k-l); }
+  html[data-theme="dark"] .al-sec-ico { border-radius: 10px; }
+  html[data-theme="dark"] .m-unfold { border: 1px dashed var(--k-l); border-radius: 12px; background: var(--k-xl); color: var(--k-d); }
+  html[data-theme="dark"] .al-route { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: rgba(22, 28, 34, 0.97); }
+  html[data-theme="dark"] .al-chip.m-here { background: var(--k); border-color: var(--k); color: #ffffff; }
+  html[data-theme="dark"] .al-chip.m-here .al-chip-ico, html[data-theme="dark"] .al-chip.m-here .al-chip-ok { color: #ffffff; }
+  html[data-theme="dark"] .al-route-bar { border-radius: 0; }
+  html[data-theme="dark"] .al-sec-body > .sy, html[data-theme="dark"] .al-sec-body > .xp, html[data-theme="dark"] .al-sec-body > .gx, html[data-theme="dark"] .al-sec-body > .py-box, html[data-theme="dark"] .al-sec-body > .sq-lab, html[data-theme="dark"] .al-sec-body > .sq-ws, html[data-theme="dark"] .al-sec-body > .qz, html[data-theme="dark"] .markdown-section > .sy, html[data-theme="dark"] .markdown-section > .xp, html[data-theme="dark"] .markdown-section > .gx, html[data-theme="dark"] .markdown-section > .py-box, html[data-theme="dark"] .markdown-section > .sq-ws, html[data-theme="dark"] .markdown-section > .qz, html[data-theme="dark"] .markdown-section > .sq-play, html[data-theme="dark"] .markdown-section figure.pic, html[data-theme="dark"] .al-sec-body > figure.pic, html[data-theme="dark"] .al-sec-body > .yt-panel, html[data-theme="dark"] .markdown-section > .yt-panel { border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; }
+  html[data-theme="dark"] .al-q { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
+  html[data-theme="dark"] .sy-nav { background: #161c22; border-top: 1px solid var(--line); }
+  html[data-theme="dark"] .sq-scroll .sq-table th:first-child, html[data-theme="dark"] .sq-scroll .sq-table td:first-child { background: #161c22; }
+  html[data-theme="dark"] .m-fs { border: 1px solid var(--line); border-radius: 10px; background: #161c22; color: var(--ink); }
+  html[data-theme="dark"] .m-sheet { background: #161c22; }
+  html[data-theme="dark"] .m-sheet .m-full { border: 0 !important; border-top: 1px solid var(--line) !important; border-radius: 0 !important; background: #161c22; }
+  html[data-theme="dark"] .m-full-x { border: 1px solid var(--line); border-radius: 12px; background: #161c22; color: var(--ink); }
+  html[data-theme="dark"] .m-pin > table tr > :first-child { background: #161c22; }
+  html[data-theme="dark"] .markdown-section table.m-stack { border: 0; }
+  html[data-theme="dark"] .markdown-section table.m-stack tr { border: 1px solid var(--line); border-radius: 12px; background: #161c22; }
+  html[data-theme="dark"] .markdown-section table.m-stack td { border: 0 !important; background: none !important; }
+  html[data-theme="dark"] .markdown-section table.m-stack td::before { color: var(--muted); }
+  html[data-theme="dark"] .markdown-section table.m-stack td:first-child { color: var(--ink); }
+  html[data-theme="dark"] .markdown-section pre:not(.hi-back) { border-radius: 0; }
+  html[data-theme="dark"] .al-q pre, html[data-theme="dark"] .tk pre, html[data-theme="dark"] .sq-box pre, html[data-theme="dark"] .py-box pre, html[data-theme="dark"] .gx pre, html[data-theme="dark"] .xp pre, html[data-theme="dark"] .sy pre, html[data-theme="dark"] .qz pre, html[data-theme="dark"] blockquote pre { border-radius: 8px; }
+  html[data-theme="dark"] .yt-clip.yt-on { border-radius: 0; border-left: 0; border-right: 0; }
+  html[data-theme="dark"] .sch-preview { border-radius: 0 !important; }
+}
+
 /* ---------- by hand (scripts/dark_manual.css): last, so it wins ---------- */
 /* ---------- dark mode, by hand (copied first into docs/assets/dark.css by scripts/make_dark_css.py) ----------
    html[data-theme="dark"] is set before the page draws (index.html <head>), from the switch (theme.js) or, until she
