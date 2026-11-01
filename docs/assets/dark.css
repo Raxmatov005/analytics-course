@@ -1304,7 +1304,7 @@ html[data-theme="dark"] .sy-next.sy-go { background: #15803d; border-color: #158
   html[data-theme="dark"] .sy { border-radius: 16px; }
 }
 
-/* ---------- mobile.css (42 rules) ---------- */
+/* ---------- mobile.css (59 rules) ---------- */
 @media (max-width: 768px) {
   html[data-theme="dark"] .m-bar { background: rgba(22, 28, 34, 0.97); border-bottom: 1px solid var(--line); }
   html[data-theme="dark"] .m-menu { border: 0; border-radius: 12px; background: transparent; }
@@ -1345,6 +1345,23 @@ html[data-theme="dark"] .sy-next.sy-go { background: #15803d; border-color: #158
   html[data-theme="dark"] .markdown-section pre:not(.hi-back) { border-radius: 0; }
   html[data-theme="dark"] .al-q pre, html[data-theme="dark"] .tk pre, html[data-theme="dark"] .sq-box pre, html[data-theme="dark"] .py-box pre, html[data-theme="dark"] .gx pre, html[data-theme="dark"] .xp pre, html[data-theme="dark"] .sy pre, html[data-theme="dark"] .qz pre, html[data-theme="dark"] blockquote pre { border-radius: 8px; }
   html[data-theme="dark"] .yt-clip.yt-on { border-radius: 0; border-left: 0; border-right: 0; }
+  html[data-theme="dark"] body.m-paged .m-off { border: 0 !important; }
+  html[data-theme="dark"] .m-secnav button { border-radius: 14px; border: 1px solid var(--line); background: #161c22; color: var(--ink); }
+  html[data-theme="dark"] .m-secnav button small { color: var(--muted); }
+  html[data-theme="dark"] .m-secnav .m-sec-next { background: var(--brand); border-color: var(--brand); color: #ffffff; }
+  html[data-theme="dark"] .m-secnav .m-sec-next small { color: rgba(255, 255, 255, 0.85); }
+  html[data-theme="dark"] .m-xp-tabs button { border-radius: 10px; border: 1px solid var(--line); background: #161c22; color: var(--muted); }
+  html[data-theme="dark"] .m-xp-tabs button.on { background: #0369a1; border-color: #0369a1; color: #ffffff; }
+  html[data-theme="dark"] .m-xp-goal { border-radius: 12px; background: #13242f; border: 1px solid #234d63; color: var(--ink); }
+  html[data-theme="dark"] .m-xp-goal small { color: #a3d6f2; }
+  html[data-theme="dark"] .m-xp-on { border: 0; border-radius: 12px; background: #0369a1; color: #ffffff; }
+  html[data-theme="dark"] .m-pager { background: #161c22; border-top: 1px solid var(--line); }
+  html[data-theme="dark"] .m-pager button { border-radius: 12px; border: 1px solid var(--line); background: #161c22; color: var(--ink); }
+  html[data-theme="dark"] .m-pager .m-pg-next { background: var(--brand); border-color: var(--brand); color: #ffffff; }
+  html[data-theme="dark"] .m-pg-at b { color: var(--ink); }
+  html[data-theme="dark"] .m-pg-at small { color: var(--muted); }
+  html[data-theme="dark"] .gx-match.m-pick > .gx-col:nth-child(2) { background: #161c22; border-radius: 18px 18px 0 0; }
+  html[data-theme="dark"] .gx-match.m-pick > .gx-col:nth-child(2)::before { color: var(--ink); }
   html[data-theme="dark"] .sch-preview { border-radius: 0 !important; }
 }
 

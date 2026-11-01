@@ -8,7 +8,7 @@ The rules: an app shell (a bar on top, the menu as a drawer, the day's sections 
 labels 12+), every form field 16 px (iOS zooms into anything smaller), every tap target 44 px. */
 
 /* the phone-only parts do not exist on a wider screen */
-.m-bar, .m-shade, .m-fs, .m-unfold { display: none; }
+.m-bar, .m-shade, .m-fs, .m-unfold, .m-xp-tabs, .m-xp-goal, .m-xp-on, .m-pager, .m-secnav { display: none; }
 
 @media (max-width: 768px) {
   /* ---------- the app bar ---------- */
@@ -211,6 +211,54 @@ labels 12+), every form field 16 px (iOS zooms into anything smaller), every tap
   .yt-acts { flex-wrap: wrap; gap: 8px; }
   .yt-acts .yt-go { flex: 1 1 100%; justify-content: center; white-space: normal; }
   .sq-ws-graded, .sq-ws-graded b, .markdown-section span .badge, .al-sec h2 .badge { font-size: 12.5px !important; }
+  /* ---------- one section of the day at a time (mobile.js pages): the others keep their width, not their height ---------- */
+  body.m-paged .m-off { height: 0 !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; border: 0 !important; overflow: hidden !important; visibility: hidden; }
+  body.m-paged .al-sec:not(.m-off) { margin-top: 1.2em; }
+  .m-secnav { display: flex; gap: 10px; margin: 2em 0 .5em; }
+  .m-secnav button { flex: 1; min-width: 0; min-height: 64px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 10px 14px; border-radius: 14px;
+    border: 1px solid var(--line); background: #fff; color: var(--ink); font-family: var(--sans); text-align: left; cursor: pointer; }
+  .m-secnav button small { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .m-secnav button b { font-size: 15px; font-weight: 800; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; }
+  .m-secnav .m-sec-next { background: var(--brand); border-color: var(--brand); color: #fff; text-align: right; align-items: flex-end; }
+  .m-secnav .m-sec-next small { color: rgba(255, 255, 255, .85); }
+
+  /* ---------- explorers: Guess · Play · Goals, one on screen ---------- */
+  .m-xp-tabs { display: flex; gap: 6px; margin: .8em 0 .2em; }
+  .m-xp-tabs button { flex: 1; min-height: 40px; padding: 0 .4em; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--muted); font: 700 13px var(--sans); cursor: pointer; }
+  .m-xp-tabs button.on { background: #0369a1; border-color: #0369a1; color: #fff; }
+  .m-xp-tabs button:disabled { opacity: .45; cursor: default; }
+  .m-xp-n { font-weight: 600; opacity: .85; }
+  .xp.m-xp .xp-step { display: none; }
+  .xp.m-xp-1 .xp-predict, .xp.m-xp-2 .xp-play, .xp.m-xp-3 .xp-goals { display: block; }
+  .m-xp-goal { display: block; margin: .2em 0 .8em; padding: 10px 12px; border-radius: 12px; background: #f0f9ff; border: 1px solid #bae6fd; color: var(--ink); font-size: 15px; line-height: 1.45; }
+  .m-xp-goal:empty { display: none; }
+  .m-xp-goal small { display: block; font-size: 12.5px; font-weight: 800; color: #075985; margin-bottom: 2px; }
+  .m-xp-on { display: block; width: 100%; min-height: 48px; margin-top: .9em; border: 0; border-radius: 12px; background: #0369a1; color: #fff; font: 700 15.5px var(--sans); cursor: pointer; }
+  .m-xp-on[hidden] { display: none; }
+
+  /* ---------- a long hand-in: one task on screen, ‹ Task 3 of 8 › ---------- */
+  .sq-ws.m-tasks .sq-task:not(.m-cur) { display: none; }
+  .m-pager { position: sticky; bottom: 0; z-index: 6; display: flex; align-items: center; gap: 8px; margin: .8em -14px 0; padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+    background: #fff; border-top: 1px solid var(--line); }
+  .m-pager button { min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: 700 14.5px var(--sans); cursor: pointer; }
+  .m-pager .m-pg-next { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .m-pager button:disabled { opacity: .4; }
+  .m-pg-at { flex: 1; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+  .m-pg-at b { font-size: 14.5px; color: var(--ink); }
+  .m-pg-at small { font-size: 12.5px; color: var(--muted); }
+  .sq-task-q { flex-wrap: wrap; row-gap: 6px; }
+  .sq-task-q > span:last-child { flex: 1 1 100%; }
+  body:has(.sch-preview) .m-pager, body:has(.sch-preview) .sy-nav { bottom: 36px; }   /* above the mentor's preview strip */
+
+  /* ---------- the matching game: the words in one column, the meanings in a sheet once a word is picked ---------- */
+  .gx-match { grid-template-columns: 1fr !important; }
+  .gx-match > .gx-col:nth-child(2) { display: none; }
+  .gx-match.m-pick > .gx-col:nth-child(2) { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 65; max-height: 64vh; overflow-y: auto; gap: 8px;
+    padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); background: #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(15, 23, 42, .28); }
+  .gx-match.m-pick > .gx-col:nth-child(2)::before { content: attr(data-m-head); font: 800 15px var(--sans); color: var(--ink); margin-bottom: 2px; }
+  .gx-match.m-pick > .gx-col:nth-child(2) .gx-done { display: none; }
+  .gx-match .gx-it { min-height: 48px; text-align: left; }
+
   /* the database drawer fills the screen; the preview strip is a thin full-width line at the bottom */
   #sq-db { width: 100% !important; max-width: none !important; }
   #sq-db button { min-height: 40px; }
@@ -227,5 +275,11 @@ labels 12+), every form field 16 px (iOS zooms into anything smaller), every tap
   html[data-theme="dark"] .sy-nav, html[data-theme="dark"] .sq-scroll .sq-table th:first-child, html[data-theme="dark"] .sq-scroll .sq-table td:first-child,
   html[data-theme="dark"] .m-pin > table tr > :first-child, html[data-theme="dark"] .m-full, html[data-theme="dark"] .m-sheet, html[data-theme="dark"] .m-full-x, html[data-theme="dark"] .m-fs,
   html[data-theme="dark"] .markdown-section table.m-stack tr { background: var(--card); }
+}
+@media (max-width: 768px) {
+  html[data-theme="dark"] .m-secnav button:not(.m-sec-next), html[data-theme="dark"] .m-xp-tabs button:not(.on), html[data-theme="dark"] .m-pager,
+  html[data-theme="dark"] .m-pager button:not(.m-pg-next), html[data-theme="dark"] .gx-match.m-pick > .gx-col:nth-child(2) { background: var(--card); }
+  html[data-theme="dark"] .m-xp-goal { background: #0c2a3d; border-color: #164e63; }
+  html[data-theme="dark"] .m-xp-goal small { color: #7dd3fc; }
 }
 /* dark:end */
