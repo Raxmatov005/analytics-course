@@ -51,6 +51,11 @@ PYTHONIOENCODING=utf-8 python -I scripts/validate_pages.py week-06    # must end
 PYTHONIOENCODING=utf-8 python -I scripts/check_quizzes.py week-06
 ```
 
+A day that keeps its text and only gains a story (e.g. w1d2.py, w2d4.py): give the source
+`INSERT = [(story id, start of the English ### heading, start of the Russian one)]` and run
+`python -I scripts/stories/insert.py w1d2` once (the story goes at the top of that topic, both languages).
+`"extra": True` on a story keeps it out of the day's count — for a day she may already have finished.
+
 A source file: `from common import build as _b, btn`; `STORIES = [...]`; `TOPICS`, `CLIPS_EN`, `CLIPS_RU`, `GF`
 (see rebuild.py's header); `def build(lang): return _b(STORIES, lang)`. Story ids: `w06d2-s1`, `w06d2-s2`, …
 English `###` headings must differ from every old `###` heading of the page (the old ones stay in Going further).

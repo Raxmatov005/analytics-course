@@ -34,5 +34,8 @@ def build(stories, lang):
             for a in d.get("act", []):
                 a.setdefault("do", "run")
             steps.append(d)
-        out[s["id"]] = json.dumps({"id": s["id"], "title": pick(s["title"], i), "min": s["min"], "steps": steps}, ensure_ascii=False)
+        d = {"id": s["id"], "title": pick(s["title"], i), "min": s["min"], "steps": steps}
+        if s.get("extra"):   # not counted toward the day (a story added to a day she may already have finished)
+            d["extra"] = True
+        out[s["id"]] = json.dumps(d, ensure_ascii=False)
     return out

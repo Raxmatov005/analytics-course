@@ -24,7 +24,7 @@ Pictures:
   dots   — people or loans: "groups" [[count, fill, tag, ring colour?], …] fill the grid in order; "blocks" [8, 12] split
            it into side-by-side groups with "labels"; "cols"; "scatter": a seed that shuffles the places (the same on
            every visit); "fade" [tags] greys those out; "box" [tags] draws a dashed frame round them; "legend"
-           [[fill, words], …]. act "roll" (p): every dot becomes orange with chance p, the rest "base" — one month.
+           [[fill, words], …] ("ring-g" for a ring colour). act "roll" (p): every dot becomes orange with chance p, the rest "base" — one month.
   bag    — a jar: "balls" [[fill, count], …], "hit" (the colour counted, default o); act "draw" n takes a ball, notes its
            colour and puts it back; "line": the running share after each draw on a log scale, with the true share.
   months — a count per month (dist "binom": n loans, chance p) or per hour (dist "pois": rate lam); act "run" n adds that
@@ -46,7 +46,7 @@ Pictures:
            missed in orange; "lo", "hi", "unit", "words" {truth}.
 More kinds can live in other files (story2.js …): they add themselves to window.ALStory.scenes and use its helpers.
 
-Done: the card is an "al-block" and turns "al-done" when she presses Finish on the last step (sections.js counts it).
+Done: the card is an "al-block" (not with "extra": true, for a story added to a day she may have finished) and turns "al-done" when she presses Finish on the last step (sections.js counts it).
 State: localStorage "al.v1" → story[id] = {at, ans: {step: option}, done, doneOn}; sync.js keeps it with her sign-in. */
 (function () {
   var KEY = 'al.v1';
@@ -123,7 +123,7 @@ State: localStorage "al.v1" → story[id] = {at, ans: {step: option}, done, done
         Object.keys(rows).forEach(function (y) { var r = rows[y], h = cell / 2; boxes += '<rect class="sy-box" x="' + (r[0] - h + 1).toFixed(1) + '" y="' + (Number(y) - h + 1).toFixed(1) + '" width="' + (r[1] - r[0] + cell - 2).toFixed(1) + '" height="' + (cell - 2).toFixed(1) + '" rx="' + (cell / 3).toFixed(1) + '"/>'; });
       });
       host.querySelector('.sy-boxes').innerHTML = boxes;
-      var lg = (o.legend || []).map(function (l) { return '<span class="sy-lg"><i class="sy-f-' + l[0] + '"></i>' + fmt(l[1]) + '</span>'; }).join('');
+      var lg = (o.legend || []).map(function (l) { return '<span class="sy-lg"><i class="' + (/^ring-/.test(l[0]) ? 'sy-' : 'sy-f-') + l[0] + '"></i>' + fmt(l[1]) + '</span>'; }).join('');
       info.innerHTML = (lg ? '<div class="sy-legend">' + lg + '</div>' : '') + (rolled ? '<div class="sy-read">' + fmt((o.rollSay || T('This month: {o|%k} of %n loans had an FPD.', 'В этом месяце: {o|%k} из %n займов с FPD.')).replace('%k', rolled.k).replace('%n', rolled.length)) + '</div>' : '');
     }
     return {
@@ -469,7 +469,7 @@ State: localStorage "al.v1" → story[id] = {at, ans: {step: option}, done, done
     catch (e) { pre.insertAdjacentHTML('beforebegin', '<p class="quiz-error">' + T('This story could not be read', 'Не удалось прочитать историю') + ' (' + esc(e.message) + ').</p>'); return; }
     var steps = g.steps || [], last = steps.length - 1;
     var box = document.createElement('div');
-    box.className = 'sy al-block';
+    box.className = g.extra ? 'sy sy-extra' : 'sy al-block';   // "extra": shown, but not counted toward the day
     box.setAttribute('data-id', g.id);
     pre.parentNode.replaceChild(box, pre);
     var st = stateOf(g.id); st.ans = st.ans || {};

@@ -28,7 +28,8 @@ rules for the pictures sit inside dark:skip at the end). */
 .sy-svg .sy-big { font-size: 15px; font-weight: 800; fill: #a16207; }
 .sy-dot, .sy-ball { transition: fill .45s, opacity .45s, stroke .45s; stroke: transparent; stroke-width: 2.5; }
 .sy-f-o { fill: #f97316; } .sy-f-g { fill: #86efac; } .sy-f-b { fill: #38bdf8; } .sy-f-p { fill: #a78bfa; } .sy-f-y { fill: #facc15; } .sy-f-m { fill: #cbd5e1; }
-.sy-r-b { stroke: #0284c7; } .sy-r-m { stroke: #64748b; } .sy-r-o { stroke: #c2410c; }
+.sy-r-b { stroke: #0284c7; } .sy-r-m { stroke: #64748b; } .sy-r-o { stroke: #c2410c; } .sy-r-g { stroke: #16a34a; stroke-width: 4; } .sy-r-y { stroke: #d97706; stroke-width: 4; }
+.sy-lg i.sy-ring-g, .sy-lg i.sy-ring-y { background: transparent; border: 3px solid #16a34a; box-sizing: border-box; } .sy-lg i.sy-ring-y { border-color: #d97706; }
 .sy-fade { opacity: .13; }
 .sy-box { fill: none; stroke: #0f766e; stroke-width: 2; stroke-dasharray: 5 4; }
 .sy-jar { fill: #f8fafc; stroke: #94a3b8; stroke-width: 2; }
