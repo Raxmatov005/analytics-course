@@ -115,6 +115,8 @@ rules for the pictures sit inside dark:skip at the end). */
   .sy-play { width: 100%; }
   .sy-say { font-size: 1em; }
   .sy-f { font-size: .9em; }
+  .sy-svg .sy-ax { font-size: 13px; }   /* a phone shows the picture at about 70 %: keep its words readable */
+  .sy-svg .sy-lab { font-size: 13.5px; }
 }
 
 /* dark:skip */

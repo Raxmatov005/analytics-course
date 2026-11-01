@@ -14,519 +14,81 @@
 
 ## 1. Learn — the line, in money, and the watch on it
 
-Press ▶ Run on this first box once. It loads the scored loans and W8D2's numbers for an average Consumer loan; every later box on this page, and every Practice box, reuses them.
+Eight short stories. Each one tells **one idea in small steps**: read a sentence, watch the picture change, press **Next**. A dotted word shows its meaning when you tap it. Tired of reading? Press **▶ Play as a video**: the page reads every step aloud and moves the picture for you.
 
-```python
-import sqlite3
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+The Python for each idea, and the extra topics, are in **Going further — the full version** near the end of the page (optional).
 
-con = sqlite3.connect("data/raw/nur.db")
-S = pd.read_sql("""
-SELECT l.loan_id, l.disbursed_at, p.code AS product,
-       a.credit_score AS score,
-       CASE WHEN l.status IN ('default', 'written_off')
-            THEN 1 ELSE 0 END AS bad
-FROM loans l
-JOIN applications a ON a.application_id = l.application_id
-JOIN products p ON p.product_id = l.product_id
-WHERE a.credit_score IS NOT NULL""", con)
-s, y = S["score"].to_numpy(), S["bad"].to_numpy()
-# W8D2's average Consumer loan, soum: interest, funding at 18 %,
-# selling and servicing, exposure at default; LGD is ours
-I, COF, OPEX = 5_695_580, 3_417_348, 823_325
-EAD, LGD = 21_630_783, 0.60
-# 7615 223
-print(len(S), y.sum())
+### One line, two numbers — approval, bad rate, bads avoided
+
+```story
+{"id": "w09d4-s1", "title": "One line, two numbers", "min": 5, "steps": [{"say": "Back to Day 3's 20 toy loans. Approve everyone: 20 approved, {o|5} of them bad — a bad rate of {o|25 %}. The share approved is the [[approval rate|the share of applicants (here, loans) that are approved]].", "show": {"kind": "roc", "goods": [560, 600, 620, 630, 650, 660, 670, 680, 710, 720, 730, 740, 750, 770, 790], "bads": [540, 580, 610, 640, 700], "lo": 520, "hi": 800, "left": "dist", "appr": true, "cut": 540}}, {"say": "Approve from 620: {b|15 approved} (75 %), and only {o|2} of them bad — {o|13 %}.", "show": {"cut": 620}}, {"say": "From 650: {b|12 approved} (60 %), {o|1} of them bad — {o|8 %}. Raise the line and **both** numbers fall: fewer approvals, and fewer bads among them.", "show": {"cut": 650}}, {"say": "Your turn.", "ask": {"q": "Sales wants more approvals, Risk wants fewer bads. What does raising the line do?", "options": ["Fewer approvals and a lower bad rate", "More approvals and a lower bad rate", "Fewer approvals and a higher bad rate"], "answer": 0, "why": "The two numbers move together. Choosing a cut-off means choosing one point on that trade-off."}}, {"say": "Nur's real loans, every line from 540 to 760: {b|blue} = the share approved, {o|orange} = their bad rate. Approve from 600: {b|95.7 %} approved at {o|2.55 %} bad.", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.18, "lo": 540, "hi": 760, "tick": 40, "lines": ["appr", "br"], "cut": 600, "drag": false, "best": false, "target": null, "avoid": false, "view": null, "edges": null, "be": false, "decide": false, "pick": null}, "f": "600: approved {b|95.7 %} · bad rate {o|2.55 %}"}, {"say": "From 660: {b|66.7 %} approved at {o|1.50 %}. 29 points of volume for about one point of bad rate — whether that pays is a question of money.", "show": {"cut": 660}, "f": "660: approved {b|66.7 %} · bad rate {o|1.50 %}"}, {"say": "Drag the line, or tap **−20** / **+20**, and watch the two curves fall together.", "show": {"drag": true}, "act": [{"label": "−20", "rep": 1, "do": "nudge", "by": -20}, {"label": "+20", "rep": 2, "do": "nudge", "by": 20}], "film": 1}, {"say": "Moving up from “approve everyone” declines two kinds of people: [[bads avoided|loans that would have gone bad]] and [[goods turned away|good customers lost, with their interest]]. At 600: {o|37} and {g|294}.", "show": {"cut": 600, "drag": false, "avoid": true}, "f": "600: {o|37} bads avoided · {g|294} goods turned away → 7.9 goods per bad"}, {"say": "At 640: {o|94} bads avoided, {g|1 593} goods lost — 16.9 good customers for each bad. Between 600 and 640 the price doubles.", "show": {"cut": 640}, "f": "640: {o|94} bads avoided · {g|1 593} goods turned away → 16.9 goods per bad"}, {"say": "These are loans Nur already made. A line **below** today's practice would approve people Nur never lent to, whose bad rate is unknown (swap-ins, later today)."}]}
 ```
 
-### The cut-off — one line, two numbers that move together
+### What one approved loan is expected to lose
 
-**What it is.** The **cut-off** (*порог отсечения*) is the lowest score Nur approves. Raising it declines more people: the **approval rate** (*уровень одобрения*) falls, and so does the **bad rate** of the loans that are still approved. Choosing a cut-off means choosing a point on that trade-off.
-
-**How to write it.**
-
-```python
-def at(c):
-    keep = s >= c
-    return keep.mean(), y[keep].mean(), keep.sum(), y[keep].sum()
-
-for c in (560, 600, 620, 640, 660):
-    share, br, n, b = at(c)
-    print(c, round(100 * share, 1), round(100 * br, 2), n, b)
+```story
+{"id": "w09d4-s2", "title": "What one approved loan is expected to lose", "min": 4, "steps": [{"say": "From Week 8: a loan's [[expected loss|the loss you expect on average: PD × LGD × EAD]] is PD × LGD × EAD. For an average Consumer loan: {p|21 630 783} soum still owed at default (EAD), 60 % of it lost (LGD).", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.18, "lo": 424, "hi": 760, "tick": 40, "lines": ["el"], "cut": 424, "drag": false, "best": false, "target": null, "avoid": false, "view": null, "edges": null, "be": false, "decide": false, "pick": null}}, {"say": "At a cut-off, the PD of an approved loan is the bad rate of the approved group. Approve everyone: 2.93 % → {p|380 065} soum per loan.", "f": "approve everyone: 0.0293 × 0.60 × 21 630 783 = {p|380 065}", "fs": "0.0293 times 0.60 times 21 630 783: about 380 thousand soum."}, {"say": "Approve from 600: the bad rate falls to 2.55 %, and the expected loss per loan to {p|331 411} soum.", "show": {"cut": 600}, "f": "600: 0.02554 × 0.60 × 21 630 783 = {p|331 411}"}, {"say": "From 660: {p|194 319} per loan — half the risk of “everyone”, for two thirds of the volume.", "show": {"cut": 660}}, {"say": "Think in money.", "ask": {"q": "The expected loss per loan halves at 660. Does 660 earn more?", "options": ["Yes: less loss per loan means more profit", "Not necessarily: the book shrinks too, and the goods turned away take their interest with them", "No: the expected loss rises"], "answer": 1, "why": "Per-loan risk is only one side. The next story puts a price on both sides."}}, {"say": "The total expected loss falls from 2.89 bn to 0.99 bn soum between “everyone” and 660 — but 2 392 good loans and their interest are gone too. Only money on both sides decides."}]}
 ```
 
-| approve from | approved | bad rate | loans |
-|---|---|---|---|
-| 560 | 98.7 % | 2.81 % | 7 515 |
-| 600 | 95.7 % | 2.55 % | 7 284 |
-| 620 | 87.9 % | 2.41 % | 6 694 |
-| 640 | 77.8 % | 2.18 % | 5 928 |
-| 660 | 66.7 % | 1.50 % | 5 076 |
+### A good loan, a bad loan — the profit of a line
 
-From 560 to 660 the approval rate falls by 32 points and the bad rate by 1.3 points: the business pays a lot of volume for a little risk.
-
-**When you use it.**
-- Sales asks for more approvals, risk asks for fewer bads — the table puts both on one line.
-- Before any money: the first view of what a proposed cut-off does.
-
-> ⚠️ **Watch out.** These are loans Nur already made under its old decisions. A cut-off below today's practice would approve people Nur never lent to, whose bad rate is unknown (swap-in, below).
-
-**Your turn.** What share of the scored loans does the cut-off **680** keep, in %, to 1 decimal?
-
-```task
-{"id": "w09d4-l1", "kind": "number", "answer": 50.3, "dp": 1, "unit": "%", "hint": "at(680) in the box above.", "model": "3 833 of 7 615 = 50.3 % approved, with a bad rate of 1.46 % — half the business for 1.5 points of bad rate."}
+```story
+{"id": "w09d4-s3", "title": "A good loan, a bad loan — the profit of a line", "min": 5, "steps": [{"say": "Put a price on each loan with Week 8's average Consumer loan. A {g|good} loan pays its interest: {g|5 695 580} soum.", "show": {"kind": "fall", "items": [[5695580, "g"], [-3417348, "o"], [-823325, "o"]], "total": true, "fmt": "m", "upto": 1, "totalTone": "g", "labels": ["interest", "funding\nat 18 %", "selling and\nservicing", "a good loan\nleaves"]}}, {"say": "It costs its funding ({o|3 417 348}) and its selling and servicing ({o|823 325}). It leaves {g|1 454 907} soum.", "show": {"upto": 3}}, {"say": "A {o|bad} loan pays no interest (Week 8's simplification), still costs the funding and the operating cost, and loses 60 % of the 21 630 783 it owes: it costs {o|17 219 143} soum.", "show": {"items": [[0, "g"], [-3417348, "o"], [-823325, "o"], [-12978470, "o"]], "upto": 4, "totalTone": "o", "labels": ["interest", "funding", "selling and\nservicing", "60 % of\n21.6 m lost", "a bad loan\ncosts"]}}, {"say": "Guess first.", "ask": {"q": "How many good loans does it take to pay for one bad one?", "options": ["About 2", "About 12", "About 50"], "answer": 1, "why": "17 219 143 ÷ 1 454 907 ≈ 11.8: one bad wipes out what about 12 goods leave."}}, {"say": "The profit of a line: the goods it approves times what each leaves, minus the bads it approves times what each costs. Approve everyone: {y|6.91 bn} soum.", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.18, "lo": 424, "hi": 760, "tick": 40, "lines": ["profit"], "cut": 424, "drag": false, "best": false, "target": null, "avoid": false, "view": null, "edges": null, "be": false, "decide": false, "pick": null}, "f": "profit = {g|goods approved} × 1 454 907 − {o|bads approved} × 17 219 143", "fs": "Profit: the goods approved times 1 454 907, minus the bads approved times 17 219 143."}, {"say": "Approve from 600: {y|7.12 bn} — declining the 331 loans below 600 adds 0.21 bn.", "show": {"cut": 600}}, {"say": "From 660: {y|5.97 bn}. Tightening from 600 to 660 throws away 1.16 bn: those goods earned more than their bads cost.", "show": {"cut": 660}}, {"say": "Drag the line and find the top of the curve yourself.", "show": {"drag": true}, "act": [{"label": "−10", "rep": 2, "do": "nudge", "by": -10}, {"label": "+10", "rep": 1, "do": "nudge", "by": 10}]}, {"say": "This is Week 8's contribution per loan, added up over the book. One caveat: every loan here is priced like an average Consumer loan; a real policy prices each product with its own numbers.", "show": {"drag": false}}]}
 ```
 
-### Bads avoided and goods turned away
+### Where would you put the line? — the break-even and the best cut-off
 
-**What it is.** Moving the line up from "approve everyone" declines two kinds of people. **Bads avoided** are the loans that would have gone bad. **Goods turned away** are good customers lost — revenue that never comes. Their ratio, goods per bad avoided, is the price of a tighter line.
-
-**How to write it.**
-
-```python
-for c in (560, 600, 640, 660):
-    keep = s >= c
-    avoided = y[~keep].sum()
-    lost = (~keep & (y == 0)).sum()
-    print(c, avoided, lost, round(lost / avoided, 1))
+```story
+{"id": "w09d4-s4", "title": "Where would you put the line?", "min": 6, "steps": [{"say": "A group of loans is worth declining only if it loses money: if more of it goes bad than the [[break-even bad rate|good ÷ (good + bad): above it, a group of loans loses money]], {p|7.79 %} — Week 8's break-even PD.", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.18, "lo": 540, "hi": 760, "tick": 40, "lines": ["appr", "br"], "cut": null, "drag": false, "best": false, "target": null, "avoid": false, "view": "bands", "edges": [540, 560, 580, 600, 620, 640, 660, 680, 700, 720, 740], "be": true, "decide": false, "pick": null}, "f": "break-even = 1 454 907 ÷ (1 454 907 + 17 219 143) = {p|7.79 %}", "fs": "Good divided by good plus bad: 7.79 percent."}, {"say": "Each bar is a 20-point band of scores with its bad rate; the dashed line is 7.79 %. Four rounds: keep the band, or decline it?"}, {"say": "Round 1.", "show": {"pick": 3}, "ask": {"q": "Scores 580–599: 17 bads in 142 loans, 12.0 %. Keep or decline?", "options": ["Keep", "Decline"], "answer": 1, "why": "12.0 % is above the 7.79 % break-even: lending to this band loses money."}}, {"say": "Round 2.", "show": {"pick": 6}, "ask": {"q": "Scores 640–659 go bad 6.2 % of the time — twice the book's 2.93 %. Keep or decline?", "options": ["Keep", "Decline"], "answer": 0, "why": "6.2 % is below the 7.79 % break-even: these loans still leave money. Compare with the break-even, not with the average."}}, {"say": "Round 3.", "show": {"pick": 1}, "ask": {"q": "Scores 540–559: 4 bads in 49 loans, 8.2 %. Keep or decline?", "options": ["Keep", "Decline"], "answer": 1, "why": "8.2 % is just above 7.79 %: decline — though with only 49 loans it is a close call."}}, {"say": "Colour every band: {o|orange} above the line (decline), {g|green} below (keep). Everything below 600 is orange, everything from 600 up is green.", "show": {"pick": null, "decide": true, "cut": 600}}, {"say": "Now try every line in money: the profit peaks at {y|594} — 7.14 bn soum, 0.23 bn more than approving everyone. Every line from 593 to 600 is within 0.3 % of it.", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.18, "lo": 540, "hi": 760, "tick": 40, "lines": ["profit"], "cut": 594, "drag": false, "best": true, "target": null, "avoid": false, "view": null, "edges": null, "be": false, "decide": false, "pick": null}, "f": "best line {y|594}: 7.14 bn  ·  approve everyone: 6.91 bn"}, {"say": "The top is flat and a little jagged, so 594 is partly noise. Recommend a round line you can explain — {y|600}, the edge of grade D — and give the range.", "show": {"cut": 600}}, {"say": "Round 4. Funding rises to 22 %: a good loan now leaves only 695 496 soum, and the break-even falls to {p|3.72 %}.", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.22, "lo": 540, "hi": 760, "tick": 40, "lines": ["appr", "br"], "cut": null, "drag": false, "best": false, "target": null, "avoid": false, "view": "bands", "edges": [540, 560, 580, 600, 620, 640, 660, 680, 700, 720, 740], "be": true, "decide": false, "pick": 4}, "f": "22 %: a good loan leaves 695 496 · a bad one costs 17 978 554 → break-even {p|3.72 %}"}, {"say": "Decide.", "ask": {"q": "At 22 % funding, scores 600–619 (4.2 % bad): keep or decline?", "options": ["Keep", "Decline"], "answer": 1, "why": "4.2 % is now above the 3.72 % break-even: the same loans that paid at 18 % lose money at 22 %."}}, {"say": "In money: at 22 % everything from 600 to 659 stops paying, and the best line jumps from 594 to {y|659}, the C/B edge.", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.22, "lo": 540, "hi": 760, "tick": 40, "lines": ["profit"], "cut": 659, "drag": false, "best": true, "target": null, "avoid": false, "view": null, "edges": null, "be": false, "decide": false, "pick": null}}, {"say": "Last round, in your head.", "ask": {"q": "Funding gets cheaper instead: 14 %. Where does the best line go?", "options": ["Up", "Down", "It stays at 594"], "answer": 1, "why": "A good loan leaves more, the break-even rises and more bands pay: at 14 % the best line drops to 537."}}]}
 ```
 
-| approve from | bads avoided | goods lost | goods per bad |
-|---|---|---|---|
-| 560 | 12 | 88 | 7.3 |
-| 600 | 37 | 294 | 7.9 |
-| 640 | 94 | 1 593 | 16.9 |
-| 660 | 147 | 2 392 | 16.3 |
-
-Below 600, each bad avoided costs about 8 good customers; between 600 and 640 the price doubles to about 17.
-
-**When you use it.**
-- "How many good customers do we lose to stop one bad?" — the question every sales director asks.
-- The input for money: each side has a price (next subsections).
-
-**Your turn.** At the cut-off 620 (62 bads avoided, 859 goods lost), how many goods are turned away per bad avoided, to 1 decimal?
-
-```task
-{"id": "w09d4-l2", "kind": "number", "answer": 13.9, "dp": 1, "unit": "goods per bad", "hint": "859 ÷ 62.", "model": "859 / 62 = 13.9 good customers for each bad loan avoided."}
-```
-
-### Expected loss per approved loan — PD, LGD and EAD at a cut-off
-
-**What it is.** From W6D1: the **expected loss** (*ожидаемые потери*) of a loan is **PD × LGD × EAD**. At a cut-off, the PD of an approved loan is the bad rate of the approved group. With W8D2's Consumer EAD (21 630 783 soum) and our LGD of 60 %, each cut-off has its own expected loss per loan.
-
-**How to write it.**
-
-```python
-for c in (424, 600, 640, 660):
-    pd_c = y[s >= c].mean()
-    print(c, round(pd_c * LGD * EAD))
-```
-
-Approving everyone, the expected loss is 380 065 soum per loan; at 600 it is 331 411, at 640 282 426, at 660 194 319 — half the risk per loan, for two thirds of the volume.
-
-**When you use it.**
-- Pricing: the expected loss is the part of the rate that pays for defaults.
-- Explaining a cut-off to finance in their units.
-
-> ⚠️ **Watch out.** A lower loss per loan is not more profit: the book also shrinks. The total expected loss falls from 2.89 bn to 0.99 bn soum between "everyone" and 660, but so does the interest. Only the next subsection weighs both.
-
-**Your turn.** The cut-off 620 approves 6 694 loans, 161 of them bad. Its expected loss per approved loan, in **thousand** soum (whole number)?
-
-```task
-{"id": "w09d4-l3", "kind": "number", "answer": 312, "dp": 0, "unit": "thousand soum", "hint": "161 / 6 694 × 0.60 × 21 630 783, then ÷ 1 000.", "model": "0.02405 × 0.60 × 21 630 783 = 312 150 soum ≈ 312 thousand per approved loan."}
-```
-
-### Profit by cut-off — W8D2's unit economics
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+**Now play.** The same idea with sliders — try the challenges.
 
 ```explore
 {"id": "w09d4-x1", "type": "cutoff", "title": "Draw the line in money", "predict": {"q": "Approving every scored applicant would have earned **6.91 bn soum** at W8D2's prices. Which line earns the most?", "options": ["Approve everyone — every good loan earns money", "About 595: decline only the worst 4 %", "About 650: keep the bad rate under 2 %", "720: lend only to the safest 23 %"], "answer": 1, "why": "A good loan leaves 1.45 m soum and a bad one costs 17.2 m, so declining a group pays only if more than 7.79 % of it goes bad. Only the scores below about 600 (grade D, 11.2 % bad) are that bad: the best line is 594, with 7.14 bn."}, "from": 424, "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "econ": {"interest": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "funds": [0.14, 0.18, 0.22], "lo": 500, "hi": 760, "start": {"cut": 600, "fund": 0.18}, "challenges": [{"id": "c1", "text": "At 18 % funding, find the **most profitable** cut-off: the box *Below the top of this curve* says *at the top* within 5 m soum.", "when": {"gapBest": ["<=", 5000000], "fund": ["=", 0.18]}}, {"id": "c2", "text": "Find the **loosest** cut-off whose approved loans have a **bad rate of 2 % or less**. How much profit does that target cost?", "when": {"br": ["<=", 0.02], "cut": ["<=", 647]}}, {"id": "c3", "text": "Funding rises to **22 %**. Find the new most profitable cut-off — how far did the line move?", "when": {"gapBest": ["<=", 5000000], "fund": ["=", 0.22]}}]}
 ```
 
-**What it is.** Put a price on both kinds of loan with W8D2's average Consumer loan. A **good** loan pays its interest, 5 695 580, and costs its funding, 3 417 348, and its selling and servicing, 823 325: it leaves **1 454 907 soum**. A **bad** loan pays no interest (W8D2's simplification), still costs the funding and the operating cost, and loses 60 % of its exposure, 12 978 470: it costs **17 219 143 soum**. The profit of a cut-off is the goods it approves times the first number, minus the bads it approves times the second.
+### A 2 % target — and its price
 
-**How to write it.**
-
-```python
-good = float(I - COF - OPEX)
-bad = LGD * EAD + COF + OPEX
-def profit(c):
-    keep = s >= c
-    return good * (keep & (y == 0)).sum() - bad * (keep & (y == 1)).sum()
-
-# 1454907 17219143
-print(round(good), round(bad))
-for c in (424, 560, 600, 640, 660, 700):
-    print(c, round(profit(c) / 1e9, 2))
+```story
+{"id": "w09d4-s5", "title": "A 2 % target — and its price", "min": 4, "steps": [{"say": "Risk appetite is often written as a [[bad-rate target|a ceiling on the approved loans' bad rate, set by risk appetite]]: “the loans we approve must stay under 2 % bad”.", "show": {"kind": "cutoff", "n": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 4, 0, 0, 0, 2, 2, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2, 1, 0, 0, 1, 0, 5, 0, 2, 2, 2, 0, 4, 3, 1, 4, 0, 1, 1, 3, 1, 2, 6, 1, 5, 2, 2, 4, 1, 2, 1, 3, 3, 6, 4, 1, 1, 4, 3, 2, 2, 9, 6, 3, 1, 5, 3, 8, 4, 4, 6, 5, 4, 9, 2, 8, 9, 6, 4, 8, 9, 4, 10, 11, 3, 4, 5, 9, 11, 11, 7, 9, 4, 5, 6, 7, 22, 26, 22, 28, 28, 31, 24, 38, 28, 28, 26, 27, 34, 26, 32, 33, 27, 36, 34, 40, 27, 40, 40, 30, 34, 36, 44, 43, 30, 43, 48, 44, 26, 35, 45, 44, 43, 34, 41, 39, 31, 42, 36, 37, 40, 39, 44, 33, 45, 47, 51, 45, 56, 55, 48, 54, 45, 41, 34, 29, 66, 61, 61, 60, 74, 58, 59, 61, 59, 73, 70, 53, 71, 62, 53, 53, 61, 57, 58, 73, 47, 75, 72, 65, 59, 66, 58, 63, 50, 48, 64, 52, 52, 53, 52, 60, 48, 41, 44, 47, 57, 54, 54, 57, 56, 47, 52, 38, 42, 60, 48, 45, 45, 36, 37, 38, 40, 41, 54, 42, 43, 42, 38, 50, 43, 37, 35, 36, 46, 33, 31, 39, 37, 48, 46, 28, 29, 43, 35, 26, 25, 29, 33, 31, 24, 24, 26, 26, 30, 19, 28, 32, 23, 20, 28, 19, 19, 29, 18, 16, 12, 14, 22, 15, 18, 15, 13, 19, 20, 10, 14, 12, 12, 11, 11, 16, 12, 15, 9, 14, 14, 9, 10, 13, 10, 8, 5, 4, 8, 9, 5, 7, 2, 3, 5, 4, 7, 4, 5, 3, 2, 6, 5, 2, 2, 2, 1, 3, 4, 3, 4, 2, 4, 2, 1, 1, 6, 0, 2, 0, 3, 3, 2, 2, 0, 3, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 2, 3, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 2, 7], "b": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 2, 3, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 2, 1, 2, 1, 3, 3, 1, 1, 0, 0, 1, 3, 1, 1, 2, 1, 1, 2, 4, 0, 1, 1, 4, 4, 2, 4, 0, 3, 0, 1, 3, 1, 1, 0, 0, 0, 3, 2, 2, 1, 3, 3, 2, 2, 2, 3, 6, 2, 3, 4, 5, 2, 2, 3, 3, 0, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 2, 2, 0, 3, 1, 2, 0, 0, 1, 0, 1, 3, 0, 0, 2, 1, 0, 2, 0, 2, 1, 0, 0, 2, 0, 2, 0, 0, 2, 1, 2, 1, 0, 0, 2, 3, 1, 1, 1, 4, 0, 1, 0, 0, 0, 2, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "from": 424, "econ": {"i": 5695580, "cof": 3417348, "opex": 823325, "ead": 21630783, "lgd": 0.6}, "fund": 0.18, "lo": 540, "hi": 760, "tick": 40, "lines": ["profit", "br"], "cut": null, "drag": false, "best": true, "target": 0.02, "avoid": false, "view": null, "edges": null, "be": false, "decide": false, "pick": null}}, {"say": "The loosest line that meets it is {p|647}: 74.3 % approved at a 1.997 % bad rate, earning {y|6.12 bn} soum.", "show": {"cut": 647}, "f": "647: approved 74.3 % · bad rate 1.997 % · profit {y|6.12 bn}"}, {"say": "The best line earns 7.14 bn, so the target costs {o|1.02 bn} of profit on this book — and 0.79 bn below even approving everyone.", "f": "price of the target = 7.14 − 6.12 = {o|1.02 bn}", "fs": "The target costs about 1.02 billion soum."}, {"say": "Why?", "ask": {"q": "Why does the 2 % line earn less than approving everyone?", "options": ["The target is computed wrongly", "Between 600 and 647 it declines loans that go bad less often than 7.79 %, and each of them would have earned money", "Bad loans earn more than good ones"], "answer": 1, "why": "A group is worth declining only above the break-even. The 2 % line declines grade C loans that still pay."}}, {"say": "The lowest bad rate is not a goal: approve only 720 and above and the bad rate is 0.90 % — and the profit {y|2.28 bn}, a third of the best.", "show": {"cut": 720}}, {"say": "So when a committee proposes a target, show it two numbers before it votes: the line the target implies, and the money it costs."}]}
 ```
 
-| approve from | profit, bn soum |
-|---|---|
-| everyone (424) | 6.91 |
-| 560 | 6.99 |
-| 600 | 7.12 |
-| 640 | 6.22 |
-| 660 | 5.97 |
-| 700 | 3.22 |
+### Who changes sides — swap-ins, swap-outs, rules and tests
 
-Declining the scores below 600 adds 0.21 bn soum; tightening on to 660 throws away 1.16 bn of it.
-
-**When you use it.**
-- Every cut-off proposal: the line in money, not only in bad rate.
-- It is W8D2's contribution per loan, summed: (1 − PD) × interest − funding − PD × LGD × EAD − operating cost.
-
-> ⚠️ **Watch out.** Every loan here is priced like an average Consumer loan — one product's money on the whole book's scores. A real policy prices each product with its own numbers, and gets a different line for each (Practice P4: Micro's line sits at 659).
-
-**Your turn.** What is the profit at the cut-off **620**, in bn soum, to 2 decimals?
-
-```task
-{"id": "w09d4-l4", "kind": "number", "answer": 6.73, "dp": 2, "unit": "bn soum", "hint": "profit(620) / 1e9 in the box above.", "model": "6 533 goods × 1 454 907 − 161 bads × 17 219 143 = 6.73 bn — 0.39 bn less than at 600."}
+```story
+{"id": "w09d4-s6", "title": "Who changes sides", "min": 5, "steps": [{"say": "A rule, “approve 600 and above”, against today's decisions on {b|13 612} scored applications (one dot ≈ 136). Most decisions stay the same; two groups change sides.", "show": {"kind": "dots", "groups": [[80, "m", "same"], [3, "o", "out"], [17, "y", "in"]], "cols": 20, "scatter": 3, "legend": [["m", "same decision"], ["o", "swap-out"], ["y", "swap-in"]]}}, {"say": "[[Swap-outs|approved today, declined by the new rule]]: {o|363} applications. 331 became loans and 37 of those went bad — Nur **knows**, because it lent to them.", "show": {"fade": ["same", "in"], "box": ["out"]}}, {"say": "[[Swap-ins|rejected today, approved by the new rule]]: {y|2 295} applicants. Nobody knows how they would have paid.", "show": {"fade": ["same", "out"], "box": ["in"]}}, {"say": "Your turn.", "ask": {"q": "What do you know about the 2 295 swap-ins' bad rate?", "options": ["The same as approved loans with the same score", "Nothing from Nur's data: they never got a loan, so there is no outcome", "It is zero"], "answer": 1, "why": "No loan, no outcome. The past policy hides how the people it rejected would have paid."}}, {"say": "Guessing it is [[reject inference|estimating how rejected applicants would have behaved]]. Beware: swap-ins were often rejected by a rule, not the score, so treating them like approved people usually underestimates their risk."}, {"say": "The share rejected by score band. It falls with the score but never reaches zero — 5.9 % even at 720+. [[Policy rules|hard rules that decline whatever the score says: income, bureau delinquencies, fraud flags]] and [[overrides|a credit officer's decision against the score]] decide too.", "show": {"kind": "rows", "rows": [[0.55, null, null, "o"], [0.316, null, null, "o"], [0.152, null, null, "o"], [0.059, null, null, "o"]], "pct": true, "dp": 1, "lo": 0, "hi": 0.6, "labels": ["below 600 · 2 155 applicants", "600–659 · 4 605", "660–719 · 4 702", "720+ · 2 150"]}}, {"say": "So a cut-off study keeps the policy rules fixed — otherwise it promises swap-ins the rules would reject anyway. The [[override rate|the share of decisions that went against the score]] shows whether people trust the scorecard."}, {"say": "To test a policy for real: [[champion / challenger|the current policy decides most applications; a random share goes through the new one]] — Week 7's A/B test. But bads are rare: seeing 2.93 % → 2.55 % needs about 28 936 loans per arm.", "f": "2.93 % → 2.55 %: about {b|28 936} loans per arm  ·  Nur's whole history: 7 828", "fs": "About 28 936 loans per arm — Nur has made 7 828 in its life."}, {"say": "Last one.", "ask": {"q": "Why is a test a poor way to choose between the lines 594 and 600?", "options": ["They disagree on only 38 loans in Nur's history — no test could see a difference", "A/B tests are not allowed in lending", "600 is always better"], "answer": 0, "why": "Small moves are judged on the swap sets and the profit curve. Tests are for big changes, read early with FPD."}}]}
 ```
 
-### The profit-maximising cut-off and the break-even bad rate
+### Has the crowd moved? — PSI
 
-**What it is.** Raising the line by one point declines the loans at that score. That adds money when those loans would have lost it — when their bad rate is above the **break-even bad rate** (*безубыточная доля плохих*): good ÷ (good + bad) = 1 454 907 ÷ 18 674 050 = **7.79 %**, W8D2's break-even PD for a Consumer loan. The **profit-maximising cut-off** (*порог максимальной прибыли*) sits where the loans just below it go bad more often than that and the loans above it less often.
-
-**How to write it.** Try every cut-off and keep the best.
-
-```python
-cs = np.arange(424, 852)
-pr = np.array([profit(c) for c in cs])
-best = cs[pr.argmax()]
-# 594 7.14 0.0779
-print(best, round(pr.max() / 1e9, 2), round(good / (good + bad), 4))
-plt.plot(cs, pr / 1e9)
-plt.axvline(best, ls="--")
-plt.xlabel("approve from score"); plt.ylabel("profit, bn soum")
-plt.show()
+```story
+{"id": "w09d4-s7", "title": "Has the crowd moved? — PSI", "min": 6, "steps": [{"say": "The scorecard was built on one crowd of applicants. Is today's crowd the same? A toy with two bands: last year {p|25 % low, 75 % high}; this month {b|35 % and 65 %}.", "show": {"kind": "psi", "e": [0.25, 0.75], "a": [0.35, 0.65], "parts": false, "sum": false, "labels": ["low scores", "high scores"], "words": {"e": "last year", "a": "this month"}}}, {"say": "For each band: (today's share − last year's) × ln(today ÷ last year). The low band: 0.10 × ln 1.4 = {p|0.0336}.", "show": {"parts": true}, "f": "(35 % − 25 %) × ln(35 ÷ 25) = 0.10 × 0.336 = {p|0.0336}", "fs": "0.10 times the log of 1.4: 0.0336."}, {"say": "The high band: −0.10 × ln 0.867 = {p|0.0143}, positive too — a fall and its log share the sign. Add the bands: the [[PSI|population stability index: how far the applicants' shares across score bands moved from the reference]] = {y|0.048}.", "show": {"sum": true}, "f": "+ (65 % − 75 %) × ln(65 ÷ 75) = {p|0.0143}  →  PSI = 0.0336 + 0.0143 = {y|0.048}", "fs": "Plus 0.0143 from the high band: the PSI is 0.048."}, {"say": "Read it with a traffic light: {g|under 0.1 stable}, {y|0.1–0.25 watch}, {o|over 0.25 act}. 0.048 is stable."}, {"say": "Check the formula.", "show": {"e": [0.5, 0.5], "a": [0.5, 0.5]}, "ask": {"q": "Two years with identical shares, 50 % and 50 %. What is the PSI?", "options": ["0", "0.5", "1"], "answer": 0, "why": "Each band adds 0 × ln 1 = 0. No movement, no PSI."}}, {"say": "Nur: 2024's applicants, the scorecard's first year, against 2026's, on six score bands. The bars almost match: PSI = {g|0.0037}, stable.", "show": {"e": [0.0470785, 0.1051753, 0.2003339, 0.2584307, 0.2270451, 0.1619366], "a": [0.0464466, 0.112479, 0.2173102, 0.259653, 0.2081701, 0.1559411], "parts": false, "labels": ["<560", "560", "600", "640", "680", "720+"], "words": {"e": "2024 (the build year)", "a": "2026"}}}, {"say": "Each band's part is tiny; the biggest, 680–719 (22.70 % → 20.82 %), adds only {p|0.0016}.", "show": {"parts": true}}, {"say": "A slow slide hides, though: lower every 2026 score by 10 points and the PSI is only {g|0.041} — still green. That is why the monthly page also shows the average score.", "show": {"a": [0.063421, 0.1402723, 0.2344712, 0.2562955, 0.1848536, 0.1206864], "words": {"e": "2024", "a": "2026, every score −10"}}}, {"say": "Lower them by 20 and the PSI reaches {y|0.136}: watch. By 30 it would be 0.28: act.", "show": {"a": [0.0869241, 0.1719828, 0.2465958, 0.2465958, 0.1596717, 0.0882298], "words": {"e": "2024", "a": "2026, every score −20"}}}, {"say": "A detail for the homework: a score exactly on an edge belongs to the band **above** it — 600 goes into 600–639, not into 560–599."}, {"say": "Two practical rules. An empty band makes ln(0) blow up: floor every share at a tiny value (0.01 %) or merge the band with its neighbour. More bands give the same verdict — the homework uses ten, cut at 2024's deciles."}, {"say": "And a stable PSI says only that the **applicants** have not moved — not that the score still ranks. That is the Gini's job."}]}
 ```
 
-The best line is **594**, with 7.14 bn soum: 0.23 bn more than approving everyone. Every cut-off from 593 to 600 is within 0.3 % of it. Below 600 sit grade D's loans, 11.2 % bad — above the break-even; above it, grade C's, at 5.0 % — below it.
-
-**When you use it.**
-- The starting point of a cut-off recommendation.
-- Again whenever the money changes: funding cost, LGD, the product's rate (the explorer's 22 % moves the line to 659).
-
-> ⚠️ **Watch out.** The top of the curve is flat and jagged; the single best point (594) is partly noise. Recommend a round line you can explain — 600, the edge of grade D — and give the range.
-
-**Your turn.** At 22 % funding, a good loan leaves 695 496 soum and a bad one costs 17 978 554. What is the break-even bad rate, in %, to 2 decimals?
-
-```task
-{"id": "w09d4-l5", "kind": "number", "answer": 3.72, "dp": 2, "unit": "%", "hint": "good ÷ (good + bad).", "model": "695 496 ÷ 18 674 050 = 3.72 %. Grade C (5.0 %) now loses money, so the line moves up to the C/B edge: 659."}
-```
-
-### A bad-rate target — and what it costs
-
-**What it is.** Risk appetite is often written as a **bad-rate target** (*целевая доля плохих*): "the loans we approve must stay under 2 % bad". The loosest cut-off that meets it is rarely the most profitable one. The difference is the **price of the target** — a number the committee should see before it votes.
-
-**How to write it.**
-
-```python
-ok = [c for c in cs if y[s >= c].mean() <= 0.02]
-c2 = min(ok)
-share, br, n, b = at(c2)
-# 647 74.3 1.997 6.12
-print(c2, round(100 * share, 1), round(100 * br, 3), round(profit(c2) / 1e9, 2))
-```
-
-The loosest line under 2 % is **647**: 74.3 % approved at a 1.997 % bad rate, and 6.12 bn soum — 1.02 bn less than the best line, and 0.79 bn less than approving everyone.
-
-**When you use it.**
-- A committee proposes a target → you show the line it implies and the money it costs.
-- Comparing two policies with the same bad rate: prefer the one that keeps more goods.
-
-> ⚠️ **Watch out.** The lowest bad rate is not a goal. Approving only 720 and above gives 0.90 % — and 2.28 bn soum, a third of the best.
-
-**Your turn.** Why can the line under the 2 % target earn less than approving everyone?
-
-```task
-{"id": "w09d4-l6", "kind": "choice", "options": ["Because the target is computed wrongly", "Because between 600 and 647 it declines grade C loans whose bad rate is below the 7.79 % break-even — each of them would have earned money", "Because bad loans earn more than good ones", "Because the approval rate rises"], "answer": 1, "explain": "A loan is worth declining only if its group goes bad more than 7.79 % of the time. Grade C goes bad at about 5 %: declining it gives up more interest than it saves in losses."}
-```
-
-### Swap-in and swap-out — what a new line changes
-
-**What it is.** A new policy changes decisions both ways compared with today's. **Swap-outs** (*swap-out*) are applicants approved today and declined by the new rule: Nur knows how their loans went. **Swap-ins** (*swap-in*) are applicants rejected today and approved by the new rule: nobody knows, because Nur never lent to them. Guessing how they would have behaved is **reject inference** (*оценка отклонённых заявок*).
-
-**How to write it.** A pure "approve 600 and above" rule against today's decisions:
-
-```sql
-SELECT CASE WHEN status = 'rejected' AND credit_score >= 600
-            THEN 'swap-in'
-            WHEN status IN ('approved', 'approved_not_disbursed')
-                 AND credit_score < 600
-            THEN 'swap-out'
-            ELSE 'same' END AS change,
-       COUNT(*) AS applications
-FROM applications
-WHERE credit_score IS NOT NULL
-GROUP BY change;
-```
-
-The rule would swap out 363 approved applications (331 of them became loans, and 37 of those went bad — known) and swap in 2 295 rejected applicants whose bad rate nobody knows.
-
-**When you use it.**
-- Every policy change: show both sets, with what is known and what is guessed.
-- Loosening a cut-off is the dangerous direction: it lives on swap-ins.
-
-> ⚠️ **Watch out.** Swap-ins were rejected for a reason — often a policy rule, not the score. Assuming they behave like approved applicants with the same score usually underestimates their risk.
-
-**Your turn.** Why can't you compute the bad rate of the 2 295 swap-ins from Nur's data?
-
-```task
-{"id": "w09d4-l7", "kind": "choice", "options": ["Because their scores are missing", "Because they were rejected, so they never got a loan whose outcome could be observed", "Because SQL cannot join applications to loans", "Because there are too few of them"], "answer": 1, "explain": "No loan, no outcome. That is the whole problem of reject inference: the past policy hides how the people it rejected would have paid."}
-```
-
-### Policy rules besides the score
-
-**What it is.** A credit decision is the score **and** the **policy rules** (*кредитная политика, стоп-факторы*): hard rules that decline whatever the score says — age, income, the share of income going to payments, recent delinquencies at the bureau, fraud flags, a blacklist — and **overrides** (*ручные решения*), where a credit officer goes against the score. That is how Nur rejected applicants with 720 and lent below 560.
-
-**How to write it.** The rejection rate by grade band:
-
-```sql
-SELECT CASE WHEN credit_score < 600 THEN '1: below 600'
-            WHEN credit_score < 660 THEN '2: 600-659'
-            WHEN credit_score < 720 THEN '3: 660-719'
-            ELSE '4: 720+' END AS band,
-       COUNT(*) AS applications,
-       ROUND(100.0 * SUM(status = 'rejected') / COUNT(*), 1)
-         AS rejected_pct
-FROM applications
-WHERE credit_score IS NOT NULL
-GROUP BY band ORDER BY band;
-```
-
-Below 600, 55.0 % of applicants are rejected; 600–659, 31.6 %; 660–719, 15.2 %; 720 and above, 5.9 %. Rejection falls with the score but never reaches zero: other rules decide too.
-
-**When you use it.**
-- A cut-off study must keep the policy rules fixed — or it promises swap-ins the rules would reject anyway.
-- Monitoring: the **override rate** (decisions against the score) shows whether people trust the scorecard.
-
-**Your turn.** Of 2 150 applicants with 720 or more, 126 were rejected. What share, in %, to 1 decimal?
-
-```task
-{"id": "w09d4-l8", "kind": "number", "answer": 5.9, "dp": 1, "unit": "%", "hint": "126 ÷ 2 150.", "model": "126 / 2 150 = 5.9 % — rejected by something other than the score: a policy rule or an officer."}
-```
-
-### Champion / challenger — testing a new line
-
-**What it is.** **Champion / challenger** (*чемпион / претендент*) is W7's A/B test applied to credit decisions. The current policy, the champion, decides most applications; a random share goes through the new one, the challenger. When the loans have matured, the two groups' bad rates and profits are compared.
-
-**How to write it.** How many loans does each arm need to see a lower bad rate? W7's power calculation:
-
-```python
-from statsmodels.stats.proportion import proportion_effectsize
-from statsmodels.stats.power import NormalIndPower
-
-for p2 in (0.0255, 0.0200):
-    h = proportion_effectsize(0.0293, p2)
-    n = NormalIndPower().solve_power(h, alpha=0.05, power=0.8)
-    print(p2, round(n))
-```
-
-To see a fall from 2.93 % to 2.55 % (the line at 600) each arm needs about 28 936 loans — more than Nur has made in its life (7 828). A fall to 2.00 % needs about 4 325.
-
-**When you use it.**
-- A big change with a big expected effect: a new scorecard, a new product rule.
-- Not for small cut-off moves: judge those on the swap sets and the profit curve, and read an early indicator (FPD30, W5) instead of the final bad rate.
-
-> ⚠️ **Watch out.** Bad loans take months to show. Fix the test's length and its sample before it starts and do not stop at the first good month (W7's peeking).
-
-**Your turn.** Why is champion / challenger a poor tool to choose between the lines 594 and 600?
-
-```task
-{"id": "w09d4-l9", "kind": "choice", "options": ["Because the two policies differ on only a few dozen applicants, so no test could see the difference in bad rate", "Because A/B tests are not allowed in lending", "Because 600 is always better", "Because a challenger must be a new scorecard"], "answer": 0, "explain": "The two lines disagree only on scores 594–599: 38 loans in our history. A difference that small needs the profit curve and judgement, not a test."}
-```
-
-### PSI — has the population moved?
-
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
+**Now play.** The same idea with sliders — try the challenges.
 
 ```explore
 {"id": "w09d4-x2", "type": "psi", "title": "Has the population moved?", "predict": {"q": "Take 2026's applicants and lower **every score by 10 points**. What does the PSI against 2024 say?", "options": ["Under 0.1 — 'stable' (about 0.04)", "Between 0.1 and 0.25 — 'watch'", "Over 0.25 — 'act'", "PSI cannot see a change in the average"], "answer": 0, "why": "Ten points move each band's share by only one or two points: PSI 0.041, still green. The traffic light is built for big moves; a slow slide hides under 0.1 — so the monthly page also shows the average score."}, "from": 424, "edges": [560, 600, 640, 680, 720], "base": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 2, 0, 0, 0, 0, 0, 2, 0, 0, 1, 0, 1, 1, 1, 0, 2, 2, 2, 4, 0, 1, 0, 2, 0, 1, 2, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 2, 6, 1, 1, 2, 0, 3, 3, 1, 1, 4, 5, 3, 2, 4, 3, 1, 3, 1, 3, 5, 5, 2, 3, 1, 10, 1, 7, 7, 5, 2, 5, 7, 5, 6, 6, 7, 1, 5, 6, 5, 7, 2, 3, 5, 4, 4, 4, 10, 7, 11, 11, 4, 12, 10, 4, 6, 10, 16, 9, 9, 4, 11, 21, 8, 17, 10, 10, 8, 9, 16, 15, 14, 11, 10, 11, 16, 9, 15, 12, 13, 13, 8, 18, 16, 17, 9, 9, 20, 23, 23, 16, 14, 18, 20, 15, 11, 16, 14, 10, 19, 19, 21, 15, 12, 17, 16, 21, 14, 16, 14, 10, 11, 22, 17, 22, 25, 22, 13, 19, 21, 18, 18, 23, 24, 28, 19, 11, 18, 14, 18, 23, 16, 26, 16, 18, 19, 17, 19, 17, 26, 20, 20, 23, 20, 19, 19, 17, 23, 11, 32, 12, 15, 27, 15, 14, 27, 14, 19, 17, 16, 28, 16, 15, 18, 15, 28, 18, 15, 15, 13, 14, 17, 19, 17, 19, 21, 17, 25, 19, 20, 10, 13, 17, 9, 13, 12, 16, 14, 16, 15, 12, 17, 10, 19, 8, 10, 4, 10, 14, 10, 10, 7, 8, 12, 7, 7, 4, 19, 13, 4, 9, 6, 5, 6, 6, 5, 4, 8, 2, 5, 5, 5, 5, 5, 12, 7, 7, 7, 3, 7, 2, 3, 4, 4, 8, 5, 2, 10, 7, 1, 9, 3, 9, 4, 3, 2, 1, 3, 1, 6, 7, 3, 1, 3, 3, 4, 0, 1, 1, 2, 2, 3, 1, 1, 0, 0, 3, 2, 1, 2, 0, 0, 3, 1, 1, 1, 2, 0, 2, 1, 3, 0, 2, 1, 1, 0, 2, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 2, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2], "pops": [{"key": 2025, "label": "2025", "counts": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1, 1, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 1, 1, 0, 1, 1, 2, 0, 1, 1, 0, 4, 1, 2, 4, 0, 1, 1, 2, 2, 1, 0, 1, 5, 5, 1, 2, 5, 1, 3, 1, 4, 0, 1, 4, 5, 2, 8, 2, 6, 1, 4, 2, 8, 6, 2, 9, 6, 6, 9, 3, 5, 6, 8, 6, 2, 8, 6, 4, 5, 6, 4, 5, 9, 5, 7, 12, 6, 11, 7, 8, 13, 12, 9, 7, 12, 20, 17, 16, 10, 13, 22, 10, 14, 16, 16, 16, 14, 14, 15, 16, 16, 25, 12, 10, 24, 23, 22, 20, 28, 19, 17, 20, 27, 19, 25, 17, 14, 13, 21, 23, 22, 25, 26, 23, 31, 27, 18, 21, 29, 32, 21, 23, 19, 29, 28, 35, 30, 32, 30, 30, 42, 34, 33, 37, 32, 27, 27, 28, 38, 32, 26, 34, 30, 31, 30, 38, 29, 28, 27, 30, 38, 35, 35, 31, 51, 41, 44, 30, 36, 31, 43, 33, 19, 30, 29, 29, 30, 41, 42, 33, 33, 31, 38, 43, 33, 30, 33, 35, 30, 30, 42, 38, 35, 28, 33, 39, 40, 41, 42, 28, 41, 33, 26, 26, 32, 24, 27, 30, 28, 25, 29, 26, 21, 26, 30, 21, 28, 23, 26, 23, 37, 27, 22, 29, 29, 29, 24, 17, 14, 33, 23, 27, 24, 20, 16, 17, 19, 23, 23, 22, 17, 22, 21, 14, 17, 13, 14, 24, 24, 13, 11, 18, 14, 18, 11, 19, 14, 17, 10, 14, 14, 12, 16, 10, 12, 9, 11, 8, 10, 5, 7, 15, 7, 6, 7, 8, 11, 10, 7, 8, 7, 9, 9, 6, 6, 5, 4, 2, 5, 11, 8, 4, 4, 4, 6, 5, 5, 6, 5, 3, 6, 1, 4, 4, 3, 1, 3, 2, 4, 3, 5, 0, 2, 1, 1, 6, 0, 1, 1, 1, 1, 1, 2, 0, 0, 1, 1, 0, 1, 1, 2, 0, 0, 0, 1, 1, 1, 1, 0, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 5]}, {"key": 2026, "label": "2026", "counts": [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 1, 0, 1, 0, 0, 2, 0, 2, 0, 1, 2, 2, 1, 1, 2, 2, 1, 1, 0, 0, 1, 2, 3, 0, 2, 1, 0, 2, 2, 5, 1, 4, 2, 1, 4, 3, 0, 4, 3, 0, 4, 3, 0, 2, 4, 1, 5, 3, 1, 2, 3, 6, 9, 8, 7, 5, 5, 6, 7, 8, 5, 5, 11, 5, 11, 4, 5, 4, 7, 2, 8, 5, 6, 7, 6, 3, 5, 6, 10, 8, 7, 9, 13, 12, 6, 15, 10, 11, 13, 8, 18, 13, 14, 15, 16, 8, 16, 16, 24, 21, 14, 22, 17, 15, 13, 12, 17, 27, 18, 23, 13, 16, 27, 19, 28, 28, 17, 16, 17, 34, 27, 28, 25, 28, 24, 24, 21, 24, 38, 17, 27, 27, 38, 41, 28, 35, 35, 30, 36, 23, 26, 23, 30, 31, 30, 38, 28, 39, 31, 26, 35, 33, 37, 27, 39, 32, 27, 34, 31, 27, 28, 36, 33, 37, 39, 40, 37, 34, 42, 44, 34, 39, 44, 33, 25, 29, 30, 39, 36, 30, 37, 29, 35, 34, 37, 45, 39, 27, 44, 35, 32, 41, 34, 25, 31, 39, 29, 43, 31, 35, 28, 30, 31, 32, 27, 28, 36, 30, 31, 26, 37, 34, 34, 23, 27, 31, 36, 40, 35, 32, 27, 19, 26, 19, 25, 30, 22, 23, 17, 19, 28, 15, 15, 19, 25, 21, 23, 19, 23, 23, 17, 18, 18, 14, 17, 17, 17, 24, 21, 23, 20, 10, 18, 13, 15, 13, 9, 11, 21, 11, 11, 11, 12, 7, 15, 9, 18, 29, 14, 12, 10, 13, 11, 12, 11, 8, 11, 7, 11, 4, 8, 7, 4, 3, 5, 9, 2, 4, 2, 6, 5, 5, 5, 12, 4, 6, 6, 3, 5, 6, 3, 2, 0, 3, 4, 4, 2, 4, 1, 1, 2, 2, 4, 2, 2, 2, 3, 1, 3, 0, 1, 1, 1, 3, 0, 2, 1, 2, 3, 2, 0, 0, 2, 0, 1, 0, 2, 2, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]}, {"key": 202610, "label": "Oct 2026 (129)", "counts": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 2, 1, 2, 0, 1, 1, 0, 0, 2, 1, 2, 0, 1, 1, 0, 1, 0, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3, 1, 2, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 2, 0, 0, 3, 0, 1, 3, 0, 1, 0, 2, 2, 0, 0, 0, 3, 0, 0, 1, 1, 0, 2, 0, 1, 1, 4, 0, 0, 1, 1, 1, 2, 2, 1, 1, 1, 0, 0, 2, 2, 2, 0, 1, 0, 3, 0, 1, 1, 2, 0, 2, 0, 1, 1, 0, 2, 1, 0, 0, 1, 1, 0, 0, 2, 0, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}], "start": {"pre": 2025}, "challenges": [{"id": "c1", "text": "Pick **2026** — the year Nilufar asks about — with nothing moved, and read the real PSI.", "when": {"pre": ["=", 2026], "shift": ["=", 0], "spread": ["=", 1]}}, {"id": "c2", "text": "Move **only the level** of the scores (the first slider) until the PSI crosses **0.1** — watch. How many points did it take?", "when": {"psi": [">=", 0.1]}, "only": ["shift", "pre"]}, {"id": "c3", "text": "Put it back, then change **only the spread** until the PSI crosses **0.25** — act.", "when": {"psi": [">", 0.25]}, "only": ["spread", "pre"]}, {"id": "c4", "text": "Pick **October 2026**, nothing moved: only 129 applicants so far. Its PSI is 17 times 2026's — drift, or a small month?", "when": {"pre": ["=", 202610], "shift": ["=", 0], "spread": ["=", 1]}}]}
 ```
 
-**What it is.** The **population stability index**, **PSI** (*индекс стабильности популяции*), compares how this period's applicants spread over the score bands with how the reference period's did — here 2024, the scorecard's first year. For each band, (actual share − expected share) × ln(actual share ÷ expected share); add the bands up. The usual reading: **under 0.1 stable, 0.1–0.25 watch, over 0.25 act**.
+### Watching every month — CSI and what to do
 
-**How to write it.**
-
-```python
-A = pd.read_sql("""SELECT applied_at, credit_score FROM applications
-                   WHERE credit_score IS NOT NULL""", con)
-edges = [560, 600, 640, 680, 720]
-def shares(x):
-    band = np.searchsorted(edges, x, side="right")
-    return np.bincount(band, minlength=6) / len(x)
-def psi(e, a):
-    return np.sum((a - e) * np.log(a / e))
-
-yr = A["applied_at"].str[:4]
-e = shares(A.loc[yr == "2024", "credit_score"].to_numpy())
-a = shares(A.loc[yr == "2026", "credit_score"].to_numpy())
-# 0.0037
-print(round(psi(e, a), 4))
+```story
+{"id": "w09d4-s8", "title": "Watching every month", "min": 5, "steps": [{"say": "The same PSI for each month of 2026 against 2024. Every month is green, from 0.004 to 0.018…", "show": {"kind": "psi", "view": "months", "vals": [[0.0179, 505], [0.0131, 475], [0.0079, 593], [0.0131, 552], [0.004, 618], [0.0045, 621], [0.0174, 634], [0.0078, 625], [0.0115, 609], [0.0617, 129]], "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"]}}, {"say": "…and October: {y|0.062}, 17 times 2026's PSI. But October has only 129 applicants so far, and in a small month each band's share jumps by chance."}, {"say": "Your turn.", "ask": {"q": "October shows 0.062 on 129 applicants. What do you write?", "options": ["The population has shifted: rebuild", "A partial month, noisy and still green — look again when it is complete", "PSI can't be computed for one month"], "answer": 1, "why": "Fewer applicants, bigger random swings. Act on a trend, not on one partial month."}}, {"say": "When the PSI rises, find **which input** moved: the [[CSI|characteristic stability index: the PSI formula applied to one input, such as the channel]] — the same formula on one input instead of the score. Nur's are all tiny.", "show": {"kind": "rows", "rows": [[0.0001, null, null, "b"], [0.0005, null, null, "b"], [0.0033, null, null, "b"], [0.0033, null, null, "b"]], "dp": 4, "lo": 0, "hi": 0.005, "labels": ["channel", "product", "term in months", "requested amount"]}}, {"say": "Find the cause.", "ask": {"q": "The PSI is 0.18; the channel's CSI is 0.15; every other CSI is under 0.01. Where do you look first?", "options": ["Rebuild the scorecard today", "The channel mix: a new partner or a campaign changed who applies — check the bad rate by band there", "Nowhere: 0.18 is under 0.25"], "answer": 1, "why": "0.1–0.25 means “watch”: find the cause before acting. The CSI points at the input that moved."}}, {"say": "Each signal has its usual action. Under 0.1: note it. 0.1–0.25: find the moved input and adjust its cut-off. Over 0.25: a new population — restrict the score, recalibrate or rebuild.", "f": "PSI < 0.1 → note it  ·  0.1–0.25 → find the cause (CSI)  ·  > 0.25 → restrict, recalibrate or rebuild"}, {"say": "The bad rate rises while the Gini and the PSI stay put? The **order** is right, the **level** is not: [[recalibrate|shift the predicted PD levels to match the actual bad rates]] the PD, move the cut-off, reprice."}, {"say": "The Gini falls beyond its interval? The score ranks worse: review it and rebuild with recent loans."}, {"say": "The monthly page, always in the same order: **population** (PSI, average score), **ranking** (Gini on mature vintages), **outcome** (bad rate by vintage at the same age), **policy** (approval rate, overrides). It ends with one line: signal → action → owner → date."}]}
 ```
 
-| band | 2024 | 2026 | its part |
-|---|---|---|---|
-| below 560 | 4.71 % | 4.64 % | 0.0000 |
-| 560–599 | 10.52 % | 11.25 % | 0.0005 |
-| 600–639 | 20.03 % | 21.73 % | 0.0014 |
-| 640–679 | 25.84 % | 25.97 % | 0.0000 |
-| 680–719 | 22.70 % | 20.82 % | 0.0016 |
-| 720+ | 16.19 % | 15.59 % | 0.0002 |
-
-PSI = 0.0037: 2026's applicants spread over the bands almost exactly like 2024's. The population is stable.
-
-**When you use it.**
-- Every month, for every scorecard in use.
-- Before reusing last year's cut-off on this year's applicants.
-
-> ⚠️ **Watch out.** An empty band makes ln(0) blow up: floor every share at a tiny value (0.01 %) or merge the band with its neighbour. And a stable PSI says only that the *population* has not moved — not that the score still ranks (that is the Gini's job).
-
-**Your turn.** What is the PSI of 2025's applicants against 2024's, to 4 decimals?
-
-```task
-{"id": "w09d4-l10", "kind": "number", "answer": 0.0027, "dp": 4, "hint": "Change 2026 to 2025 in the box above.", "model": "0.0027 — stable. 2025 and 2026 sit just as close to 2024; between themselves, PSI 0.0008."}
-```
-
-### CSI — which characteristic moved
-
-**What it is.** The **characteristic stability index**, **CSI** (*индекс стабильности характеристики*), is the same formula on one input instead of the score: the channel, the product, the requested amount, the term. When the PSI rises, the CSIs show which input moved.
-
-**How to write it.** Bands of the requested amount from 2024's quintiles, then the same `psi`:
-
-```python
-B = pd.read_sql("SELECT applied_at, requested_amount FROM applications", con)
-by = B["applied_at"].str[:4]
-r24 = B.loc[by == "2024", "requested_amount"].to_numpy()
-r26 = B.loc[by == "2026", "requested_amount"].to_numpy()
-q = np.quantile(r24, [0.2, 0.4, 0.6, 0.8])
-def share_q(x):
-    return np.bincount(np.searchsorted(q, x, side="right"), minlength=5) / len(x)
-# 0.0033
-print(round(psi(share_q(r24), share_q(r26)), 4))
-```
-
-| characteristic | CSI 2026 vs 2024 |
-|---|---|
-| channel | 0.0001 |
-| product | 0.0005 |
-| term in months | 0.0033 |
-| requested amount | 0.0033 |
-
-Every input is stable. The largest move: 22.0 % of 2026's applicants ask for 2.41 m soum or less, against 19.9 % in 2024.
-
-**When you use it.**
-- Right after an amber or red PSI, to find the cause.
-- Before a product launch or a new partner: expect the channel's CSI to jump.
-
-**Your turn.** The PSI is 0.18 and the channel's CSI is 0.15; every other CSI is under 0.01. What do you look at first?
-
-```task
-{"id": "w09d4-l11", "kind": "choice", "options": ["Rebuild the scorecard at once", "The channel mix: a new partner or a campaign has changed who applies — check the bad rate by band in that channel", "Nothing: 0.18 is below 0.25", "The requested amount"], "answer": 1, "explain": "The CSI points at the input that moved. A new channel can bring applicants whose risk at a given score differs — the score may need a channel-specific cut-off."}
-```
-
-### The monthly monitoring view
-
-**What it is.** A **monitoring report** (*мониторинг модели*) is one page a month, always the same four blocks: the **population** (PSI of the month's applicants, the average score), the **ranking** (Gini on vintages old enough to judge), the **outcome** (bad rate by vintage, compared at the same age), and the **policy** (approval rate, overrides).
-
-**How to write it.** The PSI of each month of 2026 against 2024:
-
-```python
-A["ym"] = A["applied_at"].str[:7]
-m = A[yr == "2026"].groupby("ym")["credit_score"]
-view = m.agg(applicants="size", avg_score="mean")
-view["psi"] = m.apply(lambda x: psi(e, shares(x.to_numpy())))
-view.round(4)
-```
-
-| month | applicants | PSI |
-|---|---|---|
-| 2026-01 | 505 | 0.0179 |
-| 2026-03 | 593 | 0.0079 |
-| 2026-05 | 618 | 0.0040 |
-| 2026-07 | 634 | 0.0174 |
-| 2026-09 | 609 | 0.0115 |
-| 2026-10 | 129 | 0.0617 |
-
-The box prints all ten months; the table shows every other one and October. Below, the loans by half-year of disbursal:
-
-| vintage | loans | bad rate | Gini |
-|---|---|---|---|
-| 2024 H1 | 667 | 4.05 % | 0.42 |
-| 2024 H2 | 1 032 | 3.97 % | 0.41 |
-| 2025 H1 | 1 297 | 4.01 % | 0.41 |
-| 2025 H2 | 1 659 | 4.34 % | 0.39 |
-| 2026 H1 | 1 884 | 1.65 % | 0.29 |
-
-Every month is green; October's 0.062 comes from 129 applicants — a small month jumps. The Gini drifts from 0.42 to 0.39 over two years, and the 2026 vintages are too young: their bad rate is low because they are young, not because they are good.
-
-**When you use it.**
-- The risk committee's standing item: the same page, the same order, every month.
-- A trend matters more than one month's colour.
-
-> ⚠️ **Watch out.** A PSI on a few hundred applicants moves by chance. Read a month together with its size and the months around it; act on a trend, not on one partial month.
-
-**Your turn.** October 2026 shows PSI 0.062 on 129 applicants, against 0.004–0.018 for every full month. What do you write?
-
-```task
-{"id": "w09d4-l12", "kind": "choice", "options": ["The population has shifted: rebuild", "October is a partial month of 129 applicants; its PSI is noisy and still green — look again when the month is complete", "PSI cannot be computed for October", "Average all ten months into one PSI and stop reporting months"], "answer": 1, "explain": "Fewer applicants, bigger random swings in each band's share. Still under 0.1; the full month will tell."}
-```
-
-### What to do when it drifts
-
-**What it is.** Each signal has its own usual cause and action. The monitoring page ends with a decision, not with a chart.
-
-**How to write it.**
-
-| signal | usual cause | action |
-|---|---|---|
-| PSI < 0.1, Gini steady | nothing moved | note it; next month |
-| PSI 0.1–0.25 | the mix moved (a channel, a product, a campaign) | CSIs; bad rate by band in the moved group; adjust its cut-off |
-| PSI > 0.25 | a new population | restrict the score, recalibrate or rebuild |
-| Gini falls beyond its interval | the score ranks worse | review; rebuild with recent loans |
-| bad rate up, Gini steady | the level moved, the order did not | recalibrate the PD; move the cut-off; reprice |
-
-Nur today sits in the first row: PSI 0.0037, every CSI under 0.01, the Gini a little lower out of time but within noise.
-
-**When you use it.** At the end of every monitoring report: one line, "signal → action → owner → date".
-
-**Your turn.**
+**Now check yourself.**
 
 ```game
 {"type": "sort", "id": "w09d4-g1", "title": "Signal → action", "q": "Put each finding under the action it calls for.", "groups": {"Note it, no action": ["PSI 0.004 and the Gini steady at 0.38"], "Find the cause (CSI)": ["PSI 0.17 after a new partner joined"], "Recalibrate or move the cut-off": ["bad rate up from 2.9 % to 4.1 %, Gini unchanged"], "Rebuild the scorecard": ["Gini down from 0.40 to 0.22 on two mature vintages", "PSI 0.31 after the product was opened to a new region"]}}
 ```
 
-### Putting it together
-
-Nilufar's two questions, one tool per line. **Where to draw the line:** the trade-off table → bads avoided against goods lost → expected loss per loan → profit with W8D2's prices → the best line where the loans below it go bad more than 7.79 % → what a 2 % target costs → the swap sets → the policy rules → why a test cannot settle a 6-point move. **How to know it still holds:** PSI → CSI → the monthly page → the decision table.
-
-| question | tool | Nur |
-|---|---|---|
-| what does a line do | approval, bad rate | 600: 95.7 %, 2.55 % |
-| what does it earn | profit by cut-off | best 594: 7.14 bn |
-| what does 2 % cost | the target's line | 647: −1.02 bn |
-| who changes | swap-in, swap-out | 2 295 in, 363 out at 600 |
-| has the population moved | PSI | 0.0037, stable |
-| which input moved | CSI | all under 0.01 |
-
-**Words of the day.**
+**Now check yourself.**
 
 ```game
 {"type": "match", "id": "w09d4-g2", "title": "Words of the day", "pairs": [["Cut-off", "the lowest score that is approved"], ["Break-even bad rate", "good ÷ (good + bad): above it, a group loses money"], ["Bad-rate target", "a ceiling on the approved loans' bad rate, set by risk appetite"], ["Swap-in", "rejected today, approved by the new rule — outcome unknown"], ["Swap-out", "approved today, declined by the new rule — outcome known"], ["Override", "a decision that goes against the score"], ["PSI", "how far the applicants' score shares moved from the reference"], ["CSI", "the same formula for one input of the decision"]]}
 ```
-
-### Depth (optional)
-
-- **Books.** Naeem Siddiqi, *Intelligent Credit Scoring* (Wiley, 2nd ed., 2017): the chapters on choosing cut-offs, swap sets, policy rules and the monitoring reports (population stability, characteristic analysis). Lyn Thomas, Jonathan Crook and David Edelman, *Credit Scoring and Its Applications* (SIAM, 2nd ed., 2017): cut-offs by profit, and reject inference.
-- **Where the PSI comes from.** The PSI is the symmetric Kullback–Leibler divergence (Jeffreys' divergence) between the two band distributions: the sum of KL(actual ‖ expected) and KL(expected ‖ actual). That is why it is never negative and why swapping the two years gives the same number.
-- **Cut-offs in practice.** Lenders often set the line by product and channel, add a "refer" zone around it for manual review, and keep a strategy table: cut-off, expected approval, bad rate and profit, signed by the risk committee.
-- *Russian terms:* порог отсечения = cut-off, уровень одобрения = approval rate, безубыточная доля плохих = break-even bad rate, риск-аппетит = risk appetite, оценка отклонённых заявок = reject inference, стоп-факторы = hard policy rules, ручное решение (override) = override, чемпион / претендент = champion / challenger, индекс стабильности популяции = PSI, индекс стабильности характеристики = CSI, мониторинг модели = model monitoring, перекалибровка = recalibration.
-
----
 
 ## 2. Worked example — where to draw the line (15 min)
 
@@ -553,6 +115,77 @@ Nilufar's two questions, one tool per line. **Where to draw the line:** the trad
 ## 3. Practice (50 min)
 
 Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `np`, `pd`, `plt`, the frames `S` and `A`, the arrays `s` and `y`, the numbers `I`, `COF`, `OPEX`, `EAD`, `LGD`, `good`, `bad`, the arrays `cs` and `pr`, `e`, `edges` and the functions `at`, `profit`, `shares` and `psi` are ready — if you came straight here, press ▶ Run on every box of section 1 from the first to the PSI box. (The notebook `data/python/week9/day4_starter.ipynb` holds the same tools; you need it for the homework.)
+
+**First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
+
+```python
+# the tools and the data from the full version of section 1 — run once
+import sqlite3
+import numpy as np
+import pandas as pd
+con = sqlite3.connect("data/raw/nur.db")
+S = pd.read_sql("""
+SELECT l.loan_id, l.disbursed_at, p.code AS product,
+       a.credit_score AS score,
+       CASE WHEN l.status IN ('default', 'written_off')
+            THEN 1 ELSE 0 END AS bad
+FROM loans l
+JOIN applications a ON a.application_id = l.application_id
+JOIN products p ON p.product_id = l.product_id
+WHERE a.credit_score IS NOT NULL""", con)
+s, y = S["score"].to_numpy(), S["bad"].to_numpy()
+I, COF, OPEX = 5_695_580, 3_417_348, 823_325
+EAD, LGD = 21_630_783, 0.60
+def at(c):
+    keep = s >= c
+    return keep.mean(), y[keep].mean(), keep.sum(), y[keep].sum()
+for c in (560, 600, 620, 640, 660):
+    share, br, n, b = at(c)
+    print(c, round(100 * share, 1), round(100 * br, 2), n, b)
+for c in (560, 600, 640, 660):
+    keep = s >= c
+    avoided = y[~keep].sum()
+    lost = (~keep & (y == 0)).sum()
+    print(c, avoided, lost, round(lost / avoided, 1))
+for c in (424, 600, 640, 660):
+    pd_c = y[s >= c].mean()
+    print(c, round(pd_c * LGD * EAD))
+good = float(I - COF - OPEX)
+bad = LGD * EAD + COF + OPEX
+def profit(c):
+    keep = s >= c
+    return good * (keep & (y == 0)).sum() - bad * (keep & (y == 1)).sum()
+for c in (424, 560, 600, 640, 660, 700):
+    print(c, round(profit(c) / 1e9, 2))
+cs = np.arange(424, 852)
+pr = np.array([profit(c) for c in cs])
+best = cs[pr.argmax()]
+ok = [c for c in cs if y[s >= c].mean() <= 0.02]
+c2 = min(ok)
+share, br, n, b = at(c2)
+from statsmodels.stats.proportion import proportion_effectsize
+from statsmodels.stats.power import NormalIndPower
+for p2 in (0.0255, 0.0200):
+    h = proportion_effectsize(0.0293, p2)
+    n = NormalIndPower().solve_power(h, alpha=0.05, power=0.8)
+    print(p2, round(n))
+A = pd.read_sql("""SELECT applied_at, credit_score FROM applications
+                   WHERE credit_score IS NOT NULL""", con)
+edges = [560, 600, 640, 680, 720]
+def shares(x):
+    band = np.searchsorted(edges, x, side="right")
+    return np.bincount(band, minlength=6) / len(x)
+def psi(e, a):
+    return np.sum((a - e) * np.log(a / e))
+yr = A["applied_at"].str[:4]
+e = shares(A.loc[yr == "2024", "credit_score"].to_numpy())
+a = shares(A.loc[yr == "2026", "credit_score"].to_numpy())
+A["ym"] = A["applied_at"].str[:7]
+m = A[yr == "2026"].groupby("ym")["credit_score"]
+view = m.agg(applicants="size", avg_score="mean")
+view["psi"] = m.apply(lambda x: psi(e, shares(x.to_numpy())))
+print('ready')
+```
 
 **P1.** *(the cut-off)* Write one SQL query that returns the approval rate and the bad rate for the cut-offs **580** and **700** — one row each. Use a small table of cut-offs: `WITH cuts(c) AS (VALUES (580), (700))`.
 
@@ -870,6 +503,508 @@ Put the parts of the policy in place:
 ```
 
 Tomorrow: the checkpoint — the scorecard review for the risk committee, from this week's four days.
+
+---
+
+## Going further — the full version, with Python (optional, 60 min)
+
+The same ideas as the stories, written out in full with Python and SQL: the trade-off table, bads avoided and goods lost, the expected loss per loan, the profit curve and its best point, the price of a bad-rate target, the swap query, policy rules, the champion / challenger power calculation, PSI and CSI, the monthly view and the decision table. Optional: nothing here counts toward the day.
+
+Press ▶ Run on this first box once. It loads the scored loans and W8D2's numbers for an average Consumer loan; every later box on this page, and every Practice box, reuses them.
+
+```python
+import sqlite3
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+con = sqlite3.connect("data/raw/nur.db")
+S = pd.read_sql("""
+SELECT l.loan_id, l.disbursed_at, p.code AS product,
+       a.credit_score AS score,
+       CASE WHEN l.status IN ('default', 'written_off')
+            THEN 1 ELSE 0 END AS bad
+FROM loans l
+JOIN applications a ON a.application_id = l.application_id
+JOIN products p ON p.product_id = l.product_id
+WHERE a.credit_score IS NOT NULL""", con)
+s, y = S["score"].to_numpy(), S["bad"].to_numpy()
+# W8D2's average Consumer loan, soum: interest, funding at 18 %,
+# selling and servicing, exposure at default; LGD is ours
+I, COF, OPEX = 5_695_580, 3_417_348, 823_325
+EAD, LGD = 21_630_783, 0.60
+# 7615 223
+print(len(S), y.sum())
+```
+
+### The cut-off — one line, two numbers that move together
+
+**What it is.** The **cut-off** (*порог отсечения*) is the lowest score Nur approves. Raising it declines more people: the **approval rate** (*уровень одобрения*) falls, and so does the **bad rate** of the loans that are still approved. Choosing a cut-off means choosing a point on that trade-off.
+
+**How to write it.**
+
+```python
+def at(c):
+    keep = s >= c
+    return keep.mean(), y[keep].mean(), keep.sum(), y[keep].sum()
+
+for c in (560, 600, 620, 640, 660):
+    share, br, n, b = at(c)
+    print(c, round(100 * share, 1), round(100 * br, 2), n, b)
+```
+
+| approve from | approved | bad rate | loans |
+|---|---|---|---|
+| 560 | 98.7 % | 2.81 % | 7 515 |
+| 600 | 95.7 % | 2.55 % | 7 284 |
+| 620 | 87.9 % | 2.41 % | 6 694 |
+| 640 | 77.8 % | 2.18 % | 5 928 |
+| 660 | 66.7 % | 1.50 % | 5 076 |
+
+From 560 to 660 the approval rate falls by 32 points and the bad rate by 1.3 points: the business pays a lot of volume for a little risk.
+
+**When you use it.**
+- Sales asks for more approvals, risk asks for fewer bads — the table puts both on one line.
+- Before any money: the first view of what a proposed cut-off does.
+
+> ⚠️ **Watch out.** These are loans Nur already made under its old decisions. A cut-off below today's practice would approve people Nur never lent to, whose bad rate is unknown (swap-in, below).
+
+**Your turn.** What share of the scored loans does the cut-off **680** keep, in %, to 1 decimal?
+
+```task
+{"id": "w09d4-l1", "kind": "number", "answer": 50.3, "dp": 1, "unit": "%", "hint": "at(680) in the box above.", "model": "3 833 of 7 615 = 50.3 % approved, with a bad rate of 1.46 % — half the business for 1.5 points of bad rate."}
+```
+
+### Bads avoided and goods turned away
+
+**What it is.** Moving the line up from "approve everyone" declines two kinds of people. **Bads avoided** are the loans that would have gone bad. **Goods turned away** are good customers lost — revenue that never comes. Their ratio, goods per bad avoided, is the price of a tighter line.
+
+**How to write it.**
+
+```python
+for c in (560, 600, 640, 660):
+    keep = s >= c
+    avoided = y[~keep].sum()
+    lost = (~keep & (y == 0)).sum()
+    print(c, avoided, lost, round(lost / avoided, 1))
+```
+
+| approve from | bads avoided | goods lost | goods per bad |
+|---|---|---|---|
+| 560 | 12 | 88 | 7.3 |
+| 600 | 37 | 294 | 7.9 |
+| 640 | 94 | 1 593 | 16.9 |
+| 660 | 147 | 2 392 | 16.3 |
+
+Below 600, each bad avoided costs about 8 good customers; between 600 and 640 the price doubles to about 17.
+
+**When you use it.**
+- "How many good customers do we lose to stop one bad?" — the question every sales director asks.
+- The input for money: each side has a price (next subsections).
+
+**Your turn.** At the cut-off 620 (62 bads avoided, 859 goods lost), how many goods are turned away per bad avoided, to 1 decimal?
+
+```task
+{"id": "w09d4-l2", "kind": "number", "answer": 13.9, "dp": 1, "unit": "goods per bad", "hint": "859 ÷ 62.", "model": "859 / 62 = 13.9 good customers for each bad loan avoided."}
+```
+
+### Expected loss per approved loan — PD, LGD and EAD at a cut-off
+
+**What it is.** From W6D1: the **expected loss** (*ожидаемые потери*) of a loan is **PD × LGD × EAD**. At a cut-off, the PD of an approved loan is the bad rate of the approved group. With W8D2's Consumer EAD (21 630 783 soum) and our LGD of 60 %, each cut-off has its own expected loss per loan.
+
+**How to write it.**
+
+```python
+for c in (424, 600, 640, 660):
+    pd_c = y[s >= c].mean()
+    print(c, round(pd_c * LGD * EAD))
+```
+
+Approving everyone, the expected loss is 380 065 soum per loan; at 600 it is 331 411, at 640 282 426, at 660 194 319 — half the risk per loan, for two thirds of the volume.
+
+**When you use it.**
+- Pricing: the expected loss is the part of the rate that pays for defaults.
+- Explaining a cut-off to finance in their units.
+
+> ⚠️ **Watch out.** A lower loss per loan is not more profit: the book also shrinks. The total expected loss falls from 2.89 bn to 0.99 bn soum between "everyone" and 660, but so does the interest. Only the next subsection weighs both.
+
+**Your turn.** The cut-off 620 approves 6 694 loans, 161 of them bad. Its expected loss per approved loan, in **thousand** soum (whole number)?
+
+```task
+{"id": "w09d4-l3", "kind": "number", "answer": 312, "dp": 0, "unit": "thousand soum", "hint": "161 / 6 694 × 0.60 × 21 630 783, then ÷ 1 000.", "model": "0.02405 × 0.60 × 21 630 783 = 312 150 soum ≈ 312 thousand per approved loan."}
+```
+
+### Profit by cut-off — W8D2's unit economics
+
+
+**What it is.** Put a price on both kinds of loan with W8D2's average Consumer loan. A **good** loan pays its interest, 5 695 580, and costs its funding, 3 417 348, and its selling and servicing, 823 325: it leaves **1 454 907 soum**. A **bad** loan pays no interest (W8D2's simplification), still costs the funding and the operating cost, and loses 60 % of its exposure, 12 978 470: it costs **17 219 143 soum**. The profit of a cut-off is the goods it approves times the first number, minus the bads it approves times the second.
+
+**How to write it.**
+
+```python
+good = float(I - COF - OPEX)
+bad = LGD * EAD + COF + OPEX
+def profit(c):
+    keep = s >= c
+    return good * (keep & (y == 0)).sum() - bad * (keep & (y == 1)).sum()
+
+# 1454907 17219143
+print(round(good), round(bad))
+for c in (424, 560, 600, 640, 660, 700):
+    print(c, round(profit(c) / 1e9, 2))
+```
+
+| approve from | profit, bn soum |
+|---|---|
+| everyone (424) | 6.91 |
+| 560 | 6.99 |
+| 600 | 7.12 |
+| 640 | 6.22 |
+| 660 | 5.97 |
+| 700 | 3.22 |
+
+Declining the scores below 600 adds 0.21 bn soum; tightening on to 660 throws away 1.16 bn of it.
+
+**When you use it.**
+- Every cut-off proposal: the line in money, not only in bad rate.
+- It is W8D2's contribution per loan, summed: (1 − PD) × interest − funding − PD × LGD × EAD − operating cost.
+
+> ⚠️ **Watch out.** Every loan here is priced like an average Consumer loan — one product's money on the whole book's scores. A real policy prices each product with its own numbers, and gets a different line for each (Practice P4: Micro's line sits at 659).
+
+**Your turn.** What is the profit at the cut-off **620**, in bn soum, to 2 decimals?
+
+```task
+{"id": "w09d4-l4", "kind": "number", "answer": 6.73, "dp": 2, "unit": "bn soum", "hint": "profit(620) / 1e9 in the box above.", "model": "6 533 goods × 1 454 907 − 161 bads × 17 219 143 = 6.73 bn — 0.39 bn less than at 600."}
+```
+
+### The profit-maximising cut-off and the break-even bad rate
+
+**What it is.** Raising the line by one point declines the loans at that score. That adds money when those loans would have lost it — when their bad rate is above the **break-even bad rate** (*безубыточная доля плохих*): good ÷ (good + bad) = 1 454 907 ÷ 18 674 050 = **7.79 %**, W8D2's break-even PD for a Consumer loan. The **profit-maximising cut-off** (*порог максимальной прибыли*) sits where the loans just below it go bad more often than that and the loans above it less often.
+
+**How to write it.** Try every cut-off and keep the best.
+
+```python
+cs = np.arange(424, 852)
+pr = np.array([profit(c) for c in cs])
+best = cs[pr.argmax()]
+# 594 7.14 0.0779
+print(best, round(pr.max() / 1e9, 2), round(good / (good + bad), 4))
+plt.plot(cs, pr / 1e9)
+plt.axvline(best, ls="--")
+plt.xlabel("approve from score"); plt.ylabel("profit, bn soum")
+plt.show()
+```
+
+The best line is **594**, with 7.14 bn soum: 0.23 bn more than approving everyone. Every cut-off from 593 to 600 is within 0.3 % of it. Below 600 sit grade D's loans, 11.2 % bad — above the break-even; above it, grade C's, at 5.0 % — below it.
+
+**When you use it.**
+- The starting point of a cut-off recommendation.
+- Again whenever the money changes: funding cost, LGD, the product's rate (the explorer's 22 % moves the line to 659).
+
+> ⚠️ **Watch out.** The top of the curve is flat and jagged; the single best point (594) is partly noise. Recommend a round line you can explain — 600, the edge of grade D — and give the range.
+
+**Your turn.** At 22 % funding, a good loan leaves 695 496 soum and a bad one costs 17 978 554. What is the break-even bad rate, in %, to 2 decimals?
+
+```task
+{"id": "w09d4-l5", "kind": "number", "answer": 3.72, "dp": 2, "unit": "%", "hint": "good ÷ (good + bad).", "model": "695 496 ÷ 18 674 050 = 3.72 %. Grade C (5.0 %) now loses money, so the line moves up to the C/B edge: 659."}
+```
+
+### A bad-rate target — and what it costs
+
+**What it is.** Risk appetite is often written as a **bad-rate target** (*целевая доля плохих*): "the loans we approve must stay under 2 % bad". The loosest cut-off that meets it is rarely the most profitable one. The difference is the **price of the target** — a number the committee should see before it votes.
+
+**How to write it.**
+
+```python
+ok = [c for c in cs if y[s >= c].mean() <= 0.02]
+c2 = min(ok)
+share, br, n, b = at(c2)
+# 647 74.3 1.997 6.12
+print(c2, round(100 * share, 1), round(100 * br, 3), round(profit(c2) / 1e9, 2))
+```
+
+The loosest line under 2 % is **647**: 74.3 % approved at a 1.997 % bad rate, and 6.12 bn soum — 1.02 bn less than the best line, and 0.79 bn less than approving everyone.
+
+**When you use it.**
+- A committee proposes a target → you show the line it implies and the money it costs.
+- Comparing two policies with the same bad rate: prefer the one that keeps more goods.
+
+> ⚠️ **Watch out.** The lowest bad rate is not a goal. Approving only 720 and above gives 0.90 % — and 2.28 bn soum, a third of the best.
+
+**Your turn.** Why can the line under the 2 % target earn less than approving everyone?
+
+```task
+{"id": "w09d4-l6", "kind": "choice", "options": ["Because the target is computed wrongly", "Because between 600 and 647 it declines grade C loans whose bad rate is below the 7.79 % break-even — each of them would have earned money", "Because bad loans earn more than good ones", "Because the approval rate rises"], "answer": 1, "explain": "A loan is worth declining only if its group goes bad more than 7.79 % of the time. Grade C goes bad at about 5 %: declining it gives up more interest than it saves in losses."}
+```
+
+### Swap-in and swap-out — what a new line changes
+
+**What it is.** A new policy changes decisions both ways compared with today's. **Swap-outs** (*swap-out*) are applicants approved today and declined by the new rule: Nur knows how their loans went. **Swap-ins** (*swap-in*) are applicants rejected today and approved by the new rule: nobody knows, because Nur never lent to them. Guessing how they would have behaved is **reject inference** (*оценка отклонённых заявок*).
+
+**How to write it.** A pure "approve 600 and above" rule against today's decisions:
+
+```sql
+SELECT CASE WHEN status = 'rejected' AND credit_score >= 600
+            THEN 'swap-in'
+            WHEN status IN ('approved', 'approved_not_disbursed')
+                 AND credit_score < 600
+            THEN 'swap-out'
+            ELSE 'same' END AS change,
+       COUNT(*) AS applications
+FROM applications
+WHERE credit_score IS NOT NULL
+GROUP BY change;
+```
+
+The rule would swap out 363 approved applications (331 of them became loans, and 37 of those went bad — known) and swap in 2 295 rejected applicants whose bad rate nobody knows.
+
+**When you use it.**
+- Every policy change: show both sets, with what is known and what is guessed.
+- Loosening a cut-off is the dangerous direction: it lives on swap-ins.
+
+> ⚠️ **Watch out.** Swap-ins were rejected for a reason — often a policy rule, not the score. Assuming they behave like approved applicants with the same score usually underestimates their risk.
+
+**Your turn.** Why can't you compute the bad rate of the 2 295 swap-ins from Nur's data?
+
+```task
+{"id": "w09d4-l7", "kind": "choice", "options": ["Because their scores are missing", "Because they were rejected, so they never got a loan whose outcome could be observed", "Because SQL cannot join applications to loans", "Because there are too few of them"], "answer": 1, "explain": "No loan, no outcome. That is the whole problem of reject inference: the past policy hides how the people it rejected would have paid."}
+```
+
+### Policy rules besides the score
+
+**What it is.** A credit decision is the score **and** the **policy rules** (*кредитная политика, стоп-факторы*): hard rules that decline whatever the score says — age, income, the share of income going to payments, recent delinquencies at the bureau, fraud flags, a blacklist — and **overrides** (*ручные решения*), where a credit officer goes against the score. That is how Nur rejected applicants with 720 and lent below 560.
+
+**How to write it.** The rejection rate by grade band:
+
+```sql
+SELECT CASE WHEN credit_score < 600 THEN '1: below 600'
+            WHEN credit_score < 660 THEN '2: 600-659'
+            WHEN credit_score < 720 THEN '3: 660-719'
+            ELSE '4: 720+' END AS band,
+       COUNT(*) AS applications,
+       ROUND(100.0 * SUM(status = 'rejected') / COUNT(*), 1)
+         AS rejected_pct
+FROM applications
+WHERE credit_score IS NOT NULL
+GROUP BY band ORDER BY band;
+```
+
+Below 600, 55.0 % of applicants are rejected; 600–659, 31.6 %; 660–719, 15.2 %; 720 and above, 5.9 %. Rejection falls with the score but never reaches zero: other rules decide too.
+
+**When you use it.**
+- A cut-off study must keep the policy rules fixed — or it promises swap-ins the rules would reject anyway.
+- Monitoring: the **override rate** (decisions against the score) shows whether people trust the scorecard.
+
+**Your turn.** Of 2 150 applicants with 720 or more, 126 were rejected. What share, in %, to 1 decimal?
+
+```task
+{"id": "w09d4-l8", "kind": "number", "answer": 5.9, "dp": 1, "unit": "%", "hint": "126 ÷ 2 150.", "model": "126 / 2 150 = 5.9 % — rejected by something other than the score: a policy rule or an officer."}
+```
+
+### Champion / challenger — testing a new line
+
+**What it is.** **Champion / challenger** (*чемпион / претендент*) is W7's A/B test applied to credit decisions. The current policy, the champion, decides most applications; a random share goes through the new one, the challenger. When the loans have matured, the two groups' bad rates and profits are compared.
+
+**How to write it.** How many loans does each arm need to see a lower bad rate? W7's power calculation:
+
+```python
+from statsmodels.stats.proportion import proportion_effectsize
+from statsmodels.stats.power import NormalIndPower
+
+for p2 in (0.0255, 0.0200):
+    h = proportion_effectsize(0.0293, p2)
+    n = NormalIndPower().solve_power(h, alpha=0.05, power=0.8)
+    print(p2, round(n))
+```
+
+To see a fall from 2.93 % to 2.55 % (the line at 600) each arm needs about 28 936 loans — more than Nur has made in its life (7 828). A fall to 2.00 % needs about 4 325.
+
+**When you use it.**
+- A big change with a big expected effect: a new scorecard, a new product rule.
+- Not for small cut-off moves: judge those on the swap sets and the profit curve, and read an early indicator (FPD30, W5) instead of the final bad rate.
+
+> ⚠️ **Watch out.** Bad loans take months to show. Fix the test's length and its sample before it starts and do not stop at the first good month (W7's peeking).
+
+**Your turn.** Why is champion / challenger a poor tool to choose between the lines 594 and 600?
+
+```task
+{"id": "w09d4-l9", "kind": "choice", "options": ["Because the two policies differ on only a few dozen applicants, so no test could see the difference in bad rate", "Because A/B tests are not allowed in lending", "Because 600 is always better", "Because a challenger must be a new scorecard"], "answer": 0, "explain": "The two lines disagree only on scores 594–599: 38 loans in our history. A difference that small needs the profit curve and judgement, not a test."}
+```
+
+### PSI — has the population moved?
+
+
+**What it is.** The **population stability index**, **PSI** (*индекс стабильности популяции*), compares how this period's applicants spread over the score bands with how the reference period's did — here 2024, the scorecard's first year. For each band, (actual share − expected share) × ln(actual share ÷ expected share); add the bands up. The usual reading: **under 0.1 stable, 0.1–0.25 watch, over 0.25 act**.
+
+**How to write it.**
+
+```python
+A = pd.read_sql("""SELECT applied_at, credit_score FROM applications
+                   WHERE credit_score IS NOT NULL""", con)
+edges = [560, 600, 640, 680, 720]
+def shares(x):
+    band = np.searchsorted(edges, x, side="right")
+    return np.bincount(band, minlength=6) / len(x)
+def psi(e, a):
+    return np.sum((a - e) * np.log(a / e))
+
+yr = A["applied_at"].str[:4]
+e = shares(A.loc[yr == "2024", "credit_score"].to_numpy())
+a = shares(A.loc[yr == "2026", "credit_score"].to_numpy())
+# 0.0037
+print(round(psi(e, a), 4))
+```
+
+| band | 2024 | 2026 | its part |
+|---|---|---|---|
+| below 560 | 4.71 % | 4.64 % | 0.0000 |
+| 560–599 | 10.52 % | 11.25 % | 0.0005 |
+| 600–639 | 20.03 % | 21.73 % | 0.0014 |
+| 640–679 | 25.84 % | 25.97 % | 0.0000 |
+| 680–719 | 22.70 % | 20.82 % | 0.0016 |
+| 720+ | 16.19 % | 15.59 % | 0.0002 |
+
+PSI = 0.0037: 2026's applicants spread over the bands almost exactly like 2024's. The population is stable.
+
+**When you use it.**
+- Every month, for every scorecard in use.
+- Before reusing last year's cut-off on this year's applicants.
+
+> ⚠️ **Watch out.** An empty band makes ln(0) blow up: floor every share at a tiny value (0.01 %) or merge the band with its neighbour. And a stable PSI says only that the *population* has not moved — not that the score still ranks (that is the Gini's job).
+
+**Your turn.** What is the PSI of 2025's applicants against 2024's, to 4 decimals?
+
+```task
+{"id": "w09d4-l10", "kind": "number", "answer": 0.0027, "dp": 4, "hint": "Change 2026 to 2025 in the box above.", "model": "0.0027 — stable. 2025 and 2026 sit just as close to 2024; between themselves, PSI 0.0008."}
+```
+
+### CSI — which characteristic moved
+
+**What it is.** The **characteristic stability index**, **CSI** (*индекс стабильности характеристики*), is the same formula on one input instead of the score: the channel, the product, the requested amount, the term. When the PSI rises, the CSIs show which input moved.
+
+**How to write it.** Bands of the requested amount from 2024's quintiles, then the same `psi`:
+
+```python
+B = pd.read_sql("SELECT applied_at, requested_amount FROM applications", con)
+by = B["applied_at"].str[:4]
+r24 = B.loc[by == "2024", "requested_amount"].to_numpy()
+r26 = B.loc[by == "2026", "requested_amount"].to_numpy()
+q = np.quantile(r24, [0.2, 0.4, 0.6, 0.8])
+def share_q(x):
+    return np.bincount(np.searchsorted(q, x, side="right"), minlength=5) / len(x)
+# 0.0033
+print(round(psi(share_q(r24), share_q(r26)), 4))
+```
+
+| characteristic | CSI 2026 vs 2024 |
+|---|---|
+| channel | 0.0001 |
+| product | 0.0005 |
+| term in months | 0.0033 |
+| requested amount | 0.0033 |
+
+Every input is stable. The largest move: 22.0 % of 2026's applicants ask for 2.41 m soum or less, against 19.9 % in 2024.
+
+**When you use it.**
+- Right after an amber or red PSI, to find the cause.
+- Before a product launch or a new partner: expect the channel's CSI to jump.
+
+**Your turn.** The PSI is 0.18 and the channel's CSI is 0.15; every other CSI is under 0.01. What do you look at first?
+
+```task
+{"id": "w09d4-l11", "kind": "choice", "options": ["Rebuild the scorecard at once", "The channel mix: a new partner or a campaign has changed who applies — check the bad rate by band in that channel", "Nothing: 0.18 is below 0.25", "The requested amount"], "answer": 1, "explain": "The CSI points at the input that moved. A new channel can bring applicants whose risk at a given score differs — the score may need a channel-specific cut-off."}
+```
+
+### The monthly monitoring view
+
+**What it is.** A **monitoring report** (*мониторинг модели*) is one page a month, always the same four blocks: the **population** (PSI of the month's applicants, the average score), the **ranking** (Gini on vintages old enough to judge), the **outcome** (bad rate by vintage, compared at the same age), and the **policy** (approval rate, overrides).
+
+**How to write it.** The PSI of each month of 2026 against 2024:
+
+```python
+A["ym"] = A["applied_at"].str[:7]
+m = A[yr == "2026"].groupby("ym")["credit_score"]
+view = m.agg(applicants="size", avg_score="mean")
+view["psi"] = m.apply(lambda x: psi(e, shares(x.to_numpy())))
+view.round(4)
+```
+
+| month | applicants | PSI |
+|---|---|---|
+| 2026-01 | 505 | 0.0179 |
+| 2026-03 | 593 | 0.0079 |
+| 2026-05 | 618 | 0.0040 |
+| 2026-07 | 634 | 0.0174 |
+| 2026-09 | 609 | 0.0115 |
+| 2026-10 | 129 | 0.0617 |
+
+The box prints all ten months; the table shows every other one and October. Below, the loans by half-year of disbursal:
+
+| vintage | loans | bad rate | Gini |
+|---|---|---|---|
+| 2024 H1 | 667 | 4.05 % | 0.42 |
+| 2024 H2 | 1 032 | 3.97 % | 0.41 |
+| 2025 H1 | 1 297 | 4.01 % | 0.41 |
+| 2025 H2 | 1 659 | 4.34 % | 0.39 |
+| 2026 H1 | 1 884 | 1.65 % | 0.29 |
+
+Every month is green; October's 0.062 comes from 129 applicants — a small month jumps. The Gini drifts from 0.42 to 0.39 over two years, and the 2026 vintages are too young: their bad rate is low because they are young, not because they are good.
+
+**When you use it.**
+- The risk committee's standing item: the same page, the same order, every month.
+- A trend matters more than one month's colour.
+
+> ⚠️ **Watch out.** A PSI on a few hundred applicants moves by chance. Read a month together with its size and the months around it; act on a trend, not on one partial month.
+
+**Your turn.** October 2026 shows PSI 0.062 on 129 applicants, against 0.004–0.018 for every full month. What do you write?
+
+```task
+{"id": "w09d4-l12", "kind": "choice", "options": ["The population has shifted: rebuild", "October is a partial month of 129 applicants; its PSI is noisy and still green — look again when the month is complete", "PSI cannot be computed for October", "Average all ten months into one PSI and stop reporting months"], "answer": 1, "explain": "Fewer applicants, bigger random swings in each band's share. Still under 0.1; the full month will tell."}
+```
+
+### What to do when it drifts
+
+**What it is.** Each signal has its own usual cause and action. The monitoring page ends with a decision, not with a chart.
+
+**How to write it.**
+
+| signal | usual cause | action |
+|---|---|---|
+| PSI < 0.1, Gini steady | nothing moved | note it; next month |
+| PSI 0.1–0.25 | the mix moved (a channel, a product, a campaign) | CSIs; bad rate by band in the moved group; adjust its cut-off |
+| PSI > 0.25 | a new population | restrict the score, recalibrate or rebuild |
+| Gini falls beyond its interval | the score ranks worse | review; rebuild with recent loans |
+| bad rate up, Gini steady | the level moved, the order did not | recalibrate the PD; move the cut-off; reprice |
+
+Nur today sits in the first row: PSI 0.0037, every CSI under 0.01, the Gini a little lower out of time but within noise.
+
+**When you use it.** At the end of every monitoring report: one line, "signal → action → owner → date".
+
+**Your turn.**
+
+
+### Putting it together
+
+Nilufar's two questions, one tool per line. **Where to draw the line:** the trade-off table → bads avoided against goods lost → expected loss per loan → profit with W8D2's prices → the best line where the loans below it go bad more than 7.79 % → what a 2 % target costs → the swap sets → the policy rules → why a test cannot settle a 6-point move. **How to know it still holds:** PSI → CSI → the monthly page → the decision table.
+
+| question | tool | Nur |
+|---|---|---|
+| what does a line do | approval, bad rate | 600: 95.7 %, 2.55 % |
+| what does it earn | profit by cut-off | best 594: 7.14 bn |
+| what does 2 % cost | the target's line | 647: −1.02 bn |
+| who changes | swap-in, swap-out | 2 295 in, 363 out at 600 |
+| has the population moved | PSI | 0.0037, stable |
+| which input moved | CSI | all under 0.01 |
+
+**Words of the day.**
+
+
+### Depth (optional)
+
+- **Books.** Naeem Siddiqi, *Intelligent Credit Scoring* (Wiley, 2nd ed., 2017): the chapters on choosing cut-offs, swap sets, policy rules and the monitoring reports (population stability, characteristic analysis). Lyn Thomas, Jonathan Crook and David Edelman, *Credit Scoring and Its Applications* (SIAM, 2nd ed., 2017): cut-offs by profit, and reject inference.
+- **Where the PSI comes from.** The PSI is the symmetric Kullback–Leibler divergence (Jeffreys' divergence) between the two band distributions: the sum of KL(actual ‖ expected) and KL(expected ‖ actual). That is why it is never negative and why swapping the two years gives the same number.
+- **Cut-offs in practice.** Lenders often set the line by product and channel, add a "refer" zone around it for manual review, and keep a strategy table: cut-off, expected approval, bad rate and profit, signed by the risk committee.
+- *Russian terms:* порог отсечения = cut-off, уровень одобрения = approval rate, безубыточная доля плохих = break-even bad rate, риск-аппетит = risk appetite, оценка отклонённых заявок = reject inference, стоп-факторы = hard policy rules, ручное решение (override) = override, чемпион / претендент = champion / challenger, индекс стабильности популяции = PSI, индекс стабильности характеристики = CSI, мониторинг модели = model monitoring, перекалибровка = recalibration.
 
 ---
 
