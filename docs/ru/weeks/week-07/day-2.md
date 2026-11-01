@@ -128,6 +128,7 @@ def srm_p(n_a, n_b, share_b=0.5):
     n = n_a + n_b
     chi2 = (n_a - n * (1 - share_b)) ** 2 / (n * (1 - share_b)) + (n_b - n * share_b) ** 2 / (n * share_b)
     return 2 * (1 - N.cdf(sqrt(chi2)))
+ud["week"] = (ud["assigned_at"] - pd.Timestamp("2026-08-01")).dt.days // 7 + 1
 for name, d in [("rows", users), ("users", ud)]:
     n = d["variant"].value_counts()
     # строки 13 845 / 14 129, p = 0.090 · пользователи 13 545 / 13 829, p =
@@ -142,6 +143,7 @@ def srm_by(df, cols):
 def hash_variant(user_id, salt="offer_screen_v2"):  # День 1
     h = int(hashlib.sha256(f"{salt}{user_id}".encode()).hexdigest(), 16)
     return "A" if h % 2 == 0 else "B"
+users["expected"] = users["user_id"].map(lambda u: hash_variant(u, "offer_screen_v2"))
 bad = users[users["variant"] != users["expected"]]
 ud2 = ud[~((ud["device"] == "iOS") & (ud["assigned_at"] >= "2026-08-22"))]
 n = ud2["variant"].value_counts()
@@ -209,6 +211,7 @@ for step in ["start_application", "submit_application", "approved", "contract_si
     print(f"{step:20} A {kA / nA:6.1%}  B {kB / nB:6.1%}  p = {p:.2f}")
     prev = reached
 from math import asin
+lc["fpd"] = 1 - lc["first_instalment_paid_within_30d"]
 f = lc.groupby("variant")["fpd"].agg(["sum", "size"])
 r = ab_test(f.loc["A", "sum"], f.loc["A", "size"], f.loc["B", "sum"], f.loc["B", "size"])
 h = 2 * asin(sqrt(r["B %"] / 100)) - 2 * asin(sqrt(r["A %"] / 100))
@@ -227,6 +230,7 @@ for col in ["device", "new_vs_returning", "segment"]:
         r = ab_test(k.loc["A", "sum"], k.loc["A", "size"], k.loc["B", "sum"], k.loc["B", "size"])
         rows.append((val, r["A %"], r["B %"], r["diff pt"], r["p"]))
 seg = pd.DataFrame(rows, columns=["segment", "A %", "B %", "lift pt", "p"])
+seg["Holm"] = holm(list(seg["p"]))
 for name, (lo, hi), mde in [("start rate (if it were the primary)", (-1.16, 1.29), 2.0),
                             ("FPD guardrail", (-0.49, 1.94), 0.94)]:
     verdict = "precise flat: no effect of that size" if hi < mde else "underpowered: cannot tell"

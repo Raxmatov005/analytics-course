@@ -143,6 +143,7 @@ pop = loans["principal"].to_numpy(dtype=float)
 apps = pd.read_csv("data/raw/applications.csv")
 s = apps["credit_score"].dropna().to_numpy(dtype=float)
 f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
 rng = np.random.default_rng(2026)
 samples = np.array([rng.choice(s, 5, replace=False) for _ in range(20_000)])
 mu = pop.mean()
@@ -187,6 +188,7 @@ def newcombe(k1, n1, k2, n2):
     return d, d - math.sqrt((p1 - l1)**2 + (u2 - p2)**2), d + math.sqrt((u1 - p1)**2 + (p2 - l2)**2)
 for name, k, n in [("app", 41, 2411), ("branch", 34, 3263), ("partner", 16, 1425), ("2 in 150", 2, 150), ("0 in 120", 0, 120)]:
     print(name, "Wilson", [round(100 * v, 2) for v in wilson(k, n)], "Wald", [round(100 * v, 2) for v in wald(k, n)])
+hits = 0
 for _ in range(100):                               # 100 samples of 400 loans
     x = rng.choice(pop, 400, replace=False)
     half = 1.966 * x.std(ddof=1) / math.sqrt(400)  # t(0.975, 399) × SE

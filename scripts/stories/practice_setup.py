@@ -27,11 +27,19 @@ def stores(node):
             out.add(n.name)
         elif isinstance(n, (ast.Import, ast.ImportFrom)):
             out |= {(a.asname or a.name).split(".")[0] for a in n.names}
+        elif isinstance(n, (ast.Subscript, ast.Attribute)) and isinstance(n.ctx, ast.Store):
+            root = n.value   # loans["bad"] = … changes loans: keep it wherever loans is needed
+            while isinstance(root, (ast.Subscript, ast.Attribute)):
+                root = root.value
+            if isinstance(root, ast.Name):
+                out.add(root.id)
     return out
 
 
 def uses(node):
-    return {n.id for n in ast.walk(node) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+    out = {n.id for n in ast.walk(node) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+    out |= {n.target.id for n in ast.walk(node) if isinstance(n, ast.AugAssign) and isinstance(n.target, ast.Name)}   # hits += … reads hits
+    return out
 
 
 def run(day, lang):

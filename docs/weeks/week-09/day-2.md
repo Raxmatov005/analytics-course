@@ -14,6 +14,401 @@
 
 ## 1. Learn — from a score to a probability
 
+Eight short stories. Each one tells **one idea in small steps**: read a sentence, watch the picture change, press **Next**. A dotted word shows its meaning when you tap it. Tired of reading? Press **▶ Play as a video**: the page reads every step aloud and moves the picture for you.
+
+The Python for each idea, and the extra topics, are in **Going further — the full version** near the end of the page (optional).
+
+### One chance, three rulers — probability, odds and log-odds
+
+```story
+{"id": "w09d2-s1", "title": "Three ways to say one chance", "min": 5, "steps": [{"say": "Four loans: {o|1} went bad, {g|3} did not. The **probability** of bad is the share: 1 of 4 = {y|25 %}. We call it {y|p}.", "show": {"view": "rulers", "p": 0.25, "row": [1, 3], "omax": null, "pins": null, "zmax": null, "xr": null, "yr": null, "xt": null, "yt": null, "pts": null, "lpm": null, "out": null, "curve": null, "xc": null, "xu": null, "flat": null, "surp": null, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": null, "words": null, "dragMark": null, "kind": "logit"}, "f": "probability = bad ÷ all = 1 ÷ 4 = {y|25 %}"}, {"say": "The **odds** compare the two outcomes instead: bad ÷ good = 1 ÷ 3 = {b|0.33} — “1 bad for every 3 good”. The second ruler shows them.", "f": "odds = bad ÷ good = p ÷ (1 − p) = 1 ÷ 3 = {b|0.33}", "fs": "Odds are bad divided by good: p over one minus p, one third."}, {"say": "A fair coin: 2 bad, 2 good. Probability {y|50 %}, odds {b|1} — one to one.", "show": {"p": 0.5, "row": [2, 2]}}, {"say": "Your turn.", "ask": {"q": "One loan in 3 goes bad. What are the odds of bad?", "options": ["0.33", "0.5", "2"], "answer": 1, "why": "1 bad for 2 good: 1 ÷ 2 = 0.5. Odds divide by the good loans, not by all of them."}}, {"say": "Odds have no ceiling: 3 bad and 1 good give odds of {b|3}; 99 bad and 1 good, 99. Probability stops at 100 %, odds run on to infinity.", "show": {"p": 0.75, "row": [3, 1]}}, {"say": "The third ruler takes the [[natural logarithm|ln: it turns “times e (2.718…)” into “plus 1”; ln 1 = 0]] of the odds: the **log-odds**. Odds of 1 sit at {p|0}; odds of 1 to 3 at {p|−1.10}.", "show": {"p": 0.25, "row": null}, "f": "log-odds = ln(odds): odds 1 → {p|0} · below 1 → minus · above 1 → plus"}, {"say": "Drag the yellow marker, or tap the buttons. Probability lives between 0 and 1, odds between 0 and ∞, log-odds anywhere from −∞ to +∞ — the only ruler a straight line can run along forever.", "act": [{"label": "1 %", "rep": 1, "do": "set", "p": 0.01}, {"label": "50 %", "rep": 1, "do": "set", "p": 0.5}, {"label": "99 %", "rep": 1, "do": "set", "p": 0.99}]}, {"say": "Nur's book: 234 bad of 7 828 loans. Probability {y|2.99 %}, odds {b|0.0308} — 1 bad per 32.5 good — log-odds {p|−3.48}.", "show": {"p": 0.029893, "pins": [0.029893]}}, {"say": "Last one: from odds back to a probability.", "ask": {"q": "The odds of bad are 0.25. What is the probability?", "options": ["25 %", "20 %", "75 %"], "answer": 1, "why": "0.25 = 1 bad per 4 good = 1 bad in 5 loans = 20 %. Odds and probability are close only for rare events (2.99 % against 3.08 %)."}}]}
+```
+
+### Yes or no on a ruler — why the straight line breaks
+
+```story
+{"id": "w09d2-s2", "title": "A ruler through yes and no", "min": 4, "steps": [{"say": "16 toy loans by credit score. A loan that went bad sits at {o|1}, at the top; a good one at {g|0}, at the bottom. Low scores go bad more often.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [400, 850], "yr": [-0.3, 1.3], "xt": 100, "yt": 0.25, "pts": [[430, 1], [460, 1], [480, 1], [500, 0], [520, 1], [540, 1], [560, 0], [580, 1], [600, 0], [620, 0], [640, 1], [660, 0], [690, 0], [720, 0], [760, 0], [800, 0]], "lpm": null, "out": null, "curve": null, "xc": null, "xu": null, "flat": null, "surp": null, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": null, "words": {"x": "credit score (toy loans)", "y": "bad? 1 = yes, 0 = no"}, "dragMark": null, "kind": "logit"}}, {"say": "Yesterday's tool: the least-squares line through the 0s and 1s — the [[linear probability model|a straight line fitted to a 0/1 outcome, its height read as a probability]]. Read its height as a chance… and it leaves the band at both ends.", "show": {"lpm": "fit", "out": true, "mark": 800, "read": ["lpm"]}}, {"say": "Read the marker.", "ask": {"q": "What chance of going bad does the line give a score of 800?", "options": ["about −17 % — an impossible chance", "0 % — fine", "it cannot be read at 800"], "answer": 0, "why": "Below the floor. A probability below 0 is not a rounding problem: the shape is wrong."}}, {"say": "Nur's 7 615 scored loans; each {o|bubble} is a score band's bad rate. The straight line says {o|−3.3 %} at 850 and reaches 0 at 760: above it, 6.7 % of the loans get a **negative** chance.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [-0.05, 0.16], "xt": 100, "yt": 0.05, "pts": null, "lpm": [0.2809, -0.0003696], "out": true, "curve": null, "xc": null, "xu": null, "flat": null, "surp": null, "bands": [["<560", 100, 12, 534.4, 14.24], ["560–599", 231, 25, 582.2, 8.04], ["600–639", 1356, 57, 621.2, 5.03], ["640–679", 2095, 73, 661.4, 3.06], ["680–719", 2059, 40, 698.1, 1.93], ["720+", 1774, 16, 750.1, 1.03]], "bandLab": true, "pred": null, "hotBand": null, "grades": null, "mark": 850, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": ["lpm"], "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}}, {"say": "And a line drops by the same 0.04 points per point of score everywhere. The bubbles fall fast at low scores and slowly at high ones. We need a curve that stays between 0 and 1.", "f": "a “probability” must stay between 0 and 1 — by construction"}]}
+```
+
+### The S-curve — a straight line, bent into a probability
+
+```story
+{"id": "w09d2-s3", "title": "A machine that bends a line", "min": 5, "steps": [{"say": "A machine: put in any number z, from −∞ to +∞; out comes a chance between 0 and 1. At z = 0 it gives {y|50 %}. It is the [[sigmoid|the S-shaped curve 1 ÷ (1 + e^(−z)), also called the logistic function]].", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [-6, 6], "yr": [0, 1], "xt": 2, "yt": 0.25, "pts": null, "lpm": null, "out": null, "curve": [0, 1], "xc": 0, "xu": 1, "flat": null, "surp": null, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": 0, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": ["pd"], "words": {"x": "z — any number", "y": "chance", "at": "z =", "z": "z itself"}, "dragMark": null, "kind": "logit"}}, {"say": "Move the marker: z = 2 gives {y|88 %}, z = −2 gives {y|12 %}, z = −4 only {y|1.8 %}. However far you go, the curve never leaves 0 to 1.", "f": "p = 1 ÷ (1 + e^(−z))", "fs": "p is one over one plus e to the minus z.", "act": [{"label": "z + 2", "rep": 1, "do": "move", "by": 2}, {"label": "z − 2", "rep": 1, "do": "move", "by": -2}]}, {"say": "Read it backwards: z is the **log-odds** of the chance — the third ruler of the first story. Below, z on its own ruler is a straight line; the machine bends it into the S.", "show": {"zpanel": true, "zr": [-6, 6]}, "f": "z = ln( p ÷ (1 − p) )  ⇄  p = 1 ÷ (1 + e^(−z))"}, {"say": "So draw a **straight line** for z — z = β₀ + β₁ × score, with β₀, β₁ (“beta”) playing yesterday's a and b — and let the machine bend it. That is [[logistic regression|a straight line for the log-odds, turned into a probability by the S-curve]].", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [400, 850], "yr": [0, 1], "xt": 100, "yt": 0.25, "pts": [[430, 1], [460, 1], [480, 1], [500, 0], [520, 1], [540, 1], [560, 0], [580, 1], [600, 0], [620, 0], [640, 1], [660, 0], [690, 0], [720, 0], [760, 0], [800, 0]], "lpm": null, "out": null, "curve": "fit", "xc": null, "xu": null, "flat": null, "surp": null, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": true, "zr": [-5, 5], "card": null, "fo": null, "read": null, "words": {"x": "credit score (toy loans)", "y": "bad? 1 = yes, 0 = no"}, "dragMark": null, "kind": "logit"}, "f": "z = {p|β₀} + {p|β₁} × score  →  p = 1 ÷ (1 + e^(−z))"}, {"say": "Nur's fitted curve. Above: the curve through the bands' bubbles. Below: the same thing in log-odds — a straight line, the bubbles close to it.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [0, 0.16], "xt": 100, "yt": 0.04, "pts": null, "lpm": null, "out": null, "curve": [5.0677, -0.012903], "xc": null, "xu": null, "flat": null, "surp": null, "bands": [["<560", 100, 12, 534.4, 14.24], ["560–599", 231, 25, 582.2, 8.04], ["600–639", 1356, 57, 621.2, 5.03], ["640–679", 2095, 73, 661.4, 3.06], ["680–719", 2059, 40, 698.1, 1.93], ["720+", 1774, 16, 750.1, 1.03]], "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": true, "zr": [-6, 0], "card": null, "fo": null, "read": ["fit"], "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}}, {"say": "A score of 600 → {o|6.45 %}; a 700 → {o|1.86 %}. Our loans live far down the S: the whole book sits near log-odds −3.5.", "show": {"mark": 600, "mark2": 700, "read": ["pd"]}}, {"say": "Look at the two panels.", "ask": {"q": "In logistic regression, which one is a straight line in the score?", "options": ["the probability", "the log-odds", "the odds"], "answer": 1, "why": "The bottom panel: the log-odds line is straight; the sigmoid bends it into the S above."}}]}
+```
+
+### The least surprised curve — maximum likelihood and log-loss
+
+```story
+{"id": "w09d2-s4", "title": "The least surprised curve", "min": 6, "steps": [{"say": "How do we find the best curve? Think of a weather app. It says 90 % rain and it rains: you are hardly surprised. It says 10 % and it rains: you are very surprised.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [400, 850], "yr": [0, 1], "xt": 100, "yt": 0.25, "pts": [[430, 1], [460, 1], [480, 1], [500, 0], [520, 1], [540, 1], [560, 0], [580, 1], [600, 0], [620, 0], [640, 1], [660, 0], [690, 0], [720, 0], [760, 0], [800, 0]], "lpm": null, "out": null, "curve": [-0.25131, 0], "xc": null, "xu": null, "flat": null, "surp": true, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": null, "words": {"x": "credit score (toy loans)", "y": "bad? 1 = yes, 0 = no"}, "dragMark": null, "kind": "logit"}}, {"say": "We score a curve the same way: each loan's **surprise** is −ln of the chance the curve gave to what really happened. The bars under the picture show it, one per loan.", "f": "surprise = −ln(the chance given to what happened): 90 % → {g|0.11} · 10 % → {o|2.30}"}, {"say": "Start flat: every loan gets the toy book's rate, {p|44 %}. The average surprise is {p|0.685}. That average is the [[log-loss|the average surprise over all loans: −ln p for a bad loan, −ln(1 − p) for a good one]].", "show": {"read": ["loss"]}, "f": "log-loss = average of: −ln(p) for each bad loan, −ln(1 − p) for each good one"}, {"say": "Bend the curve with the buttons. When it gives low scores a high chance and high scores a low one, most bars shrink — and the average surprise falls.", "act": [{"label": "Tilt: low scores riskier", "rep": 4, "do": "bend", "by": -0.5}, {"label": "Lower the curve", "rep": 1, "do": "shift", "by": -0.5}]}, {"say": "Tap **Best fit**: the curve with the smallest average surprise, {g|0.436}. Choosing the curve under which what happened is least surprising is [[maximum likelihood|picking the curve that makes the outcomes we saw most likely — the same as the smallest log-loss]].", "act": [{"label": "Best fit", "rep": 1, "do": "fit"}]}, {"say": "A confident wrong answer costs the most: the two tall bars are the good loan at 500 and the bad loan at 640 — both against the curve's bet.", "show": {"curve": "fit"}}, {"say": "How does the computer find it? It starts flat and steps downhill on the average surprise, a few times — Newton's method, the loop of the homework's `fit_logit`."}, {"say": "On Nur's 7 615 scored loans the curve's average surprise is {p|0.1256}, the flat line's {m|0.1322}. Log-loss has no “good” value on its own: compare it with the flat line.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [0, 0.16], "xt": 100, "yt": 0.04, "pts": null, "lpm": null, "out": null, "curve": [5.0677, -0.012903], "xc": null, "xu": null, "flat": true, "surp": null, "bands": [["<560", 100, 12, 534.4, 14.24], ["560–599", 231, 25, 582.2, 8.04], ["600–639", 1356, 57, 621.2, 5.03], ["640–679", 2095, 73, 661.4, 3.06], ["680–719", 2059, 40, 698.1, 1.93], ["720+", 1774, 16, 750.1, 1.03]], "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": null, "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}, "f": "Nur: log-loss {p|0.1256} with the score · {m|0.1322} flat at 2.93 %"}, {"say": "Your turn.", "ask": {"q": "What does maximum likelihood make as small as possible?", "options": ["the squared gaps, like yesterday's line", "the log-loss: the average surprise", "the number of wrong calls at a 50 % cut-off"], "answer": 1, "why": "Most likely = least surprised. Counting mistakes at 50 % would be useless here: no loan gets a chance above 40 %."}}]}
+```
+
+### Every 54 points — odds ratios and the PDO
+
+```story
+{"id": "w09d2-s5", "title": "Every 54 points, half the odds", "min": 5, "steps": [{"say": "Two applicants: 600 and 700. Their chances of going bad: {o|6.45 %} and {o|1.86 %}. Their odds: {b|0.0690} and {b|0.0190}.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [0, 0.16], "xt": 100, "yt": 0.04, "pts": null, "lpm": null, "out": null, "curve": [5.0677, -0.012903], "xc": null, "xu": null, "flat": null, "surp": null, "bands": [["<560", 100, 12, 534.4, 14.24], ["560–599", 231, 25, 582.2, 8.04], ["600–639", 1356, 57, 621.2, 5.03], ["640–679", 2095, 73, 661.4, 3.06], ["680–719", 2059, 40, 698.1, 1.93], ["720+", 1774, 16, 750.1, 1.03]], "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": 600, "mark2": 700, "cut": null, "zpanel": true, "zr": [-6, 0], "card": null, "fo": null, "read": ["pd"], "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}}, {"say": "Divide the odds: 0.0190 ÷ 0.0690 = {y|0.275}. 100 more points multiply the odds of going bad by 0.275 — about a quarter. That factor is an [[odds ratio|how many times one set of odds is another]].", "show": {"read": ["ratio"]}, "f": "odds ratio for 100 points = e^(100 × {p|β₁}) = e^(−1.29) = {y|0.275}", "fs": "The odds ratio for 100 points is e to the 100 times beta one: 0.275."}, {"say": "On the bottom panel the same 100 points are a fixed drop of the straight line: {p|−1.29} in log-odds, anywhere along it. A fixed step in log-odds is a fixed **factor** on the odds."}, {"say": "50 points: the odds × {y|0.525}, a little over half. One point: × 0.987.", "show": {"mark2": 650}}, {"say": "At 53.7 points the odds are exactly halved. Our scorecard's [[PDO|points to double the odds: every PDO points, the odds double (or halve)]] is {y|53.7}.", "show": {"mark2": 653.7}, "f": "PDO = ln 2 ÷ 0.012903 = {y|53.7} points"}, {"say": "Think in factors.", "ask": {"q": "50 points multiply the odds by 0.525. What do 100 points do?", "options": ["× 0.525 again: × 0.275 in all", "× 1.05", "the odds drop to 0"], "answer": 0, "why": "0.525 × 0.525 = 0.275: each 50 points multiplies again. That is what “a straight line in log-odds” means."}}, {"say": "Groups work the same way. Grade D's odds of going bad are {y|13.0} times grade A's; the ratio of their chances is {m|11.7}. Close for rare events, never the same: say which one you mean.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [0, 0.16], "xt": 100, "yt": 0.04, "pts": null, "lpm": null, "out": null, "curve": [5.0677, -0.012903], "xc": null, "xu": null, "flat": null, "surp": null, "bands": [["<560", 100, 12, 534.4, 14.24], ["560–599", 231, 25, 582.2, 8.04], ["600–639", 1356, 57, 621.2, 5.03], ["640–679", 2095, 73, 661.4, 3.06], ["680–719", 2059, 40, 698.1, 1.93], ["720+", 1774, 16, 750.1, 1.03]], "bandLab": null, "pred": null, "hotBand": null, "grades": [[424, 600, 0.1091, "D"], [600, 660, 0.0512, "C"], [660, 720, 0.0188, "B"], [720, 850, 0.0093, "A"]], "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": null, "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}, "f": "D against A: odds ratio {y|13.0} · ratio of the chances 10.91 % ÷ 0.93 % = {m|11.7}"}]}
+```
+
+**Now play.** The same idea with sliders — try the challenges.
+
+```explore
+{"id": "w09d2-x1", "type": "logit", "title": "Bend the curve through the bands", "predict": {"q": "A score of **600** against a score of **700**. How many times more likely is the 600 to go bad?", "options": ["About 1.2 times — 100 points is a small step", "About 3.5 times", "About 10 times", "The same: both are approved"], "answer": 1, "why": "The fitted curve says 6.4 % at 600 and 1.9 % at 700: about 3.5 times. Each 100 points multiplies the odds of going bad by about 0.28. Move the two sliders until the curve passes through the dots."}, "bins": [[424.0, 1, 0], [448.0, 1, 0], [486.0, 1, 0], [494.5, 4, 0], [507.0, 7, 2], [515.2, 8, 0], [524.0, 6, 1], [534.7, 23, 5], [545.8, 22, 3], [554.9, 27, 1], [565.0, 36, 6], [574.8, 53, 2], [584.3, 68, 8], [594.1, 74, 9], [604.8, 275, 14], [614.8, 315, 11], [624.7, 367, 23], [634.5, 399, 9], [644.7, 394, 23], [654.1, 458, 30], [664.5, 632, 9], [674.5, 611, 11], [684.3, 603, 10], [694.2, 513, 7], [704.3, 517, 13], [714.5, 426, 10], [724.3, 403, 4], [734.3, 362, 6], [744.3, 267, 0], [754.1, 232, 3], [764.5, 158, 0], [774.5, 126, 0], [783.9, 90, 1], [794.4, 45, 1], [804.2, 30, 0], [813.5, 22, 1], [823.1, 16, 0], [835.4, 12, 0], [845.8, 4, 0], [850.0, 7, 0]], "bands": [["<560", 100, 12, 534.4], ["560–599", 231, 25, 582.2], ["600–639", 1356, 57, 621.2], ["640–679", 2095, 73, 661.4], ["680–719", 2059, 40, 698.1], ["720+", 1774, 16, 750.1]], "start": {"a": -3.48, "b": 0, "cur": 750}, "challenges": [{"id": "c1", "text": "Fit it by hand: bring the log-loss within **0.0002** of the best.", "when": {"gap": ["<", 0.0002]}}, {"id": "c2", "text": "Keep a fit that close and put the marker on **600**: read the PD.", "when": {"gap": ["<", 0.0002], "cur": ["=", 600]}}, {"id": "c3", "text": "Same fit, marker on **700**. How many times safer is a 700 than a 600?", "when": {"gap": ["<", 0.0002], "cur": ["=", 700]}}, {"id": "c4", "text": "**PDO:** with a near-best fit, find the score where the odds of going bad are **half** those at 600 (×0.47 to ×0.53). Its distance from 600 is the points to double the odds.", "when": {"gap": ["<", 0.0005], "ratio": ["between", 0.47, 0.53]}}]}
+```
+
+### Bands and grades — the bad rate you can count
+
+```story
+{"id": "w09d2-s6", "title": "Bubbles by band, grades by letter", "min": 5, "steps": [{"say": "No model at all: cut the scores into bands of 40 points and count. Each bubble is one band at its bad rate; its size is its number of loans (above it).", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [0, 0.16], "xt": 100, "yt": 0.04, "pts": null, "lpm": null, "out": null, "curve": null, "xc": null, "xu": null, "flat": null, "surp": null, "bands": [["<560", 100, 12, 534.4, 14.24], ["560–599", 231, 25, 582.2, 8.04], ["600–639", 1356, 57, 621.2, 5.03], ["640–679", 2095, 73, 661.4, 3.06], ["680–719", 2059, 40, 698.1, 1.93], ["720+", 1774, 16, 750.1, 1.03]], "bandLab": "n", "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": ["total"], "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}}, {"say": "The bad rate falls in every band: {o|12.0 %} below 560 down to {o|0.9 %} at 720 and above. A rate that only ever falls is [[monotonic|always falling (or always rising) from band to band]] — the first check of any scorecard review.", "show": {"bandLab": true}}, {"say": "Always write the count next to a rate. The lowest band is {o|12 of 100}: one more bad loan moves it a whole point. In the biggest band (2 095 loans), 0.05 points.", "show": {"hotBand": 0, "read": ["band"]}}, {"say": "Your turn.", "ask": {"q": "Which rate is shakier: 12 of 100 (12.0 %) or 57 of 1 356 (4.2 %)?", "options": ["12 of 100", "57 of 1 356", "both equally sure"], "answer": 0, "why": "Fewer loans, more luck: one loan is 1 point of 100, but only 0.07 points of 1 356."}}, {"say": "The logistic curve should pass close to every bubble: the bands are the model-free picture of it. Here it does.", "show": {"hotBand": null, "read": null, "curve": [5.0677, -0.012903]}}, {"say": "Nur's grades are score bands too: D below 600, C 600–659, B 660–719, A from 720. Their bad rates (the purple steps): {o|10.91, 5.12, 1.88 and 0.93 %}.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [0, 0.16], "xt": 100, "yt": 0.04, "pts": null, "lpm": null, "out": null, "curve": [5.0677, -0.012903], "xc": null, "xu": null, "flat": null, "surp": null, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": [[424, 600, 0.1091, "D"], [600, 660, 0.0512, "C"], [660, 720, 0.0188, "B"], [720, 850, 0.0093, "A"]], "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": null, "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}, "f": "A: 720+ · B: 660–719 · C: 600–659 · D: below 600"}, {"say": "A grade throws detail away: 601 and 659 are both C, but the curve gives them {o|6.4 %} and {o|3.1 %}. Use the score near a boundary, the grade for reports.", "show": {"mark": 601, "mark2": 659, "read": ["pd"]}}, {"say": "Find it on the picture.", "ask": {"q": "An applicant scores 719. Which grade does Nur print?", "options": ["A", "B", "C"], "answer": 1, "why": "B is 660–719; one point more and it would be A. Every grade boundary is a cut-off in disguise."}}]}
+```
+
+### From log-odds to points — the scorecard's scale
+
+```story
+{"id": "w09d2-s7", "title": "Points that double the odds", "min": 5, "steps": [{"say": "A [[scorecard|a table that turns a model's log-odds into points that are easy to read and add]] speaks in points. Pick a **base**: 600 points means good : bad odds of {b|50 to 1} — 50 good loans for every bad one.", "show": {"view": "card", "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [540, 680], "yr": null, "xt": null, "yt": null, "pts": null, "lpm": null, "out": null, "curve": null, "xc": null, "xu": null, "flat": null, "surp": null, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": 600, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": [600, 50, 20], "fo": null, "read": null, "words": {"pts": "score, points", "lo": "ln(good : bad odds)"}, "dragMark": null, "kind": "logit"}}, {"say": "Pick the [[PDO|points to double the odds: every PDO points more, the good : bad odds double]]: here 20. So 620 means {b|100 to 1}, 640 means 200 to 1 — each 20 points, × 2.", "show": {"mark": 620}}, {"say": "Your turn — use the ruler.", "ask": {"q": "On this card, what odds does a 580 have?", "options": ["25 to 1", "48 to 1", "30 to 1"], "answer": 0, "why": "20 points down halves the odds: 50 ÷ 2 = 25."}}, {"say": "The bottom ruler is ln(odds): every 20 points add the same {p|0.69} (that is ln 2). Points are just log-odds on a friendlier scale — stretched by a **factor**, shifted by an **offset**.", "show": {"mark": 600, "fo": true}, "f": "score = offset + factor × ln(odds) · factor = PDO ÷ ln 2 = 28.85 · offset = 600 − 28.85 × ln 50 = 487.12", "fs": "The score is the offset plus the factor times the log of the odds."}, {"say": "That is why points **add up**: a scorecard gives each answer (an age band, an income band) its own points, and the sum is the score. Adding points is adding log-odds."}, {"say": "Our score has its own scale, read off the fitted curve: 600 means {b|14.5 to 1}, 700 means {b|52.7 to 1}, and the odds double every {p|53.7} points.", "show": {"card": [600, 14.5, 53.7], "xr": [500, 760], "mark": 700, "fo": null}}, {"say": "Last one.", "ask": {"q": "On a PDO-20 card, what do 20 more points mean?", "options": ["20 % safer", "the good : bad odds doubled", "the chance of bad fell by 20 points"], "answer": 1, "why": "Points are not percentages. On ours it takes 53.7 points to double the odds: always ask a scorecard for its PDO before comparing scores."}}]}
+```
+
+### Do the chances come true? — calibration and the 3 % problem
+
+```story
+{"id": "w09d2-s8", "title": "Do the chances come true?", "min": 6, "steps": [{"say": "A model is [[calibrated|its chances come true: among loans given 5 %, about 5 % go bad]] when its chances come true. Check band by band: the {o|bubble} is what happened, the {p|purple bar} what the model predicted.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [420, 860], "yr": [0, 0.16], "xt": 100, "yt": 0.04, "pts": null, "lpm": null, "out": null, "curve": [5.0677, -0.012903], "xc": null, "xu": null, "flat": null, "surp": null, "bands": [["<560", 100, 12, 534.4, 14.24], ["560–599", 231, 25, 582.2, 8.04], ["600–639", 1356, 57, 621.2, 5.03], ["640–679", 2095, 73, 661.4, 3.06], ["680–719", 2059, 40, 698.1, 1.93], ["720+", 1774, 16, 750.1, 1.03]], "bandLab": null, "pred": true, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": null, "zpanel": null, "zr": null, "card": null, "fo": null, "read": null, "words": {"x": "credit score", "y": "chance of going bad"}, "dragMark": null, "kind": "logit"}}, {"say": "680–719: predicted {p|1.93 %}, happened {o|1.94 %}, on 2 059 loans — spot on. The big bands are close.", "show": {"hotBand": 4, "read": ["band"]}}, {"say": "560–599 runs hot: {o|10.8 %} happened against {p|8.0 %} predicted — on only 231 loans. Flag it and watch it.", "show": {"hotBand": 1}}, {"say": "In total, the average prediction equals the bad rate exactly: {o|2.93 %}. A logistic regression always does that on the loans it was fitted on — so it proves nothing. Check by band, on **new** loans.", "show": {"hotBand": null, "read": ["total"]}}, {"say": "Your turn.", "ask": {"q": "Where must calibration be checked to mean something?", "options": ["in total, on the loans the model was fitted on", "band by band, on new loans, with the count next to each band", "only in the biggest band"], "answer": 1, "why": "The total is right by construction. The bands, on loans the model never saw, are the real test."}}, {"say": "Now the 3 % problem. In 100 of our loans, about {o|3} go bad. A “model” that says **everyone is good** is right 97 times in 100.", "show": {"kind": "dots", "groups": [[3, "o", "bad"], [97, "g", "good"]], "cols": 20, "legend": [["o", "went bad"], ["g", "stayed good"]]}}, {"say": "Its [[accuracy|the share of right yes/no calls]] on our scored loans: {g|97.07 %} — and it catches no bad loan at all. With a rare outcome, accuracy rewards doing nothing.", "show": {"box": ["good"]}}, {"say": "And a 50 % cut-off flags nobody: the riskiest scored applicant (424 points) has a chance of only {o|40 %}. Where to cut is a business decision about cost (Day 4), not 50 %.", "show": {"view": null, "p": null, "row": null, "omax": null, "pins": null, "zmax": null, "xr": [424, 850], "yr": [0, 0.6], "xt": 100, "yt": 0.1, "pts": null, "lpm": null, "out": null, "curve": [5.0677, -0.012903], "xc": null, "xu": null, "flat": null, "surp": null, "bands": null, "bandLab": null, "pred": null, "hotBand": null, "grades": null, "mark": null, "mark2": null, "cut": 0.5, "zpanel": null, "zr": null, "card": null, "fo": null, "read": ["max"], "words": {"x": "credit score", "y": "chance of going bad", "cut": "a 50 % cut-off:"}, "dragMark": null, "kind": "logit"}}, {"say": "A vendor brings a model.", "f": "judge a PD model by: log-loss · calibration by band · ranking (Day 3) — not accuracy", "ask": {"q": "It is “97 % accurate” on our loans. What do you ask?", "options": ["Nothing — 97 % is excellent", "How it ranks and how well its chances come true: “everyone good” already scores 97.07 %", "Whether it is written in Python"], "answer": 1, "why": "With 2.93 % bad, accuracy rewards doing nothing. Ask for log-loss against the flat line, calibration by band, and the ranking (Day 3)."}}]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "match", "id": "w09d2-g1", "title": "Words of the day", "pairs": [["Odds", "p / (1 − p): bad loans per good loan"], ["Log-odds", "ln of the odds: the scale logistic regression keeps straight"], ["Sigmoid", "1 / (1 + e^−z): turns log-odds into a probability"], ["Log-loss", "what maximum likelihood makes small"], ["Odds ratio", "e^β: how much one step multiplies the odds"], ["PDO", "the points that double the good:bad odds"], ["Calibration", "the predicted PDs come true, band by band"], ["Class imbalance", "one outcome is rare, so accuracy misleads"]]}
+```
+
+**Now check yourself.**
+
+```game
+{"type": "order", "id": "w09d2-g2", "title": "From a score to a PD", "items": ["Define bad (default or written off) and keep the scored loans", "Look at the bad rate by score band", "Fit the logistic regression by maximum likelihood", "Read the coefficient as an odds ratio and the PDO", "Turn the score into a PD with the sigmoid", "Check calibration band by band", "Judge it by log-loss and calibration, not accuracy"]}
+```
+
+## 2. Worked example — what a 600 and a 700 mean (15 min)
+
+*"What is the chance that a 600 goes bad? And a 700? Does the grade say the same?"*
+
+**Step 1 — probability, odds, log-odds.** Bad = default or written off; 223 bad among the 7 615 scored loans: p = 2.93 %, odds 0.0302, log-odds −3.50.
+
+**Step 2 — not a straight line.** The linear model goes below 0 at 760; Nilufar needs probabilities for the whole range up to 850.
+
+**Step 3 — the logistic curve.** log-odds of bad = β₀ + β₁ · score; PD = the sigmoid of it.
+
+**Step 4 — maximum likelihood.** `sm.Logit`: β₀ = **5.0677**, β₁ = **−0.012903** per point (standard error 0.00129, so the 95 % interval is −0.0154 to −0.0104 — clearly below 0). Log-loss 0.1256 against 0.1322 for the flat line.
+
+**Step 5 — the odds ratio.** e^(100 × −0.012903) = **0.275**: 100 more points, about a quarter of the odds. ln 2 ÷ 0.012903 = **53.7** points halve them.
+
+**Step 6 — the bands.** 12.0 / 10.8 / 4.2 / 3.5 / 1.9 / 0.9 % from the lowest band up: monotonic, the curve passes close to every band.
+
+**Step 7 — the two PDs.** 600 → **6.45 %** (good:bad 14.5 to 1); 700 → **1.86 %** (52.7 to 1). A 600 is 3.5 times as likely to go bad as a 700.
+
+**Step 8 — the grades.** 600 is the bottom of grade C (600–659), 700 the middle of B (660–719). The grades' bad rates — C 5.12 %, B 1.88 % — are averages over the band; the curve says more for one applicant.
+
+**Step 9 — calibration.** In the 600–639 band the model predicts 5.03 %, 4.20 % happened (1 356 loans); in 680–719, 1.93 % against 1.94 % (2 059 loans). Good enough to quote, with the 560–599 band flagged (10.8 % against 8.0 %).
+
+**Step 10 — the answer, with the caveat.** *"A 600 goes bad about 6.5 % of the time, a 700 about 1.9 % — 3.5 times less. Every 54 points halves the odds. Grades agree in order, but within a grade the score matters: C runs from 6.5 % at 600 to 3.1 % at 659. These are PDs for loans like the ones we approved in 2024–2026, measured as 'ever defaulted or written off so far'; tomorrow I check how well the score ranks, and on Thursday where the cut-off should be."*
+
+---
+
+## 3. Practice (50 min)
+
+Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `np`, `pd`, `plt`, `df` (all loans with their score), `S` (the scored loans, with `band` and `pd` once you ran the calibration box), `sigmoid`, `b0` and `b1` are ready — if you came straight here, press ▶ Run all above on the last box of section 1. SQL boxes run on your practice copy of the database. (The notebook `data/python/week9/day2_starter.ipynb` holds the same tools; you need it for the homework.)
+
+**First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
+
+```python
+# the tools and the data from the full version of section 1 — run once
+import numpy as np
+import pandas as pd
+loans = pd.read_csv("data/raw/loans.csv")
+apps = pd.read_csv("data/raw/applications.csv")
+bad = loans["status"].isin(["default", "written_off"])
+loans["bad"] = bad.astype(int)
+cols = ["application_id", "credit_score"]
+df = loans.merge(apps[cols], on="application_id")
+S = df.dropna(subset=["credit_score"]).copy()
+b, a = np.polyfit(S["credit_score"], S["bad"], 1)
+for s in (424, 600, 700, 850):
+    print(s, round(100 * (a + b * s), 1))
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+for z in (-4, -2, 0, 2, 4):
+    print(z, round(sigmoid(z), 3))
+import statsmodels.api as sm
+X = sm.add_constant(S["credit_score"])
+fit = sm.Logit(S["bad"], X).fit(disp=0)
+b0, b1 = fit.params
+for s in (600, 700):
+    print(s, round(100 * sigmoid(b0 + b1 * s), 2))
+y = S["bad"].to_numpy()
+Xn = np.column_stack([np.ones(len(S)), S["credit_score"]])
+beta = np.zeros(2)
+for step in range(25):
+    q = sigmoid(Xn @ beta)
+    grad = Xn.T @ (y - q)
+    hess = Xn.T @ (Xn * (q * (1 - q))[:, None])
+    beta = beta + np.linalg.solve(hess, grad)
+q = sigmoid(b0 + b1 * S["credit_score"])
+import statsmodels.formula.api as smf
+for s in (600, 650, 700):
+    q = sigmoid(b0 + b1 * s)
+    print(s, round((1 - q) / q, 1))
+bins = [0, 560, 600, 640, 680, 720, 1000]
+S["band"] = pd.cut(S["credit_score"], bins, right=False)
+S["pd"] = sigmoid(b0 + b1 * S["credit_score"])
+print('ready')
+```
+
+**P1.** *(odds and log-odds)* Grade C: 116 bad loans among 2 264. What are the log-odds of bad, to 2 decimals?
+
+```task
+{"id": "w09d2-p1", "kind": "number", "answer": -2.92, "dp": 2, "hint": "ln( 116 ÷ (2 264 − 116) ).", "model": "odds = 116 / 2 148 = 0.0540; ln 0.0540 = −2.92. The book is at −3.48: grade C's log-odds are 0.56 higher, odds e^0.56 = 1.75 times the book's."}
+```
+
+<details><summary>Answer</summary>
+
+odds = 116 / 2 148 = 0.0540, log-odds = ln 0.0540 = **−2.92**. Probability 5.12 %, odds 5.40 % — close, because the event is rare.
+
+</details>
+
+**P2.** *(why a straight line fails)* Fit the linear probability model on the scored loans (`np.polyfit` of `bad` on `credit_score`). What share of the scored loans gets a **negative** "probability", in %, to 1 decimal?
+
+```task
+{"id": "w09d2-p2", "kind": "python", "starter": "b_lin, a_lin = np.polyfit(S[\"credit_score\"], S[\"bad\"], 1)\n# the share of loans with a + b * score < 0, in %, to 1 decimal\n", "answer": 6.7, "dp": 1, "model": "neg = (a_lin + b_lin * S[\"credit_score\"]) < 0\nprint(round(100 * neg.mean(), 1))\n# 6.7 — every loan scored above 760"}
+```
+
+<details><summary>Answer</summary>
+
+```python
+neg = (a_lin + b_lin * S["credit_score"]) < 0
+print(round(100 * neg.mean(), 1))
+# 6.7
+```
+**6.7 %** of the scored loans — everyone above 760 — would get a negative chance of going bad.
+
+</details>
+
+**P3.** *(the logistic curve)* With β₀ = 5.0677 and β₁ = −0.012903, what is the PD of a score of 560, in %, to 1 decimal?
+
+```task
+{"id": "w09d2-p3", "kind": "number", "answer": 10.4, "dp": 1, "unit": "%", "hint": "z = 5.0677 − 0.012903 × 560, then 1 / (1 + e^−z).", "model": "z = 5.0677 − 7.2257 = −2.158; 1 / (1 + e^2.158) = 10.4 %. The band 560–599 actually ran at 10.8 %."}
+```
+
+<details><summary>Answer</summary>
+
+z = 5.0677 − 0.012903 × 560 = −2.158; PD = 1 / (1 + e^2.158) = **10.4 %**.
+
+</details>
+
+**P4.** *(fitting it)* Fit `smf.logit("bad ~ credit_score", data=S)`. Print the slope to 6 decimals and McFadden's pseudo-R² (`fit.prsquared`) to 3 decimals.
+
+```task
+{"id": "w09d2-p4", "kind": "python", "starter": "import statsmodels.formula.api as smf\nm = smf.logit(\"bad ~ credit_score\", data=S).fit(disp=0)\n# print the credit_score coefficient (6 dp) and m.prsquared (3 dp)\n", "answer": 0.05, "dp": 3, "model": "print(round(m.params[\"credit_score\"], 6), round(m.prsquared, 3))\n# -0.012903 0.05 — the log-likelihood is 5 % better than the flat line's"}
+```
+
+<details><summary>Answer</summary>
+
+```python
+print(round(m.params["credit_score"], 6), round(m.prsquared, 3))
+# -0.012903 0.05
+```
+The same β₁ as `sm.Logit`; pseudo-R² = 1 − ln L(model) / ln L(flat) = **0.050**. Small numbers are normal for a rare outcome — it is not R² and is not read like it.
+
+</details>
+
+**P5.** *(odds ratio)* Grade D has odds of 37 / 302, grade A 17 / 1 804. What is D's odds ratio against A, to 1 decimal?
+
+```task
+{"id": "w09d2-p5", "kind": "number", "answer": 13.0, "dp": 1, "hint": "(37 ÷ 302) ÷ (17 ÷ 1 804).", "model": "0.1225 / 0.00942 = 13.0 — the same as e^β of the D dummy in the grade logit. The ratio of bad rates is 10.91 / 0.93 = 11.7."}
+```
+
+<details><summary>Answer</summary>
+
+(37 / 302) / (17 / 1 804) = 0.1225 / 0.00942 = **13.0**. The dummy's e^β in `bad ~ C(risk_grade)` is exactly this: with one categorical predictor, logistic regression reproduces each group's odds.
+
+</details>
+
+**P6.** *(bad rate by band)* Bad rate by **channel**: one row per channel with loans, bads and the bad rate in % to 2 decimals, the riskiest first.
+
+```task
+{"id": "w09d2-p6", "kind": "sql", "model": "SELECT a.channel,\n       COUNT(*) AS loans,\n       SUM(l.status IN ('default', 'written_off')) AS bads,\n       ROUND(100.0 * SUM(l.status IN ('default', 'written_off')) / COUNT(*), 2) AS bad_pct\nFROM loans l\nJOIN applications a ON a.application_id = l.application_id\nGROUP BY a.channel\nORDER BY bad_pct DESC;", "note": "branch 3 590 loans, 116 bad, 3.23 %; app 2 669, 76, 2.85 %; partner 1 569, 42, 2.68 %."}
+```
+
+<details><summary>Answer</summary>
+
+```sql
+SELECT a.channel,
+       COUNT(*) AS loans,
+       SUM(l.status IN ('default', 'written_off')) AS bads,
+       ROUND(100.0 * SUM(l.status IN ('default', 'written_off'))
+             / COUNT(*), 2) AS bad_pct
+FROM loans l
+JOIN applications a ON a.application_id = l.application_id
+GROUP BY a.channel
+ORDER BY bad_pct DESC;
+```
+branch **3.23 %** (116 of 3 590), app 2.85 % (76 of 2 669), partner 2.68 % (42 of 1 569). The gaps are small next to the score bands' 12 % to 0.9 %.
+
+</details>
+
+**P7.** *(the scorecard)* Our score's PDO is 53.7 points and a 600 has good:bad odds of 14.5. Roughly what good:bad odds does a 707 have (two PDOs higher)?
+
+```task
+{"id": "w09d2-p7", "kind": "number", "answer": 58, "dp": 0, "unit": "to 1", "hint": "Two doublings: 14.5 × 2 × 2.", "model": "600 + 2 × 53.7 = 707.4: odds 14.5 × 4 = 58 to 1 (PD about 1.7 %)."}
+```
+
+<details><summary>Answer</summary>
+
+Two PDOs = two doublings: 14.5 × 4 = **58** good loans per bad one at about 707 — a PD of 1 / 59 = 1.7 %.
+
+</details>
+
+**P8.** *(risk grades)* A loan has a score of 599. What grade does Nur print, and what does that say about grade boundaries?
+
+```task
+{"id": "w09d2-p8", "kind": "choice", "options": ["C — 599 rounds to 600", "D — D is everything below 600; a 599 and a 600 differ by one point but by a whole grade (PD 6.5 % against 6.4 %)", "B", "No grade: D starts at 424"], "answer": 1, "explain": "Grades are cut-offs: neighbours across a boundary have almost the same PD but different labels, prices and limits."}
+```
+
+<details><summary>Answer</summary>
+
+**D**: grade D is every score below 600. The model's PD is 6.53 % at 599 and 6.45 % at 600 — one point, one grade apart.
+
+</details>
+
+**P9.** *(calibration)* Average predicted PD and actual bad rate for grade **C** (scored loans), in %. Print both to 2 decimals.
+
+```task
+{"id": "w09d2-p9", "kind": "python", "starter": "S[\"pd\"] = sigmoid(b0 + b1 * S[\"credit_score\"])\nc = S[S[\"risk_grade\"] == \"C\"]\n# print 100 × the mean of pd and 100 × the mean of bad, to 2 decimals\n", "answer": 4.98, "dp": 2, "model": "print(round(100 * c[\"pd\"].mean(), 2), round(100 * c[\"bad\"].mean(), 2))\n# 4.44 4.98 — 2 208 loans: C runs about half a point hotter than predicted"}
+```
+
+<details><summary>Answer</summary>
+
+```python
+print(round(100 * c["pd"].mean(), 2), round(100 * c["bad"].mean(), 2))
+# 4.44 4.98
+```
+Predicted **4.44 %**, actual **4.98 %** on 2 208 loans: C goes bad a little more often than the score alone says.
+
+</details>
+
+**P10.** *(class imbalance)* A model flags a loan as "bad" when its PD is above 5 %. On the scored loans, how many loans does it flag, and what share of all bad loans are among them (in %, to 1 decimal)?
+
+```task
+{"id": "w09d2-p10", "kind": "python", "starter": "flag = S[\"pd\"] > 0.05\n# print the number flagged and 100 × (bad loans flagged) / (all bad loans), to 1 decimal\n", "answer": 28.3, "dp": 1, "model": "print(flag.sum(), round(100 * S.loc[flag, \"bad\"].sum() / S[\"bad\"].sum(), 1))\n# 948 28.3 — the loans scored below 621"}
+```
+
+<details><summary>Answer</summary>
+
+```python
+print(flag.sum(), round(100 * S.loc[flag, "bad"].sum() / S["bad"].sum(), 1))
+# 948 28.3
+```
+A 5 % threshold (not 50 %) flags the 948 loans scored below 621 and catches 28.3 % of the bad ones (63 of 223). Which threshold is right is a cost question — Day 4.
+
+</details>
+
+### Mistakes people make
+
+- A straight line fitted to a 0/1 outcome and its ŷ called a probability (−3.3 % at 850).
+- β₁ read as "−1.3 % per point": it is a change in log-odds; say the odds ratio.
+- Odds and probability mixed up: odds 0.25 = probability 20 %.
+- An odds ratio quoted as a risk ratio (13.0 against 11.7 for D vs A).
+- A rate without its count: 12 % "of the lowest band" is 12 loans of 100.
+- Calibration "checked" on the total, where it is exact by construction.
+- Accuracy reported for a 3 % outcome; a 50 % cut-off that flags nobody.
+- An oversampled model's PDs used without correcting the intercept.
+- Scores compared across scorecards with different PDOs.
+- The 213 loans with no score silently dropped and not mentioned.
+
+---
+
+## 4. Homework <span class="badge hw">HW 9.2 — Due Day 4</span>
+
+**The Consumer PD.** Open `data/python/week9/day2_starter.ipynb`. Part 0 repeats today's model on all scored loans. Then four functions are stubs with assert cells: `sigmoid(z)`, `log_odds(p)`, `fit_logit(x, y)` (Newton's method in numpy) and `log_loss(y, p)`. Then the Consumer part: the bad rate by score band from SQL, the logistic fit on the 2 350 scored Consumer loans, the PD for scores 600 and 700, a calibration table by band, and three sentences for Nilufar in the last cell. **Kernel → Restart & Run All**, then hand in the executed notebook with the 📎 box below.
+
+Graded on (20 points): (a) all four assert cells pass after *Restart & Run All* (2 points each, 8), (b) the band table comes from SQL (3), (c) the fit, the two PDs and the calibration table are right (5), (d) the three sentences give the two PDs, how well the model is calibrated, and one caveat (4).
+
+**Check your numbers here before you hand in.**
+
+**H1.** Consumer loans, band 640–679: what is the bad rate, in %, to 2 decimals?
+
+```task
+{"id": "w09d2-hw1", "kind": "number", "answer": 4.33, "dp": 2, "unit": "%", "hint": "Today's band query with AND l.product_id = 2 in the WHERE.", "model": "28 bad of 646 = 4.33 % — higher than the 600–639 band's 4.15 %: on 2 350 loans the Consumer bands are not perfectly monotonic."}
+```
+
+**H2.** The logistic regression of bad on credit_score, Consumer loans only: what PD does it give for a score of **600**, in %, to 2 decimals?
+
+```task
+{"id": "w09d2-hw2", "kind": "number", "answer": 6.51, "dp": 2, "unit": "%", "hint": "fit_logit on the 2 350 scored Consumer loans; then sigmoid(b0 + b1 × 600).", "model": "β0 = 4.5863, β1 = −0.012083: PD(600) = 6.51 %."}
+```
+
+**H3.** And for **700**, in %, to 2 decimals?
+
+```task
+{"id": "w09d2-hw3", "kind": "number", "answer": 2.04, "dp": 2, "unit": "%", "hint": "sigmoid(b0 + b1 × 700) with the Consumer coefficients.", "model": "PD(700) = 2.04 % — 3.2 times lower than at 600 (PDO 57 points), close to the whole book's curve."}
+```
+
+**H4.** Your three sentences for Nilufar (the last cell of the notebook) — write them here too.
+
+```task
+{"id": "w09d2-hw4", "kind": "free", "min": 30, "model": "On 2 350 scored Consumer loans (73 bad, 3.1 %) a score of 600 goes bad about 6.5 % of the time and a 700 about 2.0 %, three times less; the odds halve every 57 points. By band the model is close where the counts are large (680–719: 2.1 % predicted, 1.6 % actual on 635 loans), but the 640–679 band runs hotter than predicted (4.3 % against 3.2 %). The bands below 600 have only 104 loans, so their rates are shaky, and these PDs count 'ever bad so far' on loans of different ages.", "rubric": ["gives the two PDs (about 6.5 % and 2.0 %)", "says how well the PDs come true by band, with a count", "names a band or a group where the model is off", "gives one caveat (small bands, the bad definition, loan age, approved loans only)"]}
+```
+
+### 📎 Hand in here
+
+```sqltask
+{"check": "handin-W9D2", "lesson": "W9D2", "title": "HW 9.2", "why": "Day 3 judges the score's ranking and Day 4 sets the cut-off on top of these PDs, so the Consumer fit and its calibration have to be right first.", "graded": ["all four assert cells pass after Restart & Run All (8)", "the band table comes from SQL (3)", "the fit, PD(600), PD(700) and the calibration table are right (5)", "the three sentences give the two PDs, the calibration and one caveat (4)"], "tasks": [{"id": "day2_starter.ipynb", "file": "day2_starter.ipynb", "names": ["day2_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day2_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+```
+
+---
+
+## 5. Self-check
+
+Three questions, one at a time. Wrong? The explanation points to the part of section 1 to reread.
+
+```check
+{"id": "w09d2-sc", "questions": [
+  {"type": "single", "q": "The probability of bad is 20 %. What are the odds?", "options": ["0.20", "0.25 — one bad per four good", "0.80", "4"], "answer": 1, "explain": "odds = p / (1 − p) = 0.2 / 0.8 = 0.25 (→ section 1, 'Probability, odds and log-odds')."},
+  {"type": "number", "q": "β₁ = −0.02 per point. By what factor are the odds of bad multiplied over 50 points? (2 decimals)", "answer": 0.37, "tol": 0.005, "explain": "e^(50 × −0.02) = e^−1 = 0.37 (→ section 1, 'A coefficient as an odds ratio')."},
+  {"type": "single", "q": "On the loans it was fitted on, the model's average PD equals the bad rate exactly. What does that prove?", "options": ["The model is calibrated", "Nothing much — with an intercept it is true by construction; check calibration band by band, on new loans", "The model ranks well", "There is no class imbalance"], "answer": 1, "explain": "Calibration in total is automatic in-sample; the test is band by band and out of time (→ section 1, 'Calibration')."}
+]}
+```
+
+---
+
+## 6. Company corner <span class="badge company">How a scorecard is built and kept</span>
+
+An application scorecard is not one regression in a notebook. At a lender it is a small project with a life cycle, and the risk committee — Nilufar's meeting on Friday — signs off each stage.
+
+1. **Definition.** What is "bad" (here: default or written off; often 90+ days past due within 12 months), what is the **performance window** (how long a loan is watched), and which loans are excluded (fraud, deaths, too young to judge).
+2. **Development sample.** Applications from a past period with known outcomes, plus an **out-of-time** sample held back for validation.
+3. **Characteristics.** Bureau data, application data, behaviour; each binned, with WoE and IV (today's Depth), weak or unstable ones dropped.
+4. **The model.** Logistic regression on WoE-coded characteristics, chosen for being explainable: every point on the card can be justified to a customer and a regulator.
+5. **Scaling.** Base score, base odds and PDO turn the log-odds into points.
+6. **Validation.** Ranking (Gini, KS — tomorrow), calibration (today), stability (PSI — Thursday), on the out-of-time sample.
+7. **Cut-off and policy.** Where to approve and on what terms (Thursday).
+8. **Monitoring and redevelopment.** Monthly reports; a rebuild when Gini falls or the population shifts — which is exactly Nilufar's question about a two-year-old card.
+
+```game
+{"type": "match", "id": "w09d2-g3", "title": "A scorecard's life", "pairs": [["Bad definition", "which outcome counts as bad, within which window"], ["Development sample", "past applications with known outcomes, used to fit"], ["Out-of-time sample", "a later period held back to test the model"], ["WoE binning", "turning each characteristic into bands with weights"], ["Scaling", "base score, base odds and PDO turn log-odds into points"], ["Calibration", "the PDs come true band by band"], ["Monitoring", "monthly checks of ranking, calibration and stability"], ["Redevelopment", "rebuilding the card when it no longer works"]]}
+```
+
+> 🎯 **Interview version.** *"How do you turn a logistic regression into a scorecard?"* — fit log-odds of bad on WoE-coded characteristics; choose a base score, base odds and PDO; factor = PDO / ln 2, offset = base score − factor × ln(base odds); each attribute's points are −factor × β × WoE (plus its share of the offset), and the score is the sum. Then say how you would validate it: ranking, calibration, stability, out of time.
+
+**Say it like in an interview.** *"How do you turn a logistic regression into a scorecard, and how would you know it still works?"* — answer in 3–5 sentences.
+
+```task
+{"id": "w09d2-cc", "kind": "free", "min": 30, "model": "I fit a logistic regression of the log-odds of bad on the characteristics, usually binned and WoE-coded so each band has one weight. Then I pick the scale — for example 600 points at good:bad odds of 50:1 and 20 points to double the odds — so factor = PDO / ln 2 and offset = 600 − factor × ln 50, and each attribute's points come from its coefficient times its WoE times the factor; the applicant's score is the sum. To know it still works I check ranking (Gini, KS), calibration by band and stability (PSI) on recent, out-of-time loans; on our book the score's odds halve every 54 points and the PDs are close to the actual bad rates in the big bands.", "rubric": ["logistic regression on (WoE-coded) characteristics", "the scaling: base score, base odds, PDO, factor and offset", "points per attribute add up to the score", "validation: ranking, calibration and stability, out of time"]}
+```
+
+Tomorrow: Nilufar's first question — does the scorecard still work? — measured: the confusion matrix, the ROC curve, AUC, Gini and KS, and how our two-year-old score compares with what application scorecards usually reach.
+
+---
+
+## Going further — the full version, with Python (optional, 60 min)
+
+The same ideas as the stories, written out in full with Python and SQL: the fits with statsmodels and with numpy (Newton's method), the log-loss by hand, the grade dummies, the band query, the scorecard's scaling, the calibration table, and the Depth notes (weight of evidence, information value, reject inference). Optional: nothing here counts toward the day.
+
 Press ▶ Run on this first box once. It loads the data for the whole page; every later box on this page, and every Practice box, reuses it.
 
 ```python
@@ -107,11 +502,6 @@ The line crosses 0 at a score of 760. Above it — 6.7 % of our scored loans —
 
 ### The logistic curve
 
-**Before you read.** Guess first, then play with it — the explanation below will make more sense.
-
-```explore
-{"id": "w09d2-x1", "type": "logit", "title": "Bend the curve through the bands", "predict": {"q": "A score of **600** against a score of **700**. How many times more likely is the 600 to go bad?", "options": ["About 1.2 times — 100 points is a small step", "About 3.5 times", "About 10 times", "The same: both are approved"], "answer": 1, "why": "The fitted curve says 6.4 % at 600 and 1.9 % at 700: about 3.5 times. Each 100 points multiplies the odds of going bad by about 0.28. Move the two sliders until the curve passes through the dots."}, "bins": [[424.0, 1, 0], [448.0, 1, 0], [486.0, 1, 0], [494.5, 4, 0], [507.0, 7, 2], [515.2, 8, 0], [524.0, 6, 1], [534.7, 23, 5], [545.8, 22, 3], [554.9, 27, 1], [565.0, 36, 6], [574.8, 53, 2], [584.3, 68, 8], [594.1, 74, 9], [604.8, 275, 14], [614.8, 315, 11], [624.7, 367, 23], [634.5, 399, 9], [644.7, 394, 23], [654.1, 458, 30], [664.5, 632, 9], [674.5, 611, 11], [684.3, 603, 10], [694.2, 513, 7], [704.3, 517, 13], [714.5, 426, 10], [724.3, 403, 4], [734.3, 362, 6], [744.3, 267, 0], [754.1, 232, 3], [764.5, 158, 0], [774.5, 126, 0], [783.9, 90, 1], [794.4, 45, 1], [804.2, 30, 0], [813.5, 22, 1], [823.1, 16, 0], [835.4, 12, 0], [845.8, 4, 0], [850.0, 7, 0]], "bands": [["<560", 100, 12, 534.4], ["560–599", 231, 25, 582.2], ["600–639", 1356, 57, 621.2], ["640–679", 2095, 73, 661.4], ["680–719", 2059, 40, 698.1], ["720+", 1774, 16, 750.1]], "start": {"a": -3.48, "b": 0, "cur": 750}, "challenges": [{"id": "c1", "text": "Fit it by hand: bring the log-loss within **0.0002** of the best.", "when": {"gap": ["<", 0.0002]}}, {"id": "c2", "text": "Keep a fit that close and put the marker on **600**: read the PD.", "when": {"gap": ["<", 0.0002], "cur": ["=", 600]}}, {"id": "c3", "text": "Same fit, marker on **700**. How many times safer is a 700 than a 600?", "when": {"gap": ["<", 0.0002], "cur": ["=", 700]}}, {"id": "c4", "text": "**PDO:** with a near-best fit, find the score where the odds of going bad are **half** those at 600 (×0.47 to ×0.53). Its distance from 600 is the points to double the odds.", "when": {"gap": ["<", 0.0005], "ratio": ["between", 0.47, 0.53]}}]}
-```
 
 **What it is.** **Logistic regression** (*логистическая регрессия*) fits a straight line to the **log-odds**, not to the probability: z = β₀ + β₁ · score. Then the **logistic function** (the **sigmoid**, *сигмоида*) turns z back into a probability: p = 1 / (1 + e^−z). Whatever z is, p stays between 0 and 1, and the curve has the S-shape real risk has: steep in the middle, flat at both ends.
 
@@ -470,15 +860,9 @@ Nilufar's question, the chain of today's tools:
 
 **Words of the day.**
 
-```game
-{"type": "match", "id": "w09d2-g1", "title": "Words of the day", "pairs": [["Odds", "p / (1 − p): bad loans per good loan"], ["Log-odds", "ln of the odds: the scale logistic regression keeps straight"], ["Sigmoid", "1 / (1 + e^−z): turns log-odds into a probability"], ["Log-loss", "what maximum likelihood makes small"], ["Odds ratio", "e^β: how much one step multiplies the odds"], ["PDO", "the points that double the good:bad odds"], ["Calibration", "the predicted PDs come true, band by band"], ["Class imbalance", "one outcome is rare, so accuracy misleads"]]}
-```
 
 **From a score to a decision, in order.**
 
-```game
-{"type": "order", "id": "w09d2-g2", "title": "From a score to a PD", "items": ["Define bad (default or written off) and keep the scored loans", "Look at the bad rate by score band", "Fit the logistic regression by maximum likelihood", "Read the coefficient as an odds ratio and the PDO", "Turn the score into a PD with the sigmoid", "Check calibration band by band", "Judge it by log-loss and calibration, not accuracy"]}
-```
 
 ### Depth (optional)
 
@@ -498,282 +882,6 @@ The score's six bands have IV 0.46: strong. The WoE rises band by band, as a goo
 **Reject inference.** We see outcomes only for **approved** applicants. The 600s we approved were the 600s that passed every other check; the rejected ones never had the chance to go bad. A model fitted on approved loans can look better than it is on the whole applicant flow. **Reject inference** (*восстановление по отказам*) tries to guess what the rejected would have done (by parcelling them by score, by giving them the PD of similar approved loans, or by approving a small random sample on purpose). No method is free; a small random "below cut-off" sample is the only one that measures instead of guessing.
 
 *Russian terms:* вероятность = probability, шансы = odds, логарифм шансов (логит) = log-odds, логистическая регрессия = logistic regression, сигмоида = sigmoid, метод максимального правдоподобия = maximum likelihood, логарифмическая функция потерь (log-loss) = log-loss, отношение шансов = odds ratio, скоринговая карта = scorecard, баллы удвоения шансов (PDO) = PDO, класс риска = risk grade, калибровка = calibration, несбалансированные классы = class imbalance, WoE (весомость признака) = weight of evidence, IV (информационная ценность) = information value, reject inference (восстановление по отказам) = reject inference.
-
----
-
-## 2. Worked example — what a 600 and a 700 mean (15 min)
-
-*"What is the chance that a 600 goes bad? And a 700? Does the grade say the same?"*
-
-**Step 1 — probability, odds, log-odds.** Bad = default or written off; 223 bad among the 7 615 scored loans: p = 2.93 %, odds 0.0302, log-odds −3.50.
-
-**Step 2 — not a straight line.** The linear model goes below 0 at 760; Nilufar needs probabilities for the whole range up to 850.
-
-**Step 3 — the logistic curve.** log-odds of bad = β₀ + β₁ · score; PD = the sigmoid of it.
-
-**Step 4 — maximum likelihood.** `sm.Logit`: β₀ = **5.0677**, β₁ = **−0.012903** per point (standard error 0.00129, so the 95 % interval is −0.0154 to −0.0104 — clearly below 0). Log-loss 0.1256 against 0.1322 for the flat line.
-
-**Step 5 — the odds ratio.** e^(100 × −0.012903) = **0.275**: 100 more points, about a quarter of the odds. ln 2 ÷ 0.012903 = **53.7** points halve them.
-
-**Step 6 — the bands.** 12.0 / 10.8 / 4.2 / 3.5 / 1.9 / 0.9 % from the lowest band up: monotonic, the curve passes close to every band.
-
-**Step 7 — the two PDs.** 600 → **6.45 %** (good:bad 14.5 to 1); 700 → **1.86 %** (52.7 to 1). A 600 is 3.5 times as likely to go bad as a 700.
-
-**Step 8 — the grades.** 600 is the bottom of grade C (600–659), 700 the middle of B (660–719). The grades' bad rates — C 5.12 %, B 1.88 % — are averages over the band; the curve says more for one applicant.
-
-**Step 9 — calibration.** In the 600–639 band the model predicts 5.03 %, 4.20 % happened (1 356 loans); in 680–719, 1.93 % against 1.94 % (2 059 loans). Good enough to quote, with the 560–599 band flagged (10.8 % against 8.0 %).
-
-**Step 10 — the answer, with the caveat.** *"A 600 goes bad about 6.5 % of the time, a 700 about 1.9 % — 3.5 times less. Every 54 points halves the odds. Grades agree in order, but within a grade the score matters: C runs from 6.5 % at 600 to 3.1 % at 659. These are PDs for loans like the ones we approved in 2024–2026, measured as 'ever defaulted or written off so far'; tomorrow I check how well the score ranks, and on Thursday where the cut-off should be."*
-
----
-
-## 3. Practice (50 min)
-
-Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `np`, `pd`, `plt`, `df` (all loans with their score), `S` (the scored loans, with `band` and `pd` once you ran the calibration box), `sigmoid`, `b0` and `b1` are ready — if you came straight here, press ▶ Run all above on the last box of section 1. SQL boxes run on your practice copy of the database. (The notebook `data/python/week9/day2_starter.ipynb` holds the same tools; you need it for the homework.)
-
-**P1.** *(odds and log-odds)* Grade C: 116 bad loans among 2 264. What are the log-odds of bad, to 2 decimals?
-
-```task
-{"id": "w09d2-p1", "kind": "number", "answer": -2.92, "dp": 2, "hint": "ln( 116 ÷ (2 264 − 116) ).", "model": "odds = 116 / 2 148 = 0.0540; ln 0.0540 = −2.92. The book is at −3.48: grade C's log-odds are 0.56 higher, odds e^0.56 = 1.75 times the book's."}
-```
-
-<details><summary>Answer</summary>
-
-odds = 116 / 2 148 = 0.0540, log-odds = ln 0.0540 = **−2.92**. Probability 5.12 %, odds 5.40 % — close, because the event is rare.
-
-</details>
-
-**P2.** *(why a straight line fails)* Fit the linear probability model on the scored loans (`np.polyfit` of `bad` on `credit_score`). What share of the scored loans gets a **negative** "probability", in %, to 1 decimal?
-
-```task
-{"id": "w09d2-p2", "kind": "python", "starter": "b_lin, a_lin = np.polyfit(S[\"credit_score\"], S[\"bad\"], 1)\n# the share of loans with a + b * score < 0, in %, to 1 decimal\n", "answer": 6.7, "dp": 1, "model": "neg = (a_lin + b_lin * S[\"credit_score\"]) < 0\nprint(round(100 * neg.mean(), 1))\n# 6.7 — every loan scored above 760"}
-```
-
-<details><summary>Answer</summary>
-
-```python
-neg = (a_lin + b_lin * S["credit_score"]) < 0
-print(round(100 * neg.mean(), 1))
-# 6.7
-```
-**6.7 %** of the scored loans — everyone above 760 — would get a negative chance of going bad.
-
-</details>
-
-**P3.** *(the logistic curve)* With β₀ = 5.0677 and β₁ = −0.012903, what is the PD of a score of 560, in %, to 1 decimal?
-
-```task
-{"id": "w09d2-p3", "kind": "number", "answer": 10.4, "dp": 1, "unit": "%", "hint": "z = 5.0677 − 0.012903 × 560, then 1 / (1 + e^−z).", "model": "z = 5.0677 − 7.2257 = −2.158; 1 / (1 + e^2.158) = 10.4 %. The band 560–599 actually ran at 10.8 %."}
-```
-
-<details><summary>Answer</summary>
-
-z = 5.0677 − 0.012903 × 560 = −2.158; PD = 1 / (1 + e^2.158) = **10.4 %**.
-
-</details>
-
-**P4.** *(fitting it)* Fit `smf.logit("bad ~ credit_score", data=S)`. Print the slope to 6 decimals and McFadden's pseudo-R² (`fit.prsquared`) to 3 decimals.
-
-```task
-{"id": "w09d2-p4", "kind": "python", "starter": "import statsmodels.formula.api as smf\nm = smf.logit(\"bad ~ credit_score\", data=S).fit(disp=0)\n# print the credit_score coefficient (6 dp) and m.prsquared (3 dp)\n", "answer": 0.05, "dp": 3, "model": "print(round(m.params[\"credit_score\"], 6), round(m.prsquared, 3))\n# -0.012903 0.05 — the log-likelihood is 5 % better than the flat line's"}
-```
-
-<details><summary>Answer</summary>
-
-```python
-print(round(m.params["credit_score"], 6), round(m.prsquared, 3))
-# -0.012903 0.05
-```
-The same β₁ as `sm.Logit`; pseudo-R² = 1 − ln L(model) / ln L(flat) = **0.050**. Small numbers are normal for a rare outcome — it is not R² and is not read like it.
-
-</details>
-
-**P5.** *(odds ratio)* Grade D has odds of 37 / 302, grade A 17 / 1 804. What is D's odds ratio against A, to 1 decimal?
-
-```task
-{"id": "w09d2-p5", "kind": "number", "answer": 13.0, "dp": 1, "hint": "(37 ÷ 302) ÷ (17 ÷ 1 804).", "model": "0.1225 / 0.00942 = 13.0 — the same as e^β of the D dummy in the grade logit. The ratio of bad rates is 10.91 / 0.93 = 11.7."}
-```
-
-<details><summary>Answer</summary>
-
-(37 / 302) / (17 / 1 804) = 0.1225 / 0.00942 = **13.0**. The dummy's e^β in `bad ~ C(risk_grade)` is exactly this: with one categorical predictor, logistic regression reproduces each group's odds.
-
-</details>
-
-**P6.** *(bad rate by band)* Bad rate by **channel**: one row per channel with loans, bads and the bad rate in % to 2 decimals, the riskiest first.
-
-```task
-{"id": "w09d2-p6", "kind": "sql", "model": "SELECT a.channel,\n       COUNT(*) AS loans,\n       SUM(l.status IN ('default', 'written_off')) AS bads,\n       ROUND(100.0 * SUM(l.status IN ('default', 'written_off')) / COUNT(*), 2) AS bad_pct\nFROM loans l\nJOIN applications a ON a.application_id = l.application_id\nGROUP BY a.channel\nORDER BY bad_pct DESC;", "note": "branch 3 590 loans, 116 bad, 3.23 %; app 2 669, 76, 2.85 %; partner 1 569, 42, 2.68 %."}
-```
-
-<details><summary>Answer</summary>
-
-```sql
-SELECT a.channel,
-       COUNT(*) AS loans,
-       SUM(l.status IN ('default', 'written_off')) AS bads,
-       ROUND(100.0 * SUM(l.status IN ('default', 'written_off'))
-             / COUNT(*), 2) AS bad_pct
-FROM loans l
-JOIN applications a ON a.application_id = l.application_id
-GROUP BY a.channel
-ORDER BY bad_pct DESC;
-```
-branch **3.23 %** (116 of 3 590), app 2.85 % (76 of 2 669), partner 2.68 % (42 of 1 569). The gaps are small next to the score bands' 12 % to 0.9 %.
-
-</details>
-
-**P7.** *(the scorecard)* Our score's PDO is 53.7 points and a 600 has good:bad odds of 14.5. Roughly what good:bad odds does a 707 have (two PDOs higher)?
-
-```task
-{"id": "w09d2-p7", "kind": "number", "answer": 58, "dp": 0, "unit": "to 1", "hint": "Two doublings: 14.5 × 2 × 2.", "model": "600 + 2 × 53.7 = 707.4: odds 14.5 × 4 = 58 to 1 (PD about 1.7 %)."}
-```
-
-<details><summary>Answer</summary>
-
-Two PDOs = two doublings: 14.5 × 4 = **58** good loans per bad one at about 707 — a PD of 1 / 59 = 1.7 %.
-
-</details>
-
-**P8.** *(risk grades)* A loan has a score of 599. What grade does Nur print, and what does that say about grade boundaries?
-
-```task
-{"id": "w09d2-p8", "kind": "choice", "options": ["C — 599 rounds to 600", "D — D is everything below 600; a 599 and a 600 differ by one point but by a whole grade (PD 6.5 % against 6.4 %)", "B", "No grade: D starts at 424"], "answer": 1, "explain": "Grades are cut-offs: neighbours across a boundary have almost the same PD but different labels, prices and limits."}
-```
-
-<details><summary>Answer</summary>
-
-**D**: grade D is every score below 600. The model's PD is 6.53 % at 599 and 6.45 % at 600 — one point, one grade apart.
-
-</details>
-
-**P9.** *(calibration)* Average predicted PD and actual bad rate for grade **C** (scored loans), in %. Print both to 2 decimals.
-
-```task
-{"id": "w09d2-p9", "kind": "python", "starter": "S[\"pd\"] = sigmoid(b0 + b1 * S[\"credit_score\"])\nc = S[S[\"risk_grade\"] == \"C\"]\n# print 100 × the mean of pd and 100 × the mean of bad, to 2 decimals\n", "answer": 4.98, "dp": 2, "model": "print(round(100 * c[\"pd\"].mean(), 2), round(100 * c[\"bad\"].mean(), 2))\n# 4.44 4.98 — 2 208 loans: C runs about half a point hotter than predicted"}
-```
-
-<details><summary>Answer</summary>
-
-```python
-print(round(100 * c["pd"].mean(), 2), round(100 * c["bad"].mean(), 2))
-# 4.44 4.98
-```
-Predicted **4.44 %**, actual **4.98 %** on 2 208 loans: C goes bad a little more often than the score alone says.
-
-</details>
-
-**P10.** *(class imbalance)* A model flags a loan as "bad" when its PD is above 5 %. On the scored loans, how many loans does it flag, and what share of all bad loans are among them (in %, to 1 decimal)?
-
-```task
-{"id": "w09d2-p10", "kind": "python", "starter": "flag = S[\"pd\"] > 0.05\n# print the number flagged and 100 × (bad loans flagged) / (all bad loans), to 1 decimal\n", "answer": 28.3, "dp": 1, "model": "print(flag.sum(), round(100 * S.loc[flag, \"bad\"].sum() / S[\"bad\"].sum(), 1))\n# 948 28.3 — the loans scored below 621"}
-```
-
-<details><summary>Answer</summary>
-
-```python
-print(flag.sum(), round(100 * S.loc[flag, "bad"].sum() / S["bad"].sum(), 1))
-# 948 28.3
-```
-A 5 % threshold (not 50 %) flags the 948 loans scored below 621 and catches 28.3 % of the bad ones (63 of 223). Which threshold is right is a cost question — Day 4.
-
-</details>
-
-### Mistakes people make
-
-- A straight line fitted to a 0/1 outcome and its ŷ called a probability (−3.3 % at 850).
-- β₁ read as "−1.3 % per point": it is a change in log-odds; say the odds ratio.
-- Odds and probability mixed up: odds 0.25 = probability 20 %.
-- An odds ratio quoted as a risk ratio (13.0 against 11.7 for D vs A).
-- A rate without its count: 12 % "of the lowest band" is 12 loans of 100.
-- Calibration "checked" on the total, where it is exact by construction.
-- Accuracy reported for a 3 % outcome; a 50 % cut-off that flags nobody.
-- An oversampled model's PDs used without correcting the intercept.
-- Scores compared across scorecards with different PDOs.
-- The 213 loans with no score silently dropped and not mentioned.
-
----
-
-## 4. Homework <span class="badge hw">HW 9.2 — Due Day 4</span>
-
-**The Consumer PD.** Open `data/python/week9/day2_starter.ipynb`. Part 0 repeats today's model on all scored loans. Then four functions are stubs with assert cells: `sigmoid(z)`, `log_odds(p)`, `fit_logit(x, y)` (Newton's method in numpy) and `log_loss(y, p)`. Then the Consumer part: the bad rate by score band from SQL, the logistic fit on the 2 350 scored Consumer loans, the PD for scores 600 and 700, a calibration table by band, and three sentences for Nilufar in the last cell. **Kernel → Restart & Run All**, then hand in the executed notebook with the 📎 box below.
-
-Graded on (20 points): (a) all four assert cells pass after *Restart & Run All* (2 points each, 8), (b) the band table comes from SQL (3), (c) the fit, the two PDs and the calibration table are right (5), (d) the three sentences give the two PDs, how well the model is calibrated, and one caveat (4).
-
-**Check your numbers here before you hand in.**
-
-**H1.** Consumer loans, band 640–679: what is the bad rate, in %, to 2 decimals?
-
-```task
-{"id": "w09d2-hw1", "kind": "number", "answer": 4.33, "dp": 2, "unit": "%", "hint": "Today's band query with AND l.product_id = 2 in the WHERE.", "model": "28 bad of 646 = 4.33 % — higher than the 600–639 band's 4.15 %: on 2 350 loans the Consumer bands are not perfectly monotonic."}
-```
-
-**H2.** The logistic regression of bad on credit_score, Consumer loans only: what PD does it give for a score of **600**, in %, to 2 decimals?
-
-```task
-{"id": "w09d2-hw2", "kind": "number", "answer": 6.51, "dp": 2, "unit": "%", "hint": "fit_logit on the 2 350 scored Consumer loans; then sigmoid(b0 + b1 × 600).", "model": "β0 = 4.5863, β1 = −0.012083: PD(600) = 6.51 %."}
-```
-
-**H3.** And for **700**, in %, to 2 decimals?
-
-```task
-{"id": "w09d2-hw3", "kind": "number", "answer": 2.04, "dp": 2, "unit": "%", "hint": "sigmoid(b0 + b1 × 700) with the Consumer coefficients.", "model": "PD(700) = 2.04 % — 3.2 times lower than at 600 (PDO 57 points), close to the whole book's curve."}
-```
-
-**H4.** Your three sentences for Nilufar (the last cell of the notebook) — write them here too.
-
-```task
-{"id": "w09d2-hw4", "kind": "free", "min": 30, "model": "On 2 350 scored Consumer loans (73 bad, 3.1 %) a score of 600 goes bad about 6.5 % of the time and a 700 about 2.0 %, three times less; the odds halve every 57 points. By band the model is close where the counts are large (680–719: 2.1 % predicted, 1.6 % actual on 635 loans), but the 640–679 band runs hotter than predicted (4.3 % against 3.2 %). The bands below 600 have only 104 loans, so their rates are shaky, and these PDs count 'ever bad so far' on loans of different ages.", "rubric": ["gives the two PDs (about 6.5 % and 2.0 %)", "says how well the PDs come true by band, with a count", "names a band or a group where the model is off", "gives one caveat (small bands, the bad definition, loan age, approved loans only)"]}
-```
-
-### 📎 Hand in here
-
-```sqltask
-{"check": "handin-W9D2", "lesson": "W9D2", "title": "HW 9.2", "why": "Day 3 judges the score's ranking and Day 4 sets the cut-off on top of these PDs, so the Consumer fit and its calibration have to be right first.", "graded": ["all four assert cells pass after Restart & Run All (8)", "the band table comes from SQL (3)", "the fit, PD(600), PD(700) and the calibration table are right (5)", "the three sentences give the two PDs, the calibration and one caveat (4)"], "tasks": [{"id": "day2_starter.ipynb", "file": "day2_starter.ipynb", "names": ["day2_starter.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `day2_starter.ipynb` — what the page above asks for."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
-```
-
----
-
-## 5. Self-check
-
-Three questions, one at a time. Wrong? The explanation points to the part of section 1 to reread.
-
-```check
-{"id": "w09d2-sc", "questions": [
-  {"type": "single", "q": "The probability of bad is 20 %. What are the odds?", "options": ["0.20", "0.25 — one bad per four good", "0.80", "4"], "answer": 1, "explain": "odds = p / (1 − p) = 0.2 / 0.8 = 0.25 (→ section 1, 'Probability, odds and log-odds')."},
-  {"type": "number", "q": "β₁ = −0.02 per point. By what factor are the odds of bad multiplied over 50 points? (2 decimals)", "answer": 0.37, "tol": 0.005, "explain": "e^(50 × −0.02) = e^−1 = 0.37 (→ section 1, 'A coefficient as an odds ratio')."},
-  {"type": "single", "q": "On the loans it was fitted on, the model's average PD equals the bad rate exactly. What does that prove?", "options": ["The model is calibrated", "Nothing much — with an intercept it is true by construction; check calibration band by band, on new loans", "The model ranks well", "There is no class imbalance"], "answer": 1, "explain": "Calibration in total is automatic in-sample; the test is band by band and out of time (→ section 1, 'Calibration')."}
-]}
-```
-
----
-
-## 6. Company corner <span class="badge company">How a scorecard is built and kept</span>
-
-An application scorecard is not one regression in a notebook. At a lender it is a small project with a life cycle, and the risk committee — Nilufar's meeting on Friday — signs off each stage.
-
-1. **Definition.** What is "bad" (here: default or written off; often 90+ days past due within 12 months), what is the **performance window** (how long a loan is watched), and which loans are excluded (fraud, deaths, too young to judge).
-2. **Development sample.** Applications from a past period with known outcomes, plus an **out-of-time** sample held back for validation.
-3. **Characteristics.** Bureau data, application data, behaviour; each binned, with WoE and IV (today's Depth), weak or unstable ones dropped.
-4. **The model.** Logistic regression on WoE-coded characteristics, chosen for being explainable: every point on the card can be justified to a customer and a regulator.
-5. **Scaling.** Base score, base odds and PDO turn the log-odds into points.
-6. **Validation.** Ranking (Gini, KS — tomorrow), calibration (today), stability (PSI — Thursday), on the out-of-time sample.
-7. **Cut-off and policy.** Where to approve and on what terms (Thursday).
-8. **Monitoring and redevelopment.** Monthly reports; a rebuild when Gini falls or the population shifts — which is exactly Nilufar's question about a two-year-old card.
-
-```game
-{"type": "match", "id": "w09d2-g3", "title": "A scorecard's life", "pairs": [["Bad definition", "which outcome counts as bad, within which window"], ["Development sample", "past applications with known outcomes, used to fit"], ["Out-of-time sample", "a later period held back to test the model"], ["WoE binning", "turning each characteristic into bands with weights"], ["Scaling", "base score, base odds and PDO turn log-odds into points"], ["Calibration", "the PDs come true band by band"], ["Monitoring", "monthly checks of ranking, calibration and stability"], ["Redevelopment", "rebuilding the card when it no longer works"]]}
-```
-
-> 🎯 **Interview version.** *"How do you turn a logistic regression into a scorecard?"* — fit log-odds of bad on WoE-coded characteristics; choose a base score, base odds and PDO; factor = PDO / ln 2, offset = base score − factor × ln(base odds); each attribute's points are −factor × β × WoE (plus its share of the offset), and the score is the sum. Then say how you would validate it: ranking, calibration, stability, out of time.
-
-**Say it like in an interview.** *"How do you turn a logistic regression into a scorecard, and how would you know it still works?"* — answer in 3–5 sentences.
-
-```task
-{"id": "w09d2-cc", "kind": "free", "min": 30, "model": "I fit a logistic regression of the log-odds of bad on the characteristics, usually binned and WoE-coded so each band has one weight. Then I pick the scale — for example 600 points at good:bad odds of 50:1 and 20 points to double the odds — so factor = PDO / ln 2 and offset = 600 − factor × ln 50, and each attribute's points come from its coefficient times its WoE times the factor; the applicant's score is the sum. To know it still works I check ranking (Gini, KS), calibration by band and stability (PSI) on recent, out-of-time loans; on our book the score's odds halve every 54 points and the PDs are close to the actual bad rates in the big bands.", "rubric": ["logistic regression on (WoE-coded) characteristics", "the scaling: base score, base odds, PDO, factor and offset", "points per attribute add up to the score", "validation: ranking, calibration and stability, out of time"]}
-```
-
-Tomorrow: Nilufar's first question — does the scorecard still work? — measured: the confusion matrix, the ROC curve, AUC, Gini and KS, and how our two-year-old score compares with what application scorecards usually reach.
 
 ---
 

@@ -163,6 +163,7 @@ def pmf(k, n, p):
 def cdf(k, n, p):  # binomial P(X <= k)
     return sum(pmf(i, n, p) for i in range(k + 1))
 f = pd.read_csv("data/powerbi/fct_first_instalment.csv")
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
 con = sqlite3.connect("data/raw/nur.db")
 x = pd.read_sql("""
     WITH pay AS (SELECT MIN(payment_id) AS payment_id, installment_id, paid_at, amount
@@ -188,6 +189,7 @@ def mann_whitney(a, b):
     z = (abs(u - n1 * n2 / 2) - 0.5) / sd
     # U, P(a random a > a random b), p-value
     return u, u / (n1 * n2), 2 * (1 - Phi(z))
+f["year"] = pd.to_datetime(f["disbursed_at"]).dt.year
 w = f[f.year.isin([2025, 2026])].pivot_table(index="branch_name", columns="year", values="fpd30", aggfunc="mean") * 100
 d = (w[2026] - w[2025]).to_numpy()
 d = d[d != 0]
@@ -241,6 +243,8 @@ def bh(pvals):
 br = f.groupby("branch_name")["fpd30"].agg(["sum", "size"])
 k_all, n_all = f["fpd30"].sum(), len(f)
 br["p"] = [fisher(k, n - k, k_all - k, n_all - n - (k_all - k)) for k, n in zip(br["sum"], br["size"])]
+br["bonferroni"] = np.minimum(1, br["p"] * len(br))
+br["holm"], br["bh"] = holm(br["p"]), bh(br["p"])
 g = np.random.default_rng(2026)
 p_late, runs, per_month = 947 / 7099, 20_000, 150
 ka = g.binomial(per_month, p_late, size=(runs, 12)).cumsum(axis=1)

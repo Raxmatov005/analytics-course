@@ -134,6 +134,8 @@ import pandas as pd
 from statistics import NormalDist
 Phi = NormalDist().cdf
 f = pd.read_csv("data/powerbi/fct_first_instalment.csv", parse_dates=["disbursed_at"])
+f["channel"] = f["product"].map({"MICRO": "app", "BNPL": "partner"}).fillna("branch")
+f["year"] = f["disbursed_at"].dt.year
 apps = pd.read_csv("data/raw/applications.csv")
 gap = 41 / 2411 - 34 / 3263
 p0 = 75 / 5674
