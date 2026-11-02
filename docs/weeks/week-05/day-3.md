@@ -82,6 +82,23 @@ The functions you can name: `sum`, `mean`, `median`, `min`, `max`, `count`, `siz
 {"type": "cloze", "id": "w05d3-g1", "title": "Total paid per region", "text": "pay.groupby({{0}})[{{1}}].{{2}}()     # Σ amount per region", "blanks": [["\"region\""], ["\"amount\""], ["sum"]], "distractors": ["\"payment_id\"", "transform", "mean"]}
 ```
 
+**Try it.**
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    "segment": ["sme", None, "sme", None],
+    "loans": [1, 2, 3, 4]})
+g = df.groupby("segment")["loans"].sum()
+print(g.to_dict())   # {'sme': 4}
+by = df.groupby("segment", dropna=False)
+print(by["loans"].sum().to_dict())
+# the NaN group is back: 6
+```
+
+The groups add up to 4, the column to 10. When the groups do not add up to the total, look for a NaN key.
+
 ### agg — several aggregates with names
 
 **What it is.** `.agg(name=("column", "function"))` computes **several** numbers per group in one call and names each output. This is **named aggregation** (*именованная агрегация*) — `SUM(amount) AS total` with the `AS` built in.
@@ -266,6 +283,10 @@ Card carries a third of the 52 850 payments (17 612, 33.32 %); the other four me
 
 ### merge — the join, and its four how=
 
+```story
+{"id": "w05d3-s1", "title": "One key, two frames: the four how=", "min": 4, "steps": [{"say": "Two small frames: `sched`, what each instalment owes, and `got`, what was paid. The **key**, `installment_id`, is in both.", "show": {"kind": "merge", "L": {"name": "sched", "cols": ["installment_id", "total_due"], "rows": [[1, 100], [2, 100], [3, 100]]}, "R": {"name": "got", "cols": ["installment_id", "paid"], "rows": [[2, 100], [3, 60], [4, 50]]}, "on": "installment_id", "how": null, "words": {"rows": "rows", "keys": "keys found on both sides"}}}, {"say": "Keys {y|2} and {p|3} are in both frames (same colour). Key 1 is only in `sched`, key 4 only in `got` (dashed): rows with no partner."}, {"say": "`how=\"inner\"` — the **default** — keeps only the matches: 3 + 3 rows in, {y|2} out. Instalment 1 vanishes.", "show": {"how": "inner"}, "f": "sched.merge(got, on=\"installment_id\", how=\"inner\")"}, {"say": "`how=\"left\"` keeps **every** row of the left frame. Instalment 1 has no payment, so its `paid` is {m|NaN}. Payment 4 is struck out.", "show": {"how": "left"}, "f": "sched.merge(got, on=\"installment_id\", how=\"left\")"}, {"say": "`how=\"right\"` keeps every row of the **right** frame: the stray payment 4 stays, with {m|NaN} for `total_due`.", "show": {"how": "right"}, "f": "sched.merge(got, on=\"installment_id\", how=\"right\")"}, {"say": "`how=\"outer\"` keeps everything: 4 rows, NaN wherever one side is missing.", "show": {"how": "outer"}, "f": "sched.merge(got, on=\"installment_id\", how=\"outer\")"}, {"say": "Try the four buttons, then answer.", "act": [{"label": "inner", "rep": 1, "do": "how", "how": "inner"}, {"label": "left", "rep": 1, "do": "how", "how": "left"}, {"label": "right", "rep": 1, "do": "how", "how": "right"}, {"label": "outer", "rep": 1, "do": "how", "how": "outer"}], "ask": {"q": "Nilufar needs **every instalment**, paid or not, to find the unpaid ones. Which how=?", "options": ["inner", "left", "right", "outer"], "answer": 1, "why": "`sched` is the list that must stay complete — the left frame. inner would silently drop instalment 1, the unpaid one."}, "film": 1}, {"say": "On the real data `inst.merge(paid, how=\"left\")` keeps all 92 193 instalments; the unpaid ones get NaN — exactly the ones DPD is about. inner would drop them without a word.", "show": {"how": "left"}}]}
+```
+
 **What it is.** `left.merge(right, on="key", how=...)` is the **join** (*соединение*): it puts the rows of two frames side by side where the key matches. `how=` decides what happens to a row with **no partner** — exactly week 2's INNER / LEFT / RIGHT / FULL.
 
 ```pic
@@ -365,7 +386,7 @@ Every one of the 7 828 loans found its product's rate, and the average loan cost
 - Every merge: name the key on purpose, never rely on pandas finding a shared column.
 - `suffixes=` whenever both frames carry the same descriptive columns.
 
-> ⚠️ **Watch out.** A key that looks the same but has a different type does not match: `loan_id` as `int64` on one side and as text on the other raises `ValueError: You are trying to merge on int64 and object columns`. Check `dtypes` and convert one side before the merge. And pandas **matches a NaN key to a NaN key** — SQL never joins NULL to NULL — so two tables with blank keys pair every blank with every blank. Count `key.isna().sum()` on both sides first, and drop or fill the blank keys on purpose.
+> ⚠️ **Watch out.** A key that looks the same but has a different type does not match: `loan_id` as `int64` on one side and as text on the other raises `ValueError: You are trying to merge on int64 and str columns` (`object` instead of `str` in pandas before 3.0). Check `dtypes` and convert one side before the merge. And pandas **matches a NaN key to a NaN key** — SQL never joins NULL to NULL — so two tables with blank keys pair every blank with every blank. Count `key.isna().sum()` on both sides first, and drop or fill the blank keys on purpose.
 
 **Your turn.** The average annual rate over all 7 828 loans, in % with two decimals.
 
@@ -374,6 +395,10 @@ Every one of the 7 828 loans found its product's rate, and the average loan cost
 ```
 
 ### validate= and indicator= — the safety belts
+
+```story
+{"id": "w05d3-s2", "title": "Where each row came from — and rows that multiply", "min": 4, "steps": [{"say": "`indicator=True` adds a column, `_merge`: {g|both} = found a partner, {b|left_only} = only in the left frame, {y|right_only} = only in the right one.", "show": {"kind": "merge", "L": {"name": "sched", "cols": ["installment_id", "total_due"], "rows": [[1, 100], [2, 100], [3, 100]]}, "R": {"name": "got", "cols": ["installment_id", "paid"], "rows": [[2, 100], [3, 60], [4, 50]]}, "on": "installment_id", "how": "left", "words": {"rows": "rows", "keys": "keys found on both sides"}, "ind": true}, "f": "sched.merge(got, on=\"installment_id\", how=\"left\", indicator=True)"}, {"say": "With `how=\"outer\"` all three appear: instalment 1 is {b|left_only}, payment 4 is {y|right_only}.", "show": {"how": "outer"}, "f": "sched.merge(got, on=\"installment_id\", how=\"outer\", indicator=True)"}, {"say": "One filter on `_merge` replaces a hand-written anti-join.", "ask": {"q": "Which filter gives the instalments with **no** payment (the anti-join)?", "options": ["m[m[\"_merge\"] == \"both\"]", "m[m[\"_merge\"] == \"left_only\"]", "m[m[\"_merge\"] == \"right_only\"]"], "answer": 1, "why": "left_only = in `sched`, no partner in `got` — week 2's LEFT JOIN … WHERE right IS NULL."}}, {"say": "On Nur's data (the table below) {y|right_only} is 0: no payment points at an instalment that does not exist. `value_counts()` of `_merge` is a free check after every merge."}, {"say": "Now a trap. Two frames keyed by `loan_id`, and the key **repeats on both sides**: loan {b|7} has 2 payments and 3 instalments.", "show": {"kind": "merge", "L": {"name": "pay", "cols": ["loan_id", "payment_id"], "rows": [[7, "p1"], [7, "p2"], [8, "p3"]]}, "R": {"name": "inst", "cols": ["loan_id", "installment_no"], "rows": [[7, 1], [7, 2], [7, 3], [8, 1]]}, "on": "loan_id", "how": null, "ind": false, "words": {"rows": "rows", "keys": "keys found on both sides"}}}, {"say": "Merge them: every payment of loan 7 meets every instalment of loan 7 — {o|2 × 3 = 6 rows}. Loan 8: 1 × 1. 3 + 4 rows in, 7 out.", "show": {"how": "inner"}, "f": "pay.merge(inst, on=\"loan_id\")"}, {"say": "Count the pairs.", "ask": {"q": "Loan 1 has 18 payments and 24 instalments. How many rows does it get in `pay.merge(inst, on=\"loan_id\")`?", "options": ["24", "42", "432"], "answer": 2, "why": "18 × 24 = 432: every payment meets every instalment."}}, {"say": "On the whole book, 52 850 payments and 92 193 instalments become {o|858 612 rows} — and every sum after that is wrong, with no error. `validate=\"m:1\"` would have stopped it.", "f": "pay.merge(inst, on=\"loan_id\", validate=\"m:1\")  →  MergeError"}]}
+```
 
 **What it is.** Two arguments SQL never gave you. **`validate=`** states the grain you expect — `"1:1"`, `"m:1"` or `"1:m"` — and raises `MergeError` if a key is not unique on the side you promised. **`indicator=True`** adds a column `_merge` that says where each row came from: `both`, `left_only` or `right_only`.
 
@@ -590,6 +615,43 @@ Parsing finds 0 bad values — every birth date is a valid ISO date — but the 
 {"id": "w05d3-l10", "kind": "python", "starter": "import pandas as pd\nAS_OF = pd.Timestamp(\"2026-10-01\")\nc3 = pd.read_csv(\"../excel/customers_dirty.csv\")\n\n# your code: parse birth_date (coerce), keep the valid ones (not after AS_OF, not before 1920), age = days / 365.25\n", "answer": 45.7, "dp": 1, "hint": "b = pd.to_datetime(c3[\"birth_date\"], errors=\"coerce\"); ok = (b <= AS_OF) & (b >= \"1920-01-01\"); ((AS_OF - b[ok]).dt.days / 365.25).mean()", "model": "b = pd.to_datetime(c3[\"birth_date\"], errors=\"coerce\")\nok = (b <= AS_OF) & (b >= \"1920-01-01\")\nprint(ok.sum(), round(((AS_OF - b[ok]).dt.days / 365.25).mean(), 1))     # 6033 45.7\n\nWith the 7 impossible dates left in, the 1900 birthdays add 126-year-olds and the 2031 ones negative ages — the mean moves for no real reason."}
 ```
 
+> ⚠️ **Quirk: `05/09/2026` is 9 May to pandas.**
+>
+> - **You expect:** 5 September — the way dates are written in Uzbekistan and Russia.
+> - **What happens:** `pd.to_datetime("05/09/2026")` is **9 May 2026**: pandas reads the month first, the American way. In a column it takes the order from the first value, so a later `13/09/2026` stops it with *doesn't match format*.
+> - **Why:** `dayfirst=False` is the default.
+> - **Protect yourself:** give the shape: `format="%d/%m/%Y"` (or `dayfirst=True`). Then check one date you know.
+
+```python
+import pandas as pd
+
+print(pd.to_datetime("05/09/2026"))  # 9 May
+d = pd.Series(["05/09/2026", "13/09/2026"])
+good = pd.to_datetime(d, format="%d/%m/%Y")
+print(good.dt.strftime("%Y-%m-%d").tolist())
+# 5 and 13 September
+```
+
+> ⚠️ **Quirk: Excel dates can arrive as numbers.**
+>
+> - **You expect:** a date column from an Excel export to read as dates.
+> - **What happens:** a column that lost its date format arrives as numbers like 46296 — Excel's day count (week 4).
+> - **Why:** in Excel a date *is* a number; only the format made it look like a date.
+> - **Protect yourself:** convert from Excel's day 0, **30 December 1899**. From 1 January 1900 every date comes out two days late (Excel's extra 29 February 1900, week 4). Check: 46296 must be 2026-10-01.
+
+```python
+import pandas as pd
+
+serial = pd.Series([46296, 46295])
+right = pd.to_datetime(serial, unit="D",
+                       origin="1899-12-30")
+wrong = pd.to_datetime(serial, unit="D",
+                       origin="1900-01-01")
+print(right.dt.strftime("%Y-%m-%d").tolist())
+print(wrong.dt.strftime("%Y-%m-%d").tolist())
+# the second line: two days late
+```
+
 ### Duplicates — find, look, then drop
 
 **What it is.** `duplicated(subset=, keep=)` marks the rows that repeat an earlier row on the **key** columns of `subset`. `drop_duplicates(subset=, keep=)` removes them. `keep="first"` keeps the first row of each group **in the current order** — so the sort before it decides which row survives.
@@ -699,10 +761,10 @@ inst["total"] = inst["principal_due"] + inst["interest_due"]
 inst["total"] = inst.apply(lambda r: r["principal_due"] + r["interest_due"], axis=1)
 # fine for a label function on one column
 loans["bucket_fn"] = loans["dpd"].apply(dpd_bucket)
-(inst["total"] == inst["total_due"]).all(), (loans["bucket_fn"] == loans["bucket"].astype(str)).all()
+print((inst["total"] == inst["total_due"]).all(), (loans["bucket_fn"] == loans["bucket"].astype(str)).all())
 ```
 
-The box shows `(True, True)`: both ways rebuild `total_due` on all 92 193 instalments, and the label function gives the file's bucket for all 7 828 loans.
+The box prints `True True`: both ways rebuild `total_due` on all 92 193 instalments, and the label function gives the file's bucket for all 7 828 loans.
 
 | | vectorised | `apply` on one column | `apply(axis=1)` |
 |---|---|---|---|
@@ -1084,7 +1146,8 @@ dpd = (AS_OF - late.groupby("loan_id")["due_date"].min()).dt.days.rename("dpd")
 loans = (pd.read_csv("../excel/loans_status.csv")[["loan_id"]]
          .merge(dpd, on="loan_id", how="left").fillna({"dpd": 0}).astype({"dpd": int}))
 loans["bucket"] = pd.cut(loans["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
-(loans["dpd"] > 0).sum(), loans["bucket"].value_counts().sort_index()
+print((loans["dpd"] > 0).sum())
+loans["bucket"].value_counts().sort_index()
 ```
 
 `(loans.dpd > 0).sum()` → **399**; `loans.bucket.value_counts().sort_index()` → **7 429 / 124 / 25 / 16 / 234**; merged against `loans_status.csv`, `(dpd == dpd_sql).all()` → **True** for all 7 828 loans. Same definition, same rows, third tool, same number — which is the only acceptable outcome.

@@ -6,6 +6,7 @@
 - [Как сдавать домашние задания](ru/homework/how-to-submit.md)
 - [Пробный день: попробуйте распорядок](ru/practice.md)
 - [SQL-песочница](ru/playground.md)
+- [Подвохи: SQL, Excel, Python](ru/quirks.md)
 - [ИИ-помощник: спросите о чём угодно](ru/ai-helper.md)
 
 - **Неделя 0 — Диагностика**

@@ -181,6 +181,23 @@ ORDER BY product_id, principal DESC;
 
 > 🎬 **Didn't get ORDER BY?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=2984&end=3512)
 
+> ⚠️ **Quirk: where do the empty cells go?**
+>
+> - **You expect:** the empty cells (NULL) at the same end in every database.
+> - **What happens:** SQLite and SQL Server put them first with `ASC` and last with `DESC`; PostgreSQL and Oracle do the opposite. No error — just a different first row.
+> - **Why:** the SQL standard does not say where NULL sorts, so each database chose.
+> - **Protect yourself:** say it in the query: `NULLS FIRST` or `NULLS LAST` after the column (SQLite, PostgreSQL, Oracle). SQL Server does not know these words; there you sort by a `CASE` first (week 2).
+
+```sql
+-- no income (356 rows): at the end
+SELECT customer_id, monthly_income
+FROM customers
+ORDER BY monthly_income NULLS LAST
+LIMIT 5;
+```
+
+The five lowest incomes, from 2 504 499 soum. Delete `NULLS LAST` and run again: all five rows are empty incomes.
+
 ### LIMIT and TOP — only the first N rows
 
 **What it is.** **LIMIT** returns at most N rows. It goes at the very end of the query. SQL Server writes the same thing as **TOP N** right after `SELECT`. This is the one place this week where the two engines spell a query differently.
@@ -391,6 +408,17 @@ The box shows the last count: 13 612 applications have a score. Run the first li
 {"type": "bug", "id": "w01d2-g2", "title": "Find the bug", "q": "Madina wants the Tashkent customers with no recorded income. This query runs, returns 0 — and is wrong. Tap the line.", "code": "SELECT COUNT(*)\nFROM customers\nWHERE region = 'Tashkent'\n  AND monthly_income = NULL;", "answer": [3], "why": "= NULL is never true, so the count is 0 every time. Write AND monthly_income IS NULL."}
 ```
 
+**Try it.** Each column compares with NULL in another way:
+
+```sql
+SELECT NULL = NULL  AS equals,
+       NULL <> NULL AS not_equals,
+       NULL IS NULL AS is_null;
+-- NULL · NULL · 1
+```
+
+`equals` and `not_equals` are both NULL: a comparison with an unknown is neither true nor false. `WHERE` keeps a row only when its condition is true, so both would lose every row.
+
 ### AND, OR, NOT — combining conditions, with brackets
 
 ```story
@@ -476,6 +504,22 @@ SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_a
 ```task
 {"id": "w01d2-l11", "kind": "choice", "options": ["applied_at >= '2025-01-01' AND applied_at < '2026-01-01'", "applied_at BETWEEN '2025-01-01' AND '2025-12-31'", "applied_at = '2025'", "applied_at LIKE 2025"], "answer": 0, "explain": "The half-open range keeps every moment of 31 December. BETWEEN … '2025-12-31' stops at midnight, so the applications made later that day fall out; = '2025' matches nothing."}
 ```
+
+> ⚠️ **Quirk: a typo in double quotes becomes text.**
+>
+> - **You expect:** `SELECT "princpal" FROM loans` (a typo of `principal`) to stop with *no such column*.
+> - **What happens:** SQLite returns the word `princpal` on every row, and no error.
+> - **Why:** double quotes mark a **name**. When no column has that name, SQLite guesses you meant text — an old habit it keeps so that old code still runs. SQL Server and PostgreSQL stop with an error.
+> - **Protect yourself:** write column names without quotes, and text values in **single** quotes.
+
+```sql
+SELECT "status", "princpal", 'status'
+FROM loans
+LIMIT 3;
+-- a column · a typo read as text · text
+```
+
+The first column holds each loan's real status; the other two repeat one word on every row. A column of one repeated word is the sign of this quirk.
 
 ### Putting it together
 

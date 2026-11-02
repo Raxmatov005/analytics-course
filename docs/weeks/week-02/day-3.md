@@ -75,6 +75,17 @@ Customer 1 is *Eldor Olimov*. The `' '` in the middle is a text of one space; wi
 
 > 🎬 **Didn't get CONCAT (joining texts)?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=17578&end=17764)
 
+**Try it.**
+
+```sql
+SELECT 'Eldor' || ' ' || NULL AS full_name,
+       'a' + 'b' AS plus_on_text,
+       'Loan ' || 42 AS label;
+-- NULL · 0 · 'Loan 42'
+```
+
+One missing last name empties the whole `full_name`. Day 4's `COALESCE(last_name, '')` keeps the first name.
+
 ### UPPER and LOWER — one case for every value
 
 **What it is.** **UPPER** turns every letter into a capital; **LOWER** into a small letter. Other characters stay as they are. Same spelling on both engines.
@@ -307,6 +318,22 @@ The average SME loan is 308.7 m UZS; the average Micro loan is 2.7 m. Divided by
 
 > 🎬 **Didn't get ROUND?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=19118&end=19298)
 
+> ⚠️ **Quirk: ROUND with a minus, and a half that is not a half.**
+>
+> - **You expect:** `ROUND(1234567, -3)` to give 1 235 000 (to thousands, as in SQL Server and Excel), and `ROUND(2.675, 2)` to give 2.68.
+> - **What happens:** SQLite returns 1 234 567 — it treats a negative number of digits as 0, with no error. And `ROUND(2.675, 2)` is 2.67.
+> - **Why:** SQLite's `ROUND` rounds only to the right of the point. And 2.675 is stored in binary as 2.67499999…, just under the half, so it goes down — Python does the same (week 5).
+> - **Protect yourself:** to round to thousands, divide first: `ROUND(x / 1000.0) * 1000`. Keep money in whole soum and round once, at the end.
+
+```sql
+SELECT ROUND(1234567, -3) AS minus_three,
+       ROUND(1234567 / 1000.0) * 1000
+         AS thousands,
+       ROUND(2.5) AS half,
+       ROUND(2.675, 2) AS not_a_half;
+-- 1234567 (no change) · 1235000 · 3 · 2.67
+```
+
 ### Integer and decimal division
 
 **What it is.** Both engines divide two whole numbers **as whole numbers**: `7917 / 14000` is **0**. The fraction is cut off, silently. If one side is a decimal number, the result is a decimal.
@@ -365,6 +392,18 @@ FROM loans;
 ```
 
 > 🎬 **Didn't get CAST?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=23440&end=23737)
+
+**Try it.** The same two values, compared as text and as numbers:
+
+```sql
+SELECT '10' < '9' AS as_text,
+       CAST('10' AS INTEGER) < 9
+         AS as_numbers,
+       '10' = 10 AS text_vs_number;
+-- 1 · 0 · 0
+```
+
+As text, `'10'` is smaller than `'9'`, because the first characters decide. That is why a column of codes stored as text sorts 10, 100, 2, 9 — and why its `MAX` can be `'9'`. CAST the column before you sort, compare or take a `MAX`.
 
 ### ABS — the size of a number without its sign
 

@@ -93,6 +93,16 @@ WHERE customer_id IN (SELECT customer_id              -- one column,
 
 > 🎬 **Didn't get IN with a subquery?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=49138&end=49648)
 
+**Try it.** The same test, with and without a NULL in the list:
+
+```sql
+SELECT 3 NOT IN (1, 2) AS without_null,
+       3 NOT IN (1, 2, NULL) AS with_null;
+-- 1 (true) · NULL (unknown)
+```
+
+3 is clearly neither 1 nor 2, yet one NULL in the list turns the answer into *unknown*. In a `WHERE`, every row would be lost.
+
 ### EXISTS and NOT EXISTS — is there at least one row?
 
 **What it is.** `EXISTS (subquery)` is true when the subquery returns **at least one row**; `NOT EXISTS` when it returns none. What the rows contain does not matter, so the subquery usually says `SELECT 1`. The subquery mentions the outer row (`a.customer_id = c.customer_id`), so it is checked once per outer row.

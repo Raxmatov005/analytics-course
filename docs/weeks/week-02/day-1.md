@@ -327,6 +327,20 @@ ORDER BY p.name, b.branch_name;                              -- 5 × 10 = 50 row
 
 > 🎬 **Didn't get CROSS JOIN?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=13416&end=13614)
 
+> ⚠️ **Quirk: a comma between two tables is a join.**
+>
+> - **You expect:** `FROM loans l, products p` to be a plain list of tables, or an error.
+> - **What happens:** it is a join with no `ON` — every loan with every product, 7 828 × 5 = 39 140 rows. Its condition goes in `WHERE`: `WHERE l.product_id = p.product_id` makes it an inner join again.
+> - **Why:** this is how joins were written before `JOIN … ON` arrived in 1992, and every database still accepts it. You will meet it in old reports.
+> - **Protect yourself:** write `JOIN … ON` yourself. When you read a comma join, find its condition in `WHERE` first; no condition means a cross join.
+
+```sql
+SELECT COUNT(*) AS pairs
+FROM loans l, products p;   -- 39 140
+```
+
+Add `WHERE l.product_id = p.product_id` on a new line and run again: 7 828, one row per loan — the same as `JOIN products p ON p.product_id = l.product_id`.
+
 ### Self-join — a table joined to itself
 
 **What it is.** A **self-join** joins a table to **another copy of itself**. There is no special keyword: you name the same table twice with two aliases, and the `ON` compares two rows of that one table.
@@ -356,6 +370,10 @@ The second condition does two jobs: `b.customer_id > a.customer_id` stops a row 
 ```
 
 ### Many-to-one and one-to-many — what happens to your row count
+
+```story
+{"id": "w02d1-s1", "title": "One to many: why the total grew", "min": 3, "steps": [{"say": "Two loans and their instalments. Loans 3 and 6 are 3-month loans: three instalment rows each, one colour per loan.", "show": {"kind": "merge", "L": {"name": "loans", "cols": ["loan_id", "principal"], "rows": [[3, "1 590 000"], [6, "4 720 000"]]}, "R": {"name": "installments", "cols": ["loan_id", "installment_no"], "rows": [[3, 1], [3, 2], [3, 3], [6, 1], [6, 2], [6, 3]]}, "on": "loan_id", "how": null, "words": {"nan": "NULL", "rows": "rows", "keys": "loans found on both sides"}, "code": "JOIN installments ON loan_id"}}, {"say": "Join them on `loan_id`: each loan meets **each** of its instalments. 2 loan rows become {o|6 rows}, and every `principal` is copied three times.", "show": {"how": "inner"}}, {"say": "Now add up the loans' money on the joined rows.", "ask": {"q": "`SUM(principal)` over the joined rows: what comes out?", "options": ["1 590 000 + 4 720 000 = 6 310 000", "Three times that: 18 930 000"], "answer": 1, "why": "Each principal sits on three rows, so the sum counts each loan three times — and no error appears."}}, {"say": "One row is now an **instalment**, not a loan: the [[grain|what one row of a table stands for]] changed. Sum loan columns **before** the join, or count loans with `COUNT(DISTINCT loan_id)`."}, {"say": "Worse: two **many** tables. Loan 3 has 3 payments and 3 instalments — the key `loan_id` repeats on both sides.", "show": {"kind": "merge", "L": {"name": "payments", "cols": ["loan_id", "payment_id"], "rows": [[3, 28], [3, 29], [3, 30]]}, "R": {"name": "installments", "cols": ["loan_id", "installment_no"], "rows": [[3, 1], [3, 2], [3, 3]]}, "on": "loan_id", "how": null, "words": {"nan": "NULL", "rows": "rows", "keys": "loans found on both sides"}, "code": "JOIN installments ON loan_id"}}, {"say": "Every payment meets every instalment: {o|3 × 3 = 9 rows} for one loan. Payment 28 now sits next to instalments 2 and 3, which it never paid.", "show": {"how": "inner"}}, {"say": "The rule of thumb for every join you write.", "ask": {"q": "Before a join, which question saves you?", "options": ["Is the key one row or many on each side?", "Is the key a number or text?"], "answer": 0, "why": "one × many = many rows (the grain changes); many × many = every pair (a mess). Know both sides' grain first."}}]}
+```
 
 **What it is.** The **direction of the relationship** decides how many rows a join returns.
 

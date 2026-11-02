@@ -568,10 +568,10 @@ into host (an SVG via ALStory.svg) and its read-out into info. Bads are orange, 
   /* ---------- rows: one labelled bar (or interval) per row ---------- */
   function rows(host, info) {
     var o = {};
-    function paint() {
+    function paint(LXm, RXm) {   // LXm, RXm: the edges measured on the first draw (a phone draws the words larger)
       var R0 = o.rows || [], labels = o.labels || [], n = R0.length, Tp = 14, rh = 28, s = '', dp = o.dp != null ? o.dp : 2, ml = 0;
       labels.forEach(function (l) { ml = Math.max(ml, String(l == null ? '' : l).length); });
-      var LX = clamp(ml * 6.1 + 14, 110, 236), RX = 420;
+      var LX = LXm || clamp(ml * 6.1 + 14, 110, 236), RX = RXm || 420;
       var mx = 0; R0.forEach(function (r) { mx = Math.max(mx, r[0] || 0, r[2] || 0); });
       var lo = o.lo != null ? o.lo : 0, hi = o.hi != null ? o.hi : mx * 1.1 || 1;
       var x = function (v) { return LX + (clamp(v, lo, hi) - lo) / (hi - lo) * (RX - LX); };
@@ -580,7 +580,7 @@ into host (an SVG via ALStory.svg) and its read-out into info. Bads are orange, 
       if (o.ref) s += box(x(o.ref[0]), Tp - 4, x(o.ref[1]) - x(o.ref[0]), B - Tp + 4, 'sy-hband') + txt((x(o.ref[0]) + x(o.ref[1])) / 2, B + 28, (o.words && o.words.ref) || '', 'sy-ax sy-pl', 'middle');
       R0.forEach(function (r, i) {
         var yc = Tp + i * rh + rh / 2, fill = r[3] || 'b', hot = o.hot === i;
-        s += txt(LX - 8, yc + 4, labels[i] == null ? '' : String(labels[i]), 'sy-ax' + (hot ? ' sy7-hot' : ''), 'end');
+        s += txt(LX - 8, yc + 4, labels[i] == null ? '' : String(labels[i]), 'sy-ax sy7-rl' + (hot ? ' sy7-hot' : ''), 'end');
         if (r[1] != null && r[2] != null) {
           s += ln(x(r[1]), yc, x(r[2]), yc, 'sy-iv') + ln(x(r[1]), yc - 5, x(r[1]), yc + 5, 'sy-iv') + ln(x(r[2]), yc - 5, x(r[2]), yc + 5, 'sy-iv');
           var fi = function (v) { return o.dpi != null ? num(v, o.dpi) : f(v); };
@@ -588,13 +588,23 @@ into host (an SVG via ALStory.svg) and its read-out into info. Bads are orange, 
         } else {
           s += box(x(lo), yc - 8, x(r[0]) - x(lo), 16, 'sy7-f-' + fill, 3);
           if (hot) s += box(x(lo) - 2, yc - 10, x(r[0]) - x(lo) + 4, 20, 'sy7-pick', 4);
-          s += txt(x(r[0]) + 6, yc + 4, f(r[0]), 'sy-ax ' + (hot ? 'sy7-hot' : 'sy7-v'), 'start');
+          s += txt(x(r[0]) + 6, yc + 4, f(r[0]), 'sy-ax sy7-rv ' + (hot ? 'sy7-hot' : 'sy7-v'), 'start');
         }
       });
       s += ln(LX, B, RX, B, 'sy-axl');
       for (var k = 0; k <= 4; k++) { var tv = lo + (hi - lo) * k / 4; s += txt(x(tv), B + 14, f(tv), 'sy-ax sy7-sm', 'middle'); }
       host.innerHTML = svg(480, B + (o.ref ? 36 : 22), s);
       info.innerHTML = o.legend ? legend(o.legend) : '';
+      if (!LXm) {   // measure the drawn words: room for the longest label on the left and the longest value on the right
+        var lw = 0, vw = 0;
+        try {
+          host.querySelectorAll('.sy7-rl').forEach(function (t) { lw = Math.max(lw, t.getComputedTextLength()); });
+          host.querySelectorAll('.sy7-rv').forEach(function (t) { vw = Math.max(vw, t.getComputedTextLength()); });
+        } catch (e) { return; }
+        if (!lw) return;
+        var nl = clamp(lw + 14, 60, 300), nr = Math.min(420, 474 - vw - 6);
+        if (Math.abs(nl - LX) > 3 || nr < RX) paint(nl, Math.max(nl + 60, nr));
+      }
     }
     return { set: function (nx) { o = nx; paint(); }, act: function () { /* nothing to run */ } };
   }

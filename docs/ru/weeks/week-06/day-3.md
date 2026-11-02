@@ -735,7 +735,7 @@ sa = apps.loc[apps["channel"] == "app", "credit_score"].dropna()
 # заявители, филиалы
 sb = apps.loc[apps["channel"] == "branch", "credit_score"].dropna()
 # 661.0 659.6 [1.233, 0.218]
-print(round(sa.mean(), 1), round(sb.mean(), 1), [round(v, 3) for v in welch_t(sa, sb)])
+print(round(sa.mean(), 1), round(sb.mean(), 1), [round(float(v), 3) for v in welch_t(sa, sb)])
 
 loans = pd.read_csv("data/raw/loans.csv").merge(apps[["application_id", "channel", "credit_score"]], on="application_id")
 # одобренные кредиты, приложение
@@ -743,7 +743,7 @@ la = loans.loc[loans["channel"] == "app", "credit_score"].dropna()
 # одобренные кредиты, филиалы
 lb = loans.loc[loans["channel"] == "branch", "credit_score"].dropna()
 # 683.2 679.8 [2.482, 0.013]
-print(round(la.mean(), 1), round(lb.mean(), 1), [round(v, 3) for v in welch_t(la, lb)])
+print(round(la.mean(), 1), round(lb.mean(), 1), [round(float(v), 3) for v in welch_t(la, lb)])
 # scipy: stats.ttest_ind(sa, sb, equal_var=False)   Excel: =T.TEST(r1, r2, 2, 3)
 # (2 = двусторонний, 3 = неравные дисперсии)
 ```
@@ -875,10 +875,12 @@ print(round(z, 3), round(p, 4))  # 2.147 0.0318
 
 ```python
 from statsmodels.stats.proportion import proportions_ztest, confint_proportions_2indep
-# (2.147, 0.0318)
-print(proportions_ztest([41, 34], [2411, 3263]))
+z, p = proportions_ztest([41, 34], [2411, 3263])
+# 2.147 0.0318
+print(round(z, 3), round(p, 4))
+lo, hi = confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb")
 # разность: от +0.05 до +1.33 пункта
-print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))
+print(round(100 * lo, 2), round(100 * hi, 2))
 ```
 
 В Excel — одна строка на канал и четыре ячейки с формулами:

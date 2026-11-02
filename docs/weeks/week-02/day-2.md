@@ -68,6 +68,22 @@ FROM loans;
 
 > 🎬 **Didn't get COUNT, SUM, AVG, MIN and MAX?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=31420&end=31706)
 
+> ⚠️ **Quirk: `COUNT(DISTINCT a, b)` is an error in SQLite.**
+>
+> - **You expect:** the number of different (customer, product) pairs.
+> - **What happens:** *wrong number of arguments to function COUNT()*. SQLite's `COUNT(DISTINCT …)` takes exactly one column. (MySQL accepts two; SQL Server does not.)
+> - **Protect yourself:** make one value out of the pair — `customer_id || '-' || product_id` (`||` glues texts; tomorrow's lesson) — or count the rows of a `SELECT DISTINCT a, b` (week 3). Keep a separator between the parts: without it, 1 and 23 glue into the same `123` as 12 and 3.
+
+```sql
+SELECT COUNT(DISTINCT
+         customer_id || '-' || product_id)
+       AS pairs
+FROM loans;
+-- 6 602; then try two columns: the error
+```
+
+6 602 different customer–product pairs among the 7 828 loans: some people took the same product more than once.
+
 ### SUM — add a column up
 
 **What it is.** **SUM** adds up the values of a numeric column over the rows that are left after `WHERE`. NULL values are skipped.
@@ -95,6 +111,18 @@ WHERE status = 'active';
 ```task
 {"id": "w02d2-l2", "kind": "number", "answer": 125703885377, "dp": 0, "unit": "UZS", "hint": "SUM(amount) FROM payments with the date filter in WHERE.", "model": "125 703 885 377 UZS (125.7 bn) in 25 146 payments."}
 ```
+
+**Try it.** No loan has the status `'frozen'`, so both aggregates run over zero rows:
+
+```sql
+SELECT SUM(principal) AS total,
+       COUNT(*) AS loans
+FROM loans
+WHERE status = 'frozen';
+-- NULL · 0
+```
+
+`total` comes back empty, `loans` is 0. An empty tile next to a 0 on a dashboard is this quirk; Day 4's `COALESCE(SUM(principal), 0)` shows 0 instead.
 
 ### AVG — the average, and the whole-number trap
 
@@ -207,6 +235,18 @@ The rule behind most beginner errors: **every column in `SELECT` is either insid
 
 > 🎬 **Didn't get GROUP BY?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=3514&end=4010)
 
+**Try it.** SQLite runs the query that SQL Server refuses:
+
+```sql
+SELECT risk_grade, loan_id,
+       COUNT(*) AS loans
+FROM loans
+GROUP BY risk_grade;
+-- each loan_id: just one of the grade's
+```
+
+Four rows, each with *some* `loan_id`. Nothing says which loan it is or why — that is the danger: the result looks complete.
+
 ### GROUP BY two columns — one row per combination
 
 **What it is.** With two columns in `GROUP BY`, a group is a **combination** of values. The result has one row for each combination that occurs in the data.
@@ -255,6 +295,10 @@ ORDER BY month, disbursed DESC;  -- 50 rows: 10 months × 5 products
 ```
 
 ### WHERE vs HAVING — filter rows, or filter groups
+
+```story
+{"id": "w02d2-s1", "title": "WHERE asks each row, HAVING asks each group", "min": 3, "steps": [{"say": "Eighteen loans in three branches, one dot each. {b|Blue} = active, {m|grey} = closed.", "show": {"kind": "dots", "blocks": [6, 6, 6], "labels": ["Andijan", "Bukhara", "Fergana"], "groups": [[4, "b", "Aa"], [2, "m", "Ac"], [2, "b", "Ba"], [4, "m", "Bc"], [5, "b", "Ca"], [1, "m", "Cc"]], "legend": [["b", "active"], ["m", "closed"]]}}, {"say": "`WHERE` asks **each row** one question: is it active? The grey loans are out before any counting starts.", "show": {"fade": ["Ac", "Bc", "Cc"]}, "f": "WHERE status = 'active'"}, {"say": "`GROUP BY branch` folds what is left into one row per branch, and `COUNT(*)` counts each: Andijan {b|4}, Bukhara {b|2}, Fergana {b|5}.", "show": {"box": ["Aa", "Ba", "Ca"]}, "f": "GROUP BY branch → COUNT(*): 4 · 2 · 5"}, {"say": "The question is now about whole branches.", "ask": {"q": "Keep only the branches with more than 3 active loans. Which line?", "options": ["WHERE COUNT(*) > 3", "HAVING COUNT(*) > 3"], "answer": 1, "why": "A count belongs to a group, and WHERE runs before the groups exist. HAVING runs after GROUP BY."}}, {"say": "`HAVING` asks **each group**: Bukhara's 2 is not more than 3, so the whole group goes. The framed groups, Andijan and Fergana, stay.", "show": {"fade": ["Ac", "Bc", "Cc", "Ba"], "box": ["Aa", "Ca"]}, "f": "HAVING COUNT(*) > 3 → Andijan 4 · Fergana 5"}, {"say": "Follow the rows in order: first the rows, then the groups.", "ask": {"q": "A fourth branch has 3 active and 10 closed loans. Does it pass this query?", "options": ["Yes: 13 loans is more than 3", "No: WHERE left 3 rows, and 3 is not more than 3"], "answer": 1, "why": "WHERE removed the 10 closed loans first; HAVING only ever sees the 3 rows that are left."}}]}
+```
 
 **What it is.** `WHERE` filters **rows before** grouping. **HAVING** filters **groups after** the aggregates are computed. "Active loans, branches with more than 300 of them" needs both.
 

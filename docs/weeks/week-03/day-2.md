@@ -62,6 +62,10 @@ Seven rows: customer 1893 has seven loans, numbered in the order they were paid 
 
 ### RANK and DENSE_RANK — what happens on a tie
 
+```story
+{"id": "w03d2-s1", "title": "A tie: three ways to number rows", "min": 3, "steps": [{"say": "Five loans, biggest first. Number them one row at a time with three functions. Row 1: all three say {y|1}.", "show": {"kind": "frame", "rank": true, "vals": [900, 700, 700, 500, 400], "keys": [101, 102, 103, 104, 105], "cur": 0, "fill": "upto", "labels": {"cols": ["loan", "principal"]}, "words": {"row": "row"}}, "f": "ORDER BY principal DESC"}, {"say": "Row 2, 700: second place everywhere — {y|2 · 2 · 2}.", "show": {"cur": 1}}, {"say": "The next row has the same principal.", "ask": {"q": "Row 3 is **also** 700 — a tie. What does `RANK` give it?", "options": ["2", "3"], "answer": 0, "why": "Equal values share a rank: both 700s are 2."}}, {"say": "`ROW_NUMBER` never ties: it goes on to {y|3}. `RANK` and `DENSE_RANK` both give the tie {y|2}.", "show": {"cur": 2}}, {"say": "Row 4, 500 — the difference. `RANK` jumps to {y|4}: three rows are ahead of it. `DENSE_RANK` says {y|3}: two **values** are ahead.", "show": {"cur": 3}}, {"say": "Row 5: 5 · 5 · 4. `ROW_NUMBER`: always 1, 2, 3 … `RANK`: like a race, a gap after a tie. `DENSE_RANK`: no gaps.", "show": {"cur": 4}}, {"say": "Pick the numbering that matches the question.", "ask": {"q": "Nilufar wants 'the loans with the three biggest **amounts**', ties included. Which filter?", "options": ["ROW_NUMBER() <= 3", "RANK() <= 3", "DENSE_RANK() <= 3"], "answer": 2, "why": "Three amounts — 900, 700, 500 — are four loans. DENSE_RANK counts values; RANK() <= 3 would stop at the two 700s."}}, {"say": "When you need exactly **one** row per group — the latest loan of each customer — use `ROW_NUMBER` with a tiebreaker: `ORDER BY disbursed_at DESC, loan_id DESC`."}]}
+```
+
 **What it is.** `RANK()` and `DENSE_RANK()` number rows like `ROW_NUMBER`, but rows with the **same value** (a tie, *равные значения*) get the **same number**. After a tie `RANK` skips numbers; `DENSE_RANK` does not.
 
 ```pic

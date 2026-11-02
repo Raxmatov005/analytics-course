@@ -450,6 +450,19 @@ You do not need to write M. You need to read it enough to see what a step does. 
 {"type": "sort", "id": "w04d3-g3", "title": "Discover, or deliver?", "q": "Which tools leave a re-runnable recipe behind, and which are a one-time edit?", "groups": {"One-time edit — fine for a look, never for Monday's file": ["Find & Replace (Ctrl+H)", "Flash Fill (Ctrl+E)", "the Remove Duplicates button", "Text to Columns on the raw sheet"], "Recorded — re-runs on the next file": ["Power Query: Replace Values step", "Power Query: Remove Duplicates step", "=TRIM(…) on a clean tab", "Sheets: QUERY over the raw tab"]}}
 ```
 
+> ⚠️ **Quirk: Excel changes some values the moment it opens a file.**
+>
+> - **You expect:** a CSV to open exactly as it was written.
+> - **What happens:** a code `00123` becomes the number 123; a 20-digit bank account keeps only its first 15 digits; a code like `1-2` turns into a date.
+> - **Why:** Excel guesses a type for every cell, and it stores a number with at most 15 significant digits. The digits after the 15th become zeros and are gone for good — saving the file does not bring them back.
+> - **Protect yourself:** never double-click such a file. In **Data → From Text/CSV → Transform Data**, set the id, account and code columns to **Text** before *Close & Load*. Microsoft 365 also lets you switch these guesses off: **File → Options → Data → Automatic data conversion**.
+
+| In the file | Opened by a double-click | Loaded as Text |
+|---|---|---|
+| `00123` | 123 | 00123 |
+| `20208000900123456789` | 2.02081E+19 — it holds 20208000900123400000 | 20208000900123456789 |
+| `1-2` | a date: 2 January or 1 February, by your Windows settings | 1-2 |
+
 ### Change Type — the first step after the headers
 
 **What it is.** **Change Type** sets the type of each column: Whole Number, Decimal, Date, Text. It is SQL's `CAST`. Power Query guesses types on import; you check every guess.

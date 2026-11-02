@@ -316,7 +316,8 @@ b["share_pct"] = (100 * b["outstanding"] / b["outstanding"].sum()).round(2)
 par30 = st.loc[st["dpd"] > 30, "outstanding"].sum() / st["outstanding"].sum()
 # 2.55 %
 npl90 = st.loc[st["dpd"] > 90, "outstanding"].sum() / st["outstanding"].sum()
-b, round(100 * par30, 2), round(100 * npl90, 2)
+print(round(100 * par30, 2), round(100 * npl90, 2))
+b
 ```
 
 FPD30: Day 3's pivot — 91 / 7 099 = **1.28 %**, app 1.70 · partner 1.12 · branch 1.04 %, grades A 0.60 · B 0.97 · C 2.16 · D 2.23. Roll rates: Day 4's `read_sql` matrix or two `dpd_per_loan` snapshots merged `how="outer"` — 1–30 → 31–60 **19.5 %** (25 of 128), cure 75.8 %, 31–60 → 61–90 69.6 %, 61–90 → 90+ 100 %, 117 new entries. Vintage: the Day-4 heatmap — 2025-10 at 6.91 % (MOB 3) / 11.52 % (MOB 6) vs pooled 2025 4.35 / 7.46. Charts: figures 3, 4, 5.
@@ -335,7 +336,7 @@ FPD30: Day 3's pivot — 91 / 7 099 = **1.28 %**, app 1.70 · partner 1.12 · br
 inc = pd.read_sql("SELECT customer_id, monthly_income FROM customers", con)
 lc = L.merge(inc, on="customer_id", how="left", validate="m:1")
 lc["band"] = (pd.cut(lc["monthly_income"], [0, 5e6, 10e6, 20e6, np.inf], labels=["<5m", "5-10m", "10-20m", "20m+"], right=False)
-                .astype(str).replace("nan", "unknown"))
+                .astype(str).fillna("unknown"))
 ct = pd.crosstab(lc["band"], lc["risk_grade"])
 ct["loans"] = ct.sum(axis=1); ct["cd_share_pct"] = (100 * (ct["C"] + ct["D"]) / ct["loans"]).round(1)
 ct["avg_ticket"] = lc.groupby("band")["principal"].mean().round()
@@ -346,7 +347,7 @@ ct
 
 Concentration (pandas): top-3 branches 39.1 % of outstanding; the top tenth of the 2 535 borrowers with a balance hold 49.2 % — week 3's `NTILE(10)` puts 254 of them in the first tile, so take `head(math.ceil(len(s) / 10))`; `head(len(s) // 10)` takes 253 and prints 49.1 %, a mismatch to explain in the match line. Chart: a heatmap of the crosstab or a stacked bar of grade shares per band.
 
-**Match:** identical to week 3 S10 — because `right=False` makes `pd.cut` read `[5m, 10m)` exactly as `WHEN monthly_income < 10000000`; with the default right-closed intervals a customer earning exactly 5 000 000 moves bands and the counts drift by a few. **Finding.** Income does not predict grade: C+D is 32–35 % in every band including the 466 "unknown" loans, which pandas shows only because `.astype(str).replace("nan", "unknown")` turns the NaN band into a row — `pd.cut` alone would have dropped it silently from the crosstab, the week-2 NULL-band lesson one more time.
+**Match:** identical to week 3 S10 — because `right=False` makes `pd.cut` read `[5m, 10m)` exactly as `WHEN monthly_income < 10000000`; with the default right-closed intervals a customer earning exactly 5 000 000 moves bands and the counts drift by a few. **Finding.** Income does not predict grade: C+D is 32–35 % in every band including the 466 "unknown" loans, which pandas shows only because `.astype(str).fillna("unknown")` turns the NaN band into a row (pandas 3's `astype(str)` keeps a blank as NaN; pandas 2 wrote the text `"nan"`, so older code says `.replace("nan", "unknown")`) — `pd.cut` alone would have dropped it silently from the crosstab, the week-2 NULL-band lesson one more time.
 
 </details>
 

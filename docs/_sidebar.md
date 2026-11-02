@@ -6,6 +6,7 @@
 - [How to submit homework](homework/how-to-submit.md)
 - [Practice day: try the routine](practice.md)
 - [SQL playground](playground.md)
+- [Quirks: SQL, Excel, Python](quirks.md)
 - [AI helper: ask about anything](ai-helper.md)
 
 - **Week 0 — Diagnostic**

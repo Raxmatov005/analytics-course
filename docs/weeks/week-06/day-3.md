@@ -734,7 +734,7 @@ sa = apps.loc[apps["channel"] == "app", "credit_score"].dropna()
 # applicants, branch
 sb = apps.loc[apps["channel"] == "branch", "credit_score"].dropna()
 # 661.0 659.6 [1.233, 0.218]
-print(round(sa.mean(), 1), round(sb.mean(), 1), [round(v, 3) for v in welch_t(sa, sb)])
+print(round(sa.mean(), 1), round(sb.mean(), 1), [round(float(v), 3) for v in welch_t(sa, sb)])
 
 loans = pd.read_csv("data/raw/loans.csv").merge(apps[["application_id", "channel", "credit_score"]], on="application_id")
 # approved loans, app
@@ -742,7 +742,7 @@ la = loans.loc[loans["channel"] == "app", "credit_score"].dropna()
 # approved loans, branch
 lb = loans.loc[loans["channel"] == "branch", "credit_score"].dropna()
 # 683.2 679.8 [2.482, 0.013]
-print(round(la.mean(), 1), round(lb.mean(), 1), [round(v, 3) for v in welch_t(la, lb)])
+print(round(la.mean(), 1), round(lb.mean(), 1), [round(float(v), 3) for v in welch_t(la, lb)])
 # scipy: stats.ttest_ind(sa, sb, equal_var=False)   Excel: =T.TEST(r1, r2, 2, 3)
 # (2 = two-tailed, 3 = unequal variances)
 ```
@@ -872,10 +872,12 @@ The same in statsmodels (optional: it loads an extra package on the first run):
 
 ```python
 from statsmodels.stats.proportion import proportions_ztest, confint_proportions_2indep
-# (2.147, 0.0318)
-print(proportions_ztest([41, 34], [2411, 3263]))
+z, p = proportions_ztest([41, 34], [2411, 3263])
+# 2.147 0.0318
+print(round(z, 3), round(p, 4))
+lo, hi = confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb")
 # difference: +0.05 to +1.33 points
-print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))
+print(round(100 * lo, 2), round(100 * hi, 2))
 ```
 
 In Excel, one row per channel and four formula cells:

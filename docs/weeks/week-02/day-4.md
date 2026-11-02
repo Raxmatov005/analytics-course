@@ -87,6 +87,24 @@ So `WHERE segment = 'sme' OR monthly_income > 5000000` keeps an SME customer wit
 
 > 🎬 **Didn't get IS NULL and IS NOT NULL?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=27704&end=27930)
 
+> ⚠️ **Quirk: NULL is not equal to NULL — except when you group.**
+>
+> - **You expect:** if `NULL = NULL` is not true, every NULL is a group of its own.
+> - **What happens:** `GROUP BY`, `DISTINCT` and `UNION` put all the NULLs together in **one** row.
+> - **Why:** for grouping, SQL asks "can I tell these two apart?" rather than "are they equal?" — and two unknowns cannot be told apart.
+> - **Protect yourself:** expect one NULL row in every grouped result of a column with blanks, and keep it: it is a real group. To ask the grouping question in a condition, SQLite has `IS`: `a IS b` is true when both are NULL.
+
+```sql
+SELECT NULL = NULL AS equal,
+       monthly_income,
+       COUNT(*) AS customers
+FROM customers
+GROUP BY monthly_income
+ORDER BY monthly_income
+LIMIT 3;
+-- row 1: all 356 empty incomes, one group
+```
+
 ### NULL in arithmetic — anything combined with NULL is NULL
 
 **What it is.** A calculation with a NULL in it returns NULL: `5 + NULL`, `NULL * 0`, `'Eldor' || NULL` are all NULL. The database cannot compute with a value it does not know.

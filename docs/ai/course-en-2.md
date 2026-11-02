@@ -193,6 +193,24 @@ On the real data: `=COUNTA(tblCustomers[customer_id])` → **6 040** customers. 
 
 **Your turn.** How many customers have no `monthly_income`? Use two of these functions on `tblCustomers`.
 
+> ⚠️ **Quirk: a cell can be empty and not empty at the same time.**
+>
+> - **You expect:** every cell to be counted once — by `COUNTA` if it is filled, by `COUNTBLANK` if it is empty.
+> - **What happens:** a formula that returns `""` (empty text), like `=IF(B3="", "", B3*2)`, looks empty. `COUNTBLANK` counts it as blank, `COUNTA` counts it as filled, and `ISBLANK` says FALSE.
+> - **Why:** `COUNTA` and `ISBLANK` look at what the cell *holds* — a formula. `COUNTBLANK` looks at what it *shows* — nothing.
+> - **Protect yourself:** on a column filled by formulas, count real values with `COUNT` (numbers) or `=SUMPRODUCT(--(A2:A4<>""))`; do not trust `COUNTA` there.
+
+Try it on an empty sheet: type 120 in A2, the formula `=IF(B3="", "", B3*2)` in A3 (B3 stays empty), and leave A4 empty.
+
+| Formula | Gives | Why |
+|---|---|---|
+| `=COUNTA(A2:A4)` | 2 | 120 and the formula |
+| `=COUNTBLANK(A2:A4)` | 2 | the formula's `""` and the empty cell |
+| `=ISBLANK(A3)` | FALSE | A3 holds a formula |
+| `=SUMPRODUCT(--(A2:A4<>""))` | 1 | only 120 is a real value |
+
+Three cells, and `COUNTA` + `COUNTBLANK` = 4.
+
 ### COUNTIFS, SUMIFS, AVERAGEIFS — an aggregate with a condition
 
 **What it is.** These functions add up, count or average only the rows that meet a **criterion** (*условие*). `SUMIFS` is `SELECT SUM(x) FROM t WHERE …` in one cell. `MAXIFS` and `MINIFS` work the same way.
@@ -357,6 +375,13 @@ On the real data: `=SUMPRODUCT((tblLoans[dpd]>30)*tblLoans[outstanding])` → **
 - A count of mismatches between two columns: `=SUMPRODUCT(--(col1<>col2))`. Zero means the columns agree.
 
 **Your turn.** Which formula counts the loans whose `outstanding` is more than half their `principal`?
+
+> ⚠️ **Quirk: `K:K` costs nothing in one formula and a lot in another.**
+>
+> - **You expect:** a whole-column reference such as `K:K` to be a harmless way to say "all the rows".
+> - **What happens:** `SUMIFS(K:K, …)` and `COUNTIFS` stay fast — they stop at the last used row. `SUMPRODUCT`, `FILTER` and other array formulas really work through all 1 048 576 rows, so a few hundred of them make the file slow on every change. And a formula inside column K that reads `K:K` reads itself: Excel warns *circular reference*.
+> - **Why:** the `…IFS` functions are built to skip the empty end of a column; array formulas compute every cell they are given.
+> - **Protect yourself:** in Excel, point formulas at Table columns (`tblLoans[principal]`): they grow with the data and stop where it stops. Keep `K:K` for Sheets and for `SUMIFS`/`COUNTIFS`.
 
 ### IF — two branches
 
@@ -573,6 +598,34 @@ The cell that shows `209 bn` still holds 208 723 504 430. A check `=G11=SUM(tblL
 > ⚠️ **Watch out.** A format hides decimals; it does not remove them. Three cells that each hold 1/3 show `0.33`, yet their `SUM` shows `1.00`, not 0.99 — and `=A1=B1` can be FALSE for two cells that both show `0.30`. When the number you see must be the number that is stored (a check cell, an amount on a schedule), round the value itself with **ROUND**: `=ROUND(x, 2)` keeps 2 decimals, `=ROUND(x, 0)` makes a whole number, `=ROUND(x, -2)` rounds to hundreds. Excel's `ROUND` sends a 5 away from zero: `=ROUND(2.5, 0)` is 3.
 
 **Your turn.** Nur Finance rounds every instalment to whole hundreds of soum. Loan 1's exact monthly payment is 1 741 684.35. What does `=ROUND(1741684.35, -2)` return?
+
+> ⚠️ **Quirk: Excel's calendar has a day that never was.**
+>
+> - **You expect:** day 60 of Excel's calendar to be 1 March 1900.
+> - **What happens:** day 60 is **29 February 1900** — a date that did not exist (1900 was not a leap year).
+> - **Why:** Lotus 1-2-3 had this mistake, and Excel copied it on purpose so old files kept their numbers.
+> - **Protect yourself:** it bites outside Excel. Python, SQL and Power BI turn a day number like 46 296 into a date by counting from **30 December 1899**; count from 1 January 1900 and every date comes out two days late. And a workbook set to the old Mac **1904 date system** (File → Options → Advanced) gives the same date a number 1 462 smaller, so dates copied between the two jump by 4 years and 1 day. After every import, check one date you know: 1 October 2026 must be 46 296.
+
+| Formula, format `General` | Shows | |
+|---|---|---|
+| `=DATE(1900,2,28)` | 59 | |
+| `=DATE(1900,2,29)` | 60 | a day that never existed |
+| `=DATE(1900,3,1)` | 61 | |
+| `=DATE(2026,10,1)` | 46296 | the course's "today" |
+
+Week 5 turns 46 296 back into a date in pandas, from the right day 0.
+
+> ⚠️ **Quirk: Excel does binary maths too.**
+>
+> - **You expect:** `=1*(0.5-0.4-0.1)` to show 0.
+> - **What happens:** it shows `-2.78E-17`: a tiny crumb instead of zero.
+> - **Why:** 0.4 and 0.1 have no exact binary form — the same reason `0.1 + 0.2` is not exactly 0.3 in SQL (week 2) and Python (week 5). Excel hides most of these crumbs: it shows only 15 digits, and it cleans up some results that land next to zero. So you meet them rarely — and then in a check cell that says FALSE.
+> - **Protect yourself:** round both sides before you compare: `=ROUND(A1,2)=ROUND(B1,2)`; or test the gap: `=ABS(A1-B1)<0.005`.
+
+| Formula | Shows |
+|---|---|
+| `=1*(0.5-0.4-0.1)` | -2.78E-17 |
+| `=ROUND(1*(0.5-0.4-0.1), 10)` | 0 |
 
 ### Russian Excel — the same functions, other names
 
@@ -1042,6 +1095,17 @@ With 2167 in `B1` the second formula returns **Dilnoza Abdullaeva**; with 99999 
 **Your turn.** Build Sevara's loan finder.
 
 ### XLOOKUP for bands — approximate and wildcard match
+
+(Animated explanation)
+Which band? The largest edge not above
+- The band table on `Lookup` holds five **lower edges**: 0, 1, 31, 61, 91. Each band starts at its edge (● = in) and stops just before the next one (○ = out).
+- match_mode -1: the exact value, or else the **next smaller** edge. dpd 45: no edge is 45; the next smaller is 31 → **31-60**.
+- dpd 0 is exactly an edge: an exact match → **0**.
+- 30 is not an edge.
+- 30 → 1-30, and 919 → **90+**: the last band has no end. Five rows of edges cover all 258 dpd values from 0 to 919.
+- The trap: a table of **upper** edges (0, 30, 60, 90, 9999) with -1. dpd 31 finds 30 and comes back as **1-30** — wrong, and no error.
+- Each kind of edge has its own match_mode.
+- Back to lower edges and -1. Drop a few dpd values and watch each one land in the band of its largest edge not above it.
 
 **What it is.** The 5th argument, **match_mode**, changes how XLOOKUP compares. `-1` finds the exact value **or the next smaller** one — the rule for a **band table** (*таблица диапазонов*) whose key column holds lower edges. `2` lets the key contain wildcards `*` and `?`.
 
@@ -2041,6 +2105,19 @@ You do not need to write M. You need to read it enough to see what a step does. 
 
 **Your turn.** Which tools leave a recipe that re-runs on the next file?
 
+> ⚠️ **Quirk: Excel changes some values the moment it opens a file.**
+>
+> - **You expect:** a CSV to open exactly as it was written.
+> - **What happens:** a code `00123` becomes the number 123; a 20-digit bank account keeps only its first 15 digits; a code like `1-2` turns into a date.
+> - **Why:** Excel guesses a type for every cell, and it stores a number with at most 15 significant digits. The digits after the 15th become zeros and are gone for good — saving the file does not bring them back.
+> - **Protect yourself:** never double-click such a file. In **Data → From Text/CSV → Transform Data**, set the id, account and code columns to **Text** before *Close & Load*. Microsoft 365 also lets you switch these guesses off: **File → Options → Data → Automatic data conversion**.
+
+| In the file | Opened by a double-click | Loaded as Text |
+|---|---|---|
+| `00123` | 123 | 00123 |
+| `20208000900123456789` | 2.02081E+19 — it holds 20208000900123400000 | 20208000900123456789 |
+| `1-2` | a date: 2 January or 1 February, by your Windows settings | 1-2 |
+
 ### Change Type — the first step after the headers
 
 **What it is.** **Change Type** sets the type of each column: Whole Number, Decimal, Date, Text. It is SQL's `CAST`. Power Query guesses types on import; you check every guess.
@@ -2827,6 +2904,18 @@ On `tblLoans`, Values `principal` as **Average**: the Grand Total row shows **51
 
 ### Show Values As — % of Grand Total, of Column, of Row, of Parent
 
+(Animated explanation)
+Of the row, of the column, of the whole
+- The small pivot: Sum of outstanding, products down, regions across. Each row has its total on the right, each column at the bottom; the corner, 500, is the **Grand Total**.
+- **% of Grand Total** divides every cell by 500. SME in Tashkent: 300 ÷ 500 = 60.0 %. All the cells together make 100 %.
+- **% of Column Total** divides by the cell's column. Within Tashkent's 345: SME = 300 ÷ 345 = 87.0 %. Each **column** adds up to 100 %.
+- **% of Row Total** divides by the cell's row. Within SME's 450: Tashkent = 300 ÷ 450 = 66.7 %. Each **row** adds up to 100 %.
+- Press the three buttons and watch the amber ring move: it marks what the cell is divided by.
+- `tblLoans`, Count of loans, product × bucket (the late buckets under 90 days in one column). % of Column Total: Consumer is 77 ÷ 234 = 32.9 % of the 90+ loans.
+- Switch to % of Row Total: of SME's 781 loans, 29 — 3.7 % — are 90+. Same table, a different question.
+- Find the words that name the denominator: 'of all the …'.
+- Watch out: under % of Column Total every column ends in 100 %. Never add those up — and turn the Grand Total off if it confuses the reader.
+
 **What it is.** **Show Values As** turns a number into a **share** of a total, without a formula. % of Grand Total divides by the whole table; % of Column Total by its column; % of Row Total by its row; **% of Parent Row Total** by the group one level up (region for a branch).
 
 **How to write it.** Value Field Settings → second tab **Show Values As** → pick → OK (Sheets: *Show as*). Drag the field to Values twice to see the amount and its share side by side.
@@ -2957,6 +3046,16 @@ On `tblLoans`, the product pivot with the region slicer on **Fergana**: Grand To
 **Your turn.** One `region` slicer should filter both the product pivot and the month pivot on the page. What connects it to the second pivot?
 
 ### A calculated field — a ratio of sums
+
+(Animated explanation)
+A rate for a group: add first, then divide
+- Micro's three loans on the small table. Each bar is one loan's share left, outstanding ÷ principal: 50 %, 62.5 %, 0 %.
+- Average the three bars: 37.5 %. That is what *Average* of a rate column gives — every loan gets one vote.
+- But the loans differ in size: principal 10, 8 and 6. Draw each bar as **wide** as its principal.
+- Now level the bars like water: 10 ÷ 24 = 41.7 %, the ratio of sums. Each loan counts by its size.
+- Guess first, then press the button on the next step.
+- Press it: the wide grey bar pulls the ratio of sums down to 10 ÷ 48 = 20.8 %; the average stays at 37.5 %.
+- A rate for a group — collected ÷ due, outstanding ÷ principal — is a ratio of sums. In a pivot that is a **calculated field**; *Average* of a rate column answers another question.
 
 **What it is.** A **calculated field** (*Вычисляемое поле*) is a new Values field computed from the **sums** of other fields: `= outstanding / principal` is `SUM(outstanding) / SUM(principal)` per row of the pivot. That is a **ratio of sums** — the correct way to show a rate for a group.
 
@@ -4051,6 +4150,38 @@ print(round(0.5), round(1.5), round(2.5), round(3.5))
 
 **Your turn.** Month 1's interest of loan 2.
 
+> ⚠️ **Quirk: a half that is not a half.**
+>
+> - **You expect:** `round(2.675, 2)` to give 2.68 — it ends in a 5, and 8 is even.
+> - **What happens:** 2.67.
+> - **Why:** 2.675 has no exact binary form. The float really holds 2.67499999999999982236…, which is just *under* the half, so it goes down; banker's rounding never comes into it. SQLite's `ROUND(2.675, 2)` says 2.67 too (week 2).
+> - **Protect yourself:** keep money in whole soum (`int`) and round once, at the end. When a rule says "a half always goes up", use `Decimal` from text:
+
+```python
+from decimal import Decimal, ROUND_HALF_UP
+
+print(round(2.675, 2))   # 2.67, not 2.68
+print(f"{2.675:.20f}")   # what is really stored
+cents = Decimal("0.01")
+half_up = Decimal("2.675").quantize(
+    cents, rounding=ROUND_HALF_UP)
+print(half_up)           # 2.68
+```
+
+> ⚠️ **Quirk: the same division, two languages, different answers.**
+>
+> - **You expect:** `7 / 2` and `-7 // 2` to give what SQL gave in week 2.
+> - **What happens:** Python's `/` never cuts: `7 / 2` is 3.5, where SQL's `7 / 2` is 3. On a negative, Python rounds **down**: `-7 // 2` is -4 and `-7 % 3` is 2, where SQLite cuts towards zero: -3 and -1.
+> - **Why:** each language picked its own rule. Neither is wrong, and neither warns you.
+> - **Protect yourself:** when you move a calculation from SQL to Python (or back), test it on one odd and one negative number before you trust it.
+
+```python
+print(7 / 2, 7 // 2)     # 3.5 3
+print(-7 // 2, -7 % 3)   # -4 2
+print(6 / 2)             # 3.0: / gives a float
+# SQLite: 7 / 2 is 3, -7 / 2 is -3, -7 % 3 is -1
+```
+
 ### Lists — an ordered column of values
 
 **What it is.** A **list** (*список*) holds several values in order, inside `[ ]`. Each value has a **position** (an *index*) starting at **0**. Negative positions count from the end.
@@ -4316,6 +4447,32 @@ The app channel approved 2 915 of 5 006 applications: 58.2 %, or 58.23 with two 
 > ⚠️ **Watch out.** A function without `return` gives back `None`. A function that `print`s its answer looks right on screen and is useless to the next line of code.
 
 **Your turn.** A function for month 1's interest, tried on loan 3.
+
+> ⚠️ **Quirk: a default list remembers.**
+>
+> - **You expect:** `def add_loan(loan, basket=[])` to start with an empty basket on every call.
+> - **What happens:** the second call still holds the first call's loan: `[1]`, then `[1, 2]`.
+> - **Why:** a default value is made **once**, when Python reads the `def`, and every call shares that one list. Numbers and text cannot change in place, so they are safe defaults; a list or a dict is not.
+> - **Protect yourself:** use `None` as the default and make the list inside the function.
+
+```python
+def add_loan(loan, basket=[]):   # the trap
+    basket.append(loan)
+    return basket
+
+print(add_loan(1))   # [1]
+print(add_loan(2))   # [1, 2]: the same list
+
+# the fix
+def add_loan_safe(loan, basket=None):
+    if basket is None:
+        basket = []
+    basket.append(loan)
+    return basket
+
+print(add_loan_safe(1))   # [1]
+print(add_loan_safe(2))   # [2]
+```
 
 ### Importing modules — someone else's functions
 
@@ -4776,7 +4933,7 @@ The column is a Series: it adds up to 72 800 000 and its largest value is loan 2
 
 ### read_csv — a file into a DataFrame (parse_dates, dtype)
 
-**What it is.** `pd.read_csv(path)` reads a CSV into a DataFrame. It takes the header line as column names and **guesses a type** (*dtype*) for every column: whole numbers → `int64`, decimals → `float64`, anything else → `object` (text). Two parameters correct the guess: `parse_dates=[…]` makes date columns real dates, `dtype={…}` forces a type.
+**What it is.** `pd.read_csv(path)` reads a CSV into a DataFrame. It takes the header line as column names and **guesses a type** (*dtype*) for every column: whole numbers → `int64`, decimals → `float64`, anything else → `str` (text; pandas before 3.0, and many tutorials, call it `object`). Two parameters correct the guess: `parse_dates=[…]` makes date columns real dates, `dtype={…}` forces a type.
 
 **How to write it.**
 
@@ -4791,8 +4948,8 @@ print(cust_txt["phone"].dtype, cust_txt["phone"][0])
 
 | column | default guess | with the parameter |
 |---|---|---|
-| `disbursed_at` | `object` — text | `datetime64[ns]` with `parse_dates=["disbursed_at"]` |
-| `phone` | `int64` — `998902031105`, the `+` lost | `object` — `"+998902031105"` with `dtype={"phone": str}` |
+| `disbursed_at` | `str` — text | `datetime64[us]` with `parse_dates=["disbursed_at"]` |
+| `phone` | `int64` — `998902031105`, the `+` lost | `str` — `"+998902031105"` with `dtype={"phone": str}` |
 | `monthly_income` | `float64` — whole numbers, but 356 blanks | (a blank is `NaN`, and `NaN` is a float) |
 
 The date comes back as text unless you ask for dates; the phone becomes the number 998 902 031 105 and loses its `+` unless you ask for text.
@@ -4818,6 +4975,36 @@ Other parameters you will need:
 > ⚠️ **Watch out.** A whole-number column with a single blank becomes `float64`, because `NaN` is a float — `monthly_income` prints as `3894708.0`. Run `dtypes` before you trust a column. To keep whole numbers *and* the blanks, ask for the nullable type: `dtype={"monthly_income": "Int64"}` (capital I) shows `3894708` and `<NA>`; `astype(int)` on a column with `NaN` raises an error instead.
 
 **Your turn.** Read only three columns of `customers_dirty.csv` and keep the phone as text.
+
+**Try it.** One blank in a column of whole numbers:
+
+```python
+import pandas as pd
+
+s = pd.Series([1, 2, None])
+print(s.dtype, s.tolist())
+# float64 [1.0, 2.0, nan]
+s2 = pd.Series([1, 2, None], dtype="Int64")
+print(s2.dtype, s2.tolist())
+# Int64: whole numbers and a missing value
+```
+
+> ⚠️ **Quirk: numbers stored as text add up as text.**
+>
+> - **You expect:** the sum of a column of amounts.
+> - **What happens:** if pandas read the column as text — dtype `str` (`object` in older pandas); one `"n/a"` in the file is enough — `sum()` glues the values: `"1"`, `"2"`, `"30"` give `"1230"`.
+> - **Why:** `+` on text joins it (`"31150000" * 2` in Day 1 is the same rule). pandas keeps a column it could not read as numbers as text, and does not warn.
+> - **Protect yourself:** run `dtypes` after every `read_csv`. Turn a text column into numbers with `pd.to_numeric(col, errors="coerce")` — the bad values become NaN; count them.
+
+```python
+import pandas as pd
+
+# as read from a messy file:
+amounts = pd.Series(["1", "2", "30"])
+print(amounts.dtype, amounts.sum())
+# str 1230: glued, not added
+print(pd.to_numeric(amounts).sum())   # 33
+```
 
 ### First look — shape, head, info, describe
 
@@ -4850,11 +5037,11 @@ loans.info()             # dtype and non-null count per column
 RangeIndex: 7828 entries, 0 to 7827
  #   Column        Non-Null Count  Dtype
  0   loan_id       7828 non-null   int64
- 1   customer      7828 non-null   object
- 6   disbursed_at  7828 non-null   datetime64[ns]
+ 1   customer      7828 non-null   str
+ 6   disbursed_at  7828 non-null   datetime64[us]
  7   principal     7828 non-null   int64
- 12  bucket        7828 non-null   object
-dtypes: datetime64[ns](1), int64(5), object(7)
+ 12  bucket        7828 non-null   str
+dtypes: datetime64[us](1), int64(5), str(7)
 ```
 
 (five of the 13 lines shown.) Every column has 7 828 non-null values: this extract has no blanks. Five columns are whole numbers, one is a date, seven are text.
@@ -4874,7 +5061,7 @@ loans.describe()  # numeric columns: count, mean, std, min, quartiles, max
 
 (three of the columns, `std` and `min` left out.) The mean principal is 51.7 m but the median is 5.79 m: most loans are small and a few are very large — week 3's two books in one line. The 75 % quartile of `dpd` is still 0, so at least three loans in four are not late — in fact 7 429 of 7 828, 95 %; the worst is 919 days late.
 
-`describe(include="object")` does the same for text: number of distinct values, the most common one and its count. `loans["product"].nunique()` is `COUNT(DISTINCT product)` — 5.
+`describe(include="str")` does the same for text: number of distinct values, the most common one and its count. `loans["product"].nunique()` is `COUNT(DISTINCT product)` — 5.
 
 **When you use it.**
 - On every new file, before any filter: is the grain right, are the types right, where are the blanks?
@@ -5024,6 +5211,21 @@ The first late loan sits at **position** 0 of `late` but keeps its **label** 20 
 
 **Your turn.** The `loan_id` of the tenth late loan in the file (position 9 of the late loans).
 
+> ⚠️ **Quirk: `[1:3]` is three rows in `loc` and two in `iloc`.**
+>
+> - **You expect:** `s.loc[1:3]` and `s.iloc[1:3]` to give the same rows on a fresh 0, 1, 2 … index.
+> - **What happens:** `loc` returns labels 1, 2 **and 3**; `iloc` returns positions 1 and 2.
+> - **Why:** `iloc` slices like every Python list — the end is left out. `loc` slices by label, and a label has no "next one" to stop before, so the end is kept.
+> - **Protect yourself:** for "the first n rows" use `iloc[:n]` or `head(n)`; with `loc`, name the last label you want.
+
+```python
+import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50])
+print(s.loc[1:3].tolist())    # label 3 in
+print(s.iloc[1:3].tolist())   # position 3 out
+```
+
 ### Sorting — sort_values and nlargest
 
 **What it is.** `df.sort_values("col")` returns the rows in the order of a column — `ORDER BY`. `ascending=False` sorts largest first; a list of columns sorts by several keys. `df.nlargest(n, "col")` is the shortcut for "the top n".
@@ -5101,9 +5303,26 @@ The term becomes the text `['24', '18', '3']`; the scores `"658"`, `""`, `"n/a"`
 - Every derived number: a share, a ratio, a flag, an amount in bn.
 - `astype` after reading, when the guess was wrong; `to_numeric(errors="coerce")` on dirty text.
 
-> ⚠️ **Watch out.** Assign through `.loc`, never through two brackets in a row. `loans[loans["dpd"] > 90]["flag"] = 1` (chained indexing) writes into a temporary **copy** and changes nothing in `loans` — pandas only warns `SettingWithCopyWarning`. Write `loans.loc[loans["dpd"] > 90, "flag"] = 1`. When you cut a frame to keep working on it, take a copy on purpose: `late = loans[loans["dpd"] > 0].copy()`.
+> ⚠️ **Watch out.** Assign through `.loc`, never through two brackets in a row. `loans[loans["dpd"] > 90]["flag"] = 1` (chained indexing) writes into a temporary **copy** and changes nothing in `loans` — pandas only warns `ChainedAssignmentError: A value is being set on a copy of a DataFrame or Series through chained assignment`. Write `loans.loc[loans["dpd"] > 90, "flag"] = 1`. When you cut a frame to keep working on it, take a copy on purpose: `late = loans[loans["dpd"] > 0].copy()`. Since pandas 3.0 (Copy-on-Write) a cut already behaves as a frame of its own and the `.copy()` is optional, but it says what you mean, and older pandas warns `SettingWithCopyWarning` without it.
 
 **Your turn.** Add a column `paid` = principal − outstanding and print its total in bn, one decimal.
+
+**Try it.** The chained line changes nothing; `.loc` works:
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({"dpd": [0, 95, 120],
+                   "flag": [0, 0, 0]})
+# chained: writes into a copy
+df[df["dpd"] > 90]["flag"] = 1
+print(df["flag"].tolist())   # [0, 0, 0]
+# one step, on df itself
+df.loc[df["dpd"] > 90, "flag"] = 1
+print(df["flag"].tolist())   # [0, 1, 1]
+```
+
+pandas 3 also prints a *ChainedAssignmentError* warning for the chained line: it never writes into `df`. (Older pandas warned with *SettingWithCopyWarning* and sometimes did write — one more reason to use `.loc` every time.)
 
 ### Dates — the .dt accessor
 
@@ -5189,6 +5408,21 @@ Micro 34.1 % · Consumer 30.9 · BNPL 20.0 · SME 10.0 · Auto 5.0 — the share
 
 **Your turn.** The share of written-off loans, in % with two decimals.
 
+**Try it.**
+
+```python
+import pandas as pd
+
+method = pd.Series(["card", None, "card",
+                    None, "cash"])
+print(method.value_counts().to_dict())
+# the 2 blanks come back:
+vc = method.value_counts(dropna=False)
+print(vc.to_dict())
+```
+
+Five payments, and the first count shows three. Shares made from it would be shares of the three filled rows.
+
 ### Missing values — isna, fillna, dropna
 
 **What it is.** **`NaN`** (*пропуск*) is pandas' NULL: a cell with no value (`NaT` for a date). Aggregates skip it, like SQL's `AVG`. `isna()` finds it, `fillna(x)` writes a value into the gaps, `dropna()` removes the rows that have it.
@@ -5238,7 +5472,49 @@ print(len(cust.dropna(subset=["monthly_income"])))
 
 **Your turn.** Check it on the customers file.
 
+**Try it.** NaN is not equal even to itself:
+
+```python
+import numpy as np
+import pandas as pd
+
+print(np.nan == np.nan)        # False
+inc = pd.Series([5_000_000, np.nan])
+print((inc == np.nan).sum())   # 0
+print(inc.isna().sum())        # 1
+```
+
+> ⚠️ **Quirk: the sum of nothing is 0, the average of nothing is NaN.**
+>
+> - **You expect:** pandas to tell you when there is nothing to add, as SQL's `SUM` does with NULL (week 2).
+> - **What happens:** `sum()` skips NaN, so a column of only blanks — or an empty selection — sums to **0**. `mean()` of the same is NaN. And `mean()` of `[1, NaN, 3]` is 2: the blank is skipped, not counted as 0.
+> - **Why:** pandas starts every sum at 0 and adds what it finds; an average needs at least one value.
+> - **Protect yourself:** show next to a total how many values it is made of (`count()`); or ask for `sum(min_count=1)`, which returns NaN when there is nothing to add — the SQL behaviour.
+
+```python
+import numpy as np
+import pandas as pd
+
+blank = pd.Series([np.nan, np.nan])
+print(blank.sum(), blank.mean())   # 0.0 nan
+print(blank.count())               # 0
+print(blank.sum(min_count=1))      # nan
+# the blank is skipped, not counted as 0:
+print(pd.Series([1, np.nan, 3]).mean())
+```
+
 ### pd.cut — buckets without a CASE
+
+(Animated explanation)
+pd.cut: which side owns the edge?
+- `pd.cut` with the edges −1, 0, 30, 60, 90, ∞. Every interval is [[right-closed|it contains its right edge but not its left one: (30, 60] holds 60, not 30]]: ● marks the end that is in.
+- dpd 60 sits on an edge. The right end is closed, so 60 belongs to (30, 60] → **31-60**.
+- One day more.
+- 61 → 61-90. And 0 → (−1, 0] → **0**: that is why the first edge is −1, not 0.
+- The trap: start the edges at 0. The first interval is (0, 30], which does **not** hold 0 → NaN. All 7 429 current loans lose their bucket, with no error.
+- `right=False` closes the **left** end instead: [5, 10) holds 5. Rules written with `<` — 'under 5 m' — need it: an income of exactly 5 m is **5-10m**.
+- Press **Flip the closed side** and watch 5 m jump to <5m: the same edges, a different rule. Press it again to flip back.
+- Back to the dpd edges. Drop the edge values yourself: each lands in the interval whose **right** end it reaches.
 
 **What it is.** `pd.cut(col, bins=edges, labels=…)` puts every number into an interval and returns its label — the `CASE WHEN dpd <= 30 THEN …` of week 2 in one line. Intervals are **right-closed** by default: `(30, 60]` contains 60 but not 30.
 
@@ -5337,7 +5613,7 @@ watch.head()
 
 61 loans, 2 718 083 360 soum outstanding. The top of the list is an Auto loan of 301 m that is already 84 days late — one step from 90+.
 
-`.copy()` after the `loc` makes `watch` a frame of its own, so the new columns do not trigger the copy warning. `to_csv(…, index=False)` writes the file Bekzod opens; `to_excel("f.xlsx", sheet_name="…", index=False)` does the same for Excel (it needs the `openpyxl` package, which Anaconda has).
+`.copy()` after the `loc` makes `watch` a frame of its own: the new columns land on `watch` and never touch `loans` (pandas 3 works this way even without `.copy()`; older pandas warned `SettingWithCopyWarning` there). `to_csv(…, index=False)` writes the file Bekzod opens; `to_excel("f.xlsx", sheet_name="…", index=False)` does the same for Excel (it needs the `openpyxl` package, which Anaconda has).
 
 **Your turn.** The same list for the Samarkand branch: how much outstanding does it hold?
 
@@ -5384,11 +5660,14 @@ def portfolio_summary(df):
     }
 
 portfolio_summary(loans)
-# {'loans': 7828, 'active': 3352, 'outstanding': 208723504430, 'disbursed_2026':
-# 3030, 'par30_pct': 3.12, 'npl90_pct': 2.55}
+# {'loans': 7828, 'active': np.int64(3352), 'outstanding': np.int64(208723504430),
+#  'disbursed_2026': np.int64(3030), 'par30_pct': np.float64(3.12),
+#  'npl90_pct': np.float64(2.55)}
 ```
 
 Every line is a SQL clause you have written: `len` is `COUNT(*)`, `(cond).sum()` is `SUM(CASE WHEN … THEN 1 END)`, `df.loc[mask, "col"].sum()` is `SUM(col) WHERE mask`. One number differs from week 4's tile on purpose: **3 030**, not 3 051 — this function uses the half-open `< AS_OF`, so the 21 loans disbursed on the as-of day itself (852 760 000) are out; week 4's `COUNTIFS` used `<=`. Neither is wrong; the function's docstring must say which.
+
+The dict shows `np.int64(3352)` and `np.float64(3.12)`, and Jupyter on your computer shows the same: a pandas sum or mean is a **numpy number**, and since numpy 2.0 its `repr` names the type. The number is 3 352 all the same — `print(x)` writes it bare, and `int(x)` / `float(x)` turn it into a plain Python number (do that before a dict like this goes into a JSON file or a report).
 
 > 💡 **Key idea.** A monthly notebook is safe only with an **assert** pinning the known values: `assert portfolio_summary(loans)["outstanding"] == 208_723_504_430`. If the November file has a new status spelling or a text date, the assert fails before Bekzod sees a wrong tile — `day2_starter.ipynb` pins all six.
 
@@ -5574,6 +5853,23 @@ The functions you can name: `sum`, `mean`, `median`, `min`, `max`, `count`, `siz
 
 **Your turn.**
 
+**Try it.**
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    "segment": ["sme", None, "sme", None],
+    "loans": [1, 2, 3, 4]})
+g = df.groupby("segment")["loans"].sum()
+print(g.to_dict())   # {'sme': 4}
+by = df.groupby("segment", dropna=False)
+print(by["loans"].sum().to_dict())
+# the NaN group is back: 6
+```
+
+The groups add up to 4, the column to 10. When the groups do not add up to the total, look for a NaN key.
+
 ### agg — several aggregates with names
 
 **What it is.** `.agg(name=("column", "function"))` computes **several** numbers per group in one call and names each output. This is **named aggregation** (*именованная агрегация*) — `SUM(amount) AS total` with the `AS` built in.
@@ -5738,6 +6034,17 @@ Card carries a third of the 52 850 payments (17 612, 33.32 %); the other four me
 
 ### merge — the join, and its four how=
 
+(Animated explanation)
+One key, two frames: the four how=
+- Two small frames: `sched`, what each instalment owes, and `got`, what was paid. The **key**, `installment_id`, is in both.
+- Keys 2 and 3 are in both frames (same colour). Key 1 is only in `sched`, key 4 only in `got` (dashed): rows with no partner.
+- `how="inner"` — the **default** — keeps only the matches: 3 + 3 rows in, 2 out. Instalment 1 vanishes.
+- `how="left"` keeps **every** row of the left frame. Instalment 1 has no payment, so its `paid` is NaN. Payment 4 is struck out.
+- `how="right"` keeps every row of the **right** frame: the stray payment 4 stays, with NaN for `total_due`.
+- `how="outer"` keeps everything: 4 rows, NaN wherever one side is missing.
+- Try the four buttons, then answer.
+- On the real data `inst.merge(paid, how="left")` keeps all 92 193 instalments; the unpaid ones get NaN — exactly the ones DPD is about. inner would drop them without a word.
+
 **What it is.** `left.merge(right, on="key", how=...)` is the **join** (*соединение*): it puts the rows of two frames side by side where the key matches. `how=` decides what happens to a row with **no partner** — exactly week 2's INNER / LEFT / RIGHT / FULL.
 
 **How to write it.** Two tiny frames first: three instalments, and payments for instalments 2, 3 and a stray 4.
@@ -5829,11 +6136,22 @@ Every one of the 7 828 loans found its product's rate, and the average loan cost
 - Every merge: name the key on purpose, never rely on pandas finding a shared column.
 - `suffixes=` whenever both frames carry the same descriptive columns.
 
-> ⚠️ **Watch out.** A key that looks the same but has a different type does not match: `loan_id` as `int64` on one side and as text on the other raises `ValueError: You are trying to merge on int64 and object columns`. Check `dtypes` and convert one side before the merge. And pandas **matches a NaN key to a NaN key** — SQL never joins NULL to NULL — so two tables with blank keys pair every blank with every blank. Count `key.isna().sum()` on both sides first, and drop or fill the blank keys on purpose.
+> ⚠️ **Watch out.** A key that looks the same but has a different type does not match: `loan_id` as `int64` on one side and as text on the other raises `ValueError: You are trying to merge on int64 and str columns` (`object` instead of `str` in pandas before 3.0). Check `dtypes` and convert one side before the merge. And pandas **matches a NaN key to a NaN key** — SQL never joins NULL to NULL — so two tables with blank keys pair every blank with every blank. Count `key.isna().sum()` on both sides first, and drop or fill the blank keys on purpose.
 
 **Your turn.** The average annual rate over all 7 828 loans, in % with two decimals.
 
 ### validate= and indicator= — the safety belts
+
+(Animated explanation)
+Where each row came from — and rows that multiply
+- `indicator=True` adds a column, `_merge`: both = found a partner, left_only = only in the left frame, right_only = only in the right one.
+- With `how="outer"` all three appear: instalment 1 is left_only, payment 4 is right_only.
+- One filter on `_merge` replaces a hand-written anti-join.
+- On Nur's data (the table below) right_only is 0: no payment points at an instalment that does not exist. `value_counts()` of `_merge` is a free check after every merge.
+- Now a trap. Two frames keyed by `loan_id`, and the key **repeats on both sides**: loan 7 has 2 payments and 3 instalments.
+- Merge them: every payment of loan 7 meets every instalment of loan 7 — 2 × 3 = 6 rows. Loan 8: 1 × 1. 3 + 4 rows in, 7 out.
+- Count the pairs.
+- On the whole book, 52 850 payments and 92 193 instalments become 858 612 rows — and every sum after that is wrong, with no error. `validate="m:1"` would have stopped it.
 
 **What it is.** Two arguments SQL never gave you. **`validate=`** states the grain you expect — `"1:1"`, `"m:1"` or `"1:m"` — and raises `MergeError` if a key is not unique on the side you promised. **`indicator=True`** adds a column `_merge` that says where each row came from: `both`, `left_only` or `right_only`.
 
@@ -6026,6 +6344,43 @@ Parsing finds 0 bad values — every birth date is a valid ISO date — but the 
 
 **Your turn.** The average age of the customers whose birth date is valid, on the as-of, in years with one decimal.
 
+> ⚠️ **Quirk: `05/09/2026` is 9 May to pandas.**
+>
+> - **You expect:** 5 September — the way dates are written in Uzbekistan and Russia.
+> - **What happens:** `pd.to_datetime("05/09/2026")` is **9 May 2026**: pandas reads the month first, the American way. In a column it takes the order from the first value, so a later `13/09/2026` stops it with *doesn't match format*.
+> - **Why:** `dayfirst=False` is the default.
+> - **Protect yourself:** give the shape: `format="%d/%m/%Y"` (or `dayfirst=True`). Then check one date you know.
+
+```python
+import pandas as pd
+
+print(pd.to_datetime("05/09/2026"))  # 9 May
+d = pd.Series(["05/09/2026", "13/09/2026"])
+good = pd.to_datetime(d, format="%d/%m/%Y")
+print(good.dt.strftime("%Y-%m-%d").tolist())
+# 5 and 13 September
+```
+
+> ⚠️ **Quirk: Excel dates can arrive as numbers.**
+>
+> - **You expect:** a date column from an Excel export to read as dates.
+> - **What happens:** a column that lost its date format arrives as numbers like 46296 — Excel's day count (week 4).
+> - **Why:** in Excel a date *is* a number; only the format made it look like a date.
+> - **Protect yourself:** convert from Excel's day 0, **30 December 1899**. From 1 January 1900 every date comes out two days late (Excel's extra 29 February 1900, week 4). Check: 46296 must be 2026-10-01.
+
+```python
+import pandas as pd
+
+serial = pd.Series([46296, 46295])
+right = pd.to_datetime(serial, unit="D",
+                       origin="1899-12-30")
+wrong = pd.to_datetime(serial, unit="D",
+                       origin="1900-01-01")
+print(right.dt.strftime("%Y-%m-%d").tolist())
+print(wrong.dt.strftime("%Y-%m-%d").tolist())
+# the second line: two days late
+```
+
 ### Duplicates — find, look, then drop
 
 **What it is.** `duplicated(subset=, keep=)` marks the rows that repeat an earlier row on the **key** columns of `subset`. `drop_duplicates(subset=, keep=)` removes them. `keep="first"` keeps the first row of each group **in the current order** — so the sort before it decides which row survives.
@@ -6127,10 +6482,10 @@ inst["total"] = inst["principal_due"] + inst["interest_due"]
 inst["total"] = inst.apply(lambda r: r["principal_due"] + r["interest_due"], axis=1)
 # fine for a label function on one column
 loans["bucket_fn"] = loans["dpd"].apply(dpd_bucket)
-(inst["total"] == inst["total_due"]).all(), (loans["bucket_fn"] == loans["bucket"].astype(str)).all()
+print((inst["total"] == inst["total_due"]).all(), (loans["bucket_fn"] == loans["bucket"].astype(str)).all())
 ```
 
-The box shows `(True, True)`: both ways rebuild `total_due` on all 92 193 instalments, and the label function gives the file's bucket for all 7 828 loans.
+The box prints `True True`: both ways rebuild `total_due` on all 92 193 instalments, and the label function gives the file's bucket for all 7 828 loans.
 
 | | vectorised | `apply` on one column | `apply(axis=1)` |
 |---|---|---|---|
@@ -6354,7 +6709,8 @@ dpd = (AS_OF - late.groupby("loan_id")["due_date"].min()).dt.days.rename("dpd")
 loans = (pd.read_csv("../excel/loans_status.csv")[["loan_id"]]
          .merge(dpd, on="loan_id", how="left").fillna({"dpd": 0}).astype({"dpd": int}))
 loans["bucket"] = pd.cut(loans["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
-(loans["dpd"] > 0).sum(), loans["bucket"].value_counts().sort_index()
+print((loans["dpd"] > 0).sum())
+loans["bucket"].value_counts().sort_index()
 ```
 
 `(loans.dpd > 0).sum()` → **399**; `loans.bucket.value_counts().sort_index()` → **7 429 / 124 / 25 / 16 / 234**; merged against `loans_status.csv`, `(dpd == dpd_sql).all()` → **True** for all 7 828 loans. Same definition, same rows, third tool, same number — which is the only acceptable outcome.
@@ -10270,7 +10626,7 @@ sa = apps.loc[apps["channel"] == "app", "credit_score"].dropna()
 # applicants, branch
 sb = apps.loc[apps["channel"] == "branch", "credit_score"].dropna()
 # 661.0 659.6 [1.233, 0.218]
-print(round(sa.mean(), 1), round(sb.mean(), 1), [round(v, 3) for v in welch_t(sa, sb)])
+print(round(sa.mean(), 1), round(sb.mean(), 1), [round(float(v), 3) for v in welch_t(sa, sb)])
 
 loans = pd.read_csv("data/raw/loans.csv").merge(apps[["application_id", "channel", "credit_score"]], on="application_id")
 # approved loans, app
@@ -10278,7 +10634,7 @@ la = loans.loc[loans["channel"] == "app", "credit_score"].dropna()
 # approved loans, branch
 lb = loans.loc[loans["channel"] == "branch", "credit_score"].dropna()
 # 683.2 679.8 [2.482, 0.013]
-print(round(la.mean(), 1), round(lb.mean(), 1), [round(v, 3) for v in welch_t(la, lb)])
+print(round(la.mean(), 1), round(lb.mean(), 1), [round(float(v), 3) for v in welch_t(la, lb)])
 # scipy: stats.ttest_ind(sa, sb, equal_var=False)   Excel: =T.TEST(r1, r2, 2, 3)
 # (2 = two-tailed, 3 = unequal variances)
 ```
@@ -10396,10 +10752,12 @@ The same in statsmodels (optional: it loads an extra package on the first run):
 
 ```python
 from statsmodels.stats.proportion import proportions_ztest, confint_proportions_2indep
-# (2.147, 0.0318)
-print(proportions_ztest([41, 34], [2411, 3263]))
+z, p = proportions_ztest([41, 34], [2411, 3263])
+# 2.147 0.0318
+print(round(z, 3), round(p, 4))
+lo, hi = confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb")
 # difference: +0.05 to +1.33 points
-print(confint_proportions_2indep(41, 2411, 34, 3263, method="newcomb"))
+print(round(100 * lo, 2), round(100 * hi, 2))
 ```
 
 In Excel, one row per channel and four formula cells:
@@ -11156,11 +11514,11 @@ def mann_whitney(a, b):
     # U, P(a random a > a random b), p-value
     return u, u / (n1 * n2), 2 * (1 - Phi(z))
 
-# (8.0, 0.667) — the small table
-print(mann_whitney([2, 5, 9], [1, 3, 4, 7])[:2])
+# [8.0, 0.667] — the small table
+print([round(float(v), 3) for v in mann_whitney([2, 5, 9], [1, 3, 4, 7])[:2]])
 auto, sme = x.loc[x.code == "AUTO", "days_late"], x.loc[x.code == "SME", "days_late"]
 # [19075370.5, 0.495, 0.323]
-print([round(v, 3) for v in mann_whitney(auto, sme)])
+print([round(float(v), 3) for v in mann_whitney(auto, sme)])
 # scipy (the notebook): scipy.stats.mannwhitneyu(auto, sme) — the same U and p
 ```
 

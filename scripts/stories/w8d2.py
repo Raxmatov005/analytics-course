@@ -76,7 +76,7 @@ STORIES = [
    "fs": ("60 percent of 21 630 783: about 13 million soum.", "60 процентов от 21 630 783: около 13 миллионов сумов."),
    "say": ("Collections get some of it back; Nur assumes 60 % is lost for good, the [[LGD|loss given default: the share of what is owed that is lost]]. One default loses {o|12 978 470} soum.",
            "Часть взыскание вернёт; Nur считает, что 60 % потеряно навсегда, — это [[LGD|потери при дефолте: доля долга, которая теряется]]. Один дефолт теряет {o|12 978 470} сумов.")},
-  {"f": ("expected loss = PD × LGD × EAD = 0.0318 × 0.60 × 21 630 783 = {o|413 293}", "ожидаемые потери = PD × LGD × EAD = 0,0318 × 0,60 × 21 630 783 = {o|413 293}"),
+  {"f": ("expected loss = PD × LGD × EAD = 0.03184 × 0.60 × 21 630 783 ≈ {o|413 293}", "ожидаемые потери = PD × LGD × EAD = 0,03184 × 0,60 × 21 630 783 ≈ {o|413 293}"),
    "fs": ("PD times LGD times EAD: 413 293 soum per loan.", "PD на LGD на EAD: 413 293 сума на кредит."),
    "say": ("Spread over all the loans, each one carries an [[expected loss|the loss you expect on average per loan, priced in before anyone defaults]] of {o|413 293} soum: how likely × how much is lost × of how much.",
            "Если разложить на все кредиты, на каждый приходятся [[ожидаемые потери|убыток, который в среднем ожидают на кредит и закладывают в цену заранее]] в {o|413 293} сума: насколько вероятно × какая доля теряется × от какой суммы.")},

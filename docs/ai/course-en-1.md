@@ -1303,6 +1303,23 @@ ORDER BY product_id, principal DESC;
 
 > 🎬 **Didn't get ORDER BY?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=2984&end=3512)
 
+> ⚠️ **Quirk: where do the empty cells go?**
+>
+> - **You expect:** the empty cells (NULL) at the same end in every database.
+> - **What happens:** SQLite and SQL Server put them first with `ASC` and last with `DESC`; PostgreSQL and Oracle do the opposite. No error — just a different first row.
+> - **Why:** the SQL standard does not say where NULL sorts, so each database chose.
+> - **Protect yourself:** say it in the query: `NULLS FIRST` or `NULLS LAST` after the column (SQLite, PostgreSQL, Oracle). SQL Server does not know these words; there you sort by a `CASE` first (week 2).
+
+```sql
+-- no income (356 rows): at the end
+SELECT customer_id, monthly_income
+FROM customers
+ORDER BY monthly_income NULLS LAST
+LIMIT 5;
+```
+
+The five lowest incomes, from 2 504 499 soum. Delete `NULLS LAST` and run again: all five rows are empty incomes.
+
 ### LIMIT and TOP — only the first N rows
 
 **What it is.** **LIMIT** returns at most N rows. It goes at the very end of the query. SQL Server writes the same thing as **TOP N** right after `SELECT`. This is the one place this week where the two engines spell a query differently.
@@ -1477,6 +1494,17 @@ The box shows the last count: 13 612 applications have a score. Run the first li
 
 **Your turn.** Find the line that makes this query wrong.
 
+**Try it.** Each column compares with NULL in another way:
+
+```sql
+SELECT NULL = NULL  AS equals,
+       NULL <> NULL AS not_equals,
+       NULL IS NULL AS is_null;
+-- NULL · NULL · 1
+```
+
+`equals` and `not_equals` are both NULL: a comparison with an unknown is neither true nor false. `WHERE` keeps a row only when its condition is true, so both would lose every row.
+
 ### AND, OR, NOT — combining conditions, with brackets
 
 (Animated explanation)
@@ -1560,6 +1588,22 @@ SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_a
 > ⚠️ **Watch out.** `= NULL`, `'Active'` instead of `'active'`, and `BETWEEN` on a date-time column all run without an error and return a wrong number. Prefer `IS NULL`, exact spelling and half-open ranges by habit. And keep values in **single** quotes: double quotes mean a column name, so `status = "active"` is an error in SQL Server and PostgreSQL, while SQLite quietly guesses you meant text.
 
 **Your turn.** Which filter keeps **every** application of 2025?
+
+> ⚠️ **Quirk: a typo in double quotes becomes text.**
+>
+> - **You expect:** `SELECT "princpal" FROM loans` (a typo of `principal`) to stop with *no such column*.
+> - **What happens:** SQLite returns the word `princpal` on every row, and no error.
+> - **Why:** double quotes mark a **name**. When no column has that name, SQLite guesses you meant text — an old habit it keeps so that old code still runs. SQL Server and PostgreSQL stop with an error.
+> - **Protect yourself:** write column names without quotes, and text values in **single** quotes.
+
+```sql
+SELECT "status", "princpal", 'status'
+FROM loans
+LIMIT 3;
+-- a column · a typo read as text · text
+```
+
+The first column holds each loan's real status; the other two repeat one word on every row. A column of one repeated word is the sign of this quirk.
 
 ### Putting it together
 
@@ -2277,6 +2321,43 @@ Two calls are left. In the Database panel, `my_calls` now shows 2 rows.
 **Your turn.** The promise on loan 4503 was cancelled.
 
 > 🎬 **Didn't get DELETE?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=7433&end=7662)
+
+> ⚠️ **Quirk: SQLite has no `TRUNCATE`.**
+>
+> - **You expect:** `TRUNCATE TABLE my_calls` to empty the table, as in SQL Server and PostgreSQL.
+> - **What happens:** SQLite stops with *syntax error*: it does not know the word.
+> - **Why:** SQLite keeps one command for removing rows. `DELETE FROM t` with no `WHERE` is its fast way to empty a table.
+> - **Protect yourself:** when a script from another database says `TRUNCATE TABLE t`, read it as "delete **every** row of t".
+
+```sql
+SELECT COUNT(*) AS calls FROM my_calls;
+-- SQLite: syntax error, nothing changes
+TRUNCATE TABLE my_calls;
+```
+
+The box stops at the second line with *near "TRUNCATE": syntax error*, and `my_calls` keeps its rows.
+
+> ⚠️ **Quirk: every statement is saved the moment it runs.**
+>
+> - **You expect:** a chance to undo, like Ctrl+Z in Excel or a *Save* button.
+> - **What happens:** `UPDATE` and `DELETE` are saved at once (*autocommit*). There is nothing to undo.
+> - **Why:** each statement is its own small **transaction** — a group of changes that is kept or thrown away as a whole — and it is kept automatically.
+> - **Protect yourself:** open the transaction yourself. `BEGIN` starts it, `ROLLBACK` throws away every change since `BEGIN`, `COMMIT` keeps them. At work: `BEGIN`, the change, a `SELECT COUNT(*)` to check it, then `COMMIT` or `ROLLBACK`.
+
+```sql
+BEGIN;
+DELETE FROM products;     -- all 5 gone…
+SELECT COUNT(*) AS inside_the_transaction
+FROM products;
+ROLLBACK;                 -- …and back
+```
+
+The box shows 0: inside the transaction the table is empty, and its last line says the change was rolled back. All five rows are back; check:
+
+```sql
+SELECT COUNT(*) AS after_rollback
+FROM products;            -- 5
+```
 
 ### ALTER TABLE — change the columns
 
@@ -3469,6 +3550,20 @@ ORDER BY p.name, b.branch_name;                              -- 5 × 10 = 50 row
 
 > 🎬 **Didn't get CROSS JOIN?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=13416&end=13614)
 
+> ⚠️ **Quirk: a comma between two tables is a join.**
+>
+> - **You expect:** `FROM loans l, products p` to be a plain list of tables, or an error.
+> - **What happens:** it is a join with no `ON` — every loan with every product, 7 828 × 5 = 39 140 rows. Its condition goes in `WHERE`: `WHERE l.product_id = p.product_id` makes it an inner join again.
+> - **Why:** this is how joins were written before `JOIN … ON` arrived in 1992, and every database still accepts it. You will meet it in old reports.
+> - **Protect yourself:** write `JOIN … ON` yourself. When you read a comma join, find its condition in `WHERE` first; no condition means a cross join.
+
+```sql
+SELECT COUNT(*) AS pairs
+FROM loans l, products p;   -- 39 140
+```
+
+Add `WHERE l.product_id = p.product_id` on a new line and run again: 7 828, one row per loan — the same as `JOIN products p ON p.product_id = l.product_id`.
+
 ### Self-join — a table joined to itself
 
 **What it is.** A **self-join** joins a table to **another copy of itself**. There is no special keyword: you name the same table twice with two aliases, and the `ON` compares two rows of that one table.
@@ -3494,6 +3589,16 @@ The second condition does two jobs: `b.customer_id > a.customer_id` stops a row 
 **Your turn.** Why does the self-join need `b.customer_id > a.customer_id`?
 
 ### Many-to-one and one-to-many — what happens to your row count
+
+(Animated explanation)
+One to many: why the total grew
+- Two loans and their instalments. Loans 3 and 6 are 3-month loans: three instalment rows each, one colour per loan.
+- Join them on `loan_id`: each loan meets **each** of its instalments. 2 loan rows become 6 rows, and every `principal` is copied three times.
+- Now add up the loans' money on the joined rows.
+- One row is now an **instalment**, not a loan: the grain changed. Sum loan columns **before** the join, or count loans with `COUNT(DISTINCT loan_id)`.
+- Worse: two **many** tables. Loan 3 has 3 payments and 3 instalments — the key `loan_id` repeats on both sides.
+- Every payment meets every instalment: 3 × 3 = 9 rows for one loan. Payment 28 now sits next to instalments 2 and 3, which it never paid.
+- The rule of thumb for every join you write.
 
 **What it is.** The **direction of the relationship** decides how many rows a join returns.
 
@@ -3867,6 +3972,22 @@ FROM loans;
 
 > 🎬 **Didn't get COUNT, SUM, AVG, MIN and MAX?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=31420&end=31706)
 
+> ⚠️ **Quirk: `COUNT(DISTINCT a, b)` is an error in SQLite.**
+>
+> - **You expect:** the number of different (customer, product) pairs.
+> - **What happens:** *wrong number of arguments to function COUNT()*. SQLite's `COUNT(DISTINCT …)` takes exactly one column. (MySQL accepts two; SQL Server does not.)
+> - **Protect yourself:** make one value out of the pair — `customer_id || '-' || product_id` (`||` glues texts; tomorrow's lesson) — or count the rows of a `SELECT DISTINCT a, b` (week 3). Keep a separator between the parts: without it, 1 and 23 glue into the same `123` as 12 and 3.
+
+```sql
+SELECT COUNT(DISTINCT
+         customer_id || '-' || product_id)
+       AS pairs
+FROM loans;
+-- 6 602; then try two columns: the error
+```
+
+6 602 different customer–product pairs among the 7 828 loans: some people took the same product more than once.
+
 ### SUM — add a column up
 
 **What it is.** **SUM** adds up the values of a numeric column over the rows that are left after `WHERE`. NULL values are skipped.
@@ -3890,6 +4011,18 @@ WHERE status = 'active';
 > ⚠️ **Watch out.** `SUM` over no rows returns NULL, not 0: `SELECT SUM(principal) FROM loans WHERE status = 'frozen'` gives NULL. Day 4's `COALESCE` turns it into 0. `COUNT` over no rows is 0; `AVG`, `MIN` and `MAX` are NULL like `SUM`. And with a `GROUP BY`, no rows means no groups at all — an empty result, not a row of zeros.
 
 **Your turn.** How much money arrived in payments from 1 January to 30 September 2026? Use `paid_at >= '2026-01-01' AND paid_at < '2026-10-01'`.
+
+**Try it.** No loan has the status `'frozen'`, so both aggregates run over zero rows:
+
+```sql
+SELECT SUM(principal) AS total,
+       COUNT(*) AS loans
+FROM loans
+WHERE status = 'frozen';
+-- NULL · 0
+```
+
+`total` comes back empty, `loans` is 0. An empty tile next to a 0 on a dashboard is this quirk; Day 4's `COALESCE(SUM(principal), 0)` shows 0 instead.
 
 ### AVG — the average, and the whole-number trap
 
@@ -3986,6 +4119,18 @@ The rule behind most beginner errors: **every column in `SELECT` is either insid
 
 > 🎬 **Didn't get GROUP BY?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=3514&end=4010)
 
+**Try it.** SQLite runs the query that SQL Server refuses:
+
+```sql
+SELECT risk_grade, loan_id,
+       COUNT(*) AS loans
+FROM loans
+GROUP BY risk_grade;
+-- each loan_id: just one of the grade's
+```
+
+Four rows, each with *some* `loan_id`. Nothing says which loan it is or why — that is the danger: the result looks complete.
+
 ### GROUP BY two columns — one row per combination
 
 **What it is.** With two columns in `GROUP BY`, a group is a **combination** of values. The result has one row for each combination that occurs in the data.
@@ -4030,6 +4175,15 @@ ORDER BY month, disbursed DESC;  -- 50 rows: 10 months × 5 products
 **Your turn.** How many rows does `SELECT channel, status, COUNT(*) FROM applications GROUP BY channel, status` return?
 
 ### WHERE vs HAVING — filter rows, or filter groups
+
+(Animated explanation)
+WHERE asks each row, HAVING asks each group
+- Eighteen loans in three branches, one dot each. Blue = active, grey = closed.
+- `WHERE` asks **each row** one question: is it active? The grey loans are out before any counting starts.
+- `GROUP BY branch` folds what is left into one row per branch, and `COUNT(*)` counts each: Andijan 4, Bukhara 2, Fergana 5.
+- The question is now about whole branches.
+- `HAVING` asks **each group**: Bukhara's 2 is not more than 3, so the whole group goes. The framed groups, Andijan and Fergana, stay.
+- Follow the rows in order: first the rows, then the groups.
 
 **What it is.** `WHERE` filters **rows before** grouping. **HAVING** filters **groups after** the aggregates are computed. "Active loans, branches with more than 300 of them" needs both.
 
@@ -4486,6 +4640,17 @@ Customer 1 is *Eldor Olimov*. The `' '` in the middle is a text of one space; wi
 
 > 🎬 **Didn't get CONCAT (joining texts)?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=17578&end=17764)
 
+**Try it.**
+
+```sql
+SELECT 'Eldor' || ' ' || NULL AS full_name,
+       'a' + 'b' AS plus_on_text,
+       'Loan ' || 42 AS label;
+-- NULL · 0 · 'Loan 42'
+```
+
+One missing last name empties the whole `full_name`. Day 4's `COALESCE(last_name, '')` keeps the first name.
+
 ### UPPER and LOWER — one case for every value
 
 **What it is.** **UPPER** turns every letter into a capital; **LOWER** into a small letter. Other characters stay as they are. Same spelling on both engines.
@@ -4686,6 +4851,22 @@ The average SME loan is 308.7 m UZS; the average Micro loan is 2.7 m. Divided by
 
 > 🎬 **Didn't get ROUND?** [Baraa explains it · 3 min](https://youtu.be/SSKVgrwhzus?t=19118&end=19298)
 
+> ⚠️ **Quirk: ROUND with a minus, and a half that is not a half.**
+>
+> - **You expect:** `ROUND(1234567, -3)` to give 1 235 000 (to thousands, as in SQL Server and Excel), and `ROUND(2.675, 2)` to give 2.68.
+> - **What happens:** SQLite returns 1 234 567 — it treats a negative number of digits as 0, with no error. And `ROUND(2.675, 2)` is 2.67.
+> - **Why:** SQLite's `ROUND` rounds only to the right of the point. And 2.675 is stored in binary as 2.67499999…, just under the half, so it goes down — Python does the same (week 5).
+> - **Protect yourself:** to round to thousands, divide first: `ROUND(x / 1000.0) * 1000`. Keep money in whole soum and round once, at the end.
+
+```sql
+SELECT ROUND(1234567, -3) AS minus_three,
+       ROUND(1234567 / 1000.0) * 1000
+         AS thousands,
+       ROUND(2.5) AS half,
+       ROUND(2.675, 2) AS not_a_half;
+-- 1234567 (no change) · 1235000 · 3 · 2.67
+```
+
 ### Integer and decimal division
 
 **What it is.** Both engines divide two whole numbers **as whole numbers**: `7917 / 14000` is **0**. The fraction is cut off, silently. If one side is a decimal number, the result is a decimal.
@@ -4736,6 +4917,18 @@ FROM loans;
 **Your turn.** What does `SELECT CAST(-2.99 AS INTEGER)` return?
 
 > 🎬 **Didn't get CAST?** [Baraa explains it · 5 min](https://youtu.be/SSKVgrwhzus?t=23440&end=23737)
+
+**Try it.** The same two values, compared as text and as numbers:
+
+```sql
+SELECT '10' < '9' AS as_text,
+       CAST('10' AS INTEGER) < 9
+         AS as_numbers,
+       '10' = 10 AS text_vs_number;
+-- 1 · 0 · 0
+```
+
+As text, `'10'` is smaller than `'9'`, because the first characters decide. That is why a column of codes stored as text sorts 10, 100, 2, 9 — and why its `MAX` can be `'9'`. CAST the column before you sort, compare or take a `MAX`.
 
 ### ABS — the size of a number without its sign
 
@@ -5244,6 +5437,24 @@ So `WHERE segment = 'sme' OR monthly_income > 5000000` keeps an SME customer wit
 **Your turn.**
 
 > 🎬 **Didn't get IS NULL and IS NOT NULL?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=27704&end=27930)
+
+> ⚠️ **Quirk: NULL is not equal to NULL — except when you group.**
+>
+> - **You expect:** if `NULL = NULL` is not true, every NULL is a group of its own.
+> - **What happens:** `GROUP BY`, `DISTINCT` and `UNION` put all the NULLs together in **one** row.
+> - **Why:** for grouping, SQL asks "can I tell these two apart?" rather than "are they equal?" — and two unknowns cannot be told apart.
+> - **Protect yourself:** expect one NULL row in every grouped result of a column with blanks, and keep it: it is a real group. To ask the grouping question in a condition, SQLite has `IS`: `a IS b` is true when both are NULL.
+
+```sql
+SELECT NULL = NULL AS equal,
+       monthly_income,
+       COUNT(*) AS customers
+FROM customers
+GROUP BY monthly_income
+ORDER BY monthly_income
+LIMIT 3;
+-- row 1: all 356 empty incomes, one group
+```
 
 ### NULL in arithmetic — anything combined with NULL is NULL
 
@@ -6565,6 +6776,20 @@ Five rows; the shares add to 100. SME holds 60.3 % of the 208 723 504 430 outsta
 
 ### The frame — ROWS BETWEEN, and the default that lumps ties
 
+(Animated explanation)
+What the window reads: the frame
+- Three rows in day order. A running total adds up a frame: from the first row to the current one. Row 1: 10.
+- Row 2: the frame grows to rows 1–2. 10 + 20 = 30.
+- Row 3: 10 + 20 + 5 = 35. `ROWS` counts row by row, whatever the day.
+- Write only `ORDER BY` and you get the **default** frame, `RANGE`: it also takes every row with the **same** `ORDER BY` value as the current one.
+- Look at the days in the picture.
+- Under `RANGE`: 30, 30, 35. The total jumps a whole day at a time. On Nur's last week of September the two frames agree on only 7 of 77 loans — the last loan of each day.
+- The fix: a tiebreaker (`, loan_id`) and `ROWS`. Row by row again: 10, 30, 35.
+- A frame can have a fixed length: `2 PRECEDING AND CURRENT ROW` is three rows. April: (11.9 + 19.7 + 17.9) ÷ 3 = 16.5 bn.
+- Press **Next row**: the frame slides down one month at a time, and each moving average is filled in.
+- August is ringed. Before you press on, picture its frame.
+- With `PARTITION BY loan` a frame never crosses into another loan: at loan B's first row it starts again — 50, not 650.
+
 **What it is.** The **frame** (*рамка окна*) is the part of the window that the aggregate actually reads, counted from the current row. You set it with `ROWS BETWEEN <start> AND <end>`.
 
 | Bound | Which row |
@@ -6961,6 +7186,17 @@ Seven rows: customer 1893 has seven loans, numbered in the order they were paid 
 > 🎬 **Didn't get ROW_NUMBER?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=39482&end=39750)
 
 ### RANK and DENSE_RANK — what happens on a tie
+
+(Animated explanation)
+A tie: three ways to number rows
+- Five loans, biggest first. Number them one row at a time with three functions. Row 1: all three say 1.
+- Row 2, 700: second place everywhere — 2 · 2 · 2.
+- The next row has the same principal.
+- `ROW_NUMBER` never ties: it goes on to 3. `RANK` and `DENSE_RANK` both give the tie 2.
+- Row 4, 500 — the difference. `RANK` jumps to 4: three rows are ahead of it. `DENSE_RANK` says 3: two **values** are ahead.
+- Row 5: 5 · 5 · 4. `ROW_NUMBER`: always 1, 2, 3 … `RANK`: like a race, a gap after a tie. `DENSE_RANK`: no gaps.
+- Pick the numbering that matches the question.
+- When you need exactly **one** row per group — the latest loan of each customer — use `ROW_NUMBER` with a tiebreaker: `ORDER BY disbursed_at DESC, loan_id DESC`.
 
 **What it is.** `RANK()` and `DENSE_RANK()` number rows like `ROW_NUMBER`, but rows with the **same value** (a tie, *равные значения*) get the **same number**. After a tie `RANK` skips numbers; `DENSE_RANK` does not.
 
@@ -7592,6 +7828,16 @@ WHERE customer_id IN (SELECT customer_id              -- one column,
 
 > 🎬 **Didn't get IN with a subquery?** [Baraa explains it · 8 min](https://youtu.be/SSKVgrwhzus?t=49138&end=49648)
 
+**Try it.** The same test, with and without a NULL in the list:
+
+```sql
+SELECT 3 NOT IN (1, 2) AS without_null,
+       3 NOT IN (1, 2, NULL) AS with_null;
+-- 1 (true) · NULL (unknown)
+```
+
+3 is clearly neither 1 nor 2, yet one NULL in the list turns the answer into *unknown*. In a `WHERE`, every row would be lost.
+
 ### EXISTS and NOT EXISTS — is there at least one row?
 
 **What it is.** `EXISTS (subquery)` is true when the subquery returns **at least one row**; `NOT EXISTS` when it returns none. What the rows contain does not matter, so the subquery usually says `SELECT 1`. The subquery mentions the outer row (`a.customer_id = c.customer_id`), so it is checked once per outer row.
@@ -8209,6 +8455,28 @@ SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;
 > 🎬 **Didn't get CREATE VIEW?** [Baraa explains it · 9 min](https://youtu.be/SSKVgrwhzus?t=57243&end=57796)
 
 > 🎬 **Didn't get changing and dropping a view?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=57796&end=58040)
+
+> ⚠️ **Quirk: a view with `SELECT *` follows its table in SQLite — and not elsewhere.**
+>
+> - **You expect:** a view to behave the same in every database.
+> - **What happens:** add a column to a table, and a SQLite view written with `SELECT *` shows it from then on. In SQL Server and PostgreSQL the view keeps the column list it had on the day it was made; the new column is missing until you refresh the view (`sp_refreshview` in SQL Server, `CREATE OR REPLACE VIEW` in PostgreSQL).
+> - **Why:** SQLite keeps the view's text and reads the `*` again on every use; the other two turn the `*` into a fixed list when the view is created.
+> - **Protect yourself:** list the columns in every view you share, as `my_v_written_off` does. Then the view shows the same columns in every database, and a new column changes nothing until you decide.
+
+```sql
+-- throwaway TEMP objects: gone after the run
+DROP VIEW IF EXISTS temp.v_star;
+DROP TABLE IF EXISTS temp.t_star;
+CREATE TEMP TABLE t_star (a INTEGER);
+INSERT INTO t_star VALUES (1);
+CREATE TEMP VIEW v_star AS
+  SELECT * FROM t_star;
+-- a column added after the view:
+ALTER TABLE t_star ADD COLUMN b INTEGER;
+SELECT * FROM v_star;   -- SQLite: a and b
+```
+
+Two columns: SQLite's view picked up `b`. In SQL Server the same steps show only `a`. (The box says it too: TEMP objects never reach your practice copy.)
 
 ### A view over a view — layers
 

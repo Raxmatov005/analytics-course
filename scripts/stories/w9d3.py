@@ -199,7 +199,7 @@ STORIES = [
   {"show": {"kind": "rows", "rows": [[0, None, None, "m"], [0.377, None, None, "p"], [1, None, None, "g"]],
             "labels": (["coin toss · AUC 0.5", "Nur's score · AUC 0.689", "perfect · AUC 1"], ["монетка · AUC 0,5", "скор Nur · AUC 0,689", "идеальный · AUC 1"]),
             "lo": 0, "hi": 1, "dp": 3, "ref": [0.4, 0.6], "words": {"ref": ("usual for an application scorecard", "обычно для скоринга заявок")}},
-   "f": ("Gini = 2 × AUC − 1 = 2 × 0.689 − 1 = {p|0.377}", "Джини = 2 × AUC − 1 = 2 × 0,689 − 1 = {p|0,377}"),
+   "f": ("Gini = 2 × AUC − 1 = 2 × 0.6887 − 1 = {p|0.377}", "Джини = 2 × AUC − 1 = 2 × 0,6887 − 1 = {p|0,377}"),
    "fs": ("Gini is two times the AUC minus one: 0.377.", "Джини — это два AUC минус один: 0,377."),
    "say": ("Banks rescale it as the [[Gini|2 × AUC − 1: 0 for a coin toss, 1 for a perfect ranking]]: a coin toss gets 0, a perfect score 1, Nur's score {p|0.377}.",
            "Банки переводят его в [[коэффициент Джини|2 × AUC − 1: 0 у монетки, 1 у идеального ранжирования]]: у монетки 0, у идеального скора 1, у скора Nur {p|0,377}.")},

@@ -99,6 +99,28 @@ SELECT COUNT(*) AS loans, SUM(principal) AS principal FROM my_v_written_off;
 
 > 🎬 **Didn't get changing and dropping a view?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=57796&end=58040)
 
+> ⚠️ **Quirk: a view with `SELECT *` follows its table in SQLite — and not elsewhere.**
+>
+> - **You expect:** a view to behave the same in every database.
+> - **What happens:** add a column to a table, and a SQLite view written with `SELECT *` shows it from then on. In SQL Server and PostgreSQL the view keeps the column list it had on the day it was made; the new column is missing until you refresh the view (`sp_refreshview` in SQL Server, `CREATE OR REPLACE VIEW` in PostgreSQL).
+> - **Why:** SQLite keeps the view's text and reads the `*` again on every use; the other two turn the `*` into a fixed list when the view is created.
+> - **Protect yourself:** list the columns in every view you share, as `my_v_written_off` does. Then the view shows the same columns in every database, and a new column changes nothing until you decide.
+
+```sql
+-- throwaway TEMP objects: gone after the run
+DROP VIEW IF EXISTS temp.v_star;
+DROP TABLE IF EXISTS temp.t_star;
+CREATE TEMP TABLE t_star (a INTEGER);
+INSERT INTO t_star VALUES (1);
+CREATE TEMP VIEW v_star AS
+  SELECT * FROM t_star;
+-- a column added after the view:
+ALTER TABLE t_star ADD COLUMN b INTEGER;
+SELECT * FROM v_star;   -- SQLite: a and b
+```
+
+Two columns: SQLite's view picked up `b`. In SQL Server the same steps show only `a`. (The box says it too: TEMP objects never reach your practice copy.)
+
 ### A view over a view — layers
 
 **What it is.** A view can read another view. The outer view **inherits** everything the inner one does: build the dedup once in `v_payments_clean`, and every view on top of it is de-duplicated too. This is how a **reporting layer** is built: clean views first, business views on top.

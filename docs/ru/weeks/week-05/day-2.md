@@ -77,7 +77,7 @@ DataFrame Series
 
 ### read_csv — файл в DataFrame (parse_dates, dtype) :id=read_csv--a-file-into-a-dataframe-parse_dates-dtype
 
-**Что это.** `pd.read_csv(path)` читает CSV в DataFrame. Строку заголовка он берёт как имена столбцов и **угадывает тип** (*dtype*) каждого столбца: целые числа → `int64`, дробные → `float64`, всё остальное → `object` (текст). Два параметра исправляют догадку: `parse_dates=[…]` делает столбцы дат настоящими датами, `dtype={…}` задаёт тип принудительно.
+**Что это.** `pd.read_csv(path)` читает CSV в DataFrame. Строку заголовка он берёт как имена столбцов и **угадывает тип** (*dtype*) каждого столбца: целые числа → `int64`, дробные → `float64`, всё остальное → `str` (текст; pandas до версии 3.0 и многие учебники называют его `object`). Два параметра исправляют догадку: `parse_dates=[…]` делает столбцы дат настоящими датами, `dtype={…}` задаёт тип принудительно.
 
 **Как пишется.**
 
@@ -92,8 +92,8 @@ print(cust_txt["phone"].dtype, cust_txt["phone"][0])
 
 | столбец | догадка по умолчанию | с параметром |
 |---|---|---|
-| `disbursed_at` | `object` — текст | `datetime64[ns]` с `parse_dates=["disbursed_at"]` |
-| `phone` | `int64` — `998902031105`, `+` потерян | `object` — `"+998902031105"` с `dtype={"phone": str}` |
+| `disbursed_at` | `str` — текст | `datetime64[us]` с `parse_dates=["disbursed_at"]` |
+| `phone` | `int64` — `998902031105`, `+` потерян | `str` — `"+998902031105"` с `dtype={"phone": str}` |
 | `monthly_income` | `float64` — целые числа, но 356 пропусков | (пропуск — это `NaN`, а `NaN` — число float) |
 
 Дата приходит текстом, пока вы не попросите даты; телефон становится числом 998 902 031 105 и теряет `+`, пока вы не попросите текст.
@@ -121,10 +121,40 @@ print(cust_txt["phone"].dtype, cust_txt["phone"][0])
 **Ваша очередь.** Прочитайте только три столбца `customers_dirty.csv` и сохраните телефон текстом.
 
 ```task
-{"id": "w05d2-l2", "kind": "python", "starter": "import pandas as pd\n\n# ваш код: прочитайте ../excel/customers_dirty.csv с usecols=[\"customer_id\", \"phone\", \"monthly_income\"]\n# и dtype={\"phone\": str}; выведите shape и dtypes\n", "answer": 6040, "dp": 0, "hint": "pd.read_csv(path, usecols=[...], dtype={\"phone\": str}); затем .shape и .dtypes.", "model": "c3 = pd.read_csv(\"../excel/customers_dirty.csv\", usecols=[\"customer_id\", \"phone\", \"monthly_income\"], dtype={\"phone\": str})\nprint(c3.shape)      # (6040, 3)\nprint(c3.dtypes)     # customer_id int64 · phone object · monthly_income float64\n\n6 040 строк, 3 столбца; телефон сохраняет свой +."}
+{"id": "w05d2-l2", "kind": "python", "starter": "import pandas as pd\n\n# ваш код: прочитайте ../excel/customers_dirty.csv с usecols=[\"customer_id\", \"phone\", \"monthly_income\"]\n# и dtype={\"phone\": str}; выведите shape и dtypes\n", "answer": 6040, "dp": 0, "hint": "pd.read_csv(path, usecols=[...], dtype={\"phone\": str}); затем .shape и .dtypes.", "model": "c3 = pd.read_csv(\"../excel/customers_dirty.csv\", usecols=[\"customer_id\", \"phone\", \"monthly_income\"], dtype={\"phone\": str})\nprint(c3.shape)      # (6040, 3)\nprint(c3.dtypes)     # customer_id int64 · phone str · monthly_income float64\n\n6 040 строк, 3 столбца; телефон сохраняет свой +."}
 ```
 
 > 🎬 **Остались вопросы про чтение данных в DataFrame (read_csv)?** [Глеб Михайлов объясняет · 7 мин](https://youtu.be/dd3RcafdOQk?t=7182&end=7608)
+
+**Попробуйте.** Один пропуск в столбце целых чисел:
+
+```python
+import pandas as pd
+
+s = pd.Series([1, 2, None])
+print(s.dtype, s.tolist())
+# float64 [1.0, 2.0, nan]
+s2 = pd.Series([1, 2, None], dtype="Int64")
+print(s2.dtype, s2.tolist())
+# Int64: целые числа и пропуск
+```
+
+> ⚠️ **Подвох: числа, хранящиеся как текст, складываются как текст.**
+>
+> - **Ожидаете:** сумму столбца с суммами денег.
+> - **На деле:** если pandas прочитал столбец как текст — dtype `str` (`object` в старых версиях pandas); достаточно одного `"n/a"` в файле, — `sum()` склеивает значения: `"1"`, `"2"`, `"30"` дают `"1230"`.
+> - **Почему:** `+` на тексте склеивает его (`"31150000" * 2` из дня 1 — то же правило). Столбец, который не удалось прочитать как числа, pandas оставляет текстом и не предупреждает.
+> - **Как защититься:** после каждого `read_csv` смотрите `dtypes`. Превращайте текстовый столбец в числа через `pd.to_numeric(col, errors="coerce")` — плохие значения станут NaN; посчитайте их.
+
+```python
+import pandas as pd
+
+# так приходит из грязного файла:
+amounts = pd.Series(["1", "2", "30"])
+print(amounts.dtype, amounts.sum())
+# str 1230: склеено, а не сложено
+print(pd.to_numeric(amounts).sum())   # 33
+```
 
 ### Первый взгляд — shape, head, info, describe :id=first-look--shape-head-info-describe
 
@@ -157,11 +187,11 @@ loans.info()             # dtype и число непустых значений
 RangeIndex: 7828 entries, 0 to 7827
  #   Column        Non-Null Count  Dtype
  0   loan_id       7828 non-null   int64
- 1   customer      7828 non-null   object
- 6   disbursed_at  7828 non-null   datetime64[ns]
+ 1   customer      7828 non-null   str
+ 6   disbursed_at  7828 non-null   datetime64[us]
  7   principal     7828 non-null   int64
- 12  bucket        7828 non-null   object
-dtypes: datetime64[ns](1), int64(5), object(7)
+ 12  bucket        7828 non-null   str
+dtypes: datetime64[us](1), int64(5), str(7)
 ```
 
 (показаны пять из 13 строк.) В каждом столбце 7 828 непустых значений: в этой выгрузке пропусков нет. Пять столбцов — целые числа, один — дата, семь — текст.
@@ -181,7 +211,7 @@ loans.describe()  # числовые столбцы: count, mean, std, min, кв
 
 (три столбца, `std` и `min` опущены.) Средний principal — 51.7 млн, а медиана — 5.79 млн: большинство кредитов маленькие, а несколько — очень большие; два портфеля недели 3 в одной строке. Квартиль 75 % у `dpd` всё ещё 0, значит, как минимум три кредита из четырёх не просрочены — на деле 7 429 из 7 828, 95 %; худший просрочен на 919 дней.
 
-`describe(include="object")` делает то же для текста: число разных значений, самое частое и сколько раз оно встречается. `loans["product"].nunique()` — это `COUNT(DISTINCT product)`, 5.
+`describe(include="str")` делает то же для текста: число разных значений, самое частое и сколько раз оно встречается. `loans["product"].nunique()` — это `COUNT(DISTINCT product)`, 5.
 
 **Когда применять.**
 - На каждом новом файле, до любого фильтра: верно ли зерно, верны ли типы, где пропуски?
@@ -359,6 +389,21 @@ late.loc[late["dpd"] > 400, ["loan_id", "product", "dpd"]].head(3)
 {"id": "w05d2-l5", "kind": "python", "starter": "import pandas as pd\nlo = pd.read_csv(\"../excel/loans_status.csv\", parse_dates=[\"disbursed_at\"])\n\n# ваш код: оставьте просроченные кредиты (dpd > 0), возьмите позицию 9 через iloc и выведите её loan_id\n", "answer": 243, "dp": 0, "hint": "lt = lo[lo[\"dpd\"] > 0]; затем lt.iloc[9][\"loan_id\"].", "model": "lt = lo[lo[\"dpd\"] > 0]\nprint(lt.iloc[9][\"loan_id\"])     # 243\nprint(lt.index[9])                # 239 — её метка, а не позиция\n\nПозиция 9 — десятая просроченная строка; её метка 239, а loan_id 243. Три разных числа для одной строки — вот почему loc и iloc — два разных метода."}
 ```
 
+> ⚠️ **Подвох: `[1:3]` — это три строки в `loc` и две в `iloc`.**
+>
+> - **Ожидаете:** `s.loc[1:3]` и `s.iloc[1:3]` дадут одни и те же строки на свежем индексе 0, 1, 2 …
+> - **На деле:** `loc` возвращает метки 1, 2 **и 3**; `iloc` — позиции 1 и 2.
+> - **Почему:** `iloc` режет как любой список Python — конец не входит. `loc` режет по меткам, а у метки нет «следующей», перед которой можно остановиться, поэтому конец входит.
+> - **Как защититься:** для «первых n строк» берите `iloc[:n]` или `head(n)`; с `loc` называйте последнюю нужную метку.
+
+```python
+import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50])
+print(s.loc[1:3].tolist())    # метка 3 входит
+print(s.iloc[1:3].tolist())   # позиция 3 — нет
+```
+
 ### Сортировка — sort_values и nlargest :id=sorting--sort_values-and-nlargest
 
 **Что это.** `df.sort_values("col")` возвращает строки в порядке столбца — `ORDER BY`. `ascending=False` ставит наибольшие первыми; список столбцов сортирует по нескольким ключам. `df.nlargest(n, "col")` — короткий путь к «топ n».
@@ -440,7 +485,7 @@ pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")  # 658.0, NaN, NaN
 - Каждое производное число: доля, отношение, флаг, сумма в млрд.
 - `astype` после чтения, если догадка была неверной; `to_numeric(errors="coerce")` — на грязном тексте.
 
-> ⚠️ **Осторожно.** Присваивайте через `.loc`, никогда через две пары скобок подряд. `loans[loans["dpd"] > 90]["flag"] = 1` (цепочная индексация) пишет во временную **копию** и ничего не меняет в `loans` — pandas лишь предупреждает `SettingWithCopyWarning`. Пишите `loans.loc[loans["dpd"] > 90, "flag"] = 1`. А когда вырезаете фрейм, чтобы работать с ним дальше, сознательно берите копию: `late = loans[loans["dpd"] > 0].copy()`.
+> ⚠️ **Осторожно.** Присваивайте через `.loc`, никогда через две пары скобок подряд. `loans[loans["dpd"] > 90]["flag"] = 1` (цепочная индексация) пишет во временную **копию** и ничего не меняет в `loans` — pandas лишь предупреждает `ChainedAssignmentError: A value is being set on a copy of a DataFrame or Series through chained assignment`. Пишите `loans.loc[loans["dpd"] > 90, "flag"] = 1`. А когда вырезаете фрейм, чтобы работать с ним дальше, сознательно берите копию: `late = loans[loans["dpd"] > 0].copy()`. С pandas 3.0 (Copy-on-Write, «копирование при записи») вырезанный фрейм и так ведёт себя как отдельный, и `.copy()` необязателен, но он говорит, что вы имеете в виду, а старые версии pandas без него предупреждают `SettingWithCopyWarning`.
 
 **Ваша очередь.** Добавьте столбец `paid` = principal − outstanding и выведите его сумму в млрд с одним знаком после запятой.
 
@@ -449,6 +494,23 @@ pd.to_numeric(pd.Series(["658", "", "n/a"]), errors="coerce")  # 658.0, NaN, NaN
 ```
 
 > 🎬 **Остались вопросы про новые столбцы в DataFrame?** [Глеб Михайлов объясняет · 4 мин](https://youtu.be/dd3RcafdOQk?t=8530&end=8800)
+
+**Попробуйте.** Строка-цепочка ничего не меняет; `.loc` работает:
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({"dpd": [0, 95, 120],
+                   "flag": [0, 0, 0]})
+# цепочка: запись в копию
+df[df["dpd"] > 90]["flag"] = 1
+print(df["flag"].tolist())   # [0, 0, 0]
+# один шаг, прямо в df
+df.loc[df["dpd"] > 90, "flag"] = 1
+print(df["flag"].tolist())   # [0, 1, 1]
+```
+
+На строку-цепочку pandas 3 ещё выводит предупреждение *ChainedAssignmentError*: в `df` она не пишет никогда. (Старые версии pandas предупреждали *SettingWithCopyWarning* и иногда всё же записывали — ещё одна причина всегда писать `.loc`.)
 
 ### Даты — аксессор .dt :id=dates--the-dt-accessor
 
@@ -542,6 +604,21 @@ Micro 34.1 % · Consumer 30.9 · BNPL 20.0 · SME 10.0 · Auto 5.0 — доли 
 {"id": "w05d2-l9", "kind": "python", "starter": "import pandas as pd\nlo = pd.read_csv(\"../excel/loans_status.csv\", parse_dates=[\"disbursed_at\"])\n\n# ваш код: value_counts по status с normalize=True; выведите долю written_off в %\n", "answer": 2.43, "dp": 2, "hint": "lo[\"status\"].value_counts(normalize=True)[\"written_off\"] * 100.", "model": "shares = lo[\"status\"].value_counts(normalize=True)\nprint(round(100 * shares[\"written_off\"], 2))     # 2.43\n\n190 из 7 828 кредитов. Результат value_counts — это Series с индексом из значений, поэтому [\"written_off\"] выбирает одно из них."}
 ```
 
+**Попробуйте.**
+
+```python
+import pandas as pd
+
+method = pd.Series(["card", None, "card",
+                    None, "cash"])
+print(method.value_counts().to_dict())
+# 2 пропуска возвращаются:
+vc = method.value_counts(dropna=False)
+print(vc.to_dict())
+```
+
+Пять платежей, а первый подсчёт показывает три. Доли из него были бы долями трёх заполненных строк.
+
 ### Пропущенные значения — isna, fillna, dropna :id=missing-values--isna-fillna-dropna
 
 **Что это.** **`NaN`** (*missing value*, пропуск) — это NULL в pandas: ячейка без значения (`NaT` для даты). Агрегаты пропускают его, как `AVG` в SQL. `isna()` находит его, `fillna(x)` вписывает значение в пропуски, `dropna()` удаляет строки с ним.
@@ -602,7 +679,42 @@ print(len(cust.dropna(subset=["monthly_income"])))
 
 > 🎬 **Остались вопросы про пропущенные значения в pandas?** [Глеб Михайлов объясняет · 6 мин](https://youtu.be/dd3RcafdOQk?t=9192&end=9530)
 
+**Попробуйте.** NaN не равен даже самому себе:
+
+```python
+import numpy as np
+import pandas as pd
+
+print(np.nan == np.nan)        # False
+inc = pd.Series([5_000_000, np.nan])
+print((inc == np.nan).sum())   # 0
+print(inc.isna().sum())        # 1
+```
+
+> ⚠️ **Подвох: сумма ничего — 0, среднее ничего — NaN.**
+>
+> - **Ожидаете:** pandas сообщит, когда складывать нечего, как `SUM` в SQL с его NULL (неделя 2).
+> - **На деле:** `sum()` пропускает NaN, поэтому столбец из одних пропусков — или пустая выборка — даёт в сумме **0**. `mean()` того же столбца — NaN. А `mean()` от `[1, NaN, 3]` равно 2: пропуск пропущен, а не посчитан как 0.
+> - **Почему:** pandas начинает каждую сумму с 0 и прибавляет то, что нашёл; для среднего нужно хотя бы одно значение.
+> - **Как защититься:** показывайте рядом с итогом, из скольких значений он сложен (`count()`); или просите `sum(min_count=1)` — он вернёт NaN, когда складывать нечего, как SQL.
+
+```python
+import numpy as np
+import pandas as pd
+
+blank = pd.Series([np.nan, np.nan])
+print(blank.sum(), blank.mean())   # 0.0 nan
+print(blank.count())               # 0
+print(blank.sum(min_count=1))      # nan
+# пропуск пропущен, а не посчитан как 0:
+print(pd.Series([1, np.nan, 3]).mean())
+```
+
 ### pd.cut — корзины без CASE :id=pdcut--buckets-without-a-case
+
+```story
+{"id": "w05d2-s1", "title": "pd.cut: кому принадлежит край?", "min": 3, "steps": [{"say": "`pd.cut` с краями −1, 0, 30, 60, 90, ∞. Каждый интервал [[закрыт справа|содержит правый край, но не левый: (30, 60] содержит 60, но не 30]]: ● отмечает край, который внутри.", "show": {"kind": "bands", "edges": [-1, 0, 30, 60, 90, null], "labels": ["0", "1-30", "31-60", "61-90", "90+"], "closed": "right", "vals": [], "words": {"val": "dpd"}}, "f": "pd.cut(loans[\"dpd\"], bins=[-1, 0, 30, 60, 90, np.inf], labels=…)"}, {"say": "dpd {p|60} стоит на краю. Правый конец закрыт, поэтому 60 входит в (30, 60] → **31-60**.", "show": {"vals": [60]}}, {"say": "На один день больше.", "ask": {"q": "А dpd 61?", "options": ["31-60", "61-90"], "answer": 1, "why": "61 больше 60, его содержит следующий интервал, (60, 90]."}}, {"say": "61 → 61-90. А {p|0} → (−1, 0] → **0**: вот почему первый край −1, а не 0.", "show": {"vals": [60, 61, 0]}}, {"say": "Ловушка: начать края с 0. Первый интервал — (0, 30], и 0 в него **не** входит → {o|NaN}. Все 7 429 текущих кредитов теряют корзину — без ошибки.", "show": {"kind": "bands", "edges": [0, 30, 60, 90, null], "labels": ["1-30", "31-60", "61-90", "90+"], "closed": "right", "vals": [0], "words": {"val": "dpd"}}}, {"say": "`right=False` закрывает **левый** конец: [5, 10) содержит 5. Правилам со знаком `<` — «меньше 5 млн» — нужен именно он: доход ровно {p|5 млн} — это **5-10m**.", "show": {"kind": "bands", "edges": [0, 5, 10, 20, null], "labels": ["<5m", "5-10m", "10-20m", "20m+"], "closed": "left", "vals": [5], "words": {"val": "доход, млн"}}, "f": "pd.cut(income, bins=[0, 5, 10, 20, np.inf], right=False)"}, {"say": "Нажмите **Перевернуть закрытый край** — и 5 млн перепрыгнет в <5m: те же края, другое правило. Нажмите ещё раз, чтобы вернуть.", "act": [{"label": "Перевернуть закрытый край", "rep": 1, "do": "flip"}], "film": 0}, {"say": "Снова края dpd. Бросайте краевые значения сами: каждое попадает в интервал, чьего **правого** конца оно достигает.", "show": {"kind": "bands", "edges": [-1, 0, 30, 60, 90, null], "labels": ["0", "1-30", "31-60", "61-90", "90+"], "closed": "right", "vals": [], "words": {"val": "dpd"}}, "act": [{"label": "dpd 0", "rep": 1, "do": "drop", "v": 0}, {"label": "dpd 30", "rep": 1, "do": "drop", "v": 30}, {"label": "dpd 31", "rep": 1, "do": "drop", "v": 31}, {"label": "dpd 90", "rep": 1, "do": "drop", "v": 90}, {"label": "dpd 91", "rep": 1, "do": "drop", "v": 91}]}]}
+```
 
 **Что это.** `pd.cut(col, bins=edges, labels=…)` относит каждое число к интервалу и возвращает его метку — `CASE WHEN dpd <= 30 THEN …` недели 2 в одну строку. Интервалы по умолчанию **закрыты справа**: `(30, 60]` содержит 60, но не 30.
 
@@ -715,7 +827,7 @@ watch.head()
 
 61 кредит, 2 718 083 360 сумов остатка. Вверху списка — Auto-кредит на 301 млн, уже просроченный на 84 дня: один шаг до 90+.
 
-`.copy()` после `loc` делает `watch` отдельным фреймом, поэтому новые столбцы не вызывают предупреждения о копии. `to_csv(…, index=False)` записывает файл, который откроет Бекзод; `to_excel("f.xlsx", sheet_name="…", index=False)` делает то же для Excel (нужен пакет `openpyxl`, он есть в Anaconda).
+`.copy()` после `loc` делает `watch` отдельным фреймом: новые столбцы попадают в `watch` и никогда не трогают `loans` (pandas 3 так работает и без `.copy()`; старые версии pandas здесь предупреждали `SettingWithCopyWarning`). `to_csv(…, index=False)` записывает файл, который откроет Бекзод; `to_excel("f.xlsx", sheet_name="…", index=False)` делает то же для Excel (нужен пакет `openpyxl`, он есть в Anaconda).
 
 **Ваша очередь.** Тот же список для филиала Samarkand: какой остаток он держит?
 
@@ -786,11 +898,14 @@ def portfolio_summary(df):
     }
 
 portfolio_summary(loans)
-# {'loans': 7828, 'active': 3352, 'outstanding': 208723504430, 'disbursed_2026':
-# 3030, 'par30_pct': 3.12, 'npl90_pct': 2.55}
+# {'loans': 7828, 'active': np.int64(3352), 'outstanding': np.int64(208723504430),
+#  'disbursed_2026': np.int64(3030), 'par30_pct': np.float64(3.12),
+#  'npl90_pct': np.float64(2.55)}
 ```
 
 Каждая строка — это SQL-оператор, который вы уже писали: `len` — это `COUNT(*)`, `(cond).sum()` — это `SUM(CASE WHEN … THEN 1 END)`, `df.loc[mask, "col"].sum()` — это `SUM(col) WHERE mask`. Одно число отличается от плитки недели 4 намеренно: **3 030**, а не 3 051 — эта функция использует полуоткрытое `< AS_OF`, поэтому 21 кредит, выданный в сам день отчёта (852 760 000), не входит; `COUNTIFS` на неделе 4 использовал `<=`. Ни то ни другое не ошибка; докстринг функции должен сказать, какое из них выбрано.
+
+В словаре видно `np.int64(3352)` и `np.float64(3.12)` — и Jupyter на вашем компьютере покажет то же: сумма или среднее pandas — это **число numpy**, и с numpy 2.0 его `repr` называет тип. Число всё равно 3 352: `print(x)` выводит его без обёртки, а `int(x)` / `float(x)` превращают его в обычное число Python (так и сделайте, прежде чем такой словарь уйдёт в JSON-файл или отчёт).
 
 > 💡 **Главное.** Ежемесячный ноутбук безопасен только с **assert**, фиксирующим известные значения: `assert portfolio_summary(loans)["outstanding"] == 208_723_504_430`. Если в ноябрьском файле появится новое написание статуса или дата в виде текста, assert упадёт раньше, чем Бекзод увидит неверную плитку, — `day2_starter.ipynb` фиксирует все шесть.
 
@@ -809,7 +924,7 @@ portfolio_summary(loans)
 **P2.** *(read_csv)* Прочитайте `loans_status.csv` *без* `parse_dates`. Какой dtype у `disbursed_at` и что делает `loans["disbursed_at"].dt.year`? Исправьте двумя способами.
 
 ```task
-{"id": "w05d2-p1", "kind": "choice", "options": ["datetime64[ns] — pandas сам распознаёт даты ISO", "object (текст) — и .dt вызывает AttributeError, пока вы его не преобразуете", "int64 — даты хранятся как числа", "category — даты повторяются, и pandas их сжимает"], "answer": 1, "explain": "Без parse_dates столбец — текст: .dt вызывает AttributeError: Can only use .dt accessor with datetimelike values. Исправление: parse_dates=[\"disbursed_at\"] в read_csv или потом loans[\"disbursed_at\"] = pd.to_datetime(loans[\"disbursed_at\"]); после этого info() покажет datetime64[ns]."}
+{"id": "w05d2-p1", "kind": "choice", "options": ["datetime64[us] — pandas сам распознаёт даты ISO", "str (текст) — и .dt вызывает AttributeError, пока вы его не преобразуете", "int64 — даты хранятся как числа", "category — даты повторяются, и pandas их сжимает"], "answer": 1, "explain": "Без parse_dates столбец — текст: .dt вызывает AttributeError: Can only use .dt accessor with datetimelike values. Исправление: parse_dates=[\"disbursed_at\"] в read_csv или потом loans[\"disbursed_at\"] = pd.to_datetime(loans[\"disbursed_at\"]); после этого info() покажет datetime64[us]."}
 ```
 
 **P3.** *(первый взгляд)* Только по `describe()`: медиана principal, среднее principal, 75-й перцентиль `dpd`, максимум `dpd`. О чём говорит разрыв между средним и медианой? Введите медиану principal.

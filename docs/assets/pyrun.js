@@ -1,4 +1,4 @@
-/* Python in the browser (Docsify plugin), with Pyodide 0.26.4 (CPython compiled for the web) + pandas, numpy, matplotlib.
+/* Python in the browser (Docsify plugin), with Pyodide 314.0.7 (CPython 3.14 compiled for the web) + pandas 3, numpy, matplotlib.
 
 1. Every runnable ```python example on a page becomes an editable box with ▶ Run (Ctrl + Enter). Python starts on the first
    ▶ Run of a page (never on page load: about 15 MB the first time, then the browser keeps it). The blocks of a page share
@@ -20,7 +20,10 @@ with a line that says why. A box gets "al-done" after a run without an error ("a
 "al-block" that counts toward its section: the examples on a page are there to run, like the SQL examples, not to be ticked off.
 Edits are kept in localStorage "al.py" (code → per page and block, ed → per editor id, done → blocks that ran). */
 (function () {
-  var BASE = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+  /* Pyodide 314.0.7 = Python 3.14.2 with pandas 3.0, numpy 2.4, matplotlib 3.10, scipy 1.18, statsmodels 0.14.6,
+     scikit-learn 1.8 — the same majors as the Anaconda she installs in week 5 (Python 3.14, pandas 3.0.3, numpy 2.4,
+     matplotlib 3.11). Changed 2026-11-02; it was 0.26.4 with pandas 2.2, numpy 1.26 and matplotlib 3.5 */
+  var BASE = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/';
   var REPO_RAW = 'https://raw.githubusercontent.com/Raxmatov005/analytics-course/main/';
   var DB_GZ = 'assets/nur.db.gz?v=1';   // the same file and cache ("al-db") as sqlrun.js
   var KEY = 'al.py', FILES_V = 1;
@@ -52,7 +55,7 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
       'from statsmodels.stats.power import zt_ind_solve_power, tt_ind_solve_power, NormalIndPower'],
     [/(^|[^.\w])multipletests\s*\(/, 'statsmodels', 'multipletests', 'from statsmodels.stats.multitest import multipletests'],
     [/(^|[^.\w])FuncFormatter\s*\(/, '', 'FuncFormatter', 'from matplotlib.ticker import FuncFormatter'],
-    [/(^|[^.\w])sqlite3\./, 'sqlite3', 'sqlite3', 'import sqlite3'],
+    [/(^|[^.\w])sqlite3\./, '', 'sqlite3', 'import sqlite3'],   // part of Pyodide 314's standard library: loadPackage('sqlite3') fails there
     [/(^|[^.\w])Path\s*\(/, '', 'Path', 'from pathlib import Path'],
     [/(^|[^.\w])csv\./, '', 'csv', 'import csv'],
     [/(^|[^.\w])math\./, '', 'math', 'import math'],
@@ -84,8 +87,10 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
     function dir(p) { return p.replace(/\/[^\/]*$/, '') || '/'; }
     var jobs = {
       boot: function (m) {
-        importScripts(m.base + 'pyodide.js');
-        return self.loadPyodide({ indexURL: m.base }).then(function (p) {
+        // Pyodide 314 runs only in a module worker ("Classic web workers are not supported"): import its ES module
+        return import(m.base + 'pyodide.mjs').then(function (mod) {
+          return mod.loadPyodide({ indexURL: m.base });
+        }).then(function (p) {
           py = p; stage('packages');
           return py.loadPackage(['numpy', 'pandas', 'matplotlib'], { messageCallback: function () {} });
         }).then(function () { py.runPython(m.prelude); return true; });
@@ -105,7 +110,11 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
       },
       run: function (m) {
         var own = m.pkgs.filter(function (p) { return p.indexOf('pip:') !== 0; }), pip = m.pkgs.filter(function (p) { return p.indexOf('pip:') === 0; });
-        var pre = own.length ? py.loadPackage(own, { messageCallback: said, errorCallback: function () {} }).catch(function () {}) : Promise.resolve();
+        // one unknown name rejects the whole list (Pyodide 314): then each package on its own, so the others still load
+        var quiet = { messageCallback: said, errorCallback: function () {} };
+        var pre = own.length ? py.loadPackage(own, quiet).catch(function () {
+          return Promise.all(own.map(function (p) { return py.loadPackage(p, quiet).catch(function () {}); }));
+        }) : Promise.resolve();
         pip.forEach(function (p) {   // a pure-Python package from PyPI, through micropip (once: then it is imported)
           var name = p.slice(4);
           pre = pre.then(function () {
@@ -141,6 +150,18 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
     'import numpy as _np',
     'import pandas as _pd',
     '_plt.show = lambda *a, **k: None',
+    /* two things only the browser's build does (2026-11-02, Pyodide 314; her Anaconda draws the same code without them):
+       matplotlib 3.10's Agg warns "The x parameter as float was deprecated" inside every savefig, and numpy 2's default
+       integer is 32-bit in WebAssembly, so ax.barh(names, sums_in_soum) overflowed ("Python int too large to convert to
+       C long") on bars over 2.1 bn: the widths are retried as floats */
+    'import warnings',
+    'warnings.filterwarnings("ignore", message="The (x|y|width|height) parameter as float")',
+    'import matplotlib.axes as _axes',
+    '_cdx = _axes.Axes._convert_dx',
+    'def _convert_dx(dx, x0, xconv, convert):',
+    '    try: return _cdx(dx, x0, xconv, convert)',
+    '    except OverflowError: return _cdx(_np.asarray(dx, dtype=float), x0, xconv, convert)',
+    '_axes.Axes._convert_dx = staticmethod(_convert_dx)',
     '_pd.set_option("display.width", 120); _pd.set_option("display.max_columns", 30)',
     '_G, _PAGE, _SHOWN = {}, None, []',
     'def _show(v):',
@@ -224,7 +245,7 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
   function start() {
     if (booting) return booting;
     var src = '(' + workerMain.toString() + ')();';
-    worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+    worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })), { type: 'module' });
     worker.onmessage = function (e) {
       var m = e.data;
       if (m.t === 'stage') { onStage(m.stage, m.x); return; }
@@ -443,7 +464,8 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
         var why = String(e && e.message || e);
         if (why === 'restarted') return failed(T('Python was restarted — run the blocks again from the top (▶ Run all above).', 'Python перезапущен — выполните блоки заново сверху (▶ Выполнить всё выше).'));
         console.error('pyrun', e);
-        if (/HTTP|fetch|network/i.test(why)) return failed(T('Could not load a data file — check the internet connection and try again.', 'Не удалось загрузить файл данных — проверьте подключение к интернету и попробуйте снова.'));
+        // a data file failed only while Python is on; a failed start (its message holds the CDN's https:// address) says so
+        if (state === 'on' && /HTTP|fetch|network/i.test(why)) return failed(T('Could not load a data file — check the internet connection and try again.', 'Не удалось загрузить файл данных — проверьте подключение к интернету и попробуйте снова.'));
         return failed(T('Could not start Python — check the internet connection and try again.', 'Не удалось запустить Python — проверьте подключение к интернету и попробуйте снова.') + ' (' + why + ')');
       });
     });

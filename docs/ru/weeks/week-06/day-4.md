@@ -667,11 +667,11 @@ def mann_whitney(a, b):
     # U, P(случайное a > случайного b), p-значение
     return u, u / (n1 * n2), 2 * (1 - Phi(z))
 
-# (8.0, 0.667) — маленькая таблица
-print(mann_whitney([2, 5, 9], [1, 3, 4, 7])[:2])
+# [8.0, 0.667] — маленькая таблица
+print([round(float(v), 3) for v in mann_whitney([2, 5, 9], [1, 3, 4, 7])[:2]])
 auto, sme = x.loc[x.code == "AUTO", "days_late"], x.loc[x.code == "SME", "days_late"]
 # [19075370.5, 0.495, 0.323]
-print([round(v, 3) for v in mann_whitney(auto, sme)])
+print([round(float(v), 3) for v in mann_whitney(auto, sme)])
 # scipy (ноутбук): scipy.stats.mannwhitneyu(auto, sme) — те же U и p
 ```
 

@@ -981,6 +981,16 @@ Seven segments, one honest answer
 - …and loses the total, 6.00 % against 7.37 %: 47 % of A's users come from the strong week 1, only 9 % of B's. That is why a broken cell leaves **both** arms, and why the balance check comes before the result.
 - Last one.
 
+(Animated explanation)
+Better in every part, worse in total
+- A test with a ramp-up: in week 1, 90 % of the users went to A. Each bar is a conversion rate; its **width** is the number of users.
+- Inside each period B is ahead: week 1 11.0 % against 10.0 %, weeks 2–4 5.5 % against 5.0 %.
+- Look at the widths before you answer.
+- Add each arm up: A 7.37 %, B 6.00 % — B **loses** the total. 47 % of A's users sit in the strong week 1, only 9 % of B's: B's week 1 is the thin bar.
+- Give B as many week-1 users as A, at the same rates. Press the button: B's total jumps to 154 ÷ 1 900 = 8.11 %, above A.
+- That is Simpson's paradox: the total mixes the effect with the **mix** of users.
+- One last look at the bars.
+
 **Now check yourself.**
 
 ### Ship it or not? A game — the decision, the paragraph and the slide
@@ -2619,6 +2629,14 @@ own   = CALCULATE ( SUM ( v_loan_status[outstanding] ) )
 
 ### ALL and its relatives — the denominators
 
+(Animated explanation)
+ALL: a denominator that forgets the row
+- A matrix: Rows `products[code]`, Values `[Outstanding]`, in bn. Each row is the same measure under one more filter — its product. The Total row has none: 208.7 bn.
+- A first try at a share: divide the measure by itself. In the SME row **both** see product = SME: 125.9 ÷ 125.9 = 100 %. Every row says 100 %.
+- `CALCULATE ( …, ALL ( products ) )` removes the product filter from the **bottom** only: 125.9 ÷ 208.7 = 60.32 %. Now the rows add up to 100 %.
+- Switch between the two measures.
+- The rule: a share needs a denominator with **fewer** filters than its cell. ALL ( products ) takes away exactly one — the product — so BNPL is 1.1 ÷ 208.7 = 0.54 %.
+
 **What it is.** A share needs a denominator with **fewer** filters than the cell. **ALL** removes filters inside CALCULATE. Its relatives remove different amounts:
 
 | function | removes | with a branch slicer on Tashkent Central, the SME row shows |
@@ -3532,6 +3550,15 @@ FROM m;
 
 ### The lending funnel — visit → application → approval → disbursement → repayment
 
+(Animated explanation)
+Step by step, or from the top?
+- Nur's app funnel, January–June 2026: the sessions that reached each step. Every bar is shorter than the one above — a unit can only drop out.
+- **Step conversion**: this step ÷ the step above. 854 ÷ 1 252 = 68.2 % of the visits send an application.
+- Three of the four step conversions: 68.2, 84.2 and 83.3 %. The fourth, approval → disbursement, is yours to work out in the box below. The weakest step is the first one.
+- **From the top**: this step ÷ the first. It is the step rates multiplied: 43.8 % of the visits end in a first instalment paid on time.
+- Subtract the bars of the first picture.
+- Step rates say **where** it leaks; from the top says **what is left**. If only the first step rose from 68.2 % to 75 %, the end would rise from 43.8 % to about 48.2 %.
+
 **What it is.** A **funnel** (*воронка*) is an ordered list of steps and the number of units that reached each one. A lender's funnel ends at money coming back: **visit → application → approval → disbursement → repayment**. **Step conversion** (*конверсия шага*) = reached this step ÷ reached the previous step. **Conversion from the top** = reached this step ÷ reached step 1.
 
 **How to write it.** One row per unit with a 0/1 flag per step, then one sum per step:
@@ -3734,6 +3761,21 @@ GROUP BY cohort ORDER BY cohort;
 **Your turn.** How many customers are in the **June 2025** cohort?
 
 ### The retention table and the retention curve
+
+(Animated explanation)
+The cohort triangle, one month at a time
+- A small product, 10 first-time borrowers a month. Each **row** is a cohort: Jan, Feb … May.
+- Each **column** is an age: 1 to 4 months after the first loan. A cell = the share with a **second** loan by then. Jan at 2 months: 3 of 10 = 30 %.
+- Today is 1 June. May's people borrowed during May; most have not had a full month yet, so May's row is all ? — not measured yet, **not** zero.
+- Press **A month passes**. Every cohort gets one month older, so one new cell appears in each row that still has room.
+- The new cells lie on one slanted line — a **diagonal**: they were all measured in the same calendar month. That is why the empty corner is a triangle.
+- Think one month ahead.
+- Read **down** a column: the same age, newer cohorts. At 1 month: 10, 20, 20, 30, 30 % — newer customers come back sooner.
+- Read **across** a row: one cohort growing older. Jan: 10 → 30 → 40 → 50 %. Across only goes up: a second loan, once taken, stays taken.
+- Now Nur's real table from below: quarter cohorts of 2025–2026 at 3, 6 and 12 months. The same triangle of ? in the corner.
+- Down the 6-month column: 28.8 % → 38.3 %. Later cohorts take a second loan sooner.
+- The trap: fill the blanks with 0. The newest cohorts suddenly look the **worst** — 2026Q2 at 0 % for 6 and 12 months. A blank is 'not yet', never 0.
+- A cell exists only when **every** customer of the row has had that many months.
 
 **What it is.** A **retention table** puts cohorts in rows and the age N in columns; each cell is that cohort's retention at that age. A cell exists only when **every** customer of the cohort has had N months; otherwise it stays blank. Such a cell is **right-censored** (*цензурировано справа*): the answer exists, but the data end before we can see it — "not measured yet", never 0. A **retention curve** draws one row of the table as a line over N.
 

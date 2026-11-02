@@ -231,7 +231,27 @@ Work in progress is kept in localStorage "al.sql". */
         } catch (e) { out.error = e.message; }
       }
     });
+    if (out.changed != null) out.undone = undone(text);
     return out;
+  }
+  /* a box whose changes do not stay (2026-11-02, the quirks pass): it ends with ROLLBACK, or it only touches TEMP tables
+     and views (gone on reload) → 'rollback' / 'temp', else null; the "saved in your practice copy" line then says so */
+  function undone(text) {
+    var temps = {}, lastTx = null, kept = false;
+    statements(text).forEach(function (s) {
+      var w = ((/^\s*(\w+)/.exec(s) || [])[1] || '').toUpperCase(), m;
+      if (/^(BEGIN|COMMIT|END|ROLLBACK)$/.test(w)) { lastTx = w; return; }
+      if ((m = /^\s*CREATE\s+TEMP(?:ORARY)?\s+(?:TABLE|VIEW)\s+(?:IF\s+NOT\s+EXISTS\s+)?["`\[]?([\w.]+)/i.exec(s))) { temps[m[1].toLowerCase()] = 1; return; }
+      m = /^\s*(?:INSERT\s+(?:OR\s+\w+\s+)?INTO|REPLACE\s+INTO|UPDATE(?:\s+OR\s+\w+)?|DELETE\s+FROM|DROP\s+(?:TABLE|VIEW|INDEX)(?:\s+IF\s+EXISTS)?|ALTER\s+TABLE|CREATE\s+(?:UNIQUE\s+)?(?:TABLE|VIEW|INDEX)(?:\s+IF\s+NOT\s+EXISTS)?)\s+["`\[]?([\w.]+)/i.exec(s);
+      if (m && !temps[m[1].toLowerCase()] && !/^temp\./i.test(m[1])) kept = true;
+    });
+    return lastTx === 'ROLLBACK' ? 'rollback' : kept ? null : 'temp';
+  }
+  function savedLine(res, lead) {
+    return res.undone === 'rollback' ? T(lead + 'Rolled back: nothing was saved in your practice copy of the database.', lead + 'Откат (ROLLBACK): в учебной копии базы ничего не сохранилось.')
+      : res.undone === 'temp' ? T(lead + 'Only TEMP tables or views: they disappear when the page reloads, and your practice copy is unchanged.',
+        lead + 'Только временные (TEMP) таблицы или представления: они исчезнут при перезагрузке страницы, учебная копия базы не изменилась.')
+      : null;
   }
   function table(res) {
     if (res.error) return '<div class="sq-err">⚠ ' + esc(res.error) + '</div>' + hint(res.error);
@@ -239,11 +259,11 @@ Work in progress is kept in localStorage "al.sql". */
       var kind = (res.kind || '').toUpperCase(), ch = res.changed;
       return '<div class="sq-done">' + T('✓ Done', '✓ Готово') + (/INSERT|UPDATE|DELETE|REPLACE/.test(kind) ? ' — ' + ch + ' ' + rowsWord(ch) + T(' changed', ' ' + plural(ch, 'изменена', 'изменены', 'изменено')) :
         /CREATE|DROP|ALTER/.test(kind) ? (kind === 'DROP' ? T(' — table removed', ' — таблица удалена') : kind === 'CREATE' ? T(' — table created', ' — таблица создана') : T(' — table changed', ' — таблица изменена')) : '') +
-        T('. Saved in your practice copy of the database (Database → Reset brings back the original).',
-          '. Сохранено в вашей учебной копии базы (База данных → Сбросить вернёт исходные данные).') + '</div>';
+        (savedLine(res, '. ') || T('. Saved in your practice copy of the database (Database → Reset brings back the original).',
+          '. Сохранено в вашей учебной копии базы (База данных → Сбросить вернёт исходные данные).')) + '</div>';
     }
     var r = res.last, shown = r.values.slice(0, 50);
-    var saved = res.changed != null ? '<div class="sq-done">' + T('✓ Your changes are saved in your practice copy of the database.', '✓ Ваши изменения сохранены в учебной копии базы.') + '</div>' : '';
+    var saved = res.changed != null ? '<div class="sq-done">' + (savedLine(res, '✓ ') || T('✓ Your changes are saved in your practice copy of the database.', '✓ Ваши изменения сохранены в учебной копии базы.')) + '</div>' : '';
     if (!r.columns.length) return saved + '<div class="sq-note">' + T('0 rows.', '0 строк.') + '</div>';
     return saved + '<div class="sq-note">' + r.values.length + ' ' + rowsWord(r.values.length) + (r.values.length > 50 ? T(' (first 50 shown)', ' (показаны первые 50)') : '') + '</div>' +
       '<div class="sq-scroll"><table class="sq-table"><thead><tr>' + r.columns.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') +
@@ -344,7 +364,7 @@ Work in progress is kept in localStorage "al.sql". */
     var body = stripComments(code).trim();
     if (/,$/.test(body)) return T('One piece of a longer query (it ends with a comma) — it runs together with the pieces around it.',
       'Это часть более длинного запроса (она заканчивается запятой) — она выполняется вместе с соседними частями.');
-    if (body && !/^(SELECT|WITH|CREATE|INSERT|UPDATE|DELETE|DROP|ALTER|PRAGMA|REPLACE|BEGIN|COMMIT|ROLLBACK|EXPLAIN|VALUES|ANALYZE)\b/i.test(body)) {
+    if (body && !/^(SELECT|WITH|CREATE|INSERT|UPDATE|DELETE|DROP|ALTER|PRAGMA|REPLACE|BEGIN|COMMIT|ROLLBACK|EXPLAIN|VALUES|ANALYZE|TRUNCATE)\b/i.test(body)) {
       var w = esc(body.split(/\s/)[0].toUpperCase());
       return T('One piece of a query (it starts at ' + w + ') — it runs as part of a whole query, not on its own.',
         'Это часть запроса (она начинается с ' + w + ') — она выполняется в составе целого запроса, а не сама по себе.');

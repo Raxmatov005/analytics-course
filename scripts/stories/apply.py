@@ -16,6 +16,7 @@ for lang in ("en", "ru"):
     nl = "\r\n" if "\r\n" in raw else "\n"
     t = raw.replace("\r\n", "\n")
     B = S.build(lang)
-    t, n = re.subn(r"```story\n(.*?)\n```", lambda m: "```story\n" + B[json.loads(m.group(1))["id"]] + "\n```", t, flags=re.S)
+    # a story that is not in this source (placed by place.py from extra_stories.py) stays as it is
+    t, n = re.subn(r"```story\n(.*?)\n```", lambda m: "```story\n" + B.get(json.loads(m.group(1))["id"], m.group(1)) + "\n```", t, flags=re.S)
     io.open(p, "w", encoding="utf-8", newline="").write(t.replace("\n", nl))
     print(lang, n, "stories written")

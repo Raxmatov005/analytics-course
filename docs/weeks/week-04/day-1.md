@@ -200,6 +200,24 @@ On the real data: `=COUNTA(tblCustomers[customer_id])` → **6 040** customers. 
 {"id": "w04d1-l4", "kind": "number", "answer": 356, "dp": 0, "unit": "customers", "hint": "Rows minus rows that have a number: COUNTA on the id column, COUNT on the income column.", "model": "=COUNTA(tblCustomers[customer_id]) - COUNT(tblCustomers[monthly_income]) → 6 040 − 5 684 = 356. =COUNTBLANK(tblCustomers[monthly_income]) gives the same 356."}
 ```
 
+> ⚠️ **Quirk: a cell can be empty and not empty at the same time.**
+>
+> - **You expect:** every cell to be counted once — by `COUNTA` if it is filled, by `COUNTBLANK` if it is empty.
+> - **What happens:** a formula that returns `""` (empty text), like `=IF(B3="", "", B3*2)`, looks empty. `COUNTBLANK` counts it as blank, `COUNTA` counts it as filled, and `ISBLANK` says FALSE.
+> - **Why:** `COUNTA` and `ISBLANK` look at what the cell *holds* — a formula. `COUNTBLANK` looks at what it *shows* — nothing.
+> - **Protect yourself:** on a column filled by formulas, count real values with `COUNT` (numbers) or `=SUMPRODUCT(--(A2:A4<>""))`; do not trust `COUNTA` there.
+
+Try it on an empty sheet: type 120 in A2, the formula `=IF(B3="", "", B3*2)` in A3 (B3 stays empty), and leave A4 empty.
+
+| Formula | Gives | Why |
+|---|---|---|
+| `=COUNTA(A2:A4)` | 2 | 120 and the formula |
+| `=COUNTBLANK(A2:A4)` | 2 | the formula's `""` and the empty cell |
+| `=ISBLANK(A3)` | FALSE | A3 holds a formula |
+| `=SUMPRODUCT(--(A2:A4<>""))` | 1 | only 120 is a real value |
+
+Three cells, and `COUNTA` + `COUNTBLANK` = 4.
+
 ### COUNTIFS, SUMIFS, AVERAGEIFS — an aggregate with a condition
 
 **What it is.** These functions add up, count or average only the rows that meet a **criterion** (*условие*). `SUMIFS` is `SELECT SUM(x) FROM t WHERE …` in one cell. `MAXIFS` and `MINIFS` work the same way.
@@ -396,6 +414,13 @@ On the real data: `=SUMPRODUCT((tblLoans[dpd]>30)*tblLoans[outstanding])` → **
 ```task
 {"id": "w04d1-l8", "kind": "choice", "options": ["=COUNTIFS(tblLoans[outstanding], \">\"&tblLoans[principal]/2)", "=SUMPRODUCT(--(tblLoans[outstanding] > tblLoans[principal]/2))", "=SUM(tblLoans[outstanding] > tblLoans[principal]/2)", "=COUNTIFS(tblLoans[outstanding], \">principal/2\")"], "answer": 1, "explain": "The test compares two columns row by row, which a COUNTIFS criterion cannot do. SUMPRODUCT(--(…)) turns the TRUE/FALSE column into 1/0 and adds it up."}
 ```
+
+> ⚠️ **Quirk: `K:K` costs nothing in one formula and a lot in another.**
+>
+> - **You expect:** a whole-column reference such as `K:K` to be a harmless way to say "all the rows".
+> - **What happens:** `SUMIFS(K:K, …)` and `COUNTIFS` stay fast — they stop at the last used row. `SUMPRODUCT`, `FILTER` and other array formulas really work through all 1 048 576 rows, so a few hundred of them make the file slow on every change. And a formula inside column K that reads `K:K` reads itself: Excel warns *circular reference*.
+> - **Why:** the `…IFS` functions are built to skip the empty end of a column; array formulas compute every cell they are given.
+> - **Protect yourself:** in Excel, point formulas at Table columns (`tblLoans[principal]`): they grow with the data and stop where it stops. Keep `K:K` for Sheets and for `SUMIFS`/`COUNTIFS`.
 
 ### IF — two branches
 
@@ -652,6 +677,34 @@ The cell that shows `209 bn` still holds 208 723 504 430. A check `=G11=SUM(tblL
 ```task
 {"id": "w04d1-l17", "kind": "number", "answer": 1741700, "dp": 0, "unit": "UZS", "hint": "A negative number of digits rounds to the left of the decimal point: −2 = to hundreds.", "model": "1 741 700 — exactly the total_due of loan 1's instalments in tblInstallments. 84.35 is nearer to 100 than to 0, so it rounds up. A number format would only have hidden the decimals; ROUND changes the value."}
 ```
+
+> ⚠️ **Quirk: Excel's calendar has a day that never was.**
+>
+> - **You expect:** day 60 of Excel's calendar to be 1 March 1900.
+> - **What happens:** day 60 is **29 February 1900** — a date that did not exist (1900 was not a leap year).
+> - **Why:** Lotus 1-2-3 had this mistake, and Excel copied it on purpose so old files kept their numbers.
+> - **Protect yourself:** it bites outside Excel. Python, SQL and Power BI turn a day number like 46 296 into a date by counting from **30 December 1899**; count from 1 January 1900 and every date comes out two days late. And a workbook set to the old Mac **1904 date system** (File → Options → Advanced) gives the same date a number 1 462 smaller, so dates copied between the two jump by 4 years and 1 day. After every import, check one date you know: 1 October 2026 must be 46 296.
+
+| Formula, format `General` | Shows | |
+|---|---|---|
+| `=DATE(1900,2,28)` | 59 | |
+| `=DATE(1900,2,29)` | 60 | a day that never existed |
+| `=DATE(1900,3,1)` | 61 | |
+| `=DATE(2026,10,1)` | 46296 | the course's "today" |
+
+Week 5 turns 46 296 back into a date in pandas, from the right day 0.
+
+> ⚠️ **Quirk: Excel does binary maths too.**
+>
+> - **You expect:** `=1*(0.5-0.4-0.1)` to show 0.
+> - **What happens:** it shows `-2.78E-17`: a tiny crumb instead of zero.
+> - **Why:** 0.4 and 0.1 have no exact binary form — the same reason `0.1 + 0.2` is not exactly 0.3 in SQL (week 2) and Python (week 5). Excel hides most of these crumbs: it shows only 15 digits, and it cleans up some results that land next to zero. So you meet them rarely — and then in a check cell that says FALSE.
+> - **Protect yourself:** round both sides before you compare: `=ROUND(A1,2)=ROUND(B1,2)`; or test the gap: `=ABS(A1-B1)<0.005`.
+
+| Formula | Shows |
+|---|---|
+| `=1*(0.5-0.4-0.1)` | -2.78E-17 |
+| `=ROUND(1*(0.5-0.4-0.1), 10)` | 0 |
 
 ### Russian Excel — the same functions, other names
 

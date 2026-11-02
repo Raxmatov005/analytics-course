@@ -77,7 +77,7 @@ The column is a Series: it adds up to 72 800 000 and its largest value is loan 2
 
 ### read_csv — a file into a DataFrame (parse_dates, dtype)
 
-**What it is.** `pd.read_csv(path)` reads a CSV into a DataFrame. It takes the header line as column names and **guesses a type** (*dtype*) for every column: whole numbers → `int64`, decimals → `float64`, anything else → `object` (text). Two parameters correct the guess: `parse_dates=[…]` makes date columns real dates, `dtype={…}` forces a type.
+**What it is.** `pd.read_csv(path)` reads a CSV into a DataFrame. It takes the header line as column names and **guesses a type** (*dtype*) for every column: whole numbers → `int64`, decimals → `float64`, anything else → `str` (text; pandas before 3.0, and many tutorials, call it `object`). Two parameters correct the guess: `parse_dates=[…]` makes date columns real dates, `dtype={…}` forces a type.
 
 **How to write it.**
 
@@ -92,8 +92,8 @@ print(cust_txt["phone"].dtype, cust_txt["phone"][0])
 
 | column | default guess | with the parameter |
 |---|---|---|
-| `disbursed_at` | `object` — text | `datetime64[ns]` with `parse_dates=["disbursed_at"]` |
-| `phone` | `int64` — `998902031105`, the `+` lost | `object` — `"+998902031105"` with `dtype={"phone": str}` |
+| `disbursed_at` | `str` — text | `datetime64[us]` with `parse_dates=["disbursed_at"]` |
+| `phone` | `int64` — `998902031105`, the `+` lost | `str` — `"+998902031105"` with `dtype={"phone": str}` |
 | `monthly_income` | `float64` — whole numbers, but 356 blanks | (a blank is `NaN`, and `NaN` is a float) |
 
 The date comes back as text unless you ask for dates; the phone becomes the number 998 902 031 105 and loses its `+` unless you ask for text.
@@ -121,7 +121,37 @@ Other parameters you will need:
 **Your turn.** Read only three columns of `customers_dirty.csv` and keep the phone as text.
 
 ```task
-{"id": "w05d2-l2", "kind": "python", "starter": "import pandas as pd\n\n# your code: read ../excel/customers_dirty.csv with usecols=[\"customer_id\", \"phone\", \"monthly_income\"]\n# and dtype={\"phone\": str}; print the shape and the dtypes\n", "answer": 6040, "dp": 0, "hint": "pd.read_csv(path, usecols=[...], dtype={\"phone\": str}); then .shape and .dtypes.", "model": "c3 = pd.read_csv(\"../excel/customers_dirty.csv\", usecols=[\"customer_id\", \"phone\", \"monthly_income\"], dtype={\"phone\": str})\nprint(c3.shape)      # (6040, 3)\nprint(c3.dtypes)     # customer_id int64 · phone object · monthly_income float64\n\n6 040 rows, 3 columns; the phone keeps its +."}
+{"id": "w05d2-l2", "kind": "python", "starter": "import pandas as pd\n\n# your code: read ../excel/customers_dirty.csv with usecols=[\"customer_id\", \"phone\", \"monthly_income\"]\n# and dtype={\"phone\": str}; print the shape and the dtypes\n", "answer": 6040, "dp": 0, "hint": "pd.read_csv(path, usecols=[...], dtype={\"phone\": str}); then .shape and .dtypes.", "model": "c3 = pd.read_csv(\"../excel/customers_dirty.csv\", usecols=[\"customer_id\", \"phone\", \"monthly_income\"], dtype={\"phone\": str})\nprint(c3.shape)      # (6040, 3)\nprint(c3.dtypes)     # customer_id int64 · phone str · monthly_income float64\n\n6 040 rows, 3 columns; the phone keeps its +."}
+```
+
+**Try it.** One blank in a column of whole numbers:
+
+```python
+import pandas as pd
+
+s = pd.Series([1, 2, None])
+print(s.dtype, s.tolist())
+# float64 [1.0, 2.0, nan]
+s2 = pd.Series([1, 2, None], dtype="Int64")
+print(s2.dtype, s2.tolist())
+# Int64: whole numbers and a missing value
+```
+
+> ⚠️ **Quirk: numbers stored as text add up as text.**
+>
+> - **You expect:** the sum of a column of amounts.
+> - **What happens:** if pandas read the column as text — dtype `str` (`object` in older pandas); one `"n/a"` in the file is enough — `sum()` glues the values: `"1"`, `"2"`, `"30"` give `"1230"`.
+> - **Why:** `+` on text joins it (`"31150000" * 2` in Day 1 is the same rule). pandas keeps a column it could not read as numbers as text, and does not warn.
+> - **Protect yourself:** run `dtypes` after every `read_csv`. Turn a text column into numbers with `pd.to_numeric(col, errors="coerce")` — the bad values become NaN; count them.
+
+```python
+import pandas as pd
+
+# as read from a messy file:
+amounts = pd.Series(["1", "2", "30"])
+print(amounts.dtype, amounts.sum())
+# str 1230: glued, not added
+print(pd.to_numeric(amounts).sum())   # 33
 ```
 
 ### First look — shape, head, info, describe
@@ -155,11 +185,11 @@ loans.info()             # dtype and non-null count per column
 RangeIndex: 7828 entries, 0 to 7827
  #   Column        Non-Null Count  Dtype
  0   loan_id       7828 non-null   int64
- 1   customer      7828 non-null   object
- 6   disbursed_at  7828 non-null   datetime64[ns]
+ 1   customer      7828 non-null   str
+ 6   disbursed_at  7828 non-null   datetime64[us]
  7   principal     7828 non-null   int64
- 12  bucket        7828 non-null   object
-dtypes: datetime64[ns](1), int64(5), object(7)
+ 12  bucket        7828 non-null   str
+dtypes: datetime64[us](1), int64(5), str(7)
 ```
 
 (five of the 13 lines shown.) Every column has 7 828 non-null values: this extract has no blanks. Five columns are whole numbers, one is a date, seven are text.
@@ -179,7 +209,7 @@ loans.describe()  # numeric columns: count, mean, std, min, quartiles, max
 
 (three of the columns, `std` and `min` left out.) The mean principal is 51.7 m but the median is 5.79 m: most loans are small and a few are very large — week 3's two books in one line. The 75 % quartile of `dpd` is still 0, so at least three loans in four are not late — in fact 7 429 of 7 828, 95 %; the worst is 919 days late.
 
-`describe(include="object")` does the same for text: number of distinct values, the most common one and its count. `loans["product"].nunique()` is `COUNT(DISTINCT product)` — 5.
+`describe(include="str")` does the same for text: number of distinct values, the most common one and its count. `loans["product"].nunique()` is `COUNT(DISTINCT product)` — 5.
 
 **When you use it.**
 - On every new file, before any filter: is the grain right, are the types right, where are the blanks?
@@ -353,6 +383,21 @@ The first late loan sits at **position** 0 of `late` but keeps its **label** 20 
 {"id": "w05d2-l5", "kind": "python", "starter": "import pandas as pd\nlo = pd.read_csv(\"../excel/loans_status.csv\", parse_dates=[\"disbursed_at\"])\n\n# your code: keep the late loans (dpd > 0), then take position 9 with iloc and print its loan_id\n", "answer": 243, "dp": 0, "hint": "lt = lo[lo[\"dpd\"] > 0]; then lt.iloc[9][\"loan_id\"].", "model": "lt = lo[lo[\"dpd\"] > 0]\nprint(lt.iloc[9][\"loan_id\"])     # 243\nprint(lt.index[9])                # 239 — its label, not its position\n\nPosition 9 is the tenth late row; its label is 239 and its loan_id 243. Three different numbers for one row — that is why loc and iloc are two methods."}
 ```
 
+> ⚠️ **Quirk: `[1:3]` is three rows in `loc` and two in `iloc`.**
+>
+> - **You expect:** `s.loc[1:3]` and `s.iloc[1:3]` to give the same rows on a fresh 0, 1, 2 … index.
+> - **What happens:** `loc` returns labels 1, 2 **and 3**; `iloc` returns positions 1 and 2.
+> - **Why:** `iloc` slices like every Python list — the end is left out. `loc` slices by label, and a label has no "next one" to stop before, so the end is kept.
+> - **Protect yourself:** for "the first n rows" use `iloc[:n]` or `head(n)`; with `loc`, name the last label you want.
+
+```python
+import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50])
+print(s.loc[1:3].tolist())    # label 3 in
+print(s.iloc[1:3].tolist())   # position 3 out
+```
+
 ### Sorting — sort_values and nlargest
 
 **What it is.** `df.sort_values("col")` returns the rows in the order of a column — `ORDER BY`. `ascending=False` sorts largest first; a list of columns sorts by several keys. `df.nlargest(n, "col")` is the shortcut for "the top n".
@@ -434,13 +479,30 @@ The term becomes the text `['24', '18', '3']`; the scores `"658"`, `""`, `"n/a"`
 - Every derived number: a share, a ratio, a flag, an amount in bn.
 - `astype` after reading, when the guess was wrong; `to_numeric(errors="coerce")` on dirty text.
 
-> ⚠️ **Watch out.** Assign through `.loc`, never through two brackets in a row. `loans[loans["dpd"] > 90]["flag"] = 1` (chained indexing) writes into a temporary **copy** and changes nothing in `loans` — pandas only warns `SettingWithCopyWarning`. Write `loans.loc[loans["dpd"] > 90, "flag"] = 1`. When you cut a frame to keep working on it, take a copy on purpose: `late = loans[loans["dpd"] > 0].copy()`.
+> ⚠️ **Watch out.** Assign through `.loc`, never through two brackets in a row. `loans[loans["dpd"] > 90]["flag"] = 1` (chained indexing) writes into a temporary **copy** and changes nothing in `loans` — pandas only warns `ChainedAssignmentError: A value is being set on a copy of a DataFrame or Series through chained assignment`. Write `loans.loc[loans["dpd"] > 90, "flag"] = 1`. When you cut a frame to keep working on it, take a copy on purpose: `late = loans[loans["dpd"] > 0].copy()`. Since pandas 3.0 (Copy-on-Write) a cut already behaves as a frame of its own and the `.copy()` is optional, but it says what you mean, and older pandas warns `SettingWithCopyWarning` without it.
 
 **Your turn.** Add a column `paid` = principal − outstanding and print its total in bn, one decimal.
 
 ```task
 {"id": "w05d2-l7", "kind": "python", "starter": "import pandas as pd\nlo = pd.read_csv(\"../excel/loans_status.csv\", parse_dates=[\"disbursed_at\"])\n\n# your code: lo[\"paid\"] = …, then the sum in bn with one decimal\n", "answer": 196.1, "dp": 1, "hint": "lo[\"paid\"] = lo[\"principal\"] - lo[\"outstanding\"]; round(lo[\"paid\"].sum() / 1e9, 1).", "model": "lo[\"paid\"] = lo[\"principal\"] - lo[\"outstanding\"]\nprint(round(lo[\"paid\"].sum() / 1e9, 1))     # 196.1\n\n404.8 bn lent − 208.7 bn still outstanding = 196.1 bn of principal already repaid (interest not counted)."}
 ```
+
+**Try it.** The chained line changes nothing; `.loc` works:
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({"dpd": [0, 95, 120],
+                   "flag": [0, 0, 0]})
+# chained: writes into a copy
+df[df["dpd"] > 90]["flag"] = 1
+print(df["flag"].tolist())   # [0, 0, 0]
+# one step, on df itself
+df.loc[df["dpd"] > 90, "flag"] = 1
+print(df["flag"].tolist())   # [0, 1, 1]
+```
+
+pandas 3 also prints a *ChainedAssignmentError* warning for the chained line: it never writes into `df`. (Older pandas warned with *SettingWithCopyWarning* and sometimes did write — one more reason to use `.loc` every time.)
 
 ### Dates — the .dt accessor
 
@@ -534,6 +596,21 @@ Micro 34.1 % · Consumer 30.9 · BNPL 20.0 · SME 10.0 · Auto 5.0 — the share
 {"id": "w05d2-l9", "kind": "python", "starter": "import pandas as pd\nlo = pd.read_csv(\"../excel/loans_status.csv\", parse_dates=[\"disbursed_at\"])\n\n# your code: value_counts of status with normalize=True; print the written_off share in %\n", "answer": 2.43, "dp": 2, "hint": "lo[\"status\"].value_counts(normalize=True)[\"written_off\"] * 100.", "model": "shares = lo[\"status\"].value_counts(normalize=True)\nprint(round(100 * shares[\"written_off\"], 2))     # 2.43\n\n190 of 7 828 loans. A value_counts result is a Series indexed by the values, so [\"written_off\"] picks one."}
 ```
 
+**Try it.**
+
+```python
+import pandas as pd
+
+method = pd.Series(["card", None, "card",
+                    None, "cash"])
+print(method.value_counts().to_dict())
+# the 2 blanks come back:
+vc = method.value_counts(dropna=False)
+print(vc.to_dict())
+```
+
+Five payments, and the first count shows three. Shares made from it would be shares of the three filled rows.
+
 ### Missing values — isna, fillna, dropna
 
 **What it is.** **`NaN`** (*пропуск*) is pandas' NULL: a cell with no value (`NaT` for a date). Aggregates skip it, like SQL's `AVG`. `isna()` finds it, `fillna(x)` writes a value into the gaps, `dropna()` removes the rows that have it.
@@ -591,7 +668,42 @@ print(len(cust.dropna(subset=["monthly_income"])))
 {"id": "w05d2-l18", "kind": "python", "starter": "import pandas as pd\ncu = pd.read_csv(\"../excel/customers_dirty.csv\")\ninc = cu[\"monthly_income\"]\n\n# your code: count the customers with inc > 10_000_000, then those with inc <= 10_000_000;\n# print both, their sum, and how many of the 6 040 customers neither mask counts\n", "answer": 356, "dp": 0, "hint": "(inc > 10_000_000).sum() and (inc <= 10_000_000).sum(); then len(inc) minus their sum.", "model": "hi = (inc > 10_000_000).sum()\nlo = (inc <= 10_000_000).sum()\nprint(hi, lo, hi + lo, len(inc) - (hi + lo))     # 2205 3479 5684 356\n\nA NaN fails every comparison, so the 356 blank incomes are in neither group: week 2's NULL falling out of both sides of a WHERE. Count them on purpose with inc.isna().sum()."}
 ```
 
+**Try it.** NaN is not equal even to itself:
+
+```python
+import numpy as np
+import pandas as pd
+
+print(np.nan == np.nan)        # False
+inc = pd.Series([5_000_000, np.nan])
+print((inc == np.nan).sum())   # 0
+print(inc.isna().sum())        # 1
+```
+
+> ⚠️ **Quirk: the sum of nothing is 0, the average of nothing is NaN.**
+>
+> - **You expect:** pandas to tell you when there is nothing to add, as SQL's `SUM` does with NULL (week 2).
+> - **What happens:** `sum()` skips NaN, so a column of only blanks — or an empty selection — sums to **0**. `mean()` of the same is NaN. And `mean()` of `[1, NaN, 3]` is 2: the blank is skipped, not counted as 0.
+> - **Why:** pandas starts every sum at 0 and adds what it finds; an average needs at least one value.
+> - **Protect yourself:** show next to a total how many values it is made of (`count()`); or ask for `sum(min_count=1)`, which returns NaN when there is nothing to add — the SQL behaviour.
+
+```python
+import numpy as np
+import pandas as pd
+
+blank = pd.Series([np.nan, np.nan])
+print(blank.sum(), blank.mean())   # 0.0 nan
+print(blank.count())               # 0
+print(blank.sum(min_count=1))      # nan
+# the blank is skipped, not counted as 0:
+print(pd.Series([1, np.nan, 3]).mean())
+```
+
 ### pd.cut — buckets without a CASE
+
+```story
+{"id": "w05d2-s1", "title": "pd.cut: which side owns the edge?", "min": 3, "steps": [{"say": "`pd.cut` with the edges −1, 0, 30, 60, 90, ∞. Every interval is [[right-closed|it contains its right edge but not its left one: (30, 60] holds 60, not 30]]: ● marks the end that is in.", "show": {"kind": "bands", "edges": [-1, 0, 30, 60, 90, null], "labels": ["0", "1-30", "31-60", "61-90", "90+"], "closed": "right", "vals": [], "words": {"val": "dpd"}}, "f": "pd.cut(loans[\"dpd\"], bins=[-1, 0, 30, 60, 90, np.inf], labels=…)"}, {"say": "dpd {p|60} sits on an edge. The right end is closed, so 60 belongs to (30, 60] → **31-60**.", "show": {"vals": [60]}}, {"say": "One day more.", "ask": {"q": "And dpd 61?", "options": ["31-60", "61-90"], "answer": 1, "why": "61 is above 60, so the next interval, (60, 90], holds it."}}, {"say": "61 → 61-90. And {p|0} → (−1, 0] → **0**: that is why the first edge is −1, not 0.", "show": {"vals": [60, 61, 0]}}, {"say": "The trap: start the edges at 0. The first interval is (0, 30], which does **not** hold 0 → {o|NaN}. All 7 429 current loans lose their bucket, with no error.", "show": {"kind": "bands", "edges": [0, 30, 60, 90, null], "labels": ["1-30", "31-60", "61-90", "90+"], "closed": "right", "vals": [0], "words": {"val": "dpd"}}}, {"say": "`right=False` closes the **left** end instead: [5, 10) holds 5. Rules written with `<` — 'under 5 m' — need it: an income of exactly {p|5 m} is **5-10m**.", "show": {"kind": "bands", "edges": [0, 5, 10, 20, null], "labels": ["<5m", "5-10m", "10-20m", "20m+"], "closed": "left", "vals": [5], "words": {"val": "income, m"}}, "f": "pd.cut(income, bins=[0, 5, 10, 20, np.inf], right=False)"}, {"say": "Press **Flip the closed side** and watch 5 m jump to <5m: the same edges, a different rule. Press it again to flip back.", "act": [{"label": "Flip the closed side", "rep": 1, "do": "flip"}], "film": 0}, {"say": "Back to the dpd edges. Drop the edge values yourself: each lands in the interval whose **right** end it reaches.", "show": {"kind": "bands", "edges": [-1, 0, 30, 60, 90, null], "labels": ["0", "1-30", "31-60", "61-90", "90+"], "closed": "right", "vals": [], "words": {"val": "dpd"}}, "act": [{"label": "dpd 0", "rep": 1, "do": "drop", "v": 0}, {"label": "dpd 30", "rep": 1, "do": "drop", "v": 30}, {"label": "dpd 31", "rep": 1, "do": "drop", "v": 31}, {"label": "dpd 90", "rep": 1, "do": "drop", "v": 90}, {"label": "dpd 91", "rep": 1, "do": "drop", "v": 91}]}]}
+```
 
 **What it is.** `pd.cut(col, bins=edges, labels=…)` puts every number into an interval and returns its label — the `CASE WHEN dpd <= 30 THEN …` of week 2 in one line. Intervals are **right-closed** by default: `(30, 60]` contains 60 but not 30.
 
@@ -702,7 +814,7 @@ watch.head()
 
 61 loans, 2 718 083 360 soum outstanding. The top of the list is an Auto loan of 301 m that is already 84 days late — one step from 90+.
 
-`.copy()` after the `loc` makes `watch` a frame of its own, so the new columns do not trigger the copy warning. `to_csv(…, index=False)` writes the file Bekzod opens; `to_excel("f.xlsx", sheet_name="…", index=False)` does the same for Excel (it needs the `openpyxl` package, which Anaconda has).
+`.copy()` after the `loc` makes `watch` a frame of its own: the new columns land on `watch` and never touch `loans` (pandas 3 works this way even without `.copy()`; older pandas warned `SettingWithCopyWarning` there). `to_csv(…, index=False)` writes the file Bekzod opens; `to_excel("f.xlsx", sheet_name="…", index=False)` does the same for Excel (it needs the `openpyxl` package, which Anaconda has).
 
 **Your turn.** The same list for the Samarkand branch: how much outstanding does it hold?
 
@@ -773,11 +885,14 @@ def portfolio_summary(df):
     }
 
 portfolio_summary(loans)
-# {'loans': 7828, 'active': 3352, 'outstanding': 208723504430, 'disbursed_2026':
-# 3030, 'par30_pct': 3.12, 'npl90_pct': 2.55}
+# {'loans': 7828, 'active': np.int64(3352), 'outstanding': np.int64(208723504430),
+#  'disbursed_2026': np.int64(3030), 'par30_pct': np.float64(3.12),
+#  'npl90_pct': np.float64(2.55)}
 ```
 
 Every line is a SQL clause you have written: `len` is `COUNT(*)`, `(cond).sum()` is `SUM(CASE WHEN … THEN 1 END)`, `df.loc[mask, "col"].sum()` is `SUM(col) WHERE mask`. One number differs from week 4's tile on purpose: **3 030**, not 3 051 — this function uses the half-open `< AS_OF`, so the 21 loans disbursed on the as-of day itself (852 760 000) are out; week 4's `COUNTIFS` used `<=`. Neither is wrong; the function's docstring must say which.
+
+The dict shows `np.int64(3352)` and `np.float64(3.12)`, and Jupyter on your computer shows the same: a pandas sum or mean is a **numpy number**, and since numpy 2.0 its `repr` names the type. The number is 3 352 all the same — `print(x)` writes it bare, and `int(x)` / `float(x)` turn it into a plain Python number (do that before a dict like this goes into a JSON file or a report).
 
 > 💡 **Key idea.** A monthly notebook is safe only with an **assert** pinning the known values: `assert portfolio_summary(loans)["outstanding"] == 208_723_504_430`. If the November file has a new status spelling or a text date, the assert fails before Bekzod sees a wrong tile — `day2_starter.ipynb` pins all six.
 
@@ -796,7 +911,7 @@ Each task's editor already loads `loans_status.csv` with `parse_dates` (P12 load
 **P2.** *(read_csv)* Read `loans_status.csv` *without* `parse_dates`. What is the dtype of `disbursed_at`, and what does `loans["disbursed_at"].dt.year` do? Fix it two ways.
 
 ```task
-{"id": "w05d2-p1", "kind": "choice", "options": ["datetime64[ns] — pandas recognises ISO dates by itself", "object (text) — and .dt raises AttributeError until you convert it", "int64 — the dates are stored as numbers", "category — dates repeat, so pandas compresses them"], "answer": 1, "explain": "Without parse_dates the column is text: .dt raises AttributeError: Can only use .dt accessor with datetimelike values. Fix: parse_dates=[\"disbursed_at\"] in read_csv, or loans[\"disbursed_at\"] = pd.to_datetime(loans[\"disbursed_at\"]) afterwards; info() then shows datetime64[ns]."}
+{"id": "w05d2-p1", "kind": "choice", "options": ["datetime64[us] — pandas recognises ISO dates by itself", "str (text) — and .dt raises AttributeError until you convert it", "int64 — the dates are stored as numbers", "category — dates repeat, so pandas compresses them"], "answer": 1, "explain": "Without parse_dates the column is text: .dt raises AttributeError: Can only use .dt accessor with datetimelike values. Fix: parse_dates=[\"disbursed_at\"] in read_csv, or loans[\"disbursed_at\"] = pd.to_datetime(loans[\"disbursed_at\"]) afterwards; info() then shows datetime64[us]."}
 ```
 
 **P3.** *(first look)* From `describe()` alone: median principal, mean principal, the 75th percentile of `dpd`, max `dpd`. What does the gap between mean and median tell you? Type the median principal.

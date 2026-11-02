@@ -152,7 +152,7 @@ INSERT INTO my_loans_demo VALUES (1, 999999);
 **What it is.** A **composite key** (*составной ключ*) is a primary key made of two or more columns. Each column alone may repeat; the **pair** must not.
 
 ```pic
-{"id": "w01d3-pic2", "title": "Two columns, one key", "caption": "`loan_id` repeats (1, 1) and `installment_no` repeats (1, 1); the **pair** — (1, 1), (1, 2), (2, 1), (2, 2) — is different on every row.", "tables": [{"name": "installments", "cols": ["loan_id", "installment_no", "due_date"], "pk": ["loan_id", "installment_no"], "rows": [[1, 1, "2025-04-28"], [1, 2, "2025-05-28"], [2, 1, "2026-01-05"], [2, 2, "2026-02-05"]], "tone": ["a", "a", "b", "b"], "more": "… 24 months per loan"}]}
+{"id": "w01d3-pic2", "title": "Two columns, one key", "caption": "`loan_id` repeats (1, 1) and `installment_no` repeats (1, 1); the **pair** — (1, 1), (1, 2), (2, 1), (2, 2) — is different on every row.", "tables": [{"name": "installments", "cols": ["loan_id", "installment_no", "due_date"], "pk": ["loan_id", "installment_no"], "rows": [[1, 1, "2025-04-28"], [1, 2, "2025-05-28"], [2, 1, "2026-01-05"], [2, 2, "2026-02-05"]], "tone": ["a", "a", "b", "b"], "more": "… one row per month of the term: 24 for loan 1, 18 for loan 2"}]}
 ```
 
 **How to write it.** A separate line at the end: `PRIMARY KEY (column1, column2)`.
@@ -591,6 +591,43 @@ Two calls are left. In the Database panel, `my_calls` now shows 2 rows.
 ```
 
 > 🎬 **Didn't get DELETE?** [Baraa explains it · 4 min](https://youtu.be/SSKVgrwhzus?t=7433&end=7662)
+
+> ⚠️ **Quirk: SQLite has no `TRUNCATE`.**
+>
+> - **You expect:** `TRUNCATE TABLE my_calls` to empty the table, as in SQL Server and PostgreSQL.
+> - **What happens:** SQLite stops with *syntax error*: it does not know the word.
+> - **Why:** SQLite keeps one command for removing rows. `DELETE FROM t` with no `WHERE` is its fast way to empty a table.
+> - **Protect yourself:** when a script from another database says `TRUNCATE TABLE t`, read it as "delete **every** row of t".
+
+```sql
+SELECT COUNT(*) AS calls FROM my_calls;
+-- SQLite: syntax error, nothing changes
+TRUNCATE TABLE my_calls;
+```
+
+The box stops at the second line with *near "TRUNCATE": syntax error*, and `my_calls` keeps its rows.
+
+> ⚠️ **Quirk: every statement is saved the moment it runs.**
+>
+> - **You expect:** a chance to undo, like Ctrl+Z in Excel or a *Save* button.
+> - **What happens:** `UPDATE` and `DELETE` are saved at once (*autocommit*). There is nothing to undo.
+> - **Why:** each statement is its own small **transaction** — a group of changes that is kept or thrown away as a whole — and it is kept automatically.
+> - **Protect yourself:** open the transaction yourself. `BEGIN` starts it, `ROLLBACK` throws away every change since `BEGIN`, `COMMIT` keeps them. At work: `BEGIN`, the change, a `SELECT COUNT(*)` to check it, then `COMMIT` or `ROLLBACK`.
+
+```sql
+BEGIN;
+DELETE FROM products;     -- all 5 gone…
+SELECT COUNT(*) AS inside_the_transaction
+FROM products;
+ROLLBACK;                 -- …and back
+```
+
+The box shows 0: inside the transaction the table is empty, and its last line says the change was rolled back. All five rows are back; check:
+
+```sql
+SELECT COUNT(*) AS after_rollback
+FROM products;            -- 5
+```
 
 ### ALTER TABLE — change the columns
 

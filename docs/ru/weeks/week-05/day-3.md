@@ -84,6 +84,23 @@ by_region.sort_values(ascending=False).head()
 
 > 🎬 **Остались вопросы про groupby?** [Глеб Михайлов объясняет · 10 мин](https://youtu.be/dd3RcafdOQk?t=10364&end=10956)
 
+**Попробуйте.**
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    "segment": ["sme", None, "sme", None],
+    "loans": [1, 2, 3, 4]})
+g = df.groupby("segment")["loans"].sum()
+print(g.to_dict())   # {'sme': 4}
+by = df.groupby("segment", dropna=False)
+print(by["loans"].sum().to_dict())
+# группа NaN вернулась: 6
+```
+
+Группы дают в сумме 4, а весь столбец — 10. Когда группы не складываются в итог, ищите ключ NaN.
+
 ### agg — несколько агрегатов с именами :id=agg--several-aggregates-with-names
 
 **Что это.** `.agg(name=("column", "function"))` считает **несколько** чисел на группу за один вызов и даёт имя каждому результату. Это **именованная агрегация** (*named aggregation*) — `SUM(amount) AS total` со встроенным `AS`.
@@ -268,6 +285,10 @@ pd.DataFrame({"payments": counts, "share_pct": shares})
 
 ### merge — соединение и его четыре how= :id=merge--the-join-and-its-four-how
 
+```story
+{"id": "w05d3-s1", "title": "Один ключ, две таблицы: четыре how=", "min": 4, "steps": [{"say": "Две маленькие таблицы: `sched` — сколько должен каждый платёж по графику, и `got` — сколько заплатили. **Ключ** `installment_id` есть в обеих.", "show": {"kind": "merge", "L": {"name": "sched", "cols": ["installment_id", "total_due"], "rows": [[1, 100], [2, 100], [3, 100]]}, "R": {"name": "got", "cols": ["installment_id", "paid"], "rows": [[2, 100], [3, 60], [4, 50]]}, "on": "installment_id", "how": null, "words": {"rows": "строк", "keys": "ключей есть в обеих таблицах"}}}, {"say": "Ключи {y|2} и {p|3} есть в обеих таблицах (один цвет). Ключ 1 есть только в `sched`, ключ 4 — только в `got` (пунктир): строки без пары."}, {"say": "`how=\"inner\"` — **по умолчанию** — оставляет только совпадения: на входе 3 + 3 строки, на выходе {y|2}. Платёж 1 исчезает.", "show": {"how": "inner"}, "f": "sched.merge(got, on=\"installment_id\", how=\"inner\")"}, {"say": "`how=\"left\"` сохраняет **все** строки левой таблицы. У платежа 1 оплаты нет, поэтому `paid` у него {m|NaN}. Платёж 4 зачёркнут.", "show": {"how": "left"}, "f": "sched.merge(got, on=\"installment_id\", how=\"left\")"}, {"say": "`how=\"right\"` сохраняет все строки **правой** таблицы: лишний платёж 4 остаётся, с {m|NaN} в `total_due`.", "show": {"how": "right"}, "f": "sched.merge(got, on=\"installment_id\", how=\"right\")"}, {"say": "`how=\"outer\"` сохраняет всё: 4 строки, NaN там, где нет одной из сторон.", "show": {"how": "outer"}, "f": "sched.merge(got, on=\"installment_id\", how=\"outer\")"}, {"say": "Попробуйте четыре кнопки, потом ответьте.", "act": [{"label": "inner", "rep": 1, "do": "how", "how": "inner"}, {"label": "left", "rep": 1, "do": "how", "how": "left"}, {"label": "right", "rep": 1, "do": "how", "how": "right"}, {"label": "outer", "rep": 1, "do": "how", "how": "outer"}], "ask": {"q": "Нилуфар нужны **все платежи по графику**, оплаченные или нет, чтобы найти неоплаченные. Какой how=?", "options": ["inner", "left", "right", "outer"], "answer": 1, "why": "`sched` — список, который должен остаться полным, левая таблица. inner молча выбросит платёж 1 — как раз неоплаченный."}, "film": 1}, {"say": "На настоящих данных `inst.merge(paid, how=\"left\")` сохраняет все 92 193 платежа по графику; у неоплаченных будет NaN — как раз у тех, о которых DPD. inner выбросил бы их молча.", "show": {"how": "left"}}]}
+```
+
 **Что это.** `left.merge(right, on="key", how=...)` — это **соединение** (*join*): строки двух фреймов ставятся рядом там, где совпадает ключ. `how=` решает, что будет со строкой **без пары**, — ровно INNER / LEFT / RIGHT / FULL с недели 2.
 
 ```pic
@@ -369,7 +390,7 @@ print([c for c in both.columns if c[:7] in ("product", "region_")])
 - В каждом merge: называйте ключ намеренно, не полагайтесь на то, что pandas сам найдёт общий столбец.
 - `suffixes=` — всегда, когда оба фрейма несут одни и те же описательные столбцы.
 
-> ⚠️ **Осторожно.** Ключ, который выглядит одинаково, но имеет другой тип, не совпадёт: `loan_id` как `int64` с одной стороны и как текст с другой вызывает `ValueError: You are trying to merge on int64 and object columns`. Проверьте `dtypes` и приведите одну сторону перед соединением. И pandas **сопоставляет ключ NaN с ключом NaN** — SQL никогда не соединяет NULL с NULL, — поэтому две таблицы с пустыми ключами спаривают каждый пустой с каждым пустым. Сначала посчитайте `key.isna().sum()` с обеих сторон и удалите или заполните пустые ключи намеренно.
+> ⚠️ **Осторожно.** Ключ, который выглядит одинаково, но имеет другой тип, не совпадёт: `loan_id` как `int64` с одной стороны и как текст с другой вызывает `ValueError: You are trying to merge on int64 and str columns` (в pandas до версии 3.0 — `object` вместо `str`). Проверьте `dtypes` и приведите одну сторону перед соединением. И pandas **сопоставляет ключ NaN с ключом NaN** — SQL никогда не соединяет NULL с NULL, — поэтому две таблицы с пустыми ключами спаривают каждый пустой с каждым пустым. Сначала посчитайте `key.isna().sum()` с обеих сторон и удалите или заполните пустые ключи намеренно.
 
 **Ваша очередь.** Средняя годовая ставка по всем 7 828 кредитам, в % с двумя знаками.
 
@@ -378,6 +399,10 @@ print([c for c in both.columns if c[:7] in ("product", "region_")])
 ```
 
 ### validate= и indicator= — страховочные ремни :id=validate-and-indicator--the-safety-belts
+
+```story
+{"id": "w05d3-s2", "title": "Откуда строка — и строки, которые множатся", "min": 4, "steps": [{"say": "`indicator=True` добавляет столбец `_merge`: {g|both} — пара нашлась, {b|left_only} — только в левой таблице, {y|right_only} — только в правой.", "show": {"kind": "merge", "L": {"name": "sched", "cols": ["installment_id", "total_due"], "rows": [[1, 100], [2, 100], [3, 100]]}, "R": {"name": "got", "cols": ["installment_id", "paid"], "rows": [[2, 100], [3, 60], [4, 50]]}, "on": "installment_id", "how": "left", "words": {"rows": "строк", "keys": "ключей есть в обеих таблицах"}, "ind": true}, "f": "sched.merge(got, on=\"installment_id\", how=\"left\", indicator=True)"}, {"say": "При `how=\"outer\"` видны все три: платёж по графику 1 — {b|left_only}, оплата 4 — {y|right_only}.", "show": {"how": "outer"}, "f": "sched.merge(got, on=\"installment_id\", how=\"outer\", indicator=True)"}, {"say": "Один фильтр по `_merge` заменяет анти-соединение, написанное вручную.", "ask": {"q": "Какой фильтр даёт платежи по графику **без** оплаты (анти-соединение)?", "options": ["m[m[\"_merge\"] == \"both\"]", "m[m[\"_merge\"] == \"left_only\"]", "m[m[\"_merge\"] == \"right_only\"]"], "answer": 1, "why": "left_only — есть в `sched`, нет пары в `got`: LEFT JOIN … WHERE right IS NULL из второй недели."}}, {"say": "На данных Nur (таблица ниже) {y|right_only} — 0: ни одна оплата не указывает на несуществующий платёж по графику. `value_counts()` по `_merge` — бесплатная проверка после каждого merge."}, {"say": "Теперь ловушка. Две таблицы с ключом `loan_id`, и ключ **повторяется с обеих сторон**: у кредита {b|7} две оплаты и три платежа по графику.", "show": {"kind": "merge", "L": {"name": "pay", "cols": ["loan_id", "payment_id"], "rows": [[7, "p1"], [7, "p2"], [8, "p3"]]}, "R": {"name": "inst", "cols": ["loan_id", "installment_no"], "rows": [[7, 1], [7, 2], [7, 3], [8, 1]]}, "on": "loan_id", "how": null, "ind": false, "words": {"rows": "строк", "keys": "ключей есть в обеих таблицах"}}}, {"say": "Соединим: каждая оплата кредита 7 встречает каждый его платёж по графику — {o|2 × 3 = 6 строк}. Кредит 8: 1 × 1. На входе 3 + 4 строки, на выходе 7.", "show": {"how": "inner"}, "f": "pay.merge(inst, on=\"loan_id\")"}, {"say": "Посчитайте пары.", "ask": {"q": "У кредита 1 18 оплат и 24 платежа по графику. Сколько строк он получит в `pay.merge(inst, on=\"loan_id\")`?", "options": ["24", "42", "432"], "answer": 2, "why": "18 × 24 = 432: каждая оплата встречает каждый платёж по графику."}}, {"say": "На всём портфеле 52 850 оплат и 92 193 платежа по графику превращаются в {o|858 612 строк} — и каждая сумма после этого неверна, без ошибки. `validate=\"m:1\"` остановил бы это.", "f": "pay.merge(inst, on=\"loan_id\", validate=\"m:1\")  →  MergeError"}]}
+```
 
 **Что это.** Два аргумента, которых SQL вам никогда не давал. **`validate=`** заявляет ожидаемое зерно — `"1:1"`, `"m:1"` или `"1:m"` — и вызывает `MergeError`, если ключ не уникален на той стороне, за которую вы поручились. **`indicator=True`** добавляет столбец `_merge`, который говорит, откуда пришла каждая строка: `both`, `left_only` или `right_only`.
 
@@ -596,6 +621,43 @@ cust.loc[bad, ["customer_id", "birth_date"]].head()
 {"id": "w05d3-l10", "kind": "python", "starter": "import pandas as pd\nAS_OF = pd.Timestamp(\"2026-10-01\")\nc3 = pd.read_csv(\"../excel/customers_dirty.csv\")\n\n# ваш код: разберите birth_date (coerce), оставьте валидные (не позже AS_OF, не раньше 1920), возраст = дни / 365.25\n", "answer": 45.7, "dp": 1, "hint": "b = pd.to_datetime(c3[\"birth_date\"], errors=\"coerce\"); ok = (b <= AS_OF) & (b >= \"1920-01-01\"); ((AS_OF - b[ok]).dt.days / 365.25).mean()", "model": "b = pd.to_datetime(c3[\"birth_date\"], errors=\"coerce\")\nok = (b <= AS_OF) & (b >= \"1920-01-01\")\nprint(ok.sum(), round(((AS_OF - b[ok]).dt.days / 365.25).mean(), 1))     # 6033 45.7\n\nЕсли оставить 7 невозможных дат, дни рождения 1900 года добавят 126-летних, а 2031 года — отрицательный возраст: среднее сдвинется без реальной причины."}
 ```
 
+> ⚠️ **Подвох: для pandas `05/09/2026` — это 9 мая.**
+>
+> - **Ожидаете:** 5 сентября — так даты пишут в Узбекистане и России.
+> - **На деле:** `pd.to_datetime("05/09/2026")` — это **9 мая 2026**: pandas читает сначала месяц, по-американски. В столбце он берёт порядок из первого значения, поэтому следующее `13/09/2026` останавливает его ошибкой *doesn't match format*.
+> - **Почему:** по умолчанию `dayfirst=False`.
+> - **Как защититься:** задайте форму: `format="%d/%m/%Y"` (или `dayfirst=True`). Потом проверьте одну знакомую дату.
+
+```python
+import pandas as pd
+
+print(pd.to_datetime("05/09/2026"))  # 9 мая
+d = pd.Series(["05/09/2026", "13/09/2026"])
+good = pd.to_datetime(d, format="%d/%m/%Y")
+print(good.dt.strftime("%Y-%m-%d").tolist())
+# 5 и 13 сентября
+```
+
+> ⚠️ **Подвох: даты из Excel могут прийти числами.**
+>
+> - **Ожидаете:** столбец дат из выгрузки Excel прочитается как даты.
+> - **На деле:** столбец, потерявший формат даты, приходит числами вроде 46296 — это счёт дней Excel (неделя 4).
+> - **Почему:** в Excel дата *и есть* число; датой её делал только формат.
+> - **Как защититься:** считайте от дня 0 Excel — **30 декабря 1899** года. От 1 января 1900 каждая дата окажется на два дня позже (лишнее 29 февраля 1900 года в Excel, неделя 4). Проверка: 46296 должно быть 2026-10-01.
+
+```python
+import pandas as pd
+
+serial = pd.Series([46296, 46295])
+right = pd.to_datetime(serial, unit="D",
+                       origin="1899-12-30")
+wrong = pd.to_datetime(serial, unit="D",
+                       origin="1900-01-01")
+print(right.dt.strftime("%Y-%m-%d").tolist())
+print(wrong.dt.strftime("%Y-%m-%d").tolist())
+# вторая строка: на два дня позже
+```
+
 ### Дубликаты — найти, посмотреть, потом удалить :id=duplicates--find-look-then-drop
 
 **Что это.** `duplicated(subset=, keep=)` помечает строки, которые повторяют более раннюю строку по **ключевым** столбцам из `subset`. `drop_duplicates(subset=, keep=)` удаляет их. `keep="first"` оставляет первую строку каждой группы **в текущем порядке** — поэтому то, какая строка выживет, решает сортировка перед этим.
@@ -705,10 +767,10 @@ inst["total"] = inst["principal_due"] + inst["interest_due"]
 inst["total"] = inst.apply(lambda r: r["principal_due"] + r["interest_due"], axis=1)
 # нормально для функции-метки на одном столбце
 loans["bucket_fn"] = loans["dpd"].apply(dpd_bucket)
-(inst["total"] == inst["total_due"]).all(), (loans["bucket_fn"] == loans["bucket"].astype(str)).all()
+print((inst["total"] == inst["total_due"]).all(), (loans["bucket_fn"] == loans["bucket"].astype(str)).all())
 ```
 
-Блок показывает `(True, True)`: оба способа восстанавливают `total_due` на всех 92 193 платежах по графику, а функция-метка даёт корзину из файла для всех 7 828 кредитов.
+Блок печатает `True True`: оба способа восстанавливают `total_due` на всех 92 193 платежах по графику, а функция-метка даёт корзину из файла для всех 7 828 кредитов.
 
 | | векторно | `apply` по одному столбцу | `apply(axis=1)` |
 |---|---|---|---|
@@ -1090,7 +1152,8 @@ dpd = (AS_OF - late.groupby("loan_id")["due_date"].min()).dt.days.rename("dpd")
 loans = (pd.read_csv("../excel/loans_status.csv")[["loan_id"]]
          .merge(dpd, on="loan_id", how="left").fillna({"dpd": 0}).astype({"dpd": int}))
 loans["bucket"] = pd.cut(loans["dpd"], [-1, 0, 30, 60, 90, np.inf], labels=["0", "1-30", "31-60", "61-90", "90+"])
-(loans["dpd"] > 0).sum(), loans["bucket"].value_counts().sort_index()
+print((loans["dpd"] > 0).sum())
+loans["bucket"].value_counts().sort_index()
 ```
 
 `(loans.dpd > 0).sum()` → **399**; `loans.bucket.value_counts().sort_index()` → **7 429 / 124 / 25 / 16 / 234**; при сверке с `loans_status.csv` `(dpd == dpd_sql).all()` → **True** для всех 7 828 кредитов. То же определение, те же строки, третий инструмент, то же число — единственный приемлемый исход.

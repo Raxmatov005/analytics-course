@@ -304,7 +304,7 @@ Four things to say: clean payments (a duplicated payment would count twice towar
 **P3.** **`df[df['amount'] > 0]['flag'] = 1` printed a warning and the flag did not change. Why, and what is the right line?**
 
 ```task
-{"id": "interview-p3", "kind": "free", "min": 25, "model": "That is chained indexing: `df[df['amount'] > 0]` returns a new DataFrame (a copy), and `['flag'] = 1` writes into that copy, which is thrown away — hence the SettingWithCopyWarning and no change in df. Select rows and column in one step with .loc: `df.loc[df['amount'] > 0, 'flag'] = 1`. When you really want a separate table, say so with `.copy()`: `pos = df[df['amount'] > 0].copy()`.", "rubric": ["chained indexing writes into a temporary copy", "use df.loc[condition, 'column'] = value in one step", "use .copy() when a separate table is meant"]}
+{"id": "interview-p3", "kind": "free", "min": 25, "model": "That is chained indexing: `df[df['amount'] > 0]` returns a new DataFrame, and `['flag'] = 1` writes into that intermediate result, which is thrown away. Under pandas 3's Copy-on-Write every such intermediate behaves as a copy, so a chained assignment never writes into df — pandas warns ChainedAssignmentError (before 3.0 it warned SettingWithCopyWarning and sometimes did write). Select rows and column in one step with .loc: `df.loc[df['amount'] > 0, 'flag'] = 1`. When you really want a separate table, say so: `pos = df[df['amount'] > 0].copy()` — optional in pandas 3, but it states the intent.", "rubric": ["chained indexing writes into a temporary copy: in pandas 3 never into df (ChainedAssignmentError)", "use df.loc[condition, 'column'] = value in one step", "use .copy() when a separate table is meant"]}
 ```
 
 ---

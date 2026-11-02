@@ -87,6 +87,24 @@ SELECT COUNT(*) FROM customers WHERE monthly_income <> 5000000;
 
 > 🎬 **Остались вопросы про IS NULL и IS NOT NULL?** [Бараа объясняет (на английском, есть субтитры) · 4 мин](https://youtu.be/SSKVgrwhzus?t=27704&end=27930)
 
+> ⚠️ **Подвох: NULL не равен NULL — кроме группировки.**
+>
+> - **Ожидаете:** раз `NULL = NULL` не истинно, каждый NULL — отдельная группа.
+> - **На деле:** `GROUP BY`, `DISTINCT` и `UNION` собирают все NULL в **одну** строку.
+> - **Почему:** при группировке SQL спрашивает не «равны ли значения?», а «можно ли их различить?» — а два неизвестных различить нельзя.
+> - **Как защититься:** ждите одну строку NULL в каждом сгруппированном результате по столбцу с пропусками и не выбрасывайте её: это настоящая группа. Чтобы задать вопрос группировки в условии, в SQLite есть `IS`: `a IS b` истинно, когда оба NULL.
+
+```sql
+SELECT NULL = NULL AS equal,
+       monthly_income,
+       COUNT(*) AS customers
+FROM customers
+GROUP BY monthly_income
+ORDER BY monthly_income
+LIMIT 3;
+-- строка 1: все 356 пустых доходов
+```
+
 ### NULL в арифметике — всё, что соединено с NULL, становится NULL :id=null-in-arithmetic-anything-combined-with-null-is-null
 
 **Что это.** Вычисление с NULL внутри возвращает NULL: `5 + NULL`, `NULL * 0`, `'Eldor' || NULL` — всё это NULL. База не может считать со значением, которого не знает.

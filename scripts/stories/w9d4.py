@@ -72,7 +72,7 @@ STORIES = [
   {"show": cut(lines=["el"], lo=424, cut=424),
    "say": ("From Week 8: a loan's [[expected loss|the loss you expect on average: PD × LGD × EAD]] is PD × LGD × EAD. For an average Consumer loan: {p|21 630 783} soum still owed at default (EAD), 60 % of it lost (LGD).",
            "Из Недели 8: [[ожидаемые потери|убыток, который ожидают в среднем: PD × LGD × EAD]] кредита — это PD × LGD × EAD. Для среднего потребительского кредита: при дефолте ещё должны {p|21 630 783} сума (EAD), 60 % из них теряется (LGD).")},
-  {"f": ("approve everyone: 0.0293 × 0.60 × 21 630 783 = {p|380 065}", "одобрять всех: 0,0293 × 0,60 × 21 630 783 = {p|380 065}"),
+  {"f": ("approve everyone: 0.02928 × 0.60 × 21 630 783 ≈ {p|380 065}", "одобрять всех: 0,02928 × 0,60 × 21 630 783 ≈ {p|380 065}"),
    "fs": ("0.0293 times 0.60 times 21 630 783: about 380 thousand soum.", "0,0293 на 0,60 на 21 630 783: около 380 тысяч сумов."),
    "say": ("At a cut-off, the PD of an approved loan is the bad rate of the approved group. Approve everyone: 2.93 % → {p|380 065} soum per loan.",
            "При пороге PD одобренного кредита — это доля плохих среди одобренных. Одобряем всех: 2,93 % → {p|380 065} сумов на кредит.")},

@@ -249,6 +249,38 @@ print(round(0.5), round(1.5), round(2.5), round(3.5))
 {"id": "w05d1-l5", "kind": "python", "starter": "principal = 40_060_000      # loan 2\nannual_rate = 0.30\n\n# your code: month 1's interest — print it\n", "answer": 1001500, "dp": 0, "hint": "principal * annual_rate / 12.", "model": "print(principal * annual_rate / 12)     # 1001500.0\n\nThe same as interest_due of loan 2's first instalment in installments.csv."}
 ```
 
+> ⚠️ **Quirk: a half that is not a half.**
+>
+> - **You expect:** `round(2.675, 2)` to give 2.68 — it ends in a 5, and 8 is even.
+> - **What happens:** 2.67.
+> - **Why:** 2.675 has no exact binary form. The float really holds 2.67499999999999982236…, which is just *under* the half, so it goes down; banker's rounding never comes into it. SQLite's `ROUND(2.675, 2)` says 2.67 too (week 2).
+> - **Protect yourself:** keep money in whole soum (`int`) and round once, at the end. When a rule says "a half always goes up", use `Decimal` from text:
+
+```python
+from decimal import Decimal, ROUND_HALF_UP
+
+print(round(2.675, 2))   # 2.67, not 2.68
+print(f"{2.675:.20f}")   # what is really stored
+cents = Decimal("0.01")
+half_up = Decimal("2.675").quantize(
+    cents, rounding=ROUND_HALF_UP)
+print(half_up)           # 2.68
+```
+
+> ⚠️ **Quirk: the same division, two languages, different answers.**
+>
+> - **You expect:** `7 / 2` and `-7 // 2` to give what SQL gave in week 2.
+> - **What happens:** Python's `/` never cuts: `7 / 2` is 3.5, where SQL's `7 / 2` is 3. On a negative, Python rounds **down**: `-7 // 2` is -4 and `-7 % 3` is 2, where SQLite cuts towards zero: -3 and -1.
+> - **Why:** each language picked its own rule. Neither is wrong, and neither warns you.
+> - **Protect yourself:** when you move a calculation from SQL to Python (or back), test it on one odd and one negative number before you trust it.
+
+```python
+print(7 / 2, 7 // 2)     # 3.5 3
+print(-7 // 2, -7 % 3)   # -4 2
+print(6 / 2)             # 3.0: / gives a float
+# SQLite: 7 / 2 is 3, -7 / 2 is -3, -7 % 3 is -1
+```
+
 ### Lists — an ordered column of values
 
 **What it is.** A **list** (*список*) holds several values in order, inside `[ ]`. Each value has a **position** (an *index*) starting at **0**. Negative positions count from the end.
@@ -549,6 +581,32 @@ The app channel approved 2 915 of 5 006 applications: 58.2 %, or 58.23 with two 
 
 ```task
 {"id": "w05d1-l10", "kind": "python", "starter": "# your code: def first_interest(principal, annual_rate) that RETURNS round(principal * annual_rate / 12)\n\n\nprint(first_interest(1_590_000, 0.42))     # loan 3, a Micro loan\n", "answer": 55650, "dp": 0, "hint": "def first_interest(principal, annual_rate):\n    return round(principal * annual_rate / 12)", "model": "def first_interest(principal, annual_rate):\n    return round(principal * annual_rate / 12)\n\nprint(first_interest(1_590_000, 0.42))     # 55650 — loan 3's first interest_due"}
+```
+
+> ⚠️ **Quirk: a default list remembers.**
+>
+> - **You expect:** `def add_loan(loan, basket=[])` to start with an empty basket on every call.
+> - **What happens:** the second call still holds the first call's loan: `[1]`, then `[1, 2]`.
+> - **Why:** a default value is made **once**, when Python reads the `def`, and every call shares that one list. Numbers and text cannot change in place, so they are safe defaults; a list or a dict is not.
+> - **Protect yourself:** use `None` as the default and make the list inside the function.
+
+```python
+def add_loan(loan, basket=[]):   # the trap
+    basket.append(loan)
+    return basket
+
+print(add_loan(1))   # [1]
+print(add_loan(2))   # [1, 2]: the same list
+
+# the fix
+def add_loan_safe(loan, basket=None):
+    if basket is None:
+        basket = []
+    basket.append(loan)
+    return basket
+
+print(add_loan_safe(1))   # [1]
+print(add_loan_safe(2))   # [2]
 ```
 
 ### Importing modules — someone else's functions
