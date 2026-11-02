@@ -1,10 +1,20 @@
 {
-  "_about": "The course calendar (assets/schedule.js on the site, worker.js in the bot). One lesson per study day in 'order' (Monday to Friday, or every day when 'weekends' is true); each opens at 00:00 Tashkent time and its homework closes at 23:59 on its due day: the same day, or the later lesson 'due' names (the plan's due days). 'start' = the first study day (YYYY-MM-DD); null = no schedule, everything open. 'dates' pins a lesson to its own day outside the walk (Day 0 on the Friday before). 'off' = days without a lesson: every later lesson moves one study day on. The practice day is never scheduled.",
-  "start": "2026-10-29",
-  "weekends": true,
+  "_about": "The course calendar (assets/schedule.js on the site, worker.js in the bot, post_day.py for the mentor). One lesson per study day in 'order' (Monday to Friday, or every day when 'weekends' is true); each opens at 00:00 Tashkent time and its homework closes at 23:59 on its due day: the same day, or the later lesson 'due' names (the plan's due days), or a date 'due' gives as YYYY-MM-DD. 'start' = the first study day of the walk (YYYY-MM-DD); null = no schedule, everything open. 'dates' pins a lesson to its own day outside the walk. 'with' opens a lesson on the same day as another without taking a study day (each Day 6 exam opens with its Day 5 and is due on the next week's Day 1). 'off' = days without a lesson: every later lesson moves one study day on. The practice day is never scheduled. Since 2026-11-02 (her wish, through the founder): Monday to Friday, restarting at Week 1 Day 2, which opens on 2026-11-02 and keeps Tuesday too; from Wednesday 2026-11-04 Day 3, 4, 5 fall on Wednesday to Friday, and from Week 2 every Day N falls on the weekday the lessons' stories name.",
+  "start": "2026-11-04",
+  "weekends": false,
   "dates": {
     "W0D0": "2026-10-28",
-    "W1D1": "2026-10-28"
+    "W1D1": "2026-10-28",
+    "W1D2": "2026-11-02"
+  },
+  "with": {
+    "W3D6": "W3D5",
+    "W4D6": "W4D5",
+    "W5D6": "W5D5",
+    "W6D6": "W6D5",
+    "W7D6": "W7D5",
+    "W8D6": "W8D5",
+    "W9D6": "W9D5"
   },
   "off": [],
   "due": {
@@ -33,7 +43,8 @@
     "W5D6": "W6D1",
     "W6D6": "W7D1",
     "W7D6": "W8D1",
-    "W8D6": "W9D1"
+    "W8D6": "W9D1",
+    "W9D6": "2027-01-04"
   },
   "order": [
     "W0D0",

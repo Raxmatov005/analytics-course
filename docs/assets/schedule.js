@@ -31,18 +31,19 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
   }
   function walk(s) {
     if (!s || !s.start || !s.order) return null;
-    var fixed = s.dates || {}, out = {}, d = s.start;
+    var fixed = s.dates || {}, together = s['with'] || {}, out = {}, d = s.start;
     while (!study(d)) d = dayAfter(d, 1);
     s.order.forEach(function (id) {
       if (fixed[id]) { out[id] = fixed[id]; return; }
+      if (together[id] && out[together[id]]) { out[id] = out[together[id]]; return; }   // a Day 6 exam opens with its Day 5
       out[id] = d;
       do d = dayAfter(d, 1); while (!study(d));
     });
     return out;
   }
   function on() { return !!dates && !preview; }
-  function lastDay(id) {   // its lesson's day, or the later lesson's it is due on ("due"), or the mentor's reopen date
-    var own = dates[due[id]] || dates[id];
+  function lastDay(id) {   // its lesson's day, or the later lesson's it is due on ("due", or a date there), or the mentor's reopen date
+    var own = dates[due[id]] || (/^\d{4}-\d\d-\d\d$/.test(due[id] || '') ? due[id] : null) || dates[id];
     return reopen[id] && reopen[id] > (own || '') ? reopen[id] : own;
   }
   function state(id) {
