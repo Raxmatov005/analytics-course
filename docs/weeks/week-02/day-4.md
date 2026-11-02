@@ -35,6 +35,8 @@ FROM customers;
 
 **When you use it.** On every column you are about to filter, group or average: how many values are missing, and is a missing value "unknown" (income) or "not yet" (`closed_at` of an active loan)?
 
+> ⚠️ **Watch out.** An empty text `''` is not NULL. `IS NULL` does not find it, `COUNT(column)` counts it, and it sorts and groups as a value of its own. Our database has no `''` cells, but a CSV or Excel import often turns blanks into `''`: check both, `WHERE x IS NULL OR TRIM(x) = ''`.
+
 **Your turn.** How many loans have no `closed_at`? (Most of them are simply not closed yet.)
 
 ```task
@@ -64,6 +66,18 @@ The 356 rows leave *every* comparison: `monthly_income > x` and `monthly_income 
 **When you use it.** Finding the missing (`IS NULL`), excluding them on purpose (`IS NOT NULL`), and checking that groups add up: when a report's groups do not sum to the total, look for a NULL.
 
 > ⚠️ **Watch out.** `= NULL` and `<> NULL` do not fail; they quietly return 0 rows. Every test for "empty" is written `IS NULL`.
+
+When an unknown meets `AND`, `OR` and `NOT`, SQL follows three rules. `WHERE` keeps a row only when the whole condition comes out **true**:
+
+| Condition | Result | The row |
+|---|---|---|
+| true `AND` unknown | unknown | dropped |
+| false `AND` unknown | false | dropped |
+| true `OR` unknown | **true** | kept |
+| false `OR` unknown | unknown | dropped |
+| `NOT` unknown | unknown | dropped |
+
+So `WHERE segment = 'sme' OR monthly_income > 5000000` keeps an SME customer with no income (true OR unknown = true), while `WHERE NOT (monthly_income > 5000000)` drops every customer with no income, just like the condition without `NOT`. The same rule breaks `NOT IN` on a list that holds a NULL — Week 3.
 
 **Your turn.**
 
@@ -425,6 +439,8 @@ FROM customers a JOIN customers b
 40 pairs — exactly the 40 duplicates with ids 6001+. Phone alone gives 43 pairs: three are family members sharing a number.
 
 **When you use it.** Tables keyed by two columns (`loan_id, installment_no`); duplicate searches that need two pieces of evidence; **consistency checks** — `payments JOIN installments ON installment_id AND loan_id` returns 52 875 rows, the same as on `installment_id` alone, which proves that no payment points at an instalment of a *different* loan.
+
+> ⚠️ **Watch out.** A join matches only **exactly equal** keys. A NULL key never matches anything — not even another NULL — so those rows vanish from an INNER JOIN and look "unmatched" in a LEFT JOIN. And text keys must be spelt the same on both sides: `'Card'` is not `'card'`, `'+998901112233'` is not `'998901112233'`. Before you join on a typed key, count the rows with a NULL key and clean both sides with the same `TRIM`, `LOWER` or `REPLACE`.
 
 **Your turn.** The self-join on phone alone returns 43 pairs, on phone and birth date 40. What are the other 3?
 
@@ -1084,7 +1100,7 @@ ORDER BY vintage, a.channel;
 
 The app channel is worse by **0.66 points — 1.6× the branch rate** (at the branch rate, the app's 2 411 loans would have produced about 25 FPDs; they produced 41). Nilufar and Timur were both right: Timur's tile uses the *unpaid-only* rule (app 1.04 % — "fine"), Nilufar's sheet the *within-30-days* rule. Same data, two definitions, a 0.7-point gap on the app. The fix is the sentence at the top of this corner, written on the slide.
 
-**By vintage** (2026 only, all channels): Jan 1.05 % · Feb 1.13 · Mar **0.00** · Apr 1.60 · May 1.86 · Jun 0.80 · Jul 1.09 · Aug 0 of 11 (barely in scope). Across all 32 vintages the rate ranges 0.0–3.1 % on 100–380 loans each — with 3 FPDs a month, one loan moves the rate by 0.3 points. Read vintages by *quarter* when counts are this small: 2026-Q1 app 1.40 % vs branch 0.24 %; 2026-Q2 app 1.07 % vs branch 1.22 % vs partner 2.58 % (5 of 194). The app's excess is persistent over 2024–2025 (2.16 / 1.76 % vs branch 0.50 / 1.59 %) and has narrowed in 2026 (1.27 vs 0.74 %).
+**By vintage** (2026 only, all channels): Jan 1.05 % · Feb 1.13 · Mar **0.00** · Apr 1.60 · May 1.86 · Jun 0.80 · Jul 1.09 · Aug 0 of 11 (barely in scope). Across all 32 vintages the rate ranges 0.0–3.1 % on about 100–380 loans each (August 2026: 11) — with 3 FPDs a month, one loan moves the rate by 0.3 points. Read vintages by *quarter* when counts are this small: 2026-Q1 app 1.40 % vs branch 0.24 %; 2026-Q2 app 1.07 % vs branch 1.22 % vs partner 2.58 % (5 of 194). The app's excess is persistent over 2024–2025 (2.16 / 1.76 % vs branch 0.50 / 1.59 %) and has narrowed in 2026 (1.27 vs 0.74 %).
 
 **By product and grade** (same query, swap the dimension): Micro 1.70 % (= the app: Micro is the only app product), Consumer 1.14, BNPL 1.12, SME 0.98, Auto 0.58; grades A 0.60, B 0.97, C 2.16, D 2.23 — the scorecard separates A/B from C/D at the first payment already.
 

@@ -587,7 +587,7 @@ Power BI Desktop, one `.pbix` for the whole week (`nur_week7.pbix`). Keep a shor
 **P5.** *(star schema · cardinality)* Build every relationship in the README. Then a table visual by `products[code]` with `Outstanding` and `Disbursed Count = COUNTROWS(v_loan_status)`. What does the Model view's diagram look like, and what does each line's "1" and "*" mean? In the box: Disbursed Count for MICRO.
 
 ```task
-{"id": "w07d3-p5", "kind": "number", "answer": 2669, "dp": 0, "unit": "loans", "hint": "Enter Disbursed Count for MICRO.", "model": "SME 125 892 942 411 / 781 · AUTO 57 684 271 333 / 391 · CONS 23 054 933 316 / 2 418 · BNPL 1 135 251 000 / 1 569 · MICRO 956 106 370 / 2 669 (total 7 828). The diagram: five dimensions around seven facts, every line with 1 at the dimension and * at the fact, a single arrow pointing to the fact; no line between two facts. \"1\" = each key appears once there; \"\" = many rows per key."}
+{"id": "w07d3-p5", "kind": "number", "answer": 2669, "dp": 0, "unit": "loans", "hint": "Enter Disbursed Count for MICRO.", "model": "SME 125 892 942 411 / 781 · AUTO 57 684 271 333 / 391 · CONS 23 054 933 316 / 2 418 · BNPL 1 135 251 000 / 1 569 · MICRO 956 106 370 / 2 669 (total 7 828). The diagram: five dimensions around seven facts, every line with 1 at the dimension and * at the fact, a single arrow pointing to the fact; no line between two facts. \"1\" = each key appears once there; \"*\" = many rows per key."}
 ```
 
 **P6.** *(relationships — the missing one)* The missing-relationship symptom. Before relating `v_payments_clean` to `products`, put `products[code]` and `Collected Amount` in a table. What do you see, and what does it tell you?

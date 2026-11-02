@@ -51,7 +51,7 @@ The Python for each idea, and the extra topics, are in **Going further — the f
 **Now play.** The same idea with sliders — try the challenges.
 
 ```explore
-{"id": "w09d2-x1", "type": "logit", "title": "Bend the curve through the bands", "predict": {"q": "A score of **600** against a score of **700**. How many times more likely is the 600 to go bad?", "options": ["About 1.2 times — 100 points is a small step", "About 3.5 times", "About 10 times", "The same: both are approved"], "answer": 1, "why": "The fitted curve says 6.4 % at 600 and 1.9 % at 700: about 3.5 times. Each 100 points multiplies the odds of going bad by about 0.28. Move the two sliders until the curve passes through the dots."}, "bins": [[424.0, 1, 0], [448.0, 1, 0], [486.0, 1, 0], [494.5, 4, 0], [507.0, 7, 2], [515.2, 8, 0], [524.0, 6, 1], [534.7, 23, 5], [545.8, 22, 3], [554.9, 27, 1], [565.0, 36, 6], [574.8, 53, 2], [584.3, 68, 8], [594.1, 74, 9], [604.8, 275, 14], [614.8, 315, 11], [624.7, 367, 23], [634.5, 399, 9], [644.7, 394, 23], [654.1, 458, 30], [664.5, 632, 9], [674.5, 611, 11], [684.3, 603, 10], [694.2, 513, 7], [704.3, 517, 13], [714.5, 426, 10], [724.3, 403, 4], [734.3, 362, 6], [744.3, 267, 0], [754.1, 232, 3], [764.5, 158, 0], [774.5, 126, 0], [783.9, 90, 1], [794.4, 45, 1], [804.2, 30, 0], [813.5, 22, 1], [823.1, 16, 0], [835.4, 12, 0], [845.8, 4, 0], [850.0, 7, 0]], "bands": [["<560", 100, 12, 534.4], ["560–599", 231, 25, 582.2], ["600–639", 1356, 57, 621.2], ["640–679", 2095, 73, 661.4], ["680–719", 2059, 40, 698.1], ["720+", 1774, 16, 750.1]], "start": {"a": -3.48, "b": 0, "cur": 750}, "challenges": [{"id": "c1", "text": "Fit it by hand: bring the log-loss within **0.0002** of the best.", "when": {"gap": ["<", 0.0002]}}, {"id": "c2", "text": "Keep a fit that close and put the marker on **600**: read the PD.", "when": {"gap": ["<", 0.0002], "cur": ["=", 600]}}, {"id": "c3", "text": "Same fit, marker on **700**. How many times safer is a 700 than a 600?", "when": {"gap": ["<", 0.0002], "cur": ["=", 700]}}, {"id": "c4", "text": "**PDO:** with a near-best fit, find the score where the odds of going bad are **half** those at 600 (×0.47 to ×0.53). Its distance from 600 is the points to double the odds.", "when": {"gap": ["<", 0.0005], "ratio": ["between", 0.47, 0.53]}}]}
+{"id": "w09d2-x1", "type": "logit", "title": "Bend the curve through the bands", "predict": {"q": "A score of **600** against a score of **700**. How many times more likely is the 600 to go bad?", "options": ["About 1.2 times — 100 points is a small step", "About 3.5 times", "About 10 times", "The same: both are approved"], "answer": 1, "why": "The fitted curve says 6.45 % at 600 and 1.86 % at 700: about 3.5 times. Each 100 points multiplies the odds of going bad by about 0.28. Move the two sliders until the curve passes through the dots."}, "bins": [[424.0, 1, 0], [448.0, 1, 0], [486.0, 1, 0], [494.5, 4, 0], [507.0, 7, 2], [515.2, 8, 0], [524.0, 6, 1], [534.7, 23, 5], [545.8, 22, 3], [554.9, 27, 1], [565.0, 36, 6], [574.8, 53, 2], [584.3, 68, 8], [594.1, 74, 9], [604.8, 275, 14], [614.8, 315, 11], [624.7, 367, 23], [634.5, 399, 9], [644.7, 394, 23], [654.1, 458, 30], [664.5, 632, 9], [674.5, 611, 11], [684.3, 603, 10], [694.2, 513, 7], [704.3, 517, 13], [714.5, 426, 10], [724.3, 403, 4], [734.3, 362, 6], [744.3, 267, 0], [754.1, 232, 3], [764.5, 158, 0], [774.5, 126, 0], [783.9, 90, 1], [794.4, 45, 1], [804.2, 30, 0], [813.5, 22, 1], [823.1, 16, 0], [835.4, 12, 0], [845.8, 4, 0], [850.0, 7, 0]], "bands": [["<560", 100, 12, 534.4], ["560–599", 231, 25, 582.2], ["600–639", 1356, 57, 621.2], ["640–679", 2095, 73, 661.4], ["680–719", 2059, 40, 698.1], ["720+", 1774, 16, 750.1]], "start": {"a": -3.48, "b": 0, "cur": 750}, "challenges": [{"id": "c1", "text": "Fit it by hand: bring the log-loss within **0.0002** of the best.", "when": {"gap": ["<", 0.0002]}}, {"id": "c2", "text": "Keep a fit that close and put the marker on **600**: read the PD.", "when": {"gap": ["<", 0.0002], "cur": ["=", 600]}}, {"id": "c3", "text": "Same fit, marker on **700**. How many times safer is a 700 than a 600?", "when": {"gap": ["<", 0.0002], "cur": ["=", 700]}}, {"id": "c4", "text": "**PDO:** with a near-best fit, find the score where the odds of going bad are **half** those at 600 (×0.47 to ×0.53). Its distance from 600 is the points to double the odds.", "when": {"gap": ["<", 0.0005], "ratio": ["between", 0.47, 0.53]}}]}
 ```
 
 ### Bands and grades — the bad rate you can count
@@ -104,7 +104,7 @@ The Python for each idea, and the extra topics, are in **Going further — the f
 
 **Step 8 — the grades.** 600 is the bottom of grade C (600–659), 700 the middle of B (660–719). The grades' bad rates — C 5.12 %, B 1.88 % — are averages over the band; the curve says more for one applicant.
 
-**Step 9 — calibration.** In the 600–639 band the model predicts 5.03 %, 4.20 % happened (1 356 loans); in 680–719, 1.93 % against 1.94 % (2 059 loans). Good enough to quote, with the 560–599 band flagged (10.8 % against 8.0 %).
+**Step 9 — calibration.** In the 600–639 band the model predicts 5.03 %, 4.20 % happened (1 356 loans); in 680–719, 1.93 % against 1.94 % (2 059 loans). Good enough to quote, with the 560–599 band flagged: 8.0 % predicted, 10.8 % happened (231 loans).
 
 **Step 10 — the answer, with the caveat.** *"A 600 goes bad about 6.5 % of the time, a 700 about 1.9 % — 3.5 times less. Every 54 points halves the odds. Grades agree in order, but within a grade the score matters: C runs from 6.5 % at 600 to 3.1 % at 659. These are PDs for loans like the ones we approved in 2024–2026, measured as 'ever defaulted or written off so far'; tomorrow I check how well the score ranks, and on Thursday where the cut-off should be."*
 
@@ -112,7 +112,7 @@ The Python for each idea, and the extra topics, are in **Going further — the f
 
 ## 3. Practice (50 min)
 
-Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `np`, `pd`, `plt`, `df` (all loans with their score), `S` (the scored loans, with `band` and `pd` once you ran the calibration box), `sigmoid`, `b0` and `b1` are ready — if you came straight here, press ▶ Run all above on the last box of section 1. SQL boxes run on your practice copy of the database. (The notebook `data/python/week9/day2_starter.ipynb` holds the same tools; you need it for the homework.)
+Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The setup box just below loads everything the Python boxes need: `np`, `pd`, `df` (all loans with their score), `S` (the scored loans, with their score `band` and the model's `pd`), `sigmoid`, `b0` and `b1` — run it once before the first task (and again after you reload the page). SQL boxes run on your practice copy of the database. (The notebook `data/python/week9/day2_starter.ipynb` holds the same tools; you need it for the homework.)
 
 **First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
 
@@ -128,8 +128,6 @@ cols = ["application_id", "credit_score"]
 df = loans.merge(apps[cols], on="application_id")
 S = df.dropna(subset=["credit_score"]).copy()
 b, a = np.polyfit(S["credit_score"], S["bad"], 1)
-for s in (424, 600, 700, 850):
-    print(s, round(100 * (a + b * s), 1))
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 for z in (-4, -2, 0, 2, 4):
@@ -138,21 +136,7 @@ import statsmodels.api as sm
 X = sm.add_constant(S["credit_score"])
 fit = sm.Logit(S["bad"], X).fit(disp=0)
 b0, b1 = fit.params
-for s in (600, 700):
-    print(s, round(100 * sigmoid(b0 + b1 * s), 2))
-y = S["bad"].to_numpy()
-Xn = np.column_stack([np.ones(len(S)), S["credit_score"]])
-beta = np.zeros(2)
-for step in range(25):
-    q = sigmoid(Xn @ beta)
-    grad = Xn.T @ (y - q)
-    hess = Xn.T @ (Xn * (q * (1 - q))[:, None])
-    beta = beta + np.linalg.solve(hess, grad)
-q = sigmoid(b0 + b1 * S["credit_score"])
 import statsmodels.formula.api as smf
-for s in (600, 650, 700):
-    q = sigmoid(b0 + b1 * s)
-    print(s, round((1 - q) / q, 1))
 bins = [0, 560, 600, 640, 680, 720, 1000]
 S["band"] = pd.cut(S["credit_score"], bins, right=False)
 S["pd"] = sigmoid(b0 + b1 * S["credit_score"])
@@ -266,7 +250,7 @@ Two PDOs = two doublings: 14.5 × 4 = **58** good loans per bad one at about 707
 **P8.** *(risk grades)* A loan has a score of 599. What grade does Nur print, and what does that say about grade boundaries?
 
 ```task
-{"id": "w09d2-p8", "kind": "choice", "options": ["C — 599 rounds to 600", "D — D is everything below 600; a 599 and a 600 differ by one point but by a whole grade (PD 6.5 % against 6.4 %)", "B", "No grade: D starts at 424"], "answer": 1, "explain": "Grades are cut-offs: neighbours across a boundary have almost the same PD but different labels, prices and limits."}
+{"id": "w09d2-p8", "kind": "choice", "options": ["C — 599 rounds to 600", "D — D is everything below 600; a 599 and a 600 differ by one point but by a whole grade (PD 6.53 % against 6.45 %)", "B", "No grade: D starts at 424"], "answer": 1, "explain": "Grades are cut-offs: neighbours across a boundary have almost the same PD but different labels, prices and limits."}
 ```
 
 <details><summary>Answer</summary>
@@ -333,7 +317,7 @@ Graded on (20 points): (a) all four assert cells pass after *Restart & Run All* 
 **H1.** Consumer loans, band 640–679: what is the bad rate, in %, to 2 decimals?
 
 ```task
-{"id": "w09d2-hw1", "kind": "number", "answer": 4.33, "dp": 2, "unit": "%", "hint": "Today's band query with AND l.product_id = 2 in the WHERE.", "model": "28 bad of 646 = 4.33 % — higher than the 600–639 band's 4.15 %: on 2 350 loans the Consumer bands are not perfectly monotonic."}
+{"id": "w09d2-hw1", "kind": "number", "answer": 4.33, "dp": 2, "unit": "%", "hint": "Today's band query (Going further, 'Bad rate by score band') with AND l.product_id = 2 in the WHERE.", "model": "28 bad of 646 = 4.33 % — higher than the 600–639 band's 4.15 %: on 2 350 loans the Consumer bands are not perfectly monotonic."}
 ```
 
 **H2.** The logistic regression of bad on credit_score, Consumer loans only: what PD does it give for a score of **600**, in %, to 2 decimals?
@@ -368,9 +352,9 @@ Three questions, one at a time. Wrong? The explanation points to the part of sec
 
 ```check
 {"id": "w09d2-sc", "questions": [
-  {"type": "single", "q": "The probability of bad is 20 %. What are the odds?", "options": ["0.20", "0.25 — one bad per four good", "0.80", "4"], "answer": 1, "explain": "odds = p / (1 − p) = 0.2 / 0.8 = 0.25 (→ section 1, 'Probability, odds and log-odds')."},
-  {"type": "number", "q": "β₁ = −0.02 per point. By what factor are the odds of bad multiplied over 50 points? (2 decimals)", "answer": 0.37, "tol": 0.005, "explain": "e^(50 × −0.02) = e^−1 = 0.37 (→ section 1, 'A coefficient as an odds ratio')."},
-  {"type": "single", "q": "On the loans it was fitted on, the model's average PD equals the bad rate exactly. What does that prove?", "options": ["The model is calibrated", "Nothing much — with an intercept it is true by construction; check calibration band by band, on new loans", "The model ranks well", "There is no class imbalance"], "answer": 1, "explain": "Calibration in total is automatic in-sample; the test is band by band and out of time (→ section 1, 'Calibration')."}
+  {"type": "single", "q": "The probability of bad is 20 %. What are the odds?", "options": ["0.20", "0.25 — one bad per four good", "0.80", "4"], "answer": 1, "explain": "odds = p / (1 − p) = 0.2 / 0.8 = 0.25 (→ section 1, 'One chance, three rulers — probability, odds and log-odds')."},
+  {"type": "number", "q": "β₁ = −0.02 per point. By what factor are the odds of bad multiplied over 50 points? (2 decimals)", "answer": 0.37, "tol": 0.005, "explain": "e^(50 × −0.02) = e^−1 = 0.37 (→ section 1, 'Every 54 points — odds ratios and the PDO')."},
+  {"type": "single", "q": "On the loans it was fitted on, the model's average PD equals the bad rate exactly. What does that prove?", "options": ["The model is calibrated", "Nothing much — with an intercept it is true by construction; check calibration band by band, on new loans", "The model ranks well", "There is no class imbalance"], "answer": 1, "explain": "Calibration in total is automatic in-sample; the test is band by band and out of time (→ section 1, 'Do the chances come true? — calibration and the 3 % problem')."}
 ]}
 ```
 
@@ -858,12 +842,6 @@ Nilufar's question, the chain of today's tools:
 | 9 | calibration | close in big bands; 560–599 hot |
 | 10 | imbalance | judge by log-loss and calibration, not accuracy |
 
-**Words of the day.**
-
-
-**From a score to a decision, in order.**
-
-
 ### Depth (optional)
 
 **Weight of evidence and information value.** Scorecard builders turn every characteristic into bands and give each band its **weight of evidence** (*весомость признака*): WoE = ln(share of all goods in the band ÷ share of all bads in the band). Positive WoE = safer than average. The **information value** IV = Σ (share of goods − share of bads) × WoE measures how well the characteristic separates (rules of thumb: under 0.02 useless, 0.1–0.3 medium, above 0.3 strong).
@@ -891,14 +869,14 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w09d2", "pass": 0.8, "questions": [
-  {"type": "number", "q": "The probability of bad is 10 %. What are the odds of bad? (3 decimals)", "answer": 0.111, "tol": 0.001, "explain": "0.1 / 0.9 = 0.111: one bad per nine good (→ section 1, 'Probability, odds and log-odds')."},
-  {"type": "single", "q": "Why not fit a straight line to bad (0/1) against the score?", "options": ["It is too slow", "It predicts impossible probabilities — below 0 above a score of 760 — and assumes the same change per point everywhere", "It cannot use scores", "It always gives R² = 0"], "answer": 1, "explain": "The linear probability model runs out of [0, 1]: −3.3 % at 850 (→ section 1, 'Why a straight line fails')."},
-  {"type": "single", "q": "In logistic regression, what is a straight line in the score?", "options": ["The probability", "The log-odds of bad", "The odds", "The bad count"], "answer": 1, "explain": "z = β₀ + β₁ · score is the log-odds; the sigmoid turns it into a probability (→ section 1, 'The logistic curve')."},
-  {"type": "single", "q": "What does maximum likelihood make as small as possible?", "options": ["The squared residuals", "The log-loss", "The number of wrong calls at 50 %", "The PDO"], "answer": 1, "explain": "Highest likelihood = lowest log-loss: −ln p for bad loans, −ln(1 − p) for good ones (→ section 1, 'Fitting it')."},
-  {"type": "single", "q": "e^(100 · β₁) = 0.275 for our score. What does it mean?", "options": ["100 more points lower the PD by 27.5 points", "100 more points multiply the odds of going bad by 0.275 — about a quarter", "27.5 % of loans go bad", "The PDO is 27.5"], "answer": 1, "explain": "An odds ratio multiplies odds; the odds halve every ln 2 / 0.012903 = 53.7 points (→ section 1, 'A coefficient as an odds ratio')."},
-  {"type": "number", "q": "A card has 600 points at good:bad odds of 50:1 and PDO 20. What odds does 640 have, good per bad?", "answer": 200, "tol": 0.5, "explain": "Two PDOs, two doublings: 50 × 4 = 200 (→ section 1, 'The scorecard')."},
-  {"type": "single", "q": "Which statement about Nur's grades is right?", "options": ["They are separate from the score", "They are score bands: A 720+, B 660–719, C 600–659, D below 600, with bad rates 0.93 / 1.88 / 5.12 / 10.91 %", "D is the safest grade", "Grades have no bad rate"], "answer": 1, "explain": "Every grade boundary is a cut-off on the score (→ section 1, 'Risk grades A–D')."},
-  {"type": "single", "q": "A vendor's model is '97 % accurate' on our loans. Why is that no news?", "options": ["Saying 'good' to everyone is 97.07 % accurate when 2.93 % go bad", "97 % is low", "Accuracy is always 97 %", "Vendors cannot measure accuracy"], "answer": 0, "explain": "With a rare outcome, judge ranking, calibration and log-loss, not accuracy (→ section 1, '3 % bads')."},
+  {"type": "number", "q": "The probability of bad is 10 %. What are the odds of bad? (3 decimals)", "answer": 0.111, "tol": 0.001, "explain": "0.1 / 0.9 = 0.111: one bad per nine good (→ section 1, 'One chance, three rulers — probability, odds and log-odds')."},
+  {"type": "single", "q": "Why not fit a straight line to bad (0/1) against the score?", "options": ["It is too slow", "It predicts impossible probabilities — below 0 above a score of 760 — and assumes the same change per point everywhere", "It cannot use scores", "It always gives R² = 0"], "answer": 1, "explain": "The linear probability model runs out of [0, 1]: −3.3 % at 850 (→ section 1, 'Yes or no on a ruler — why the straight line breaks')."},
+  {"type": "single", "q": "In logistic regression, what is a straight line in the score?", "options": ["The probability", "The log-odds of bad", "The odds", "The bad count"], "answer": 1, "explain": "z = β₀ + β₁ · score is the log-odds; the sigmoid turns it into a probability (→ section 1, 'The S-curve — a straight line, bent into a probability')."},
+  {"type": "single", "q": "What does maximum likelihood make as small as possible?", "options": ["The squared residuals", "The log-loss", "The number of wrong calls at 50 %", "The PDO"], "answer": 1, "explain": "Highest likelihood = lowest log-loss: −ln p for bad loans, −ln(1 − p) for good ones (→ section 1, 'The least surprised curve — maximum likelihood and log-loss')."},
+  {"type": "single", "q": "e^(100 · β₁) = 0.275 for our score. What does it mean?", "options": ["100 more points lower the PD by 27.5 points", "100 more points multiply the odds of going bad by 0.275 — about a quarter", "27.5 % of loans go bad", "The PDO is 27.5"], "answer": 1, "explain": "An odds ratio multiplies odds; the odds halve every ln 2 / 0.012903 = 53.7 points (→ section 1, 'Every 54 points — odds ratios and the PDO')."},
+  {"type": "number", "q": "A card has 600 points at good:bad odds of 50:1 and PDO 20. What odds does 640 have, good per bad?", "answer": 200, "tol": 0.5, "explain": "Two PDOs, two doublings: 50 × 4 = 200 (→ section 1, 'From log-odds to points — the scorecard's scale')."},
+  {"type": "single", "q": "Which statement about Nur's grades is right?", "options": ["They are separate from the score", "They are score bands: A 720+, B 660–719, C 600–659, D below 600, with bad rates 0.93 / 1.88 / 5.12 / 10.91 %", "D is the safest grade", "Grades have no bad rate"], "answer": 1, "explain": "Every grade boundary is a cut-off on the score (→ section 1, 'Bands and grades — the bad rate you can count')."},
+  {"type": "single", "q": "A vendor's model is '97 % accurate' on our loans. Why is that no news?", "options": ["Saying 'good' to everyone is 97.07 % accurate when 2.93 % go bad", "97 % is low", "Accuracy is always 97 %", "Vendors cannot measure accuracy"], "answer": 0, "explain": "With a rare outcome, judge ranking, calibration and log-loss, not accuracy (→ section 1, 'Do the chances come true? — calibration and the 3 % problem')."},
   {"type": "single", "q": "Company corner: what is an out-of-time sample for?", "options": ["Fitting the model faster", "Testing the model on a later period it never saw, as it will be used", "Removing old loans", "Choosing the PDO"], "answer": 1, "explain": "A scorecard is used on future applicants; validation on a later period is the honest test (→ Company corner)."}
 ]}
 ```

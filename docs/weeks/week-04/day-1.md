@@ -10,7 +10,7 @@
 - An Excel **Table** (Ctrl+T) is your `FROM`; **SUMIFS / COUNTIFS / AVERAGEIFS / MAXIFS** are your `WHERE` + `GROUP BY`; **IF / IFS** is `CASE`; **TRIM / PROPER / LEFT / TEXT** are week 2's string functions with new names.
 - By evening you reproduce the week-3 numbers (3 352 active · 208 723 504 430 outstanding · 2026: 3 051 loans / 162 333 060 000) and the approval rate by channel, in cells.
 
-**Today's file:** `data/excel/nur_week4_start.xlsx` — press **⬇ Download** next to the name, then save a copy as `week-04/day-1/practice.xlsx` before you type anything (never work in the original). Google Sheets: import the five CSVs from `data/excel/`, one tab each. **Done today** = the Worked example's check cell shows 208 723 504 430, every Practice box below is ✓, the Quick check is answered, the day quiz is passed — and `functions_pack.xlsx` (HW 4.1) is on its way (due Day 3).
+**Today's file:** `data/excel/nur_week4_start.xlsx` — press **⬇ Download** next to the name, then save a copy as `week-04/day-1/practice.xlsx` before you type anything (never work in the original). Google Sheets: upload the workbook itself to Google Drive and open it with Google Sheets — all six sheets come across, the small **Lookup** sheet included (the CSVs in `data/excel/` hold the same data sheets, but not Lookup). **Done today** = the Worked example's check cell shows 208 723 504 430, every Practice box below is ✓, the Quick check is answered, the day quiz is passed — and `functions_pack.xlsx` (HW 4.1) is on its way (due Day 3).
 
 ---
 
@@ -18,7 +18,7 @@
 
 Every number from weeks 1–3 ends up in a spreadsheet: the board pack, the budget, Sevara's printed collections list. The analyst's rule in Excel (*Эксель*) is the same as in SQL: **one definition, computed from the data, reproducible**. A pasted number is wrong the day the data changes; a formula on a table is not.
 
-Open `data/excel/nur_week4_start.xlsx` (built from `nur.db`; `data/excel/README.md` describes every column). It has five data sheets — **Loans**, **Payments**, **Customers**, **Applications**, **Installments** — and a **Lookup** sheet. `Loans` is week 3's `v_loan_status` with fewer columns: one row per loan, as of 2026-10-01. Google Sheets: File → Import each CSV from `data/excel/` into one spreadsheet, one tab per file.
+Open `data/excel/nur_week4_start.xlsx` (built from `nur.db`; `data/excel/README.md` describes every column). It has five data sheets — **Loans**, **Payments**, **Customers**, **Applications**, **Installments** — and a **Lookup** sheet. `Loans` is week 3's `v_loan_status` with fewer columns: one row per loan, as of 2026-10-01. Google Sheets: File → Import → Upload the `.xlsx` (or open it from Google Drive); the six sheets arrive as six tabs. The Table names (`tblLoans` …) may not come across — Sheets users write whole-column ranges instead (see *Excel Tables* below).
 
 **The small table used on this page.** Most subsections show a formula on these five rows first (outstanding in millions of soum), then on the real `Loans` sheet.
 
@@ -67,7 +67,7 @@ The left block cannot be filtered, sorted or summed by region: the region sits i
 - Always, for data. Reports (with merged titles and totals) are built *from* a table, on another sheet.
 - When a file arrives from a colleague: fix it into this shape first, then write formulas.
 
-> ⚠️ **Watch out.** A total row typed inside the data is counted twice by every `SUM` below it. Keep totals outside the table — Excel Tables have a separate *Total Row* for this.
+> ⚠️ **Watch out.** A total row typed inside the data is counted twice by every `SUM` below it. Keep totals outside the table — Excel Tables have a separate *Total Row* for this. And sort the whole table, never one selected column: if Excel asks *Expand the selection?*, say yes — otherwise only that column moves, and every amount ends up next to another loan's id.
 
 **Your turn.** Look at the left block above. Which of these break the table rules?
 
@@ -313,7 +313,7 @@ On the real data: `=COUNTIFS(tblApplications[status], "approved*")` → **8 595*
 - A family of values that share a start or an end: statuses `approved*`, branches `Tashkent*`.
 - Not as a replacement for cleaning: `"*cash*"` would also catch a method called `cashback`.
 
-> ⚠️ **Watch out.** Wildcards work in `COUNTIFS`/`SUMIFS` criteria (and in tomorrow's `XLOOKUP` with match mode 2). They do **not** work with `=`: `=B2="Tashkent*"` looks for a real star in the text.
+> ⚠️ **Watch out.** Wildcards work in `COUNTIFS`/`SUMIFS` criteria (and in tomorrow's `XLOOKUP` with match mode 2). They do **not** work with `=`: `=B2="Tashkent*"` looks for a real star in the text. To find a real `*` or `?` inside a criterion, put a tilde in front of it: `"*~?*"` matches any text that contains a question mark.
 
 **Your turn.** How many loans were made by a branch whose name ends in `Central`?
 
@@ -355,12 +355,20 @@ On the real data:
 - A month, a quarter, a year: two pairs, `>=` the first day and `<` the next period's first day.
 - A report that moves: put the start date in a cell and write `">="&$B$1`.
 
-> ⚠️ **Watch out.** A date stored as **text** looks like a date but is skipped by every date criterion — your count comes out low and nothing turns red. In a date column `=ISNUMBER(D2)` must say TRUE. Wednesday fixes the ones that do not.
+> ⚠️ **Watch out.** A date stored as **text** looks like a date but is skipped by every date criterion — your count comes out low and nothing turns red. In a date column `=ISNUMBER(D2)` must say TRUE. Day 3 fixes the ones that do not.
 
 **Your turn.** How many loans were disbursed in calendar year **2025**?
 
 ```task
 {"id": "w04d1-l7", "kind": "number", "answer": 3041, "dp": 0, "unit": "loans", "hint": "Two pairs on disbursed_at: \">=\"&DATE(2025,1,1) and \"<\"&DATE(2026,1,1).", "model": "=COUNTIFS(tblLoans[disbursed_at], \">=\"&DATE(2025,1,1), tblLoans[disbursed_at], \"<\"&DATE(2026,1,1)) → 3 041 loans; the same pairs in SUMIFS on principal give 155 927 230 000."}
+```
+
+> ⚠️ **Watch out.** A date **with a time** is a number with a fraction: 30 Sep 2026 at 14:20 is 46 295.60 (the day, plus 14 h 20 min ÷ 24 h). `"<="&DATE(2026,9,30)` means "up to 46 295.00" — midnight at the *start* of the 30th — so everything later that day falls out. The half-open filter has no such hole: `"<"&DATE(2026,10,1)` keeps the whole last day.
+
+**Your turn.** `tblApplications[applied_at]` holds a date **and** a time. Count September 2026 applications twice, both starting with `">="&DATE(2026,9,1)`: once ending with `"<"&DATE(2026,10,1)`, once with `"<="&DATE(2026,9,30)`. How many applications does the `<=` version lose?
+
+```task
+{"id": "w04d1-l16", "kind": "number", "answer": 23, "dp": 0, "unit": "applications", "hint": "The two counts differ only on 30 September. What time of day is 30 September at DATE(2026,9,30)?", "model": "=COUNTIFS(tblApplications[applied_at], \">=\"&DATE(2026,9,1), tblApplications[applied_at], \"<\"&DATE(2026,10,1)) → 621; with \"<=\"&DATE(2026,9,30) as the end → 598. The 23 applications of 30 September were all made after midnight, so the <= version drops every one of them."}
 ```
 
 ### SUMPRODUCT — when the condition is not a simple comparison
@@ -605,7 +613,7 @@ On the real data, a `month` column `=TEXT([@disbursed_at], "yyyy-mm")` in `tblLo
 
 ### Number formats vs values — the display changes, the value does not
 
-**What it is.** A **number format** (*формат ячеек*) changes how a cell *shows* its value. The value itself does not change. Ctrl+1 → Number opens the formats. A **date** is a number with a date format: `DATE(2026,10,1)` is the number 46 296.
+**What it is.** A **number format** (*формат ячеек*) changes how a cell *shows* its value. The value itself does not change. Ctrl+1 → Number opens the formats. A **date** is a number with a date format: `DATE(2026,10,1)` is the number 46 296. Day 1 is 1 January 1900. (Excel also counts a 29 February 1900 that never existed — an old bug kept on purpose; Google Sheets counts from 30 December 1899, so today's dates get the same numbers in both.) A column full of numbers like 46296 is a date column in the `General` format: give it a date format and the dates come back.
 
 **How to write it.** One value, several formats:
 
@@ -637,9 +645,17 @@ The cell that shows `209 bn` still holds 208 723 504 430. A check `=G11=SUM(tblL
 {"id": "w04d1-l15", "kind": "number", "answer": 46296, "dp": 0, "hint": "A date is a count of days since 1900.", "model": "46 296 — 1 October 2026 is day 46 296 of Excel's calendar. That is why \">=\"&DATE(2026,1,1) can compare dates: it compares numbers."}
 ```
 
+> ⚠️ **Watch out.** A format hides decimals; it does not remove them. Three cells that each hold 1/3 show `0.33`, yet their `SUM` shows `1.00`, not 0.99 — and `=A1=B1` can be FALSE for two cells that both show `0.30`. When the number you see must be the number that is stored (a check cell, an amount on a schedule), round the value itself with **ROUND**: `=ROUND(x, 2)` keeps 2 decimals, `=ROUND(x, 0)` makes a whole number, `=ROUND(x, -2)` rounds to hundreds. Excel's `ROUND` sends a 5 away from zero: `=ROUND(2.5, 0)` is 3.
+
+**Your turn.** Nur Finance rounds every instalment to whole hundreds of soum. Loan 1's exact monthly payment is 1 741 684.35. What does `=ROUND(1741684.35, -2)` return?
+
+```task
+{"id": "w04d1-l17", "kind": "number", "answer": 1741700, "dp": 0, "unit": "UZS", "hint": "A negative number of digits rounds to the left of the decimal point: −2 = to hundreds.", "model": "1 741 700 — exactly the total_due of loan 1's instalments in tblInstallments. 84.35 is nearer to 100 than to 0, so it rounds up. A number format would only have hidden the decimals; ROUND changes the value."}
+```
+
 ### Russian Excel — the same functions, other names
 
-**What it is.** Excel in Russian shows Russian function names (`СУММЕСЛИМН` for `SUMIFS`) and separates arguments with `;` instead of `,`. The file stores the formula in one internal form, so it opens correctly in either language.
+**What it is.** Excel in Russian shows Russian function names (`СУММЕСЛИМН` for `SUMIFS`). Separately, a computer whose regional settings write decimals with a comma (Russia, Uzbekistan) separates arguments with `;` instead of `,` — in English Excel too, so `=SUMIFS(a; b; c)` is a normal sight. The file stores the formula in one internal form, so it opens correctly in either language and region.
 
 **How to write it.**
 
@@ -649,6 +665,8 @@ The cell that shows `209 bn` still holds 208 723 504 430. A check `=G11=SUM(tblL
 | Russian Excel | `=СУММЕСЛИМН(tblLoans[outstanding]; tblLoans[status]; "active")` |
 
 **When you use it.** When a colleague's screen or a Russian tutorial shows the Russian names. Switch Office to English if you can (File → Options → Language): every interview and most tutorials use the English names.
+
+> ⚠️ **Watch out.** Format codes follow the language and the region too. In Russian Excel, `TEXT` wants Russian letters for dates — `=ТЕКСТ(A2; "ГГГГ-ММ")`, not `"yyyy-mm"` — and a custom number format is written with your own separators: `# ##0` (a space) instead of `#,##0`, `0,0%` instead of `0.0%`. If a `TEXT` date comes back with the letters still in it, or Ctrl+1 refuses a code from this page, this is why.
 
 **Your turn.**
 
@@ -670,19 +688,19 @@ The cell that shows `209 bn` still holds 208 723 504 430. A check `=G11=SUM(tblL
 | `WHERE d >= '2026-09-01' AND d < '2026-10-01'` | two pairs: `">="&DATE(2026,9,1)` and `"<"&DATE(2026,10,1)` on the same column |
 | `WHERE status LIKE 'approved%'` | `"approved*"` |
 | `WHERE status <> 'cancelled'` | `"<>cancelled"` |
-| `GROUP BY region` | a column of region labels + one formula filled down (today) or a pivot (Thursday) |
+| `GROUP BY region` | a column of region labels + one formula filled down (today) or a pivot (Day 4) |
 | `CASE WHEN … END` | `IF` / `IFS` in a calculated column |
 | `SUM(CASE WHEN dpd > 30 THEN outstanding ELSE 0 END)` | `=SUMPRODUCT((tblLoans[dpd]>30)*tblLoans[outstanding])` |
 | `first_name \|\| ' ' \|\| last_name` | `=[@first_name]&" "&[@last_name]` |
 | `LOWER(TRIM(method))` | `=LOWER(TRIM([@method]))` |
 | `strftime('%Y-%m', d)` / `FORMAT(d, 'yyyy-MM')` | `=TEXT([@disbursed_at], "yyyy-mm")` |
 | `ROUND(100.0 * a / b, 1)` | `=a/b` formatted `0.0%` |
-| `JOIN` | tomorrow: `XLOOKUP` / `INDEX-MATCH`; Wednesday: Power Query *Merge* |
+| `JOIN` | tomorrow: `XLOOKUP` / `INDEX-MATCH`; Day 3: Power Query *Merge* |
 | `SELECT DISTINCT`, `ORDER BY`, `LIMIT` | tomorrow: `UNIQUE`, `SORT`, `TAKE` |
 
 **When you use it.** Every time you know the SQL and need the cell.
 
-> ⚠️ **Watch out.** Two differences bite. Excel text comparison is **case-insensitive** (SQL's was not). And Excel has **no NULL**: an empty cell is skipped by `AVERAGE` and `COUNT`, but counted by `COUNTIFS(range, "")`.
+> ⚠️ **Watch out.** Two differences bite. Excel text comparison is **case-insensitive** (SQL's was not). And Excel has **no NULL**: an empty cell is skipped by `AVERAGE` and `COUNT`, but counted by `COUNTIFS(range, "")`. A formula that returns `""` only *looks* empty: it holds text, so `COUNTA` counts it and `ISBLANK` says FALSE.
 
 **Your turn.**
 
@@ -860,7 +878,7 @@ Work in a **copy** of `nur_week4_start.xlsx` named `week-04/day-1/practice.xlsx`
 **P11.** *(& · TRIM, PROPER · EXACT)* On `tblCustomers`, a `full_name` column = `PROPER(TRIM([@first_name]))&" "&PROPER(TRIM([@last_name]))`, and three count cells: first names with a stray space (`LEN` vs `LEN(TRIM)`), surnames that are all lower-case, phones that are not 13 characters long. *In the box: the number of surnames written all in lower case.*
 
 ```task
-{"id": "w04d1-p7", "kind": "number", "answer": 40, "dp": 0, "hint": "= ignores case in Excel. Which function compares text case-sensitively?", "explain": "=SUMPRODUCT(--EXACT(tblCustomers[last_name],LOWER(tblCustomers[last_name]))) → 40 — EXACT is the one case-sensitive comparison in Excel; with = every surname 'equals' its lower-case copy and you get 6 040. Stray spaces in first_name: =SUMPRODUCT(--(LEN(tblCustomers[first_name])<>LEN(TRIM(tblCustomers[first_name])))) → 18; phones not 13 long → 0. Row 6001 becomes Malika Jalilova — identical to row 4516. Wednesday finishes this."}
+{"id": "w04d1-p7", "kind": "number", "answer": 40, "dp": 0, "hint": "= ignores case in Excel. Which function compares text case-sensitively?", "explain": "=SUMPRODUCT(--EXACT(tblCustomers[last_name],LOWER(tblCustomers[last_name]))) → 40 — EXACT is the one case-sensitive comparison in Excel; with = every surname 'equals' its lower-case copy and you get 6 040. Stray spaces in first_name: =SUMPRODUCT(--(LEN(tblCustomers[first_name])<>LEN(TRIM(tblCustomers[first_name])))) → 18; phones not 13 long → 0. Row 6001 becomes Malika Jalilova — identical to row 4516. Day 3 finishes this."}
 ```
 
 **P12.** *(LEFT, MID, SEARCH)* Two calculated columns on `tblLoans`: `city` = the word before the space in `branch`, `part` = everything after it. Check that `city` always equals `region` (a `SUMPRODUCT` of mismatches), then count the loans per `part`. *In the box: the number of loans whose `part` is `South`.*
@@ -974,7 +992,7 @@ Read four numbers off your own `functions_pack.xlsx` — they are not in the tab
 {"id": "w04d1-sc", "questions": [
   {"type": "single", "q": "You paste 120 new loans under tblLoans. Which formula includes them without any edit?", "options": ["=SUM(Loans!K2:K7829)", "=SUM(tblLoans[outstanding])", "=SUM(Loans!$K$2:$K$7829)", "=SUBTOTAL(9, Loans!K2:K7829)"], "answer": 1, "explain": "A Table column grows with the Table; every fixed range stops at row 7 829, $ or no $ (→ section 1, Excel Tables)."},
   {"type": "single", "q": "Which formula gives the principal disbursed in September 2026 with the half-open filter?", "options": ["=SUMIFS(tblLoans[principal], tblLoans[disbursed_at], \">=\"&DATE(2026,9,1), tblLoans[disbursed_at], \"<\"&DATE(2026,10,1))", "=SUMIFS(tblLoans[disbursed_at], tblLoans[principal], \">=\"&DATE(2026,9,1))", "=SUMIFS(tblLoans[principal], tblLoans[disbursed_at], \">=DATE(2026,9,1)\")", "=SUMIFS(tblLoans[principal], tblLoans[disbursed_at], \"<=\"&DATE(2026,9,30))"], "answer": 0, "explain": "Sum range first, two pairs on the date, the operator glued to DATE() with & (→ section 1, Dates in criteria; P7)."},
-  {"type": "multi", "q": "COUNTIFS(method, \"card\") returns 17 621 while SQL's GROUP BY said 17 564. Which kinds of dirt does Excel still NOT absorb?", "options": ["Upper and lower case (Card vs card)", "A trailing space ('CASH ')", "A different word ('bank transfer' vs 'transfer')", "None — Excel absorbs all three"], "answer": [1, 2], "explain": "Criteria ignore case, so Card is already inside 17 621; spaces and synonyms need TRIM and SUBSTITUTE — Wednesday (→ P8)."},
+  {"type": "multi", "q": "COUNTIFS(method, \"card\") returns 17 621 while SQL's GROUP BY said 17 564. Which kinds of dirt does Excel still NOT absorb?", "options": ["Upper and lower case (Card vs card)", "A trailing space ('CASH ')", "A different word ('bank transfer' vs 'transfer')", "None — Excel absorbs all three"], "answer": [1, 2], "explain": "Criteria ignore case, so Card is already inside 17 621; spaces and synonyms need TRIM and SUBSTITUTE — Day 3 (→ P8)."},
   {"type": "number", "q": "How many loans does this return on the shipped file?", "code": "=COUNTIFS(tblLoans[status], \"active\", tblLoans[dpd], \">0\")", "answer": 151, "explain": "Active and late: 111 in 1-30 + 24 in 31-60 + 16 in 61-90 = 151; no active loan is 90+ (→ P4)."}
 ]}
 ```

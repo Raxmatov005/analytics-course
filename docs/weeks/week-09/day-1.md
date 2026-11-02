@@ -126,7 +126,7 @@ What the steps taught: the correlation (0.778) and even R² 0.891 looked good, b
 
 ## 3. Practice (50 min)
 
-Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `np`, `pd`, `plt`, `stats`, the frames `loans`, `apps`, `cust` and `auto`, and the columns `pm` (principal, m soum), `pay_k` (payment, thousand soum) and `bad` are ready — if you came straight here, press ▶ Run on the first box of section 1. Answer, check, then open the fold for the full working. (The notebook `data/python/week9/day1_starter.ipynb` holds the same tools; you need it for the homework.)
+Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The setup box just below loads everything the Python boxes need: `np`, `pd`, `stats`, the frames `loans`, `apps`, `cust` and `auto`, and the columns `pm` (principal, m soum), `pay_k` (payment, thousand soum) and `bad` — run it once before the first task (and again after you reload the page). Answer, check, then open the fold for the full working. (The notebook `data/python/week9/day1_starter.ipynb` holds the same tools; you need it for the homework.)
 
 **First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
 
@@ -446,9 +446,9 @@ Three questions, one at a time. Wrong? The explanation points to the part of sec
 
 ```check
 {"id": "w09d1-sc", "questions": [
-  {"type": "single", "q": "Two scatters: A has r = 0.95 and slope 10 000 soum per 1 m; B has r = 0.60 and slope 400 000 soum per 1 m. Which is the stronger straight-line relationship?", "options": ["A — r measures how close the dots lie to a line", "B — its slope is forty times larger", "They are equal", "You need R² to say"], "answer": 0, "explain": "Strength is r, steepness is the slope; they are different numbers (b = r · s_y / s_x) (→ section 1, 'Pearson's correlation r')."},
-  {"type": "number", "q": "A line has r = −0.7. What share of the spread of y does it explain, in %?", "answer": 49, "tol": 0.5, "explain": "R² = r² = 0.49: the sign of r drops out of R² (→ section 1, 'R²')."},
-  {"type": "single", "q": "The residuals of a line average exactly 0. What does that tell you?", "options": ["The line fits well", "Nothing about the fit — least-squares residuals always average 0 on the fitted rows; look at their shape and their averages by group", "The model has no outliers", "R² is 1"], "answer": 1, "explain": "The average is 0 by construction; patterns in the residual plot (fans, curves, groups) are what tell you about the fit (→ section 1, 'Residuals')."}
+  {"type": "single", "q": "Two scatters: A has r = 0.95 and slope 10 000 soum per 1 m; B has r = 0.60 and slope 400 000 soum per 1 m. Which is the stronger straight-line relationship?", "options": ["A — r measures how close the dots lie to a line", "B — its slope is forty times larger", "They are equal", "You need R² to say"], "answer": 0, "explain": "Strength is r, steepness is the slope; they are different numbers (b = r · s_y / s_x) (→ section 1, 'How close to a line — Pearson's r')."},
+  {"type": "number", "q": "A line has r = −0.7. What share of the spread of y does it explain, in %?", "answer": 49, "tol": 0.5, "explain": "R² = r² = 0.49: the sign of r drops out of R² (→ section 1, 'What the line explains — R² and the residual plot')."},
+  {"type": "single", "q": "The residuals of a line average exactly 0. What does that tell you?", "options": ["The line fits well", "Nothing about the fit — least-squares residuals always average 0 on the fitted rows; look at their shape and their averages by group", "The model has no outliers", "R² is 1"], "answer": 1, "explain": "The average is 0 by construction; patterns in the residual plot (fans, curves, groups) are what tell you about the fit (→ section 1, 'What the line explains — R² and the residual plot')."}
 ]}
 ```
 
@@ -831,9 +831,6 @@ The three tools agree: slope 41.49, intercept −12.1. The slope's standard erro
 
 > ⚠️ **Watch out.** The argument order differs. numpy and scipy take **x first**: `polyfit(x, y, 1)`. Excel takes **y first**: `SLOPE(known_y's, known_x's)`. Swap them and you get the slope of x on y — a different line.
 
-**Your turn.**
-
-
 ### R² — the share of the spread the line explains
 
 **What it is.** **R²** (the **coefficient of determination**, *коэффициент детерминации*) is the share of the variation of y that the line accounts for: R² = 1 − SS_res / SS_tot, where SS_res = Σ (y − ŷ)² is what is left after the line and SS_tot = Σ (y − ȳ)² is the variation around the plain mean. It runs from 0 (the line is no better than the mean) to 1 (every dot on the line). With one x, R² = r².
@@ -1045,12 +1042,6 @@ The whole chain on one picture, in the order you will use it at work.
 | 8 | add the term | R² 0.961; −184 300 soum per month of term |
 | 9 | predict | only inside 50–400 m and 24–48 months |
 
-**The workflow in order.**
-
-
-**Words of the day.**
-
-
 ### Depth (optional)
 
 - **Why the fans?** The annuity formula: payment = principal × r / (1 − (1 + r)^−n), with r the monthly rate and n the term. For one product and one term the factor is fixed, so payment is an exact line through 0. Across terms the factor changes, so the principal's effect *multiplies* with the term. A model that adds them can only approximate it.
@@ -1067,14 +1058,14 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w09d1", "pass": 0.8, "questions": [
-  {"type": "single", "q": "What does Pearson's r measure?", "options": ["How steep the line is", "How closely the dots lie to a straight line, and its direction", "Whether x causes y", "The share of y explained, in %"], "answer": 1, "explain": "r is direction and closeness to a line, from −1 to +1; steepness is the slope, and the share explained is R² (→ section 1, 'Pearson's correlation r')."},
-  {"type": "single", "q": "Across all loans r(term, payment) = +0.335; inside every product it is negative. Why?", "options": ["The book-wide number is wrong", "The product is a confounder: Auto and SME loans are both long and big, so mixing products makes 'longer' look like 'bigger payment'", "Small groups always give negative r", "Payments are rounded"], "answer": 1, "explain": "Simpson's paradox: a third variable can flip a correlation between the pooled data and every group (→ section 1, 'Correlation is not causation')."},
-  {"type": "number", "q": "A line has r = 0.6. What R², in %?", "answer": 36, "tol": 0.5, "explain": "R² = r² = 0.36 → 36 % (→ section 1, 'R²')."},
-  {"type": "single", "q": "Principal has skewness 2.9. Term against principal: Pearson 0.581, Spearman 0.713. Which statement is right?", "options": ["Spearman is wrong because it ignores the values", "The ranks show a cleaner 'longer goes with bigger' than the skewed values; report Spearman for money columns", "Pearson is always better", "The two must be equal"], "answer": 1, "explain": "Spearman uses ranks, so a handful of huge loans cannot drag it; it measures a monotonic pattern (→ section 1, 'Spearman')."},
-  {"type": "single", "q": "What is wrong with this cell, meant to explain the payment by the principal?", "code": "b, a = np.polyfit(auto[\"pay_k\"], auto[\"pm\"], 1)", "options": ["Nothing", "x and y are swapped: polyfit takes x first, so this regresses the principal on the payment", "The degree should be 2", "polyfit needs a constant column"], "answer": 1, "explain": "np.polyfit(x, y, 1); Excel's SLOPE takes y first. Swapped arguments give a different line (→ section 1, 'Fitting it')."},
-  {"type": "single", "q": "The residual plot of payment ~ principal shows three bands, one per term. What does it mean?", "options": ["The line is perfect", "The model is missing the term: add it as a predictor (or fit each term separately)", "Delete the 24-month loans", "R² must be 1"], "answer": 1, "explain": "Residuals that differ by group point to the missing variable (→ section 1, 'Residuals', worked example Step 6)."},
-  {"type": "single", "q": "Which loan pulls the Auto line most if its payment is mistyped?", "options": ["One at the average principal", "One with the largest principal — the highest leverage", "Any loan equally", "The one with the smallest payment"], "answer": 1, "explain": "Leverage grows with (x − x̄)²; an error far from the average x tilts the line most (→ section 1, 'Outliers and leverage')."},
-  {"type": "single", "q": "The Micro line (fitted on 0.5–5 m loans) says a 300 m loan pays 81.5 m a month. What is the problem?", "options": ["None — R² is 0.665", "Extrapolation: 300 m is far outside the range the line was fitted on", "The slope is negative", "The intercept is too large"], "answer": 1, "explain": "A line is a rule only inside the data's range; real 300 m SME loans pay about 16 m (→ section 1, 'Extrapolation')."},
+  {"type": "single", "q": "What does Pearson's r measure?", "options": ["How steep the line is", "How closely the dots lie to a straight line, and its direction", "Whether x causes y", "The share of y explained, in %"], "answer": 1, "explain": "r is direction and closeness to a line, from −1 to +1; steepness is the slope, and the share explained is R² (→ section 1, 'How close to a line — Pearson's r')."},
+  {"type": "single", "q": "Across all loans r(term, payment) = +0.335; inside every product it is negative. Why?", "options": ["The book-wide number is wrong", "The product is a confounder: Auto and SME loans are both long and big, so mixing products makes 'longer' look like 'bigger payment'", "Small groups always give negative r", "Payments are rounded"], "answer": 1, "explain": "Simpson's paradox: a third variable can flip a correlation between the pooled data and every group (→ section 1, 'Cause or coincidence? A game')."},
+  {"type": "number", "q": "A line has r = 0.6. What R², in %?", "answer": 36, "tol": 0.5, "explain": "R² = r² = 0.36 → 36 % (→ section 1, 'What the line explains — R² and the residual plot')."},
+  {"type": "single", "q": "Principal has skewness 2.9. Term against principal: Pearson 0.581, Spearman 0.713. Which statement is right?", "options": ["Spearman is wrong because it ignores the values", "The ranks show a cleaner 'longer goes with bigger' than the skewed values; report Spearman for money columns", "Pearson is always better", "The two must be equal"], "answer": 1, "explain": "Spearman uses ranks, so a handful of huge loans cannot drag it; it measures a monotonic pattern (→ section 1, 'When r is fooled — curves, typos and Spearman's ranks')."},
+  {"type": "single", "q": "What is wrong with this cell, meant to explain the payment by the principal?", "code": "b, a = np.polyfit(auto[\"pay_k\"], auto[\"pm\"], 1)", "options": ["Nothing", "x and y are swapped: polyfit takes x first, so this regresses the principal on the payment", "The degree should be 2", "polyfit needs a constant column"], "answer": 1, "explain": "np.polyfit(x, y, 1); Excel's SLOPE takes y first. Swapped arguments give a different line (→ section 1, 'The line that misses least — slope, intercept and least squares')."},
+  {"type": "single", "q": "The residual plot of payment ~ principal shows three bands, one per term. What does it mean?", "options": ["The line is perfect", "The model is missing the term: add it as a predictor (or fit each term separately)", "Delete the 24-month loans", "R² must be 1"], "answer": 1, "explain": "Residuals that differ by group point to the missing variable (→ section 1, 'What the line explains — R² and the residual plot'; worked example, Step 6)."},
+  {"type": "single", "q": "Which loan pulls the Auto line most if its payment is mistyped?", "options": ["One at the average principal", "One with the largest principal — the highest leverage", "Any loan equally", "The one with the smallest payment"], "answer": 1, "explain": "Leverage grows with (x − x̄)²; an error far from the average x tilts the line most (→ section 1, 'One loan can tilt the line — outliers and leverage')."},
+  {"type": "single", "q": "The Micro line (fitted on 0.5–5 m loans) says a 300 m loan pays 81.5 m a month. What is the problem?", "options": ["None — R² is 0.665", "Extrapolation: 300 m is far outside the range the line was fitted on", "The slope is negative", "The intercept is too large"], "answer": 1, "explain": "A line is a rule only inside the data's range; real 300 m SME loans pay about 16 m (→ section 1, 'A rule you can use — more predictors, and where the rule stops')."},
   {"type": "single", "q": "Company corner: why is PTI on the owner's personal income meaningless for SME loans?", "options": ["SME loans have no payment", "The business repays them from its cash flow, so personal income is the wrong denominator (median PTI 151 %)", "SME incomes are not recorded", "PTI only works for 0 % loans"], "answer": 1, "explain": "A ratio needs the right denominator; for a business loan it is the business's cash flow (→ Company corner)."}
 ]}
 ```

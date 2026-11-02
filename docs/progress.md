@@ -11,7 +11,7 @@ Your level, your XP, the real rewards you are working towards, your badges and e
 | What | XP |
 |---|---|
 | Homework and checkpoints | the points the mentor gives (see the tables above) |
-| Each day finished (day quiz passed with 80 % or more) | 2 — counted by the mentor from the screenshot of this board you send after each checkpoint |
+| Each day finished (day quiz passed with 80 % or more) | 2 — added on this page as soon as you pass the quiz |
 | Each daily challenge solved | 2, 3, 4, 6, 9, then 10 a day as your challenge streak grows (a day without one resets it to 2) |
 | A challenge on a **lucky day** (one hidden day in every week) | double |
 | Each stretch task (🚀 *Stretch* in Practice) | 5 — counted by the mentor |
@@ -24,7 +24,7 @@ Your level, your XP, the real rewards you are working towards, your badges and e
 - **Streak:** study days in a row with a finished day. Saturdays and Sundays never break it.
 - **Homework:** on time = full points possible; one day late = ×0.8; later = ×0.5. Always submit — feedback matters more than points.
 - **Checkpoints:** you need **70 %** to move on without a redo. Below 70 % you get a focused redo list, not a repeat of the week.
-- **After each checkpoint** (Day 5) send a screenshot of this page. Finished days and solved challenges live in your browser; the screenshot is how they join your XP.
+- **Days and challenges count by themselves.** This page adds the XP for every finished day and every solved challenge as you go. While you are signed in, they follow you to every device. Nothing to send.
 - **Vouchers:** every checkpoint you pass wins a voucher worth 1.5× the previous one; 90 %+ adds 25 %; a week with all five daily challenges adds 10 %. Missing a checkpoint gives no voucher and steps the chain back two links — so the cheapest way to lose money is to skip the work, not to make mistakes in it. Checkpoint 9 (the credit-risk week) wins a fixed voucher of 200 000 soum outside the chain: the same bonuses, and missing it does not step the chain back.
 - **Daily challenges** are a bonus at the end of each day. Giving up shows the solution but earns no XP.
 - **Lucky days:** one day in every week is a surprise lucky day: its challenge pays double XP. You only find out when you open that day; the [course map](map.md) marks the ones you have found.

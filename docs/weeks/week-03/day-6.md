@@ -15,11 +15,11 @@
 ## 1. How the exam works
 
 - **Two parts.** Part A is a quiz: 25 questions, 40 points, marked at once. Part B is an interview: eight written answers, 60 points, marked by your mentor.
-- **Pass mark.** You need 70 of 100 points. In Part A, 80 % right (20 of 25) counts as done. You can repeat Part A as often as you like, and your best attempt counts.
+- **Pass mark.** You need 70 of 100 points for the whole exam. Part A is also this day's quiz: 80 % right (20 of 25) marks the day as done in the menu. You can repeat Part A as often as you like, and your best attempt counts.
 - **What it covers.** All of SQL: Day 0 and Weeks 1–3. About a third of the questions come from the early part (Day 0 and Week 1), because everything later stands on it.
 - **Open book.** The course pages, your own notes and the [SQL playground](playground.md) are allowed. Chatbots and asking other people are not. A real interview works the same way: you may bring notes, but nobody answers for you.
 - **Time.** Plan 60 minutes for Part A and 45 minutes for Part B.
-- **Deadline.** Like every hand-in, the exam closes at 23:59 today.
+- **Deadline.** Part B is due at 23:59 on the day of Week 4 · Day 1 (the menu shows the date). Part A can be taken any time before that.
 - **After the exam.** Your mentor reviews Part B and sends structured feedback.
 
 ---

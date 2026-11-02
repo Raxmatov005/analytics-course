@@ -1,6 +1,9 @@
 /* The progress board: level, XP, real-reward milestones, badges, points by week.
-Official numbers come from progress.json (kept by the mentor with scripts/award.py);
-finished days, streak and quiz badges come from this browser (quiz.js). Rules and rewards: rewards.json. */
+Official numbers come from progress.json (kept by the mentor with scripts/award.py; its "device" run adds the quiz days,
+challenge XP and full challenge weeks every night from her synced site progress, so only while she is signed in);
+finished days, streak and quiz badges come from this browser (quiz.js). Rules and rewards: rewards.json.
+A "finished day" here is a day whose day quiz is passed (quiz.js); a lesson page's "x of y sections done" (sections.js)
+counts its sections, so a day can be finished with sections still open. */
 (function () {
   var ICONS = {
     terminal: ['<path d="M4 17l6-5-6-5M12 19h8"/>'],
@@ -51,7 +54,11 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
   function xpOf(p, r) {
     var xp = 0;
     p.items.forEach(function (it) { if (it.earned != null) xp += it.earned; });
-    xp += (p.quizDays || 0) * r.xpPerQuizDay + (p.stretch || 0) * r.xpPerStretch + (p.challengeXp || 0);
+    /* finished days and challenge XP count as she goes (2026-11-02, "parts when she completes but it does not count"):
+       this browser's own count (synced across her devices while she is signed in), or the recorded one if it is higher */
+    var days = Math.max(p.quizDays || 0, window.ALQuiz ? window.ALQuiz.doneCount() : 0);
+    var chal = Math.max(p.challengeXp || 0, window.ALChallenge ? window.ALChallenge.xp() : 0);
+    xp += days * r.xpPerQuizDay + (p.stretch || 0) * r.xpPerStretch + chal;
     (p.bonus || []).forEach(function (b) { xp += b.points || 0; });
     return xp;
   }
@@ -79,9 +86,11 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     if (/^cp\d$/.test(rule)) { var v = pct(by[rule]); return v != null && v >= 85; }
     return false;
   }
+  /* a device badge, once earned, stays: the streak badges read the longest streak there ever was (quiz.js bestStreak),
+     not today's, which a missed day resets (audit 2026-11-02); "Perfect quiz" is a day quiz, not the practice quiz */
   function deviceBadge(id) {
     if (!window.ALQuiz) return false;
-    var st = window.ALQuiz.state(), s = window.ALQuiz.streak();
+    var st = window.ALQuiz.state(), s = window.ALQuiz.bestStreak ? window.ALQuiz.bestStreak() : window.ALQuiz.streak();
     if (id === 'streak-5') return s >= 5;
     if (id === 'streak-10') return s >= 10;
     if (id === 'streak-20') return s >= 20;
@@ -91,7 +100,7 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
       Object.keys(cs).forEach(function (k) { best = Math.max(best, cs[k].streakAtSolve || 0); });
       return best >= Number(id.slice(5));
     }
-    if (id === 'perfect') return Object.keys(st.quizzes).some(function (k) { return st.quizzes[k].best === 100; });
+    if (id === 'perfect') return Object.keys(st.quizzes).some(function (k) { return k.indexOf('practice') !== 0 && st.quizzes[k].best === 100; });
     if (id === 'sweep') {
       for (var w = 1; w <= 9; w++) {
         var all = true;
@@ -242,11 +251,14 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
     ]).then(function (res) {
       var p = res[0], r = res[1];
       var xp = xpOf(p, r), lv = levelOf(xp, r);
-      var maxXp = p.items.reduce(function (s, it) { return s + it.max; }, 0) + 46 * r.xpPerQuizDay +
-        (window.ALChallenge ? window.ALChallenge.maxXp() : 374);  // 45 challenges on a perfect streak, lucky days doubled
+      /* quiz days in XP: Days 1–5 of weeks 1–9, the 45 that scripts/award.py counts (Day 0 and the Day 6 exams are
+         finished days but bring no day XP); challenges: the 45 on a perfect streak, lucky days doubled */
+      var maxXp = p.items.reduce(function (s, it) { return s + it.max; }, 0) + 45 * r.xpPerQuizDay +
+        (window.ALChallenge ? window.ALChallenge.maxXp() : 507);
       var span = lv.next ? lv.next.from - lv.cur.from : 1;
       var into = lv.next ? (xp - lv.cur.from) / span : 1;
       var done = window.ALQuiz ? window.ALQuiz.doneCount() : 0, streak = window.ALQuiz ? window.ALQuiz.streak() : 0;
+      var days = window.ALQuiz && window.ALQuiz.TOTAL_DAYS || 53;   // every lesson with a day quiz (quiz.js)
 
       var html = '';
       html += '<div class="lvl"><div class="lvl-top">' + icon('briefcase', 36) +
@@ -257,18 +269,19 @@ finished days, streak and quiz badges come from this browser (quiz.js). Rules an
           'ещё ' + fmt(lv.next.from - xp) + ' XP до уровня <b>' + esc(loc(lv.next, 'name')) + '</b>') : T('Top level reached.', 'Достигнут высший уровень.')) + '</div></div>';
 
       var cSolved = window.ALChallenge ? window.ALChallenge.solved() : 0, cStreak = window.ALChallenge ? window.ALChallenge.streak() : 0;
-      var cXp = window.ALChallenge ? window.ALChallenge.xp() : 0, inXp = p.quizDays || 0;
+      var cXp = window.ALChallenge ? window.ALChallenge.xp() : 0;
       html += '<div class="stats">' +
-        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / 46</b><span>' + T('days finished · ' + inXp + ' already in your XP',
-          'дней завершено · ' + inXp + ' уже в вашем XP') + '</span></div>' +
+        '<div class="stat">' + icon('check', 22) + '<b>' + done + ' / ' + days + '</b><span>' + T('days finished (the day quiz passed)',
+          'дней завершено (тест дня сдан)') + '</span></div>' +
         '<div class="stat">' + icon('flame', 22) + '<b>' + streak + '</b><span>' + T('day streak', plural(streak, 'день подряд', 'дня подряд', 'дней подряд')) + '</span></div>' +
         (window.ALChallenge ? '<div class="stat">' + icon('target', 22) + '<b>' + cSolved + ' / 45</b><span>' +
-          T('challenges solved · streak ' + cStreak + ' · ' + cXp + ' XP earned, ' + (p.challengeXp || 0) + ' already in your XP',
-            'задач решено · серия ' + cStreak + ' · заработано ' + cXp + ' XP, ' + (p.challengeXp || 0) + ' уже в вашем XP') + '</span></div>' : '') +
+          T('challenges solved · streak ' + cStreak + ' · ' + cXp + ' XP earned',
+            'задач решено · серия ' + cStreak + ' · заработано ' + cXp + ' XP') + '</span></div>' : '') +
         '<div class="stat">' + icon('zap', 22) + '<b>' + (p.stretch || 0) + '</b><span>' + T('stretch tasks done', 'задач «со звёздочкой» выполнено') + '</span></div></div>' +
-        '<p class="board-note">' + T('Days and challenges count on this device as you go; they join your XP above when your mentor records ' +
-        'the Friday screenshot of this page.', 'Дни и задачи засчитываются на этом устройстве по ходу курса; в ваш XP выше они попадают, когда ментор ' +
-        'записывает пятничный скриншот этой страницы.') + '</p>';
+        '<p class="board-note">' + T('Finished days and challenges add to your XP as you go. Signed in, they follow you to every device; ' +
+        'on a device where you are not signed in, they stay on that device only. Homework counts once it is handed in and checked.',
+        'Завершённые дни и задачи добавляются к XP по ходу курса. Когда вы вошли на сайт, они видны на всех ваших устройствах; ' +
+        'на устройстве, где вы не вошли, они остаются только на нём. Домашнее задание засчитывается, когда оно сдано и проверено.') + '</p>';
 
       html += '<h2 id="real-rewards">' + T('Real rewards: your voucher chain', 'Настоящие награды: ваша цепочка ваучеров') + '</h2><p class="board-note">' +
         T('Every checkpoint you pass wins a voucher, and every voucher is bigger than the last. Keep the chain going.',

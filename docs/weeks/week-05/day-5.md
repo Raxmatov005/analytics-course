@@ -283,7 +283,7 @@ s8
 # 3 392 loans)
 ```
 
-**Match:** all nine month-ends equal week 3 S8 (`v_portfolio_monthly` / the recursive calendar). **Finding.** +56 bn (+37 %) in nine months while 161.5 bn was disbursed: two thirds of new lending replaces repayments. This is the one section where pandas is *clearer* than SQL — a nine-step loop with a readable condition replaces a recursive CTE plus a correlated aggregate — and also the one where it is slowest (nine passes over 92 193 rows; still under a second).
+**Match:** all nine month-ends equal week 3 S8 (`v_portfolio_monthly` / the recursive calendar). **Finding.** +56.4 bn (+37 %) from the end of January to the end of September, while 144.0 bn was disbursed in those eight months (February–September): about three fifths of new lending only replaces repayments. This is the one section where pandas is *clearer* than SQL — a nine-step loop with a readable condition replaces a recursive CTE plus a correlated aggregate — and also the one where it is slowest (nine passes over 92 193 rows; still under a second).
 
 </details>
 
@@ -344,7 +344,7 @@ ct
 # 774 / 34.8 · 20m+ 2137 / 33.7
 ```
 
-Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borrowers 49.1 % (`sort_values().head(len // 10).sum()`). Chart: a heatmap of the crosstab or a stacked bar of grade shares per band.
+Concentration (pandas): top-3 branches 39.1 % of outstanding; the top tenth of the 2 535 borrowers with a balance hold 49.2 % — week 3's `NTILE(10)` puts 254 of them in the first tile, so take `head(math.ceil(len(s) / 10))`; `head(len(s) // 10)` takes 253 and prints 49.1 %, a mismatch to explain in the match line. Chart: a heatmap of the crosstab or a stacked bar of grade shares per band.
 
 **Match:** identical to week 3 S10 — because `right=False` makes `pd.cut` read `[5m, 10m)` exactly as `WHEN monthly_income < 10000000`; with the default right-closed intervals a customer earning exactly 5 000 000 moves bands and the counts drift by a few. **Finding.** Income does not predict grade: C+D is 32–35 % in every band including the 466 "unknown" loans, which pandas shows only because `.astype(str).replace("nan", "unknown")` turns the NaN band into a row — `pd.cut` alone would have dropped it silently from the crosstab, the week-2 NULL-band lesson one more time.
 
@@ -435,9 +435,9 @@ Concentration (pandas): top-3 branches 39.1 % of outstanding, top decile of borr
 |---|---|---|
 | A — report, 10 sections × 8 | 80 | |
 | B — 8 questions × 2 + definitions note | 20 | |
-| **Total** | **100** | **≥ 70 → Week 6 on Monday** |
+| **Total** | **100** | **≥ 70 → on to Week 6** |
 
-Below 70: feedback names the sections to redo (most often S8 — the month-end loop — and S9's FPD30 scope); re-submit Monday morning before Week 6. Points go to the [Progress page](progress.md).
+Below 70: feedback names the sections to redo (most often S8 — the month-end loop — and S9's FPD30 scope); re-submit before Week 6 starts. Points go to the [Progress page](progress.md).
 
 > 🚀 **Stretch (optional, +5 XP).** Package the week: a file `nur.py` with `clean_customers`, `clean_payments`, `dpd_per_loan`, `portfolio_summary`, `fpd30_table` and `figure_pack(con, as_of, out_dir)`, imported by a ten-line `monthly.py` that writes the tiles, the buckets and the five PNGs for any `AS_OF`. Run it for 2026-09-01 and 2026-10-01 and diff the two bucket tables — the roll-rate matrix, from the command line. Paste the two bucket rows and one sentence on what moved.
 
@@ -445,7 +445,7 @@ Below 70: feedback names the sections to redo (most often S8 — the month-end l
 {"id": "w05d5-st", "kind": "free", "min": 20, "xp": 2, "model": "2026-09-01: 1-30 128 · 31-60 23 · 61-90 17 · 90+ 217 (385 late). 2026-10-01: 1-30 124 · 31-60 25 · 61-90 16 · 90+ 234 (399 late). The 90+ bucket grew by 17 — exactly the 61–90 loans of September rolling on — while the early buckets barely moved: the risk is migrating into the oldest bucket, not arriving as a new wave.", "rubric": ["Both snapshots' bucket counts", "Names the movement into 90+ (17 loans)", "monthly.py runs for any AS_OF without editing nur.py"]}
 ```
 
-Madina, 17:30: *"Jasur ran your notebook on his machine and got the same 399. Bekzod has his monthly file. Timur has five PNGs with titles he did not write. Monday is statistics — the week where you learn what 'the app channel is 0.66 points worse' is actually worth with 41 cases against 34."*
+Madina, 17:30: *"Jasur ran your notebook on his machine and got the same 399. Bekzod has his monthly file. Timur has five PNGs with titles he did not write. Next week is statistics — the week where you learn what 'the app channel is 0.66 points worse' is actually worth with 41 cases against 34."*
 
 ---
 
@@ -480,7 +480,7 @@ Paste the code of the section into its editor; the check compares what it prints
 ### 📎 Hand in here
 
 ```sqltask
-{"check": "handin-W5D5", "lesson": "W5D5", "title": "Checkpoint 5", "why": "Two independent ways to every number: the week-3 report rebuilt in pandas proves you can reach any figure from SQL or from a DataFrame, explain any difference between them, and choose the right tool for the next question.", "graded": ["Part A — 10 sections × 8 points: code that runs (3), numbers matching or explained (3), finding and match line (2)", "At least four charts with finding titles, and the five-sentence closing cell", "Part B — 8 answers × 2 points (correct and complete; a Nur Finance example and number) + 4 for the definitions note", "Pass: 70 of 100 → Week 6 on Monday"], "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — executed (Restart & Run All, then save)."}, {"id": "interview.md", "file": "interview.md", "text": true, "minLines": 10, "q": "Write `interview.md` here: the definitions note (as-of, DPD, FPD30, the dedup rule, outstanding), then your eight answers."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
+{"check": "handin-W5D5", "lesson": "W5D5", "title": "Checkpoint 5", "why": "Two independent ways to every number: the week-3 report rebuilt in pandas proves you can reach any figure from SQL or from a DataFrame, explain any difference between them, and choose the right tool for the next question.", "graded": ["Part A — 10 sections × 8 points: code that runs (3), numbers matching or explained (3), finding and match line (2)", "At least four charts with finding titles, and the five-sentence closing cell", "Part B — 8 answers × 2 points (correct and complete; a Nur Finance example and number) + 4 for the definitions note", "Pass: 70 of 100 → on to Week 6"], "tasks": [{"id": "checkpoint.ipynb", "file": "checkpoint.ipynb", "names": ["checkpoint.ipynb"], "upload": true, "accept": ".ipynb", "q": "Attach `checkpoint.ipynb` — executed (Restart & Run All, then save)."}, {"id": "interview.md", "file": "interview.md", "text": true, "minLines": 10, "q": "Write `interview.md` here: the definitions note (as-of, DPD, FPD30, the dedup rule, outstanding), then your eight answers."}, {"id": "Extra", "file": "extra", "upload": true, "optional": true, "q": "Anything else the page lists (one more file, or a .zip of several)."}]}
 ```
 
 **Hand-in checklist:** `checkpoint.ipynb` (executed, 10 sections, ≥ 4 charts, the match line under each section, the five-sentence closing cell), `interview.md` (definitions note + 8 answers). Also due today: **HW 5.2** in Day 3's hand-in box (`clean_nur.py` or the executed `day3_starter.ipynb`, `customers_clean.csv`, `payments_clean.csv`, `dpd_per_loan.csv`).

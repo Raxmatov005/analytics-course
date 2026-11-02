@@ -57,10 +57,10 @@ Now answer Madina in the workspace: write each query, **▶ Run** it, **✔ Chec
 
 When all three are ✅, **📤 Submit** at the bottom of the workspace opens. Tap it.
 
-- **The first time** the box asks you to **🔑 sign in**: write your name and the PIN your mentor gave you, tap **Sign in**, then **📤 Submit**. Once per device and browser.
+- **Signed in?** The site asks for your name and the PIN your mentor gave you the first time you open it on a device. If you skipped that, the box asks you to **🔑 sign in** now: write them, tap **Sign in**, then **📤 Submit**. Once per device and browser.
 - Submit sends your queries with the first rows of their results. Your mentor gets them in the group's **📤 Homework** topic, the bot confirms *"submitted from the website"*, and the box shows **✅ submitted** with the date.
 
-> ⚠️ **Watch out.** Signing in belongs to this browser. On another phone or laptop — or after clearing the browser's data — the box asks you to sign in again. Your answers are saved in this browser too.
+> ⚠️ **Watch out.** Signing in belongs to this browser. On another phone or laptop — or after clearing the browser's data — the site asks you to sign in again. Your answers are saved in this browser and, while you are signed in, with your sign-in, so they come back when you sign in on another device.
 
 ## Step 4 — your feedback
 

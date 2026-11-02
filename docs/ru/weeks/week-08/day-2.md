@@ -400,7 +400,7 @@ print(f"{loans / customers:.2f} Micro loans per customer · LTV {ltv:,.0f} · LT
 **Как пишется.**
 
 ```python
-# кредиты Micro, выданные в январе–сентябре 2026
+# кредиты Micro, выданные в 2026 году, с 1 января по дату отсчёта 1 октября
 loans_2026 = 1045
 per_loan = {"interest income (1 − PD) × I": 259_069,
             "− cost of funds (18 %)":       -114_284,
@@ -415,7 +415,7 @@ print(f"{'= contribution':32s} {total / 1e6:8.1f} m soum   ({total / (2_705_586 
 print("Assumptions: funding 18 %, LGD 60 %, acquisition and servicing per channel (ours); averages over all Micro loans.")
 ```
 
-| Micro, янв–сен 2026 (1 045 кредитов) | млн сум |
+| Micro, 2026 по 1 октября (1 045 кредитов) | млн сум |
 |---|---|
 | процентный доход | 270.7 |
 | − стоимость фондирования | −119.4 |
@@ -668,7 +668,7 @@ ue.head()
 {"id": "w08d2-p8", "kind": "python", "starter": "q = \"\"\"\nWITH ranked AS (\n  SELECT l.customer_id, l.disbursed_at, p.code,\n         ROW_NUMBER() OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at, l.loan_id) AS n\n  FROM loans l JOIN products p ON p.product_id = l.product_id),\nfirsts AS (SELECT customer_id, disbursed_at AS first_at FROM ranked\n           WHERE n = 1 AND code = 'MICRO' AND disbursed_at < '2024-10-01')\nSELECT r.code AS product, COUNT(*) AS loans, COUNT(DISTINCT r.customer_id) AS customers\nFROM firsts f JOIN ranked r ON r.customer_id = f.customer_id AND r.disbursed_at <= date(f.first_at, '+24 months')\nGROUP BY r.code\"\"\"\nltv = pd.read_sql(q, con).set_index(\"product\")\ncustomers = ltv.loc[\"MICRO\", \"customers\"]           # у каждого из них есть первый кредит Micro\nltv[\"contrib\"] = p3[\"income\"] - p3[\"cof\"] - p3[\"el\"] - p3[\"serv\"]   # до привлечения\nprint(customers, \"customers\"); print(ltv)\n# TODO: только Micro: LTV = (кредиты Micro x вклад Micro - 20 000 x (кредиты Micro - клиенты)) / клиенты\n#       выведите LTV и LTV / 60 000 (два знака)\n", "answer": 1.6, "dp": 1, "model": "344 клиента, 665 кредитов за 24 месяца (1.93 на клиента): 447 MICRO (1.30 на клиента), 96 CONS, 74 BNPL, 32 SME, 16 AUTO. Вклад до привлечения: MICRO 78 430 на кредит (чистый 18 430 + 60 000), CONS 1 310 241, BNPL −349 053, AUTO 16 263 021, SME 19 062 452. Только Micro: LTV 95 925 сум, LTV/CAC = 1.6 — первый кредит Micro уже окупает свой CAC (78 430 > 60 000); повторные — это прибыль. Все продукты: LTV 2 903 483, LTV/CAC ≈ 48 — но около 87 % этого дают 48 кредитов SME и AUTO на 344 клиента. Сообщайте это как «клиенты Micro, которые потом берут кредит в филиале, очень ценны», а не как среднее, которое приносит каждый клиент приложения; LTV медианного клиента — это LTV по Micro."}
 ```
 
-**P11.** *(P&L на одной странице)* P&L всего портфеля за 2026 год: по каждому продукту — кредиты, выданные в январе–сентябре 2026, × каждая строка на кредит из `p3` (доход, стоимость фондирования, ожидаемые потери, привлечение, обслуживание, вклад), в миллиардах сум, плюс строка итога. Выведите итоговый вклад в млрд сум с двумя знаками после запятой.
+**P11.** *(P&L на одной странице)* P&L всего портфеля за 2026 год: по каждому продукту — кредиты, выданные в 2026 году (по дату отсчёта 1 октября — фильтр заготовки), × каждая строка на кредит из `p3` (доход, стоимость фондирования, ожидаемые потери, привлечение, обслуживание, вклад), в миллиардах сум, плюс строка итога. Выведите итоговый вклад в млрд сум с двумя знаками после запятой.
 
 ```task
 {"id": "w08d2-p13", "kind": "python", "starter": "n26 = ue[ue[\"disbursed_at\"] >= \"2026-01-01\"].groupby(\"product\").size()\nlines = [\"income\", \"cof\", \"el\", \"acq\", \"serv\", \"net\"]\npl = p3[lines].mul(n26, axis=0) / 1e9                  # млрд сум\n# TODO: добавьте строку итога (pl.loc[\"TOTAL\"] = pl.sum()), print(pl.round(2)),\n#       затем выведите итоговый вклад: round(pl.loc[\"TOTAL\", \"net\"], 2)\n", "answer": 8.85, "dp": 2, "model": "pl.loc[\"TOTAL\"] = pl.sum()\nprint(pl.round(2))\nprint(round(pl.loc[\"TOTAL\", \"net\"], 2))\n# вклад 2026 (млрд): SME 5.68, AUTO 2.61, CONS 0.81, MICRO 0.02, BNPL −0.27 → итого 8.85.\n# Доход 47.32 млрд, стоимость фондирования 34.32 млрд: фондирование забирает 73 % дохода портфеля. Один SME — 64 % вклада.\n# Сноска: объём 2026 года × средние на кредит по всем кредитам; фондирование 18 %, LGD 60 %, привлечение и обслуживание по каналам (наши)."}

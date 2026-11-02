@@ -92,6 +92,8 @@ WHERE last_name = LOWER(last_name);
 
 **When you use it.** Before comparing or grouping text typed by people: `LOWER(a) = LOWER(b)`, `GROUP BY LOWER(method)`. And to find badly typed rows: `WHERE x = LOWER(x)` or `WHERE x = UPPER(x)`.
 
+> ⚠️ **Watch out.** SQLite's `UPPER`, `LOWER` and its case-blind `LIKE` know only the Latin letters: `LOWER('АЗИЗ')` stays `'АЗИЗ'`, and `'азиз' LIKE 'Азиз'` is false. Our names are typed in Latin, but at work Uzbek and Russian names often arrive in Cyrillic — there SQL Server's collation does the job, SQLite needs an extension.
+
 **Your turn.** How many customers have a first name written entirely in capitals (`MALIKA`)?
 
 ```task
@@ -266,6 +268,8 @@ SELECT COUNT(*) FROM customers    WHERE first_name LIKE '_____';
 
 > ⚠️ **Watch out.** In SQLite, `LIKE` ignores upper and lower case for Latin letters, but `=` does not: `'card' LIKE 'Card'` is true, `'card' = 'Card'` is false. So `method LIKE 'card'` finds 17 621 rows and `method = 'card'` finds 17 564. On SQL Server both follow the column's collation (by default case does not matter).
 
+To search for a real `%` or `_`, escape it. `code LIKE 'PAY_01'` also matches `'PAYX01'`, because `_` is any one character; `code LIKE 'PAY\_01' ESCAPE '\'` matches only the underscore itself (SQL Server: `LIKE 'PAY[_]01'`).
+
 **Your turn.** How many customers have a surname ending in `ov`?
 
 ```task
@@ -292,6 +296,8 @@ The average SME loan is 308.7 m UZS; the average Micro loan is 2.7 m. Divided by
 **When you use it.** At the very end, on the number you show. SQL Server also rounds to the left of the point — `ROUND(x, -6)` is "to the nearest million"; SQLite does not, so divide first, as above.
 
 > ⚠️ **Watch out.** Round once, at the end. Rounding the parts and then adding them drifts: five rounded shares rarely add up to 100.0.
+
+> ⚠️ **Watch out.** A decimal number (`REAL`, `FLOAT`) is stored in binary and is often not exact: `SELECT 0.1 + 0.2 = 0.3` returns 0 — false. Never compare decimals with `=`: round both sides (`ROUND(x, 4) = 0.3`) or test the gap (`ABS(x - 0.3) < 0.000001`). That is also why money is kept in whole UZS (`INTEGER`) and rates are rounded once, at the end.
 
 **Your turn.** What does `SELECT ROUND(51709667.858, 2)` return?
 
@@ -349,6 +355,8 @@ FROM loans;
 **When you use it.** Whole days from SQLite's fractional `julianday` difference (below); a text code compared with a number; a decimal before a division.
 
 > ⚠️ **Watch out.** A CAST of a finished result is too late: `CAST(7917 / 14000 AS REAL)` is 0.0, because the whole-number division already threw the fraction away. Convert an input, not the output.
+
+> ⚠️ **Watch out.** Text that is not a number does not stop SQLite: `CAST('abc' AS INTEGER)` is 0 and `CAST('12abc' AS INTEGER)` is 12, with no error. SQL Server stops with an error; its `TRY_CAST` returns NULL instead. And a number stored as **text** compares and sorts as text: `'10' < '9'` is true, because the character `1` comes before `9`. When a column of numbers sorts strangely, look at `typeof(column)` and `CAST` it before you compare or sort.
 
 **Your turn.** What does `SELECT CAST(-2.99 AS INTEGER)` return?
 
@@ -430,6 +438,8 @@ SELECT '2026-9-5' < '2026-10-01';
 
 **When you use it.** Every date filter and every "as of" calculation. Write dates with four-two-two digits and dashes, always.
 
+Text dates compare correctly only in this exact shape. `'2026-9-5'`, `'05.09.2026'` or a `T` between date and time (`'2026-09-30T14:05:00'`) sort and compare wrongly, with no error. Before you trust a date column from a new source, count the rows of the wrong length: `WHERE LENGTH(d) <> 10` for a date, `<> 19` for a datetime. And ask which clock it uses: a system that logs in UTC puts a payment made at 01:00 in Tashkent (UTC+5) on the day before.
+
 > ⚠️ **Watch out.** Never use `date('now')` (SQL Server `GETDATE()`) in this course. It returns the real calendar date, so a query about "today" would give a different answer each day, and none of them would match the data, which stops on 2026-10-01. And a datetime never equals a date: `applied_at = '2026-09-30'` finds 0 rows, although 23 applications were made that day.
 
 **Your turn.** How many applications were made on the as-of date, 1 October 2026? (`applied_at` carries a time — compare `date(applied_at)`.)
@@ -502,7 +512,7 @@ Loan 1 was paid out on 2025-03-28, 552 days before the as-of date. `julianday` c
 
 **When you use it.** Days late (paid date − due date), the age of a loan, DPD (as-of − oldest unpaid due date), "30 days before the as-of date" for a scope, the first and last day of a month.
 
-> ⚠️ **Watch out.** SQLite does not stop at the month's end: `date('2026-01-31', '+1 month')` is `'2026-03-03'` (31 February overflows into March). SQL Server's `DATEADD(month, 1, '2026-01-31')` gives 2026-02-28. For month arithmetic, go to `'start of month'` first.
+> ⚠️ **Watch out.** SQLite does not stop at the month's end: `date('2026-01-31', '+1 month')` is `'2026-03-03'` (31 February overflows into March). SQL Server's `DATEADD(month, 1, '2026-01-31')` gives 2026-02-28. For month arithmetic, go to `'start of month'` first. And SQL Server's `DATEDIFF` counts the **boundaries crossed**, not the time passed: `DATEDIFF(month, '2026-01-31', '2026-02-01')` is 1 after a single day, `DATEDIFF(year, '2025-12-31', '2026-01-01')` is 1 too. For ages and months on book, count days and divide, or check the day of the month.
 
 **Your turn.** What does `date('2026-10-01', '-30 days')` return?
 
@@ -883,7 +893,7 @@ SELECT p.payment_id, p.loan_id, i.due_date, p.paid_at,
        CAST(julianday(p.paid_at) - julianday(i.due_date) AS INTEGER) AS days_late
 FROM payments p JOIN installments i ON i.installment_id = p.installment_id
 ORDER BY days_late DESC LIMIT 5;
--- five payments at exactly 60 days
+-- the top five all show 60 days (19 payments are exactly 60 days late)
 SELECT COUNT(*) FROM payments p JOIN installments i ON i.installment_id = p.installment_id
 WHERE p.paid_at > i.due_date;
 -- 6669 of 52875 = 12.6 % late

@@ -1,4 +1,4 @@
-# Analytics Learning — from zero to analyst in 8 weeks
+# Analytics Learning — from zero to analyst in 9 weeks
 
 > STORY You have just been hired as the first data analyst of **Nur Finance**, a lending company with branches in eight regions, a mobile app and five loan products. Every week a different team comes to you with a real request. By week 8 you run the company's numbers — and you can walk into any analyst interview and talk like someone who has done the job.
 
@@ -32,12 +32,12 @@ Every day page has the same route. Under its title, **Today's route** shows the 
 | **Worked example** | follow one real Nur Finance request from question to answer | you have run it |
 | **Practice** | answer every question in its box — a choice, a number, a word, a query or a short text — and see ✓ or ✗ at once | every box is answered |
 | **Homework** | the box at the end: SQL tasks the site checks itself, the rest written or attached; **📤 Submit** ([how](homework/how-to-submit.md)) | it is submitted |
-| **Quick check** | three questions, one at a time, with explanations | all three answered |
+| **Self-check** | a Quick check: three questions, one at a time, with explanations | all three answered |
 | **Company corner** | how a lending company works: a game and an interview question | the game and the box |
 | **Day quiz** | pass with **80 %** — retry as often as you like | passed: the day is done |
 | **Daily challenge** | one harder bonus question, with its own editor on SQL days | solved |
 
-Day 5 of every week is the checkpoint: the checkpoint's parts (A, B, C) and one 📎 hand-in box take the place of Learn → Homework; the Day quiz and the Daily challenge stay. Week 8 · Days 3–5 are the capstone, with a route of their own. On a day with no new homework, its Homework section says which earlier homework is due.
+Day 5 of every week is the checkpoint: the checkpoint's parts (A, B, C) and one 📎 hand-in box take the place of Learn → Homework; the Day quiz and the Daily challenge stay. Week 8 · Days 3–5 are the capstone, with a route of their own. From Week 3 on, **Day 6** is a section exam: a 25-question quiz (Part A) and eight written answers you hand in (Part B). On a day with no new homework, its Homework section says which earlier homework is due.
 
 > ⚠️ **Watch out.** Answer before you look. A ❌ never shows the answer — it means *look again*. On written answers you see the model only after you write yours and tap **Compare**.
 
@@ -54,14 +54,14 @@ Day 5 of every week is the checkpoint: the checkpoint's parts (A, B, C) and one 
 ## What counts toward progress
 
 - **A day is done** when you pass its quiz with 80 % or more: a tick in the sidebar, a day of your streak, XP.
-- **Your answers in the boxes** are saved in this browser and tick off the day's sections. A Quick check is for you — it shows what stuck, and earns no XP.
+- **Your answers in the boxes** are saved in this browser — and, while you are signed in, with your sign-in — and tick off the day's sections. A Self-check is for you — it shows what stuck, and earns no XP.
 - **Homework and checkpoints** earn the points your mentor gives, with written feedback within a day. **✔ Check** each SQL task first — it tells you task by task whether your numbers are right, without showing the answers.
 - **Daily challenges** earn XP that grows with your challenge streak; a hidden *lucky day* in every week pays double.
 - **Checkpoints** passed with 70 %+ win a voucher, each bigger than the last; XP takes you from Intern to Lead Analyst. All the rules: [progress & rewards](progress.md).
 
-> ⚠️ **Watch out.** Progress lives in this browser. Use the same browser on the same device, and do not clear its data — or your ticks and saved answers stay behind.
+> ⚠️ **Watch out.** Stay signed in. While you are signed in (with the name and PIN your mentor gave you), your ticks and saved answers are copied to the course bot and come back on any device where you sign in. Without signing in they live only in this browser, and clearing its data loses them.
 
-## The 8 weeks
+## The 9 weeks
 
 | Week | You become able to… | Checkpoint (Day 5) |
 |---|---|---|
@@ -76,7 +76,7 @@ Day 5 of every week is the checkpoint: the checkpoint's parts (A, B, C) and one 
 | [8](weeks/week-08/day-1.md) | think in product metrics and present a story | capstone + mock interview |
 | [9](weeks/week-09/day-1.md) | judge a credit scorecard and place the approval cut-off | the scorecard review |
 
-Running through all eight weeks: the **Company & metrics** track — the loan lifecycle, DPD / FPD / SPD / TPD, portfolio metrics, product metrics, and who does what in a lending company. [Glossary](company/glossary.md) · [Who does what](company/roles.md).
+Running through all nine weeks: the **Company & metrics** track — the loan lifecycle, DPD / FPD / SPD / TPD, portfolio metrics, product metrics, and who does what in a lending company. [Glossary](company/glossary.md) · [Who does what](company/roles.md).
 
 ## Week 1 — Data & SQL basics
 
@@ -107,6 +107,7 @@ Running through all eight weeks: the **Company & metrics** track — the loan li
 | 3 | [Subqueries, CTEs and the vintage curve](weeks/week-03/day-3.md) — EXISTS, CTE chains, recursive calendar; vintage analysis | — |
 | 4 | [Views, temp tables and making it fast](weeks/week-03/day-4.md) — the warehouse layer, indexes, execution plans | HW 3.2 (due D5) |
 | 5 | [Checkpoint: the loan-book EDA report](weeks/week-03/day-5.md) | Checkpoint 3 |
+| 6 | [Exam 1 — SQL (Weeks 1–3)](weeks/week-03/day-6.md) | Exam (due W4 D1) |
 
 ## Week 4 — Excel & Sheets
 
@@ -117,6 +118,7 @@ Running through all eight weeks: the **Company & metrics** track — the loan li
 | 3 | [Cleaning dirty data: Find & Replace to Power Query](weeks/week-04/day-3.md) — duplicates, bad dates, Power Query pipeline; collection rate | HW 4.2 (due D5) |
 | 4 | [Pivot tables and charts: the one-page report](weeks/week-04/day-4.md) — pivots, slicers, chart choice; the portfolio one-pager | — |
 | 5 | [Checkpoint: cleaned dataset + one-page report](weeks/week-04/day-5.md) | Checkpoint 4 |
+| 6 | [Exam 2 — Excel](weeks/week-04/day-6.md) | Exam (due W5 D1) |
 
 Data for the week: `data/excel/` (CSV extracts + `nur_week4_start.xlsx`).
 
@@ -129,6 +131,7 @@ Data for the week: `data/excel/` (CSV extracts + `nur_week4_start.xlsx`).
 | 3 | [pandas II: groupby, merge and the cleaning pipeline](weeks/week-05/day-3.md) — aggregations, joins, dedupe; DPD and FPD in pandas | HW 5.2 (due D5) |
 | 4 | [Charts and the SQL bridge](weeks/week-05/day-4.md) — matplotlib, seaborn, read_sql; the figure pack | — |
 | 5 | [Checkpoint: the EDA report, in pandas](weeks/week-05/day-5.md) | Checkpoint 5 |
+| 6 | [Exam 3 — Python and pandas](weeks/week-05/day-6.md) | Exam (due W6 D1) |
 
 Notebooks for the week: `data/python/` (starters + checkpoint template); install with `pip install -r requirements.txt`.
 
@@ -141,6 +144,7 @@ Notebooks for the week: `data/python/` (starters + checkpoint template); install
 | 3 | [Hypothesis tests I: is the difference real?](weeks/week-06/day-3.md) — p-values, z, chi-square, t/Welch, effect size; the risk committee note | — |
 | 4 | [Hypothesis tests II: non-parametric, multiple comparisons, power](weeks/week-06/day-4.md) — Mann–Whitney, Holm, sample size | — |
 | 5 | [Checkpoint: intervals and the test-choice quiz](weeks/week-06/day-5.md) | Checkpoint 6 |
+| 6 | [Exam 4 — Statistics](weeks/week-06/day-6.md) | Exam (due W7 D1) |
 
 Notebooks for the week: `data/python/week6/`.
 
@@ -153,6 +157,7 @@ Notebooks for the week: `data/python/week6/`.
 | 3 | [Power BI I: get data, Power Query, the model](weeks/week-07/day-3.md) — star schema, relationships, grain | HW 7.2 (due D5) |
 | 4 | [Power BI II: DAX and visuals that tell the story](weeks/week-07/day-4.md) — CALCULATE, time intelligence; the three-page dashboard | — |
 | 5 | [Checkpoint: A/B notebook + 3-page dashboard](weeks/week-07/day-5.md) | Checkpoint 7 |
+| 6 | [Exam 5 — A/B tests and Power BI](weeks/week-07/day-6.md) | Exam (due W8 D1) |
 
 Data for the week: `data/ab/` (the experiment), `data/powerbi/` (model tables + `measures.dax`), notebooks in `data/python/week7/`.
 
@@ -165,6 +170,7 @@ Data for the week: `data/ab/` (the experiment), `data/powerbi/` (model tables + 
 | 3 | [Capstone I: the brief and the analysis](weeks/week-08/day-3.md) — the 2026 portfolio review for the board | — |
 | 4 | [Capstone II: dashboard and story](weeks/week-08/day-4.md) | — |
 | 5 | [Presentation day, the mock interview, and what next](weeks/week-08/day-5.md) | Capstone + mock interview |
+| 6 | [Exam 6 — Product analytics and the job](weeks/week-08/day-6.md) | Exam (due W9 D1) |
 
 ## Week 9 — Credit risk models
 
@@ -177,6 +183,7 @@ The lending specialisation, after the capstone: Nilufar asks whether the scoreca
 | 3 | [Is the scorecard any good? ROC, AUC, Gini, KS](weeks/week-09/day-3.md) | HW 9.3 (due D5) |
 | 4 | [The cut-off and watching the model: approval vs bad rate, profit, PSI](weeks/week-09/day-4.md) | HW 9.4 (due D5) |
 | 5 | [Checkpoint: the scorecard review for the risk committee](weeks/week-09/day-5.md) | Checkpoint 9 |
+| 6 | [Final exam — credit risk and the whole course](weeks/week-09/day-6.md) | Exam (due the same day) |
 
 Before any interview: the [interview bank](company/interview.md) — 35 questions with model answers.
 

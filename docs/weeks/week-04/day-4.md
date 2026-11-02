@@ -60,7 +60,7 @@ On `tblLoans`, the same drag gives five product rows and a **Grand Total of 208 
 - Any "per group" question: per product, per region, per month.
 - When the reader wants to re-cut the numbers by clicking, not by asking you for a new formula.
 
-| `SUMIFS` per label (Monday) | Pivot (today) |
+| `SUMIFS` per label (Day 1) | Pivot (today) |
 |---|---|
 | you type the labels, one formula per cell | the labels appear by themselves |
 | any layout, any formula | rows × columns, built-in aggregates |
@@ -357,7 +357,7 @@ On the small table, Rows `product`:
 
 The Average of per-loan ratios weights a 6-million loan like a 10-million one. The ratio of sums weights each loan by its size.
 
-On `tblLoans`, with Tuesday's `rate` column: a calculated field `run_rate = outstanding * rate / 12` would multiply Σ outstanding by Σ rate (for SME, 781 loans × 0.26) — trillions, and no error. outstanding × rate has to be worked out loan by loan, so it belongs in a calculated **column** on `tblLoans`, `=[@outstanding]*[@rate]/12`; Sum of that column by product adds up to **4 491 202 901** soum of interest a month — the same as Tuesday's `SUMPRODUCT`. **Sheets:** Values → Add → *Calculated field*.
+On `tblLoans`, with Day 2's `rate` column: a calculated field `run_rate = outstanding * rate / 12` would multiply Σ outstanding by Σ rate (for SME, 781 loans × 0.26) — trillions, and no error. outstanding × rate has to be worked out loan by loan, so it belongs in a calculated **column** on `tblLoans`, `=[@outstanding]*[@rate]/12`; Sum of that column by product adds up to **4 491 202 901** soum of interest a month — the same as Day 2's `SUMPRODUCT`. **Sheets:** Values → Add → *Calculated field*.
 
 **When you use it.**
 - A rate for a group: collected ÷ due, outstanding ÷ principal, interest ÷ outstanding.
@@ -749,7 +749,7 @@ Read the `90+` column: SME **3.7 %**, Consumer 3.2 %, Micro 2.8 %, BNPL 2.7 %, A
 5. **GETPIVOTDATA as the check.** In `H20`: `=GETPIVOTDATA("outstanding", $A$20) = SUM(tblLoans[outstanding])` must say TRUE. A pivot whose count says 92 193 was built on `Installments` — **double counting**.
 6. **Which chart.** Select the pivot → Insert → PivotChart → **Bar**: five long labels, one measure, a comparison. The sort is already descending, so the largest is on top (Format Axis → *Categories in reverse order* if Excel flips it).
 7. **An honest chart.** Delete the legend (one series); data labels in billions (`#,##0.0,,,` → `125.9`); axis title *outstanding, bn UZS*; all bars grey, the SME bar the brand colour. Title: **"SME is 60 % of the book on 10 % of the loans."** The loan share goes in the title, not on a second axis fighting for the same bars. Drag the chart to `A1:F18` later.
-8. **A slicer.** Insert → Slicer on `region`, Report Connections → this pivot. Click **Fergana**: SME 14 734 245 108 (the P4 lookup from Tuesday), total 24 797 334 197. The chart and its labels follow; the title does not — titles are static text. Write titles that stay true under the slicer ("by product" is safe; "60 %" is not) or link the title to a cell (select the chart title, type `=Report!$H$1` in the formula bar, and build the sentence in `H1` with `TEXT`). Clear the slicer before you read the totals again — the check in `H20` turns FALSE while it is on.
+8. **A slicer.** Insert → Slicer on `region`, Report Connections → this pivot. Click **Fergana**: SME 14 734 245 108 (Day 2's P4 lookup), total 24 797 334 197. The chart and its labels follow; the title does not — titles are static text. Write titles that stay true under the slicer ("by product" is safe; "60 %" is not) or link the title to a cell (select the chart title, type `=Report!$H$1` in the formula bar, and build the sentence in `H1` with `TEXT`). Clear the slicer before you read the totals again — the check in `H20` turns FALSE while it is on.
 
 Sheets: Insert → Pivot table on `Loans`, Rows `product`, Values `outstanding` (SUM) and `outstanding` *Show as % of grand total*, `loan_id` (COUNTA); sort by SUM of outstanding descending; Insert → Chart → Bar from the pivot range; Data → Add a slicer on `region`. The keyboard alternative, one cell:
 
@@ -803,10 +803,10 @@ File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P11, sheet `Charts` 
 {"id": "w04d4-p6", "kind": "number", "answer": 114, "dp": 0, "unit": "loans", "explain": "114 SME loans in July–September 2026, 37 677 910 000 (all products: 1 086 loans). The P4 pivot re-ranks under the filter — Fergana Central jumps to first (5.91 bn of SME outstanding). Clear both with the slicer's corner icon: a page left filtered is Monday's most common 'the numbers are wrong' call. Put the pivot's Grand Total next to the Table's SUM — equal means unfiltered."}
 ```
 
-**P7.** *(a calculated field)* With Tuesday's `rate` column on `tblLoans`, first try a calculated field `run_rate = outstanding * rate / 12` by product and see why its numbers are far too big. Then add `run_rate` as a calculated **column** on `tblLoans` (`=[@outstanding]*[@rate]/12`) and show Sum of `run_rate` by product. Last, try the calculated field `avg_ticket = principal / loan_id` — what happens, and what is the fix? *In the box: SME's Sum of run_rate from the column, in soum a month.*
+**P7.** *(a calculated field)* With Day 2's `rate` column on `tblLoans`, first try a calculated field `run_rate = outstanding * rate / 12` by product and see why its numbers are far too big. Then add `run_rate` as a calculated **column** on `tblLoans` (`=[@outstanding]*[@rate]/12`) and show Sum of `run_rate` by product. Last, try the calculated field `avg_ticket = principal / loan_id` — what happens, and what is the fix? *In the box: SME's Sum of run_rate from the column, in soum a month.*
 
 ```task
-{"id": "w04d4-p7", "kind": "number", "answer": 2727680419, "dp": 0, "unit": "UZS a month", "explain": "SME 2 727 680 419 · Auto 1 153 685 427 · Consumer 576 373 333 · Micro 33 463 723 · BNPL 0 — total 4 491 202 901, Tuesday's SUMPRODUCT. The calculated field outstanding * rate / 12 gives Σ outstanding × Σ rate ÷ 12 instead — 2.13 trillion for SME, because Σ rate there is 781 × 0.26 = 203. principal / loan_id divides the sum of principal by the sum of the ids — nonsense without an error. Fix: a column of 1s and principal / one, or just Average of principal in Values. Calculated fields see sums, never counts."}
+{"id": "w04d4-p7", "kind": "number", "answer": 2727680419, "dp": 0, "unit": "UZS a month", "explain": "SME 2 727 680 419 · Auto 1 153 685 427 · Consumer 576 373 333 · Micro 33 463 723 · BNPL 0 — total 4 491 202 901, Day 2's SUMPRODUCT. The calculated field outstanding * rate / 12 gives Σ outstanding × Σ rate ÷ 12 instead — 2.13 trillion for SME, because Σ rate there is 781 × 0.26 = 203. principal / loan_id divides the sum of principal by the sum of the ids — nonsense without an error. Fix: a column of 1s and principal / one, or just Average of principal in Values. Calculated fields see sums, never counts."}
 ```
 
 **P8.** *(double counting)* Bring `principal` onto each instalment (a lookup from `tblLoans` in a new column of `tblInstallments`, or yesterday's merge), then pivot that table: Rows `product`, Values Sum of `principal`. Compare the SME row with the same pivot on `tblLoans`. *In the box: SME's principal as it should be, from `tblLoans`, in soum.*
@@ -818,7 +818,7 @@ File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P11, sheet `Charts` 
 **P9.** *((blank) labels and empty cells)* On `tblCustomers`: Rows `segment`, Values Count of `customer_id` and Count of `monthly_income`. Why do the two columns differ, and by how much in total? *In the box: Count of monthly_income in the `mass` row.*
 
 ```task
-{"id": "w04d4-p14", "kind": "number", "answer": 3377, "dp": 0, "unit": "customers", "hint": "Count of a field skips its empty cells; 208 mass customers have no income on file.", "explain": "mass 3 585 customers, 3 377 with an income (208 blank); sme 1 251 / 1 175 (76 blank); affluent 1 204 / 1 132 (72 blank). In total 356 blanks — Monday's number. For 'how many customers', count the id column."}
+{"id": "w04d4-p14", "kind": "number", "answer": 3377, "dp": 0, "unit": "customers", "hint": "Count of a field skips its empty cells; 208 mass customers have no income on file.", "explain": "mass 3 585 customers, 3 377 with an income (208 blank); sme 1 251 / 1 175 (76 blank); affluent 1 204 / 1 132 (72 blank). In total 356 blanks — Day 1's number. For 'how many customers', count the id column."}
 ```
 
 **P10.** *(refresh and the pivot cache)* A colleague's pivot was built on `Loans!$A$1:$M$7829`. Friday's file adds 120 loans to `tblLoans`, and she presses Refresh All. *In the box: pick what the pivot shows, and the fix.*
@@ -857,7 +857,7 @@ File `week-04/day-4/practice.xlsx`, sheet `Pivots` for P1–P11, sheet `Charts` 
 {"id": "w04d4-p16", "kind": "number", "answer": 4, "dp": 0, "unit": "regions", "hint": "Filters status = active; Rows region; Count of loan_id; Value Filters → Greater Than 300.", "explain": "Active loans: Tashkent 1 279 · Samarkand 396 · Fergana 373 · Andijan 334 pass; Namangan 287 · Bukhara 270 · Nukus 213 · Termez 200 drop out. The Grand Total under a Value Filter is the total of the four shown rows (2 382), not of all 3 352 active loans."}
 ```
 
-> 🚀 **Stretch (optional, +5 XP).** **P16.** *(a calculated field on a merged query)* On yesterday's merged `installments_paid` query, a pivot with `due_month` in Rows, Sum of `total_due`, Sum of `paid`, and a **calculated field** `rate = paid / total_due` (as `0.0%`). Does it reproduce Wednesday's Company corner table? Add a slicer on `product` (merge it in from `Loans` first) — which product collects worst in September? *In the box: the product that collects worst in September.*
+> 🚀 **Stretch (optional, +5 XP).** **P16.** *(a calculated field on a merged query)* On yesterday's merged `installments_paid` query, a pivot with `due_month` in Rows, Sum of `total_due`, Sum of `paid`, and a **calculated field** `rate = paid / total_due` (as `0.0%`). Does it reproduce Day 3's Company corner table? Add a slicer on `product` (merge it in from `Loans` first) — which product collects worst in September? *In the box: the product that collects worst in September.*
 
 ```task
 {"id": "w04d4-p11", "kind": "choice", "options": ["Small business loan", "Buy now pay later", "Consumer loan", "Auto loan", "Micro loan"], "answer": 4, "xp": 2, "explain": "Yes, it reproduces Jun 96.9 · Jul 96.7 · Aug 96.5 · Sep 94.1 % — a ratio of sums, so the calculated field is right here. September by product: Micro 91.5 % (548 instalments) · Auto 92.7 % (351) · Consumer 93.4 % (1 345) · BNPL 94.2 % (473) · SME 94.8 % (588), against 94.1 % for the book. Quote the counts with the rates: Auto's 351 instalments move by a point on a handful of large unpaid ones."}

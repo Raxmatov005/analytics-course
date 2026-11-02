@@ -72,6 +72,14 @@ Week 1's rule holds in Excel: **raw stays raw**. Never clean the only copy. Clea
 - First thing with any new file: count each kind, write the counts down. They become your change log.
 - After cleaning: the same formulas on the clean table must say 0.
 
+> ⚠️ **Watch out.** A **number stored as text** sits left-aligned, often with a small green triangle in the corner, and `SUM` skips it — the total is low and nothing turns red. Changing the cell format to *Number* does **not** convert text that is already in the cell. What does: `=VALUE(A2)` or `=--A2` in a helper column, Data → Text to Columns → Finish on the column, or Paste Special → Multiply by 1. The opposite trap waits when you **type or paste** into a sheet: Excel converts anything that looks like a date or a number — `1-2` becomes 2 January, the code `00123` becomes 123, and a 16-digit card number becomes `1.23457E+15` with its last digit turned into 0 (Excel keeps only 15 digits). Format the cells as **Text before** you type codes, or import with Power Query and set the types yourself.
+
+**Your turn.** The column `amount` holds numbers stored as text. Which of these turn them into real numbers?
+
+```game
+{"type": "sort", "id": "w04d3-g8", "title": "Which fix works?", "q": "A column of numbers stored as text: drop each action into what it does.", "groups": {"Converts the text into numbers": ["=VALUE(A2) in a helper column", "=--A2 in a helper column", "Data → Text to Columns → Finish", "Paste Special → Multiply by 1"], "Changes nothing — still text": ["Format Cells → Number", "Increase Decimal", "=TRIM(A2)"]}}
+```
+
 **Your turn.** Sort the dirty values into their kind.
 
 ```game
@@ -147,7 +155,7 @@ select applied_at
 | 2025-06-02 10:35:00 | 2025-06-02 | 10:35:00 |
 | 2026-09-30 21:36:00 | 2026-09-30 | 21:36:00 |
 
-On `applications.csv` the 14 000 `applied_at` values become a date column and a time column. With the date on its own, `<= DATE(2026,9,30)` no longer loses the applications sent during the evening of 30 September.
+On `applications.csv` the 14 000 `applied_at` values become a date column and a time column. With the date on its own, `<= DATE(2026,9,30)` no longer loses the 23 applications made later on 30 September (Day 1's time-of-day trap).
 
 **When you use it.**
 - A date and a time glued together; a `"region|product"` key; a full name to split into first and last.
@@ -223,6 +231,7 @@ On `Payments`: 10 distinct raw methods. After the full formula, `=ROWS(UNIQUE(�
 **When you use it.**
 - Any text you will compare, count or match on: methods, names, regions.
 - Nested `SUBSTITUTE` for a short list of synonyms; for a long list, a mapping table and a lookup (Day 2).
+- Text pasted from a web page or a PDF: it often carries **non-breaking spaces** (`CHAR(160)`), which `TRIM` leaves alone — `LEN` then counts one character more than you can see. Replace them first, as in the last row of the table above.
 
 > ⚠️ **Watch out.** `PROPER` capitalises after every non-letter: `"payme"` → `"Payme"`, `"o'neil"` → `"O'Neil"`. Use it for people's names, not for codes.
 
@@ -247,14 +256,14 @@ On `Payments`: 10 distinct raw methods. After the full formula, `=ROWS(UNIQUE(�
 
 How Excel reads typed text depends on the **locale** (the Windows regional setting):
 
-| typed | US locale (month first) | day-first locale (Russia, UK) |
+| typed | US locale (month first) | Russian locale (day first) |
 |---|---|---|
 | `2026-03-14` | 14 March 2026 | 14 March 2026 |
 | `03/04/2026` | 4 March 2026 | 3 April 2026 |
 | `14/03/2026` | **text** — there is no month 14 | 14 March 2026 |
 | `14.03.2026` | **text** | 14 March 2026 |
 
-Only ISO `yyyy-mm-dd` reads the same everywhere. Our CSVs use it.
+Only ISO `yyyy-mm-dd` reads the same everywhere. Our CSVs use it. Other day-first locales — UK, Uzbek — also read `03/04/2026` as 3 April, but may keep `14.03.2026` as text: what converts depends on your own Windows settings, so try it on your machine (P6 asks you to). Google Sheets follows File → Settings → Locale instead.
 
 **Impossible dates** are real dates that cannot be true. In `customers_dirty.csv`, **7** birth dates are impossible: four in the future (`2031-04-12`, `2027-02-28`) and three at `1900-01-01`, a "no date" placeholder. **5** customers were registered after the as-of date 2026-10-01.
 
@@ -431,6 +440,8 @@ You do not need to write M. You need to read it enough to see what a step does. 
 - Any file that arrives again: the Monday export, the monthly bank file.
 - Power Query needs Excel for Windows or Microsoft 365. **Sheets** has none: its pipeline is a clean tab of formulas (`ARRAYFORMULA`, `UNIQUE`, `QUERY`), re-run by importing the new CSV over the raw tab.
 
+> ⚠️ **Watch out.** Do not open a CSV by double-clicking it. Excel then reads it with your Windows settings: on a computer set to Russian or Uzbek (decimal comma, list separator `;`) a comma-separated file can land in **one** column, and `1,5` can become 1.5, 15 or text. **Data → From Text/CSV** shows a preview where you choose the **Delimiter** (comma, semicolon) and the **File Origin** — the encoding. Our files are `65001: Unicode (UTF-8)`; a file from older software may need `1251: Cyrillic`. If names arrive as `ÐÐ°Ð»Ð¸ÐºÐ°` instead of letters, the encoding is wrong — change File Origin, never retype the names.
+
 > ⚠️ **Watch out.** Steps run in order, top to bottom. Insert a step in the middle and every later step works on its result — check the row count at the last step after any change.
 
 **Your turn.** Which tools leave a recipe that re-runs on the next file?
@@ -468,6 +479,8 @@ M: = Table.TransformColumnTypes(
 - Right after *Promoted Headers*, before any other step. Text steps need text columns; date filters need date columns.
 
 > ⚠️ **Watch out.** A `Trim` step on a column typed as a number does nothing and shows no error. A Date filter on a text column fails. Types first.
+
+> ⚠️ **Watch out.** The *Changed Type* step that Power Query adds by itself is a **guess from the first 200 rows**. If row 5 000 holds `n/a` in a column typed Whole Number, that cell becomes an **Error** — no message, just a red bar in View → *Column quality*. Look there after every type step; then Home → Remove Rows → **Remove Errors**, or Transform → **Replace Errors**, and write the count in the change log. For dates like `14.03.2026` and numbers like `1 234,5`, use the type icon → **Using Locale…** and pick the file's locale (e.g. Russian): the reading then does not depend on the computer that refreshes. And type every **identifier** as Text — a code `00123` typed as a number becomes 123, and a card number longer than 15 digits loses its last digits.
 
 **Your turn.** Power Query types `phone` as Whole Number. What does the first customer's phone `+998902031105` become?
 
@@ -590,6 +603,7 @@ select method → Transform
 **When you use it.**
 - Every text column you will group, filter or join on.
 - Capitalize Each Word on name columns only.
+- **Fill Down** (Transform → Fill → Down) copies the value above into empty cells below it — the repair for a report whose region sat in merged cells or appeared only on the first row of its group (Day 1's "not a table"): unmerge, then Fill Down.
 
 > ⚠️ **Watch out.** Without *Match entire cell contents*, Replace Values works inside the text: replacing `card` with `bank card` would also turn `discard` into `disbank card`.
 
@@ -789,7 +803,7 @@ On the data: `installments` (92 193 rows) Left Outer `paid_by_installment` → s
 - Bring a column from another file: the paid amount onto each instalment, a product rate onto each loan.
 - Check the row count right after every merge: a Left Outer must keep the top table's count.
 
-> ⚠️ **Watch out.** If the bottom table has two rows for one key, the merge **multiplies** the top rows — the one-to-many trap of week 2. Group By the bottom table to one row per key first.
+> ⚠️ **Watch out.** If the bottom table has two rows for one key, the merge **multiplies** the top rows — the one-to-many trap of week 2. Group By the bottom table to one row per key first. And Merge compares keys **exactly** — unlike Excel's lookups it is case-sensitive, and a space counts: `Cash` ≠ `cash`, `"2167 "` ≠ `"2167"`. Trim, clean and lowercase the key column on **both** sides before merging, and give both keys the same type.
 
 **Your turn.** Which Join Kind finds the instalments that have **no** payment?
 
@@ -969,7 +983,7 @@ Trailing spaces in `first_name` `=SUMPRODUCT(--(LEN(B2:B6041)<>LEN(TRIM(B2:B6041
 
 <details><summary>Result</summary>
 
-Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly ids 6001–6040 paired with their originals (6001 `MALIKA jalilova` ↔ 4516 `Malika Jalilova`, same phone +998908981002, same birth date 1981-08-15, same income). The two name-only pairs (823/1197, 2460/5562) have different phones and regions — namesakes, keep both. Ten of the 40 duplicates were registered in 2026, so "new customers 2026" (955 by `registered_at`) is overstated by 10 — week 1's memo line, now a filter.
+Name key: 84 rows in 42 pairs. Phone key: 80 rows in **40** pairs — exactly ids 6001–6040 paired with their originals (6001 `MALIKA jalilova` ↔ 4516 `Malika Jalilova`, same phone +998908981002, same birth date 1981-08-15, same income). The two name-only pairs (823/1197, 2460/5562) have different phones and regions — namesakes, keep both. Ten of the 40 duplicates carry a registration date in 2026 or later (one even 2027-01-09), so "new customers since 2026-01-01" (955 by `registered_at`) is overstated by 10 — week 1's memo line, now a filter.
 
 </details>
 
@@ -1094,7 +1108,7 @@ File `week-04/day-3/practice.xlsx`: raw sheets untouched, a sheet per task or a 
 {"id": "w04d3-p16", "kind": "number", "answer": 40, "dp": 0, "unit": "rows", "hint": "One row per cell of the matrix — leave the total row and column out.", "explain": "8 regions × 5 buckets = 40 rows; Σ outstanding still 208 723 504 430. If you got 54, the total column and the total row came along: 9 rows × 6 columns. Delete totals before unpivoting — they are not data."}
 ```
 
-**P13.** *(Merge Queries = join)* A query `paid_by_installment` = `payments_clean` filtered `paid_at <= 2026-10-01`, grouped by `installment_id` → `paid`; merge it into `installments.csv` (Left Outer, key `installment_id`), expand `paid`, replace null with 0, and name the merged query `installments_paid` (tomorrow and Friday reuse it). Count matured instalments (`due_date <= 2026-10-01`) with `paid < total_due`. *In the box: matured instalments not fully paid.*
+**P13.** *(Merge Queries = join)* A query `paid_by_installment` = `payments_clean` filtered `paid_at <= 2026-10-01`, grouped by `installment_id` → `paid`; merge it into `installments.csv` (Left Outer, key `installment_id`), expand `paid`, replace null with 0, and name the merged query `installments_paid` (tomorrow and Day 5 reuse it). Count matured instalments (`due_date <= 2026-10-01`) with `paid < total_due`. *In the box: matured instalments not fully paid.*
 
 ```task
 {"id": "w04d3-p8", "kind": "number", "answer": 1784, "dp": 0, "hint": "Check the row count after the merge first: it must still be 92 193.", "explain": "92 193 rows after the merge (Left Outer keeps every instalment; Inner would drop the unpaid ones, which are the point). Matured: 54 207; 1 784 not fully paid, 403 of them partly paid. Instalments with paid > total_due: 0 after the dedup, 25 before it — the duplicates were the only over-payments in the book."}

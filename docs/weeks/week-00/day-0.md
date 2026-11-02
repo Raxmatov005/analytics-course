@@ -328,9 +328,9 @@ Use this sample of days-late for 8 payments: **2, 4, 4, 4, 5, 5, 7, 9**.
 
 Three honest notes:
 
-- **Week 8 (product analytics + capstone) and the Company & metrics track are never skipped.** They are the job.
+- **Weeks 8 and 9 (product analytics, the capstone, credit risk models) and the Company & metrics track are never skipped.** They are the job, and no self-test covers them.
 - A skipped week still has a **Friday checkpoint** you must pass. If you fail it, you take the week — no penalty, the checkpoint simply found a gap the test missed.
-- If every score is below 4: good. The plan is the full 8 weeks, and the course was written for exactly that start.
+- If every score is below 4: good. The plan is the full nine weeks, and the course was written for exactly that start.
 
 ---
 
@@ -345,7 +345,7 @@ Copy this into the **📎 Hand in here** box below, fill it, tap **📤 Submit**
 SQL __/8 · Excel __/8 · Python __/8 · Statistics __/8 · BI __/6
 
 ## Weeks I will take in full
-[e.g. 1, 2, 3, 4, 5, 6, 7, 8]
+[e.g. 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 ## Weeks I will skip (checkpoint only)
 [e.g. none]
@@ -366,7 +366,7 @@ SQL __/8 · Excel __/8 · Python __/8 · Statistics __/8 · BI __/6
 [one or two sentences]
 ```
 
-Graded on: (a) it is submitted before Day 1, (b) the scores match your boxes above, (c) the hours are realistic — a plan that says 6 h a day and delivers 2 is worse than one that says 2.
+Graded on: (a) it is submitted today (the box is due at 23:59), (b) the scores match your boxes above, (c) the hours are realistic — a plan that says 6 h a day and delivers 2 is worse than one that says 2.
 
 ### 📎 Hand in here
 
@@ -383,7 +383,7 @@ Graded on: (a) it is submitted before Day 1, (b) the scores match your boxes abo
 {"id": "w00d0-sc", "questions": [
   {"type": "single", "q": "You score 6/8 in SQL. Which weeks do you take in full?", "options": ["Weeks 1, 2 and 3", "Weeks 2 and 3 — week 1 is skipped", "None of weeks 1–3"], "answer": 1, "explain": "5–6 of 8 skips week 1 only; 7+ would skip all three (→ section 6)."},
   {"type": "single", "q": "Does a skipped week remove its Friday checkpoint?", "options": ["Yes — skipped means skipped", "No — you still have to pass that week's checkpoint"], "answer": 1, "explain": "Skip means checkpoint only; fail it and you take the week after all (→ section 0, rule 4)."},
-  {"type": "text", "q": "Your plan goes into the 📎 box on this page. What is the file called?", "answer": ["my-plan.md", "my-plan"], "explain": "my-plan.md, handed in with the 📎 Hand in here box before Day 1 (→ section 7)."}
+  {"type": "text", "q": "Your plan goes into the 📎 box on this page. What is the file called?", "answer": ["my-plan.md", "my-plan"], "explain": "my-plan.md, handed in today with the 📎 Hand in here box (→ section 7)."}
 ]}
 ```
 
@@ -424,9 +424,9 @@ Pass with 80 % to finish the day. Retry as often as you like.
   {"type": "single", "q": "Your SQL self-test score is shown below. Which SQL weeks do you take in full?", "code": "SQL 6/8", "options": ["Weeks 1, 2 and 3", "Weeks 2 and 3 (week 1 skipped)", "None — skip weeks 1–3", "Only week 1"], "answer": 1, "explain": "7+ skips weeks 1–3; 5–6 skips week 1 only (→ section 6)."},
   {"type": "multi", "q": "These are your five scores. Which weeks do you skip (checkpoint only)?", "code": "SQL 7/8 · Excel 5/8 · Python 8/8 · Statistics 6/8 · BI 5/6", "options": ["Weeks 1–3", "Week 4", "Week 5", "Week 6", "Week 7", "Week 8"], "answer": [0, 2, 4], "explain": "7 of 8 skips SQL and Python, 5 of 6 skips BI; Excel 5 and Statistics 6 are below the bar, and week 8 is never skipped (→ section 6)."},
   {"type": "single", "q": "You skip week 4 because Excel scored 7/8. What must you still do?", "options": ["Nothing — the week is done", "Pass week 4's Friday checkpoint (W4 D5)", "All of week 4's homework", "Take the Excel self-test again on Monday"], "answer": 1, "explain": "Skip means checkpoint only; if you fail it, you take the week after all (→ section 0, rule 4)."},
-  {"type": "single", "q": "Which part of the course is never skipped, whatever your scores?", "options": ["Week 1 (SQL basics)", "Week 8 (product analytics + capstone) and the Company & metrics track", "Week 7 (BI)", "Day 0's self-tests"], "answer": 1, "explain": "Week 8 and the Company & metrics track are the job itself (→ section 6)."},
+  {"type": "single", "q": "Which part of the course is never skipped, whatever your scores?", "options": ["Week 1 (SQL basics)", "Weeks 8 and 9 (product analytics, capstone, credit risk) and the Company & metrics track", "Week 7 (BI)", "Day 0's self-tests"], "answer": 1, "explain": "Weeks 8 and 9 and the Company & metrics track are the job itself, and no self-test covers them (→ section 6)."},
   {"type": "number", "q": "BI has only 6 questions. What is the lowest BI score that lets you skip week 7?", "answer": 5, "explain": "BI: 5 of 6 or better = skip; the other four modules need 7 of 8 (→ section 0, rule 4)."},
-  {"type": "text", "q": "The hand-in box names the file for your plan. What is that file called?", "answer": ["my-plan.md", "my-plan"], "explain": "The plan is my-plan.md, handed in with the 📎 box on this page before Day 1 (→ section 7)."},
+  {"type": "text", "q": "The hand-in box names the file for your plan. What is that file called?", "answer": ["my-plan.md", "my-plan"], "explain": "The plan is my-plan.md, handed in today with the 📎 box on this page (→ section 7)."},
   {"type": "single", "q": "Collections asks which borrowers crossed 30 days late. Which of the two lending questions is that?", "options": ["Are we lending enough, to the right people? (growth)", "Are they paying us back? (risk)", "Neither — it is a marketing question"], "answer": 1, "explain": "Days past due, buckets and write-offs belong to the risk side (→ section 9)."}
 ]}
 ```

@@ -114,7 +114,7 @@ The Python for each idea, and the extra topics, are in **Going further — the f
 
 ## 3. Practice (50 min)
 
-Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `np`, `pd`, `plt`, the frames `S` and `A`, the arrays `s` and `y`, the numbers `I`, `COF`, `OPEX`, `EAD`, `LGD`, `good`, `bad`, the arrays `cs` and `pr`, `e`, `edges` and the functions `at`, `profit`, `shares` and `psi` are ready — if you came straight here, press ▶ Run on every box of section 1 from the first to the PSI box. (The notebook `data/python/week9/day4_starter.ipynb` holds the same tools; you need it for the homework.)
+Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The setup box just below loads everything the Python boxes need: `np`, `pd`, the frames `S` and `A`, the arrays `s` and `y`, the numbers `I`, `COF`, `OPEX`, `EAD`, `LGD`, `good`, `bad`, the arrays `cs` and `pr`, `e`, `edges` and the functions `at`, `profit`, `shares` and `psi` — run it once before the first task (and again after you reload the page). (The notebook `data/python/week9/day4_starter.ipynb` holds the same tools; you need it for the homework.)
 
 **First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
 
@@ -160,7 +160,7 @@ for c in (424, 560, 600, 640, 660, 700):
 cs = np.arange(424, 852)
 pr = np.array([profit(c) for c in cs])
 best = cs[pr.argmax()]
-ok = [c for c in cs if y[s >= c].mean() <= 0.02]
+ok = [c for c in cs if (s >= c).any() and y[s >= c].mean() <= 0.02]
 c2 = min(ok)
 share, br, n, b = at(c2)
 from statsmodels.stats.proportion import proportion_effectsize
@@ -297,7 +297,7 @@ print(c3, round(100 * (s >= c3).mean(), 1), round(profit(c3) / 1e9, 2))
 
 </details>
 
-**P7.** *(swap-in and swap-out)* Run the swap query of section 1 for the line **640**. How many rejected applicants would be swapped **in**?
+**P7.** *(swap-in and swap-out)* Run the swap query of "Swap-in and swap-out" (in Going further, near the end of the page) for the line **640**. How many rejected applicants would be swapped **in**?
 
 ```task
 {"id": "w09d4-p7", "kind": "number", "answer": 1376, "dp": 0, "unit": "applicants", "hint": "Replace 600 by 640 twice in the swap query.", "model": "1 376 swap-ins (rejected with 640 or more) and 1 842 swap-outs (approved below 640; 1 687 of them became loans, 94 bad)."}
@@ -468,9 +468,9 @@ Three questions, one at a time. Wrong? The explanation points to the part of sec
 
 ```check
 {"id": "w09d4-sc", "questions": [
-  {"type": "single", "q": "A good loan leaves 1.45 m soum and a bad one costs 17.2 m. A group of applicants goes bad 6 % of the time. Decline it?", "options": ["No: 6 % is below the break-even 1.45 ÷ (1.45 + 17.2) = 7.8 %, so the group earns money", "Yes: any group with bads should be declined", "Yes: 6 % is above the book's 2.9 %", "It depends only on the Gini"], "answer": 0, "explain": "Decline a group when its bad rate is above good ÷ (good + bad). Compared with the book's average it may look risky, yet it still pays (→ section 1, 'The profit-maximising cut-off')."},
-  {"type": "number", "q": "Expected shares 20 % and 80 %, actual 30 % and 70 %. What is the PSI, to 3 decimals?", "answer": 0.054, "tol": 0.0015, "explain": "(0.30 − 0.20) × ln(0.30 / 0.20) + (0.70 − 0.80) × ln(0.70 / 0.80) = 0.0405 + 0.0134 = 0.054 — stable, under 0.1 (→ section 1, 'PSI')."},
-  {"type": "single", "q": "A new rule would approve 2 295 applicants Nur rejected before. What do you know about their bad rate?", "options": ["It equals the approved loans' bad rate at the same score", "Nothing from Nur's own data: they are swap-ins, and their outcomes were never observed", "It is zero", "It equals the book's 2.9 %"], "answer": 1, "explain": "No loan, no outcome. Reject inference can estimate it; the data cannot show it (→ section 1, 'Swap-in and swap-out')."}
+  {"type": "single", "q": "A good loan leaves 1.45 m soum and a bad one costs 17.2 m. A group of applicants goes bad 6 % of the time. Decline it?", "options": ["No: 6 % is below the break-even 1.45 ÷ (1.45 + 17.2) = 7.8 %, so the group earns money", "Yes: any group with bads should be declined", "Yes: 6 % is above the book's 2.9 %", "It depends only on the Gini"], "answer": 0, "explain": "Decline a group when its bad rate is above good ÷ (good + bad). Compared with the book's average it may look risky, yet it still pays (→ section 1, 'Where would you put the line? — the break-even and the best cut-off')."},
+  {"type": "number", "q": "Expected shares 20 % and 80 %, actual 30 % and 70 %. What is the PSI, to 3 decimals?", "answer": 0.054, "tol": 0.0015, "explain": "(0.30 − 0.20) × ln(0.30 / 0.20) + (0.70 − 0.80) × ln(0.70 / 0.80) = 0.0405 + 0.0134 = 0.054 — stable, under 0.1 (→ section 1, 'Has the crowd moved? — PSI')."},
+  {"type": "single", "q": "A new rule would approve 2 295 applicants Nur rejected before. What do you know about their bad rate?", "options": ["It equals the approved loans' bad rate at the same score", "Nothing from Nur's own data: they are swap-ins, and their outcomes were never observed", "It is zero", "It equals the book's 2.9 %"], "answer": 1, "explain": "No loan, no outcome. Reject inference can estimate it; the data cannot show it (→ section 1, 'Who changes sides — swap-ins, swap-outs, rules and tests')."}
 ]}
 ```
 
@@ -716,7 +716,7 @@ The best line is **594**, with 7.14 bn soum: 0.23 bn more than approving everyon
 **How to write it.**
 
 ```python
-ok = [c for c in cs if y[s >= c].mean() <= 0.02]
+ok = [c for c in cs if (s >= c).any() and y[s >= c].mean() <= 0.02]
 c2 = min(ok)
 share, br, n, b = at(c2)
 # 647 74.3 1.997 6.12
@@ -947,6 +947,7 @@ The box prints all ten months; the table shows every other one and October. Belo
 | 2025 H1 | 1 297 | 4.01 % | 0.41 |
 | 2025 H2 | 1 659 | 4.34 % | 0.39 |
 | 2026 H1 | 1 884 | 1.65 % | 0.29 |
+| 2026 H2 | 1 076 | 0.00 % | — (no bad yet) |
 
 Every month is green; October's 0.062 comes from 129 applicants — a small month jumps. The Gini drifts from 0.42 to 0.39 over two years, and the 2026 vintages are too young: their bad rate is low because they are young, not because they are good.
 
@@ -980,9 +981,6 @@ Nur today sits in the first row: PSI 0.0037, every CSI under 0.01, the Gini a li
 
 **When you use it.** At the end of every monitoring report: one line, "signal → action → owner → date".
 
-**Your turn.**
-
-
 ### Putting it together
 
 Nilufar's two questions, one tool per line. **Where to draw the line:** the trade-off table → bads avoided against goods lost → expected loss per loan → profit with W8D2's prices → the best line where the loans below it go bad more than 7.79 % → what a 2 % target costs → the swap sets → the policy rules → why a test cannot settle a 6-point move. **How to know it still holds:** PSI → CSI → the monthly page → the decision table.
@@ -995,9 +993,6 @@ Nilufar's two questions, one tool per line. **Where to draw the line:** the trad
 | who changes | swap-in, swap-out | 2 295 in, 363 out at 600 |
 | has the population moved | PSI | 0.0037, stable |
 | which input moved | CSI | all under 0.01 |
-
-**Words of the day.**
-
 
 ### Depth (optional)
 
@@ -1014,14 +1009,14 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w09d4", "pass": 0.8, "questions": [
-  {"type": "single", "q": "Raising the cut-off from 600 to 660 moves the approval rate from 95.7 % to 66.7 % and the bad rate from 2.55 % to 1.50 %. What does that show?", "options": ["The trade-off: a large loss of volume for a small fall in bad rate", "That 660 is the best line", "That the score is broken", "That the bad rate rises with the cut-off"], "answer": 0, "explain": "29 points of approvals for about one point of bad rate — whether it is worth it is a question of money (→ section 1, 'The cut-off')."},
-  {"type": "number", "q": "A good loan leaves 1 454 907 soum, a bad one costs 17 219 143. What is the break-even bad rate, in %, to 2 decimals?", "answer": 7.79, "tol": 0.005, "explain": "1 454 907 ÷ 18 674 050 = 7.79 % — W8D2's break-even PD for a Consumer loan (→ section 1, 'The profit-maximising cut-off')."},
+  {"type": "single", "q": "Raising the cut-off from 600 to 660 moves the approval rate from 95.7 % to 66.7 % and the bad rate from 2.55 % to 1.50 %. What does that show?", "options": ["The trade-off: a large loss of volume for a small fall in bad rate", "That 660 is the best line", "That the score is broken", "That the bad rate rises with the cut-off"], "answer": 0, "explain": "29 points of approvals for about one point of bad rate — whether it is worth it is a question of money (→ section 1, 'One line, two numbers — approval, bad rate, bads avoided')."},
+  {"type": "number", "q": "A good loan leaves 1 454 907 soum, a bad one costs 17 219 143. What is the break-even bad rate, in %, to 2 decimals?", "answer": 7.79, "tol": 0.005, "explain": "1 454 907 ÷ 18 674 050 = 7.79 % — W8D2's break-even PD for a Consumer loan (→ section 1, 'Where would you put the line? — the break-even and the best cut-off')."},
   {"type": "single", "q": "Funding rises from 18 % to 22 %. What happens to the profit-maximising cut-off?", "options": ["It moves up (594 → 659): a good loan leaves less, so fewer groups are worth lending to", "It moves down", "It stays: the cut-off depends only on the score", "There is no longer a best cut-off"], "answer": 0, "explain": "The break-even falls to 3.72 %, below grade C's 5 %: the line jumps to the C/B edge (→ section 1, explorer)."},
-  {"type": "single", "q": "The committee wants approved loans under 2 % bad. The loosest such line is 647, earning 6.12 bn; the best line earns 7.14 bn. What do you tell them?", "options": ["The target costs about 1.0 bn of profit on this book — vote with that number in view", "647 is the best line", "The target is free", "Targets are not allowed"], "answer": 0, "explain": "The price of a target is a fact the committee needs before it votes (→ section 1, 'A bad-rate target')."},
-  {"type": "single", "q": "Which applicants are swap-ins?", "options": ["Approved today and declined by the new rule", "Rejected today and approved by the new rule — their outcomes are unknown", "Applicants with no score", "Loans that were written off"], "answer": 1, "explain": "Swap-outs are known (Nur lent to them); swap-ins are not — reject inference (→ section 1, 'Swap-in and swap-out')."},
-  {"type": "single", "q": "What does this print?", "code": "e = np.array([0.5, 0.5])\na = np.array([0.5, 0.5])\nnp.sum((a - e) * np.log(a / e))", "options": ["0.0 — identical shares, no shift", "1.0", "0.5", "An error"], "answer": 0, "explain": "Each band's term is (a − e) × ln(a / e) = 0 × ln 1 = 0 (→ section 1, 'PSI')."},
-  {"type": "single", "q": "The PSI is 0.18. What is the reading, and the next step?", "options": ["Stable; nothing to do", "Watch: find which input moved with the CSIs and check the bad rate by band there", "Act: switch the scorecard off today", "PSI above 0.1 means the Gini has fallen"], "answer": 1, "explain": "0.1–0.25 is amber: investigate the cause before acting. PSI says the population moved, not that the ranking broke (→ section 1, 'CSI', 'What to do')."},
-  {"type": "single", "q": "The bad rate of new vintages rises from 2.9 % to 4.1 % while the Gini and the PSI stay the same. What is the usual action?", "options": ["Rebuild the scorecard", "Recalibrate the PD levels and move the cut-off: the order is right, the level is not", "Ignore it", "Lower the cut-off"], "answer": 1, "explain": "Ranking intact, level shifted: recalibrate and reprice rather than rebuild (→ section 1, 'What to do when it drifts')."},
+  {"type": "single", "q": "The committee wants approved loans under 2 % bad. The loosest such line is 647, earning 6.12 bn; the best line earns 7.14 bn. What do you tell them?", "options": ["The target costs about 1.0 bn of profit on this book — vote with that number in view", "647 is the best line", "The target is free", "Targets are not allowed"], "answer": 0, "explain": "The price of a target is a fact the committee needs before it votes (→ section 1, 'A 2 % target — and its price')."},
+  {"type": "single", "q": "Which applicants are swap-ins?", "options": ["Approved today and declined by the new rule", "Rejected today and approved by the new rule — their outcomes are unknown", "Applicants with no score", "Loans that were written off"], "answer": 1, "explain": "Swap-outs are known (Nur lent to them); swap-ins are not — reject inference (→ section 1, 'Who changes sides — swap-ins, swap-outs, rules and tests')."},
+  {"type": "single", "q": "What does this print?", "code": "e = np.array([0.5, 0.5])\na = np.array([0.5, 0.5])\nnp.sum((a - e) * np.log(a / e))", "options": ["0.0 — identical shares, no shift", "1.0", "0.5", "An error"], "answer": 0, "explain": "Each band's term is (a − e) × ln(a / e) = 0 × ln 1 = 0 (→ section 1, 'Has the crowd moved? — PSI')."},
+  {"type": "single", "q": "The PSI is 0.18. What is the reading, and the next step?", "options": ["Stable; nothing to do", "Watch: find which input moved with the CSIs and check the bad rate by band there", "Act: switch the scorecard off today", "PSI above 0.1 means the Gini has fallen"], "answer": 1, "explain": "0.1–0.25 is amber: investigate the cause before acting. PSI says the population moved, not that the ranking broke (→ section 1, 'Watching every month — CSI and what to do')."},
+  {"type": "single", "q": "The bad rate of new vintages rises from 2.9 % to 4.1 % while the Gini and the PSI stay the same. What is the usual action?", "options": ["Rebuild the scorecard", "Recalibrate the PD levels and move the cut-off: the order is right, the level is not", "Ignore it", "Lower the cut-off"], "answer": 1, "explain": "Ranking intact, level shifted: recalibrate and reprice rather than rebuild (→ section 1, 'Watching every month — CSI and what to do')."},
   {"type": "single", "q": "Company corner: where does an approved cut-off live?", "options": ["In the analyst's notebook", "In the credit policy, changed only by the risk committee", "In the bureau's database", "In each officer's head"], "answer": 1, "explain": "The policy holds the cut-offs, rules, limits, overrides and monitoring triggers; the committee changes it (→ Company corner)."}
 ]}
 ```

@@ -67,7 +67,7 @@ The Python for each idea, and a few extra topics, are in **Going further — the
 **Now play.** The same idea with sliders — try the challenges.
 
 ```explore
-{"id": "w06d1-x2", "type": "binomial", "title": "A month of 400 loans, again and again", "predict": {"q": "Last October Nilufar saw **7** FPDs in a batch of 400 loans and called a meeting. If every loan has the usual 1.28 % chance, how often does a month bring **7 or more**?", "options": ["almost never — under 1 % of months", "about 1 month in 20", "about 1 month in 4", "about every second month"], "answer": 2, "why": "P(X ≥ 7) = 25.6 %: a quarter of perfectly ordinary months reach 7. Expect 5.1, but give or take 2.25 — so 7 is noise, not a signal. Run the batches and watch the orange tail."}, "p": 0.012818706860121144, "start": {"n": 400, "k": 7}, "challenges": [{"id": "c1", "text": "Run **200 batches** or more at n = 400: their average lands within **0.3** of n · p = 5.13.", "when": {"n": ["=", 400], "batches": [">=", 200], "avgErr": ["<", 0.3]}}, {"id": "c2", "text": "Find Nilufar's wall number: slide the alarm to the **smallest** count that rings in **under 5 %** of months (watch the exact share).", "when": {"n": ["=", 400], "tail": ["<", 0.05], "tailPrev": [">=", 0.05]}}, {"id": "c3", "text": "Make the spread **twice** as wide — an sd of 4.5 FPDs instead of 2.25 — by changing only the batch size. How many loans does it take?", "when": {"sd": ["between", 4.45, 4.55]}}]}
+{"id": "w06d1-x2", "type": "binomial", "title": "A month of 400 loans, again and again", "predict": {"q": "Last October Nilufar saw **7** FPDs in one vintage and called a meeting. Take a month of **400** loans, each with the usual 1.28 % chance: how often does such a month bring **7 or more**?", "options": ["almost never — under 1 % of months", "about 1 month in 20", "about 1 month in 4", "about every second month"], "answer": 2, "why": "P(X ≥ 7) = 25.6 %: a quarter of perfectly ordinary months reach 7. Expect 5.1, but give or take 2.25 — so 7 is noise, not a signal. (October's vintage was smaller, 288 loans: there 7 or more happens in 8.0 % of months — rarer, still not alarming; worked example, step 7.) Run the batches and watch the orange tail."}, "p": 0.012818706860121144, "start": {"n": 400, "k": 7}, "challenges": [{"id": "c1", "text": "Run **200 batches** or more at n = 400: their average lands within **0.3** of n · p = 5.13.", "when": {"n": ["=", 400], "batches": [">=", 200], "avgErr": ["<", 0.3]}}, {"id": "c2", "text": "Find Nilufar's wall number: slide the alarm to the **smallest** count that rings in **under 5 %** of months (watch the exact share).", "when": {"n": ["=", 400], "tail": ["<", 0.05], "tailPrev": [">=", 0.05]}}, {"id": "c3", "text": "Make the spread **twice** as wide — an sd of 4.5 FPDs instead of 2.25 — by changing only the batch size. How many loans does it take?", "when": {"sd": ["between", 4.45, 4.55]}}]}
 ```
 
 ### Counting per hour — the Poisson
@@ -110,13 +110,14 @@ The Python for each idea, and a few extra topics, are in **Going further — the
 
 ## 3. Practice (50 min)
 
-Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. The Python boxes run in the same session as section 1, so `math`, `random`, `st`, `np`, `pd`, `NormalDist`, `pmf`, `cdf`, `at_least`, the frames `apps` and `loans` and the applicants' scores `s` are ready — if you came straight here, press ▶ Run on the first box of section 1. Answer, check, then open the fold for the full working. (The notebook `data/python/week6/day1_starter.ipynb` holds the same tools with `scipy`; you need it for the homework.)
+Every task has its own answer box, and the questions follow the order of section 1 — the concept is named in italics. All the Python boxes of this page share one session: the box just below loads `math`, `random`, `st`, `np`, `pd`, `NormalDist`, `pmf`, `cdf`, `at_least`, the frames `apps` and `loans` and the applicants' scores `s` — run it once before the first task. Answer, check, then open the fold for the full working. (The notebook `data/python/week6/day1_starter.ipynb` holds the same tools with `scipy`; you need it for the homework.)
 
 **First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
 
 ```python
 # the tools and the data from the full version of section 1 — run once
 import math, random
+import statistics as st
 import numpy as np
 import pandas as pd
 from statistics import NormalDist
@@ -129,6 +130,7 @@ def cdf(k, n, p):                     # P(X <= k)
     return sum(pmf(i, n, p) for i in range(k + 1))
 def at_least(k, n, p):                # P(X >= k) = 1 - P(X <= k - 1)
     return 1 - cdf(k - 1, n, p)
+random.seed(2026)
 p_true = 91 / 7099
 for n in (10, 100, 1_000, 10_000, 100_000):
     # True = this loan is an FPD
@@ -263,7 +265,7 @@ Base **1.289 %**, sensitivity **7.9 %**, false-positive rate **4.4 %**; Bayes **
 
 </details>
 
-**P7.** *(random variable, expected value)* One SME loan: EAD = the average SME principal (308.7 m), PD = 29 / 781 (SME loans in 90+), LGD 60 %. E[loss] and sd[loss]. Compare with the Consumer loan of section 1.
+**P7.** *(random variable, expected value)* One SME loan: EAD = the average SME principal (308.7 m), PD = 29 / 781 (SME loans in 90+), LGD 60 %. E[loss] and sd[loss]. Compare with the Consumer loan of Going further, 'Random variables, expected value and variance' (E 0.52 m, sd 2.84 m).
 
 ```task
 {"id": "w06d1-p7", "kind": "number", "answer": 6.88, "dp": 2, "unit": "m soum (expected loss)", "hint": "Loss if it defaults = 0.6 × 308.7 m; the expected loss is PD times that.", "model": "Loss if default = 0.6 × 308.7 m = 185.2 m; PD = 29 / 781 = 3.71 %; E = 0.0371 × 185.2 m = 6.88 m; sd = √(0.0371 × 0.9629) × 185.2 m = 35.0 m — against 0.52 m and 2.84 m for the Consumer loan."}
@@ -355,7 +357,7 @@ Data **51.8 %**, model **50 %**. Close to flat, slightly front-loaded: 1.8 point
 **P13.** *(normal)* Normal model of applicants' scores (μ 659.6, σ 59.5). The grade-A cut is 720: what share of applicants does the model put at 720 or above, and what does the data say? The model's 5th percentile vs the data's.
 
 ```task
-{"id": "w06d1-p6", "kind": "python", "starter": "model = NormalDist(659.6, 59.5)\n# the model's share of applicants at 720 or above, in %, 1 decimal\n# then the same share in the data (s from section 1), and both 5th percentiles\n", "answer": 15.5, "dp": 1, "model": "print(round(100 * (1 - model.cdf(720)), 1), round(100 * (s >= 720).mean(), 1))   # 15.5 15.8\nprint(round(model.inv_cdf(0.05), 1), s.quantile(0.05))                           # 561.7 562.0"}
+{"id": "w06d1-p6", "kind": "python", "starter": "model = NormalDist(659.6, 59.5)\n# the model's share of applicants at 720 or above, in %, 1 decimal\n# then the same share in the data (s from the setup box), and both 5th percentiles\n", "answer": 15.5, "dp": 1, "model": "print(round(100 * (1 - model.cdf(720)), 1), round(100 * (s >= 720).mean(), 1))   # 15.5 15.8\nprint(round(model.inv_cdf(0.05), 1), s.quantile(0.05))                           # 561.7 562.0"}
 ```
 
 <details><summary>Answer</summary>
@@ -537,9 +539,9 @@ Three questions, one at a time. Wrong? The explanation points to the part of sec
 
 ```check
 {"id": "w06d1-sc", "questions": [
-  {"type": "single", "q": "45 % of FPDs came through the app. Which calculation gives the chance that an app loan has an FPD?", "options": ["P(app ∩ FPD) / P(app) = 41 / 2 411 = 1.70 %", "P(app ∩ FPD) / P(FPD) = 41 / 91 = 45 %", "P(app) · P(FPD) = 0.43 %", "41 / 7 099 = 0.58 %"], "answer": 0, "explain": "Divide by the condition: among app loans. 41 / 91 answers 'where do FPDs come from' (→ section 1, 'Conditional probability')."},
-  {"type": "number", "q": "A rule catches 80 % of frauds and flags 1 % of honest applicants; fraud is 0.2 % of applications. What share of flags are fraud, in %?", "answer": 13.8, "tol": 0.3, "explain": "0.8 × 0.002 / (0.8 × 0.002 + 0.01 × 0.998) = 13.8 %: of 10 000 applicants, 16 flagged fraudsters and 100 flagged honest people (→ section 1, 'Bayes', P6)."},
-  {"type": "single", "q": "Which scipy call answers 'P(10 or more FPDs)' for X = scipy.stats.binom(400, p)?", "options": ["X.sf(10)", "X.sf(9)", "X.cdf(10)", "1 - X.pmf(10)"], "answer": 1, "explain": "sf(k) = P(X > k), so 'k or more' is sf(k − 1); sf(10) is 11 or more (→ section 1, 'Bernoulli and binomial', Mistakes)."}
+  {"type": "single", "q": "45 % of FPDs came through the app. Which calculation gives the chance that an app loan has an FPD?", "options": ["P(app ∩ FPD) / P(app) = 41 / 2 411 = 1.70 %", "P(app ∩ FPD) / P(FPD) = 41 / 91 = 45 %", "P(app) · P(FPD) = 0.43 %", "41 / 7 099 = 0.58 %"], "answer": 0, "explain": "Divide by the condition: among app loans. 41 / 91 answers 'where do FPDs come from' (→ section 1, 'Among those who — conditional probability')."},
+  {"type": "number", "q": "A rule catches 80 % of frauds and flags 1 % of honest applicants; fraud is 0.2 % of applications. What share of flags are fraud, in %?", "answer": 13.8, "tol": 0.3, "explain": "0.8 × 0.002 / (0.8 × 0.002 + 0.01 × 0.998) = 13.8 %: of 10 000 applicants, 16 flagged fraudsters and 100 flagged honest people (→ section 1, 'The fraud-flag trap — Bayes’ rule'; Practice P6)."},
+  {"type": "single", "q": "Which scipy call answers 'P(10 or more FPDs)' for X = scipy.stats.binom(400, p)?", "options": ["X.sf(10)", "X.sf(9)", "X.cdf(10)", "1 - X.pmf(10)"], "answer": 1, "explain": "sf(k) = P(X > k), so 'k or more' is sf(k − 1); sf(10) is 11 or more (→ section 1, 'Nilufar’s panic number — the binomial', its last step; Mistakes people make)."}
 ]}
 ```
 
@@ -553,7 +555,7 @@ Every lender carries a number for "what this book will lose, on average": **expe
 - **LGD — loss given default** (*уровень потерь при дефолте*): the share of the exposure lost **if** it defaults, after recoveries (collateral, collections, sale of the debt). Unsecured consumer loans: often 50–80 %.
 - **EAD — exposure at default** (*сумма под риском на момент дефолта*): what is owed when it defaults — for an amortising loan, the outstanding principal.
 
-**EL = PD × LGD × EAD.** It is the expectation of section 1's random variable, summed over loans (expectations add, with or without independence).
+**EL = PD × LGD × EAD.** It is the expected value of each loan's loss (a random variable — Going further, 'Random variables, expected value and variance'), summed over loans (expectations add, with or without independence).
 
 A crude version for Nur, by grade, as of 2026-10-01: PD = the share of the grade's loans now in 90+; EAD = outstanding principal of the performing loans (not yet 90+); **LGD = 60 %, assumed**.
 
@@ -1420,13 +1422,13 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w06d1", "pass": 0.8, "questions": [
-  {"type": "single", "q": "45.1 % of all FPDs came through the app. What is the FPD rate of an app loan?", "options": ["1.70 % — P(FPD | app) = 41 / 2 411, a different denominator", "33.96 %", "0.58 %", "45.1 %"], "answer": 0, "explain": "P(app | FPD) answers 'where do defaults come from'; P(FPD | app) answers 'how risky is an app loan' (→ section 1, 'Conditional probability')."},
-  {"type": "single", "q": "What does the second line return?", "code": "X = stats.binom(400, 91 / 7099)\nX.sf(10)", "options": ["P(X ≥ 10)", "P(X = 10)", "P(X > 10), i.e. P(X ≥ 11)", "P(X ≤ 10)"], "answer": 2, "explain": "sf(k) is P(X > k); 'k or more' is sf(k − 1) — the off-by-one of the day (→ section 1, 'Bernoulli and binomial')."},
-  {"type": "number", "q": "A rule catches 95 % of frauds and flags 2 % of honest applicants; fraud is 0.5 % of applications. What share of flagged applications are fraud, in %?", "answer": 19.3, "tol": 0.3, "explain": "0.95 × 0.005 / (0.95 × 0.005 + 0.02 × 0.995) = 19.3 %: four flags in five are honest people — the base-rate trap (→ section 1, 'Bayes')."},
-  {"type": "multi", "q": "Which statements describe the Poisson distribution?", "options": ["If arrivals are Poisson, the gaps between them are exponential", "Its mean equals its variance (λ)", "It can never exceed a fixed n", "It is a symmetric bell for any λ", "It counts events in a fixed window arriving independently at a constant rate"], "answer": [0, 1, 4], "explain": "Applications per hour: λ = 1.44, variance 1.44 — the Poisson fingerprint; the minutes between them are exponential (→ section 1, 'Poisson', 'Exponential')."},
-  {"type": "single", "q": "For 400 independent loans the expected total loss grows like n. Its standard deviation grows like…", "options": ["n", "it stays the same", "n²", "√n"], "answer": 3, "explain": "Variances add, so the sd grows like √n — the total becomes relatively steadier, which is why a lender wants many small loans (→ section 1, 'Random variables')."},
-  {"type": "single", "q": "A normal fitted to approved loans' scores puts 6.2 % below 600; the data say 4.3 %. Why?", "options": ["The approval rule cut the left tail — a selected sample is not the applicant population", "Too few loans", "The sd used ddof=0", "Scores follow a Poisson"], "answer": 0, "explain": "Applicants' scores are close to normal; approved loans are a selection, and every model fitted on them inherits that (→ section 1, 'Normal')."},
-  {"type": "single", "q": "A reviewer re-runs your cell and gets 3.61 % instead of your 3.55 %. What is missing?", "code": "rng = np.random.default_rng()\nmonths = rng.binomial(400, 91 / 7099, size=100_000)\nnp.mean(months >= 10)", "options": ["A seed: np.random.default_rng(2026)", ">= should be >", "size must be at least 1 000 000", "months must be floats"], "answer": 0, "explain": "An unseeded simulation gives different numbers on every run; seed it, and check it against the formula where one exists (→ section 1, 'Simulation')."},
+  {"type": "single", "q": "45.1 % of all FPDs came through the app. What is the FPD rate of an app loan?", "options": ["1.70 % — P(FPD | app) = 41 / 2 411, a different denominator", "33.96 %", "0.58 %", "45.1 %"], "answer": 0, "explain": "P(app | FPD) answers 'where do defaults come from'; P(FPD | app) answers 'how risky is an app loan' (→ section 1, 'Among those who — conditional probability')."},
+  {"type": "single", "q": "What does the second line return?", "code": "X = stats.binom(400, 91 / 7099)\nX.sf(10)", "options": ["P(X ≥ 10)", "P(X = 10)", "P(X > 10), i.e. P(X ≥ 11)", "P(X ≤ 10)"], "answer": 2, "explain": "sf(k) is P(X > k); 'k or more' is sf(k − 1) — the off-by-one of the day (→ section 1, 'Nilufar’s panic number — the binomial', its last step)."},
+  {"type": "number", "q": "A rule catches 95 % of frauds and flags 2 % of honest applicants; fraud is 0.5 % of applications. What share of flagged applications are fraud, in %?", "answer": 19.3, "tol": 0.3, "explain": "0.95 × 0.005 / (0.95 × 0.005 + 0.02 × 0.995) = 19.3 %: four flags in five are honest people — the base-rate trap (→ section 1, 'The fraud-flag trap — Bayes’ rule')."},
+  {"type": "multi", "q": "Which statements describe the Poisson distribution?", "options": ["If arrivals are Poisson, the gaps between them are exponential", "Its mean equals its variance (λ)", "It can never exceed a fixed n", "It is a symmetric bell for any λ", "It counts events in a fixed window arriving independently at a constant rate"], "answer": [0, 1, 4], "explain": "Applications per hour: λ = 1.44, variance 1.44 — the Poisson fingerprint; the minutes between them are exponential (→ section 1, 'Counting per hour — the Poisson')."},
+  {"type": "single", "q": "For 400 independent loans the expected total loss grows like n. Its standard deviation grows like…", "options": ["n", "it stays the same", "n²", "√n"], "answer": 3, "explain": "Variances add, so the sd grows like √n — the total becomes relatively steadier, which is why a lender wants many small loans (→ section 1, 'Nilufar’s panic number — the binomial', the step where the book doubles; Going further, 'Random variables, expected value and variance')."},
+  {"type": "single", "q": "A normal fitted to approved loans' scores puts 6.2 % below 600; the data say 4.3 %. Why?", "options": ["The approval rule cut the left tail — a selected sample is not the applicant population", "Too few loans", "The sd used ddof=0", "Scores follow a Poisson"], "answer": 0, "explain": "Applicants' scores are close to normal; approved loans are a selection, and every model fitted on them inherits that (→ section 1, 'The bell — the normal distribution', its last step)."},
+  {"type": "single", "q": "A reviewer re-runs your cell and gets 3.61 % instead of your 3.55 %. What is missing?", "code": "rng = np.random.default_rng()\nmonths = rng.binomial(400, 91 / 7099, size=100_000)\nnp.mean(months >= 10)", "options": ["A seed: np.random.default_rng(2026)", ">= should be >", "size must be at least 1 000 000", "months must be floats"], "answer": 0, "explain": "An unseeded simulation gives different numbers on every run; seed it, and check it against the formula where one exists (→ section 1, 'Nilufar’s panic number — the binomial', the seed step; Going further, 'Simulation')."},
   {"type": "single", "q": "Company corner: why is the crude EL table's 'PD' a teaching simplification?", "options": ["It uses 90+ instead of 30+", "LGD should be 100 %", "It is a share of loans now 90+ that mixes loans of every age — a loan disbursed last month had no time to default — so it is neither a 12-month nor a lifetime PD", "EAD should be the original principal"], "answer": 2, "explain": "Real PDs come from scorecards and vintage / roll-rate models on a fixed horizon; the 60 % LGD is a guess too (→ Company corner)."}
 ]}
 ```

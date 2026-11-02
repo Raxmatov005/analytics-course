@@ -15,7 +15,7 @@ Every homework ends with a box. There are two kinds, sometimes both in one box:
 
 ## Sign in once
 
-The first time you tap Submit, the box asks you to **🔑 sign in**:
+The site asks you to sign in the first time you open it on a device. If you skipped that, the box asks when you tap Submit — **🔑 sign in**:
 
 1. Write your **name** and the **PIN** your mentor gave you.
 2. Tap **Sign in**. The box now says *Signed in as …*.
@@ -27,9 +27,13 @@ The course bot's *🔗 Connect this website* link still works too — it signs t
 
 > ⚠️ **Watch out.** A file over 5 MB will not go through the box. Send it as a zip to the course bot in **📤 Homework** instead.
 
+## When it is due
+
+The badge next to each Homework heading names the day it is due (*HW 1.1 — Due Day 3*): 23:59 Tashkent time on that day, and the menu shows the date. On time, full points are possible; one day late, ×0.8; later, ×0.5 ([the rules](progress.md)). Late is still better than never: always submit.
+
 ## What comes back
 
-Within a day your mentor replies in **📤 Homework**: what is right, what is wrong and **why**, how to fix it, and your points — they appear on the [progress board](progress.md). Fix what it says and submit again if you want the fix reviewed (you don't lose points for a second try).
+Within a day your mentor replies: what is right, what is wrong and **why**, how to fix it, and your points. The review appears on your **[My feedback](feedback.md)** page and in the hand-in box of the lesson, the bot tells you in **📤 Homework**, and the points appear on the [progress board](progress.md). Fix what it says and submit again if you want the fix reviewed (you don't lose points for a second try).
 
 ## Writing good answers
 

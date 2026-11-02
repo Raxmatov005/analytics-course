@@ -10,6 +10,8 @@
 - You learn the first-look toolkit (`head`, `shape`, `info`, `describe`, `dtypes`), filtering (`&`, `|`, `~`, `isin`, `between`, `str.contains`), new columns, `astype`, `to_datetime` and `.dt`, `value_counts`, `isna` / `fillna` / `dropna`, and writing results back (`to_csv`, `to_excel`).
 - Bekzod's notebook exists: `portfolio_summary(df)` returns the six tiles, `pd.cut` returns the buckets, and both match week 3 to the soum.
 
+**Homework:** nothing new today — HW 5.1 (Day 1's eight functions) is due tomorrow, Day 3, in Day 1's 📎 box.
+
 ---
 
 ## 1. Learn — one table, one variable
@@ -104,13 +106,17 @@ Other parameters you will need:
 | `decimal=","` | comma as the decimal mark | `"3,12"` → 3.12 |
 | `usecols=[…]` | load only these columns | 5 columns of 50 |
 | `nrows=1000` | load only the first rows | a peek at a huge file |
+| `thousands=" "` | a space between thousands | `"1 234 567"` → 1234567 |
+| `encoding="cp1251"` | a file saved by old Russian-Windows software | garbled Cyrillic (`Ð¢Ð°…`) means the wrong encoding |
+| `na_values=["n/a", "-"]` | more spellings of "blank" | `"n/a"` → `NaN` instead of a text column |
+| `dtype={"branch_code": str}` | keep a code as text | `"00123"` stays `"00123"`, not 123 |
 | `pd.read_excel(path, sheet_name="Loans")` | the same for Excel | week 4's workbook |
 
 **When you use it.**
 - At the top of every notebook: one `read_csv` per input file, with its `parse_dates`.
 - Whenever an id, a phone or a code must keep its leading `+` or `0`: `dtype=str`.
 
-> ⚠️ **Watch out.** A whole-number column with a single blank becomes `float64`, because `NaN` is a float — `monthly_income` prints as `3894708.0`. Run `dtypes` before you trust a column.
+> ⚠️ **Watch out.** A whole-number column with a single blank becomes `float64`, because `NaN` is a float — `monthly_income` prints as `3894708.0`. Run `dtypes` before you trust a column. To keep whole numbers *and* the blanks, ask for the nullable type: `dtype={"monthly_income": "Int64"}` (capital I) shows `3894708` and `<NA>`; `astype(int)` on a column with `NaN` raises an error instead.
 
 **Your turn.** Read only three columns of `customers_dirty.csv` and keep the phone as text.
 
@@ -171,7 +177,7 @@ loans.describe()  # numeric columns: count, mean, std, min, quartiles, max
 | 75% | 34 712 500 | 7 552 471 | 0 |
 | max | 599 060 000 | 586 068 714 | 919 |
 
-(three of the columns, `std` and `min` left out.) The mean principal is 51.7 m but the median is 5.79 m: most loans are small and a few are very large — week 3's two books in one line. Three loans in four have `dpd = 0`; the worst is 919 days late.
+(three of the columns, `std` and `min` left out.) The mean principal is 51.7 m but the median is 5.79 m: most loans are small and a few are very large — week 3's two books in one line. The 75 % quartile of `dpd` is still 0, so at least three loans in four are not late — in fact 7 429 of 7 828, 95 %; the worst is 919 days late.
 
 `describe(include="object")` does the same for text: number of distinct values, the most common one and its count. `loans["product"].nunique()` is `COUNT(DISTINCT product)` — 5.
 
@@ -291,7 +297,7 @@ sept        = loans[(loans["disbursed_at"] >= "2026-09-01") & (loans["disbursed_
 - Every `WHERE`: a status, a period, a product list, a text search.
 - `mask.sum()` alone, when the question is "how many?" — `True` counts as 1.
 
-> ⚠️ **Watch out.** Write `&`, `|`, `~` — never `and`, `or`, `not`, which raise `ValueError: The truth value of a Series is ambiguous`. Put **brackets round every condition**: `&` binds tighter than `>`, so `loans["dpd"] > 0 & loans["status"] == "active"` is read wrongly. And `between` includes both ends — on a column with times, use `>=` and `<` (the half-open rule).
+> ⚠️ **Watch out.** Write `&`, `|`, `~` — never `and`, `or`, `not`, which raise `ValueError: The truth value of a Series is ambiguous`. Put **brackets round every condition**: `&` binds tighter than `>`, so `loans["dpd"] > 0 & loans["status"] == "active"` is read wrongly. A chained comparison fails the same way: `0 < loans["dpd"] <= 30` hides an `and` — write `loans["dpd"].between(1, 30)` or two masks. And `between` includes both ends — on a column with times, use `>=` and `<` (the half-open rule).
 
 **Your turn.**
 
@@ -380,7 +386,7 @@ loans.sort_values(["product", "dpd"], ascending=[True, False])[["product", "dpd"
 - Rankings and top-n lists: the largest balances, the latest loans.
 - A natural order before printing: months, buckets (`sort_index()` sorts by the index instead).
 
-> ⚠️ **Watch out.** `sort_values` returns a **new** frame. `loans.sort_values("dpd")` on its own line changes nothing in `loans` — keep the result: `top = loans.sort_values(…)`.
+> ⚠️ **Watch out.** `sort_values` returns a **new** frame. `loans.sort_values("dpd")` on its own line changes nothing in `loans` — keep the result: `top = loans.sort_values(…)`. `inplace=True` is no shortcut: it changes the frame and returns `None`, so `loans = loans.sort_values("dpd", inplace=True)` leaves you with no table at all.
 
 **Your turn.** The `loan_id` of the Auto loan with the largest outstanding.
 
@@ -575,6 +581,14 @@ print(len(cust.dropna(subset=["monthly_income"])))
 
 ```task
 {"id": "w05d2-l10", "kind": "python", "starter": "import pandas as pd\ncu = pd.read_csv(\"../excel/customers_dirty.csv\")\n\n# your code: the number of non-blank monthly_income values (two ways: count() and notna().sum())\n", "answer": 5684, "dp": 0, "hint": "cu[\"monthly_income\"].count() or cu[\"monthly_income\"].notna().sum().", "model": "print(cu[\"monthly_income\"].count(), cu[\"monthly_income\"].notna().sum())     # 5684 5684\n\n6 040 customers − 356 blanks = 5 684."}
+```
+
+> ⚠️ **Watch out.** A `NaN` fails **every** comparison: for a blank income both `inc > 10_000_000` and `inc <= 10_000_000` are `False`. Split the customers into "high" and "not high" with two masks and the 356 blanks fall out of both groups — the counts add up to 5 684, not 6 040. It is week 2's NULL in a `WHERE`; make the third group explicit with `inc.isna()`. And `sum()` of a column that is entirely `NaN` returns 0, not `NaN` — `sum(min_count=1)` keeps the gap visible.
+
+**Your turn.** Check it on the customers file.
+
+```task
+{"id": "w05d2-l18", "kind": "python", "starter": "import pandas as pd\ncu = pd.read_csv(\"../excel/customers_dirty.csv\")\ninc = cu[\"monthly_income\"]\n\n# your code: count the customers with inc > 10_000_000, then those with inc <= 10_000_000;\n# print both, their sum, and how many of the 6 040 customers neither mask counts\n", "answer": 356, "dp": 0, "hint": "(inc > 10_000_000).sum() and (inc <= 10_000_000).sum(); then len(inc) minus their sum.", "model": "hi = (inc > 10_000_000).sum()\nlo = (inc <= 10_000_000).sum()\nprint(hi, lo, hi + lo, len(inc) - (hi + lo))     # 2205 3479 5684 356\n\nA NaN fails every comparison, so the 356 blank incomes are in neither group: week 2's NULL falling out of both sides of a WHERE. Count them on purpose with inc.isna().sum()."}
 ```
 
 ### pd.cut — buckets without a CASE
@@ -788,7 +802,7 @@ Each task's editor already loads `loans_status.csv` with `parse_dates` (P12 load
 **P3.** *(first look)* From `describe()` alone: median principal, mean principal, the 75th percentile of `dpd`, max `dpd`. What does the gap between mean and median tell you? Type the median principal.
 
 ```task
-{"id": "w05d2-p2", "kind": "number", "answer": 5790000, "dp": 0, "unit": "soum", "hint": "The median is the 50% row of loans[\"principal\"].describe().", "model": "Median 5 790 000 · mean 51 709 668 · 75th percentile of dpd 0 · max dpd 919. A mean nine times the median is a long right tail: a few SME/Auto loans carry the money (week 3's two-books finding). 75 % of loans have dpd = 0, so the 399 late loans are the top 5 %."}
+{"id": "w05d2-p2", "kind": "number", "answer": 5790000, "dp": 0, "unit": "soum", "hint": "The median is the 50% row of loans[\"principal\"].describe().", "model": "Median 5 790 000 · mean 51 709 668 · 75th percentile of dpd 0 · max dpd 919. A mean nine times the median is a long right tail: a few SME/Auto loans carry the money (week 3's two-books finding). At least 75 % of loans have dpd = 0 (in fact 95 %), so the 399 late loans are the top 5 %."}
 ```
 
 **P4.** *(selecting columns)* Select the two money columns, `principal` and `outstanding`, as a DataFrame and print their sums in one call. How much was lent in total?

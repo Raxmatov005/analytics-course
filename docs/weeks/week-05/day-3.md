@@ -212,7 +212,9 @@ cust["seg_median"] = cust.groupby("segment")["monthly_income"].transform("median
 - Shares of a group total, a difference from the group average, a flag "above my segment".
 - Ask "how many rows do I want back?" — the frame's count → `transform`; one per group → `agg`.
 
-> ⚠️ **Watch out.** Assigning an `agg` result as a column (`pay["t"] = pay.groupby("loan_id")["amount"].sum()`) does not repeat it per row: pandas aligns it on the index, so most rows get NaN or a wrong loan's total. A per-row column needs `transform`.
+> ⚠️ **Watch out.** Assigning an `agg` result as a column (`pay["t"] = pay.groupby("loan_id")["amount"].sum()`) does not repeat it per row: pandas aligns it on the index, so most rows get NaN or a wrong loan's total. A per-row column needs `transform`. The same alignment happens in arithmetic: two Series are added **label by label**, so a filtered Series plus a full one gives NaN on every label that is only in one of them. Do arithmetic on columns of one frame.
+
+> ⚠️ **Watch out.** A share is honest only when the numerator and the denominator see the **same rows**. `pay.loc[pay["paid_at"] <= AS_OF, "amount"].sum() / pay["amount"].sum()` divides a cut sum by an uncut one; a group's share divides by *the group's* total (`transform("sum")`), not by the grand total. Week 4's pivot rule, in pandas.
 
 **Your turn.** How many loans have more outstanding than the average loan of their own product?
 
@@ -363,7 +365,7 @@ Every one of the 7 828 loans found its product's rate, and the average loan cost
 - Every merge: name the key on purpose, never rely on pandas finding a shared column.
 - `suffixes=` whenever both frames carry the same descriptive columns.
 
-> ⚠️ **Watch out.** A key that looks the same but has a different type does not match: `loan_id` as `int64` on one side and as text on the other raises `ValueError: You are trying to merge on int64 and object columns`. Check `dtypes` and convert one side before the merge.
+> ⚠️ **Watch out.** A key that looks the same but has a different type does not match: `loan_id` as `int64` on one side and as text on the other raises `ValueError: You are trying to merge on int64 and object columns`. Check `dtypes` and convert one side before the merge. And pandas **matches a NaN key to a NaN key** — SQL never joins NULL to NULL — so two tables with blank keys pair every blank with every blank. Count `key.isna().sum()` on both sides first, and drop or fill the blank keys on purpose.
 
 **Your turn.** The average annual rate over all 7 828 loans, in % with two decimals.
 
@@ -441,7 +443,7 @@ len(a), len(b), len(u)
 - Twelve monthly files into one frame; this month's extract under last month's.
 - Add a `source` column first, so every row remembers its file.
 
-> ⚠️ **Watch out.** A column spelt differently in one frame (`Amount` vs `amount`) does not raise an error: the result gets **two** columns, each NaN in the other frame's rows. Check `set(a.columns) == set(b.columns)` before every concat.
+> ⚠️ **Watch out.** A column spelt differently in one frame (`Amount` vs `amount`) does not raise an error: the result gets **two** columns, each NaN in the other frame's rows. Check `set(a.columns) == set(b.columns)` before every concat. And without `ignore_index=True` both halves keep their old labels, so a label can appear twice: `u.loc[0]` then returns two rows.
 
 **Your turn.**
 
@@ -525,7 +527,7 @@ Ten raw spellings — 180 rows outside the five clean ones — collapse into fiv
 - Any text key before you group or merge on it: spaces and case split one group into several.
 - Names for a report: `.str.strip().str.title()`.
 
-> ⚠️ **Watch out.** Chain in the order of the change log: strip → lower → replace. Replacing `"bank transfer"` before lowering misses `"Bank Transfer"`; lowering before stripping is fine, but `"cash "` with its space still is not `"cash"` until you strip.
+> ⚠️ **Watch out.** Chain in the order of the change log: strip → lower → replace. Replacing `"bank transfer"` before lowering misses `"Bank Transfer"`; lowering before stripping is fine, but `"cash "` with its space still is not `"cash"` until you strip. And `.str.contains()` reads its pattern as a **regular expression**: `"+998"` raises an error and `"."` matches any character — add `regex=False` for plain text. On a column with blanks it returns NaN for them, which a mask cannot use: add `na=False`.
 
 **Your turn.** How many raw payment rows have a method that is not one of the five clean spellings?
 
@@ -565,6 +567,14 @@ Parsing finds 0 bad values — every birth date is a valid ISO date — but the 
 |---|---|
 | `"raise"` (default) | stops with an error |
 | `"coerce"` | NaT — count them with `.isna().sum()` |
+
+**Day first or month first.** `pd.to_datetime("03/04/2026")` reads **month first** — 4 March, the US way — and gives no warning. For files from Uzbekistan or Russia, say how to read the text: `format="%d.%m.%Y"` for `14.03.2026` (the safest: a value that does not fit becomes an error, or NaT with `coerce`) or `dayfirst=True`. A timestamp from a server is often in **UTC**: 23:30 UTC on 30 September is 04:30 on 1 October in Tashkent (UTC+5) — another day and another month. Convert before you cut by date: `col.dt.tz_localize("UTC").dt.tz_convert("Asia/Tashkent")`.
+
+**Your turn.** What does `pd.to_datetime("03/04/2026", dayfirst=True)` return?
+
+```task
+{"id": "w05d3-l23", "kind": "choice", "options": ["2026-04-03 — the 3rd of April", "2026-03-04 — the 4th of March", "an error: the format is ambiguous", "NaT"], "answer": 0, "explain": "dayfirst=True reads 03 as the day and 04 as the month. Without it pandas reads month first and returns 4 March — a different date, with no warning. format=\"%d/%m/%Y\" says the same thing and refuses any value that does not fit."}
+```
 
 `.where(cond)` keeps the values where the condition holds and blanks the rest; `np.where(cond, a, b)` is the two-sided `IF`.
 
@@ -658,7 +668,7 @@ bands.value_counts(dropna=False).sort_index()
 | first edge | must be *below* the smallest value | `-1` for DPD, or `dpd = 0` becomes NaN |
 | `np.inf` | an open top | `90+`, `20m+` |
 
-`pd.qcut(col, 10)` cuts into ten groups of equal size (deciles) — week 3's `NTILE(10)`.
+`pd.qcut(col, 10)` cuts into ten groups of equal size (deciles) — week 3's `NTILE(10)`. On a column full of equal values it fails: `dpd` is 0 for 95 % of loans, so most decile edges are 0 and `qcut` raises `ValueError: Bin edges must be unique`. Pass `duplicates="drop"` (fewer groups), or cut `col.rank(method="first")`, which breaks the ties by row order.
 
 **When you use it.**
 - Any band defined by edges: DPD buckets, income bands, ticket sizes.
@@ -704,7 +714,7 @@ The box shows `(True, True)`: both ways rebuild `total_due` on all 92 193 instal
 - Vectorised first, always, when a spelling exists.
 - `apply` for a one-off function too twisted for arithmetic; if you wrote `axis=1`, ask whether column arithmetic would do.
 
-> ⚠️ **Watch out.** `apply(axis=1)` feels natural after yesterday's loops, and it is the slowest line in most beginner notebooks. On ten million rows it is the difference between a second and an hour.
+> ⚠️ **Watch out.** `apply(axis=1)` feels natural after yesterday's loops, and it is the slowest line in most beginner notebooks. On ten million rows it is the difference between a second and an hour. `for i, row in df.iterrows():` is the same loop again, slower still — and changing `row` inside it does not change `df`.
 
 **Your turn.**
 
@@ -744,6 +754,7 @@ Four facts proven in four lines: 52 850 payments after the dedup, 5 methods, 92 
 **When you use it.**
 - After every step whose result you know — then a Monday run either finishes or names the step that broke.
 - Before you hand a number to anyone: the assert is the proof.
+- Start every cleaning function with `df = df.copy()`. Without it, `df["col"] = …` inside the function also changes the frame the caller passed in, and running the notebook twice cleans already-cleaned data.
 
 > ⚠️ **Watch out.** An assert on a float never uses `==`: `assert abs(par30 - 0.0312) < 0.0001`. Two floats computed in different orders differ in the last digits.
 
@@ -841,7 +852,7 @@ Reproduce week 4's counts step by step. Each step names the concept from section
 **Step 2 — `duplicated` with `subset=`, because "the same person" is whatever the key says.** Prove the duplicates three ways: `duplicated(subset=[normalised first, last, birth_date])`, `subset=["phone", "birth_date"]`, `subset=["phone"]`.
 
 ```task
-{"id": "w05d3-d2", "kind": "python", "starter": "import pandas as pd\nimport numpy as np\nc = pd.read_csv(\"../excel/customers_dirty.csv\")\n\n# your code\n", "answer": 40, "dp": 0, "hint": "The check looks for the extras on phone + birth_date. duplicated(subset=[...]).sum() counts the later copies.", "model": "c[\"fn\"] = c.first_name.str.strip().str.lower(); c[\"ln\"] = c.last_name.str.strip().str.lower()\nprint(c.duplicated(subset=[\"fn\", \"ln\", \"birth_date\"]).sum())                  # 42\nprint(c.duplicated(subset=[\"first_name\", \"last_name\", \"birth_date\"]).sum())  # 2 — raw names hide 40\nprint(c.duplicated(subset=[\"phone\", \"birth_date\"]).sum())                     # 40\nprint(c.duplicated(subset=[\"phone\"]).sum())                                    # 43\n\nThe name key finds 42 — the 40 plus two namesakes (823/1197 Nodir Nazarov, 2460/5562 Eldor Karimov: different people). phone + birth_date finds exactly ids 6001–6040 (6001 MALIKA jalilova ↔ 4516 Malika Jalilova). phone alone: 43 — three family numbers. All 40 duplicates were registered after their original, so sort_values(\"registered_at\") + keep=\"first\" keeps the originals; \"registered in 2026\" falls 955 → 945."}
+{"id": "w05d3-d2", "kind": "python", "starter": "import pandas as pd\nimport numpy as np\nc = pd.read_csv(\"../excel/customers_dirty.csv\")\n\n# your code\n", "answer": 40, "dp": 0, "hint": "The check looks for the extras on phone + birth_date. duplicated(subset=[...]).sum() counts the later copies.", "model": "c[\"fn\"] = c.first_name.str.strip().str.lower(); c[\"ln\"] = c.last_name.str.strip().str.lower()\nprint(c.duplicated(subset=[\"fn\", \"ln\", \"birth_date\"]).sum())                  # 42\nprint(c.duplicated(subset=[\"first_name\", \"last_name\", \"birth_date\"]).sum())  # 2 — raw names hide 40\nprint(c.duplicated(subset=[\"phone\", \"birth_date\"]).sum())                     # 40\nprint(c.duplicated(subset=[\"phone\"]).sum())                                    # 43\n\nThe name key finds 42 — the 40 plus two namesakes (823/1197 Nodir Nazarov, 2460/5562 Eldor Karimov: different people). phone + birth_date finds exactly ids 6001–6040 (6001 MALIKA jalilova ↔ 4516 Malika Jalilova). phone alone: 43 — three family numbers. All 40 duplicates were registered after their original, so sort_values(\"registered_at\") + keep=\"first\" keeps the originals; \"registered since 2026-01-01\" falls 955 → 945."}
 ```
 
 **Step 3 — `to_datetime(errors="coerce")` plus the business rule, because parsing alone finds nothing.** Count the NaT, then apply the rule.

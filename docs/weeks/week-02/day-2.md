@@ -86,9 +86,9 @@ WHERE status = 'active';
 
 404.8 bn UZS lent in total; 297.0 bn of it sits on loans that are still active.
 
-**When you use it.** "How much": the amount lent, the amount received, the amount overdue. For "how many", use `COUNT`.
+**When you use it.** "How much": the amount lent, the amount received, the amount overdue. For "how many", use `COUNT`. On SQL Server, `SUM` of an `INT` column is an `INT` too and stops with *Arithmetic overflow* above about 2.1 bn — our 404.8 bn needs `SUM(CAST(principal AS BIGINT))`, or a `BIGINT` column as in Week 1's design table.
 
-> ⚠️ **Watch out.** `SUM` over no rows returns NULL, not 0: `SELECT SUM(principal) FROM loans WHERE status = 'frozen'` gives NULL. Day 4's `COALESCE` turns it into 0.
+> ⚠️ **Watch out.** `SUM` over no rows returns NULL, not 0: `SELECT SUM(principal) FROM loans WHERE status = 'frozen'` gives NULL. Day 4's `COALESCE` turns it into 0. `COUNT` over no rows is 0; `AVG`, `MIN` and `MAX` are NULL like `SUM`. And with a `GROUP BY`, no rows means no groups at all — an empty result, not a row of zeros.
 
 **Your turn.** How much money arrived in payments from 1 January to 30 September 2026? Use `paid_at >= '2026-01-01' AND paid_at < '2026-10-01'`.
 
@@ -117,6 +117,8 @@ The average loan is 51.7 m UZS. Divided by hand, two whole numbers lose the .86:
 **When you use it.** Average ticket, average term, average days late. Put the count next to the average: an average over 3 loans and one over 3 000 look the same on a slide.
 
 > ⚠️ **Watch out.** Whole number ÷ whole number = whole number. `SUM(term_months) / COUNT(*)` returns 11; the real average term is 11.78 months. Put `1.0 *` first, or use `AVG`. Day 3 comes back to division.
+
+> ⚠️ **Watch out.** Never average averages. Micro has 2 669 loans averaging 2.7 m, SME 781 loans averaging 308.7 m. The average of all 3 450 loans is not (2.7 + 308.7) / 2 = 155.7 m — that gives the small group as much weight as the big one. Weight each average by its count: (2 669 × 2.7 + 781 × 308.7) / 3 450 ≈ 72.0 m. In SQL, take `AVG` over the loans themselves, never over a table of averages.
 
 **Your turn.** What does `SELECT SUM(term_months) / COUNT(*) FROM loans` return on SQLite?
 
@@ -189,13 +191,13 @@ FROM loans
 GROUP BY risk_grade;              -- A 1 821 · B 3 404 · C 2 264 · D 339
 ```
 
-Four rows, one per grade. They add up to 7 828 — check this sum on every grouped result.
+Four rows, one per grade. They add up to 7 828 — check this sum on every grouped result. An empty cell forms a group too: all the NULLs of the column fall into one row with an empty label. It is a real group — keep it, or the groups no longer add up to the total.
 
 The rule behind most beginner errors: **every column in `SELECT` is either inside an aggregate or listed in `GROUP BY`.**
 
 **When you use it.** "Per X", "by X", "for each X": loans per grade, payments per method, actions per collector.
 
-> ⚠️ **Watch out.** `SELECT risk_grade, loan_id, COUNT(*) … GROUP BY risk_grade` asks for one `loan_id` per grade — which one, out of 3 404? SQL Server refuses the query ("not contained in an aggregate function or the GROUP BY clause"). SQLite silently picks one and runs. Never rely on it.
+> ⚠️ **Watch out.** `SELECT risk_grade, loan_id, COUNT(*) … GROUP BY risk_grade` asks for one `loan_id` per grade — which one, out of 3 404? SQL Server refuses the query ("not contained in an aggregate function or the GROUP BY clause"). SQLite silently picks one of them — whichever row it happens to meet — and runs. Never rely on it.
 
 **Your turn.**
 
@@ -396,12 +398,14 @@ ORDER BY      sort
 LIMIT         cut
 ```
 
+Two steps the picture leaves out: `DISTINCT` runs right after `SELECT` (it removes repeated result rows before the sort), and Week 3's window functions run between `HAVING` and `SELECT`.
+
 **How to read it.** Each clause sees only what the clauses before it produced:
 
 | Because … | you cannot write | write instead |
 |---|---|---|
 | `WHERE` runs before `GROUP BY` | `WHERE COUNT(*) > 300` | `HAVING COUNT(*) > 300` |
-| `WHERE` runs before `SELECT` | `WHERE active_loans > 300` (the alias does not exist yet) | repeat the expression, or use `HAVING` |
+| `WHERE` runs before `SELECT` | `WHERE active_loans > 300` (the alias does not exist yet) | repeat the expression, or use `HAVING`. SQLite does accept the alias of a *plain* column in `WHERE` (`principal / 1000000 AS m … WHERE m > 500`); SQL Server never does, so do not rely on it |
 | `GROUP BY` runs before `SELECT` | `GROUP BY month` on SQL Server | repeat `strftime('%Y-%m', …)` in `GROUP BY` (SQLite accepts the alias) |
 | `ORDER BY` runs after `SELECT` | — | `ORDER BY active_loans` works everywhere |
 
@@ -439,6 +443,8 @@ SELECT customer_id FROM applications;  -- 5 453 rows
 | `INTERSECT` | rows in both | applicants who are also borrowers → 4 335 |
 
 **When you use it.** `UNION ALL` stacks "this month" and "last month" blocks into one table for a chart. `EXCEPT` is an anti-join written as sets.
+
+> ⚠️ **Watch out.** Set operators match columns by **position**, not by name. The result takes the column names of the first query; if the second query lists its columns in another order (`SELECT loans, month` under `SELECT month, loans`), the values land under the wrong header — no error when the types are compatible. Write both column lists in the same order.
 
 > 💡 **Key idea.** Default to `UNION ALL`. `UNION` must sort to remove duplicates, and it quietly merges rows that are legitimately identical — two months with the same count become one row.
 
@@ -827,7 +833,7 @@ No new homework. **HW 2.1** (Bekzod's loan book) is due tomorrow — with today'
 ```check
 {"id": "w02d2-sc", "questions": [
   {"type": "single", "q": "'Active loans per branch, only branches with more than 300 of them.' Where does each condition go?", "options": ["status = 'active' in WHERE, COUNT(*) > 300 in HAVING", "Both in WHERE", "Both in HAVING", "status = 'active' in HAVING, COUNT(*) > 300 in WHERE"], "answer": 0, "explain": "WHERE filters rows before grouping; HAVING filters groups after the counts exist (→ section 1, WHERE vs HAVING)."},
-  {"type": "single", "q": "What is wrong with `SELECT p.name, l.loan_id, COUNT(*) … GROUP BY p.name`?", "options": ["Nothing", "loan_id is neither aggregated nor grouped: SQL Server refuses it, SQLite picks one loan_id at random", "COUNT(*) cannot be used with GROUP BY", "p.name must be inside an aggregate"], "answer": 1, "explain": "Every SELECT column is either inside an aggregate or in GROUP BY (→ section 1, GROUP BY one column)."},
+  {"type": "single", "q": "What is wrong with `SELECT p.name, l.loan_id, COUNT(*) … GROUP BY p.name`?", "options": ["Nothing", "loan_id is neither aggregated nor grouped: SQL Server refuses it, SQLite quietly picks one of the loan_ids", "COUNT(*) cannot be used with GROUP BY", "p.name must be inside an aggregate"], "answer": 1, "explain": "Every SELECT column is either inside an aggregate or in GROUP BY (→ section 1, GROUP BY one column)."},
   {"type": "single", "q": "You sum `l.principal` over `loans JOIN installments`. Which quick check would have shown that the sum is wrong?", "options": ["COUNT(*) next to COUNT(DISTINCT l.loan_id) — they differ", "MAX(principal) next to MIN(principal)", "Running the query twice", "ORDER BY the sum"], "answer": 0, "explain": "More rows than loans means each principal is counted several times; aggregate loan columns over loans alone (→ section 1, Aggregating over a join; P15)."},
   {"type": "multi", "q": "Which of these are aggregate functions?", "options": ["COUNT", "SUM", "AVG", "ROUND", "MAX", "LOWER"], "answer": [0, 1, 2, 4], "explain": "Aggregates turn many rows into one value: COUNT, SUM, AVG, MIN, MAX. ROUND and LOWER change one value per row — Wednesday's functions (→ section 1, COUNT to MIN and MAX)."}
 ]}

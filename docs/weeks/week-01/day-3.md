@@ -61,7 +61,7 @@ SELECT COUNT(*) AS total_rows, COUNT(DISTINCT loan_id) AS different_ids FROM loa
 **Your turn.** `payments` has 52 875 rows and 52 850 different `installment_id`s. Can `payments.installment_id` be its primary key?
 
 ```task
-{"id": "w01d3-l1", "kind": "choice", "options": ["No — 25 values repeat, because some instalments were paid in two parts", "Yes — almost every value is different", "Yes — every payment has an instalment", "No — a primary key cannot be a number"], "answer": 0, "explain": "A primary key allows no repeats at all. 52 875 − 52 850 = 25 instalments received a second payment. The primary key of payments is payment_id."}
+{"id": "w01d3-l1", "kind": "choice", "options": ["No — 25 values repeat: 25 instalments have two payment rows", "Yes — almost every value is different", "Yes — every payment has an instalment", "No — a primary key cannot be a number"], "answer": 0, "explain": "A primary key allows no repeats at all. 52 875 − 52 850 = 25 instalments have a second payment row (on Week 3 · Day 2 you find out it is the same payment entered twice). One repeat is enough to rule a column out. The primary key of payments is payment_id."}
 ```
 
 ### NOT NULL — a value must be there
@@ -88,7 +88,7 @@ INSERT INTO my_keys_demo (customer_id, phone) VALUES (2, '+998901112233');
 
 ### UNIQUE — no two rows share a value
 
-**What it is.** **UNIQUE** is a constraint on a column that is not the primary key: no two rows may hold the same value in it. A primary key is UNIQUE and NOT NULL at once.
+**What it is.** **UNIQUE** is a constraint on a column that is not the primary key: no two rows may hold the same value in it. A primary key is meant to be UNIQUE and NOT NULL at once — SQL Server and PostgreSQL enforce both; SQLite does only for `INTEGER PRIMARY KEY`, so on any other primary key write `NOT NULL` yourself (the Watch out above).
 
 **How to write it.** After the column's type: `phone TEXT UNIQUE`.
 
@@ -103,7 +103,7 @@ INSERT INTO my_keys_demo VALUES (4, 'Dilnoza', '+998905550000');
 
 **When you use it.** For a second identifier that must not repeat: a tax number, a contract number, `loans.application_id` (one application gives at most one loan).
 
-> ⚠️ **Watch out.** Put UNIQUE only on what is truly unique in the business. In `customers`, 6 040 rows hold 5 997 different phones: families share a number. A UNIQUE phone would refuse real people. (Some of the 43 repeats are not families — Thursday's case.)
+> ⚠️ **Watch out.** Put UNIQUE only on what is truly unique in the business. In `customers`, 6 040 rows hold 5 997 different phones: families share a number. A UNIQUE phone would refuse real people. (Some of the 43 repeats are not families — Thursday's case.) Empty cells are a special case: in SQLite and PostgreSQL a UNIQUE column accepts any number of NULLs, SQL Server only one.
 
 **Your turn.** Which constraint enforces the rule "one application gives at most one loan"?
 
@@ -434,6 +434,8 @@ Types by engine:
 | text | `TEXT` | `NVARCHAR(100)` | `VARCHAR(100)` |
 | date / date-time | `TEXT` (`YYYY-MM-DD`) | `DATE` / `DATETIME2` | `DATE` / `TIMESTAMP` |
 | auto-numbered id | `INTEGER PRIMARY KEY` | `INT IDENTITY(1,1)` | `GENERATED … AS IDENTITY` |
+
+SQLite treats a column's type as a preference, not a rule: it stores the text `'abc'` in an `INTEGER` column without a word, where SQL Server and PostgreSQL refuse it. One more reason to look at the data, not only at the design.
 
 **When you use it.** To keep a result, a list or a log of your own: a lookup table, a list of loans to watch, a design to test.
 

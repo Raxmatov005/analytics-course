@@ -16,7 +16,8 @@
      ALPy.editor(container, {id, starter, placeholder}) → {get(), set(code), run(), el}
    "numbers" holds every number in what was printed and in the value (the tokens of scripts/check.py's Bag).
 Blocks that are not meant to run (terminal commands, code with … placeholders, a list of methods) stay as they are,
-with a line that says why. Each box is an "al-block" and gets "al-done" after a run without an error ("al:change").
+with a line that says why. A box gets "al-done" after a run without an error ("al:change"); only an editor box (a task) is an
+"al-block" that counts toward its section: the examples on a page are there to run, like the SQL examples, not to be ticked off.
 Edits are kept in localStorage "al.py" (code → per page and block, ed → per editor id, done → blocks that ran). */
 (function () {
   var BASE = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
@@ -380,17 +381,18 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
     if (s === '' || s === '-' || isNaN(Number(s))) return null;
     return Number(s);
   }
-  /* scripts/check.py's Bag: "7 828", "3.12%", "-0.5"; a token like "7828, 13" (a tuple) also gives 7828 and 13 */
+  /* scripts/check.py's Bag: "7 828", "3.12%", "-0.5"; a token like "7828, 13" (a tuple) also gives 7828 and 13, and
+     "246 159.0" gives 246159, 246 and 159.0 */
   function numbers(text) {
     var out = [];
     (String(text || '').match(/-?\d[\d   ,]*\.?\d*%?/g) || []).forEach(function (tok) {
       var n = toNum(tok);
       if (n !== null) out.push(n);
       var parts = tok.replace(/%$/, '').split(/[,\s  ]+/).filter(Boolean);
-      // a gap of two spaces, ", " or a group that is not 3 digits: separate numbers (table columns, a tuple), not one number
-      if (parts.length > 1 && (/,\s|\s\s/.test(tok) || parts.slice(1).some(function (p) { return p.replace(/\..*$/, '').length !== 3; }))) {
-        parts.forEach(function (p) { var k = toNum(p); if (k !== null) out.push(k); });
-      }
+      // a token of several groups gives both readings, the joined number and each group: print(a, b) separates with one
+      // space, so "246 159.0" is 246 and 159.0 as often as "7 828" is one number (audit 2026-11-02: W5D2 P8 printed
+      // the right median 159.0 after the mean and was told the number was not in its output)
+      if (parts.length > 1) parts.forEach(function (p) { var k = toNum(p); if (k !== null) out.push(k); });
     });
     return out;
   }
@@ -497,7 +499,7 @@ Edits are kept in localStorage "al.py" (code → per page and block, ed → per 
   /* one box: code, ▶ Run, the output. o = {code, saved, onSave(text|null), least, placeholder, label, tip, page} */
   function box(o) {
     var el = document.createElement('div');
-    el.className = 'py-box al-block' + (o.page ? ' py-page' : ' py-ed');
+    el.className = 'py-box' + (o.page ? ' py-page' : ' py-ed al-block');   // an example on the page is not a task: it does not hold the day back (2026-11-02)
     el.innerHTML = '<div class="sq-top"><span class="sq-lang">' + esc(o.label) + '</span><span class="sq-tip">' + esc(o.tip) + '</span>' +
       '<span class="py-ok" title="' + T('ran without an error', 'выполнено без ошибок') + '">✓</span>' +
       '<button type="button" class="sq-reset" hidden>' + T('Reset', 'Вернуть') + '</button></div>' +

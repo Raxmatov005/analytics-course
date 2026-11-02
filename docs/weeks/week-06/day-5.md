@@ -65,7 +65,7 @@ One sentence of this A0 write-up would lose points — tap it:
 - **Data.** `loans` — one row per loan (7 828), grouped by product (`code`).
 - **Do.** For each of the five products: n, mean, sd (ddof = 1), the 95 % t interval, and the half-width as % of the mean.
 - **Answer.** Which product's average do you know least precisely, and why — n or sd? In the box: that product's half-width as % of its mean, to 2 decimals.
-- **Taught in.** Day 2, "Confidence interval for a mean — t, not z".
+- **Taught in.** Day 2, story "A net for the average — the t interval"; the Python in Going further, "Confidence interval for a mean — t, not z".
 
 ```task
 {"id": "w06d5-a1", "kind": "number", "answer": 4.46, "dp": 2, "unit": "% of the mean (AUTO half-width)", "hint": "Half-width = t(0.975, n − 1) × s / √n, with s from ddof = 1; divide by the mean. Day 2, 'Confidence interval for a mean'."}
@@ -102,7 +102,7 @@ a1 = pd.DataFrame(rows, columns=["product", "n", "mean", "sd", "ci_lo", "ci_hi",
 - **Data.** `apps` — one row per application; keep the **decided** ones (status ≠ `cancelled`, 12 183 rows).
 - **Do.** Approved = status starting with `approved`. Per channel: approved, decided, the rate and its Wilson 95 % interval.
 - **Answer.** Do the app and branch intervals overlap, and what does that say about the gap? In the box: the app's lower Wilson limit, in % to 2 decimals.
-- **Taught in.** Day 2, "The Wilson interval — the right default for a rate" and the Worked example.
+- **Taught in.** Day 2, story "A net for a rate — Wald breaks, Wilson holds" and the Worked example; the Python in Going further, "The Wilson interval — the right default for a rate".
 
 ```task
 {"id": "w06d5-a2", "kind": "number", "answer": 66.79, "dp": 2, "unit": "% (lower Wilson limit, app)", "hint": "Denominator: decided applications only (status ≠ cancelled); numerator: status starting with 'approved'. Day 2, worked example."}
@@ -136,7 +136,7 @@ a2[["wilson_lo", "wilson_hi"]] = [proportion_confint(k, n, method="wilson") for 
 - **Data.** `x` — the 52 850 clean payments; late = paid after the due date. The segment is the customer's (`customers.segment`, reached through `loans.customer_id`).
 - **Do.** A two-proportion z-test (or χ² on the 2 × 2), sme vs mass, on payments. Then the loan-level check: any late payment per loan, same test.
 - **Answer.** p, the difference in points, the relative risk — and one sentence on what the grain (payments, not loans) does to the test. In the box: z on payments, sme first, to 2 decimals.
-- **Taught in.** Day 3, "Test for two proportions — z", and Day 3 P12 (payments vs loans).
+- **Taught in.** Day 3, story "A ruler made of noise — z, and one tail or two", and Day 3 P12 (payments vs loans); the Python in Going further, "Test for two proportions — z".
 
 ```task
 {"id": "w06d5-a3", "kind": "number", "answer": 1.26, "dp": 2, "unit": "z (payments, sme − mass)", "hint": "52 850 clean payments; late = paid after the due date; the segment comes through loans.customer_id. The order is sme first. Day 3, P12."}
@@ -172,7 +172,7 @@ stats.chi2_contingency(t, correction=False)[:2]
 - **Data.** `x` — the clean payments of Consumer loans (`code == "CONS"`), grade B and grade C.
 - **Do.** First the shape of days late per grade: median, mean, skew, share paid late — and one sentence on why not a t-test. Then a two-sided Mann–Whitney U test, grade B first.
 - **Answer.** The p-value and the probability of superiority U / (n₁·n₂). In the box: U / (n₁·n₂), to 3 decimals.
-- **Taught in.** Day 4, "Mann–Whitney U — two independent groups by ranks", and Day 4 P2.
+- **Taught in.** Day 4, story "Who wins more pairs — the Mann–Whitney test", and Day 4 P2; the Python in Going further, "Mann–Whitney U — two independent groups by ranks".
 
 ```task
 {"id": "w06d5-a4", "kind": "number", "answer": 0.45, "dp": 3, "unit": "U / (n₁·n₂), grade B first", "hint": "Consumer payments only; stats.mannwhitneyu(grade_B, grade_C, alternative=\"two-sided\"); the order of the samples decides whether you get the number or one minus it. Day 4, P2."}
@@ -208,7 +208,7 @@ Why not a t-test: days late is heavily right-skewed (skew 4–6) with the same m
 - **Data.** The baseline is the app's decided approval rate from A2; `apps` gives the monthly volume of decided app applications in 2026 (whole months only).
 - **Do.** Cohen's h for baseline + 2 points; α 0.05 two-sided, power 0.80 → decided applications per arm (round up).
 - **Answer.** n per arm, n in total, and how many months of app traffic that is.
-- **Taught in.** Day 4, "Power and sample size".
+- **Taught in.** Day 4, story "Can the test see it? — power and sample size"; the Python in Going further, "Power and sample size".
 
 ```task
 {"id": "w06d5-a5", "kind": "number", "answer": 8362, "dp": 0, "unit": "decided applications per arm", "hint": "p1 = the app's decided approval rate from A2; Cohen's h for p1 + 0.02 vs p1; round up. Day 4, 'Power and sample size'."}

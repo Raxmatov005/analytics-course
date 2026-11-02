@@ -16,7 +16,7 @@ Built by `python scripts/make_notebooks.py` and executed once with `jupyter nbco
 **Locally (recommended).** Install Anaconda (https://www.anaconda.com/download, "Just me", defaults), open *Anaconda Prompt*, then:
 
 ```
-cd "C:\path\to\Analytics Learning"
+cd "C:\path\to\analytics-course"
 pip install -r requirements.txt        # once; Anaconda already has most of it
 jupyter notebook data/python
 ```

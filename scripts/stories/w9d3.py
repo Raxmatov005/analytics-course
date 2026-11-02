@@ -214,7 +214,7 @@ STORIES = [
    "say": ("Direction matters. A tool that expects **high = bad**, given our score (high = good), reports 1 − 0.689 = 0.311 — the score read backwards. In Python pass `-s`: `roc_auc_score(y, -s)`.",
            "Направление важно. Инструмент, который ждёт **высокий = плохой**, получив наш скор (высокий = хороший), покажет 1 − 0,689 = 0,311 — скор, прочитанный задом наперёд. В Python передайте `-s`: `roc_auc_score(y, -s)`.")},
   {"show": toy(),
-   "f": ("goods' ranks 2 + 4 + 6 + … + 20 = 180  ·  smallest possible 1 + … + 15 = 120  ·  180 − 120 = {p|60} pairs won", "ранги хороших 2 + 4 + 6 + … + 20 = 180  ·  наименьшая сумма 1 + … + 15 = 120  ·  180 − 120 = {p|60} выигранных пар"),
+   "f": ("goods' ranks 2 + 4 + 6 + 7 + 9 + … + 20 = 180  ·  smallest possible 1 + … + 15 = 120  ·  180 − 120 = {p|60} pairs won", "ранги хороших 2 + 4 + 6 + 7 + 9 + … + 20 = 180  ·  наименьшая сумма 1 + … + 15 = 120  ·  180 − 120 = {p|60} выигранных пар"),
    "fs": ("The goods' ranks add up to 180; the smallest they could is 120; the difference, 60, is the pairs they win.", "Ранги хороших дают 180; наименьшая возможная сумма 120; разница, 60, — выигранные ими пары."),
    "say": ("The homework's way: number the 20 loans from the lowest score, 1 to 20 — their [[ranks|places in the line-up: the lowest score gets 1, equal scores share the average place]]. Add the goods' ranks, subtract the smallest sum they could have: 60, the pairs the goods win.",
            "Способ из домашки: пронумеруйте 20 кредитов от самого низкого скора, от 1 до 20, — это их [[ранги|места в ряду: самый низкий скор получает 1, равные скоры делят среднее место]]. Сложите ранги хороших и вычтите наименьшую возможную сумму: 60 — столько пар выигрывают хорошие.")},
@@ -289,7 +289,7 @@ STORIES = [
 
  {"id": "w09d3-s8", "min": 5, "title": ("Does it still work?", "Работает ли он ещё?"), "steps": [
   {"show": {"kind": "rows", "rows": [[0.377, None, None, "p"], [0.396, None, None, "b"]], "lo": 0, "hi": 0.6, "dp": 3,
-            "labels": (["the score · 427 values", "the risk grade · A–D"], ["скор · 427 значений", "риск-грейд · A–D"])},
+            "labels": (["the score · 327 values", "the risk grade · A–D"], ["скор · 327 значений", "риск-грейд · A–D"])},
    "say": ("Nur's [[risk grade|the score cut into four bands: A 720+, B 660–719, C 600–659, D below 600]] is the score in four bands. Same loans, same bads — and the grade's Gini is {b|0.396}, above the score's {p|0.377}!",
            "[[Риск-грейд|скор, нарезанный на четыре полосы: A 720+, B 660–719, C 600–659, D ниже 600]] Nur — это тот же скор в четырёх полосах. Те же кредиты, те же плохие — а Джини грейда {b|0,396}, выше, чем у скора, {p|0,377}!")},
   {"show": {"rows": [[0.009, None, None, "g"], [0.0182, None, None, "b"], [0.0498, None, None, "y"], [0.1118, None, None, "o"]], "pct": True, "dp": 2, "lo": 0, "hi": 0.12,

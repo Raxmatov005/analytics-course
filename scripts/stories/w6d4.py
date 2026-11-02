@@ -366,7 +366,7 @@ STORIES = [
    "fs": ("Power is Phi of h times the root of n over 2, minus 1.96, plus a tiny second term.", "Мощность — это Фи от h на корень из n пополам минус 1,96, плюс крошечное второе слагаемое."),
    "say": ("And the other way round, from n to power: the bell's share of the SMS pile past the line, read with [[Φ|the share of the standard bell to the left of a point (Day 3)]]. The second term is the tiny left tail. Your `power_at` computes exactly this.",
            "И обратно, от n к мощности: доля кучи SMS за линией по колоколу, через [[Φ|доля стандартного колокола левее точки (День 3)]]. Второе слагаемое — крошечный левый хвост. Именно это считает ваша `power_at`.")},
-  {"f": ("power ↑ when: n ↑ · effect ↑ · α ↑ · rate further from 0 % (−22 % on 12.8 % → about 2 000 per arm)", "мощность ↑, когда: n ↑ · эффект ↑ · α ↑ · доля дальше от 0 % (−22 % при 12,8 % → около 2 000 на группу)"),
+  {"f": ("power ↑ when: n ↑ · effect ↑ · α ↑ · rate further from 0 % (the same −22 % cut on a rate ten times higher, 12.8 % → about 2 000 per arm)", "мощность ↑, когда: n ↑ · эффект ↑ · α ↑ · доля дальше от 0 % (то же снижение на 22 %, но от доли в десять раз выше, 12,8 % → около 2 000 на группу)"),
    "say": ("Four things set the power, all known in advance: **n**, the **effect** (a bigger cut moves the pile further), **α** (a looser line lets more through) and **how rare** the outcome is — a rare one needs far more loans.",
            "Мощность задают четыре вещи, все известны заранее: **n**, **эффект** (снижение посильнее сдвигает кучу дальше), **α** (линия помягче пропускает больше) и **редкость** исхода — для редкого нужно гораздо больше кредитов.")},
   {"say": ("Your turn.", "Ваша очередь."),

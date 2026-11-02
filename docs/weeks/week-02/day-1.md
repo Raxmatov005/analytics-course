@@ -930,7 +930,7 @@ WHERE i.due_date <= '2026-10-01' AND p.payment_id IS NULL;
 -- 6 475 544 633 · 1357 · 399
 ```
 
-**6.48 bn UZS** on 1 357 matured instalments of 399 loans has not been paid at all. Most of it is already dead money: joined to `loans`, 4.88 bn sits on written-off loans and 0.87 bn on defaults; **0.69 bn on 181 instalments of active loans** is what Sevara's team is actually chasing this week. One refinement for Wednesday: this query treats a *partially* paid instalment as paid. Counting "not fully paid" gives 1 784 instalments on 413 loans and 7.60 bn still owed — the number the DPD computation will use.
+**6.48 bn UZS** on 1 357 matured instalments of 399 loans has not been paid at all. Most of it is already dead money: joined to `loans`, 4.88 bn sits on written-off loans and 0.87 bn on defaults; **0.69 bn on 181 instalments of active loans** is what Sevara's team is actually chasing this week. The last 0.04 bn sits on 15 loans marked `closed` that have no `closed_at` and one unpaid instalment each — not money to chase, a data question to raise (4.88 + 0.87 + 0.69 + 0.04 = 6.48). One refinement for Wednesday: this query treats a *partially* paid instalment as paid. Counting "not fully paid" gives 1 784 instalments on 413 loans and 7.60 bn still owed — the number the DPD computation will use.
 
 | Number | Question it answers | Grain of the query | As of 2026-10-01 |
 |---|---|---|---|

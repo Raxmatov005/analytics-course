@@ -354,7 +354,7 @@ The test of a pyramid: read only the top and the key lines. Does the chairman kn
 
 > 💡 **Key idea.** If you cannot write the governing thought in one sentence, you do not have an answer yet — and no amount of formatting will give you one. Go back to the tree.
 
-**P1.** *(the audience and the one decision)* Fill the audience table for Friday: for each of the five people in the room, what they own, what they will look for, and the one number of yours they will check first.
+**P1.** *(the audience and the one decision)* Fill the audience table for the board meeting (Day 5): for each of the five people in the room, what they own, what they will look for, and the one number of yours they will check first.
 
 ```task
 {"id": "w08d4-p11", "kind": "free", "min": 50, "rubric": ["all five people: the CEO, Bekzod, Nilufar, Sevara, Kamola", "what each owns, in a few words", "a number of yours per person, with its value", "the one decision the meeting must take, in one line at the end"], "model": "CEO — owns the plan; looks for the decision and its value; checks the total contribution (about 8.85 bn in 2026). Bekzod — portfolio and limits; looks for growth by product; checks outstanding 208.7 bn and +45.6 % disbursement growth. Nilufar — risk policy; looks for a number to attack; checks FPD30 1.28 % (app 1.70 %) and the crude PD behind the margins. Sevara — collections; looks for whether I understand her team; checks 651 actions in September and 13 of 124 early-late loans contacted. Kamola — the app; looks for the funnel; checks 53.3 % of sessions reaching money and the 222 signed-but-unpaid. The decision: next year's lending priorities — what gets more, what gets less, what changes."}
@@ -468,7 +468,7 @@ Every card shows its definition in a tooltip or a text box; numbers on the dashb
 
 ## 6. Review your own work — the checklist (20 min)
 
-Print it, tick it, fix what fails. Do it on Thursday evening, not on Friday morning.
+Print it, tick it, fix what fails. Do it at the end of today, not on the morning of Day 5.
 
 **Deck / memo**
 - [ ] Slide 2 answers the chairman's question in three bullets; a reader who stops there knows the decision.
@@ -498,7 +498,7 @@ Print it, tick it, fix what fails. Do it on Thursday evening, not on Friday morn
 | 7:30–9:00 | recommendations: what, who, by when, worth | 9 |
 | 9:00–10:00 | risks and assumptions; what you would do next; "questions?" | 10 |
 
-Rehearse twice with a timer, standing, out loud; record the second one (that may be your Friday submission). Cut words, not slides. Say each title as the first sentence of each slide. When you point at a chart, say the number, not "as you can see".
+Rehearse twice with a timer, standing, out loud; record the second one (that may be your Day 5 submission). Cut words, not slides. Say each title as the first sentence of each slide. When you point at a chart, say the number, not "as you can see".
 
 **P9.** *(rehearsing — the first minute)* Write your first minute — slides 1 and 2 — exactly as you will say it. No "today I will talk about".
 

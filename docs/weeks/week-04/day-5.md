@@ -77,6 +77,7 @@
 - A `#N/A` hidden with `IFERROR(…, 0)` and then summed.
 - Tiles typed as numbers.
 - A dual axis nobody asked for.
+- Calculation left on **Manual** (Formulas → Calculation Options): cells stop updating and every check looks fine. F9 recalculates once; set it back to *Automatic* before you check anything. A *circular reference* warning means a formula reads its own cell — find it under Formulas → Error Checking.
 
 ---
 
@@ -96,7 +97,7 @@
 
 **Sheets route** (same points). a `Raw_*` tab per CSV imported untouched; a `*_clean` tab built entirely by formulas — `=ARRAYFORMULA(PROPER(TRIM(Raw_Customers!B2:B)))`, a key column, `=UNIQUE(FILTER(…))` or `SORTN(range, 9^9, 2, key_col, TRUE)` (the *remove duplicates* mode of `SORTN`) for the dedup, `IF(OR(E2>DATE(2026,10,1), E2<DATE(1920,1,1)), TRUE, FALSE)` for the flag; the `Checks` tab the same as Excel's. Re-import the CSV over the raw tab to "refresh". State in `change_log.md` that the pipeline is formula-based.
 
-**The step map.** Every hand tool from Wednesday has a recorded equivalent. The checkpoint wants the right-hand column.
+**The step map.** Every hand tool from Day 3 has a recorded equivalent. The checkpoint wants the right-hand column.
 
 | You discovered it with | You deliver it as |
 |---|---|
@@ -243,11 +244,11 @@ Change-log lines: *Trimmed, lower-cased method and replaced "bank transfer" with
   4. **Bar** from P_branch + Others, largest on top — *"Three Tashkent branches, Fergana and Samarkand hold 63 % of outstanding"*.
   (Three charts are required; the fourth is the stretch — leave the collection-rate line out unless it fits.)
 - `A43:L47` the five findings (below), `A49` the definitions footnote: *DPD = days since the oldest matured instalment not fully paid; payments de-duplicated on instalment + day + amount and taken through 2026-10-01; October excluded from the monthly series (one day); all amounts UZS.*
-- `N1:N8` a hidden-from-print **Checks** block: `=GETPIVOTDATA("outstanding",Data!$A$3)=SUM(tblLoans[outstanding])` → TRUE; `=SUM(Data!B56:E60)=399` → TRUE (delinquent loans); `=ROWS(payments_clean)=52850`; `=ROWS(customers_clean)=6000`.
+- `N1:N8` a hidden-from-print **Checks** block: `=GETPIVOTDATA("outstanding",Data!$A$3)=SUM(tblLoans[outstanding])` → TRUE; `=GETPIVOTDATA("loan_id",Data!$A$55)=399` → TRUE (delinquent loans — the bucket pivot without bucket 0); `=ROWS(payments_clean)=52850`; `=ROWS(customers_clean)=6000`.
 
 **`findings.md` — the five sentences:**
 
-1. The book stands at **208.7 bn UZS** across 3 409 loans with a balance, growing about 7 bn a month while 17–22 bn is disbursed monthly — most new lending replaces fast repayments on short Micro, BNPL and Consumer terms.
+1. The book stands at **208.7 bn UZS** across 3 409 loans with a balance, growing about 7 bn a month while 12–22 bn is disbursed monthly — most new lending replaces fast repayments on short Micro, BNPL and Consumer terms.
 2. **SME is 60.3 % of outstanding on 10.0 % of the loans** (Auto another 27.6 % on 5 %), so the balance sheet is decided by fewer than 500 large decisions a year (452 SME and Auto loans in 2025), not by the 2 669 Micro loans.
 3. **PAR30 is 3.12 % and NPL90 2.55 %**: 5.3 of the 6.5 bn at risk is already past 90 days (234 loans, all defaulted or written off), so the delinquent book is old debt rather than a new wave; the live 1–90 caseload is 165 loans and 5.9 bn.
 4. **FPD30 on the July 2026 vintage is 1.09 % (4 of 367)**, in line with the 1.28 % history; August is not yet readable and should not be shown.
@@ -333,7 +334,7 @@ Change-log lines: *Trimmed, lower-cased method and replaced "bank transfer" with
 
 ## What the reviewer runs
 
-On a copy of your workbook, with the three CSVs in `data/excel/`:
+On a copy of your workbook, with the four CSVs in `data/excel/`:
 
 1. **Refresh All.** Row counts of `customers_clean`, `payments_clean`, `installments_paid` after refresh: 6 000 · 52 850 · 92 193. A count that changes means a pasted value somewhere.
 2. **The Checks sheet**: every cell TRUE.
@@ -353,7 +354,7 @@ On a copy of your workbook, with the three CSVs in `data/excel/`:
 | A — cleaning pipeline, 2 files × 20 | 40 | |
 | B — one-pager: tiles 12 + charts 12 + refreshability 8 + findings 8 | 40 | |
 | C — 8 questions × 2 + definitions note | 20 | |
-| **Total** | **100** | **≥ 70 → Week 5 on Monday** |
+| **Total** | **100** | **≥ 70 → on to Week 5** |
 
 Partial credit rules, so you know what to drop when time runs out:
 
@@ -362,7 +363,7 @@ Partial credit rules, so you know what to drop when time runs out:
 - A pipeline that refreshes but misses one rule (e.g. the namesakes deleted) loses the 3 "nothing destroyed" points, not the 6 refreshability points.
 - A change log with the right changes but no counts scores half.
 
-Below 70: feedback names the parts to redo (most often A1's duplicate rule and B's FPD30 tile); re-submit Monday morning before Week 5. Points go to the [Progress page](progress.md).
+Below 70: feedback names the parts to redo (most often A1's duplicate rule and B's FPD30 tile); re-submit before Week 5 starts. Points go to the [Progress page](progress.md).
 
 **Hand-in checklist** (the 📎 box below): `checkpoint.xlsx` (raw sheets untouched; `customers_clean`, `payments_clean`, `installments_paid`; `Data`; `OnePager`; `Checks`), `change_log.md` (ten lines with counts), `findings.md` (five sentences), `interview.md` (definitions note + 8 answers); Sheets users add `README.md` with the link. Also due today: **HW 4.2**, on the Day 3 page.
 
@@ -374,7 +375,7 @@ Below 70: feedback names the parts to redo (most often A1's duplicate rule and B
 
 **What Week 5 takes from today.** Next week's pandas labs reload exactly these files — `customers_dirty.csv`, `payments_dirty.csv`, `installments.csv`, `loans_status.csv` — and redo A1, A2 and the six tiles in a notebook: `str.strip().str.title()`, `drop_duplicates(subset=["phone", "birth_date"])`, `merge(how="left")`, `groupby`, `pivot_table`. Keep your `change_log.md`: the notebook's first markdown cell is the same ten lines, and the comparison "which tool was faster to redo" is the week's closing question. The numbers must not move — 6 000 · 52 850 · 208 723 504 430 · 94.1 % — only the tool does.
 
-Madina, 17:30: *"Bekzod has his page and refreshed it himself. Nilufar's age bands no longer have a five-year-old. Timur pointed his dashboard and your workbook at the same definitions and the six numbers agree to the soum. Monday is Python — the same book, in pandas, and we will see whether the notebook or the workbook is faster to redo."*
+Madina, 17:30: *"Bekzod has his page and refreshed it himself. Nilufar's age bands no longer have a five-year-old. Timur pointed his dashboard and your workbook at the same definitions and the six numbers agree to the soum. Next week is Python — the same book, in pandas, and we will see whether the notebook or the workbook is faster to redo."*
 
 ---
 

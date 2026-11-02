@@ -37,10 +37,12 @@ The **kernel** (*ядро*) is the Python process behind the notebook. It rememb
 **Setting up Jupyter (by Day 3).** **Anaconda** (*дистрибутив Anaconda*) is Python plus pandas, matplotlib and Jupyter in one installer: https://www.anaconda.com/download → Windows → *Just me* → defaults. Then open **Anaconda Prompt** from the Start menu and type:
 
 ```
-cd "C:\path\to\Analytics Learning"
+cd "C:\path\to\analytics-course"
 pip install -r requirements.txt
 jupyter notebook data/python
 ```
+
+The first line goes to **the course folder** — your copy of the course repository (*Tools at work* → GitHub Desktop → *Clone*), the folder that holds `requirements.txt`, `data/excel/` and `data/python/`. Type its real path instead of `C:\path\to\analytics-course`.
 
 The browser opens a file list; click `day1_starter.ipynb`. If the installer is blocked, https://colab.research.google.com runs the same notebooks — upload the `.ipynb` and the CSVs it reads (`data/python/README.md` names the one line to change).
 
@@ -79,7 +81,7 @@ type(31_150_000), type(0.30), type("Consumer loan"), type(True), type(None)
 
 The box shows five types — `int`, `float`, `str`, `bool`, `NoneType` — one per value, in the order written.
 
-`int("42")` turns text into a whole number, `float("3.12")` into a decimal, `str(42)` a number into text.
+`int("42")` turns text into a whole number, `float("3.12")` into a decimal, `str(42)` a number into text. To test for the missing value, write `x is None`, not `x == None`: `is` asks "is this the very same object?", and there is only one `None`.
 
 **When you use it.**
 - Before any arithmetic on data from a file: is this column a number or text?
@@ -212,6 +214,7 @@ Month 1's interest is 778 750 soum — exactly `interest_due` of loan 1's first 
 | `/` | `7 / 2` | `3.5` — always a float |
 | `//` | `7 // 2` | `3` — whole part |
 | `%` | `7 % 2` | `1` — remainder |
+| `//` on a negative | `-7 // 2` | `-4` — it rounds **down**, not towards zero |
 | `**` | `1.025 ** 2` | `1.050625` — power |
 | `round(x, 1)` | `round(58.23, 1)` | `58.2` |
 | `round(x, -2)` | `round(1741684.35, -2)` | `1741700.0` |
@@ -222,7 +225,23 @@ Brackets work as in school: `100 * approved / total` and `(1 + r) ** -term` are 
 - Every rate, share and payment: `100 * part / whole`.
 - `round` for display, or where the business rounds (Nur Finance rounds payments to 100 soum).
 
-> ⚠️ **Watch out.** A float is stored in binary, so `0.30 / 12` comes out as `0.024999999999999998`, not `0.025`. The error is tiny, but `0.30 / 12 == 0.025` is `False`. Round for display (`round(x, 4)`, `f"{x:.4f}"`) and never test two floats with `==`. And `int(2.9)` is `2`: `int()` cuts the decimals off — use `round()` when you mean rounding.
+> ⚠️ **Watch out.** A float is stored in binary, so `0.30 / 12` comes out as `0.024999999999999998`, not `0.025`. The error is tiny, but `0.30 / 12 == 0.025` is `False`. Round for display (`round(x, 4)`, `f"{x:.4f}"`) and never test two floats with `==` — compare with `math.isclose(a, b)` or `abs(a - b) < 1e-9`. And `int(2.9)` is `2`: `int()` cuts the decimals off — use `round()` when you mean rounding.
+
+> ⚠️ **Watch out.** `round()` sends an exact half to the **even** neighbour ("banker's rounding"): `round(0.5)` is 0, `round(1.5)` is 2, `round(2.5)` is 2. Excel's `ROUND` and SQLite's `ROUND` send a half away from zero — `ROUND(2.5)` is 3 in both. So the same number can come out as 2 in Python and 3 in Excel. When a total must match another tool to the soum, compare the unrounded numbers, or round the same way in both.
+
+```python
+print(round(0.5), round(1.5), round(2.5), round(3.5))
+```
+
+```text
+0 2 2 4
+```
+
+**Your turn.** Python and Excel round the same half differently. What does `round(4.5)` return in Python?
+
+```task
+{"id": "w05d1-l16", "kind": "choice", "options": ["4", "5", "4.5", "an error"], "answer": 0, "explain": "4.5 is exactly halfway, so Python picks the even neighbour, 4. Excel's =ROUND(4.5, 0) and SQLite's ROUND(4.5) both give 5 — a one-unit difference that appears only on exact halves."}
+```
 
 **Your turn.** Month 1's interest of loan 2.
 
@@ -274,7 +293,7 @@ A **tuple** (*кортеж*) looks like a list in round brackets and cannot be c
 - A column of values to add up, count, sort (`sorted(x)`), or walk through with a loop.
 - A list of labels in a fixed order — buckets, months, products.
 
-> ⚠️ **Watch out.** Positions start at 0, so the fifth value is `x[4]`, and `x[5]` on a five-value list is `IndexError: list index out of range`. A slice `x[a:b]` stops before `b`.
+> ⚠️ **Watch out.** Positions start at 0, so the fifth value is `x[4]`, and `x[5]` on a five-value list is `IndexError: list index out of range`. A slice `x[a:b]` stops before `b`. And `b = a` does **not** copy a list: both names point at the same list, so `b.append(…)` changes `a` too. When you need a copy, write `b = a.copy()`.
 
 **Your turn.** The average principal of loans 1–5.
 

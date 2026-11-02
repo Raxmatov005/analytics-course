@@ -118,7 +118,7 @@ html[data-theme="dark"] .gm-tb-name { color: #b897eb; }
 html[data-theme="dark"] .gm-lines line { stroke: #9cf1d7; }
 html[data-theme="dark"] .gm-again { border: 0; background: transparent; color: #a073e6; }
 
-/* ---------- theme.css (612 rules) ---------- */
+/* ---------- theme.css (614 rules) ---------- */
 html[data-theme="dark"] body { background: var(--bg); color: var(--body); }
 html[data-theme="dark"] .content { background: var(--bg); }
 html[data-theme="dark"] .markdown-section { background: var(--card); border: 1px solid #333941; border-radius: 22px; }
@@ -472,6 +472,8 @@ html[data-theme="dark"] .markdown-section p.al-sec-sub { color: var(--body); }
 html[data-theme="dark"] .al-sec-state { color: var(--k-d); background: var(--k-xl); border: 1px solid var(--k-l); border-radius: 999px; }
 html[data-theme="dark"] .al-sec.al-sec-done { border-color: #327149; }
 html[data-theme="dark"] .al-sec.al-sec-done .al-sec-state { background: #1a3623; border-color: #327149; color: #afeec7; }
+html[data-theme="dark"] .markdown-section details.al-locked > summary { color: var(--muted); }
+html[data-theme="dark"] .al-lock-note { color: var(--muted); }
 html[data-theme="dark"] .al-route { border-radius: 18px; background: #161c22; border: 1px solid var(--line); }
 html[data-theme="dark"] .al-route-title { color: var(--ink); }
 html[data-theme="dark"] .al-route-prog { color: var(--body); }

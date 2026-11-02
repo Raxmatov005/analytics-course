@@ -10,6 +10,8 @@
 - **matplotlib** (*библиотека matplotlib*) draws anything from a figure and an axes: `plot` (line), `bar` / `barh`, `hist`, `boxplot`, `scatter`; labels, a title that states the finding, a legend only when there is more than one series, big numbers formatted in bn; **seaborn** adds statistical charts on long-format data in one call (`barplot`, `lineplot`, `heatmap`, `boxplot`, `countplot`); `subplots` for a grid; `savefig` for the deck.
 - The chart-choice rules are week 4's, unchanged; by evening Timur has `figures/01…05.png` and the code that makes them again next month.
 
+**Homework:** nothing new today — HW 5.2 (Day 3's cleaning script) is due tomorrow, Day 5, in Day 3's 📎 box.
+
 ---
 
 ## 1. Learn — the figure, the axes, and what goes on them
@@ -195,7 +197,9 @@ ax.set_xlabel("principal, UZS (log scale)")
 # products from the smallest median up
 order = status.groupby("product")["principal"].median().sort_values().index
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.boxplot([status.loc[status["product"] == p, "principal"] for p in order], labels=order)
+ax.boxplot([status.loc[status["product"] == p, "principal"] for p in order])
+# the product names under the boxes (works in every matplotlib version)
+ax.set_xticklabels(order)
 ax.set_yscale("log")
 status["principal"].describe()[["count", "mean", "50%", "max"]]
 ```

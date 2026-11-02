@@ -28,7 +28,9 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
 */
 (function () {
   var KEY = 'al.v1';
-  var TOTAL_DAYS = 46;   // 41 + Week 9 (credit risk), 2026-10-29
+  /* every lesson with a day quiz, as schedule.json's "order" walks them: Day 0, Days 1–5 of weeks 1–9 and the seven
+     Day 6 exams (weeks 3–9) = 1 + 45 + 7 (was 46 before the exams, 2026-11-02); doneCount counts all of them */
+  var TOTAL_DAYS = 53;
 
   /* games.js, explore.js and challenge.js share al.v1 and may write it first (a game won before any quiz), so the
      quizzes map is made sure of here: without it every day quiz and the menu ticks stopped drawing (found 2026-10-30) */
@@ -54,6 +56,7 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
   function norm(s) { return String(s).toLowerCase().replace(/[\s ]+/g, ' ').replace(/[.;]+$/, '').trim(); }
   function parseNum(s) {
     var t = String(s).replace(/[\s ']/g, '').replace(/%$/, '');
+    t = t.replace(/[−–]/g, '-').replace(/^[^\d.,+-]+|[^\d.,]+$/g, '');   // "7 828 loans", "≈ 61.4", "−3": as task.js reads them
     if (t.indexOf(',') >= 0) {   // a decimal comma ("70,5") or thousands commas ("7,828"), as task.js reads them
       if (t.indexOf('.') < 0 && /^[+-]?\d+,\d+$/.test(t) && (!/,\d{3}$/.test(t) || /^[+-]?0,/.test(t))) t = t.replace(',', '.');
       else t = t.replace(/,/g, '');
@@ -114,7 +117,8 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
   /* the practice day's quiz (id "practice") trains the routine only: no streak, no finished day */
   function isPractice(id) { return id.indexOf('practice') === 0; }
 
-  /* ---------- streak: consecutive study days; Saturdays and Sundays never break it ---------- */
+  /* ---------- streak: consecutive study days; a day without a lesson never breaks it (schedule.js; with "weekends":
+     true every day has one, so a Saturday counts like a Monday; with no calendar, Saturdays and Sundays are free) ---------- */
   function streak(state) {
     var days = {};
     Object.keys(state.quizzes).forEach(function (id) {
@@ -135,9 +139,32 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
     }
     return n;
   }
+  /* the longest streak there ever was, with the same rules: the streak badges (board.js) are earned once and kept, not
+     taken back when today's streak breaks (audit 2026-11-02) */
+  function bestStreak(state) {
+    var days = {}, first = null;
+    Object.keys(state.quizzes).forEach(function (id) {
+      if (isPractice(id)) return;
+      var r = state.quizzes[id];
+      (r.passDays || (r.passedOn ? [r.passedOn] : [])).forEach(function (d) { days[d] = true; if (!first || d < first) first = d; });
+    });
+    if (!first) return 0;
+    var d = new Date(first + 'T12:00:00'), end = today(), run = 0, best = 0;
+    for (var i = 0; i < 800; i++) {
+      var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      if (key > end) break;
+      var wd = d.getDay();
+      if (days[key]) { run++; best = Math.max(best, run); }
+      else if (window.ALSched && window.ALSched.studyDay(key) !== null ? !window.ALSched.studyDay(key) : (wd === 0 || wd === 6)) { /* not a study day: neutral */ }
+      else run = 0;
+      d.setDate(d.getDate() + 1);
+    }
+    return best;
+  }
   window.ALQuiz = {
     state: load,
     streak: function () { return streak(load()); },
+    bestStreak: function () { return bestStreak(load()); },
     doneCount: function () {
       var s = load();
       return Object.keys(s.quizzes).filter(function (id) { return !isPractice(id) && s.quizzes[id].passedOn; }).length;
@@ -183,7 +210,7 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
     var v = el.querySelector('.qz-input').value;
     if (q.type === 'number') {
       var n = parseNum(v);
-      return !isNaN(n) && Math.abs(n - q.answer) <= (q.tol || 0);
+      return !isNaN(n) && Math.abs(n - q.answer) <= (q.tol || 0) + 1e-9;   // 2.4 within 0.1 of 2.5 is 0.10000000000000009 away
     }
     var answers = Array.isArray(q.answer) ? q.answer : [q.answer];
     return answers.some(function (a) { return norm(a) === norm(v); });
@@ -329,7 +356,7 @@ noted under that key. Both are times, so sync.js's merge (a number keeps its lar
           (x.q.explain ? '<div class="qz-why">' + esc(x.q.explain) + '</div>' : '') +
           '<div><a class="qz-rv-link" href="' + esc(link) + '">' + T('Open that lesson →', 'Открыть тот урок →') + '</a></div></div></details>';
       });
-      var pct = Math.round(100 * right / n), passed = pct >= pass * 100;
+      var pct = Math.round(100 * right / n), passed = pct >= need;   // the shown mark (pass 0.55 × 100 is 55.000000000000007)
       var r = s.quizzes[quiz.id] || { best: 0, attempts: 0 };
       r.attempts++;
       r.best = Math.max(r.best, pct);

@@ -7,7 +7,8 @@ website key (localStorage "al.wk", signin.js) — nothing of it is in the public
   what went well, every task with its verdict (✓ right · ◐ partly · ✗ wrong · – missing), what she wrote, what to fix,
   how to fix it, and the lesson part to look at again; then what to practise next. #/feedback?id=W1D1 opens at one.
 - On a lesson page, a hand-in box (sqlrun.js .sq-ws[data-lesson]) with a review gets a line on top:
-  "Your mentor's feedback is ready — 17 / 20 · Open".
+  "Your mentor's feedback is ready — 17 / 20 · Open". A reviewed hand-in has reached the mentor, so the box counts as
+  handed in ("al-handed" on the box; sqlrun.js marks it done), also when it went by the bot or from another device.
 A review may carry a Russian copy in "ru" ({summary, good, tasks: [{note, fix}], next}); the Russian page uses it. */
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev';
@@ -122,6 +123,8 @@ A review may carry a Russian copy in "ru" ({summary, good, tasks: [{note, fix}],
           a.innerHTML = '<span class="rv-ready-ic" aria-hidden="true">' + IC.ok + '</span><span>' + T('Your mentor’s feedback is ready', 'Отзыв ментора готов') +
             (r.max ? ' — <b>' + esc(r.score) + ' / ' + esc(r.max) + '</b>' : '') + '</span><span class="rv-ready-go">' + T('Open', 'Открыть') + ' →</span>';
           b.insertBefore(a, b.firstChild);
+          b.dataset.handed = '1';   // a reviewed hand-in reached the mentor: sqlrun.js marks the box done (also when sent from elsewhere)
+          b.dispatchEvent(new CustomEvent('al-handed'));
         });
       });
     }).catch(function () { /* no connection: the box works as before */ });

@@ -88,7 +88,8 @@ Every task: code with printed output, then **two sentences** for Kamola (product
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
-# (shape only — not meant to run: the template's helpers live in the notebook)
+# (shape only — not meant to run: the template gives with_conversion; srm_by, hash_variant,
+# clean_users and ab_readout are your Day 1–2 functions, copied into the notebook)
 ...
 # 16 738 rows
 reg = users[users["region"] != "Tashkent"]
@@ -137,7 +138,8 @@ Daily conversion (de-duplicated), B − A on 1–3 August: **+2.8, +0.3, +2.0** 
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
-# (shape only — not meant to run: the template's helpers live in the notebook)
+# (shape only — not meant to run: the template gives with_conversion; srm_by, hash_variant,
+# clean_users and ab_readout are your Day 1–2 functions, copied into the notebook)
 ...
 # 13 725 users: A 6 883, B 6 842 (SRM p = 0.73)
 clean = with_conversion(clean_users(reg), events)
@@ -184,14 +186,15 @@ Funnel (clean): start 33.3 vs 33.3 % (p 0.95); submit 73.5 vs 74.6 % of starters
 <details><summary>Model answer (open after submitting)</summary>
 
 ```python
-# (shape only — not meant to run: the template's helpers live in the notebook)
+# (shape only — not meant to run: the template gives with_conversion; srm_by, hash_variant,
+# clean_users and ab_readout are your Day 1–2 functions, copied into the notebook)
 ...
 lc = loans.merge(clean[["user_id", "variant"]], on="user_id").assign(fpd=lambda t: 1 - t.first_instalment_paid_within_30d)
 # A 6 / 575 = 1.04 % (Wilson 0.48-2.26) · B 14 / 636 = 2.20 % (1.32-3.66)
 # z-test p = 0.11 · Fisher p = 0.17 · difference +1.16 pt (Newcombe -0.35 to
 # +2.72)
-# power for a true +1.16 pt at these n: 37 % · loans per arm for 80 % power: 1
-# 809 (~20 700 users per arm)
+# power for a true +1.16 pt at these n: 37 %
+# loans per arm for 80 % power: 1 809 (~20 500 users per arm)
 ```
 
 Unit economics (interest 9.856 % of principal = 266 662 ÷ 2 705 586, LGD 60 %, FPD ≈ PD): per 1 000 viewers **A 18 555 488**, **B 18 303 993** (−1.4 %); break-even FPD for B **2.04 %** = A + **0.99** points — and B's observed 2.20 % is already above it; at the CI's upper end (3.77 %) B makes 15 898 606 (−14.3 % vs A).
@@ -242,7 +245,7 @@ Interaction new vs returning: z = −0.82, **p = 0.41**.
 | Primary | 7.70 % → 8.75 %: +1.05 pt (95 % CI +0.14 to +1.98), p = 0.025; +13.7 % relative (+1.7 % to +27.2 %). Raw would have said +0.98. |
 | Guardrails | FPD 1.04 % → 2.20 % (+1.16, CI −0.35 to +2.72, p = 0.11, power 37 %); break-even +0.99 pt — the point estimate is beyond it. Principal −4.8 % (p = 0.15). Disbursed per viewer +8.3 % (CI includes 0). |
 | Segments | All seven positive, none after Holm (min 0.13); no interaction (p = 0.41). |
-| Decision and conditions | Keep the 50/50 split in the regions until ~1 800 loans per arm have a readable FPD (about ten more weeks of regional traffic, then two months for the last loans to mature); ship to the regions only if the FPD difference's upper 95 % bound is below +0.99 pt. |
+| Decision and conditions | Keep the 50/50 split in the regions until ~1 800 loans per arm have a readable FPD (about ten weeks of regional traffic in all, then two months for the last loans to mature); ship to the regions only if the FPD difference's upper 95 % bound is below +0.99 pt. |
 | Learned / next | The regional lift is as large as the app's, the regional loans look riskier; the guardrail must be read per rollout population, not once; fix iOS assignment logging. |
 
 </details>
@@ -321,13 +324,13 @@ Build on yesterday's model (`nur_week7.pbix` → save as `nur_dashboard.pbix`). 
 | Risk | PAR30 % · NPL90 % | **3.12 %** · **2.55 %** (234 loans 90+) | 3 |
 | | FPD30 %, Jul 2026 vintage | **1.09 %** (4 / 367); vintages with n < 50 hidden | 2 |
 | | Cure / roll forward 1-30 | **75.78 %** / 19.53 % | 2 |
-| | Matrix PAR30 branch × product, conditional formatting | Nukus SME **9.02 %** darkest; Nukus 6.84 %, Termez 0.68 % | 3 |
+| | Matrix PAR30 branch × product, conditional formatting | Nukus SME **9.02 %** the highest red cell; Nukus 6.84 %, Termez 0.68 % | 3 |
 | | Layout, titles, definitions line | as above | 2 |
 | Collections | Collection rate, due Sep 2026 | **94.08 %** (Aug 96.52 %) | 2 |
 | | Collected, Sep 2026 | **16 338 823 207** | 2 |
 | | Actions / contact / PTP / paid, Sep 2026 | **651** · 72.81 % · 28.57 % · 22.73 % | 2 |
 | | Collection rate by branch | Termez 97.68 % top, Tashkent South 91.44 % bottom | 2 |
-| | Collector table, Top N 5 | Nilufar Jalilov 52 … Ilhom Qodirov 32 | 2 |
+| | Collector table, Top N 5, one row per `collector_id` | Bekzod Mirzaev 39 … Ilhom Qodirov 32 (not "Nilufar Jalilov 52": two collectors share that name) | 2 |
 | All | Files: `.pbix` refreshes on Timur's PC (relative folder or a parameter), PDF, three PNGs | | 3 |
 | All | Model hygiene: star, single direction, date table marked, no (Blank) segment | | 3 |
 | | | **total** | **40** |

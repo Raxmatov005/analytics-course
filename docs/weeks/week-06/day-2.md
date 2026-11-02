@@ -108,7 +108,7 @@ The Python for each idea, and the extra topics, are in **Going further — the f
 
 **1. The sample — the counts** (week 5's FPD30 frame `f`): app 41 / 2 411, branch 34 / 3 263, partner 16 / 1 425. Each channel's loans are a sample of that channel's process, so each rate is an estimate.
 
-**2. The method — the Wilson interval.** Rates near 1 % with n in the thousands: Wilson, not Wald. `wilson(k, n)` from section 1, or `proportion_confint(k, n, alpha=0.05, method="wilson")`.
+**2. The method — the Wilson interval.** Rates near 1 % with n in the thousands: Wilson, not Wald. `wilson(k, n)` from the Practice setup box (written out in Going further), or `proportion_confint(k, n, alpha=0.05, method="wilson")`.
 
 **3. The table — each estimate with its interval.**
 
@@ -128,7 +128,7 @@ The Python for each idea, and the extra topics, are in **Going further — the f
 
 ## 3. Practice (50 min)
 
-Every task has its own answer box. The Python boxes share the session of section 1's blocks: `loans`, `pop`, `cons`, `f` (with `channel`), `rng`, `wald`, `wilson`, `pmf`, `newcombe`, `n_for_rate` and `bootstrap_ci` are ready once you have pressed ▶ Run on those blocks. The Excel task needs Excel or Google Sheets. For the homework, `data/python/week6/day2_starter.ipynb` builds the same frames (and `x`, the payments) with `scipy` and `statsmodels`.
+Every task has its own answer box. All the Python boxes of this page share one session: the box just below loads `loans`, `pop`, `cons`, `f` (with `channel`), `rng`, `wald`, `wilson`, `pmf` and `newcombe` — run it once before the first task. (`n_for_rate` and `bootstrap_ci` are written out in Going further.) The Excel task needs Excel or Google Sheets. For the homework, `data/python/week6/day2_starter.ipynb` builds the same frames (and `x`, the payments) with `scipy` and `statsmodels`.
 
 **First, press ▶ Run on this box once.** It loads the tools and the data that every Python box below uses.
 
@@ -257,7 +257,7 @@ The sample starting at loan 6 misses by 14.44 m — about 2.5 standard errors (S
 
 <details><summary>Answer</summary>
 
-SE = 112.6 / 10 = **11.26 m** — the CLT table's 11.32 m for n = 100 is the same number, measured by simulation. Halving the SE needs **400** loans: SE ∝ 1 / √n, so twice the precision costs four times the data.
+SE = 112.6 / 10 = **11.26 m** — the 11.32 m for n = 100 in the CLT table (Going further, 'The central limit theorem') is the same number, measured by simulation. Halving the SE needs **400** loans: SE ∝ 1 / √n, so twice the precision costs four times the data.
 
 </details>
 
@@ -273,7 +273,7 @@ After 50 loans the rate can be 0 % or 4 % (one FPD more or less moves it by 2 po
 
 </details>
 
-**P6.** *(central limit theorem)* The CLT table: for n = 5, 30, 100, 1000 draw 5 000 samples of loan principal, report the sd and skew of the means against σ/√n. Explain the one row where sd < σ/√n.
+**P6.** *(central limit theorem)* The CLT table (Going further, 'The central limit theorem'): for n = 5, 30, 100, 1000 draw 5 000 samples of loan principal, report the sd and skew of the means against σ/√n. Explain the one row where sd < σ/√n.
 
 ```task
 {"id": "w06d2-p4", "kind": "choice", "options": ["At n = 1 000 the CLT stops working", "At n = 1 000 we draw 13 % of a finite population without replacement, so the means vary less — the finite-population correction √((N − n)/(N − 1)) = 0.934", "The seed was different for that row", "σ was computed with ddof = 0"], "answer": 1, "explain": "3.56 m × 0.934 = 3.32 m — the simulated sd. When a sample is a tiny share of the population, the correction is ≈ 1 and you can forget it."}
@@ -348,7 +348,7 @@ k = rng.binomial(400, p, 20_000)
 for m in ("normal", "wilson", "beta"):
     lo, hi = proportion_confint(k, 400, method=m); print(m, np.mean((lo <= p) & (p <= hi)))
 ```
-Run in the order of the table (n = 100 first, then 400, then 2 000, one generator): **87.7 % / 96.0 % / 98.0 %** at n = 400. Wald misses on the high side: in samples with 1–2 FPDs its upper limit is too low, and that is exactly the case where a small branch looks "safe".
+The box above (n = 400 alone) gives 88.5 % / 95.9 % / 97.9 %. The coverage table in Going further ('The Wilson interval') runs n = 100, then 400, then 2 000 on one generator and gets **87.7 % / 96.0 % / 98.0 %** at n = 400 — different draws, the same story. Wald misses on the high side: in samples with 1–2 FPDs its upper limit is too low, and that is exactly the case where a small branch looks "safe".
 
 </details>
 
@@ -419,7 +419,7 @@ Cauchy: −0.544, 0.554, −0.007, **1.058, 0.957** — still jumping at 100 000
 
 Graded on (20 points): (a) the numbers — FPD, n, rate, Wilson and bootstrap limits for 3 channels and 4 grades, matching the asserts and the model (8), (b) the chart — dots with error bars from zero-free axes in %, n in every label, grades in order A → D, a title that states the finding (6), (c) the five sentences — the overlap read correctly, the widest interval explained by n, Wilson vs bootstrap, a dashboard proposal, the question for tomorrow (6). **Bonus +20:** `clopper_pearson(k, n)` from `scipy.stats.beta` (not statsmodels) passing its assert, with the exact interval added to both tables and one sentence on when you would report it instead of Wilson.
 
-**Check your table here before you hand in.** The grade counts are A 10 / 1 667, B 30 / 3 084, C 44 / 2 034, D 7 / 314 (the `wilson` function from section 1 works).
+**Check your table here before you hand in.** The grade counts are A 10 / 1 667, B 30 / 3 084, C 44 / 2 034, D 7 / 314 (the `wilson` function of the Practice setup box works).
 
 **H1.** The upper limit of grade D's Wilson 95 % interval, in %, to 2 decimals?
 
@@ -459,9 +459,9 @@ Three questions, one at a time. Wrong? The explanation points to the part of sec
 
 ```check
 {"id": "w06d2-sc", "questions": [
-  {"type": "single", "q": "A colleague: 'the 95 % CI for app FPD is 1.26–2.30 %, so there is a 95 % chance the true rate is in there.' What is the correct reading?", "options": ["Correct as said", "The method that built it catches the true rate in 95 % of repeated samples; this interval either contains it or not", "95 % of app loans have a rate in that range", "There is a 5 % chance the rate is 1.70 %"], "answer": 1, "explain": "95 % is a property of the procedure; the true rate is fixed (→ section 1, 'What 95 % means')."},
-  {"type": "single", "q": "Why does a Wald interval for 2 FPDs in 150 loans go below zero?", "options": ["Because 150 is below 400", "Because Wald assumes the rate's sampling distribution is a symmetric bell, and near 0 % it is skewed — use Wilson", "Because of a rounding error", "Because the SE should use n − 1"], "answer": 1, "explain": "Wilson: 0.37–4.73 %, never negative and close to 95 % coverage (→ section 1, 'The Wilson interval', P10)."},
-  {"type": "single", "q": "Loan principal has skew 2.9. When does a t interval for the MEAN principal keep its 95 % promise?", "options": ["Never — the data are not normal", "When n is large enough for the mean to be near-normal: about 95 % at n = 400, only 89 % at n = 30", "Only with ddof = 0", "Always, whatever n"], "answer": 1, "explain": "The CLT makes the mean normal, slowly for skewed money; at small n use more data, logs or the bootstrap (→ section 1, 'The central limit theorem', P12)."}
+  {"type": "single", "q": "A colleague: 'the 95 % CI for app FPD is 1.26–2.30 %, so there is a 95 % chance the true rate is in there.' What is the correct reading?", "options": ["Correct as said", "The method that built it catches the true rate in 95 % of repeated samples; this interval either contains it or not", "95 % of app loans have a rate in that range", "There is a 5 % chance the rate is 1.70 %"], "answer": 1, "explain": "95 % is a property of the procedure; the true rate is fixed (→ section 1, 'What the “95 %” promises')."},
+  {"type": "single", "q": "Why does a Wald interval for 2 FPDs in 150 loans go below zero?", "options": ["Because 150 is below 400", "Because Wald assumes the rate's sampling distribution is a symmetric bell, and near 0 % it is skewed — use Wilson", "Because of a rounding error", "Because the SE should use n − 1"], "answer": 1, "explain": "Wilson: 0.37–4.73 %, never negative and close to 95 % coverage (→ section 1, 'A net for a rate — Wald breaks, Wilson holds'; P10)."},
+  {"type": "single", "q": "Loan principal has skew 2.9. When does a t interval for the MEAN principal keep its 95 % promise?", "options": ["Never — the data are not normal", "When n is large enough for the mean to be near-normal: about 95 % at n = 400, only 89 % at n = 30", "Only with ddof = 0", "Always, whatever n"], "answer": 1, "explain": "The CLT makes the mean normal, slowly for skewed money; at small n use more data, logs or the bootstrap (→ section 1, 'A bell made of averages', its last step; P12)."}
 ]}
 ```
 
@@ -1122,12 +1122,12 @@ Pass with 80 % to finish the day. Retry as often as you like.
 
 ```quiz
 {"id": "w06d2", "pass": 0.8, "questions": [
-  {"type": "single", "q": "App FPD: 95 % CI 1.26–2.30 %. Which reading is correct?", "options": ["There is a 95 % probability the true app rate is between 1.26 and 2.30 %", "95 % of app loans have an FPD rate in that range", "The procedure captures the true rate in 95 % of repeated samples; this interval either contains it or not", "If two channels' intervals overlap, the channels do not differ"], "answer": 2, "explain": "95 % is a property of the procedure; the true rate is fixed, and overlap is not a test (→ section 1, 'What 95 % means')."},
-  {"type": "single", "q": "Why Wilson rather than Wald for an FPD rate near 1.28 % on a branch-month of 400 loans?", "options": ["Near 0 % a rate's sampling distribution is skewed: a '95 %' Wald covers about 88 %, can go negative and collapses to zero width at 0 events", "Wald needs a seed", "Wilson works only for very large n", "Wilson is always narrower"], "answer": 0, "explain": "Wilson inverts the score test: never negative, asymmetric the right way, close to 95 % coverage (→ section 1, 'The Wilson interval')."},
-  {"type": "single", "q": "Which line makes this interval slightly too narrow?", "code": "m = smp.mean()                                  # line 1\ns = np.std(smp)                                 # line 2\nse = s / np.sqrt(len(smp))                      # line 3\nstats.t.interval(0.95, len(smp) - 1, loc=m, scale=se)   # line 4", "options": ["line 1", "line 2 — numpy's std defaults to ddof=0, the population formula", "line 3", "line 4 — a z value is needed instead of t"], "answer": 1, "explain": "A sample interval needs ddof=1 (pandas' .std() already uses it; numpy does not) (→ Mistakes, section 1 'A good estimate')."},
-  {"type": "number", "q": "How many first instalments do you need to estimate a rate near p = 91 / 7 099 to within ±0.5 points at 95 %? (n = z² p(1 − p) / E², round up)", "answer": 1945, "tol": 3, "explain": "1.96² × 0.01282 × 0.98718 / 0.005² ≈ 1 945; for ±0.25 points it is four times as many (→ section 1, 'Sample size for a given margin', P13)."},
-  {"type": "multi", "q": "Which statements about the bootstrap are true?", "options": ["With 5 events it is reliable for a rate near 0 %", "It resamples the sample with replacement", "It needs normally distributed data", "It gives an interval for a median or a ratio of sums, where no SE formula exists", "Seed it so a reviewer gets your interval"], "answer": [1, 3, 4], "explain": "It can only reshuffle what it saw, so with few events it is too narrow — Wilson for rates near zero, bootstrap for medians and ratios (→ section 1, 'The bootstrap')."},
-  {"type": "single", "q": "To halve the standard error of an estimate, the sample size must be…", "options": ["squared", "halved", "doubled", "quadrupled"], "answer": 3, "explain": "SE = s / √n, so halving it needs four times the n (→ section 1, 'Standard error')."},
+  {"type": "single", "q": "App FPD: 95 % CI 1.26–2.30 %. Which reading is correct?", "options": ["There is a 95 % probability the true app rate is between 1.26 and 2.30 %", "95 % of app loans have an FPD rate in that range", "The procedure captures the true rate in 95 % of repeated samples; this interval either contains it or not", "If two channels' intervals overlap, the channels do not differ"], "answer": 2, "explain": "95 % is a property of the procedure; the true rate is fixed, and overlap is not a test (→ section 1, 'What the “95 %” promises')."},
+  {"type": "single", "q": "Why Wilson rather than Wald for an FPD rate near 1.28 % on a branch-month of 400 loans?", "options": ["Near 0 % a rate's sampling distribution is skewed: a '95 %' Wald covers about 88 %, can go negative and collapses to zero width at 0 events", "Wald needs a seed", "Wilson works only for very large n", "Wilson is always narrower"], "answer": 0, "explain": "Wilson inverts the score test: never negative, asymmetric the right way, close to 95 % coverage (→ section 1, 'A net for a rate — Wald breaks, Wilson holds')."},
+  {"type": "single", "q": "Which line makes this interval slightly too narrow?", "code": "m = smp.mean()                                  # line 1\ns = np.std(smp)                                 # line 2\nse = s / np.sqrt(len(smp))                      # line 3\nstats.t.interval(0.95, len(smp) - 1, loc=m, scale=se)   # line 4", "options": ["line 1", "line 2 — numpy's std defaults to ddof=0, the population formula", "line 3", "line 4 — a z value is needed instead of t"], "answer": 1, "explain": "A sample interval needs ddof=1 (pandas' .std() already uses it; numpy does not) (→ section 1, 'A net for the average — the t interval', its last two steps; Mistakes people make)."},
+  {"type": "number", "q": "How many first instalments do you need to estimate a rate near p = 91 / 7 099 to within ±0.5 points at 95 %? (n = z² p(1 − p) / E², round up)", "answer": 1945, "tol": 3, "explain": "1.96² × 0.01282 × 0.98718 / 0.005² ≈ 1 945; for ±0.25 points it is four times as many (→ section 1, 'Many handfuls — the standard error, and how many loans you need'; P13)."},
+  {"type": "multi", "q": "Which statements about the bootstrap are true?", "options": ["With 5 events it is reliable for a rate near 0 %", "It resamples the sample with replacement", "It needs normally distributed data", "It gives an interval for a median or a ratio of sums, where no SE formula exists", "Seed it so a reviewer gets your interval"], "answer": [1, 3, 4], "explain": "It can only reshuffle what it saw, so with few events it is too narrow — Wilson for rates near zero, bootstrap for medians and ratios (→ section 1, 'A sample of your sample — the bootstrap')."},
+  {"type": "single", "q": "To halve the standard error of an estimate, the sample size must be…", "options": ["squared", "halved", "doubled", "quadrupled"], "answer": 3, "explain": "SE = s / √n, so halving it needs four times the n (→ section 1, 'Many handfuls — the standard error, and how many loans you need')."},
   {"type": "single", "q": "By hand, Wald gives −0.50 % to 3.17 % for 2 FPDs in 150 loans. What goes on the dashboard?", "code": "proportion_confint(2, 150, method=\"normal\")   # Wald", "options": ["Wilson, about 0.37–4.73 %: never negative and close to 95 % coverage", "Wald as statsmodels prints it (clipped to 0–3.17 %)", "No interval — 150 loans is too few", "Only the rate, 1.33 %"], "answer": 0, "explain": "statsmodels clips the Wald limit and hides the problem; Wilson says honestly 'between almost nothing and about 5 %' (→ P10)."},
   {"type": "single", "q": "Company corner: Bukhara has the highest FPD30 of ten branches (14 / 586). What should the risk pack do?", "options": ["Show the rate with n and its Wilson interval and compare it with the funnel limits for its size; watch it rather than punish it", "Report the rate without n — n confuses readers", "Rank the branches and act on the worst", "Drop Bukhara from the book rate"], "answer": 0, "explain": "A league table guarantees a 'worst branch' even when all are equal; a funnel flags by size-adjusted limits, not by rank (→ Company corner)."}
 ]}

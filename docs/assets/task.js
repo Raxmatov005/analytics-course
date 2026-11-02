@@ -380,10 +380,10 @@ A record with only a miss has done: false, so nothing counts it as answered. */
       };
     }
     function mine() { try { return String(ed.get() || ''); } catch (e) { return ''; } }
-    function verdict(ok, text) {
+    function verdict(ok, text, tried) {
       say.textContent = text;
       say.className = 'tk-say ' + (ok ? 'ok' : 'bad');
-      if (ok) done(true, mine()); else offerModel();
+      if (ok) done(true, mine()); else { if (tried) missed(task.id); offerModel(); }   // a failed check is a wrong attempt (header)
     }
     bar.querySelector('.tk-check').onclick = function () {
       if (!mine().trim()) { verdict(false, py ? T('Write some code first.', 'Сначала напишите код.') : T('Write a query first.', 'Сначала напишите запрос.')); return; }
@@ -392,20 +392,20 @@ A record with only a miss has done: false, so nothing counts it as answered. */
         if (typeof api.compare !== 'function') { say.textContent = T('Checking is not available yet.', 'Проверка пока недоступна.'); return; }
         Promise.resolve(api.compare(mine(), task.model || '')).then(function (r) {
           if (r && r.html && ed.out) ed.out.innerHTML = r.html;   // her result under her query, as after ▶ Run
-          verdict(!!(r && r.ok), (r && r.msg) || (r && r.ok ? T('✅ Same result as the model answer.', '✅ Результат совпадает с образцом.') : T('❌ Not yet.', '❌ Пока нет.')));
+          verdict(!!(r && r.ok), (r && r.msg) || (r && r.ok ? T('✅ Same result as the model answer.', '✅ Результат совпадает с образцом.') : T('❌ Not yet.', '❌ Пока нет.')), true);
         }).catch(function (e) { console.error('task check failed', e); say.textContent = T('Could not check right now — try again.', 'Сейчас проверить не получилось — попробуйте снова.'); });
         return;
       }
       Promise.resolve(ed.run()).then(function (r) {
         r = r || {};
-        if (r.error) { verdict(false, T('The code stopped with an error — see the output.', 'Код остановился с ошибкой — смотрите вывод.')); return; }
+        if (r.error) { verdict(false, T('The code stopped with an error — see the output.', 'Код остановился с ошибкой — смотрите вывод.'), true); return; }
         var dp = task.dp == null ? 2 : task.dp, tol = Math.pow(10, -dp) / 2 + 1e-9, want = Number(task.answer);
         var hit = (r.numbers || []).some(function (n) {
           n = Number(n);
           return Math.abs(n - want) <= tol || Math.abs(n * 100 - want) <= tol || Math.abs(n / 100 - want) <= tol;
         });
         verdict(hit, hit ? T('✅ Your output has the right number.', '✅ В вашем выводе есть верное число.')
-          : T('❌ The number we are looking for is not in your output yet. Print it.', '❌ Нужного числа в выводе пока нет. Выведите его через print.'));
+          : T('❌ The number we are looking for is not in your output yet. Print it.', '❌ Нужного числа в выводе пока нет. Выведите его через print.'), true);
       }).catch(function (e) { console.error('task run failed', e); say.textContent = T('Could not run right now — try again.', 'Сейчас запустить не получилось — попробуйте снова.'); });
     };
     var rec = get(task.id);

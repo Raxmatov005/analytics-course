@@ -253,7 +253,7 @@ The same seven rows: 2 089, 1 378, 593 … 4. The work is identical; the order o
 | use the result twice | write it twice | name it once, use it twice |
 | lives | one query | one query |
 
-> ⚠️ **Watch out.** A CTE lives for **one statement only** — the `SELECT` right after the `WITH`. Put a `;` after it and the next query cannot see the name (*no such table*). To reuse a result across queries you need a view or a table — Thursday.
+> ⚠️ **Watch out.** A CTE lives for **one statement only** — the `SELECT` right after the `WITH`. Put a `;` after it and the next query cannot see the name (*no such table*). To reuse a result across queries you need a view or a table — Thursday. Two SQL Server habits: the statement before a `WITH` must end with `;` (so many people write `;WITH`), and a CTE, a view or a subquery may not end in `ORDER BY` unless it has `TOP` — sort in the final `SELECT`.
 
 **Your turn.**
 
@@ -624,7 +624,7 @@ JOIN (SELECT loan_id, COUNT(*) AS n_inst FROM installments GROUP BY loan_id) t O
 WHERE t.n_inst <> l.term_months;
 -- 0
 ```
-Every schedule has exactly `term_months` rows (the derived table joined back to `loans` proves it: 0 mismatches). Counts: 3-month = Micro 1 335 + BNPL 532 = 1 867 — the sum reconciles with Tuesday's product × term table.
+Every schedule has exactly `term_months` rows (the derived table joined back to `loans` proves it: 0 mismatches). Counts: 3-month = Micro 1 335 + BNPL 532 = 1 867 — check it with `SELECT product_id, COUNT(*) FROM loans WHERE term_months = 3 GROUP BY product_id`.
 
 </details>
 
@@ -837,6 +837,8 @@ A **vintage** (*винтаж*) is the set of loans disbursed in one month; a **v
 - **Ever 30+ by MOB k** = at least one of instalments 1..k was **not fully paid 30 days after its due date**, as of 2026-10-01.
 - **Base:** loans with `term_months >= 6` (so every loan has all six instalments); a cell is shown only when **all** of the cohort's loans have had their 30 days at that MOB.
 
+The query below writes section 1's three CTEs as `( … )` to save space: paste them in from section 1 (or from the lab) before you press **▶ Run**.
+
 ```sql
 -- section 1's vintage chain
 WITH inst AS ( … ), flag AS ( … ), ever AS ( … ),
@@ -884,10 +886,10 @@ FROM cells GROUP BY cohort ORDER BY cohort;
 - **Small cells move a lot:** one loan in a 151-loan cohort is 0.66 points — the whole of January's MOB 1 and 2. Read the curve, not a single cell; pool by quarter when you must compare cells.
 - **Blank cells are honest:** 2026-03 at MOB 5–6 is not yet observable (250 of 251 and 5 of 251 loans have had their 30 days). Never print 0.00 there.
 
-**The chart Nilufar draws:** MOB on the x-axis (1..6), ever-30+ % on the y-axis, one line per cohort, the worst one coloured. The pooled 2025 line — 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 % — is the benchmark every new cohort is read against at equal age. MOB 1 of this chart *is* FPD30 (1.28 % overall), which is how the two reports reconcile.
+**The chart Nilufar draws:** MOB on the x-axis (1..6), ever-30+ % on the y-axis, one line per cohort, the worst one coloured. The pooled 2025 line — 1.45 → 2.85 → 4.35 → 5.50 → 6.39 → 7.46 % — is the benchmark every new cohort is read against at equal age. MOB 1 of this chart *is* FPD30: run the chain's MOB-1 step on FPD30's own base (every loan whose first instalment fell due by 2026-09-01) and you get the same 91 of 7 099 = 1.28 %; the 1.45 % above is the 2025, term ≥ 6 subset. That is how the two reports reconcile.
 
 ```game
-{"type": "flash", "id": "w03d3-g4", "title": "Vintage words", "cards": [["Vintage (cohort)", "all loans disbursed in one month"], ["MOB — month on book", "the loan's age in months; here, the instalment number"], ["Ever 30+ by MOB k", "at least one of instalments 1..k not fully paid 30 days after its due date"], ["Vintage curve", "one cohort's ever-30+ rate at MOB 1, 2, 3 … — it can only go up"], ["Observable cell", "every loan of the cohort has had its 30 days at that MOB; otherwise blank"], ["Read down a column", "compare cohorts at the same age, never across calendar time"], ["MOB 1 = FPD30", "the first point of the curve is the first-payment default rate (1.28 %)"]]}
+{"type": "flash", "id": "w03d3-g4", "title": "Vintage words", "cards": [["Vintage (cohort)", "all loans disbursed in one month"], ["MOB — month on book", "the loan's age in months; here, the instalment number"], ["Ever 30+ by MOB k", "at least one of instalments 1..k not fully paid 30 days after its due date"], ["Vintage curve", "one cohort's ever-30+ rate at MOB 1, 2, 3 … — it can only go up"], ["Observable cell", "every loan of the cohort has had its 30 days at that MOB; otherwise blank"], ["Read down a column", "compare cohorts at the same age, never across calendar time"], ["MOB 1 = FPD30", "the first point of the curve is the first-payment default rate — on the same loans (1.28 % for the whole book)"]]}
 ```
 
 > 🎯 **Interview version.** *"How do you build a vintage analysis in SQL?"* The interviewer listens for the definitions (cohort, age, "ever"), the observability rule and how you check the result. Say it in the box below, then compare.
@@ -895,7 +897,7 @@ FROM cells GROUP BY cohort ORDER BY cohort;
 **Say it like in an interview.** Answer the question above in 3–5 sentences, as you would aloud, with one Nur Finance number.
 
 ```task
-{"id": "w03d3-int", "kind": "free", "min": 30, "model": "Cohort is the disbursement month and age is the instalment number, so every cohort is read at the same month on book. Per instalment I check whether it was paid within 30 days of its due date — a LEFT JOIN to payments with the date condition — flag the late ones, and take a running MAX over the loan's instalments, so 'ever 30+' stays on once it is set. I keep only instalments whose 30 days have passed and show a cell only when the whole cohort is observable at that MOB, then pivot with SUM(CASE) into cohort × MOB and read down the columns. At Nur Finance October 2025 is the worst cohort — 6.91 % at MOB 3 against 1.99 % for January 2025 — and my check is that the MOB-1 column equals FPD30, 1.28 %.", "rubric": ["Cohort = disbursement month, age = instalment number (MOB)", "Paid within 30 days via LEFT JOIN with a date condition, then a flag", "Running MAX for 'ever'", "Observability: only matured instalments, blank cells for partly observed cohorts", "A check (curves never fall, MOB 1 = FPD30) or a real number"], "xp": 2}
+{"id": "w03d3-int", "kind": "free", "min": 30, "model": "Cohort is the disbursement month and age is the instalment number, so every cohort is read at the same month on book. Per instalment I check whether it was paid within 30 days of its due date — a LEFT JOIN to payments with the date condition — flag the late ones, and take a running MAX over the loan's instalments, so 'ever 30+' stays on once it is set. I keep only instalments whose 30 days have passed and show a cell only when the whole cohort is observable at that MOB, then pivot with SUM(CASE) into cohort × MOB and read down the columns. At Nur Finance October 2025 is the worst cohort — 6.91 % at MOB 3 against 1.99 % for January 2025 — and my check is that on FPD30's own base the MOB-1 rate equals FPD30, 1.28 %.", "rubric": ["Cohort = disbursement month, age = instalment number (MOB)", "Paid within 30 days via LEFT JOIN with a date condition, then a flag", "Running MAX for 'ever'", "Observability: only matured instalments, blank cells for partly observed cohorts", "A check (curves never fall, MOB 1 = FPD30) or a real number"], "xp": 2}
 ```
 
 Tomorrow: the three `WITH` blocks you now own become **views** — a clean layer Timur can point Power BI at — and we make them fast.

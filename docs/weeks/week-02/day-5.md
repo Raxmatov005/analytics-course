@@ -13,7 +13,7 @@
 **Rules.**
 
 - **Open book:** your notes, this week's pages, your tool. **Closed:** the answer folds, until you submit.
-- **No ✔ Check today.** Every task has a query box with **▶ Run**; you decide when a result is right.
+- **No ✔ Check today.** Write and run each query in the [SQL playground](playground.md) (or any SQL box of this week's pages), then paste them all into the 📎 box at the end. Nothing tells you whether a number is right — you decide.
 - **As-of date:** 2026-10-01. Every expected number is computed on it.
 - **Hand in** with the 📎 box at the end of this page: `queries.sql` (each task: `-- Tn:` above the query, `-- result:` below it, the dialect on the first line) and `interview.md` (Part B).
 - **Also due today:** HW 2.2, in its workspace on the [Week 2 · Day 3](weeks/week-02/day-3.md) page.

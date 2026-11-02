@@ -260,10 +260,10 @@ SELECT payment_id, loan_id, amount, paid_at FROM payments ORDER BY amount DESC, 
 ```sql
 SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LIMIT 1;
 -- 4185, 2024-01-02, 1 250 000
-SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC, loan_id LIMIT 1;
 -- 596,  2026-10-01, 2 510 000
 ```
-(`TOP 1` в SQL Server.) Последний приходится на саму дату, на которую актуальны данные: данные доведены до дня, когда их выгрузили.
+(`TOP 1` в SQL Server.) Последний приходится на саму дату, на которую актуальны данные: данные доведены до дня, когда их выгрузили. Но 2026-10-01 выдан 21 кредит, поэтому без `loan_id` в `ORDER BY` база может показать любой из них; с ним ответ всегда 596 — тот же приём, что в B18.
 
 </details>
 

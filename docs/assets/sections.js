@@ -5,13 +5,17 @@ everything up to the next h2 — is wrapped in a frame. The frame's kind comes f
 (a Russian heading also keeps the English id, which is read as well): goals, learn, worked, workspace, practice,
 homework, check, company, quiz, challenge, extra, or plain. An "extra" section ("## Going further — … (optional)",
 "## Дальше по теме — … (по желанию)") is an optional topic: its frame and chip show their state, but it is left out
-of "4 of 6 sections done", so the day never looks unfinished without it. A frame shows an icon, the heading, one line on what she does
-there, the time from "(60 min)" in the heading, and whether it is done.
+of "4 of 6 sections done", so the day never looks unfinished without it. The Daily challenge is optional too (bonus XP;
+"One harder bonus question … Optional." on its frame) and is left out the same way (audit 2026-11-02: a day with every
+section done but the challenge read "7 of 8" right under the quiz's "Day done!"). A frame shows an icon, the heading,
+one line on what she does there, the time from "(60 min)" in the heading, and whether it is done.
 
 Done-state contract shared by every engine (task.js, quiz.js, games.js, sqlrun.js, videos.js, pyrun.js, …):
 - the root element of every interactive block carries the class "al-block", and "al-done" once she completed it;
 - whenever a block's state changes, the engine calls document.dispatchEvent(new CustomEvent('al:change')).
-A frame is done when it holds at least one al-block and all of them are al-done; otherwise it shows "3 / 5".
+A frame is done when it holds at least one al-block and all of them are al-done; otherwise it shows "3 / 5". A block
+with "al-ready" is finished but not yet handed in (a hand-in box: every task answered, 📤 Submit not tapped, sqlrun.js):
+while every block left is such a one, the frame says "Hand it in ↓" instead of a count.
 
 The frames are built after every other plugin has drawn its blocks (a 0 ms timer after doneEach), so the engines
 see the page as Docsify rendered it. Wrapping never reorders: the h2 keeps its id and its place in the page, so the
@@ -47,7 +51,7 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
     return {
       goals: T('Today', 'Сегодня'), learn: T('Learn', 'Теория'), worked: T('Worked example', 'Разбор'),
       workspace: T('Workspace', 'Рабочее место'), practice: T('Practice', 'Практика'), homework: T('Homework', 'Домашнее задание'),
-      check: T('Quick check', 'Быстрая проверка'), company: T('Company corner', 'Уголок компании'), quiz: T('Day quiz', 'Тест дня'),
+      check: T('Self-check', 'Самопроверка'), company: T('Company corner', 'Уголок компании'), quiz: T('Day quiz', 'Тест дня'),
       challenge: T('Daily challenge', 'Задача дня'), extra: T('Going further · optional', 'Дальше по теме · по желанию')
     }[k] || '';
   }
@@ -211,25 +215,47 @@ the "why / how it is graded" card of a sqltask homework block ("why", "graded" i
     var q = document.querySelector('.markdown-section .qz[data-quiz]');
     return q ? q.getAttribute('data-quiz') : null;
   }
+  /* model answers marked "(open after submitting)" stay closed until the page's hand-in has been sent: the fold says so
+     and does not open (the founder's rule: never the answers before the work; the 2026-11-02 audit found them open) */
+  var LOCKED = /open after submitting|открыть после сдачи/i;
+  function locks() {
+    var ws = document.querySelector('.markdown-section .sq-ws'), sent = !ws || ws.classList.contains('al-done');
+    each(document.querySelectorAll('.markdown-section details'), function (d) {
+      var s = d.querySelector('summary');
+      if (!s || !LOCKED.test(s.textContent)) return;
+      if (!d.al_lock) {
+        d.al_lock = 1;
+        s.insertAdjacentHTML('beforeend', '<span class="al-lock-note">' + T(' · opens when your work is handed in', ' · откроется, когда работа сдана') + '</span>');
+        s.addEventListener('click', function (e) { if (d.classList.contains('al-locked')) { e.preventDefault(); d.classList.add('al-lock-shake'); setTimeout(function () { d.classList.remove('al-lock-shake'); }, 400); } });
+      }
+      d.classList.toggle('al-locked', !sent);
+      if (!sent) d.open = false;
+    });
+  }
   function refresh() {
+    locks();
     var sec = document.querySelector('.markdown-section');
     if (!sec) return;
     var frames = sec.querySelectorAll('.al-sec'), tracked = 0, finished = 0;
     each(frames, function (f, i) {
       var bl = topBlocks(f), done = bl.filter(function (b) { return b.classList.contains('al-done'); }).length;
       var all = bl.length > 0 && done === bl.length, st = f.querySelector('.al-sec-state');
+      /* every block left is finished but not handed in: say what is missing, not "0 / 1" */
+      var ready = !all && bl.every(function (b) { return b.classList.contains('al-done') || b.classList.contains('al-ready'); });
       f.classList.toggle('al-sec-done', all);
       f.classList.toggle('al-sec-track', bl.length > 0);
       if (st) {
-        st.textContent = !bl.length ? '' : all ? T('✓ Done', '✓ Готово') : done + ' / ' + bl.length;
-        st.title = bl.length ? T(done + ' of ' + bl.length + ' activities done', 'Выполнено ' + done + ' из ' + bl.length) : '';
+        st.textContent = !bl.length ? '' : all ? T('✓ Done', '✓ Готово') : ready ? T('Hand it in ↓', 'Сдайте работу ↓') : done + ' / ' + bl.length;
+        st.title = !bl.length ? '' : ready ? T('Every task is answered — tap 📤 Submit to hand it in', 'Ответ есть на каждое задание — нажмите «📤 Сдать», чтобы сдать работу')
+          : T(done + ' of ' + bl.length + ' activities done', 'Выполнено ' + done + ' из ' + bl.length);
       }
-      if (bl.length && f.getAttribute('data-kind') !== 'extra') { tracked++; if (all) finished++; }   // an optional topic is not counted
+      var kind = f.getAttribute('data-kind');
+      if (bl.length && kind !== 'extra' && kind !== 'challenge') { tracked++; if (all) finished++; }   // an optional part is not counted
       var chip = sec.querySelector('.al-chip[data-i="' + i + '"]');
       if (chip) {
         chip.classList.toggle('on', all);
         chip.classList.toggle('al-chip-track', bl.length > 0);
-        chip.title = bl.length ? (all ? T('Done', 'Готово') : done + ' / ' + bl.length) : '';
+        chip.title = !bl.length ? '' : all ? T('Done', 'Готово') : ready ? T('Hand it in', 'Сдайте работу') : done + ' / ' + bl.length;
       }
     });
     var prog = sec.querySelector('.al-route-prog'), bar = sec.querySelector('.al-route-bar span');

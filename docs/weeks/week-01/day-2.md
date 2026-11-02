@@ -134,6 +134,8 @@ SELECT DISTINCT channel, status FROM applications;
 
 12 rows: every channel appears with each of the four statuses (3 × 4 = 12).
 
+An empty cell (NULL, see *IS NULL* below) counts as one value too: if some rows of a column are empty, `DISTINCT` returns one empty row among the others.
+
 **When you use it.**
 - To learn what a column contains before you filter on it — the fastest look there is.
 - To list the different values of a column for a report: regions, products, statuses.
@@ -169,7 +171,7 @@ ORDER BY product_id, principal DESC;
 - "Biggest first", "newest first", "alphabetically".
 - Several columns: the second column sorts only inside equal values of the first.
 
-> ⚠️ **Watch out.** An empty cell (**NULL**) counts as the smallest value in both SQLite and SQL Server. With `ASC` the empty cells come first, with `DESC` they come last.
+> ⚠️ **Watch out.** An empty cell (**NULL**) counts as the smallest value in both SQLite and SQL Server. With `ASC` the empty cells come first, with `DESC` they come last. PostgreSQL does the opposite (NULL is the largest there), so the same query can put them at the other end.
 
 **Your turn.** What does `ORDER BY region, monthly_income DESC` do?
 
@@ -196,7 +198,7 @@ SELECT application_id, requested_amount FROM applications ORDER BY requested_amo
 
 **When you use it.** "The five biggest", "the ten newest", "the first row" — always together with `ORDER BY`.
 
-> ⚠️ **Watch out.** `LIMIT` without `ORDER BY` returns *some* N rows, not the biggest or the newest. Sort first, then cut.
+> ⚠️ **Watch out.** `LIMIT` without `ORDER BY` returns *some* N rows, not the biggest or the newest. Sort first, then cut. And when two rows tie at the cut (the same amount), the database decides which one you get: add a second sort column, such as `loan_id`, so the answer is the same every time.
 
 **Your turn.** What is the `application_id` of the most recent application (latest `applied_at`)?
 
@@ -423,7 +425,7 @@ WHERE product_id = 5 AND status = 'approved' OR status = 'approved_not_disbursed
 SELECT COUNT(*) FROM loans WHERE status NOT IN ('closed', 'written_off');
 ```
 
-3 396 loans are neither closed nor written off: 3 352 active + 44 in default.
+3 396 loans are neither closed nor written off: 3 352 active + 44 in default. Use `NOT IN` with a list you typed yourself; if the list ever holds an empty value (NULL), it returns no rows at all. Week 3 shows why.
 
 **When you use it.** Every filter with more than one condition.
 
@@ -467,7 +469,7 @@ SELECT COUNT(*) FROM applications WHERE applied_at >= '2025-06-02' AND applied_a
 
 **When you use it.** For a period, write a **half-open range**: `>= first day AND < first day of the next period`. It works on dates with and without a time, in every engine. For a year: `applied_at >= '2025-01-01' AND applied_at < '2026-01-01'`.
 
-> ⚠️ **Watch out.** `= NULL`, `'Active'` instead of `'active'`, and `BETWEEN` on a date-time column all run without an error and return a wrong number. Prefer `IS NULL`, exact spelling and half-open ranges by habit.
+> ⚠️ **Watch out.** `= NULL`, `'Active'` instead of `'active'`, and `BETWEEN` on a date-time column all run without an error and return a wrong number. Prefer `IS NULL`, exact spelling and half-open ranges by habit. And keep values in **single** quotes: double quotes mean a column name, so `status = "active"` is an error in SQL Server and PostgreSQL, while SQLite quietly guesses you meant text.
 
 **Your turn.** Which filter keeps **every** application of 2025?
 
@@ -704,7 +706,7 @@ Both expect 737.
 SELECT COUNT(*) FROM customers WHERE first_name LIKE 'M%';    -- expect 570
 SELECT COUNT(*) FROM customers WHERE first_name LIKE 'Ma%';   -- expect 419
 ```
-(Madina, Malika, Maftuna, Murod…). On SQLite `LIKE` ignores case by default for ASCII letters; on SQL Server it follows the collation — here both give the same.
+(Maftuna, Murod, Madina, Malika… and three rows in capitals: MUROD twice, MALIKA once). SQLite's `LIKE` ignores the case of Latin letters, so the capitals count too. SQL Server follows the collation: the usual case-insensitive one gives the same 570 and 419; a case-sensitive one gives 570 and 418, because `MALIKA` does not start with `Ma`.
 
 </details>
 
@@ -775,7 +777,9 @@ The second counts *every* approved application of any product plus the big SME o
 {"id": "w01d2-p10", "kind": "number", "answer": 128, "dp": 0, "unit": "applications", "hint": "Got 8 010? AND binds before OR — that query asks a different question.", "model": "128. Without care for AND/OR you get 8 010: every approved application of any product, plus the big SME ones."}
 ```
 
-> 🚀 **Stretch (optional, +5 XP).** **P12.** *(text, numbers and dates together)* Customers born before 1960 with a monthly income above 30 000 000, richest first. How many, and who is first? Then write one sentence on whether this group looks plausible for a mass-market lender.
+> 🚀 **Stretch (optional, +5 XP).** One more filter for the curious — not needed to finish the day.
+
+**P12.** *(text, numbers and dates together)* Customers born before 1960 with a monthly income above 30 000 000, richest first. How many, and who is first? Then write one sentence on whether this group looks plausible for a mass-market lender.
 
 <details><summary>Answer</summary>
 

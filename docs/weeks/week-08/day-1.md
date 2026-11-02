@@ -316,7 +316,7 @@ WHERE first_at >= '2025-01-01' AND first_at < '2025-02-01';
 | "Came back" means | opened the app again | took another loan |
 | Typical N | day 1, 7, 30 | 3, 6, 12 months |
 
-> ⚠️ **Watch out.** The denominator is everyone who started, not the people still here. Divide by today's active borrowers and you measure survivors, who always look loyal.
+> ⚠️ **Watch out.** The denominator is everyone who started, not the people still here. Divide by today's active borrowers and you measure survivors, who always look loyal — **survivorship bias** (*ошибка выжившего*): the customers who left are no longer in the table to be counted.
 
 **Your turn.** The same January 2025 group: retention at **12** months, in %.
 
@@ -367,7 +367,7 @@ GROUP BY cohort ORDER BY cohort;
 
 ### The retention table and the retention curve
 
-**What it is.** A **retention table** puts cohorts in rows and the age N in columns; each cell is that cohort's retention at that age. A cell exists only when **every** customer of the cohort has had N months; otherwise it stays blank. A **retention curve** draws one row of the table as a line over N.
+**What it is.** A **retention table** puts cohorts in rows and the age N in columns; each cell is that cohort's retention at that age. A cell exists only when **every** customer of the cohort has had N months; otherwise it stays blank. Such a cell is **right-censored** (*цензурировано справа*): the answer exists, but the data end before we can see it — "not measured yet", never 0. A **retention curve** draws one row of the table as a line over N.
 
 **How to write it.** The retention query from above, grouped by cohort, with the blank rule wrapped around each cell:
 
@@ -885,7 +885,7 @@ MICRO (903) 18.7 / 29.8 / 42.2 %; CONS (809) 18.0 / 27.1 / 40.7; BNPL (526) 20.0
 
 ## 4. Homework
 
-None today. **HW 8.1** (your CV draft and a one-page portfolio index) is set tomorrow, due Wednesday. Keep today's queries: the boxes above keep them in this browser, but copy **P3** (funnel), **P7** (signed, never paid out) and **P9** (cohort triangle) into a file now — the capstone (Wednesday–Friday) asks for all three again.
+None today. **HW 8.1** (your CV draft and a one-page portfolio index) is set tomorrow, due Day 3. Keep today's queries: the boxes above keep them in this browser, but copy **P3** (funnel), **P7** (signed, never paid out) and **P9** (cohort triangle) into a file now — the capstone (Days 3–5) asks for all three again.
 
 ---
 

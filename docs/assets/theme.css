@@ -641,6 +641,12 @@ body.db-on .lang-switch { opacity: 0; pointer-events: none; }
 .al-sec-body > :last-child:not(hr) { margin-bottom: .2em; }
 .al-k-goals .al-sec-body ul { margin: .8em 0 .4em; }
 .al-sec + .al-sec { margin-top: 1.6em; }
+/* a model answer that opens only after the hand-in (sections.js locks) */
+.markdown-section details.al-locked > summary { cursor: not-allowed; color: var(--muted); }
+.al-lock-note { display: none; font-weight: 600; font-size: .9em; color: var(--muted); }
+details.al-locked .al-lock-note { display: inline; }
+details.al-lock-shake > summary { animation: al-shake .35s ease; }
+@keyframes al-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 .al-route { margin: 1.1em 0 1.6em; padding: 1em 1.15em 1.05em; border-radius: 18px; background: #fff; border: 1px solid var(--line); box-shadow: var(--sh); font-family: var(--sans); }
 .al-route-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .3em .8em; }
 .al-route-title { font-weight: 800; color: var(--ink); }

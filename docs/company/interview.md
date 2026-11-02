@@ -1,4 +1,4 @@
-# The interview bank — 35 questions with model answers
+# The interview bank — 38 questions with model answers
 
 Thirty-five questions an analyst interview at a bank or lending company asks, grouped as the interviews are: **lending & metrics (10), SQL (6), Excel/BI (4), statistics & A/B (6), behavioural and case (4), credit risk (5)**. Every question has an answer box. Use it like a flash card: answer **out loud** in 60–90 seconds, write the skeleton of that answer in the box (25 words or more), tap **Compare**, then tick the rubric lines you covered. The numbers are Nur Finance's (synthetic data, as of 2026-10-01) — in a real interview, use them as *"in my portfolio project, on a 7 800-loan book…"*. Every SQL answer runs on `data/raw/nur.db` and shows its real result.
 
@@ -283,6 +283,28 @@ Four things to say: clean payments (a duplicated payment would count twice towar
 
 ```task
 {"id": "interview-c4", "kind": "free", "min": 25, "model": "CALCULATE(expression, filters…) evaluates a measure in a modified filter context: it adds, replaces or removes filters — e.g. Outstanding DPD30+ = CALCULATE([Outstanding], v_loan_status[dpd] > 30), then PAR30 % = DIVIDE([Outstanding DPD30+], [Outstanding]). Filters flow from dimension tables (products, branches, dates) along one-to-many relationships into the fact table; that is why the model should be a star: facts in the middle, dimensions around, single-direction one-to-many relationships, a marked date table. With fact-to-fact relationships, many-to-many or bidirectional filters, the same measure returns different numbers depending on the path the filter took — and nobody can explain the dashboard.", "rubric": ["CALCULATE evaluates an expression in a modified filter context (adds, replaces, removes filters)", "an example such as PAR30 % = outstanding with DPD > 30 ÷ outstanding", "star schema: filters flow from dimensions to the fact along one-to-many relationships"]}
+```
+
+---
+
+## C2. Python and pandas
+
+**P1.** **A merge turned 1 000 loans into 1 450 rows. What happened, and how do you stop it?**
+
+```task
+{"id": "interview-p1", "kind": "free", "min": 25, "model": "The right-hand table has more than one row per key (a customer with two addresses, a loan with several payments), so every matching left row was copied once per match — a one-to-many join that multiplied the rows, exactly like a SQL JOIN. Before merging, check the key: `right['loan_id'].is_unique`, or let pandas check it with `pd.merge(left, right, on='loan_id', validate='many_to_one')`, which raises an error instead of silently multiplying. Then decide: aggregate the right table to one row per key first (`groupby('loan_id').agg(...)`), or keep the latest row (`drop_duplicates('loan_id', keep='last')` after sorting). And always compare `len()` before and after a merge.", "rubric": ["the right table has duplicate keys, so rows are multiplied (one-to-many)", "check with is_unique or merge(..., validate='many_to_one')", "aggregate or de-duplicate to one row per key before merging, and compare the row count before and after"]}
+```
+
+**P2.** **NaN in pandas and NULL in SQL look alike. Name three places where they bite.**
+
+```task
+{"id": "interview-p2", "kind": "free", "min": 25, "model": "1) A comparison with NaN is always False, so `df[df['income'] == np.nan]` finds nothing — use `df['income'].isna()`, as you use IS NULL in SQL. 2) Counting: `count()` skips NaN but `len(df)` and `size` count every row — the same difference as COUNT(column) and COUNT(*); `mean()` and `sum()` skip NaN by default, like AVG and SUM. 3) Grouping: `groupby` drops rows whose key is NaN unless you pass `dropna=False`, while SQL's GROUP BY keeps a NULL group. Also: an integer column with one NaN turns into float, and `fillna(0)` is only right when 0 is the truth.", "rubric": ["comparison with NaN is never true: use isna() / notna()", "count() skips NaN while len() counts rows; mean/sum skip NaN (like SQL aggregates)", "groupby drops NaN keys unless dropna=False (SQL keeps a NULL group)"]}
+```
+
+**P3.** **`df[df['amount'] > 0]['flag'] = 1` printed a warning and the flag did not change. Why, and what is the right line?**
+
+```task
+{"id": "interview-p3", "kind": "free", "min": 25, "model": "That is chained indexing: `df[df['amount'] > 0]` returns a new DataFrame (a copy), and `['flag'] = 1` writes into that copy, which is thrown away — hence the SettingWithCopyWarning and no change in df. Select rows and column in one step with .loc: `df.loc[df['amount'] > 0, 'flag'] = 1`. When you really want a separate table, say so with `.copy()`: `pos = df[df['amount'] > 0].copy()`.", "rubric": ["chained indexing writes into a temporary copy", "use df.loc[condition, 'column'] = value in one step", "use .copy() when a separate table is meant"]}
 ```
 
 ---

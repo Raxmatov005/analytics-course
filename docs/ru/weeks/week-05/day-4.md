@@ -10,6 +10,8 @@
 - **matplotlib** (*библиотека matplotlib*) рисует всё из фигуры и осей: `plot` (линия), `bar` / `barh`, `hist`, `boxplot`, `scatter`; подписи, заголовок, формулирующий вывод, легенда только когда серий больше одной, большие числа в формате млрд (bn); **seaborn** добавляет статистические графики по данным в длинном формате одним вызовом (`barplot`, `lineplot`, `heatmap`, `boxplot`, `countplot`); `subplots` для сетки; `savefig` для презентации.
 - Правила выбора графика — те же, что на неделе 4, без изменений; к вечеру у Тимура есть `figures/01…05.png` и код, который сделает их снова в следующем месяце.
 
+**Домашнее задание:** сегодня нового нет — HW 5.2 (скрипт очистки Дня 3) сдаётся завтра, в День 5, в окне 📎 Дня 3.
+
 ---
 
 ## 1. Теория — фигура, оси и что на них размещается :id=1-learn--the-figure-the-axes-and-what-goes-on-them
@@ -197,7 +199,9 @@ ax.set_xlabel("principal, UZS (log scale)")
 # продукты от наименьшей медианы вверх
 order = status.groupby("product")["principal"].median().sort_values().index
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.boxplot([status.loc[status["product"] == p, "principal"] for p in order], labels=order)
+ax.boxplot([status.loc[status["product"] == p, "principal"] for p in order])
+# названия продуктов под ящиками (работает в любой версии matplotlib)
+ax.set_xticklabels(order)
 ax.set_yscale("log")
 status["principal"].describe()[["count", "mean", "50%", "max"]]
 ```

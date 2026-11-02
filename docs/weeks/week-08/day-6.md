@@ -19,7 +19,7 @@
 - **What it covers.** All of Week 8: product metrics, funnels and retention, the unit economics of a loan, the capstone and the interview. About a third of the questions come from earlier sections: statistics, A/B tests, Power BI, SQL, Excel and Python.
 - **Open book.** The course pages, your own notes and the [SQL playground](playground.md) are allowed. Chatbots and asking other people are not. A real interview works the same way: you may bring notes, but nobody answers for you.
 - **Time.** Plan 60 minutes for Part A and 45 minutes for Part B.
-- **Deadline.** Like every hand-in, the exam closes at 23:59 today.
+- **Deadline.** Part B is due at 23:59 on the day of Week 9 · Day 1 (the menu shows the date). Part A can be taken any time before that.
 - **After the exam.** Your mentor reviews Part B and sends structured feedback.
 
 ---

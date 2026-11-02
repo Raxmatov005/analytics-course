@@ -297,13 +297,13 @@ Branch grew 45.9 % in amount (982 → 1 403 loans), the app 45.1 % (725 → 1 03
 >
 > The board wants three answers about Nur Finance's 2026 lending, as of **1 October 2026**: **where we should grow**, **where we should stop or slow down**, and **what we should change** (policy, process, product, pricing). Each recommendation must have the number behind it, an owner and what it is worth or what it protects. The room: the CEO; Bekzod (portfolio), Nilufar (risk), Sevara (collections), Kamola (product, app). Use the definitions we use in the course; where you choose one, write it down.
 >
-> **Deliverables** (all in Day 5's hand-in box by Friday 9:00):
+> **Deliverables** (all in Day 5's hand-in box by 9:00 on Day 5, the board's Friday):
 > - **(a) Analysis notebook** — `capstone.ipynb` (SQL through `read_sql` or pandas), from `data/python/week8/capstone_template.ipynb`; Restart & Run All must work on a fresh copy of the data; one section per question; every number on a slide comes from a cell.
 > - **(b) Dashboard, 2 pages** — Power BI (`capstone.pbix` + `capstone_dashboard.pdf`) or Excel (`capstone.xlsx` + `capstone_dashboard.pdf`): page 1 *Growth & mix*, page 2 *Risk & collections*; slicers for product, channel, region; definitions in a text box.
 > - **(c) A 10-slide deck** (`capstone_deck.pdf`, from PowerPoint or Google Slides) **or** a 2-page memo (`capstone_memo.pdf`, attached in the deck's place in Day 5's box) with the recommendations.
-> - **(d) A 10-minute presentation** on Friday — a recording (`capstone_talk.mp4`, a phone is fine) or full speaker notes (`speaker_notes.md`) if you present live to the mentor.
+> - **(d) A 10-minute presentation** on Day 5 — a recording (`capstone_talk.mp4`, a phone is fine) or full speaker notes (`speaker_notes.md`) if you present live to the mentor.
 
-The arc of the three days: **brief → analysis (today) → dashboard and story (Thursday) → the ten minutes (Friday)**. Each section below ends with a line *Done looks like* — tick it before you move on.
+The arc of the three days: **brief → analysis (today, Day 3) → dashboard and story (Day 4) → the ten minutes (Day 5)**. Each section below ends with a line *Done looks like* — tick it before you move on.
 
 **P1.** *(reading a brief)* Restate the brief in **one sentence**, with the as-of date and who is in the room. It becomes the first line of your notebook.
 
@@ -354,9 +354,9 @@ Five required questions and one of your own (Q6). Each is a section of the noteb
 
 | Day | Morning | Afternoon | End-of-day output |
 |---|---|---|---|
-| **Wed (today)** | brief, issue tree, definitions | data checks, sanity numbers, Q1–Q3 first pass | checkpoint list (section 8) ticked; `issue_tree.md` + notebook draft saved |
-| **Thu** | Q4–Q6; **storyline: slide titles first** (Day 4) | dashboard pages; draft deck; peer-review checklist against your own work | full draft deck; dashboard 2 pages |
-| **Fri** | rehearse twice (timer), final checks, Restart & Run All, export PDFs | present (10 min + questions); then the mock interview | everything in Day 5's hand-in box |
+| **Day 3 (today)** | brief, issue tree, definitions | data checks, sanity numbers, Q1–Q3 first pass | checkpoint list (section 8) ticked; `issue_tree.md` + notebook draft saved |
+| **Day 4** | Q4–Q6; **storyline: slide titles first** (Day 4) | dashboard pages; draft deck; peer-review checklist against your own work | full draft deck; dashboard 2 pages |
+| **Day 5** | rehearse twice (timer), final checks, Restart & Run All, export PDFs | present (10 min + questions); then the mock interview | everything in Day 5's hand-in box |
 
 Time box it: if a cut has not produced a message in 30 minutes, write down what you tried and move on. The board needs five clear answers more than one perfect one.
 
@@ -409,7 +409,7 @@ what do we change?
          (Q6)
 ```
 
-For every branch write one **hypothesis** before you look ("SME grows fastest and earns most per soum") and the **test** that could break it ("unless its matured default rate is much higher"). A hypothesis you can not break is an opinion. Save it as `issue_tree.md` (it goes in with Friday's hand-in), with a **definitions block**: outstanding, PAR30, NPL90, FPD30 (maturity rule), approval rate (denominator), collection rate, active customer, funnel step, repeat borrowing, net contribution — one line each, the same as the course's unless you say why.
+For every branch write one **hypothesis** before you look ("SME grows fastest and earns most per soum") and the **test** that could break it ("unless its matured default rate is much higher"). A hypothesis you can not break is an opinion. Save it as `issue_tree.md` (it goes in with Day 5's hand-in), with a **definitions block**: outstanding, PAR30, NPL90, FPD30 (maturity rule), approval rate (denominator), collection rate, active customer, funnel step, repeat borrowing, net contribution — one line each, the same as the course's unless you say why.
 
 > 💡 **Key idea.** The tree decides what you will **not** do. A cut that answers no branch is interesting, not useful — and with three days, every interesting cut is time taken from a recommendation.
 
@@ -505,7 +505,7 @@ ls AS (SELECT l.loan_id, COALESCE(o.outstanding, 0) AS outstanding, COALESCE(d.d
 SELECT * FROM ls ORDER BY dpd DESC LIMIT 10;
 ```
 
-Each box below runs your query on an untouched copy of the data and checks the numbers in your result without showing them. Save the queries as `sanity.sql` — the notebook's section 2 needs the same numbers. This box is today's check, not the capstone hand-in: submit it if you want the mentor to see your sanity numbers early; the capstone itself goes into Day 5's 📎 box on Friday.
+Each box below runs your query on an untouched copy of the data and checks the numbers in your result without showing them. Save the queries as `sanity.sql` — the notebook's section 2 needs the same numbers. This box is today's check, not the capstone hand-in: submit it if you want the mentor to see your sanity numbers early; the capstone itself goes into Day 5's 📎 box.
 
 ```sqltask
 {"check": "cap8", "lesson": "W8D3", "title": "Capstone · the sanity numbers", "file": "sanity.sql", "why": "Every number on Friday's slides stands on these. If your outstanding or your FPD differs from the company's by a decimal, the board stops listening to the recommendation and starts auditing the arithmetic — so you find the difference today, on numbers you know.", "graded": ["Every box below ✅ — the site checks each result against the sanity table", "Your query, not a typed number: the checks look for the values inside the result", "The same definitions as the table (clean payments, half-open dates, FPD maturity rule) — written in the notebook's definitions block"], "tasks": [{"id": "S1", "q": "Sanity 1 — outstanding on 2026-10-01 (principal due after the as-of date) and the number of loans that owe it."}, {"id": "S2", "q": "Sanity 2 — PAR30 and NPL90 in % of outstanding (DPD > 30 and DPD > 90; use the DPD chain above)."}, {"id": "S3", "q": "Sanity 3 — the number of loans per bucket 0 / 1–30 / 31–60 / 61–90 / 90+ (one row per bucket)."}, {"id": "S4", "q": "Sanity 4 — FPD30 in % by channel: first instalments due on or before 2026-09-01; FPD if not paid in full by 1 October, or first paid more than 30 days late (clean payments)."}, {"id": "S5", "q": "Sanity 5 — loans and amount disbursed January–September 2026 and January–September 2025."}, {"id": "S7", "q": "Sanity 7 — approval rate, approved ÷ decided, all applications, in % to two decimals (approved_not_disbursed counts as approved)."}, {"id": "S8", "q": "Sanity 8 — collection rate for instalments due in September 2026, paid (clean) by 1 October, in % to one decimal."}, {"id": "S11", "q": "Sanity 11 — the exact duplicate payments: how many rows and how much money."}, {"id": "S12", "q": "Sanity 12 — app sessions (distinct application_id in app_events) and loans disbursed from app applications."}, {"id": "S13", "q": "Sanity 13 — repeat borrowing of the January 2024 first-loan cohort within 6 months, in % to one decimal."}]}
@@ -545,7 +545,7 @@ Useful starting points: growth by product is week 2 with two `CASE WHEN` columns
 {"id": "w08d3-p8", "kind": "free", "min": 50, "rubric": ["five assumptions, each a choice the data did not make", "a reason for each", "an effect for each, with a number where possible", "at least one definition (e.g. approved_not_disbursed counts as approved) and one cost or rate (e.g. funding 18 %)", "the as-of cut-off for rows dated after 2026-10-01"], "model": "A1 approved_not_disbursed counts as approved — the decision was yes; without it approval is 64.98 %, not 70.55 %. A2 rows dated after 2026-10-01 (24 payments, 72 actions, 87 decisions) are left out — the as-of date; with them, collections and approval look slightly better than they were on the day. A3 FPD30 only for first instalments due on or before 2026-09-01 — younger loans cannot be judged; including them pushes the app's FPD from 1.70 % to 2.01 %. A4 funding 18 % a year — Finance's rough figure; at 22 % Auto's margin falls from 72.9 to 3.1 per 1 000 lent. A5 the channel of a loan is its product's channel — they agree in this data; if they did not, the funnel and the unit economics would use different splits."}
 ```
 
-**Checkpoint — tick before you stop** (keep `issue_tree.md` and the `capstone.ipynb` draft on your computer — Friday's hand-in box takes the final versions):
+**Checkpoint — tick before you stop** (keep `issue_tree.md` and the `capstone.ipynb` draft on your computer — Day 5's hand-in box takes the final versions):
 
 - [ ] The brief restated in one sentence at the top of the notebook, with the as-of date.
 - [ ] Issue tree with a hypothesis and a test per branch; your deep-dive chosen and written as a question.

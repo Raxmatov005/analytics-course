@@ -260,10 +260,10 @@ Payments 30772, 30773, 30774 — all 57 170 000, all on loan 4570 (the 598 450 0
 ```sql
 SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at ASC  LIMIT 1;
 -- 4185, 2024-01-02, 1 250 000
-SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC LIMIT 1;
+SELECT loan_id, disbursed_at, principal FROM loans ORDER BY disbursed_at DESC, loan_id LIMIT 1;
 -- 596,  2026-10-01, 2 510 000
 ```
-(`TOP 1` on SQL Server.) The latest is on the as-of date itself: the data is current to the day it was cut.
+(`TOP 1` on SQL Server.) The latest is on the as-of date itself: the data is current to the day it was cut. But 21 loans were paid out on 2026-10-01, so without the `loan_id` in the `ORDER BY` the engine may show any of them; with it, the answer is always 596 — the same tiebreaker as in B18.
 
 </details>
 

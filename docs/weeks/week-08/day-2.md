@@ -398,7 +398,7 @@ print(f"{loans / customers:.2f} Micro loans per customer · LTV {ltv:,.0f} · LT
 **How to write it.**
 
 ```python
-# Micro loans disbursed January–September 2026
+# Micro loans disbursed in 2026, 1 January to the as-of date 1 October
 loans_2026 = 1045
 per_loan = {"interest income (1 − PD) × I": 259_069,
             "− cost of funds (18 %)":       -114_284,
@@ -413,7 +413,7 @@ print(f"{'= contribution':32s} {total / 1e6:8.1f} m soum   ({total / (2_705_586 
 print("Assumptions: funding 18 %, LGD 60 %, acquisition and servicing per channel (ours); averages over all Micro loans.")
 ```
 
-| Micro, Jan–Sep 2026 (1 045 loans) | m soum |
+| Micro, 2026 to 1 October (1 045 loans) | m soum |
 |---|---|
 | interest income | 270.7 |
 | − cost of funds | −119.4 |
@@ -662,7 +662,7 @@ ue.head()
 {"id": "w08d2-p8", "kind": "python", "starter": "q = \"\"\"\nWITH ranked AS (\n  SELECT l.customer_id, l.disbursed_at, p.code,\n         ROW_NUMBER() OVER (PARTITION BY l.customer_id ORDER BY l.disbursed_at, l.loan_id) AS n\n  FROM loans l JOIN products p ON p.product_id = l.product_id),\nfirsts AS (SELECT customer_id, disbursed_at AS first_at FROM ranked\n           WHERE n = 1 AND code = 'MICRO' AND disbursed_at < '2024-10-01')\nSELECT r.code AS product, COUNT(*) AS loans, COUNT(DISTINCT r.customer_id) AS customers\nFROM firsts f JOIN ranked r ON r.customer_id = f.customer_id AND r.disbursed_at <= date(f.first_at, '+24 months')\nGROUP BY r.code\"\"\"\nltv = pd.read_sql(q, con).set_index(\"product\")\ncustomers = ltv.loc[\"MICRO\", \"customers\"]           # every one of them has a first Micro loan\nltv[\"contrib\"] = p3[\"income\"] - p3[\"cof\"] - p3[\"el\"] - p3[\"serv\"]   # before acquisition\nprint(customers, \"customers\"); print(ltv)\n# TODO: Micro only: LTV = (Micro loans x Micro contrib - 20 000 x (Micro loans - customers)) / customers\n#       print LTV and LTV / 60 000 (two decimals)\n", "answer": 1.6, "dp": 1, "model": "344 customers, 665 loans in 24 months (1.93 each): 447 MICRO (1.30 each), 96 CONS, 74 BNPL, 32 SME, 16 AUTO. Contribution before acquisition: MICRO 78 430 per loan (net 18 430 + 60 000), CONS 1 310 241, BNPL −349 053, AUTO 16 263 021, SME 19 062 452. Micro only: LTV 95 925 soum, LTV/CAC = 1.6 — a first Micro loan already pays back its CAC (78 430 > 60 000); the repeats are the profit. All products: LTV 2 903 483, LTV/CAC ≈ 48 — but about 87 % of it comes from 48 SME and AUTO loans among 344 customers. Report it as \"Micro customers who later take a branch loan are very valuable\", not as an average every app customer delivers; the median customer's LTV is the Micro one."}
 ```
 
-**P11.** *(the one-page P&L)* The 2026 P&L of the whole book: for each product, the loans disbursed January–September 2026 × each per-loan line of `p3` (income, cost of funds, expected loss, acquisition, servicing, contribution), in billions of soum, plus a total row. Print the total contribution in bn soum, two decimals.
+**P11.** *(the one-page P&L)* The 2026 P&L of the whole book: for each product, the loans disbursed in 2026 (to the as-of date, 1 October — the starter's filter) × each per-loan line of `p3` (income, cost of funds, expected loss, acquisition, servicing, contribution), in billions of soum, plus a total row. Print the total contribution in bn soum, two decimals.
 
 ```task
 {"id": "w08d2-p13", "kind": "python", "starter": "n26 = ue[ue[\"disbursed_at\"] >= \"2026-01-01\"].groupby(\"product\").size()\nlines = [\"income\", \"cof\", \"el\", \"acq\", \"serv\", \"net\"]\npl = p3[lines].mul(n26, axis=0) / 1e9                  # bn soum\n# TODO: add a total row (pl.loc[\"TOTAL\"] = pl.sum()), print(pl.round(2)),\n#       then print the total contribution, round(pl.loc[\"TOTAL\", \"net\"], 2)\n", "answer": 8.85, "dp": 2, "model": "pl.loc[\"TOTAL\"] = pl.sum()\nprint(pl.round(2))\nprint(round(pl.loc[\"TOTAL\", \"net\"], 2))\n# contribution 2026 (bn): SME 5.68, AUTO 2.61, CONS 0.81, MICRO 0.02, BNPL −0.27 → total 8.85.\n# Income 47.32 bn, cost of funds 34.32 bn: funding takes 73 % of the book's income. SME alone is 64 % of the contribution.\n# Footnote: 2026 volume × the per-loan averages of all loans; funding 18 %, LGD 60 %, acquisition and servicing per channel (ours)."}

@@ -14,6 +14,8 @@
    → {get(), set(sql), run() → Promise<{res, error, html}>, el}; ALSql.compare(mine, model) → Promise<{ok, msg, html}> (the
    practice boxes' ✔ Check); ALSql.exec(sql, {play: true}) → Promise<{columns, values, error}>; ALSql.ready().
 Blocks that can be finished carry the class "al-block" and get "al-done" when finished; every change fires "al:change" on document.
+The hand-in workspace is finished once handed in (📤 Submit, or a mentor's review of it, review.js), as the bot counts it;
+with Submit open and nothing sent yet it carries "al-ready" instead (sections.js shows "Hand it in ↓").
 She signs in once per device with the name and PIN her mentor gave her (signin.js → the bot's /signin), or opens the bot's link
 with ?wk=<key>; either way the key lives in this browser only (localStorage "al.wk").
 Work in progress is kept in localStorage "al.sql". */
@@ -332,7 +334,7 @@ Work in progress is kept in localStorage "al.sql". */
   var ABOUT_NAMES = ['customers', 'products', 'branches', 'staff', 'applications', 'loans', 'installments', 'payments', 'collections_actions', 'app_events', 'dim_date'];
   /* a block that is not meant to run: a pattern with placeholders, or one piece of a longer query */
   function shape(code) {
-    if (/…|\btable_name\b|\bcolumn1\b/.test(stripComments(code))) return T('The shape of a query — the words in it are placeholders, so this one is for reading, not running.',
+    if (/…|\.\.\.|\btable_name\b|\bcolumn1\b/.test(stripComments(code))) return T('The shape of a query — the words in it are placeholders, so this one is for reading, not running.',
       'Это схема запроса — слова в ней лишь заполнители, поэтому его нужно читать, а не выполнять.');
     // "-- after the WITH block:" / "-- replace …" (a Russian page translates the comment: "-- после …" / "-- замените …")
     if (/^\s*--\s*(after the|replace|после|замени)/i.test(code)) return T('One piece of the longer query above — add it there, then run the whole query in a box.',
@@ -463,6 +465,7 @@ Work in progress is kept in localStorage "al.sql". */
       slot.appendChild(ALSignIn.card({ lead: lead }));
     }
     document.addEventListener('al-signin', function () { if (document.body.contains(box)) foot(); });
+    box.addEventListener('al-handed', function () { foot(); });   // review.js: the mentor has reviewed this hand-in
     spec.tasks.forEach(function (t, i) {
       var c = cards[i], ta = c.querySelector('textarea'), out = c.querySelector('.sq-out'), msg = c.querySelector('.sq-msg');
       if (t.upload) {
@@ -552,17 +555,23 @@ Work in progress is kept in localStorage "al.sql". */
       var tried = must.filter(function (t) {
         return t.upload ? !!picked[t.id] : t.text ? m.ok[t.id] === true : !!(m.code[t.id] || '').trim();
       }).length;
-      var fin = okN >= need || !!m.submitted;
-      box.classList.toggle('al-done', fin);
-      if (wasDone !== null && wasDone !== fin) changed();
-      wasDone = fin;
       /* the calendar (schedule.js): after 23:59 on its day the box stays for practice, but Submit is closed (the bot refuses too) */
       var S = window.ALSched, day = S && S.on() && S.opens(spec.lesson) ? S.lastDay(spec.lesson) : null, shut = !!day && S.state(spec.lesson) === 'closed';
+      /* done = handed in, as the bot counts a homework (audit 2026-11-02: Day 0's plan written in the box read "9 of 9
+         sections done" while the bot sent "missed"): 📤 Submit on any of her devices (al.sql, synced), or a mentor's
+         review of it (review.js sets data-handed). Submit open and nothing sent yet = "al-ready" (sections.js: "Hand it in ↓") */
+      var handed = !!m.submitted || box.dataset.handed === '1', ready = !handed && tried >= need && !shut;
+      box.classList.toggle('al-done', handed);
+      box.classList.toggle('al-ready', ready);
+      var turn = handed ? 2 : ready ? 1 : 0;
+      if (wasDone !== null && wasDone !== turn) changed();
+      wasDone = turn;
       btn.disabled = tried < need || shut;
       state.innerHTML = '<b>' + okN + ' / ' + need + '</b>' + T(' done', ' готово') + (m.submitted ? T(' · ✅ submitted ', ' · ✅ сдано ') + esc(m.submitted) : '') +
         (shut ? ' · <span class="sq-ws-closed">' + T('🔒 Closed on ', '🔒 Закрыто ') + esc(S.nice(day)) + T(' at 23:59 — your mentor can reopen it', ' в 23:59 — ментор может открыть снова') + '</span>'
           : (tried < need ? T(' · Submit opens once every task has an answer', ' · Кнопка «Сдать» откроется, когда у каждого задания будет ответ')
-          : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть') : '') +
+          : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть')
+          : !handed ? T(' · not handed in yet — tap 📤 Submit', ' · ещё не сдано — нажмите «📤 Сдать»') : '') +
           (day ? ' · ' + (day === S.today() ? T('closes today at 23:59', 'закрывается сегодня в 23:59') : T('closes ', 'закрывается ') + esc(S.nice(day)) + T(' at 23:59', ' в 23:59')) : ''));
       sign();
     }

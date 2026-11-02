@@ -10,7 +10,7 @@
 - **Dynamic arrays** — `FILTER`, `UNIQUE`, `SORT`, `SORTBY`, `SEQUENCE` — return many cells from one formula (a *spill*); with a **data-validation dropdown** they make a report the reader drives.
 - **Conditional formatting** turns a bucket column into colour; you have built Sevara's sheet and reproduced the bucket counts 7 429 / 124 / 25 / 16 / 234 with an approximate lookup against the `Lookup` table.
 
-**Today's file:** `data/excel/nur_week4_start.xlsx` again — press **⬇ Download** if you need a fresh copy and save it as `week-04/day-2/practice.xlsx` (yesterday's copy works too). `FILTER`, `UNIQUE`, `SORT` and `XLOOKUP` need Excel 365 / 2021 or Google Sheets; in Excel 2016/2019 use `INDEX/MATCH` and leave the spills for Thursday's pivots. **Done today** = Sevara's `Collections` sheet answers to its dropdown (Tashkent South → 59 late loans), every Practice box is ✓, the Quick check is answered and the day quiz is passed. No new homework — HW 4.1 is due tomorrow.
+**Today's file:** `data/excel/nur_week4_start.xlsx` again — press **⬇ Download** if you need a fresh copy and save it as `week-04/day-2/practice.xlsx` (yesterday's copy works too). `FILTER`, `UNIQUE`, `SORT` and `XLOOKUP` need Excel 365 / 2021 or Google Sheets; in Excel 2016/2019 use `INDEX/MATCH` and leave the spills for Day 4's pivots. **Done today** = Sevara's `Collections` sheet answers to its dropdown (Tashkent South → 59 late loans), every Practice box is ✓, the Quick check is answered and the day quiz is passed. No new homework — HW 4.1 is due tomorrow.
 
 ---
 
@@ -67,7 +67,7 @@ On the real workbook, a `rate` column on `tblLoans` keeps all **7 828** rows: ea
 | NULL for a row with no partner | `#N/A` (or your own "not found" text) |
 | several matches → several rows | several matches → **the first one only** |
 
-> ⚠️ **Watch out.** A lookup returns only the **first** match. If the key repeats on the lookup side — a customer *name* instead of an id — you silently get one arbitrary row. Look up on ids.
+> ⚠️ **Watch out.** A lookup returns only the **first** match. If the key repeats on the lookup side — a customer *name* instead of an id — you silently get one arbitrary row. Look up on ids. Lookups also **ignore case**: `"micro loan"` finds `Micro loan`, and two keys that differ only in case (`cash` and `CASH`) are one key to a lookup — the first row wins.
 
 **Your turn.** Each loan needs its product's annual rate. What are the key and the table you search?
 
@@ -243,7 +243,7 @@ Wildcard: `=XLOOKUP("Small*", Lookup!$A$3:$A$7, Lookup!$C$3:$C$7, , 2)` → **0.
 | lower edges (0, 1, 31, 61, 91) | match_mode `-1` (`VLOOKUP … TRUE`, `MATCH … 1`) |
 | upper edges (0, 30, 60, 90, 9999) | match_mode `1` |
 
-> ⚠️ **Watch out.** Lower edges with `1`, or upper edges with `-1`, shift every boundary value into the wrong band — dpd 31 lands in `1-30` — with no error. And `VLOOKUP … TRUE` and `MATCH … 1` need the edges sorted ascending.
+> ⚠️ **Watch out.** Lower edges with `1`, or upper edges with `-1`, put every dpd that is not exactly on an edge into the neighbouring band, with no error: upper edges (30, 60, 90) with `-1` send dpd 31 to `1-30`; lower edges (1, 31, 61) with `1` send dpd 45 to `61-90`. And `VLOOKUP … TRUE` and `MATCH … 1` need the edges sorted ascending.
 
 **Your turn.** Which bucket does `=XLOOKUP(61, Lookup!$A$11:$A$15, Lookup!$B$11:$B$15, , -1)` return?
 
@@ -335,6 +335,7 @@ On the real workbook: `=IFERROR(INDEX(tblLoans[customer], MATCH($B$1, tblLoans[l
 **When you use it.**
 - A miss that is **expected** and a replacement that **means** something: `"not found"`, `""`, sometimes `0`.
 - With a check cell that counts the misses: `=COUNTIF(rate_column, "not found")` must be 0 when every product is on `Lookup`.
+- **IFNA** (*ЕСНД*) is the narrow version: `=IFNA(x, "not found")` replaces only `#N/A` — the one error a lookup miss gives — and lets every other error show. Prefer it (or XLOOKUP's own not-found argument) to `IFERROR` around a lookup.
 
 | `IFERROR(x, …)` | `XLOOKUP(…, "not found")` |
 |---|---|
@@ -398,7 +399,7 @@ On the small loans table: `=UNIQUE(B2:B5)` → `Micro loan`, `Auto loan`, `Car l
 **When you use it.**
 - The labels of a summary table: `A3 =UNIQUE(tblLoans[branch])`, then `B3 =SUMIFS(tblLoans[outstanding], tblLoans[branch], A3#)` spills one total per branch.
 - The source list of a dropdown.
-- A distinct count: `ROWS(UNIQUE(…))` = `COUNT(DISTINCT …)`.
+- A distinct count: `ROWS(UNIQUE(…))` = `COUNT(DISTINCT …)` — except for blanks. `UNIQUE` keeps one empty cell as a value (it shows as 0), while `COUNT(DISTINCT)` skips NULL. On a column with gaps, filter them out first: `=ROWS(UNIQUE(FILTER(range, range<>"")))`.
 
 > ⚠️ **Watch out.** A distinct count of a **name** column is not a count of people: two people can share a name, and one person can be typed two ways. Count distinct **ids**.
 
@@ -602,11 +603,11 @@ Add `=$M2="61-90"` (orange), `=$M2="31-60"` (yellow), `=$M2="1-30"` (light yello
 
 | Error | Means | First check |
 |---|---|---|
-| `#N/A` | the lookup found nothing | a space or case difference in the key (`"Micro loan "`), a number stored as text (`"2167"` vs 2167 — `VALUE()` one side) |
+| `#N/A` | the lookup found nothing | a space in the key (`"Micro loan "`), a number stored as text (`"2167"` vs 2167 — `VALUE()` one side); never a case difference — lookups ignore case |
 | `#REF!` | a reference points at deleted cells, or `VLOOKUP`'s column number is bigger than the range | the range width; what was deleted |
 | `#VALUE!` | wrong type of argument (text where a number is needed; ranges of different sizes) | `SUMIFS` ranges of equal length; dates as text |
 | `#NAME?` | Excel does not know the function (XLOOKUP in Excel 2016) or a name is misspelt | the Excel version; quotes around text |
-| `#SPILL!` | a dynamic array has no room | clear the cells below / right of the formula |
+| `#SPILL!` | a dynamic array has no room | clear the cells below / right of the formula; no merged cells there; not inside a Table |
 | `#DIV/0!` | a share with an empty denominator | an empty group; `IF(den=0, "", num/den)` |
 
 **When you use it.** Every time a cell shows `#`. `IFERROR` hides all six alike — that is why it is for *expected* misses only.
@@ -632,7 +633,7 @@ Add `=$M2="61-90"` (orange), `=$M2="31-60"` (yellow), `=$M2="1-30"` (light yello
 | Two keys → a **sum** | `SUMIFS` (it is a group, not a row) | a lookup — it returns the first match only |
 | One cell from a two-way matrix | `INDEX(matrix, MATCH(row), MATCH(col))` | copying the matrix |
 | A list of rows that match | `FILTER` (+ `SORT`) | 7 828 `IF`s |
-| Distinct values of a column | `UNIQUE` | Remove Duplicates on a copy (Wednesday: it lies) |
+| Distinct values of a column | `UNIQUE` | Remove Duplicates on a copy (Day 3: it lies) |
 | Last occurrence (latest payment of a loan) | `XLOOKUP … , , , -1` on a date-ordered table, or `MAXIFS` on the date | `VLOOKUP` (first match only) |
 
 **When you use it.** Before you write the formula: name the shape of the answer first.
@@ -879,7 +880,7 @@ Copy `nur_week4_start.xlsx` to `week-04/day-2/practice.xlsx`. Add columns to `tb
 **P15.** *(conditional formatting)* Conditional formatting on `Loans`: a formula rule red for 90+, orange 61-90, yellow 31-60; a colour scale on `outstanding`; data bars on `dpd`. Then one cell that says how many rows are red. *In the box: how many rows are red.*
 
 ```task
-{"id": "w04d2-p10", "kind": "number", "answer": 234, "dp": 0, "unit": "rows", "explain": "Rules on A2:M7829 with =$M2=\"90+\" etc. Red rows: =COUNTIFS(tblLoans[bucket], \"90+\") → 234 — conditional formatting has no count of its own, so the rule and the COUNTIFS share one condition. Colour scale: the largest outstanding glows (586 068 714 — loan 4597, Bukhara, disbursed 2026-09-08). Data bars make 919 the full bar and every active loan a sliver — a scale problem Thursday names."}
+{"id": "w04d2-p10", "kind": "number", "answer": 234, "dp": 0, "unit": "rows", "explain": "Rules on A2:M7829 with =$M2=\"90+\" etc. Red rows: =COUNTIFS(tblLoans[bucket], \"90+\") → 234 — conditional formatting has no count of its own, so the rule and the COUNTIFS share one condition. Colour scale: the largest outstanding glows (586 068 714 — loan 4597, Bukhara, disbursed 2026-09-08). Data bars make 919 the full bar and every active loan a sliver — a scale problem Day 4 names."}
 ```
 
 **P16.** *(reading the errors)* Sevara types `2167` into B1, but the cell was formatted as Text first, and the loan finder shows `#N/A`. What happened? *In the box: pick the cause.*

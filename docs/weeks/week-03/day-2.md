@@ -837,7 +837,7 @@ Integer division picks one middle row for odd n and two for even. Median ≈ mea
 
 A **roll rate** (*миграция между корзинами*) is the share of loans that moved from one DPD bucket to another between two snapshot dates — usually month-end to month-end. It is the collections team's report card (did 1–30 cure or roll to 31–60?) and the input to provisioning (a 90+ bucket is fed by what rolls out of 61–90). Section 1 built the matrix with `LAG` over stacked snapshots. Here is the other common way — the two snapshots side by side — and how to read the result. Three steps, two of them yesterday's tools:
 
-**1. A snapshot per date.** Week 2's DPD block, with the as-of date as a *parameter* in two places — the instalment filter **and** the payment filter. The second was not needed on 2026-10-01 (the extract date), but on 2026-09-01 a payment made on 15 September must not count:
+**1. A snapshot per date.** Week 2's DPD block, with the as-of date as a *parameter* in two places — the instalment filter **and** the payment filter. The second was not needed on 2026-10-01 (the extract date), but on 2026-09-01 a payment made on 15 September must not count. (The two boxes in this corner are halves of one query, for reading: `u1` and `d1` are left as comments, so **▶ Run** stops with an error. The runnable version is section 1's roll-rate query, or P12.)
 
 ```sql
 -- unpaid matured instalments as of 2026-09-01

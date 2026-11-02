@@ -6,14 +6,15 @@
 
 The page holds only fingerprints of the answer (built by the mentor), so the answer is not in the page source.
 The solution opens once she solves the challenge, or if she gives up (then no XP).
-XP grows with the challenge streak: 2, 3, 4, 6, 9, then 10 a day. Saturdays and Sundays never break a streak.
-Lucky days: one of Monday–Thursday in each week 1–8, picked by a hash of the week, pays double XP. It is a surprise:
+XP grows with the challenge streak: 2, 3, 4, 6, 9, then 10 a day. A day without a lesson never breaks a streak
+(schedule.js; with "weekends": true every day has a lesson, so then a Saturday counts like a Monday).
+Lucky days: one of Days 1–4 in each week 1–9, picked by a hash of the week, pays double XP. It is a surprise:
 the page says so only when she opens that day, and the map shows a gift on the lucky days she has found.
 Results live in this browser (localStorage "al.v1"), next to the quiz results. The box (.chal) is an "al-block", "al-done"
 once solved or given up; that change fires "al:change" on document.
 */
 (function () {
-  var KEY = 'al.v1', SALT = 'nur-finance-2026', XP_STEPS = [2, 3, 4, 6, 9, 10];
+  var KEY = 'al.v1', SALT = 'nur-finance-2026', XP_STEPS = [2, 3, 4, 6, 9, 10], WEEKS = 9;   // weeks with daily challenges (Days 1–5)
 
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)) || {}; s.quizzes = s.quizzes || {}; s.challenges = s.challenges || {}; s.lucky = s.lucky || {}; return s; }
@@ -46,6 +47,7 @@ once solved or given up; that change fires "al:change" on document.
     if (type === 'number') {
       var s = raw;
       var t = String(s).replace(/[\s ']/g, '').replace(/%$/, '');
+      t = t.replace(/[−–]/g, '-').replace(/^[^\d.,+-]+|[^\d.,]+$/g, '');   // "70.1 percent", "≈ 70.1", "−3": as task.js reads them
       if (t.indexOf(',') >= 0) {   // a decimal comma ("70,5") or thousands commas ("7,828"), as task.js reads them
         if (t.indexOf('.') < 0 && /^[+-]?\d+,\d+$/.test(t) && (!/,\d{3}$/.test(t) || /^[+-]?0,/.test(t))) t = t.replace(',', '.');
         else t = t.replace(/,/g, '');
@@ -86,17 +88,18 @@ once solved or given up; that change fires "al:change" on document.
     streak: function () { return streakEndingAt(load()); },
     solved: function () { var s = load(); return Object.keys(s.challenges).filter(function (k) { return s.challenges[k].solvedOn; }).length; },
     xp: function () { return totalXp(load()); },
-    /* every challenge solved on a perfect streak, lucky days doubled */
+    /* every challenge solved on a perfect streak, lucky days doubled: Days 1–5 of weeks 1–9, the 45 challenges (Week 9
+       was left out until 2026-11-02; the Day 6 exams have none) */
     maxXp: function () {
       var t = 0;
-      for (var w = 1; w <= 8; w++) for (var d = 1; d <= 5; d++) {
+      for (var w = 1; w <= WEEKS; w++) for (var d = 1; d <= 5; d++) {
         t += XP_STEPS[Math.min((w - 1) * 5 + d, XP_STEPS.length) - 1] * (isLucky('w0' + w + 'd' + d) ? 2 : 1);
       }
       return t;
     },
     fullWeeks: function () {
       var s = load(), weeks = [];
-      for (var w = 1; w <= 8; w++) {
+      for (var w = 1; w <= WEEKS; w++) {   // as scripts/award.py device: weeks 1–9
         var all = true;
         for (var d = 1; d <= 5; d++) { var c = s.challenges['w0' + w + 'd' + d]; if (!c || !c.solvedOn) { all = false; break; } }
         if (all) weeks.push(w);

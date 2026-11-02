@@ -143,7 +143,35 @@ Four steps, one editor. Each **▶ Run** works on your practice copy, then the l
 
 1. Make a table of your own favourite loans: `CREATE TABLE my_loans (loan_id INTEGER PRIMARY KEY, why TEXT);` then `INSERT` three loans and `JOIN` it to `loans` to see their amounts.
 2. Close a loan: `UPDATE loans SET status = 'closed', closed_at = '2026-10-01' WHERE loan_id = 5;` — then count loans by status and see the number move.
-3. Delete every payment of one loan, then check what `installments` still says about it. This is why real databases protect foreign keys.
+3. Delete one loan: `DELETE FROM loans WHERE loan_id = 5;`. Then look for its rows in `installments` and `payments` — they are still there, pointing at a loan that no longer exists (*orphans*). A database that enforces its foreign keys would refuse that delete; SQLite enforces them only when they are declared and switched on (Week 1 · Day 3).
 4. Finished? **↺ Reset** in the Database panel.
 
 At work you would do the same in an app such as DBeaver, DataGrip or SQL Server Management Studio — the SQL is the same.
+
+## SQLite and SQL Server, side by side
+
+This site runs SQLite; many banks run SQL Server. Most SQL is the same in both — these are the places where it is not, collected from Weeks 1–3 on one card. Keep it open when you translate a query.
+
+| You want | SQLite (this site) | SQL Server |
+|---|---|---|
+| the first N rows | `… ORDER BY x LIMIT 5` | `SELECT TOP 5 … ORDER BY x` |
+| a value instead of NULL | `COALESCE(x, 0)` or `IFNULL(x, 0)` | `COALESCE(x, 0)` or `ISNULL(x, 0)` |
+| glue texts | `a \|\| ' ' \|\| b` (NULL makes it NULL) | `a + ' ' + b` (the same), or `CONCAT(a, ' ', b)` (NULL counts as empty) |
+| the length of a text | `LENGTH(s)` counts trailing spaces | `LEN(s)` ignores them; `DATALENGTH(s)` does not |
+| a piece of a text | `SUBSTR(s, 1, 4)` | `SUBSTRING(s, 1, 4)`, `LEFT(s, 4)`, `RIGHT(s, 4)` |
+| where a piece starts | `INSTR(s, 'x')` | `CHARINDEX('x', s)` |
+| "today" | never `date('now')` here: write `'2026-10-01'` | `GETDATE()` — the same warning |
+| days between two dates | `julianday(b) - julianday(a)` | `DATEDIFF(day, a, b)` — counts boundaries crossed |
+| a month later | `date(d, '+1 month')`: 31 Jan → 3 Mar | `DATEADD(month, 1, d)`: 31 Jan → 28 Feb |
+| the year and month of a date | `strftime('%Y-%m', d)` — text | `FORMAT(d, 'yyyy-MM')`, `YEAR(d)`, `MONTH(d)` |
+| count where a test is true | `SUM(status = 'x')` | `SUM(IIF(status = 'x', 1, 0))`; `SUM(CASE …)` works in both |
+| `7 / 2` | `3`: whole ÷ whole is whole | `3`, the same — write `7 * 1.0 / 2` |
+| `10 / 0` | NULL, no error | an error; `10 / NULLIF(0, 0)` gives NULL in both |
+| text that is not a number | `CAST('abc' AS INTEGER)` is 0 | an error; `TRY_CAST` gives NULL |
+| `'card' = 'Card'` | false; `LIKE` ignores Latin case | usually true: the collation ignores case |
+| an alias in `GROUP BY` | allowed | not allowed: repeat the expression |
+| a column neither grouped nor aggregated | runs and picks some row | an error |
+| a recursive CTE | `WITH RECURSIVE` | `WITH` (and `OPTION (MAXRECURSION n)` past 100 levels) |
+| a result saved as a table | `CREATE TABLE t AS SELECT …` | `SELECT … INTO t FROM …` |
+| change a view | `DROP VIEW` + `CREATE VIEW` | `CREATE OR ALTER VIEW` |
+| `SUM` of a big whole-number column | fine | `INT` overflows past about 2.1 bn: `SUM(CAST(x AS BIGINT))` |
