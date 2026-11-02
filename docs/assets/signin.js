@@ -99,9 +99,21 @@ Every change fires the document event "al-signin", so the boxes on the page redr
      signed in it remembers her and never asks again, until "sign out". A link from the bot (?wk=, taken by sqlrun.js
      before this runs) has signed her in already, and the mentor's ?preview=1 (schedule.js) skips the door. With no
      connection to the bot the door offers to go on without signing in, so a dead line never locks her out of reading. ---------- */
-  var door = null, away = false;
+  var door = null, away = false, bar = null;
   function preview() { return get('al.preview') === '1' || /[?&]preview=1/.test(location.hash); }
+  /* after "continue without signing in": a slim bar on every page, so it is never a surprise that nothing synced (2026-11-02) */
+  function awayBar() {
+    var show = away && !key() && !preview();
+    if (!show) { if (bar) { bar.remove(); bar = null; } return; }
+    if (!bar) { bar = document.createElement('div'); bar.className = 'si-away'; bar.setAttribute('role', 'status'); document.body.insertBefore(bar, document.body.firstChild); }
+    bar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg><span>' +
+      T('Not signed in: what you do now stays on this device only and does not reach your mentor.', 'Вы не вошли: всё, что вы делаете сейчас, остаётся только на этом устройстве и не дойдёт до ментора.') +
+      '</span><button type="button">' + T('Sign in', 'Войти') + '</button>';
+    bar.querySelector('button').onclick = function () { away = false; drawDoor(); };
+  }
   function drawDoor() {
+    awayBar();
     if (key() || preview() || away) { if (door) { door.remove(); door = null; document.documentElement.classList.remove('si-door-on'); } return; }
     if (!door) { door = document.createElement('div'); door.className = 'si-door'; door.setAttribute('role', 'dialog'); door.setAttribute('aria-modal', 'true'); document.body.appendChild(door); }
     document.documentElement.classList.add('si-door-on');
@@ -119,7 +131,7 @@ Every change fires the document event "al-signin", so the boxes on the page redr
     if (nm && !nm.value) nm.focus();
   }
   document.addEventListener('al-signin', drawDoor);
-  window.addEventListener('hashchange', function () { if (door) drawDoor(); });   // the EN | RU switch redraws it in the other language
+  window.addEventListener('hashchange', function () { if (door || bar) drawDoor(); });   // the EN | RU switch redraws it in the other language
 
   window.ALSignIn = { key: key, who: who, card: card, line: line, dropKey: dropKey, mentor: mentor };
   window.$docsify = window.$docsify || {};

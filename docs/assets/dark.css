@@ -734,7 +734,7 @@ html[data-theme="dark"] .rv-ready-ic { border-radius: 999px; background: #0d9488
   html[data-theme="dark"] .rv { border-radius: 14px; }
 }
 
-/* ---------- labs.css (98 rules) ---------- */
+/* ---------- labs.css (114 rules) ---------- */
 html[data-theme="dark"] .sq-box.sq-ed .sq-top { background: var(--brand-xl, #f0fdfa); }
 html[data-theme="dark"] .sq-msg.sq-lab-yes { color: #afeec7; }
 html[data-theme="dark"] .sq-msg.sq-lab-no { color: #f0ab95; }
@@ -823,6 +823,13 @@ html[data-theme="dark"] .sch-lock p { color: var(--muted, #64748b); }
 html[data-theme="dark"] .sch-lock .sch-go { border-radius: 12px; background: var(--brand, #0f766e); color: #ffffff !important; }
 html[data-theme="dark"] .sidebar-nav li.sch-next { border-radius: 12px; background: var(--brand-xl, #f0fdfa); color: var(--brand-text); }
 html[data-theme="dark"] .sch-note { border-radius: 12px; background: #312414; border: 1px solid #694924; color: #f0ab95; }
+html[data-theme="dark"] .sch-catch { border-radius: 14px; background: var(--brand-xl, #f0fdfa); border: 1px solid #2c6c5f; color: #bbefeb; }
+html[data-theme="dark"] .sch-catch-ico { color: var(--brand-text); }
+html[data-theme="dark"] .sch-catch a { color: var(--brand-text); }
+html[data-theme="dark"] .sch-catch .sch-catch-s { color: #b1d3cf; }
+html[data-theme="dark"] .sch-catch-x { border-radius: 10px; border: 1px solid #5eead4; background: transparent; color: var(--brand-text); }
+html[data-theme="dark"] .si-away { background: #312414; border-bottom: 1px solid #694924; color: #f0ab95; }
+html[data-theme="dark"] .si-away button { border-radius: 8px; border: 1px solid #7b542b; background: #161c22; color: #f0ab95; }
 html[data-theme="dark"] .sch-preview { border-radius: 16px; background: #1e293b; color: #f8fafc; }
 html[data-theme="dark"] .sch-preview a { color: #5eead4 !important; }
 html[data-theme="dark"] .sq-ws-closed { color: #f0ab95; }
@@ -833,6 +840,15 @@ html[data-theme="dark"] .si-door-t { color: var(--ink, #0f172a); }
 html[data-theme="dark"] .si-door-s { color: var(--muted, #64748b); }
 html[data-theme="dark"] .si-door .si-card { background: none; border: 0; }
 html[data-theme="dark"] .si-door-away button { border: 0; background: none; color: var(--brand-text); }
+html[data-theme="dark"] .al-ask { border-radius: 999px; border: 1px solid #212d5f; background: #141a30; color: #9792df; }
+html[data-theme="dark"] .al-ask:hover, html[data-theme="dark"] .al-ask[aria-expanded="true"] { background: #161d36; }
+html[data-theme="dark"] .al-ask-pop { border-radius: 12px; border: 1px solid #212d5f; background: #13182e; }
+html[data-theme="dark"] .al-ask-l { color: #a6a4df; }
+html[data-theme="dark"] .al-ask-pop textarea { border-radius: 10px; border: 1px solid #212d5f; background: #161c22; color: #c2bfe8; }
+html[data-theme="dark"] .al-ask-go { border-radius: 10px; border: 0; background: #4338ca; color: #ffffff; }
+html[data-theme="dark"] .al-ask-go.al-ask-claude { background: #b45309; }
+html[data-theme="dark"] .al-ask-how { color: #847ddc; }
+html[data-theme="dark"] .al-ask-note { color: #b9c0ca; }
 
 /* ---------- pics.css (59 rules) ---------- */
 html[data-theme="dark"] .markdown-section figure.pic { border: 1px solid var(--line, #e2e8f0); border-radius: 16px; background: #1b2323; }

@@ -27,7 +27,7 @@ def pages(sub):
             if f.endswith(".md") and f != "TRANSLATING.md":
                 p = os.path.join(base, f)
                 rel = os.path.relpath(p, DOCS).replace("\\", "/")
-                if not rel.startswith("ru/") and sub in rel:
+                if not rel.startswith(("ru/", "ai/")) and sub in rel:   # ai/ = the generated course pack (build_ai_pack.py)
                     yield rel, p
 
 

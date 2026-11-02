@@ -155,6 +155,24 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
 .sch-note { display: flex; gap: .6em; align-items: flex-start; margin: 0 0 1.2em; padding: .8em 1em; border-radius: 12px;
   background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: .92em; line-height: 1.5; font-family: var(--sans, system-ui); }
 .sch-note svg { flex: none; margin-top: .1em; width: 18px; height: 18px; }
+/* the catch-up plan (schedule.js catchUp): behind by two lessons or more */
+.sch-catch { display: flex; gap: .75em; align-items: flex-start; margin: 0 0 1.4em; padding: 1em 1.1em; border-radius: 14px;
+  background: var(--brand-xl, #f0fdfa); border: 1px solid #99f6e4; color: #134e4a; font-family: var(--sans, system-ui); line-height: 1.5; }
+.sch-catch-ico { flex: none; color: var(--brand, #0f766e); margin-top: .05em; }
+.sch-catch-body { min-width: 0; flex: 1; }
+.sch-catch-t { font-weight: 700; font-size: 1.02em; margin-bottom: .2em; }
+.sch-catch p { margin: .2em 0; font-size: .93em; }
+.sch-catch ol { margin: .35em 0 .4em 1.2em; padding: 0; font-size: .93em; }
+.sch-catch li { margin: .15em 0; }
+.sch-catch a { color: var(--brand-d, #115e59); font-weight: 700; }
+.sch-catch .sch-catch-s { color: #3f6f6a; font-size: .88em; }
+.sch-catch-x { margin-top: .5em; padding: .45em .9em; border-radius: 10px; border: 1px solid #5eead4; background: transparent; color: var(--brand-d, #115e59);
+  font: inherit; font-size: .85em; font-weight: 600; cursor: pointer; }
+/* not signed in after "continue without signing in" (signin.js): progress stays on this device */
+.si-away { position: sticky; top: 0; z-index: 30; display: flex; gap: .6em; align-items: center; justify-content: center; flex-wrap: wrap; padding: .5em 1em;
+  background: #fff7ed; border-bottom: 1px solid #fed7aa; color: #9a3412; font-family: var(--sans, system-ui); font-size: .88em; line-height: 1.4; }
+.si-away svg { flex: none; width: 16px; height: 16px; }
+.si-away button { padding: .3em .8em; border-radius: 8px; border: 1px solid #fdba74; background: #fff; color: #9a3412; font: inherit; font-weight: 700; cursor: pointer; }
 /* the mentor bar wraps inside the room between the menu button (left) and the Database button (right); a phone gets
    the short words (2026-10-28: it ran off the left edge and over the page) */
 .sch-preview { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 60; padding: .5em .9em; border-radius: 16px;
@@ -184,3 +202,19 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
 .si-door .si-card .si-h { margin-bottom: .55em; }
 .si-door-away { margin-top: .9em; }
 .si-door-away button { border: 0; background: none; padding: 0; font: inherit; font-size: .88em; color: var(--brand, #0f766e); text-decoration: underline; cursor: pointer; }
+
+/* "Ask AI" on every section frame (ask.js): opens her ChatGPT (his Claude in mentor preview) with the section */
+.al-ask { display: inline-flex; align-items: center; gap: .35em; flex: none; margin-left: auto; padding: .35em .7em; border-radius: 999px;
+  border: 1px solid #c7d2fe; background: #eef2ff; color: #3730a3; font: 600 .78em/1.2 var(--sans, system-ui); cursor: pointer; white-space: nowrap; }
+.al-ask:hover, .al-ask[aria-expanded="true"] { background: #e0e7ff; }
+.al-ask + .al-sec-state { margin-left: .5em; }
+.al-ask-pop { margin: .2em 0 1em; padding: .9em 1em; border-radius: 12px; border: 1px solid #c7d2fe; background: #f5f7ff; font-family: var(--sans, system-ui); }
+.al-ask-l { display: block; font-weight: 600; font-size: .88em; margin-bottom: .35em; color: #312e81; }
+.al-ask-pop textarea { width: 100%; box-sizing: border-box; min-height: 3.2em; padding: .5em .65em; border-radius: 10px; border: 1px solid #c7d2fe;
+  background: #fff; color: #1e1b4b; font: .92em/1.4 var(--sans, system-ui); resize: vertical; }
+.al-ask-row { display: flex; flex-wrap: wrap; gap: .5em; align-items: center; margin-top: .6em; }
+.al-ask-go { padding: .5em 1em; border-radius: 10px; border: 0; background: #4338ca; color: #fff; font: 700 .88em/1.2 var(--sans, system-ui); cursor: pointer; }
+.al-ask-go.al-ask-claude { background: #b45309; }
+.al-ask-how { font-size: .85em; color: #4338ca; margin-left: auto; }
+.al-ask-note { margin-top: .55em; font-size: .82em; color: #4b5563; line-height: 1.45; }
+@media (max-width: 768px) { .al-ask span { display: none; } .al-ask { padding: .45em .55em; } .al-ask-how { margin-left: 0; } }

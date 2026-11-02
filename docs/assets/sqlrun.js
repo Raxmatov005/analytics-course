@@ -898,6 +898,18 @@ Work in progress is kept in localStorage "al.sql". */
     var mineRes = run(clean, mine, true);
     if (!got.length) return { ok: false, res: mineRes, msg: mineRes.error ? T('The query did not run — see the message below.', 'Запрос не выполнился — смотрите сообщение ниже.') : T('No result to compare yet.', 'Пока нечего сравнивать.') };
     var last = got[got.length - 1], hit = -1, loose = -1, msg;
+    if (want.length > 1) {   // a two-part answer counts only when every part is there (2026-11-02: either part used to give ✅)
+      var seen = want.map(function (w) {
+        return got.some(function (g) { return sameResult(g.r, w.r, w.ordered); }) ? 2 : got.some(function (g) { return sameResult(g.r, w.r, false); }) ? 1 : 0;
+      });
+      var nums = function (f) { return seen.map(function (s, i) { return f(s) ? i + 1 : 0; }).filter(Boolean).join(', '); };
+      var have = seen.filter(Boolean).length, order = nums(function (s) { return s === 1; });
+      if (have === want.length) return { ok: true, res: mineRes, msg: T('✅ Same results as the answer, all ' + want.length + ' parts', '✅ Результаты совпадают с ответом, все части (' + want.length + ')') +
+        (order ? T(' (part ' + order + ' in a different order — check the ORDER BY).', ' (часть ' + order + ' в другом порядке — проверьте ORDER BY).') : '.') };
+      if (have) return { ok: false, res: mineRes, msg: T('Part ' + nums(Boolean) + ' of ' + want.length + ' matches. Still missing: part ' + nums(function (s) { return !s; }) +
+        ' — write its query under the first one in this box and run both.', 'Часть ' + nums(Boolean) + ' из ' + want.length + ' совпадает. Ещё нет: часть ' +
+        nums(function (s) { return !s; }) + ' — напишите её запрос под первым в этом же окне и запустите оба.') };
+    }
     want.forEach(function (w, i) {
       if (hit < 0 && sameResult(last.r, w.r, w.ordered)) hit = i;
       if (loose < 0 && sameResult(last.r, w.r, false)) loose = i;   // the same rows, sorted differently

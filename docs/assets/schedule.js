@@ -173,6 +173,43 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
       if (h1) h1.parentNode.insertBefore(n, h1.nextSibling); else sec.insertBefore(n, sec.firstChild);
     }
   }
+  /* ---------- behind by two lessons or more: the shortest way back, on the home page and every lesson page (the founder,
+     2026-11-02: "a catch-up mode"). A lesson counts as finished when its day quiz is passed (quiz.js), as on the board;
+     Day 0 and the Day 6 exams are left out (the exams are due later). Hidden for the day with its button. ---------- */
+  var CATCH = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+    'stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>';
+  function behind() {
+    if (!on() || !window.ALQuiz) return [];
+    var t = today(), qs = (window.ALQuiz.state() || {}).quizzes || {};
+    return Object.keys(dates).filter(function (id) {
+      var m = /^W(\d+)D([1-5])$/.exec(id);
+      return m && dates[id] < t && !(qs['w' + (m[1].length < 2 ? '0' : '') + m[1] + 'd' + m[2]] || {}).passedOn;
+    }).sort(function (a, b) { return dates[a] < dates[b] ? -1 : dates[a] > dates[b] ? 1 : a < b ? -1 : 1; });
+  }
+  function catchUp(vm) {
+    var sec = document.querySelector('.markdown-section'), old = sec && sec.querySelector('.sch-catch');
+    if (old) old.remove();
+    var path = vm.route.path || '/', id = idOf(path), home = /^\/(ru\/?)?$/.test(path) || /^\/(ru\/)?README$/.test(path);
+    if (!sec || (!id && !home) || ls('al.catchup.hide') === today()) return;
+    var late = behind();
+    if (late.length < 2) return;
+    var link = function (x) { var h = '#/' + pathOf(x); return window.ALLang ? window.ALLang.link(h) : h; };
+    var name = function (x) { var m = /^W(\d+)D(\d)$/.exec(x); return T('Week ' + m[1] + ' · Day ' + m[2], 'Неделя ' + m[1] + ' · День ' + m[2]); };
+    var steps = late.slice(0, 3).map(function (x) {
+      return '<li><a href="' + link(x) + '">' + name(x) + '</a>' + T(': the Learn tasks, the day quiz and its homework, if it has one',
+        ': задания раздела «Теория», тест дня и домашнее задание, если оно есть') + '</li>';
+    }).join('') + (late.length > 3 ? '<li>' + T('…then the next ones, one at a time', '…потом следующие, по одному') + '</li>' : '');
+    var n = document.createElement('div');
+    n.className = 'sch-catch';
+    n.innerHTML = '<span class="sch-catch-ico">' + CATCH + '</span><div class="sch-catch-body"><div class="sch-catch-t">' +
+      T('Catch-up plan: ' + late.length + ' lessons to finish', 'План, чтобы догнать: ' + late.length + ' урок' + (late.length < 5 ? 'а' : 'ов') + ' не закончено') + '</div>' +
+      '<p>' + T('That is fine. Here is the shortest way back, oldest first:', 'Ничего страшного. Вот самый короткий путь, начиная с самого раннего:') + '</p><ol>' + steps + '</ol>' +
+      '<p class="sch-catch-s">' + T('"Going further" and the daily challenge can wait until you are back on track.', '«Дальше по теме» и задача дня подождут, пока вы не догоните.') + '</p>' +
+      '<button type="button" class="sch-catch-x">' + T('Hide for today', 'Скрыть до завтра') + '</button></div>';
+    n.querySelector('.sch-catch-x').onclick = function () { ls('al.catchup.hide', today()); n.remove(); };
+    var h1 = sec.querySelector('h1');
+    if (h1) h1.parentNode.insertBefore(n, h1.nextSibling); else sec.insertBefore(n, sec.firstChild);
+  }
   function previewBar() {
     if (!preview || document.querySelector('.sch-preview')) return;
     var b = document.createElement('div');
@@ -204,7 +241,7 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
       });
     });
     hook.doneEach(function () {
-      ready.then(function () { lessonNotes(vm); previewBar(); sweep(); });
+      ready.then(function () { lessonNotes(vm); catchUp(vm); previewBar(); sweep(); });
     });
     hook.ready(function () {
       ready.then(function () {
