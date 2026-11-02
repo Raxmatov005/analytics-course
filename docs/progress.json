@@ -1,10 +1,12 @@
 {
   "learner": "",
-  "updated": "2026-10-31",
-  "quizDays": 0,
+  "updated": "2026-11-02",
+  "quizDays": 1,
   "stretch": 0,
   "bonus": [],
-  "badges": [],
+  "badges": [
+    "first-query"
+  ],
   "given": {},
   "items": [
     {
