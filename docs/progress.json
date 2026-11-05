@@ -1,7 +1,7 @@
 {
   "learner": "",
-  "updated": "2026-11-03",
-  "quizDays": 1,
+  "updated": "2026-11-05",
+  "quizDays": 2,
   "stretch": 0,
   "bonus": [],
   "badges": [
@@ -428,7 +428,7 @@
       "feedback": null
     }
   ],
-  "challengeXp": 0,
+  "challengeXp": 4,
   "challengeWeeks": [],
   "spent": []
 }
