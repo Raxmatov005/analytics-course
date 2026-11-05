@@ -38,8 +38,8 @@
       "title": "HW 1.2 — 10 queries for Bekzod",
       "title_ru": "HW 1.2 — 10 запросов для Бекзода",
       "max": 20,
-      "earned": null,
-      "onTime": null,
+      "earned": 17,
+      "onTime": true,
       "feedback": null
     },
     {
