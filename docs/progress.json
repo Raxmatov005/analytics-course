@@ -1,12 +1,10 @@
 {
   "learner": "",
-  "updated": "2026-11-13",
-  "quizDays": 2,
+  "updated": "",
+  "quizDays": 0,
   "stretch": 0,
   "bonus": [],
-  "badges": [
-    "first-query"
-  ],
+  "badges": [],
   "given": {},
   "items": [
     {
@@ -27,8 +25,8 @@
       "title": "HW 1.1 — tool ready",
       "title_ru": "HW 1.1 — инструмент готов",
       "max": 10,
-      "earned": 8,
-      "onTime": true,
+      "earned": null,
+      "onTime": null,
       "feedback": null
     },
     {
@@ -38,8 +36,8 @@
       "title": "HW 1.2 — 10 queries for Bekzod",
       "title_ru": "HW 1.2 — 10 запросов для Бекзода",
       "max": 20,
-      "earned": 17,
-      "onTime": true,
+      "earned": null,
+      "onTime": null,
       "feedback": null
     },
     {
@@ -428,7 +426,7 @@
       "feedback": null
     }
   ],
-  "challengeXp": 4,
+  "challengeXp": 0,
   "challengeWeeks": [],
   "spent": []
 }
