@@ -1,6 +1,10 @@
 /* The progress board: level, XP, real-reward milestones, badges, points by week.
-Official numbers come from progress.json (kept by the mentor with scripts/award.py; its "device" run adds the quiz days,
-challenge XP and full challenge weeks every night from her synced site progress, so only while she is signed in);
+Official numbers come from the mentor's record of the learner signed in here (the course bot's GET /points with her site
+key, kept by the mentor with scripts/award.py; its "device" run adds the quiz days, challenge XP and full challenge weeks
+every night from her synced site progress, so only while she is signed in). Each learner sees only their own (the
+founder, 2026-11-13); not signed in, or nothing recorded yet, the board starts from progress.json, the blank catalogue
+(every item, nothing earned), and offline from the last record this browser saw. A record with "vouchers": false (and a
+learner with no record yet) shows no voucher money;
 finished days, streak and quiz badges come from this browser (quiz.js). Rules and rewards: rewards.json.
 A "finished day" here is a day whose day quiz is passed (quiz.js); a lesson page's "x of y sections done" (sections.js)
 counts its sections, so a day can be finished with sections still open. */
@@ -241,15 +245,32 @@ counts its sections, so a day can be finished with sections still open. */
       '<div class="bdg-name">' + esc(loc(b, 'name')) + '</div><div class="bdg-how">' + esc(loc(b, 'how')) + (device ? ' <i>' + T('(this device)', '(на этом устройстве)') + '</i>' : '') + '</div></div>';
   }
 
+  /* the official numbers of the learner signed in here (the bot's GET /points), else the blank catalogue (see the top) */
+  var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev', PTS = 'al.pts';
+  function catalogue() { return fetch('progress.json', { cache: 'no-store' }).then(function (x) { return x.json(); }); }
+  function points() {
+    var k = null, kept = null;
+    try { k = localStorage.getItem('al.wk'); kept = JSON.parse(localStorage.getItem(PTS) || 'null'); } catch (e) { /* private window */ }
+    if (!k) return catalogue();
+    return fetch(WORKER + '/points?key=' + encodeURIComponent(k), { cache: 'no-store' })
+      .then(function (x) { return x.ok ? x.json() : null; })
+      .then(function (j) {
+        if (j && j.doc) { try { localStorage.setItem(PTS, JSON.stringify({ key: k, doc: j.doc })); } catch (e) { /* full: next time */ } return j.doc; }
+        return catalogue().then(function (p) { if (j) p.vouchers = false; return p; });   // signed in, nothing recorded yet: no vouchers
+      })
+      .catch(function () { return kept && kept.key === k && kept.doc ? kept.doc : catalogue(); });   // offline: the last record seen here
+  }
+  window.ALPoints = { load: points };   // the course map reads the same
+
   function render() {
     var el = document.getElementById('al-board');
     if (!el || el.getAttribute('data-done')) return;
     el.setAttribute('data-done', '1');
     Promise.all([
-      fetch('progress.json', { cache: 'no-store' }).then(function (x) { return x.json(); }),
+      points(),
       fetch('rewards.json', { cache: 'no-store' }).then(function (x) { return x.json(); })
     ]).then(function (res) {
-      var p = res[0], r = res[1];
+      var p = res[0], r = res[1], money = p.vouchers !== false;
       var xp = xpOf(p, r), lv = levelOf(xp, r);
       /* quiz days in XP: Days 1–5 of weeks 1–9, the 45 that scripts/award.py counts (Day 0 and the Day 6 exams are
          finished days but bring no day XP); challenges: the 45 on a perfect streak, lucky days doubled */
@@ -283,10 +304,10 @@ counts its sections, so a day can be finished with sections still open. */
         'Завершённые дни и задачи добавляются к XP по ходу курса. Когда вы вошли на сайт, они видны на всех ваших устройствах; ' +
         'на устройстве, где вы не вошли, они остаются только на нём. Домашнее задание засчитывается, когда оно сдано и проверено.') + '</p>';
 
-      html += '<h2 id="real-rewards">' + T('Real rewards: your voucher chain', 'Настоящие награды: ваша цепочка ваучеров') + '</h2><p class="board-note">' +
+      html += (money ? '<h2 id="real-rewards">' + T('Real rewards: your voucher chain', 'Настоящие награды: ваша цепочка ваучеров') + '</h2><p class="board-note">' +
         T('Every checkpoint you pass wins a voucher, and every voucher is bigger than the last. Keep the chain going.',
           'Каждая сданная контрольная приносит ваучер, и каждый следующий ваучер больше предыдущего. Не прерывайте цепочку.') + '</p>' +
-        chainHtml(r, p) +
+        chainHtml(r, p) : '<h2 id="real-rewards">' + T('Real rewards', 'Настоящие награды') + '</h2>') +
         '<h3>' + T('Big results', 'Крупные достижения') + '</h3><div class="mss">' + milestoneRows(r, p, xp) + '</div>';
 
       var earned = p.badges || [];

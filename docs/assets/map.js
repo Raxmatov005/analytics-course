@@ -1,6 +1,7 @@
 /* The course map (Docsify plugin): every week is a level on one path, its Friday checkpoint the "boss".
 It draws into <div id="al-map"> on map.md. Weeks and day titles come from _sidebar.md, so the map follows the menu;
-finished days and challenges from this browser (quiz.js, challenge.js), checkpoint results from progress.json.
+finished days and challenges from this browser (quiz.js, challenge.js), checkpoint results from the mentor's record of the
+learner signed in here (board.js ALPoints: the bot's GET /points, else progress.json, the blank catalogue).
 A dimmed week only shows where she is on the path; with the calendar on (schedule.js) the days not open yet are left out. */
 (function () {
   var ICON = {
@@ -42,7 +43,7 @@ A dimmed week only shows where she is on the path; with the calendar on (schedul
     el.setAttribute('data-done', '1');
     Promise.all([
       fetch(window.ALLang ? window.ALLang.file('_sidebar.md') : '_sidebar.md', { cache: 'no-store' }).then(function (x) { return x.text(); }),
-      fetch('progress.json', { cache: 'no-store' }).then(function (x) { return x.json(); }),
+      window.ALPoints ? window.ALPoints.load() : fetch('progress.json', { cache: 'no-store' }).then(function (x) { return x.json(); }),
       window.ALSched ? window.ALSched.ready : null
     ]).then(function (res) {
       var weeks = parseSidebar(res[0]), p = res[1], by = {}, S = window.ALSched;
@@ -91,7 +92,8 @@ A dimmed week only shows where she is on the path; with the calendar on (schedul
         if (state === 'here' && !hereSet) hereSet = true;  // all days done, only the boss is left
         var reward = '';
         if (cp && wk.n > 0) {
-          reward = cpPct == null ? '<span class="mreward">' + T('Beat the boss (70 %+) to win a voucher', 'Победите босса (70 %+), чтобы выиграть ваучер') + '</span>'
+          reward = cpPct == null ? '<span class="mreward">' + (p.vouchers === false ? T('Beat the boss (70 %+) to clear the level', 'Победите босса (70 %+), чтобы пройти уровень')
+              : T('Beat the boss (70 %+) to win a voucher', 'Победите босса (70 %+), чтобы выиграть ваучер')) + '</span>'
             : cpPct >= 70 ? '<span class="mreward won">' + icon('trophy', 16) + T(' Boss beaten · ', ' Босс побеждён · ') + Math.round(cpPct) + ' %</span>'
             : '<span class="mreward missed">' + T('Boss: ' + Math.round(cpPct) + ' % — try the next one', 'Босс: ' + Math.round(cpPct) + ' % — попробуйте следующего') + '</span>';
         }

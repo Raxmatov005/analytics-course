@@ -5,11 +5,14 @@ schedule.json says the days (its "_about" explains the fields); with no "start" 
 walks the same calendar and is the real lock: it refuses a hand-in outside its day, and its /reopen gives one homework a
 later last day, which GET /reopened tells this page. Dates are Tashkent dates (UTC+5) whatever her device's time zone.
 ?preview=1 (on any page) shows every lesson in this browser, for the mentor; ?preview=0 ends it.
+Several learners (2026-11-13): the calendar is the signed-in learner's — schedule.json's "learners" entry for their name
+(as the bot writes it: lower case) over the top level; GET /reopened?key= names the learner of this browser's key, and
+without an answer the name signed in here (al.who) decides. Not signed in: the top level.
 window.ALSched: ready (a promise), on(), studyDay(iso) (true / false, null with no schedule), state(id) "soon" | "open" | "closed", opens(id), lastDay(id), nice(iso),
 idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2. */
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev', PREVIEW = 'al.preview';
-  var dates = null, due = {}, reopen = {};
+  var dates = null, due = {}, reopen = {}, who = '', raw = null;   // who: whose calendar ('' = the top level); raw: schedule.json as read
   function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
   function ls(k, v) {
     try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* private mode */ }
@@ -82,15 +85,37 @@ idOf(href), weekOpen(n). Lesson ids as in the bot: W1D2 for weeks/week-01/day-2.
   var LOCK = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
     'stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>';
 
+  /* whose browser this is: the key from the bot's ?wk= link (sqlrun.js stores it a moment later) or the one signed in */
+  function norm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+  function siteKey() { var m = /[?&]wk=([A-Za-z0-9]{16,64})/.exec(location.search); return m ? m[1] : ls('al.wk'); }
+  function signedIn() { return siteKey() ? norm(ls('al.who')) : ''; }
+  function hasOwn(name) { return !!(name && raw && raw.learners && raw.learners[name]); }
+  /* one learner's calendar: the top level with their own "learners" fields over it (worker.js scheduleOf) */
+  function mine(s, name) {
+    if (!hasOwn(name)) return s;
+    var out = {};
+    Object.keys(s).forEach(function (k) { out[k] = s[k]; });
+    Object.keys(s.learners[name]).forEach(function (k) { out[k] = s.learners[name][k]; });
+    return out;
+  }
   var ready = Promise.all([
     fetch('schedule.json?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-    new Promise(function (res) {   // the mentor's reopened homework; the page does not wait long for it
-      var done = false, t = setTimeout(function () { if (!done) { done = true; res({}); } }, 3000);
-      fetch(WORKER + '/reopened', { cache: 'no-store' }).then(function (r) { return r.json(); })
-        .then(function (j) { if (!done) { done = true; clearTimeout(t); res(j.reopen || {}); } })
-        .catch(function () { if (!done) { done = true; clearTimeout(t); res({}); } });
+    new Promise(function (res) {   // the mentor's reopened homework (and whose it is); the page does not wait long for it
+      var done = false, t = setTimeout(function () { if (!done) { done = true; res(null); } }, 3000), k = siteKey();
+      fetch(WORKER + '/reopened' + (k ? '?key=' + encodeURIComponent(k) : ''), { cache: 'no-store' }).then(function (r) { return r.json(); })
+        .then(function (j) { if (!done) { done = true; clearTimeout(t); res(j || {}); } })
+        .catch(function () { if (!done) { done = true; clearTimeout(t); res(null); } });
     })
-  ]).then(function (res) { file = res[0]; dates = walk(res[0]); due = (res[0] && res[0].due) || {}; reopen = res[1]; });
+  ]).then(function (res) {
+    var ans = res[1];
+    raw = res[0];
+    who = ans ? ans.learner || '' : signedIn();   // no answer from the bot: the name signed in here
+    file = mine(raw, who); dates = walk(file); due = (file && file.due) || {}; reopen = (ans && ans.reopen) || {};
+  });
+  /* someone else signs in here (or signs out): a different calendar needs the page drawn again */
+  document.addEventListener('al-signin', function () {
+    ready.then(function () { var n = signedIn(); if (n !== who && (hasOwn(n) || hasOwn(who))) location.reload(); });
+  });
 
   window.ALSched = { ready: ready, on: on, state: state, opens: function (id) { return dates && dates[id]; }, lastDay: lastDay,
     nice: nice, idOf: idOf, weekOpen: weekOpen, today: today,

@@ -13,15 +13,40 @@ yes stays yes, lists join; for her own text (drafts) this browser's copy wins, t
 
 Where she was reading (al.pos: the page, the last heading above the top of the screen and how far below it) is kept
 on every scroll; after a refresh, or when she opens the page she was on, the page returns there. The home page shows
-"Continue where you stopped" with that page. */
+"Continue where you stopped" with that page.
+
+One browser, two learners (2026-11-13): the browser remembers whose progress it holds (al.owner, that learner's key).
+When another learner signs in here (or opens a link from the bot with their key), the progress of the one before is put
+aside in al.aside (by key, not deleted) and the page starts again with the new learner's own, pulled from the bot; when
+the first one signs in again, theirs comes back. A browser that never knew its owner takes the first one signed in. */
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev', WK = 'al.wk', POS = 'al.pos';
   var KEYS = ['al.tasks', 'al.v1', 'al.sql', 'al.py', 'al.vq', 'al.vw', POS];
+  var OWNER = 'al.owner', ASIDE = 'al.aside', OWN = KEYS.concat(['al.fb', 'al.pts', 'al.catchup.hide']);   // everything that is one learner's
   function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: this visit only */ } }
   function parse(s) { try { return s == null ? null : JSON.parse(s); } catch (e) { return null; } }
   function key() { return get(WK); }
+
+  /* ---------- whose progress this browser holds ---------- */
+  function switchTo(k) {   // true when the progress here changed hands
+    if (!k) return false;
+    var was = get(OWNER);
+    if (was === k) return false;
+    if (!was) { set(OWNER, k); return false; }   // the first learner signed in here: what is here is theirs
+    var aside = parse(get(ASIDE)) || {}, theirs = {}, back = aside[k];
+    OWN.forEach(function (n) { var v = get(n); if (v != null) theirs[n] = v; });
+    aside[was] = { at: Date.now(), data: theirs };
+    delete aside[k];
+    // if this browser is too full to keep a copy, the one before still has everything up to the last 20 s with the bot
+    set(ASIDE, JSON.stringify(aside));
+    OWN.forEach(function (n) { try { localStorage.removeItem(n); } catch (e) { /* nothing */ } });
+    if (back && back.data) Object.keys(back.data).forEach(function (n) { set(n, back.data[n]); });
+    set(OWNER, k);
+    return true;
+  }
+  (function () { var m = /[?&]wk=([A-Za-z0-9]{16,64})/.exec(location.search); switchTo(m ? m[1] : key()); })();   // before any box reads its progress
   function snapshot() {
     var o = {};
     KEYS.forEach(function (k) { var v = parse(get(k)); if (v != null) o[k] = v; });
@@ -98,7 +123,14 @@ on every scroll; after a refresh, or when she opens the page she was on, the pag
   setInterval(function () { push(false); }, 20000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') push(true); });
   window.addEventListener('pagehide', function () { push(true); });
-  document.addEventListener('al-signin', function () { pulled = false; refused = false; pull(); });
+  document.addEventListener('al-signin', function () {
+    if (switchTo(key())) {   // another learner: draw the page again with their progress, not the one before's
+      try { sessionStorage.removeItem('al.synced'); } catch (e) { /* nothing */ }
+      location.reload();
+      return;
+    }
+    pulled = false; refused = false; pull();
+  });
 
   /* ---------- where she was reading ---------- */
   function route() { return location.hash.replace(/^#/, '').replace(/\?.*$/, '') || '/'; }
