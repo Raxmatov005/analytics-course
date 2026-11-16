@@ -54,7 +54,9 @@ A review may carry a Russian copy in "ru" ({summary, good, tasks: [{note, fix}],
       '<div class="rv-top"><div class="rv-head"><div class="rv-hw">' + esc(r.hw || r.lesson) + '</div>' +
       '<div class="rv-title">' + esc(r.title || '') + '</div>' +
       '<div class="rv-meta">' + [T('Reviewed ', 'Проверено ') + nice(r.sent),
-        r.late ? T('handed in late', 'сдано с опозданием') : T('handed in on time', 'сдано вовремя'),
+        r.late ? (r.daysLate ? T('handed in ' + r.daysLate + ' day' + (r.daysLate === 1 ? '' : 's') + ' late', 'сдано с опозданием (дней: ' + r.daysLate + ')') : T('handed in late', 'сдано с опозданием')) +
+          (r.raw != null && r.factor && r.raw !== r.score ? ' · ' + T('×' + r.factor + ' for late: ' + r.raw + ' → ' + r.score, '×' + String(r.factor).replace('.', ',') + ' за опоздание: ' + r.raw + ' → ' + r.score) : '')
+          : T('handed in on time', 'сдано вовремя'),
         lessonHref(r.lesson) ? '<a href="' + lessonHref(r.lesson) + '">' + T('open the lesson', 'открыть урок') + '</a>' : ''].filter(Boolean).join(' · ') + '</div></div>' +
       (r.max ? '<div class="rv-score" aria-label="' + T('Score', 'Баллы') + '"><b>' + esc(r.score) + '</b><span>/ ' + esc(r.max) + '</span></div>' : '') + '</div>' +
       (r.max ? '<div class="rv-bar"><i style="width:' + Math.max(0, Math.min(100, pct)) + '%"></i></div>' : '') +

@@ -14,7 +14,7 @@
 
 ## How this course works
 
-- **Nine weeks, one page per day, about 3 hours.** One lesson opens each day on your calendar (the menu shows when the next one opens); Day 5 of every week is a checkpoint or a bigger homework.
+- **Nine weeks, one page per day, about 3 hours.** One lesson opens each day on your calendar (the menu shows when the next one opens), or sooner once every lesson before it is complete — its day quiz passed and its homework handed in; Day 5 of every week is a checkpoint or a bigger homework.
 - **One dataset for everything:** the Nur Finance database (11 tables, 6,040 customers, 7,828 loans). You will know it like your own flat by week 3.
 - **Skip what you know.** [Day 0](weeks/week-00/day-0.md) decides which weeks you take in full.
 - **The [course map](map.md)** shows where you are; the [progress board](progress.md) shows your XP, level and rewards.

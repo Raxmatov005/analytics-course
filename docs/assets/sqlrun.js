@@ -575,24 +575,27 @@ Work in progress is kept in localStorage "al.sql". */
       var tried = must.filter(function (t) {
         return t.upload ? !!picked[t.id] : t.text ? m.ok[t.id] === true : !!(m.code[t.id] || '').trim();
       }).length;
-      /* the calendar (schedule.js): after 23:59 on its day the box stays for practice, but Submit is closed (the bot refuses too) */
-      var S = window.ALSched, day = S && S.on() && S.opens(spec.lesson) ? S.lastDay(spec.lesson) : null, shut = !!day && S.state(spec.lesson) === 'closed';
+      /* the calendar (schedule.js): the box never closes (the founder, 2026-11-16) — past its due day a hand-in is still
+         taken and counts as late (the bot records how late) */
+      var S = window.ALSched, day = S && S.on() && S.opens(spec.lesson) ? S.lastDay(spec.lesson) : null, lateBy = day ? S.daysLate(spec.lesson) : 0;
       /* done = handed in, as the bot counts a homework (audit 2026-11-02: Day 0's plan written in the box read "9 of 9
          sections done" while the bot sent "missed"): 📤 Submit on any of her devices (al.sql, synced), or a mentor's
          review of it (review.js sets data-handed). Submit open and nothing sent yet = "al-ready" (sections.js: "Hand it in ↓") */
-      var handed = !!m.submitted || box.dataset.handed === '1', ready = !handed && tried >= need && !shut;
+      var handed = !!m.submitted || box.dataset.handed === '1', ready = !handed && tried >= need;
       box.classList.toggle('al-done', handed);
       box.classList.toggle('al-ready', ready);
       var turn = handed ? 2 : ready ? 1 : 0;
       if (wasDone !== null && wasDone !== turn) changed();
       wasDone = turn;
-      btn.disabled = tried < need || shut;
+      btn.disabled = tried < need;
       state.innerHTML = '<b>' + okN + ' / ' + need + '</b>' + T(' done', ' готово') + (m.submitted ? T(' · ✅ submitted ', ' · ✅ сдано ') + esc(m.submitted) : '') +
-        (shut ? ' · <span class="sq-ws-closed">' + T('🔒 Closed on ', '🔒 Закрыто ') + esc(S.nice(day)) + T(' at 23:59 — your mentor can reopen it', ' в 23:59 — ментор может открыть снова') + '</span>'
-          : (tried < need ? T(' · Submit opens once every task has an answer', ' · Кнопка «Сдать» откроется, когда у каждого задания будет ответ')
+        (tried < need ? T(' · Submit opens once every task has an answer', ' · Кнопка «Сдать» откроется, когда у каждого задания будет ответ')
           : okN < need ? T(' · ' + (need - okN) + ' not ✅ yet — fix them, or submit as is', ' · ' + (need - okN) + ' ещё не ✅ — исправьте или сдайте как есть')
           : !handed ? T(' · not handed in yet — tap 📤 Submit', ' · ещё не сдано — нажмите «📤 Сдать»') : '') +
-          (day ? ' · ' + (day === S.today() ? T('closes today at 23:59', 'закрывается сегодня в 23:59') : T('closes ', 'закрывается ') + esc(S.nice(day)) + T(' at 23:59', ' в 23:59')) : ''));
+        (!day ? '' : lateBy && !handed ? ' · <span class="sq-ws-late">' + T('was due ' + esc(S.nice(day)) + ' at 23:59 — still open: a hand-in now counts as late',
+            'срок был ' + esc(S.nice(day)) + ' в 23:59 — сдать всё ещё можно, но это будет опозданием') + '</span>'
+          : lateBy ? T(' · was due ', ' · срок был ') + esc(S.nice(day))
+          : ' · ' + (day === S.today() ? T('due today at 23:59', 'срок — сегодня до 23:59') : T('due ', 'срок: ') + esc(S.nice(day)) + T(' at 23:59', ', до 23:59')));
       sign();
     }
     box.querySelector('.sq-submit').onclick = function () {
@@ -619,25 +622,30 @@ Work in progress is kept in localStorage "al.sql". */
         files[name] = { b64: p.b64, type: p.type };
       });
       btn.disabled = true; state.innerHTML = T('Submitting…', 'Отправляем…');
-      fetch(WORKER + '/submit', { method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ key: key, lesson: spec.lesson, check: spec.check, files: files, ok: m.ok }) })
+      // the bot opens a lesson early from the quiz passes it has seen: send this browser's progress first (sync.js)
+      (window.ALSync && window.ALSync.flush ? window.ALSync.flush() : Promise.resolve()).then(function () {
+        return fetch(WORKER + '/submit', { method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ key: key, lesson: spec.lesson, check: spec.check, files: files, ok: m.ok }) });
+      })
         .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); })
         .then(function (x) {
           if (x.status === 200) {
             var st = store(); st.sql[spec.check].submitted = new Date().toISOString().slice(0, 10); save(st);
-            document.dispatchEvent(new CustomEvent('al-handin', { detail: { lesson: spec.lesson } }));   // feedback.js sends answers waiting for it
+            document.dispatchEvent(new CustomEvent('al-handin', { detail: { lesson: spec.lesson } }));   // feedback.js sends answers waiting for it; schedule.js
             foot(); btn.disabled = true;
-            state.innerHTML = T('✅ Submitted! Your mentor is notified — feedback will appear in 📤 Homework.', '✅ Сдано! Ментор получил уведомление — отзыв появится в 📤 Homework.');
+            var n = x.j.late ? x.j.daysLate || 1 : 0;
+            state.innerHTML = T('✅ Submitted! Your mentor is notified — feedback will appear in 📤 Homework.', '✅ Сдано! Ментор получил уведомление — отзыв появится в 📤 Homework.') +
+              (n ? T(' It came ' + n + ' day' + (n === 1 ? '' : 's') + ' after its due day, so it counts as late — well done for finishing it.',
+                ' Работа пришла через ' + n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'день' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'дня' : 'дней') + ' после срока, поэтому считается сданной с опозданием — хорошо, что вы её закончили.') : '');
           } else if (x.status === 401) {
             if (window.ALSignIn) ALSignIn.dropKey(); else try { localStorage.removeItem(WK); } catch (e) { /* nothing */ }
             sign(T('You were signed out — sign in again, then tap 📤 Submit. Your work is still saved here.',
               'Вы вышли из аккаунта — войдите снова и нажмите «📤 Сдать». Ваша работа сохранена здесь.'));
             btn.disabled = false;
-          } else if (x.status === 403) {
-            state.innerHTML = '<span class="sq-ws-closed">' + (x.j.error === 'closed'
-              ? T('🔒 This homework closed at 23:59 on its day, so it was not sent. If something got in the way, write to your mentor: they can reopen it.',
-                '🔒 Это задание закрылось в 23:59 своего дня, поэтому оно не отправлено. Если что-то помешало, напишите ментору: он может открыть его снова.')
-              : T('This lesson has not opened yet.', 'Этот урок ещё не открылся.')) + '</span>';
+          } else if (x.status === 403 && x.j.error === 'not open yet') {   // nothing else is refused since 2026-11-16
+            state.innerHTML = '<span class="sq-ws-late">' + T('This lesson has not opened yet: it opens on its day, or as soon as every lesson before it is complete.',
+              'Этот урок ещё не открылся: он откроется в свой день или как только будут завершены все уроки до него.') + '</span>';
+            btn.disabled = false;
           } else {
             state.innerHTML = T('Could not submit', 'Не удалось сдать') + ' (' + esc(x.j.error || x.status) + '). ' + T('Try again in a minute.', 'Попробуйте снова через минуту.');
             btn.disabled = false;

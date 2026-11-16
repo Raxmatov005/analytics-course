@@ -2,7 +2,8 @@
 It draws into <div id="al-map"> on map.md. Weeks and day titles come from _sidebar.md, so the map follows the menu;
 finished days and challenges from this browser (quiz.js, challenge.js), checkpoint results from the mentor's record of the
 learner signed in here (board.js ALPoints: the bot's GET /points, else progress.json, the blank catalogue).
-A dimmed week only shows where she is on the path; with the calendar on (schedule.js) the days not open yet are left out. */
+A dimmed week only shows where she is on the path; with the calendar on (schedule.js) the days not open yet are left out,
+a day is done when complete (quiz + hand-in), and a day whose time is over and that is not complete says "Not completed". */
 (function () {
   var ICON = {
     check: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
@@ -65,8 +66,13 @@ A dimmed week only shows where she is on the path; with the calendar on (schedul
       var chal = window.ALChallenge ? window.ALChallenge.state() : { challenges: {}, lucky: {} };
       var hereSet = false, html = '<div class="map">';
 
+      /* a day is done when it is complete (schedule.js: its quiz passed and its homework handed in, once the bot's list of
+         hand-ins is known), else when its quiz is passed; a day whose time is over and that is not complete says so */
+      var full = !!(S && S.on() && S.known && S.known());
+      var isDone = function (d) { return full ? S.complete(S.idOf(d.href)) : !!(quizzes[d.id] && quizzes[d.id].passedOn); };
+      var nd = function (d) { return S && S.notDone ? S.notDone(S.idOf(d.href)) : null; };
       weeks.forEach(function (wk, i) {
-        var done = wk.days.filter(function (d) { return quizzes[d.id] && quizzes[d.id].passedOn; }).length;
+        var done = wk.days.filter(isDone).length;
         var cp = by['cp' + wk.n] || (wk.n === 8 ? by.capstone : null);
         var cpPct = cp && cp.earned != null ? 100 * cp.earned / cp.max : null;
         if (wk.opens) {   // the next week, not open yet: its level and the day it opens, nothing more
@@ -77,14 +83,16 @@ A dimmed week only shows where she is on the path; with the calendar on (schedul
         var cleared = done === wk.days.length && (wk.n === 0 || (cpPct != null && cpPct >= 70));
         var state = cleared ? 'cleared' : hereSet ? 'ahead' : 'here';
         var dots = wk.days.map(function (d) {
-          var q = quizzes[d.id], c = chal.challenges[d.id], isHere = false;
-          if (state === 'here' && !hereSet && !(q && q.passedOn)) { isHere = true; hereSet = true; }
+          var ok = isDone(d), left = !ok && nd(d), c = chal.challenges[d.id], isHere = false;
+          if (state === 'here' && !hereSet && !ok) { isHere = true; hereSet = true; }
           var lucky = chal.lucky && chal.lucky[d.id];
           var boss = wk.n > 0 && d.d === 5;
-          var cls = 'mday' + (q && q.passedOn ? ' done' : '') + (isHere ? ' here' : '') + (boss ? ' boss' : '');
-          return '<a class="' + cls + '" href="' + d.href + '" title="' + esc(d.title) + '">' +
-            '<span class="mdot">' + (q && q.passedOn ? icon('check', 18) : isHere ? icon('pin', 18) : boss ? icon('trophy', 18) : d.d) + '</span>' +
-            '<span class="mday-name">' + (boss ? T('Boss: ', 'Босс: ') : '') + esc(d.title) + '</span>' +
+          var cls = 'mday' + (ok ? ' done' : '') + (isHere ? ' here' : '') + (left ? ' nd' : '') + (boss ? ' boss' : '');
+          var tip = left ? T('Not completed — still to do: ', 'Не завершён — осталось: ') + S.missingText(S.idOf(d.href)) : d.title;
+          return '<a class="' + cls + '" href="' + d.href + '" title="' + esc(tip) + '">' +
+            '<span class="mdot">' + (ok ? icon('check', 18) : isHere ? icon('pin', 18) : boss ? icon('trophy', 18) : d.d) + '</span>' +
+            '<span class="mday-name">' + (boss ? T('Boss: ', 'Босс: ') : '') + esc(d.title) +
+            (left ? '<span class="mnd">' + T('Not completed', 'Не завершён') + ' · ' + esc(S.missingText(S.idOf(d.href), true)) + '</span>' : '') + '</span>' +
             (c && c.solvedOn ? '<span class="mtag star" title="' + T('Daily challenge solved', 'Задача дня решена') + '">' + icon('star', 14) + '</span>' : '') +
             (lucky ? '<span class="mtag gift" title="' + T('A lucky day you found', 'Найденный вами счастливый день') + '">' + icon('gift', 14) + '</span>' : '') +
             (isHere ? '<span class="mhere">' + T('You are here', 'Вы здесь') + '</span>' : '') + '</a>';

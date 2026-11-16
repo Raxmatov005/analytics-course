@@ -23,7 +23,7 @@ LINK: https://raxmatov005.github.io/analytics-course/#/README
 
 ## How this course works
 
-- **Nine weeks, one page per day, about 3 hours.** One lesson opens each day on your calendar (the menu shows when the next one opens); Day 5 of every week is a checkpoint or a bigger homework.
+- **Nine weeks, one page per day, about 3 hours.** One lesson opens each day on your calendar (the menu shows when the next one opens), or sooner once every lesson before it is complete — its day quiz passed and its homework handed in; Day 5 of every week is a checkpoint or a bigger homework.
 - **One dataset for everything:** the Nur Finance database (11 tables, 6,040 customers, 7,828 loans). You will know it like your own flat by week 3.
 - **Skip what you know.** [Day 0](weeks/week-00/day-0.md) decides which weeks you take in full.
 - **The [course map](map.md)** shows where you are; the [progress board](progress.md) shows your XP, level and rewards.
@@ -431,7 +431,7 @@ The course bot's *🔗 Connect this website* link still works too — it signs t
 
 ## When it is due
 
-The badge next to each Homework heading names the day it is due (*HW 1.1 — Due Day 3*): 23:59 Tashkent time on that day, and the menu shows the date. On time, full points are possible; one day late, ×0.8; later, ×0.5 ([the rules](progress.md)). Late is still better than never: always submit.
+The badge next to each Homework heading names the day it is due (*HW 1.1 — Due Day 3*): 23:59 Tashkent time on that day, and the menu shows the date. On time, full points are possible; one day late, ×0.8; later, ×0.5 ([the rules](progress.md)). The box never closes: after the due day it stays open, and a hand-in then counts as late. Late is still better than never: always submit.
 
 ## What comes back
 

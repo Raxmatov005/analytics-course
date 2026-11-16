@@ -22,7 +22,7 @@ the first one signs in again, theirs comes back. A browser that never knew its o
 (function () {
   var WORKER = 'https://nur-feedback-bot.sohajon2005.workers.dev', WK = 'al.wk', POS = 'al.pos';
   var KEYS = ['al.tasks', 'al.v1', 'al.sql', 'al.py', 'al.vq', 'al.vw', POS];
-  var OWNER = 'al.owner', ASIDE = 'al.aside', OWN = KEYS.concat(['al.fb', 'al.pts', 'al.catchup.hide']);   // everything that is one learner's
+  var OWNER = 'al.owner', ASIDE = 'al.aside', OWN = KEYS.concat(['al.fb', 'al.pts', 'al.catchup.hide', 'al.hand']);   // everything that is one learner's
   function T(en, ru) { return window.ALLang ? window.ALLang.t(en, ru) : en; }
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private window: this visit only */ } }
@@ -95,6 +95,19 @@ the first one signs in again, theirs comes back. A browser that never knew its o
       .then(function (r) { if (r.ok) last = s; })
       .catch(function () { /* offline: the next round tries again */ })
       .then(function () { pushing = false; });
+  }
+  /* send what changed now and say when it is there (sqlrun.js, before a hand-in: the bot opens a lesson early from the
+     quiz passes it has seen, 2026-11-16); never waits more than 3 s */
+  function flush() {
+    return new Promise(function (res) {
+      var k = key(), data = snapshot(), s = JSON.stringify(data), done = false;
+      if (!k || refused || s === last) { res(); return; }
+      var t = setTimeout(function () { if (!done) { done = true; res(); } }, 3000);
+      fetch(WORKER + '/progress', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ key: k, data: data }) })
+        .then(function (r) { if (r.ok) last = s; })
+        .catch(function () { /* offline: the bot judges by what it has */ })
+        .then(function () { if (!done) { done = true; clearTimeout(t); res(); } });
+    });
   }
   var pulled = false;
   function pull() {
@@ -184,7 +197,7 @@ the first one signs in again, theirs comes back. A browser that never knew its o
     if (h1 && h1.nextSibling) sec.insertBefore(a, h1.nextSibling); else sec.insertBefore(a, sec.firstChild);
   }
 
-  window.ALSync = { merge: merge, snapshot: snapshot, push: push, pull: function () { pulled = false; refused = false; pull(); } };
+  window.ALSync = { merge: merge, snapshot: snapshot, push: push, flush: flush, pull: function () { pulled = false; refused = false; pull(); } };
   window.$docsify = window.$docsify || {};
   window.$docsify.plugins = (window.$docsify.plugins || []).concat(function (hook) {
     hook.ready(pull);

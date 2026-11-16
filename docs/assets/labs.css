@@ -155,6 +155,13 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
 .sch-note { display: flex; gap: .6em; align-items: flex-start; margin: 0 0 1.2em; padding: .8em 1em; border-radius: 12px;
   background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: .92em; line-height: 1.5; font-family: var(--sans, system-ui); }
 .sch-note svg { flex: none; margin-top: .1em; width: 18px; height: 18px; }
+/* "Not completed" (schedule.js, 2026-11-16): a lesson whose day is over and that is not complete — under its name in the
+   menu (from data-nd) and on the course map (map.js .mnd) */
+.sidebar-nav li a.sch-nd::after { content: attr(data-nd); display: table; margin: .2em 0 .1em; padding: .05em .55em; border-radius: 999px;
+  background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: .74em; font-weight: 600; line-height: 1.35; white-space: normal; }
+.mday.nd .mdot { background: #fff7ed; color: #9a3412; box-shadow: inset 0 0 0 2px #fdba74; }
+.mnd { display: block; margin-top: .1em; font-size: .78em; font-weight: 600; color: #9a3412; }
+.sch-lock .sch-catch { margin: 1em 0; text-align: left; }   /* on a lesson not open yet: what to finish first, read like a list */
 /* the catch-up plan (schedule.js catchUp): behind by two lessons or more */
 .sch-catch { display: flex; gap: .75em; align-items: flex-start; margin: 0 0 1.4em; padding: 1em 1.1em; border-radius: 14px;
   background: var(--brand-xl, #f0fdfa); border: 1px solid #99f6e4; color: #134e4a; font-family: var(--sans, system-ui); line-height: 1.5; }
@@ -185,7 +192,7 @@ li.sq-lab-now .sq-lab-say { color: var(--ink, #0f172a); font-weight: 700; }
   .sch-preview .sch-pv-short { display: inline; }
 }
 .sch-preview a { color: #5eead4 !important; }
-.sq-ws-closed { color: #9a3412; font-weight: 600; }
+.sq-ws-late { color: #9a3412; font-weight: 600; }
 
 /* ---------- the door (signin.js): the first visit on a device opens on a sign-in screen ---------- */
 .si-door-on body { overflow: hidden; }

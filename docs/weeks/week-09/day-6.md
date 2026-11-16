@@ -19,7 +19,7 @@
 - **What it covers.** Week 9 first: correlation and regression, logistic regression and the scorecard, AUC, Gini and KS, the cut-off and the PSI. Then the whole course, from Day 0 to Week 8: about two questions in five come from there.
 - **Open book.** The course pages, your own notes and the [SQL playground](playground.md) are allowed. Chatbots and asking other people are not. A real interview works the same way: you may bring notes, but nobody answers for you.
 - **Time.** Plan 60 minutes for Part A and 45 minutes for Part B.
-- **Deadline.** Like every hand-in, the exam closes at 23:59 today.
+- **Deadline.** Part B is due at 23:59 on the day the menu shows. Like every hand-in, it stays open after that, but then it counts as late.
 - **After the exam.** Your mentor reviews Part B and sends structured feedback.
 
 ---

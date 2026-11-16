@@ -29,7 +29,7 @@ The course bot's *🔗 Connect this website* link still works too — it signs t
 
 ## When it is due
 
-The badge next to each Homework heading names the day it is due (*HW 1.1 — Due Day 3*): 23:59 Tashkent time on that day, and the menu shows the date. On time, full points are possible; one day late, ×0.8; later, ×0.5 ([the rules](progress.md)). Late is still better than never: always submit.
+The badge next to each Homework heading names the day it is due (*HW 1.1 — Due Day 3*): 23:59 Tashkent time on that day, and the menu shows the date. On time, full points are possible; one day late, ×0.8; later, ×0.5 ([the rules](progress.md)). The box never closes: after the due day it stays open, and a hand-in then counts as late. Late is still better than never: always submit.
 
 ## What comes back
 
